@@ -15,6 +15,8 @@ import {
   type InsertGuest,
   type Task,
   type InsertTask,
+  type Contract,
+  type InsertContract,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -71,6 +73,15 @@ export interface IStorage {
   createTask(task: InsertTask): Promise<Task>;
   updateTask(id: string, task: Partial<InsertTask>): Promise<Task | undefined>;
   deleteTask(id: string): Promise<boolean>;
+
+  // Contracts
+  getContract(id: string): Promise<Contract | undefined>;
+  getContractsByWedding(weddingId: string): Promise<Contract[]>;
+  getContractsByVendor(vendorId: string): Promise<Contract[]>;
+  getContractByBooking(bookingId: string): Promise<Contract | undefined>;
+  createContract(contract: InsertContract): Promise<Contract>;
+  updateContract(id: string, contract: Partial<InsertContract>): Promise<Contract | undefined>;
+  deleteContract(id: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -82,6 +93,7 @@ export class MemStorage implements IStorage {
   private budgetCategories: Map<string, BudgetCategory>;
   private guests: Map<string, Guest>;
   private tasks: Map<string, Task>;
+  private contracts: Map<string, Contract>;
 
   constructor() {
     this.users = new Map();
@@ -92,6 +104,7 @@ export class MemStorage implements IStorage {
     this.budgetCategories = new Map();
     this.guests = new Map();
     this.tasks = new Map();
+    this.contracts = new Map();
   }
 
   // Users
@@ -343,6 +356,51 @@ export class MemStorage implements IStorage {
   async deleteTask(id: string): Promise<boolean> {
     return this.tasks.delete(id);
   }
+
+  // Contracts
+  async getContract(id: string): Promise<Contract | undefined> {
+    return this.contracts.get(id);
+  }
+
+  async getContractsByWedding(weddingId: string): Promise<Contract[]> {
+    return Array.from(this.contracts.values()).filter((c) => c.weddingId === weddingId);
+  }
+
+  async getContractsByVendor(vendorId: string): Promise<Contract[]> {
+    return Array.from(this.contracts.values()).filter((c) => c.vendorId === vendorId);
+  }
+
+  async getContractByBooking(bookingId: string): Promise<Contract | undefined> {
+    return Array.from(this.contracts.values()).find((c) => c.bookingId === bookingId);
+  }
+
+  async createContract(insertContract: InsertContract): Promise<Contract> {
+    const id = randomUUID();
+    const contract: Contract = {
+      ...insertContract,
+      id,
+      status: insertContract.status || 'draft',
+      createdAt: new Date(),
+    } as Contract;
+    this.contracts.set(id, contract);
+    return contract;
+  }
+
+  async updateContract(
+    id: string,
+    update: Partial<InsertContract>
+  ): Promise<Contract | undefined> {
+    const contract = this.contracts.get(id);
+    if (!contract) return undefined;
+
+    const updated = { ...contract, ...update } as Contract;
+    this.contracts.set(id, updated);
+    return updated;
+  }
+
+  async deleteContract(id: string): Promise<boolean> {
+    return this.contracts.delete(id);
+  }
 }
 
 import { neon } from "@neondatabase/serverless";
@@ -539,6 +597,40 @@ export class DBStorage implements IStorage {
 
   async deleteTask(id: string): Promise<boolean> {
     await this.db.delete(schema.tasks).where(eq(schema.tasks.id, id));
+    return true;
+  }
+
+  // Contracts
+  async getContract(id: string): Promise<Contract | undefined> {
+    const result = await this.db.select().from(schema.contracts).where(eq(schema.contracts.id, id));
+    return result[0];
+  }
+
+  async getContractsByWedding(weddingId: string): Promise<Contract[]> {
+    return await this.db.select().from(schema.contracts).where(eq(schema.contracts.weddingId, weddingId));
+  }
+
+  async getContractsByVendor(vendorId: string): Promise<Contract[]> {
+    return await this.db.select().from(schema.contracts).where(eq(schema.contracts.vendorId, vendorId));
+  }
+
+  async getContractByBooking(bookingId: string): Promise<Contract | undefined> {
+    const result = await this.db.select().from(schema.contracts).where(eq(schema.contracts.bookingId, bookingId));
+    return result[0];
+  }
+
+  async createContract(insertContract: InsertContract): Promise<Contract> {
+    const result = await this.db.insert(schema.contracts).values(insertContract).returning();
+    return result[0];
+  }
+
+  async updateContract(id: string, update: Partial<InsertContract>): Promise<Contract | undefined> {
+    const result = await this.db.update(schema.contracts).set(update).where(eq(schema.contracts.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteContract(id: string): Promise<boolean> {
+    await this.db.delete(schema.contracts).where(eq(schema.contracts.id, id));
     return true;
   }
 }
