@@ -1,0 +1,323 @@
+import type { IStorage } from "./storage";
+
+export async function seedVendors(storage: IStorage) {
+  // Seed culturally-specific Bay Area vendors for Sikh/Indian weddings
+  
+  const vendors = [
+    // Makeup Artists
+    {
+      name: "Regal Beauty Studio",
+      category: "makeup_artist" as const,
+      location: "San Jose, CA",
+      priceRange: "$$$" as const,
+      culturalSpecialties: ["sikh", "punjabi", "hindu"],
+      description: "Bridal makeup specialists with expertise in traditional and modern South Asian looks. Team of 5+ artists available for large wedding parties.",
+      contact: "regalbeauty@example.com",
+      rating: "4.8",
+      reviewCount: 127,
+      featured: true,
+      portfolio: null,
+      availability: null,
+    },
+    {
+      name: "Glam by Priya",
+      category: "makeup_artist" as const,
+      location: "Fremont, CA",
+      priceRange: "$$" as const,
+      culturalSpecialties: ["sikh", "hindu"],
+      description: "Affordable bridal makeup with focus on long-lasting looks for multi-day celebrations.",
+      contact: "priya.makeup@example.com",
+      rating: "4.6",
+      reviewCount: 89,
+      featured: false,
+      portfolio: null,
+      availability: null,
+    },
+
+    // DJs
+    {
+      name: "DJ Panjabi Sound",
+      category: "dj" as const,
+      location: "San Francisco Bay Area",
+      priceRange: "$$$" as const,
+      culturalSpecialties: ["sikh", "punjabi"],
+      description: "Premier Punjabi DJ service with extensive Bhangra and Bollywood music library. Available for Sangeet, Baraat, and Reception events.",
+      contact: "(510) 555-0123",
+      rating: "4.9",
+      reviewCount: 203,
+      featured: true,
+      portfolio: null,
+      availability: null,
+    },
+    {
+      name: "Bollywood Beats DJ Services",
+      category: "dj" as const,
+      location: "Oakland, CA",
+      priceRange: "$$" as const,
+      culturalSpecialties: ["sikh", "hindu", "general"],
+      description: "Versatile DJs for all Indian wedding events with modern sound equipment.",
+      contact: "bollywoodbeats@example.com",
+      rating: "4.5",
+      reviewCount: 156,
+      featured: false,
+      portfolio: null,
+      availability: null,
+    },
+
+    // Dhol Players
+    {
+      name: "Bay Area Dhol Group",
+      category: "dhol_player" as const,
+      location: "San Jose, CA",
+      priceRange: "$$" as const,
+      culturalSpecialties: ["sikh", "punjabi"],
+      description: "Traditional dhol players available in groups of 2-5 for Baraat processions and Sangeet celebrations.",
+      contact: "(408) 555-0187",
+      rating: "4.7",
+      reviewCount: 94,
+      featured: false,
+      portfolio: null,
+      availability: null,
+    },
+    {
+      name: "Golden State Dholis",
+      category: "dhol_player" as const,
+      location: "Fremont, CA",
+      priceRange: "$$$" as const,
+      culturalSpecialties: ["sikh", "punjabi", "hindu"],
+      description: "Professional dhol ensemble with choreographed performances. Experienced with large Baraat processions (200+ guests).",
+      contact: "goldendhol@example.com",
+      rating: "4.9",
+      reviewCount: 142,
+      featured: true,
+      portfolio: null,
+      availability: null,
+    },
+
+    // Turban Tiers
+    {
+      name: "Masterful Turban Services",
+      category: "turban_tier" as const,
+      location: "San Jose, CA",
+      priceRange: "$$" as const,
+      culturalSpecialties: ["sikh"],
+      description: "Expert turban tying for groom, groomsmen, and guests. Can handle 50+ turbans in 2 hours. Traditional and modern styles.",
+      contact: "(408) 555-0199",
+      rating: "4.8",
+      reviewCount: 67,
+      featured: true,
+      portfolio: null,
+      availability: null,
+    },
+
+    // Mehndi Artists
+    {
+      name: "Henna Dreams by Simran",
+      category: "mehndi_artist" as const,
+      location: "Sunnyvale, CA",
+      priceRange: "$$$" as const,
+      culturalSpecialties: ["sikh", "punjabi", "hindu"],
+      description: "Award-winning mehndi artist specializing in intricate bridal designs. Hourly rates or per-hand pricing available.",
+      contact: "simran.henna@example.com",
+      rating: "5.0",
+      reviewCount: 234,
+      featured: true,
+      portfolio: null,
+      availability: null,
+    },
+    {
+      name: "Quick Mehndi Artists",
+      category: "mehndi_artist" as const,
+      location: "Milpitas, CA",
+      priceRange: "$" as const,
+      culturalSpecialties: ["sikh", "hindu", "general"],
+      description: "Team of 3 mehndi artists perfect for large Mehndi parties. Budget-friendly group rates.",
+      contact: "quickhenna@example.com",
+      rating: "4.4",
+      reviewCount: 112,
+      featured: false,
+      portfolio: null,
+      availability: null,
+    },
+
+    // Photographers
+    {
+      name: "Eternal Moments Photography",
+      category: "photographer" as const,
+      location: "San Francisco Bay Area",
+      priceRange: "$$$$" as const,
+      culturalSpecialties: ["sikh", "punjabi", "hindu"],
+      description: "Premier wedding photography team specializing in multi-day South Asian celebrations. Cinematic style with cultural sensitivity.",
+      contact: "info@eternalmoments.com",
+      rating: "4.9",
+      reviewCount: 187,
+      featured: true,
+      portfolio: null,
+      availability: null,
+    },
+
+    // Caterers
+    {
+      name: "Raja Sweets & Catering",
+      category: "caterer" as const,
+      location: "Fremont, CA",
+      priceRange: "$$$" as const,
+      culturalSpecialties: ["sikh", "punjabi"],
+      description: "High-volume Punjabi catering perfect for multi-day events. Can serve breakfast, lunch, and dinner for 100-500 guests. Specialized in Paath catering.",
+      contact: "(510) 555-0156",
+      rating: "4.7",
+      reviewCount: 298,
+      featured: true,
+      portfolio: null,
+      availability: null,
+    },
+    {
+      name: "Taj Catering Services",
+      category: "caterer" as const,
+      location: "San Jose, CA",
+      priceRange: "$$" as const,
+      culturalSpecialties: ["sikh", "hindu", "general"],
+      description: "Affordable Indian catering with vegetarian and non-vegetarian options.",
+      contact: "tajcatering@example.com",
+      rating: "4.5",
+      reviewCount: 176,
+      featured: false,
+      portfolio: null,
+      availability: null,
+    },
+
+    // Banquet Halls
+    {
+      name: "Golden Peacock Banquet Hall",
+      category: "banquet_hall" as const,
+      location: "Milpitas, CA",
+      priceRange: "$$$" as const,
+      culturalSpecialties: ["sikh", "hindu", "general"],
+      description: "Premier banquet hall with capacity for 400-800 guests. Full A/V setup, stage, and dance floor. Experienced with Sangeet and Reception events.",
+      contact: "goldpeacock@example.com",
+      rating: "4.6",
+      reviewCount: 143,
+      featured: true,
+      portfolio: null,
+      availability: null,
+    },
+
+    // Gurdwaras
+    {
+      name: "San Jose Gurdwara Sahib",
+      category: "gurdwara" as const,
+      location: "San Jose, CA",
+      priceRange: "$" as const,
+      culturalSpecialties: ["sikh"],
+      description: "Beautiful Gurdwara with large Diwan Hall accommodating 500+ guests. Community kitchen (Langar) available. Wedding date bookings available 12 months in advance.",
+      contact: "(408) 555-0211",
+      rating: "4.9",
+      reviewCount: 412,
+      featured: true,
+      portfolio: null,
+      availability: null,
+    },
+
+    // Decorators
+    {
+      name: "Marigold & Jasmine Decor",
+      category: "decorator" as const,
+      location: "Santa Clara, CA",
+      priceRange: "$$$" as const,
+      culturalSpecialties: ["sikh", "punjabi", "hindu"],
+      description: "Luxury event decoration specializing in traditional Indian weddings. Custom Mandap designs, floral arrangements, and Sangeet stage setups.",
+      contact: "info@marigoldjasmine.com",
+      rating: "4.8",
+      reviewCount: 167,
+      featured: true,
+      portfolio: null,
+      availability: null,
+    },
+
+    // Horse Rentals
+    {
+      name: "Royal Baraat Horses",
+      category: "horse_rental" as const,
+      location: "San Jose, CA",
+      priceRange: "$$$" as const,
+      culturalSpecialties: ["sikh", "punjabi", "hindu"],
+      description: "White horses for Baraat processions with traditional decorations. Handler included. Experienced with city street processions.",
+      contact: "(408) 555-0244",
+      rating: "4.7",
+      reviewCount: 89,
+      featured: false,
+      portfolio: null,
+      availability: null,
+    },
+
+    // Sword Rentals
+    {
+      name: "Kirpan & Ceremonial Items Rental",
+      category: "sword_rental" as const,
+      location: "Fremont, CA",
+      priceRange: "$" as const,
+      culturalSpecialties: ["sikh"],
+      description: "Ceremonial Kirpans and decorative swords for Sikh wedding processions. Various sizes and styles available.",
+      contact: "(510) 555-0167",
+      rating: "4.5",
+      reviewCount: 34,
+      featured: false,
+      portfolio: null,
+      availability: null,
+    },
+
+    // Tent Services
+    {
+      name: "Bay Area Tent & Marquee",
+      category: "tent_service" as const,
+      location: "San Jose, CA",
+      priceRange: "$$" as const,
+      culturalSpecialties: ["sikh", "hindu", "general"],
+      description: "Large tents for home-based Paath ceremonies and outdoor events. Can accommodate 100-400 guests. Tables, chairs, and lighting included.",
+      contact: "bayareatents@example.com",
+      rating: "4.6",
+      reviewCount: 124,
+      featured: false,
+      portfolio: null,
+      availability: null,
+    },
+
+    // Mobile Food Vendors
+    {
+      name: "Tandoori Truck Catering",
+      category: "mobile_food" as const,
+      location: "Oakland, CA",
+      priceRange: "$$" as const,
+      culturalSpecialties: ["sikh", "punjabi"],
+      description: "Mobile tandoori oven perfect for casual Mehndi parties. Fresh naan, tikka, and more. Great for intimate pre-wedding events.",
+      contact: "tandooritruck@example.com",
+      rating: "4.7",
+      reviewCount: 156,
+      featured: false,
+      portfolio: null,
+      availability: null,
+    },
+
+    // Baraat Bands
+    {
+      name: "Brass Band Celebration",
+      category: "baraat_band" as const,
+      location: "Fremont, CA",
+      priceRange: "$$$" as const,
+      culturalSpecialties: ["sikh", "punjabi", "hindu"],
+      description: "Traditional brass band for Baraat processions. 8-piece ensemble playing Bhangra and Bollywood hits. Street parade experienced.",
+      contact: "(510) 555-0198",
+      rating: "4.8",
+      reviewCount: 91,
+      featured: false,
+      portfolio: null,
+      availability: null,
+    },
+  ];
+
+  for (const vendor of vendors) {
+    await storage.createVendor(vendor);
+  }
+
+  console.log(`Seeded ${vendors.length} vendors for Bay Area South Asian weddings`);
+}

@@ -1,15 +1,442 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import {
+  insertWeddingSchema,
+  insertEventSchema,
+  insertVendorSchema,
+  insertBookingSchema,
+  insertBudgetCategorySchema,
+  insertGuestSchema,
+  insertTaskSchema,
+} from "@shared/schema";
+import { seedVendors } from "./seed-data";
+
+// Seed vendors on startup
+seedVendors(storage);
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // put application routes here
-  // prefix all routes with /api
+  // ============================================================================
+  // WEDDINGS
+  // ============================================================================
 
-  // use storage to perform CRUD operations on the storage interface
-  // e.g. storage.insertUser(user) or storage.getUserByUsername(username)
+  app.get("/api/weddings", async (req, res) => {
+    try {
+      // For MVP, return all weddings for a demo user
+      const weddings = await storage.getWeddingsByUser("user-1");
+      res.json(weddings);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch weddings" });
+    }
+  });
+
+  app.get("/api/weddings/:id", async (req, res) => {
+    try {
+      const wedding = await storage.getWedding(req.params.id);
+      if (!wedding) {
+        return res.status(404).json({ error: "Wedding not found" });
+      }
+      res.json(wedding);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch wedding" });
+    }
+  });
+
+  app.post("/api/weddings", async (req, res) => {
+    try {
+      const validatedData = insertWeddingSchema.parse(req.body);
+      const wedding = await storage.createWedding(validatedData);
+
+      // Auto-create events based on tradition
+      if (wedding.tradition === "sikh") {
+        const sikhEvents = [
+          {
+            weddingId: wedding.id,
+            name: "Paath",
+            type: "paath" as const,
+            description: "3-day prayer ceremony at home or Gurdwara",
+            order: 1,
+          },
+          {
+            weddingId: wedding.id,
+            name: "Mehndi",
+            type: "mehndi" as const,
+            description: "Henna ceremony with close family and friends",
+            order: 2,
+          },
+          {
+            weddingId: wedding.id,
+            name: "Maiyan",
+            type: "maiyan" as const,
+            description: "Traditional turmeric ceremony",
+            order: 3,
+          },
+          {
+            weddingId: wedding.id,
+            name: "Lady Sangeet",
+            type: "sangeet" as const,
+            description: "Grand celebration with music and dance",
+            order: 4,
+          },
+          {
+            weddingId: wedding.id,
+            name: "Anand Karaj",
+            type: "anand_karaj" as const,
+            description: "Sacred Sikh wedding ceremony at Gurdwara",
+            order: 5,
+          },
+          {
+            weddingId: wedding.id,
+            name: "Reception",
+            type: "reception" as const,
+            description: "Grand celebration with all guests",
+            order: 6,
+          },
+        ];
+
+        // Auto-suggest dates if wedding date is provided
+        if (wedding.weddingDate) {
+          const weddingDate = new Date(wedding.weddingDate);
+          
+          sikhEvents.forEach((event, index) => {
+            let eventDate = new Date(weddingDate);
+            
+            // Calculate dates relative to wedding day
+            if (event.type === "paath") {
+              eventDate.setDate(weddingDate.getDate() - 7); // 1 week before
+            } else if (event.type === "mehndi") {
+              eventDate.setDate(weddingDate.getDate() - 3); // 3 days before
+            } else if (event.type === "maiyan") {
+              eventDate.setDate(weddingDate.getDate() - 3); // Same day as mehndi
+            } else if (event.type === "sangeet") {
+              eventDate.setDate(weddingDate.getDate() - 2); // 2 days before per research
+            } else if (event.type === "anand_karaj") {
+              eventDate = weddingDate; // Wedding day
+            } else if (event.type === "reception") {
+              eventDate = weddingDate; // Same day or next day
+            }
+            
+            event.date = eventDate;
+          });
+        }
+
+        for (const eventData of sikhEvents) {
+          await storage.createEvent(eventData as any);
+        }
+      }
+
+      // Auto-create budget categories with cultural-aware allocations
+      if (wedding.totalBudget && parseFloat(wedding.totalBudget) > 0) {
+        const totalBudget = parseFloat(wedding.totalBudget);
+        const budgetAllocations = [
+          { category: "catering", percentage: 40 },
+          { category: "venue", percentage: 15 },
+          { category: "entertainment", percentage: 12 },
+          { category: "photography", percentage: 10 },
+          { category: "decoration", percentage: 8 },
+          { category: "attire", percentage: 8 },
+          { category: "transportation", percentage: 4 },
+          { category: "other", percentage: 3 },
+        ];
+
+        for (const allocation of budgetAllocations) {
+          const allocatedAmount = ((totalBudget * allocation.percentage) / 100).toFixed(2);
+          await storage.createBudgetCategory({
+            weddingId: wedding.id,
+            category: allocation.category,
+            allocatedAmount,
+            spentAmount: "0",
+            percentage: allocation.percentage,
+          });
+        }
+      }
+
+      res.json(wedding);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      res.status(500).json({ error: "Failed to create wedding" });
+    }
+  });
+
+  // ============================================================================
+  // EVENTS
+  // ============================================================================
+
+  app.get("/api/events/:weddingId", async (req, res) => {
+    try {
+      const events = await storage.getEventsByWedding(req.params.weddingId);
+      res.json(events);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch events" });
+    }
+  });
+
+  app.post("/api/events", async (req, res) => {
+    try {
+      const validatedData = insertEventSchema.parse(req.body);
+      const event = await storage.createEvent(validatedData);
+      res.json(event);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      res.status(500).json({ error: "Failed to create event" });
+    }
+  });
+
+  app.patch("/api/events/:id", async (req, res) => {
+    try {
+      const event = await storage.updateEvent(req.params.id, req.body);
+      if (!event) {
+        return res.status(404).json({ error: "Event not found" });
+      }
+      res.json(event);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update event" });
+    }
+  });
+
+  app.delete("/api/events/:id", async (req, res) => {
+    try {
+      const success = await storage.deleteEvent(req.params.id);
+      if (!success) {
+        return res.status(404).json({ error: "Event not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete event" });
+    }
+  });
+
+  // ============================================================================
+  // VENDORS
+  // ============================================================================
+
+  app.get("/api/vendors", async (req, res) => {
+    try {
+      const { category, location } = req.query;
+
+      let vendors = await storage.getAllVendors();
+
+      if (category && typeof category === "string") {
+        vendors = vendors.filter((v) => v.category === category);
+      }
+
+      if (location && typeof location === "string") {
+        vendors = vendors.filter((v) =>
+          v.location.toLowerCase().includes(location.toLowerCase())
+        );
+      }
+
+      res.json(vendors);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch vendors" });
+    }
+  });
+
+  app.get("/api/vendors/:id", async (req, res) => {
+    try {
+      const vendor = await storage.getVendor(req.params.id);
+      if (!vendor) {
+        return res.status(404).json({ error: "Vendor not found" });
+      }
+      res.json(vendor);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch vendor" });
+    }
+  });
+
+  app.post("/api/vendors", async (req, res) => {
+    try {
+      const validatedData = insertVendorSchema.parse(req.body);
+      const vendor = await storage.createVendor(validatedData);
+      res.json(vendor);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      res.status(500).json({ error: "Failed to create vendor" });
+    }
+  });
+
+  // ============================================================================
+  // BOOKINGS
+  // ============================================================================
+
+  app.get("/api/bookings/:weddingId", async (req, res) => {
+    try {
+      const bookings = await storage.getBookingsByWedding(req.params.weddingId);
+      res.json(bookings);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch bookings" });
+    }
+  });
+
+  app.post("/api/bookings", async (req, res) => {
+    try {
+      const validatedData = insertBookingSchema.parse(req.body);
+      const booking = await storage.createBooking(validatedData);
+      res.json(booking);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      res.status(500).json({ error: "Failed to create booking" });
+    }
+  });
+
+  app.patch("/api/bookings/:id", async (req, res) => {
+    try {
+      const booking = await storage.updateBooking(req.params.id, req.body);
+      if (!booking) {
+        return res.status(404).json({ error: "Booking not found" });
+      }
+      res.json(booking);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update booking" });
+    }
+  });
+
+  // ============================================================================
+  // BUDGET CATEGORIES
+  // ============================================================================
+
+  app.get("/api/budget/:weddingId", async (req, res) => {
+    try {
+      const categories = await storage.getBudgetCategoriesByWedding(req.params.weddingId);
+      res.json(categories);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch budget categories" });
+    }
+  });
+
+  app.post("/api/budget", async (req, res) => {
+    try {
+      const validatedData = insertBudgetCategorySchema.parse(req.body);
+      const category = await storage.createBudgetCategory(validatedData);
+      res.json(category);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      res.status(500).json({ error: "Failed to create budget category" });
+    }
+  });
+
+  app.patch("/api/budget/:id", async (req, res) => {
+    try {
+      const category = await storage.updateBudgetCategory(req.params.id, req.body);
+      if (!category) {
+        return res.status(404).json({ error: "Budget category not found" });
+      }
+      res.json(category);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update budget category" });
+    }
+  });
+
+  // ============================================================================
+  // GUESTS
+  // ============================================================================
+
+  app.get("/api/guests/:weddingId", async (req, res) => {
+    try {
+      const guests = await storage.getGuestsByWedding(req.params.weddingId);
+      res.json(guests);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch guests" });
+    }
+  });
+
+  app.post("/api/guests", async (req, res) => {
+    try {
+      const validatedData = insertGuestSchema.parse(req.body);
+      const guest = await storage.createGuest(validatedData);
+      res.json(guest);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      res.status(500).json({ error: "Failed to create guest" });
+    }
+  });
+
+  app.patch("/api/guests/:id", async (req, res) => {
+    try {
+      const guest = await storage.updateGuest(req.params.id, req.body);
+      if (!guest) {
+        return res.status(404).json({ error: "Guest not found" });
+      }
+      res.json(guest);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update guest" });
+    }
+  });
+
+  app.delete("/api/guests/:id", async (req, res) => {
+    try {
+      const success = await storage.deleteGuest(req.params.id);
+      if (!success) {
+        return res.status(404).json({ error: "Guest not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete guest" });
+    }
+  });
+
+  // ============================================================================
+  // TASKS
+  // ============================================================================
+
+  app.get("/api/tasks/:weddingId", async (req, res) => {
+    try {
+      const tasks = await storage.getTasksByWedding(req.params.weddingId);
+      res.json(tasks);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch tasks" });
+    }
+  });
+
+  app.post("/api/tasks", async (req, res) => {
+    try {
+      const validatedData = insertTaskSchema.parse(req.body);
+      const task = await storage.createTask(validatedData);
+      res.json(task);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      res.status(500).json({ error: "Failed to create task" });
+    }
+  });
+
+  app.patch("/api/tasks/:id", async (req, res) => {
+    try {
+      const task = await storage.updateTask(req.params.id, req.body);
+      if (!task) {
+        return res.status(404).json({ error: "Task not found" });
+      }
+      res.json(task);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update task" });
+    }
+  });
+
+  app.delete("/api/tasks/:id", async (req, res) => {
+    try {
+      const success = await storage.deleteTask(req.params.id);
+      if (!success) {
+        return res.status(404).json({ error: "Task not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete task" });
+    }
+  });
 
   const httpServer = createServer(app);
-
   return httpServer;
 }
