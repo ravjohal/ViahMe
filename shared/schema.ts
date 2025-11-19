@@ -263,3 +263,31 @@ export const insertContractSchema = createInsertSchema(contracts).omit({
 
 export type InsertContract = z.infer<typeof insertContractSchema>;
 export type Contract = typeof contracts.$inferSelect;
+
+// ============================================================================
+// MESSAGES - Couple-Vendor Communication
+// ============================================================================
+
+export const messages = pgTable("messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  conversationId: varchar("conversation_id").notNull(), // Composite of weddingId-vendorId for grouping
+  weddingId: varchar("wedding_id").notNull(),
+  vendorId: varchar("vendor_id").notNull(),
+  senderId: varchar("sender_id").notNull(), // Could be couple or vendor
+  senderType: text("sender_type").notNull(), // 'couple' | 'vendor'
+  content: text("content").notNull(),
+  attachments: jsonb("attachments"), // Array of file URLs
+  isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertMessageSchema = createInsertSchema(messages).omit({
+  id: true,
+  createdAt: true,
+  isRead: true,
+}).extend({
+  senderType: z.enum(['couple', 'vendor']),
+});
+
+export type InsertMessage = z.infer<typeof insertMessageSchema>;
+export type Message = typeof messages.$inferSelect;

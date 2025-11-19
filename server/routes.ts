@@ -10,6 +10,7 @@ import {
   insertGuestSchema,
   insertTaskSchema,
   insertContractSchema,
+  insertMessageSchema,
 } from "@shared/schema";
 import { seedVendors } from "./seed-data";
 
@@ -547,6 +548,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete contract" });
+    }
+  });
+
+  // ============================================================================
+  // MESSAGES - Couple-Vendor Communication
+  // ============================================================================
+
+  // Get messages for a conversation
+  app.get("/api/messages/:conversationId", async (req, res) => {
+    try {
+      const messages = await storage.getConversationMessages(req.params.conversationId);
+      res.json(messages);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch messages" });
+    }
+  });
+
+  // Get all conversations for a wedding
+  app.get("/api/conversations/wedding/:weddingId", async (req, res) => {
+    try {
+      const conversationIds = await storage.getConversationsByWedding(req.params.weddingId);
+      res.json(conversationIds);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch conversations" });
+    }
+  });
+
+  // Get all conversations for a vendor
+  app.get("/api/conversations/vendor/:vendorId", async (req, res) => {
+    try {
+      const conversationIds = await storage.getConversationsByVendor(req.params.vendorId);
+      res.json(conversationIds);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch conversations" });
+    }
+  });
+
+  // Create a new message
+  app.post("/api/messages", async (req, res) => {
+    try {
+      const validatedData = insertMessageSchema.parse(req.body);
+      const message = await storage.createMessage(validatedData);
+      res.json(message);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      res.status(500).json({ error: "Failed to send message" });
+    }
+  });
+
+  // Mark message as read
+  app.patch("/api/messages/:id/read", async (req, res) => {
+    try {
+      const message = await storage.markMessageAsRead(req.params.id);
+      if (!message) {
+        return res.status(404).json({ error: "Message not found" });
+      }
+      res.json(message);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to mark message as read" });
+    }
+  });
+
+  // Get unread count for a conversation
+  app.get("/api/messages/:conversationId/unread/:recipientType", async (req, res) => {
+    try {
+      const count = await storage.getUnreadCount(
+        req.params.conversationId,
+        req.params.recipientType as 'couple' | 'vendor'
+      );
+      res.json({ count });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get unread count" });
     }
   });
 

@@ -17,6 +17,8 @@ import {
   type InsertTask,
   type Contract,
   type InsertContract,
+  type Message,
+  type InsertMessage,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -83,6 +85,15 @@ export interface IStorage {
   createContract(contract: InsertContract): Promise<Contract>;
   updateContract(id: string, contract: Partial<InsertContract>): Promise<Contract | undefined>;
   deleteContract(id: string): Promise<boolean>;
+
+  // Messages
+  getMessage(id: string): Promise<Message | undefined>;
+  getConversationMessages(conversationId: string): Promise<Message[]>;
+  getConversationsByWedding(weddingId: string): Promise<string[]>; // Returns unique conversationIds
+  getConversationsByVendor(vendorId: string): Promise<string[]>; // Returns unique conversationIds
+  createMessage(message: InsertMessage): Promise<Message>;
+  markMessageAsRead(id: string): Promise<Message | undefined>;
+  getUnreadCount(conversationId: string, recipientType: 'couple' | 'vendor'): Promise<number>;
 }
 
 export class MemStorage implements IStorage {
@@ -95,6 +106,7 @@ export class MemStorage implements IStorage {
   private guests: Map<string, Guest>;
   private tasks: Map<string, Task>;
   private contracts: Map<string, Contract>;
+  private messages: Map<string, Message>;
 
   constructor() {
     this.users = new Map();
@@ -106,6 +118,7 @@ export class MemStorage implements IStorage {
     this.guests = new Map();
     this.tasks = new Map();
     this.contracts = new Map();
+    this.messages = new Map();
   }
 
   // Users
@@ -414,6 +427,63 @@ export class MemStorage implements IStorage {
   async deleteContract(id: string): Promise<boolean> {
     return this.contracts.delete(id);
   }
+
+  // Messages
+  async getMessage(id: string): Promise<Message | undefined> {
+    return this.messages.get(id);
+  }
+
+  async getConversationMessages(conversationId: string): Promise<Message[]> {
+    return Array.from(this.messages.values())
+      .filter(m => m.conversationId === conversationId)
+      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+  }
+
+  async getConversationsByWedding(weddingId: string): Promise<string[]> {
+    const conversationIds = new Set<string>();
+    Array.from(this.messages.values())
+      .filter(m => m.weddingId === weddingId)
+      .forEach(m => conversationIds.add(m.conversationId));
+    return Array.from(conversationIds);
+  }
+
+  async getConversationsByVendor(vendorId: string): Promise<string[]> {
+    const conversationIds = new Set<string>();
+    Array.from(this.messages.values())
+      .filter(m => m.vendorId === vendorId)
+      .forEach(m => conversationIds.add(m.conversationId));
+    return Array.from(conversationIds);
+  }
+
+  async createMessage(insertMessage: InsertMessage): Promise<Message> {
+    const id = randomUUID();
+    const message: Message = {
+      ...insertMessage,
+      id,
+      isRead: false,
+      createdAt: new Date(),
+    };
+    this.messages.set(id, message);
+    return message;
+  }
+
+  async markMessageAsRead(id: string): Promise<Message | undefined> {
+    const message = this.messages.get(id);
+    if (!message) return undefined;
+    
+    const updated: Message = { ...message, isRead: true };
+    this.messages.set(id, updated);
+    return updated;
+  }
+
+  async getUnreadCount(conversationId: string, recipientType: 'couple' | 'vendor'): Promise<number> {
+    return Array.from(this.messages.values())
+      .filter(m => 
+        m.conversationId === conversationId && 
+        !m.isRead && 
+        m.senderType !== recipientType
+      ).length;
+  }
 }
 
 import { neon } from "@neondatabase/serverless";
@@ -654,6 +724,60 @@ export class DBStorage implements IStorage {
   async deleteContract(id: string): Promise<boolean> {
     await this.db.delete(schema.contracts).where(eq(schema.contracts.id, id));
     return true;
+  }
+
+  // Messages
+  async getMessage(id: string): Promise<Message | undefined> {
+    const result = await this.db.select().from(schema.messages).where(eq(schema.messages.id, id));
+    return result[0];
+  }
+
+  async getConversationMessages(conversationId: string): Promise<Message[]> {
+    const result = await this.db
+      .select()
+      .from(schema.messages)
+      .where(eq(schema.messages.conversationId, conversationId))
+      .orderBy(schema.messages.createdAt);
+    return result;
+  }
+
+  async getConversationsByWedding(weddingId: string): Promise<string[]> {
+    const result = await this.db
+      .selectDistinct({ conversationId: schema.messages.conversationId })
+      .from(schema.messages)
+      .where(eq(schema.messages.weddingId, weddingId));
+    return result.map(r => r.conversationId);
+  }
+
+  async getConversationsByVendor(vendorId: string): Promise<string[]> {
+    const result = await this.db
+      .selectDistinct({ conversationId: schema.messages.conversationId })
+      .from(schema.messages)
+      .where(eq(schema.messages.vendorId, vendorId));
+    return result.map(r => r.conversationId);
+  }
+
+  async createMessage(insertMessage: InsertMessage): Promise<Message> {
+    const result = await this.db.insert(schema.messages).values(insertMessage).returning();
+    return result[0];
+  }
+
+  async markMessageAsRead(id: string): Promise<Message | undefined> {
+    const result = await this.db
+      .update(schema.messages)
+      .set({ isRead: true })
+      .where(eq(schema.messages.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async getUnreadCount(conversationId: string, recipientType: 'couple' | 'vendor'): Promise<number> {
+    const result = await this.db
+      .select()
+      .from(schema.messages)
+      .where(eq(schema.messages.conversationId, conversationId));
+    
+    return result.filter(m => !m.isRead && m.senderType !== recipientType).length;
   }
 }
 
