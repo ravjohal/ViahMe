@@ -56,6 +56,7 @@ export interface IStorage {
   getBudgetCategoriesByWedding(weddingId: string): Promise<BudgetCategory[]>;
   createBudgetCategory(category: InsertBudgetCategory): Promise<BudgetCategory>;
   updateBudgetCategory(id: string, category: Partial<InsertBudgetCategory>): Promise<BudgetCategory | undefined>;
+  deleteBudgetCategory(id: string): Promise<boolean>;
 
   // Guests
   getGuest(id: string): Promise<Guest | undefined>;
@@ -271,6 +272,10 @@ export class MemStorage implements IStorage {
     return updated;
   }
 
+  async deleteBudgetCategory(id: string): Promise<boolean> {
+    return this.budgetCategories.delete(id);
+  }
+
   // Guests
   async getGuest(id: string): Promise<Guest | undefined> {
     return this.guests.get(id);
@@ -480,6 +485,11 @@ export class DBStorage implements IStorage {
   async updateBudgetCategory(id: string, update: Partial<InsertBudgetCategory>): Promise<BudgetCategory | undefined> {
     const result = await this.db.update(schema.budgetCategories).set(update).where(eq(schema.budgetCategories.id, id)).returning();
     return result[0];
+  }
+
+  async deleteBudgetCategory(id: string): Promise<boolean> {
+    await this.db.delete(schema.budgetCategories).where(eq(schema.budgetCategories.id, id));
+    return true;
   }
 
   // Guests
