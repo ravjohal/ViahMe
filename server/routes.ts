@@ -9,6 +9,7 @@ import {
   insertBudgetCategorySchema,
   insertGuestSchema,
   insertTaskSchema,
+  insertContractSchema,
 } from "@shared/schema";
 import { seedVendors } from "./seed-data";
 
@@ -450,6 +451,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete task" });
+    }
+  });
+
+  // ============================================================================
+  // CONTRACTS
+  // ============================================================================
+
+  app.get("/api/contracts/:weddingId", async (req, res) => {
+    try {
+      const contracts = await storage.getContractsByWedding(req.params.weddingId);
+      res.json(contracts);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch contracts" });
+    }
+  });
+
+  app.get("/api/contracts/vendor/:vendorId", async (req, res) => {
+    try {
+      const contracts = await storage.getContractsByVendor(req.params.vendorId);
+      res.json(contracts);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch vendor contracts" });
+    }
+  });
+
+  app.get("/api/contracts/booking/:bookingId", async (req, res) => {
+    try {
+      const contract = await storage.getContractByBooking(req.params.bookingId);
+      if (!contract) {
+        return res.status(404).json({ error: "Contract not found" });
+      }
+      res.json(contract);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch contract" });
+    }
+  });
+
+  app.post("/api/contracts", async (req, res) => {
+    try {
+      const validatedData = insertContractSchema.parse(req.body);
+      const contract = await storage.createContract(validatedData);
+      res.json(contract);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      res.status(500).json({ error: "Failed to create contract" });
+    }
+  });
+
+  app.patch("/api/contracts/:id", async (req, res) => {
+    try {
+      const contract = await storage.updateContract(req.params.id, req.body);
+      if (!contract) {
+        return res.status(404).json({ error: "Contract not found" });
+      }
+      res.json(contract);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update contract" });
+    }
+  });
+
+  app.delete("/api/contracts/:id", async (req, res) => {
+    try {
+      const success = await storage.deleteContract(req.params.id);
+      if (!success) {
+        return res.status(404).json({ error: "Contract not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete contract" });
     }
   });
 
