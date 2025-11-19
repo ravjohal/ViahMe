@@ -81,7 +81,7 @@ export default function Dashboard() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
           <Card className="p-6 hover-elevate transition-all cursor-pointer" onClick={() => setLocation("/timeline")}>
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-xl bg-chart-1/10">
@@ -133,6 +133,20 @@ export default function Dashboard() {
                 <p className="text-sm text-muted-foreground">Contracts</p>
                 <p className="font-mono text-2xl font-bold" data-testid="stat-contracts-count">
                   {contracts.length}
+                </p>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-6 hover-elevate transition-all cursor-pointer" onClick={() => setLocation("/guests")}>
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-xl bg-chart-5/10">
+                <Users className="w-6 h-6 text-chart-5" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Guests</p>
+                <p className="font-mono text-2xl font-bold" data-testid="stat-guests-count">
+                  {wedding.guestCountEstimate || 0}
                 </p>
               </div>
             </div>
