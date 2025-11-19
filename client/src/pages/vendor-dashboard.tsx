@@ -133,6 +133,7 @@ export default function VendorDashboard() {
       location: currentVendor.location,
       priceRange: currentVendor.priceRange,
       culturalSpecialties: currentVendor.culturalSpecialties || [],
+      availability: currentVendor.availability || null,
     });
     setEditDialogOpen(true);
   };
@@ -151,6 +152,7 @@ export default function VendorDashboard() {
         culturalSpecialties: z.array(z.string()).optional(),
         description: z.string().optional(),
         contact: z.string().optional(),
+        availability: z.any().optional(), // JSON field for availability data
       }).refine((data) => {
         // Ensure at least one field is provided
         return Object.values(data).some(v => v !== undefined);
@@ -165,14 +167,15 @@ export default function VendorDashboard() {
         message: "Required fields cannot be empty",
       });
 
-      // Build updates object with only the edited fields (check !== undefined to catch empty strings)
+      // Build updates object with only the edited fields (trim strings to prevent whitespace-only values)
       const updates: Record<string, any> = {};
-      if (editFormData.name !== undefined) updates.name = editFormData.name;
-      if (editFormData.location !== undefined) updates.location = editFormData.location;
+      if (editFormData.name !== undefined) updates.name = editFormData.name.trim();
+      if (editFormData.location !== undefined) updates.location = editFormData.location.trim();
       if (editFormData.priceRange !== undefined) updates.priceRange = editFormData.priceRange;
-      if (editFormData.description !== undefined) updates.description = editFormData.description;
-      if (editFormData.contact !== undefined) updates.contact = editFormData.contact;
+      if (editFormData.description !== undefined) updates.description = editFormData.description?.trim();
+      if (editFormData.contact !== undefined) updates.contact = editFormData.contact?.trim();
       if (editFormData.culturalSpecialties !== undefined) updates.culturalSpecialties = editFormData.culturalSpecialties;
+      if (editFormData.availability !== undefined) updates.availability = editFormData.availability;
 
       // Validate the update payload with strict rules that prevent empty required fields
       const validatedUpdates = profileUpdateSchema.parse(updates) as Partial<Vendor>;
@@ -376,9 +379,9 @@ export default function VendorDashboard() {
           </Card>
         </div>
 
-        {/* Tabs for Bookings and Contracts */}
+        {/* Tabs for Bookings, Contracts, and Availability */}
         <Tabs defaultValue="bookings" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 lg:w-auto lg:inline-grid">
+          <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-grid">
             <TabsTrigger value="bookings" data-testid="tab-bookings">
               <Calendar className="w-4 h-4 mr-2" />
               Booking Requests
@@ -386,6 +389,10 @@ export default function VendorDashboard() {
             <TabsTrigger value="contracts" data-testid="tab-contracts">
               <FileText className="w-4 h-4 mr-2" />
               Contracts
+            </TabsTrigger>
+            <TabsTrigger value="availability" data-testid="tab-availability">
+              <Clock className="w-4 h-4 mr-2" />
+              Availability
             </TabsTrigger>
           </TabsList>
 
@@ -578,6 +585,91 @@ export default function VendorDashboard() {
               </div>
             )}
           </TabsContent>
+
+          <TabsContent value="availability" className="space-y-4">
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold mb-4">Availability Management</h3>
+              <p className="text-muted-foreground mb-6">
+                Manage your availability calendar and booking preferences. This helps couples know when you're available for their events.
+              </p>
+              
+              <div className="space-y-4">
+                <div className="p-4 bg-muted rounded-lg">
+                  <h4 className="font-medium mb-2">Current Availability Status</h4>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    {currentVendor.availability 
+                      ? "You have availability information set. You can update it in your profile settings."
+                      : "No availability information set yet. Add your availability to help couples book you."}
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    onClick={openEditDialog}
+                    data-testid="button-update-availability"
+                  >
+                    <Calendar className="w-4 h-4 mr-2" />
+                    Update Availability
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Card className="p-4">
+                    <h4 className="font-medium mb-2 flex items-center">
+                      <CheckCircle className="w-4 h-4 mr-2 text-chart-2" />
+                      Accepting Bookings
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      Your profile is visible to couples and you can receive booking requests.
+                    </p>
+                  </Card>
+
+                  <Card className="p-4">
+                    <h4 className="font-medium mb-2 flex items-center">
+                      <Clock className="w-4 h-4 mr-2 text-chart-1" />
+                      Response Time
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      Try to respond to booking requests within 24-48 hours for the best customer experience.
+                    </p>
+                  </Card>
+                </div>
+
+                <div className="mt-6">
+                  <h4 className="font-medium mb-3">Upcoming Booked Dates</h4>
+                  {confirmedBookings.length > 0 ? (
+                    <div className="space-y-2">
+                      {confirmedBookings.slice(0, 5).map((booking) => (
+                        <div 
+                          key={booking.id} 
+                          className="flex items-center justify-between p-3 bg-muted rounded-lg"
+                          data-testid={`availability-booking-${booking.id}`}
+                        >
+                          <div>
+                            <p className="font-medium">Booking ID: {booking.id.slice(0, 8)}</p>
+                            {booking.eventId && (
+                              <p className="text-sm text-muted-foreground">
+                                Event: {booking.eventId.slice(0, 8)}
+                              </p>
+                            )}
+                          </div>
+                          <Badge variant="default">Confirmed</Badge>
+                        </div>
+                      ))}
+                      {confirmedBookings.length > 5 && (
+                        <p className="text-sm text-muted-foreground text-center mt-2">
+                          +{confirmedBookings.length - 5} more confirmed bookings
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <Card className="p-8 text-center">
+                      <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                      <p className="text-muted-foreground">No confirmed bookings yet</p>
+                    </Card>
+                  )}
+                </div>
+              </div>
+            </Card>
+          </TabsContent>
         </Tabs>
       </main>
 
@@ -659,6 +751,36 @@ export default function VendorDashboard() {
                   <SelectItem value="$$$$">$$$$ - Luxury</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="availability">Availability Notes</Label>
+              <Textarea
+                id="availability"
+                value={
+                  typeof editFormData.availability === 'string'
+                    ? editFormData.availability
+                    : editFormData.availability
+                    ? JSON.stringify(editFormData.availability)
+                    : ""
+                }
+                onChange={(e) => {
+                  const value = e.target.value;
+                  // Try to parse as JSON, otherwise store as string
+                  try {
+                    const parsed = value ? JSON.parse(value) : null;
+                    setEditFormData({ ...editFormData, availability: parsed });
+                  } catch {
+                    setEditFormData({ ...editFormData, availability: value });
+                  }
+                }}
+                rows={3}
+                placeholder="e.g., Available all weekends in June, Booked June 15-17"
+                data-testid="textarea-availability"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Describe your availability or unavailable dates for couples to see
+              </p>
             </div>
           </div>
 

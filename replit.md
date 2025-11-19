@@ -15,11 +15,11 @@ The Digital Baraat is a specialized vertical SaaS platform designed to manage mu
 ## Current State (MVP Development)
 
 ### Completed
-- ✅ Complete data schema for weddings, events, vendors, bookings, budget categories, guests, and tasks
+- ✅ Complete data schema for weddings, events, vendors, bookings, budget categories, guests, tasks, and contracts
 - ✅ PostgreSQL database integration with Drizzle ORM and Neon
 - ✅ Design system tokens configured (warm orange/gold primary colors, Playfair Display for headings, Inter for body)
 - ✅ Onboarding questionnaire with 5-step wizard (tradition, role, date, location, budget)
-- ✅ Dashboard with timeline view, budget overview, and quick stats
+- ✅ Dashboard with timeline view, budget overview, and quick stats (5 cards: Events, Vendors, Budget, Contracts, Guests)
 - ✅ Event timeline component with cultural event types (Paath, Mehndi, Sangeet, Anand Karaj, Reception)
 - ✅ Vendor directory with advanced filtering (category, price range, cultural specialties)
 - ✅ Vendor detail modal with booking request system
@@ -29,7 +29,9 @@ The Digital Baraat is a specialized vertical SaaS platform designed to manage mu
 - ✅ Timeline/Events management page with full CRUD operations
 - ✅ Guest management with full CRUD dialogs, event assignment, RSVP updates
 - ✅ Budget management page (/budget) with CRUD, pie charts, allocation tracking
-- ✅ Full backend API with CRUD endpoints for all entities
+- ✅ Contract management system (/contracts) with payment milestones, status tracking
+- ✅ **Vendor dashboard** (/vendor-dashboard) with profile management, booking inbox, availability calendar, contract viewing
+- ✅ Full backend API with CRUD endpoints for all entities including vendor-scoped endpoints
 - ✅ Data persistence with PostgreSQL database
 - ✅ 20 seeded Bay Area vendors in database
 
@@ -44,13 +46,12 @@ All core features have been implemented and tested:
 - ✅ Smart vendor seeding (checks for existing data, prevents duplicates)
 
 ### Next Steps
-- Vendor contract management system
-- Vendor-facing dashboard
 - Messaging system between couples and vendors
 - Hindu wedding tradition templates
-- Payment processing integration
+- Payment processing integration (Stripe)
 - Geographic expansion to NYC, LA, Chicago, Seattle
 - Collaborative planning features
+- Authentication system for vendor and couple logins
 
 ## Project Architecture
 
@@ -74,6 +75,7 @@ All core features have been implemented and tested:
 5. **Budget Categories** - Allocated vs. spent tracking per category
 6. **Guests** - Multi-event RSVP management with side tracking
 7. **Tasks** - Checklist items tied to events and deadlines
+8. **Contracts** - Vendor contracts with payment milestones and status tracking
 
 #### Key Features
 - **Cultural Templates**: Pre-populated event timelines for Sikh/Hindu/General Indian weddings
@@ -102,13 +104,18 @@ All core features have been implemented and tested:
 
 ## User Journey
 
+**Couple-facing pages:**
 1. **Onboarding** (`/`) - 5-step questionnaire collecting tradition, role, dates, location, budget
-2. **Dashboard** (`/dashboard`) - Overview with timeline, budget, and vendor recommendations
+2. **Dashboard** (`/dashboard`) - Overview with timeline, budget, and vendor recommendations (5 stat cards)
 3. **Vendors** (`/vendors`) - Directory with filtering, detail views, and booking requests
 4. **Guests** (`/guests`) - List management with RSVP tracking and event assignments
 5. **Tasks** (`/tasks`) - Checklist management with priority levels, due dates, and completion tracking
 6. **Timeline** (`/timeline`) - Event management with full CRUD for all wedding ceremonies
 7. **Budget** (`/budget`) - Budget category management with allocation tracking and pie chart visualization
+8. **Contracts** (`/contracts`) - Contract management with payment milestone tracking
+
+**Vendor-facing pages:**
+9. **Vendor Dashboard** (`/vendor-dashboard`) - Profile editing, booking request management, availability calendar, contract viewing (demo: uses first vendor)
 
 ## Cultural Specificity
 
@@ -129,7 +136,14 @@ All core features have been implemented and tested:
 - Mobile Food Vendors (casual pre-wedding events)
 
 ## Recent Changes
-- 2025-11-19: **MVP Completed** - All core CRUD features implemented and tested with PostgreSQL persistence
+- 2025-11-19: **Vendor Dashboard & Contract Management Completed** - Extended MVP with vendor-facing features
+  - Implemented vendor contract management system with payment milestones, status tracking, and CRUD operations
+  - Built vendor dashboard (/vendor-dashboard) with profile editing, booking request management, availability calendar
+  - Added vendor-scoped API endpoints (/api/bookings/vendor/:id, /api/contracts/vendor/:id) for security
+  - Implemented strict validation with input trimming and non-empty field enforcement
+  - Dashboard now displays 5 stat cards (Events, Vendors, Budget, Contracts, Guests)
+  - All features include proper data-testid attributes for testing
+- 2025-11-19: **MVP Core Features Completed** - All core CRUD features implemented and tested with PostgreSQL persistence
   - Fixed database persistence: Resolved MemStorage fallback issue, properly implemented conditional DBStorage instantiation
   - Completed Guest Management: Full CRUD dialogs with event assignment, RSVP tracking, and delete functionality
   - Completed Budget Management: Full CRUD for budget categories with Recharts visualization, progress tracking, and proper API routing
