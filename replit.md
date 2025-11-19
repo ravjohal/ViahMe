@@ -47,15 +47,13 @@ All core features have been implemented and tested:
 
 ### Newly Completed Features (2025-11-19)
 - ✅ **Messaging System** (/messages) - Full couple-vendor communication with conversation threading, vendor metadata enrichment, server-side conversationId generation
-- ✅ **Hindu Wedding Support** - Schema extended with 7 Hindu event types (haldi, mehendi, sangeet_hindu, pheras, vidaai, tilak, chunni_ceremony)
+- ✅ **Hindu Wedding Support** - Schema extended with 7 Hindu event types (haldi, mehendi, sangeet_hindu, pheras, vidaai, tilak, chunni_ceremony) with auto-seeding logic in onboarding
 - ✅ **Expanded Vendor Categories** - Added 6 Hindu-specific vendors (pandit, mandap_decorator, haldi_supplies, pooja_items, astrologer, garland_maker) - Total: 25 categories
-- ✅ **Multi-City Support** - City field added to vendors schema for geographic expansion (default: San Francisco Bay Area, ready for NYC/LA/Chicago/Seattle)
+- ✅ **Multi-City Support** - City field added to vendors schema + 43 vendors seeded across 5 cities (SF Bay Area: 20, NYC: 6, LA: 6, Chicago: 5, Seattle: 6) + City filter dropdown in vendor directory
 - ✅ **Vendor Review System** - Complete reviews table with rating (1-5), comments, validation (vendor existence, duplicate prevention), automatic rating aggregation
+- ✅ **Review UI Complete** - Vendor cards display rating + review count; vendor detail modal includes reviews list (scrollable, formatted dates) + review submission form with react-hook-form validation, star rating selector, character counter, inline error alerts, and proper pending states
 
 ### Next Steps  
-- Hindu wedding onboarding templates (event auto-seeding logic)
-- Multi-city vendor seeding and UI filtering
-- Review UI components on vendor cards/detail pages
 - Payment processing integration (Stripe)
 - Collaborative planning features
 - Authentication system for vendor and couple logins
@@ -147,6 +145,13 @@ All core features have been implemented and tested:
 - Mobile Food Vendors (casual pre-wedding events)
 
 ## Recent Changes
+- 2025-11-19: **Feature Completion & Bug Fixes - Hindu Auto-Seeding, Multi-City Filtering, Review System UI**
+  - **Hindu Wedding Auto-Seeding**: Implemented auto-seeding logic in onboarding - selects Hindu tradition creates 7 events automatically (Tilak, Haldi, Mehendi, Sangeet, Pheras, Vidaai, Chunni)
+  - **Multi-City Vendor Database**: Seeded 43 vendors across 5 cities (SF Bay: 20, NYC: 6, LA: 6, Chicago: 5, Seattle: 6)  
+  - **City Filter UI**: Added city dropdown filter to vendor directory with "All Cities" default
+  - **Review UI Complete**: Vendor cards display rating + review count; detail modal has full review system with react-hook-form validation, star selector, character counter, inline errors, pending states
+  - **Bug Fixes**: Fixed onboarding event creation (`type` field + required `order`); Fixed all pages to use most recent wedding instead of first (timeline, tasks, contracts)
+  - **End-to-End Testing**: All features verified with Playwright tests
 - 2025-11-19: **Major Feature Expansion - Messaging, Hindu Weddings, Multi-City, Reviews**
   - **Messaging System**: Complete couple-vendor messaging with conversation list, message threading, vendor metadata API enrichment, server-side conversationId generation using `generateConversationId()` helper, proper error handling with `apiRequest`
   - **Hindu Wedding Support**: Extended events enum with 7 Hindu ceremony types (haldi, mehendi, sangeet_hindu, pheras, vidaai, tilak, chunni_ceremony)

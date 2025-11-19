@@ -46,15 +46,13 @@ export default function Onboarding() {
       if (eventTemplates.length > 0) {
         // Create all events in parallel
         await Promise.all(
-          eventTemplates.map(template =>
+          eventTemplates.map((template, index) =>
             apiRequest("POST", "/api/events", {
               weddingId: wedding.id,
               name: template.name,
-              eventType: template.eventType,
+              type: template.eventType,
               description: template.description,
-              date: "", // User will set dates later
-              location: "",
-              guestCount: 0,
+              order: index + 1,
             })
           )
         );

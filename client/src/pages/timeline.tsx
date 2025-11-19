@@ -66,7 +66,8 @@ export default function TimelinePage() {
   const { data: weddings = [], isLoading: weddingsLoading } = useQuery<any[]>({
     queryKey: ["/api/weddings"],
   });
-  const wedding = weddings[0];
+  // Use the most recently created wedding (last in array)
+  const wedding = weddings[weddings.length - 1];
 
   const { data: events = [], isLoading: eventsLoading } = useQuery<Event[]>({
     queryKey: ["/api/events", wedding?.id],

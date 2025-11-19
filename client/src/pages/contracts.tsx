@@ -37,7 +37,8 @@ export default function ContractsPage() {
   const { data: weddings } = useQuery({
     queryKey: ["/api/weddings"],
   });
-  const wedding = Array.isArray(weddings) && weddings.length > 0 ? weddings[0] : undefined;
+  // Use the most recently created wedding (last in array)
+  const wedding = Array.isArray(weddings) && weddings.length > 0 ? weddings[weddings.length - 1] : undefined;
 
   // Fetch contracts
   const { data: contracts = [], isLoading } = useQuery<Contract[]>({
