@@ -45,6 +45,7 @@ export interface IStorage {
   getVendorsByCategory(category: string): Promise<Vendor[]>;
   getVendorsByLocation(location: string): Promise<Vendor[]>;
   createVendor(vendor: InsertVendor): Promise<Vendor>;
+  updateVendor(id: string, vendor: Partial<InsertVendor>): Promise<Vendor | undefined>;
 
   // Bookings
   getBooking(id: string): Promise<Booking | undefined>;
@@ -213,6 +214,18 @@ export class MemStorage implements IStorage {
     } as Vendor;
     this.vendors.set(id, vendor);
     return vendor;
+  }
+
+  async updateVendor(id: string, updates: Partial<InsertVendor>): Promise<Vendor | undefined> {
+    const existing = this.vendors.get(id);
+    if (!existing) return undefined;
+    
+    const updated: Vendor = {
+      ...existing,
+      ...updates,
+    };
+    this.vendors.set(id, updated);
+    return updated;
   }
 
   // Bookings
@@ -498,6 +511,15 @@ export class DBStorage implements IStorage {
 
   async createVendor(insertVendor: InsertVendor): Promise<Vendor> {
     const result = await this.db.insert(schema.vendors).values(insertVendor).returning();
+    return result[0];
+  }
+
+  async updateVendor(id: string, updates: Partial<InsertVendor>): Promise<Vendor | undefined> {
+    const result = await this.db
+      .update(schema.vendors)
+      .set(updates)
+      .where(eq(schema.vendors.id, id))
+      .returning();
     return result[0];
   }
 

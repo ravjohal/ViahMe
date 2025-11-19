@@ -269,6 +269,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/vendors/:id", async (req, res) => {
+    try {
+      const validatedData = insertVendorSchema.partial().parse(req.body);
+      const vendor = await storage.updateVendor(req.params.id, validatedData);
+      if (!vendor) {
+        return res.status(404).json({ error: "Vendor not found" });
+      }
+      res.json(vendor);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      res.status(500).json({ error: "Failed to update vendor" });
+    }
+  });
+
   // ============================================================================
   // BOOKINGS
   // ============================================================================
