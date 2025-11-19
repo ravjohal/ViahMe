@@ -30,10 +30,17 @@ const CATEGORY_LABELS: Record<string, string> = {
   limo_service: "Limo Service",
   mobile_food: "Mobile Food Vendor",
   baraat_band: "Baraat Band",
+  pandit: "Pandit (Hindu Priest)",
+  mandap_decorator: "Mandap Decorator",
+  haldi_supplies: "Haldi Supplies",
+  pooja_items: "Pooja Items",
+  astrologer: "Vedic Astrologer",
+  garland_maker: "Garland Maker",
 };
 
 export function VendorCard({ vendor, onSelect, featured }: VendorCardProps) {
   const rating = vendor.rating ? parseFloat(vendor.rating.toString()) : 0;
+  const reviewCount = vendor.reviewCount || 0;
 
   return (
     <Card
@@ -60,9 +67,18 @@ export function VendorCard({ vendor, onSelect, featured }: VendorCardProps) {
             </p>
           </div>
           {rating > 0 && (
-            <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted">
-              <Star className="w-4 h-4 fill-primary text-primary" />
-              <span className="font-mono font-semibold text-sm">{rating.toFixed(1)}</span>
+            <div className="flex flex-col items-end gap-1">
+              <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted">
+                <Star className="w-4 h-4 fill-primary text-primary" />
+                <span className="font-mono font-semibold text-sm" data-testid={`text-rating-${vendor.id}`}>
+                  {rating.toFixed(1)}
+                </span>
+              </div>
+              {reviewCount > 0 && (
+                <span className="text-xs text-muted-foreground" data-testid={`text-review-count-${vendor.id}`}>
+                  {reviewCount} {reviewCount === 1 ? 'review' : 'reviews'}
+                </span>
+              )}
             </div>
           )}
         </div>
