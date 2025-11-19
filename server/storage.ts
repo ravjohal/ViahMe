@@ -123,7 +123,7 @@ export class MemStorage implements IStorage {
     const wedding: Wedding = {
       ...insertWedding,
       id,
-      status: insertWedding.status || "planning",
+      status: "planning",
       createdAt: new Date(),
     } as Wedding;
     this.weddings.set(id, wedding);
@@ -340,4 +340,199 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-http";
+import { eq } from "drizzle-orm";
+import * as schema from "@shared/schema";
+
+export class DBStorage implements IStorage {
+  private db;
+
+  constructor(connectionString: string) {
+    const sql = neon(connectionString);
+    this.db = drizzle(sql, { schema });
+  }
+
+  // Users
+  async getUser(id: string): Promise<User | undefined> {
+    const result = await this.db.select().from(schema.users).where(eq(schema.users.id, id));
+    return result[0];
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const result = await this.db.select().from(schema.users).where(eq(schema.users.username, username));
+    return result[0];
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const result = await this.db.insert(schema.users).values(insertUser).returning();
+    return result[0];
+  }
+
+  // Weddings
+  async getWedding(id: string): Promise<Wedding | undefined> {
+    const result = await this.db.select().from(schema.weddings).where(eq(schema.weddings.id, id));
+    return result[0];
+  }
+
+  async getWeddingsByUser(userId: string): Promise<Wedding[]> {
+    return await this.db.select().from(schema.weddings).where(eq(schema.weddings.userId, userId));
+  }
+
+  async createWedding(insertWedding: InsertWedding): Promise<Wedding> {
+    const result = await this.db.insert(schema.weddings).values(insertWedding).returning();
+    return result[0];
+  }
+
+  async updateWedding(id: string, update: Partial<InsertWedding>): Promise<Wedding | undefined> {
+    const result = await this.db.update(schema.weddings).set(update).where(eq(schema.weddings.id, id)).returning();
+    return result[0];
+  }
+
+  // Events
+  async getEvent(id: string): Promise<Event | undefined> {
+    const result = await this.db.select().from(schema.events).where(eq(schema.events.id, id));
+    return result[0];
+  }
+
+  async getEventsByWedding(weddingId: string): Promise<Event[]> {
+    return await this.db.select().from(schema.events).where(eq(schema.events.weddingId, weddingId));
+  }
+
+  async createEvent(insertEvent: InsertEvent): Promise<Event> {
+    const result = await this.db.insert(schema.events).values(insertEvent).returning();
+    return result[0];
+  }
+
+  async updateEvent(id: string, update: Partial<InsertEvent>): Promise<Event | undefined> {
+    const result = await this.db.update(schema.events).set(update).where(eq(schema.events.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteEvent(id: string): Promise<boolean> {
+    await this.db.delete(schema.events).where(eq(schema.events.id, id));
+    return true;
+  }
+
+  // Vendors
+  async getVendor(id: string): Promise<Vendor | undefined> {
+    const result = await this.db.select().from(schema.vendors).where(eq(schema.vendors.id, id));
+    return result[0];
+  }
+
+  async getAllVendors(): Promise<Vendor[]> {
+    return await this.db.select().from(schema.vendors);
+  }
+
+  async getVendorsByCategory(category: string): Promise<Vendor[]> {
+    return await this.db.select().from(schema.vendors).where(eq(schema.vendors.category, category));
+  }
+
+  async getVendorsByLocation(location: string): Promise<Vendor[]> {
+    const vendors = await this.db.select().from(schema.vendors);
+    return vendors.filter(v => v.location.toLowerCase().includes(location.toLowerCase()));
+  }
+
+  async createVendor(insertVendor: InsertVendor): Promise<Vendor> {
+    const result = await this.db.insert(schema.vendors).values(insertVendor).returning();
+    return result[0];
+  }
+
+  // Bookings
+  async getBooking(id: string): Promise<Booking | undefined> {
+    const result = await this.db.select().from(schema.bookings).where(eq(schema.bookings.id, id));
+    return result[0];
+  }
+
+  async getBookingsByWedding(weddingId: string): Promise<Booking[]> {
+    return await this.db.select().from(schema.bookings).where(eq(schema.bookings.weddingId, weddingId));
+  }
+
+  async getBookingsByVendor(vendorId: string): Promise<Booking[]> {
+    return await this.db.select().from(schema.bookings).where(eq(schema.bookings.vendorId, vendorId));
+  }
+
+  async createBooking(insertBooking: InsertBooking): Promise<Booking> {
+    const result = await this.db.insert(schema.bookings).values(insertBooking).returning();
+    return result[0];
+  }
+
+  async updateBooking(id: string, update: Partial<InsertBooking>): Promise<Booking | undefined> {
+    const result = await this.db.update(schema.bookings).set(update).where(eq(schema.bookings.id, id)).returning();
+    return result[0];
+  }
+
+  // Budget Categories
+  async getBudgetCategory(id: string): Promise<BudgetCategory | undefined> {
+    const result = await this.db.select().from(schema.budgetCategories).where(eq(schema.budgetCategories.id, id));
+    return result[0];
+  }
+
+  async getBudgetCategoriesByWedding(weddingId: string): Promise<BudgetCategory[]> {
+    return await this.db.select().from(schema.budgetCategories).where(eq(schema.budgetCategories.weddingId, weddingId));
+  }
+
+  async createBudgetCategory(insertCategory: InsertBudgetCategory): Promise<BudgetCategory> {
+    const result = await this.db.insert(schema.budgetCategories).values(insertCategory).returning();
+    return result[0];
+  }
+
+  async updateBudgetCategory(id: string, update: Partial<InsertBudgetCategory>): Promise<BudgetCategory | undefined> {
+    const result = await this.db.update(schema.budgetCategories).set(update).where(eq(schema.budgetCategories.id, id)).returning();
+    return result[0];
+  }
+
+  // Guests
+  async getGuest(id: string): Promise<Guest | undefined> {
+    const result = await this.db.select().from(schema.guests).where(eq(schema.guests.id, id));
+    return result[0];
+  }
+
+  async getGuestsByWedding(weddingId: string): Promise<Guest[]> {
+    return await this.db.select().from(schema.guests).where(eq(schema.guests.weddingId, weddingId));
+  }
+
+  async createGuest(insertGuest: InsertGuest): Promise<Guest> {
+    const result = await this.db.insert(schema.guests).values(insertGuest).returning();
+    return result[0];
+  }
+
+  async updateGuest(id: string, update: Partial<InsertGuest>): Promise<Guest | undefined> {
+    const result = await this.db.update(schema.guests).set(update).where(eq(schema.guests.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteGuest(id: string): Promise<boolean> {
+    await this.db.delete(schema.guests).where(eq(schema.guests.id, id));
+    return true;
+  }
+
+  // Tasks
+  async getTask(id: string): Promise<Task | undefined> {
+    const result = await this.db.select().from(schema.tasks).where(eq(schema.tasks.id, id));
+    return result[0];
+  }
+
+  async getTasksByWedding(weddingId: string): Promise<Task[]> {
+    return await this.db.select().from(schema.tasks).where(eq(schema.tasks.weddingId, weddingId));
+  }
+
+  async createTask(insertTask: InsertTask): Promise<Task> {
+    const result = await this.db.insert(schema.tasks).values(insertTask).returning();
+    return result[0];
+  }
+
+  async updateTask(id: string, update: Partial<InsertTask>): Promise<Task | undefined> {
+    const result = await this.db.update(schema.tasks).set(update).where(eq(schema.tasks.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteTask(id: string): Promise<boolean> {
+    await this.db.delete(schema.tasks).where(eq(schema.tasks.id, id));
+    return true;
+  }
+}
+
+export const storage = process.env.DATABASE_URL 
+  ? new DBStorage(process.env.DATABASE_URL)
+  : new MemStorage();

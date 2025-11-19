@@ -12,8 +12,14 @@ import {
 } from "@shared/schema";
 import { seedVendors } from "./seed-data";
 
-// Seed vendors on startup
-seedVendors(storage);
+// Seed vendors only if database is empty
+(async () => {
+  const existingVendors = await storage.getAllVendors();
+  if (existingVendors.length === 0) {
+    await seedVendors(storage);
+    console.log("Seeded 20 vendors for Bay Area South Asian weddings");
+  }
+})();
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================================================
@@ -95,10 +101,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ];
 
         // Auto-suggest dates if wedding date is provided
-        if (wedding.weddingDate) {
-          const weddingDate = new Date(wedding.weddingDate);
-          
-          sikhEvents.forEach((event, index) => {
+        const eventsWithDates = sikhEvents.map((event) => {
+          if (wedding.weddingDate) {
+            const weddingDate = new Date(wedding.weddingDate);
             let eventDate = new Date(weddingDate);
             
             // Calculate dates relative to wedding day
@@ -116,11 +121,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
               eventDate = weddingDate; // Same day or next day
             }
             
-            event.date = eventDate;
-          });
-        }
+            return { ...event, date: eventDate };
+          }
+          return event;
+        });
 
-        for (const eventData of sikhEvents) {
+        for (const eventData of eventsWithDates) {
           await storage.createEvent(eventData as any);
         }
       }

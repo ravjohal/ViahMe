@@ -229,6 +229,7 @@ export const insertTaskSchema = createInsertSchema(tasks).omit({
   id: true,
 }).extend({
   priority: z.enum(['high', 'medium', 'low']).optional(),
+  dueDate: z.string().optional().transform(val => val ? new Date(val) : undefined),
 });
 
 export type InsertTask = z.infer<typeof insertTaskSchema>;
