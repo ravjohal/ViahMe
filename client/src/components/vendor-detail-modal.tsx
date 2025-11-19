@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
   Dialog,
   DialogContent,
@@ -12,6 +15,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -20,7 +31,8 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Star, MapPin, DollarSign, Phone, Mail, Send, StarIcon } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Star, MapPin, DollarSign, Phone, Mail, Send, StarIcon, AlertCircle } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Vendor, Event, Review } from "@shared/schema";
@@ -35,6 +47,13 @@ interface VendorDetailModalProps {
 
 const DEMO_WEDDING_ID = "wedding-1"; // TODO: Get from auth context
 
+const reviewFormSchema = z.object({
+  rating: z.number().min(1).max(5),
+  comment: z.string().max(1000).optional(),
+});
+
+type ReviewFormValues = z.infer<typeof reviewFormSchema>;
+
 export function VendorDetailModal({
   vendor,
   events,
@@ -45,10 +64,18 @@ export function VendorDetailModal({
   const [selectedEvent, setSelectedEvent] = useState("");
   const [notes, setNotes] = useState("");
   const [estimatedCost, setEstimatedCost] = useState("");
-  const [reviewRating, setReviewRating] = useState(5);
-  const [reviewComment, setReviewComment] = useState("");
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviewError, setReviewError] = useState<string | null>(null);
   const { toast } = useToast();
+
+  const reviewForm = useForm<ReviewFormValues>({
+    resolver: zodResolver(reviewFormSchema),
+    mode: "onChange",
+    defaultValues: {
+      rating: 5,
+      comment: "",
+    },
+  });
 
   if (!vendor) return null;
 
@@ -62,33 +89,45 @@ export function VendorDetailModal({
 
   // Add review mutation
   const addReviewMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (data: ReviewFormValues) => {
       return apiRequest("POST", "/api/reviews", {
         weddingId: DEMO_WEDDING_ID,
         vendorId: vendor.id,
-        rating: reviewRating,
-        comment: reviewComment.trim() || null,
+        rating: data.rating,
+        comment: data.comment?.trim() || null,
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/reviews/vendor", vendor.id] });
       queryClient.invalidateQueries({ queryKey: ["/api/vendors"] });
-      setReviewComment("");
-      setReviewRating(5);
+      reviewForm.reset();
       setShowReviewForm(false);
+      setReviewError(null);
       toast({
         title: "Review Submitted",
         description: "Thank you for your feedback!",
       });
     },
     onError: (error: Error) => {
+      const errorMessage = error.message.includes("duplicate")
+        ? "You have already reviewed this vendor."
+        : error.message.includes("not found")
+        ? "Vendor not found. Please refresh and try again."
+        : "Failed to submit review. Please try again.";
+      
+      setReviewError(errorMessage);
       toast({
         title: "Error",
-        description: error.message || "Failed to submit review. You may have already reviewed this vendor.",
+        description: errorMessage,
         variant: "destructive",
       });
     },
   });
+
+  const onReviewSubmit = (data: ReviewFormValues) => {
+    setReviewError(null);
+    addReviewMutation.mutate(data);
+  };
 
   const handleSubmit = () => {
     if (!selectedEvent) return;
@@ -201,100 +240,150 @@ export function VendorDetailModal({
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    onClick={() => setShowReviewForm(false)}
+                    onClick={() => {
+                      setShowReviewForm(false);
+                      setReviewError(null);
+                      reviewForm.reset();
+                    }}
+                    disabled={addReviewMutation.isPending}
                   >
                     Cancel
                   </Button>
                 </div>
+
+                {reviewError && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{reviewError}</AlertDescription>
+                  </Alert>
+                )}
                 
-                <div>
-                  <Label>Rating</Label>
-                  <div className="flex items-center gap-2 mt-2">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        type="button"
-                        onClick={() => setReviewRating(star)}
-                        className="transition-transform hover:scale-110"
-                        data-testid={`button-rating-${star}`}
-                      >
-                        <Star
-                          className={`w-8 h-8 ${
-                            star <= reviewRating
-                              ? "fill-primary text-primary"
-                              : "text-muted-foreground"
-                          }`}
-                        />
-                      </button>
-                    ))}
-                    <span className="ml-2 font-semibold">{reviewRating}/5</span>
-                  </div>
-                </div>
+                <Form {...reviewForm}>
+                  <form onSubmit={reviewForm.handleSubmit(onReviewSubmit)} className="space-y-4">
+                    <FormField
+                      control={reviewForm.control}
+                      name="rating"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Rating *</FormLabel>
+                          <FormControl>
+                            <div className="flex items-center gap-2 mt-2">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <button
+                                  key={star}
+                                  type="button"
+                                  onClick={() => field.onChange(star)}
+                                  className="transition-transform hover:scale-110"
+                                  data-testid={`button-rating-${star}`}
+                                  disabled={addReviewMutation.isPending}
+                                >
+                                  <Star
+                                    className={`w-8 h-8 ${
+                                      star <= field.value
+                                        ? "fill-primary text-primary"
+                                        : "text-muted-foreground"
+                                    }`}
+                                  />
+                                </button>
+                              ))}
+                              <span className="ml-2 font-semibold">{field.value}/5</span>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                <div>
-                  <Label htmlFor="review-comment">Comment (Optional)</Label>
-                  <Textarea
-                    id="review-comment"
-                    placeholder="Share your experience with this vendor..."
-                    value={reviewComment}
-                    onChange={(e) => setReviewComment(e.target.value)}
-                    rows={3}
-                    data-testid="textarea-review-comment"
-                    className="mt-2"
-                  />
-                </div>
+                    <FormField
+                      control={reviewForm.control}
+                      name="comment"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Comment (Optional)</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Share your experience with this vendor..."
+                              {...field}
+                              rows={3}
+                              maxLength={1000}
+                              data-testid="textarea-review-comment"
+                              disabled={addReviewMutation.isPending}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                          {field.value && (
+                            <p className="text-xs text-muted-foreground">
+                              {field.value.length}/1000 characters
+                            </p>
+                          )}
+                        </FormItem>
+                      )}
+                    />
 
-                <Button
-                  onClick={() => addReviewMutation.mutate()}
-                  disabled={addReviewMutation.isPending}
-                  className="w-full"
-                  data-testid="button-submit-review"
-                >
-                  {addReviewMutation.isPending ? "Submitting..." : "Submit Review"}
-                </Button>
+                    <Button
+                      type="submit"
+                      disabled={addReviewMutation.isPending || !reviewForm.formState.isValid}
+                      className="w-full"
+                      data-testid="button-submit-review"
+                    >
+                      {addReviewMutation.isPending ? "Submitting..." : "Submit Review"}
+                    </Button>
+                  </form>
+                </Form>
               </div>
             )}
 
             {reviews.length > 0 ? (
-              <ScrollArea className="h-[300px] rounded-lg border p-4">
-                <div className="space-y-4">
-                  {reviews.map((review) => (
-                    <div key={review.id} className="pb-4 border-b last:border-b-0" data-testid={`review-${review.id}`}>
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <div className="flex">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <Star
-                                key={star}
-                                className={`w-4 h-4 ${
-                                  star <= review.rating
-                                    ? "fill-primary text-primary"
-                                    : "text-muted-foreground"
-                                }`}
-                              />
-                            ))}
+              <div className="rounded-lg border">
+                <ScrollArea className="h-[300px] p-4">
+                  <div className="space-y-4 pr-4">
+                    {reviews.map((review, index) => (
+                      <div 
+                        key={review.id} 
+                        className={`${index !== reviews.length - 1 ? 'pb-4 border-b' : ''}`}
+                        data-testid={`review-${review.id}`}
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <div className="flex gap-0.5">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Star
+                                  key={star}
+                                  className={`w-4 h-4 ${
+                                    star <= review.rating
+                                      ? "fill-primary text-primary"
+                                      : "text-muted-foreground"
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                            <span className="font-mono font-semibold text-sm" data-testid={`text-review-rating-${review.id}`}>
+                              {review.rating}.0
+                            </span>
                           </div>
-                          <span className="font-semibold" data-testid={`text-review-rating-${review.id}`}>
-                            {review.rating}/5
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(review.createdAt).toLocaleDateString('en-US', { 
+                              year: 'numeric', 
+                              month: 'short', 
+                              day: 'numeric' 
+                            })}
                           </span>
                         </div>
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(review.createdAt).toLocaleDateString()}
-                        </span>
+                        {review.comment && (
+                          <p className="text-sm leading-relaxed" data-testid={`text-review-comment-${review.id}`}>
+                            {review.comment}
+                          </p>
+                        )}
                       </div>
-                      {review.comment && (
-                        <p className="text-sm text-muted-foreground" data-testid={`text-review-comment-${review.id}`}>
-                          {review.comment}
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <StarIcon className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">No reviews yet. Be the first to review!</p>
+              <div className="text-center py-12 text-muted-foreground rounded-lg border bg-muted/20">
+                <StarIcon className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                <p className="font-medium mb-1">No reviews yet</p>
+                <p className="text-sm">Be the first to share your experience!</p>
               </div>
             )}
           </div>
