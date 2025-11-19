@@ -300,6 +300,7 @@ export const insertMessageSchema = createInsertSchema(messages).omit({
   id: true,
   createdAt: true,
   isRead: true,
+  conversationId: true, // Generated server-side from weddingId + vendorId
 }).extend({
   senderType: z.enum(['couple', 'vendor']),
 });

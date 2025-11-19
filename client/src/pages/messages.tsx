@@ -8,22 +8,26 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { MessageCircle, Send, User } from "lucide-react";
-import type { Message, Vendor } from "@shared/schema";
+import type { Message } from "@shared/schema";
 
 // Demo wedding ID - In production, this would come from auth context
 const DEMO_WEDDING_ID = "demo-wedding-1";
+
+// Conversation metadata from API
+interface ConversationWithMetadata {
+  conversationId: string;
+  weddingId: string;
+  vendorId: string;
+  vendorName: string;
+  vendorCategory: string;
+}
 
 export default function MessagesPage() {
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [messageText, setMessageText] = useState("");
 
-  // Fetch all vendors to display conversation info
-  const { data: vendors = [] } = useQuery<Vendor[]>({
-    queryKey: ["/api/vendors"],
-  });
-
-  // Fetch conversations for the wedding
-  const { data: conversationIds = [] } = useQuery<string[]>({
+  // Fetch conversations with vendor metadata for the wedding
+  const { data: conversations = [] } = useQuery<ConversationWithMetadata[]>({
     queryKey: ["/api/conversations/wedding", DEMO_WEDDING_ID],
   });
 
@@ -38,18 +42,19 @@ export default function MessagesPage() {
     mutationFn: async (content: string) => {
       if (!selectedConversation) return;
       
-      const [weddingId, vendorId] = selectedConversation.split("-vendor-");
-      return apiRequest("/api/messages", {
-        method: "POST",
-        body: JSON.stringify({
-          conversationId: selectedConversation,
-          weddingId,
-          vendorId,
-          senderId: weddingId, // Demo: couple sends from weddingId
-          senderType: "couple",
-          content,
-        }),
+      const conversation = conversations.find(c => c.conversationId === selectedConversation);
+      if (!conversation) throw new Error("Conversation not found");
+      
+      const response = await apiRequest("POST", "/api/messages", {
+        // conversationId is generated server-side from weddingId + vendorId
+        weddingId: conversation.weddingId,
+        vendorId: conversation.vendorId,
+        senderId: conversation.weddingId, // Demo: couple sends from weddingId
+        senderType: "couple",
+        content,
       });
+      
+      return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/messages", selectedConversation] });
@@ -61,12 +66,6 @@ export default function MessagesPage() {
     if (messageText.trim() && selectedConversation) {
       sendMessageMutation.mutate(messageText);
     }
-  };
-
-  // Helper to get vendor info for a conversation
-  const getVendorForConversation = (conversationId: string) => {
-    const vendorId = conversationId.split("-vendor-")[1];
-    return vendors.find(v => v.id === vendorId);
   };
 
   return (
@@ -86,7 +85,7 @@ export default function MessagesPage() {
           </div>
           
           <ScrollArea className="flex-1">
-            {conversationIds.length === 0 ? (
+            {conversations.length === 0 ? (
               <div className="p-8 text-center">
                 <MessageCircle className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
                 <p className="text-muted-foreground text-sm">No conversations yet</p>
@@ -96,16 +95,15 @@ export default function MessagesPage() {
               </div>
             ) : (
               <div className="p-2">
-                {conversationIds.map((convId) => {
-                  const vendor = getVendorForConversation(convId);
+                {conversations.map((conversation) => {
                   return (
                     <button
-                      key={convId}
-                      onClick={() => setSelectedConversation(convId)}
+                      key={conversation.conversationId}
+                      onClick={() => setSelectedConversation(conversation.conversationId)}
                       className={`w-full p-3 rounded-lg text-left hover-elevate mb-2 ${
-                        selectedConversation === convId ? "bg-muted" : ""
+                        selectedConversation === conversation.conversationId ? "bg-muted" : ""
                       }`}
-                      data-testid={`conversation-${convId}`}
+                      data-testid={`conversation-${conversation.conversationId}`}
                     >
                       <div className="flex items-start gap-3">
                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -113,10 +111,10 @@ export default function MessagesPage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-medium truncate">
-                            {vendor?.name || "Vendor"}
+                            {conversation.vendorName}
                           </p>
                           <p className="text-sm text-muted-foreground truncate">
-                            {vendor?.category?.replace(/_/g, " ")}
+                            {conversation.vendorCategory.replace(/_/g, " ")}
                           </p>
                         </div>
                       </div>
@@ -140,10 +138,10 @@ export default function MessagesPage() {
                   </div>
                   <div>
                     <h3 className="font-semibold">
-                      {getVendorForConversation(selectedConversation)?.name || "Vendor"}
+                      {conversations.find(c => c.conversationId === selectedConversation)?.vendorName || "Vendor"}
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      {getVendorForConversation(selectedConversation)?.category?.replace(/_/g, " ")}
+                      {conversations.find(c => c.conversationId === selectedConversation)?.vendorCategory.replace(/_/g, " ") || ""}
                     </p>
                   </div>
                 </div>

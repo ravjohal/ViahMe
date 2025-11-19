@@ -24,6 +24,17 @@ import {
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
+// Helper functions for conversationId management
+export function generateConversationId(weddingId: string, vendorId: string): string {
+  return `${weddingId}-vendor-${vendorId}`;
+}
+
+export function parseConversationId(conversationId: string): { weddingId: string; vendorId: string } | null {
+  const parts = conversationId.split('-vendor-');
+  if (parts.length !== 2) return null;
+  return { weddingId: parts[0], vendorId: parts[1] };
+}
+
 export interface IStorage {
   // Users
   getUser(id: string): Promise<User | undefined>;
@@ -468,9 +479,12 @@ export class MemStorage implements IStorage {
 
   async createMessage(insertMessage: InsertMessage): Promise<Message> {
     const id = randomUUID();
+    // Ensure consistent conversationId format
+    const conversationId = generateConversationId(insertMessage.weddingId, insertMessage.vendorId);
     const message: Message = {
       ...insertMessage,
       id,
+      conversationId,
       isRead: false,
       createdAt: new Date(),
       attachments: insertMessage.attachments || null,
@@ -518,6 +532,7 @@ export class MemStorage implements IStorage {
     const review: Review = {
       ...insertReview,
       id,
+      comment: insertReview.comment ?? null,
       helpful: 0,
       createdAt: new Date(),
     };
@@ -819,7 +834,12 @@ export class DBStorage implements IStorage {
   }
 
   async createMessage(insertMessage: InsertMessage): Promise<Message> {
-    const result = await this.db.insert(schema.messages).values(insertMessage).returning();
+    // Ensure consistent conversationId format
+    const conversationId = generateConversationId(insertMessage.weddingId, insertMessage.vendorId);
+    const result = await this.db.insert(schema.messages).values({
+      ...insertMessage,
+      conversationId,
+    }).returning();
     return result[0];
   }
 

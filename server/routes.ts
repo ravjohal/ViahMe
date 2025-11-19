@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { storage, parseConversationId } from "./storage";
 import {
   insertWeddingSchema,
   insertEventSchema,
@@ -570,7 +570,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/conversations/wedding/:weddingId", async (req, res) => {
     try {
       const conversationIds = await storage.getConversationsByWedding(req.params.weddingId);
-      res.json(conversationIds);
+      
+      // Enrich with vendor metadata using shared parser
+      const conversations = await Promise.all(
+        conversationIds.map(async (convId) => {
+          const parsed = parseConversationId(convId);
+          if (!parsed) return null;
+          
+          const vendor = await storage.getVendor(parsed.vendorId);
+          
+          return {
+            conversationId: convId,
+            weddingId: parsed.weddingId,
+            vendorId: parsed.vendorId,
+            vendorName: vendor?.name || 'Unknown Vendor',
+            vendorCategory: vendor?.category || '',
+          };
+        })
+      );
+      
+      res.json(conversations.filter(Boolean));
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch conversations" });
     }
@@ -580,7 +599,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/conversations/vendor/:vendorId", async (req, res) => {
     try {
       const conversationIds = await storage.getConversationsByVendor(req.params.vendorId);
-      res.json(conversationIds);
+      
+      // Enrich with wedding/vendor metadata using shared parser
+      const conversations = await Promise.all(
+        conversationIds.map(async (convId) => {
+          const parsed = parseConversationId(convId);
+          if (!parsed) return null;
+          
+          const vendor = await storage.getVendor(req.params.vendorId);
+          
+          return {
+            conversationId: convId,
+            weddingId: parsed.weddingId,
+            vendorId: parsed.vendorId,
+            vendorName: vendor?.name || 'Unknown Vendor',
+            vendorCategory: vendor?.category || '',
+          };
+        })
+      );
+      
+      res.json(conversations.filter(Boolean));
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch conversations" });
     }
@@ -654,6 +692,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/reviews", async (req, res) => {
     try {
       const validatedData = insertReviewSchema.parse(req.body);
+      
+      // Validate vendor exists
+      const vendor = await storage.getVendor(validatedData.vendorId);
+      if (!vendor) {
+        return res.status(404).json({ error: "Vendor not found" });
+      }
+      
+      // Check for duplicate review (same wedding + vendor)
+      const existingReviews = await storage.getReviewsByWedding(validatedData.weddingId);
+      const duplicate = existingReviews.find(r => r.vendorId === validatedData.vendorId);
+      if (duplicate) {
+        return res.status(400).json({ error: "You have already reviewed this vendor" });
+      }
+      
       const review = await storage.createReview(validatedData);
       res.json(review);
     } catch (error) {

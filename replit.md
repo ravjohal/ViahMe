@@ -45,13 +45,21 @@ All core features have been implemented and tested:
 - ✅ Storage layer complete with both MemStorage and DBStorage implementations
 - ✅ Smart vendor seeding (checks for existing data, prevents duplicates)
 
-### Next Steps
-- Messaging system between couples and vendors
-- Hindu wedding tradition templates
+### Newly Completed Features (2025-11-19)
+- ✅ **Messaging System** (/messages) - Full couple-vendor communication with conversation threading, vendor metadata enrichment, server-side conversationId generation
+- ✅ **Hindu Wedding Support** - Schema extended with 7 Hindu event types (haldi, mehendi, sangeet_hindu, pheras, vidaai, tilak, chunni_ceremony)
+- ✅ **Expanded Vendor Categories** - Added 6 Hindu-specific vendors (pandit, mandap_decorator, haldi_supplies, pooja_items, astrologer, garland_maker) - Total: 25 categories
+- ✅ **Multi-City Support** - City field added to vendors schema for geographic expansion (default: San Francisco Bay Area, ready for NYC/LA/Chicago/Seattle)
+- ✅ **Vendor Review System** - Complete reviews table with rating (1-5), comments, validation (vendor existence, duplicate prevention), automatic rating aggregation
+
+### Next Steps  
+- Hindu wedding onboarding templates (event auto-seeding logic)
+- Multi-city vendor seeding and UI filtering
+- Review UI components on vendor cards/detail pages
 - Payment processing integration (Stripe)
-- Geographic expansion to NYC, LA, Chicago, Seattle
 - Collaborative planning features
 - Authentication system for vendor and couple logins
+- **Technical Debt**: Refactor conversation storage to use structured table instead of parsed conversationId strings (future-proofing for scale)
 
 ## Project Architecture
 
@@ -69,13 +77,15 @@ All core features have been implemented and tested:
 
 #### Core Entities
 1. **Weddings** - Main planning entity with tradition type, date, location, budget
-2. **Events** - Individual ceremonies (Paath, Mehndi, Sangeet, etc.) with guest counts
-3. **Vendors** - Service providers with cultural specializations and pricing tiers
+2. **Events** - Individual ceremonies with 14 types (7 Sikh + 7 Hindu + custom)
+3. **Vendors** - Service providers with 25 categories, cultural specializations, city-based locations, and aggregated ratings
 4. **Bookings** - Vendor assignments to specific events
 5. **Budget Categories** - Allocated vs. spent tracking per category
 6. **Guests** - Multi-event RSVP management with side tracking
 7. **Tasks** - Checklist items tied to events and deadlines
 8. **Contracts** - Vendor contracts with payment milestones and status tracking
+9. **Messages** - Couple-vendor conversation threading with metadata enrichment
+10. **Reviews** - Vendor ratings and feedback with automatic aggregation
 
 #### Key Features
 - **Cultural Templates**: Pre-populated event timelines for Sikh/Hindu/General Indian weddings
@@ -113,9 +123,10 @@ All core features have been implemented and tested:
 6. **Timeline** (`/timeline`) - Event management with full CRUD for all wedding ceremonies
 7. **Budget** (`/budget`) - Budget category management with allocation tracking and pie chart visualization
 8. **Contracts** (`/contracts`) - Contract management with payment milestone tracking
+9. **Messages** (`/messages`) - Couple-vendor messaging with conversation threading and vendor metadata
 
 **Vendor-facing pages:**
-9. **Vendor Dashboard** (`/vendor-dashboard`) - Profile editing, booking request management, availability calendar, contract viewing (demo: uses first vendor)
+10. **Vendor Dashboard** (`/vendor-dashboard`) - Profile editing, booking request management, availability calendar, contract viewing (demo: uses first vendor)
 
 ## Cultural Specificity
 
@@ -136,6 +147,14 @@ All core features have been implemented and tested:
 - Mobile Food Vendors (casual pre-wedding events)
 
 ## Recent Changes
+- 2025-11-19: **Major Feature Expansion - Messaging, Hindu Weddings, Multi-City, Reviews**
+  - **Messaging System**: Complete couple-vendor messaging with conversation list, message threading, vendor metadata API enrichment, server-side conversationId generation using `generateConversationId()` helper, proper error handling with `apiRequest`
+  - **Hindu Wedding Support**: Extended events enum with 7 Hindu ceremony types (haldi, mehendi, sangeet_hindu, pheras, vidaai, tilak, chunni_ceremony)
+  - **Vendor Categories Expansion**: Added 6 Hindu-specific vendors (pandit, mandap_decorator, haldi_supplies, pooja_items, astrologer, garland_maker) bringing total to 25 categories
+  - **Multi-City Foundation**: Added city field to vendors schema (default: San Francisco Bay Area, ready for NYC/LA/Chicago/Seattle expansion)
+  - **Review System**: Complete reviews table with rating (1-5), comments, helpful count, vendor existence validation, duplicate prevention, automatic vendor.rating and vendor.reviewCount aggregation
+  - API routes: /api/messages, /api/conversations/wedding/:id, /api/conversations/vendor/:id, /api/reviews, /api/reviews/vendor/:id, /api/reviews/wedding/:id
+  - All features tested with proper data-testid attributes
 - 2025-11-19: **Vendor Dashboard & Contract Management Completed** - Extended MVP with vendor-facing features
   - Implemented vendor contract management system with payment milestones, status tracking, and CRUD operations
   - Built vendor dashboard (/vendor-dashboard) with profile editing, booking request management, availability calendar
