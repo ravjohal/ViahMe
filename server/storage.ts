@@ -19,6 +19,8 @@ import {
   type InsertContract,
   type Message,
   type InsertMessage,
+  type Review,
+  type InsertReview,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -94,6 +96,13 @@ export interface IStorage {
   createMessage(message: InsertMessage): Promise<Message>;
   markMessageAsRead(id: string): Promise<Message | undefined>;
   getUnreadCount(conversationId: string, recipientType: 'couple' | 'vendor'): Promise<number>;
+
+  // Reviews
+  getReview(id: string): Promise<Review | undefined>;
+  getReviewsByVendor(vendorId: string): Promise<Review[]>;
+  getReviewsByWedding(weddingId: string): Promise<Review[]>;
+  createReview(review: InsertReview): Promise<Review>;
+  updateVendorRating(vendorId: string): Promise<void>; // Recalculate average rating
 }
 
 export class MemStorage implements IStorage {
@@ -107,6 +116,7 @@ export class MemStorage implements IStorage {
   private tasks: Map<string, Task>;
   private contracts: Map<string, Contract>;
   private messages: Map<string, Message>;
+  private reviews: Map<string, Review>;
 
   constructor() {
     this.users = new Map();
@@ -119,6 +129,7 @@ export class MemStorage implements IStorage {
     this.tasks = new Map();
     this.contracts = new Map();
     this.messages = new Map();
+    this.reviews = new Map();
   }
 
   // Users
@@ -462,6 +473,7 @@ export class MemStorage implements IStorage {
       id,
       isRead: false,
       createdAt: new Date(),
+      attachments: insertMessage.attachments || null,
     };
     this.messages.set(id, message);
     return message;
@@ -483,6 +495,55 @@ export class MemStorage implements IStorage {
         !m.isRead && 
         m.senderType !== recipientType
       ).length;
+  }
+
+  // Reviews
+  async getReview(id: string): Promise<Review | undefined> {
+    return this.reviews.get(id);
+  }
+
+  async getReviewsByVendor(vendorId: string): Promise<Review[]> {
+    return Array.from(this.reviews.values())
+      .filter(r => r.vendorId === vendorId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async getReviewsByWedding(weddingId: string): Promise<Review[]> {
+    return Array.from(this.reviews.values())
+      .filter(r => r.weddingId === weddingId);
+  }
+
+  async createReview(insertReview: InsertReview): Promise<Review> {
+    const id = randomUUID();
+    const review: Review = {
+      ...insertReview,
+      id,
+      helpful: 0,
+      createdAt: new Date(),
+    };
+    this.reviews.set(id, review);
+    
+    // Update vendor rating
+    await this.updateVendorRating(insertReview.vendorId);
+    
+    return review;
+  }
+
+  async updateVendorRating(vendorId: string): Promise<void> {
+    const vendor = this.vendors.get(vendorId);
+    if (!vendor) return;
+
+    const reviews = await this.getReviewsByVendor(vendorId);
+    if (reviews.length === 0) {
+      vendor.rating = null;
+      vendor.reviewCount = 0;
+    } else {
+      const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+      vendor.rating = String(avgRating.toFixed(1));
+      vendor.reviewCount = reviews.length;
+    }
+    
+    this.vendors.set(vendorId, vendor);
   }
 }
 
@@ -778,6 +839,53 @@ export class DBStorage implements IStorage {
       .where(eq(schema.messages.conversationId, conversationId));
     
     return result.filter(m => !m.isRead && m.senderType !== recipientType).length;
+  }
+
+  // Reviews
+  async getReview(id: string): Promise<Review | undefined> {
+    const result = await this.db.select().from(schema.reviews).where(eq(schema.reviews.id, id));
+    return result[0];
+  }
+
+  async getReviewsByVendor(vendorId: string): Promise<Review[]> {
+    return await this.db
+      .select()
+      .from(schema.reviews)
+      .where(eq(schema.reviews.vendorId, vendorId))
+      .orderBy(schema.reviews.createdAt);
+  }
+
+  async getReviewsByWedding(weddingId: string): Promise<Review[]> {
+    return await this.db.select().from(schema.reviews).where(eq(schema.reviews.weddingId, weddingId));
+  }
+
+  async createReview(insertReview: InsertReview): Promise<Review> {
+    const result = await this.db.insert(schema.reviews).values(insertReview).returning();
+    
+    // Update vendor rating
+    await this.updateVendorRating(insertReview.vendorId);
+    
+    return result[0];
+  }
+
+  async updateVendorRating(vendorId: string): Promise<void> {
+    const reviews = await this.getReviewsByVendor(vendorId);
+    
+    if (reviews.length === 0) {
+      await this.db
+        .update(schema.vendors)
+        .set({ rating: null, reviewCount: 0 })
+        .where(eq(schema.vendors.id, vendorId));
+    } else {
+      const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+      await this.db
+        .update(schema.vendors)
+        .set({ 
+          rating: avgRating.toFixed(1), 
+          reviewCount: reviews.length 
+        })
+        .where(eq(schema.vendors.id, vendorId));
+    }
   }
 }
 

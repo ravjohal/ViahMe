@@ -74,7 +74,14 @@ export const events = pgTable("events", {
 export const insertEventSchema = createInsertSchema(events).omit({
   id: true,
 }).extend({
-  type: z.enum(['paath', 'mehndi', 'maiyan', 'sangeet', 'anand_karaj', 'reception', 'custom']),
+  type: z.enum([
+    // Sikh events
+    'paath', 'mehndi', 'maiyan', 'sangeet', 'anand_karaj', 'reception',
+    // Hindu events
+    'haldi', 'mehendi', 'sangeet_hindu', 'pheras', 'vidaai', 'tilak', 'chunni_ceremony',
+    // Generic
+    'custom'
+  ]),
 });
 
 export type InsertEvent = z.infer<typeof insertEventSchema>;
@@ -89,6 +96,7 @@ export const vendors = pgTable("vendors", {
   name: text("name").notNull(),
   category: text("category").notNull(), // 'makeup' | 'dj' | 'dhol' | 'turban_tier' | 'mehndi' | etc
   location: text("location").notNull(),
+  city: text("city").notNull().default('San Francisco Bay Area'), // 'San Francisco Bay Area' | 'New York City' | 'Los Angeles' | 'Chicago' | 'Seattle'
   priceRange: text("price_range").notNull(), // '$' | '$$' | '$$$' | '$$$$'
   culturalSpecialties: text("cultural_specialties").array(), // ['sikh', 'hindu', 'punjabi', etc]
   description: text("description"),
@@ -124,7 +132,14 @@ export const insertVendorSchema = createInsertSchema(vendors).omit({
     'tent_service',
     'limo_service',
     'mobile_food',
-    'baraat_band'
+    'baraat_band',
+    // Hindu-specific vendors
+    'pandit',
+    'mandap_decorator',
+    'haldi_supplies',
+    'pooja_items',
+    'astrologer',
+    'garland_maker'
   ]),
   priceRange: z.enum(['$', '$$', '$$$', '$$$$']),
 });
@@ -291,3 +306,28 @@ export const insertMessageSchema = createInsertSchema(messages).omit({
 
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type Message = typeof messages.$inferSelect;
+
+// ============================================================================
+// REVIEWS - Vendor rating and feedback system
+// ============================================================================
+
+export const reviews = pgTable("reviews", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  vendorId: varchar("vendor_id").notNull(),
+  rating: integer("rating").notNull(), // 1-5
+  comment: text("comment"),
+  helpful: integer("helpful").default(0), // Count of users who found this helpful
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertReviewSchema = createInsertSchema(reviews).omit({
+  id: true,
+  createdAt: true,
+  helpful: true,
+}).extend({
+  rating: z.number().min(1).max(5),
+});
+
+export type InsertReview = z.infer<typeof insertReviewSchema>;
+export type Review = typeof reviews.$inferSelect;

@@ -11,6 +11,7 @@ import {
   insertTaskSchema,
   insertContractSchema,
   insertMessageSchema,
+  insertReviewSchema,
 } from "@shared/schema";
 import { seedVendors } from "./seed-data";
 
@@ -622,6 +623,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ count });
     } catch (error) {
       res.status(500).json({ error: "Failed to get unread count" });
+    }
+  });
+
+  // ============================================================================
+  // REVIEWS - Vendor rating and feedback system
+  // ============================================================================
+
+  // Get reviews for a vendor
+  app.get("/api/reviews/vendor/:vendorId", async (req, res) => {
+    try {
+      const reviews = await storage.getReviewsByVendor(req.params.vendorId);
+      res.json(reviews);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch reviews" });
+    }
+  });
+
+  // Get reviews for a wedding
+  app.get("/api/reviews/wedding/:weddingId", async (req, res) => {
+    try {
+      const reviews = await storage.getReviewsByWedding(req.params.weddingId);
+      res.json(reviews);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch reviews" });
+    }
+  });
+
+  // Create a new review
+  app.post("/api/reviews", async (req, res) => {
+    try {
+      const validatedData = insertReviewSchema.parse(req.body);
+      const review = await storage.createReview(validatedData);
+      res.json(review);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      res.status(500).json({ error: "Failed to create review" });
     }
   });
 
