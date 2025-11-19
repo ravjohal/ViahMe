@@ -234,3 +234,32 @@ export const insertTaskSchema = createInsertSchema(tasks).omit({
 
 export type InsertTask = z.infer<typeof insertTaskSchema>;
 export type Task = typeof tasks.$inferSelect;
+
+// ============================================================================
+// CONTRACTS - Vendor contract management
+// ============================================================================
+
+export const contracts = pgTable("contracts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  bookingId: varchar("booking_id").notNull(),
+  vendorId: varchar("vendor_id").notNull(),
+  contractTerms: text("contract_terms"),
+  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
+  paymentMilestones: jsonb("payment_milestones"), // Array of {name, amount, dueDate, status, paidDate}
+  status: text("status").notNull().default('draft'), // 'draft' | 'sent' | 'signed' | 'active' | 'completed' | 'cancelled'
+  signedDate: timestamp("signed_date"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertContractSchema = createInsertSchema(contracts).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  status: z.enum(['draft', 'sent', 'signed', 'active', 'completed', 'cancelled']).optional(),
+  totalAmount: z.string(),
+  signedDate: z.string().optional().transform(val => val ? new Date(val) : undefined),
+});
+
+export type InsertContract = z.infer<typeof insertContractSchema>;
+export type Contract = typeof contracts.$inferSelect;
