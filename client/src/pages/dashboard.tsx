@@ -7,9 +7,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, DollarSign, Users, Briefcase } from "lucide-react";
+import { Calendar, DollarSign, Users, Briefcase, FileText } from "lucide-react";
 import { useLocation } from "wouter";
-import type { Wedding, Event, BudgetCategory } from "@shared/schema";
+import type { Wedding, Event, BudgetCategory, Contract, Vendor } from "@shared/schema";
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
@@ -26,12 +26,17 @@ export default function Dashboard() {
   });
 
   const { data: budgetCategories = [], isLoading: budgetLoading } = useQuery<BudgetCategory[]>({
-    queryKey: ["/api/budget", wedding?.id],
+    queryKey: ["/api/budget-categories", wedding?.id],
     enabled: !!wedding?.id,
   });
 
-  const { data: vendors = [] } = useQuery({
+  const { data: vendors = [] } = useQuery<Vendor[]>({
     queryKey: ["/api/vendors"],
+  });
+
+  const { data: contracts = [] } = useQuery<Contract[]>({
+    queryKey: ["/api/contracts", wedding?.id],
+    enabled: !!wedding?.id,
   });
 
   // Redirect to onboarding if no wedding exists
@@ -119,15 +124,15 @@ export default function Dashboard() {
             </div>
           </Card>
 
-          <Card className="p-6 hover-elevate transition-all cursor-pointer" onClick={() => setLocation("/guests")}>
+          <Card className="p-6 hover-elevate transition-all cursor-pointer" onClick={() => setLocation("/contracts")}>
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-xl bg-chart-4/10">
-                <Users className="w-6 h-6 text-chart-4" />
+                <FileText className="w-6 h-6 text-chart-4" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Est. Guests</p>
-                <p className="font-mono text-2xl font-bold">
-                  {wedding.guestCountEstimate || 0}
+                <p className="text-sm text-muted-foreground">Contracts</p>
+                <p className="font-mono text-2xl font-bold" data-testid="stat-contracts-count">
+                  {contracts.length}
                 </p>
               </div>
             </div>
