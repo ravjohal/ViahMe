@@ -159,10 +159,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json(wedding);
     } catch (error) {
+      console.error("Error creating wedding:", error);
       if (error instanceof Error && "issues" in error) {
         return res.status(400).json({ error: "Validation failed", details: error });
       }
-      res.status(500).json({ error: "Failed to create wedding" });
+      res.status(500).json({ error: "Failed to create wedding", message: error instanceof Error ? error.message : String(error) });
     }
   });
 
@@ -309,7 +310,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // BUDGET CATEGORIES
   // ============================================================================
 
-  app.get("/api/budget/:weddingId", async (req, res) => {
+  app.get("/api/budget-categories/:weddingId", async (req, res) => {
     try {
       const categories = await storage.getBudgetCategoriesByWedding(req.params.weddingId);
       res.json(categories);
@@ -318,7 +319,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/budget", async (req, res) => {
+  app.post("/api/budget-categories", async (req, res) => {
     try {
       const validatedData = insertBudgetCategorySchema.parse(req.body);
       const category = await storage.createBudgetCategory(validatedData);
@@ -331,7 +332,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/budget/:id", async (req, res) => {
+  app.patch("/api/budget-categories/:id", async (req, res) => {
     try {
       const category = await storage.updateBudgetCategory(req.params.id, req.body);
       if (!category) {
@@ -340,6 +341,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(category);
     } catch (error) {
       res.status(500).json({ error: "Failed to update budget category" });
+    }
+  });
+
+  app.delete("/api/budget-categories/:id", async (req, res) => {
+    try {
+      await storage.deleteBudgetCategory(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete budget category" });
     }
   });
 

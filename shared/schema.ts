@@ -48,7 +48,7 @@ export const insertWeddingSchema = createInsertSchema(weddings).omit({
   location: z.string().min(1),
   weddingDate: z.string().optional().transform(val => val ? new Date(val) : undefined),
   guestCountEstimate: z.number().min(1).optional(),
-  totalBudget: z.string().optional(),
+  totalBudget: z.string().nullable().optional(),
 });
 
 export type InsertWedding = z.infer<typeof insertWeddingSchema>;

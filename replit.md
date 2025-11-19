@@ -26,14 +26,15 @@ The Digital Baraat is a specialized vertical SaaS platform designed to manage mu
 - ✅ Budget dashboard with category breakdowns and progress tracking
 - ✅ Guest list manager with RSVP tracking and event segmentation
 - ✅ Task/checklist management page with CRUD operations, priority filtering, due dates
+- ✅ Timeline/Events management page with full CRUD operations
+- ✅ Guest management with full CRUD dialogs, event assignment, RSVP updates
+- ✅ Budget management page (/budget) with CRUD, pie charts, allocation tracking
 - ✅ Full backend API with CRUD endpoints for all entities
 - ✅ Data persistence with PostgreSQL database
 - ✅ 20 seeded Bay Area vendors in database
 
 ### In Progress
-- 🔄 Timeline/Events management page with full CRUD
-- 🔄 Budget management page with chart visualizations
-- 🔄 Guest management dialogs and RSVP functionality
+- 🔄 Testing and final polish of core MVP features
 
 ### Next Steps
 - Vendor contract management system
@@ -97,6 +98,9 @@ The Digital Baraat is a specialized vertical SaaS platform designed to manage mu
 2. **Dashboard** (`/dashboard`) - Overview with timeline, budget, and vendor recommendations
 3. **Vendors** (`/vendors`) - Directory with filtering, detail views, and booking requests
 4. **Guests** (`/guests`) - List management with RSVP tracking and event assignments
+5. **Tasks** (`/tasks`) - Checklist management with priority levels, due dates, and completion tracking
+6. **Timeline** (`/timeline`) - Event management with full CRUD for all wedding ceremonies
+7. **Budget** (`/budget`) - Budget category management with allocation tracking and pie chart visualization
 
 ## Cultural Specificity
 
