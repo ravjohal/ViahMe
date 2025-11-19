@@ -12,10 +12,10 @@ import { Calendar, Heart, MapPin, Users, DollarSign, Sparkles } from "lucide-rea
 import { motion, AnimatePresence } from "framer-motion";
 
 const questionnaireSchema = z.object({
-  tradition: z.enum(['sikh', 'hindu', 'general']),
-  role: z.enum(['bride', 'groom', 'planner']),
+  tradition: z.enum(['sikh', 'hindu', 'general']).optional(),
+  role: z.enum(['bride', 'groom', 'planner']).optional(),
   weddingDate: z.string().optional(),
-  location: z.string().min(1, "Location is required"),
+  location: z.string().optional(),
   guestCountEstimate: z.coerce.number().min(1).optional(),
   totalBudget: z.string().optional(),
 });
@@ -82,8 +82,40 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
     }
   };
 
-  const handleNext = () => {
-    form.handleSubmit(onSubmit)();
+  const handleNext = async () => {
+    // Validate only the current step's fields
+    let isValid = false;
+    
+    switch (currentStep) {
+      case 1:
+        isValid = !!form.getValues('tradition');
+        break;
+      case 2:
+        isValid = !!form.getValues('role');
+        break;
+      case 3:
+        isValid = !!form.getValues('weddingDate');
+        break;
+      case 4:
+        isValid = !!form.getValues('location');
+        break;
+      case 5:
+        isValid = true; // Budget is optional
+        break;
+      default:
+        isValid = false;
+    }
+    
+    if (isValid) {
+      if (currentStep < STEPS.length) {
+        setCurrentStep(currentStep + 1);
+      } else {
+        form.handleSubmit(onSubmit)();
+      }
+    } else {
+      // Trigger validation for current field
+      form.trigger();
+    }
   };
 
   const handleBack = () => {

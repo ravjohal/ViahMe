@@ -41,10 +41,12 @@ export const weddings = pgTable("weddings", {
 export const insertWeddingSchema = createInsertSchema(weddings).omit({
   id: true,
   createdAt: true,
+  status: true,
 }).extend({
   tradition: z.enum(['sikh', 'hindu', 'general']),
   role: z.enum(['bride', 'groom', 'planner']),
   location: z.string().min(1),
+  weddingDate: z.string().optional().transform(val => val ? new Date(val) : undefined),
   guestCountEstimate: z.number().min(1).optional(),
   totalBudget: z.string().optional(),
 });

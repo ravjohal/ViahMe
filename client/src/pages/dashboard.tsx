@@ -30,6 +30,10 @@ export default function Dashboard() {
     enabled: !!wedding?.id,
   });
 
+  const { data: vendors = [] } = useQuery({
+    queryKey: ["/api/vendors"],
+  });
+
   // Redirect to onboarding if no wedding exists
   useEffect(() => {
     if (!weddingsLoading && !wedding) {
@@ -94,7 +98,9 @@ export default function Dashboard() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Vendors</p>
-                <p className="font-mono text-2xl font-bold">0</p>
+                <p className="font-mono text-2xl font-bold" data-testid="stat-vendors-count">
+                  {vendors.length}
+                </p>
               </div>
             </div>
           </Card>
