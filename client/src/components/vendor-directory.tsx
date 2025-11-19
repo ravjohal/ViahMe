@@ -41,6 +41,13 @@ const VENDOR_CATEGORIES = [
   { value: "limo_service", label: "Limo Services" },
   { value: "mobile_food", label: "Mobile Food Vendors" },
   { value: "baraat_band", label: "Baraat Bands" },
+  // Hindu-specific vendors
+  { value: "pandit", label: "Pandits (Hindu Priests)" },
+  { value: "mandap_decorator", label: "Mandap Decorators" },
+  { value: "haldi_supplies", label: "Haldi Supplies" },
+  { value: "pooja_items", label: "Pooja Items" },
+  { value: "astrologer", label: "Vedic Astrologers" },
+  { value: "garland_maker", label: "Garland Makers" },
 ];
 
 const PRICE_RANGES = [
@@ -51,10 +58,20 @@ const PRICE_RANGES = [
   { value: "$$$$", label: "$$$$ - Luxury" },
 ];
 
+const CITIES = [
+  { value: "all", label: "All Cities" },
+  { value: "San Francisco Bay Area", label: "San Francisco Bay Area" },
+  { value: "New York City", label: "New York City" },
+  { value: "Los Angeles", label: "Los Angeles" },
+  { value: "Chicago", label: "Chicago" },
+  { value: "Seattle", label: "Seattle" },
+];
+
 export function VendorDirectory({ vendors, onSelectVendor, tradition }: VendorDirectoryProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [priceFilter, setPriceFilter] = useState("all");
+  const [cityFilter, setCityFilter] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
 
   const filteredVendors = vendors.filter((vendor) => {
@@ -64,13 +81,14 @@ export function VendorDirectory({ vendors, onSelectVendor, tradition }: VendorDi
 
     const matchesCategory = categoryFilter === "all" || vendor.category === categoryFilter;
     const matchesPrice = priceFilter === "all" || vendor.priceRange === priceFilter;
+    const matchesCity = cityFilter === "all" || vendor.city === cityFilter;
 
     const matchesTradition =
       !tradition ||
       !vendor.culturalSpecialties ||
       vendor.culturalSpecialties.includes(tradition);
 
-    return matchesSearch && matchesCategory && matchesPrice && matchesTradition;
+    return matchesSearch && matchesCategory && matchesPrice && matchesCity && matchesTradition;
   });
 
   // Sort to show featured vendors first
@@ -119,7 +137,7 @@ export function VendorDirectory({ vendors, onSelectVendor, tradition }: VendorDi
             </Button>
           </div>
 
-          <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${showFilters ? "block" : "hidden md:grid"}`}>
+          <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 ${showFilters ? "block" : "hidden md:grid"}`}>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
               <SelectTrigger data-testid="select-category-filter" className="h-12">
                 <Filter className="w-4 h-4 mr-2" />
@@ -147,9 +165,23 @@ export function VendorDirectory({ vendors, onSelectVendor, tradition }: VendorDi
                 ))}
               </SelectContent>
             </Select>
+
+            <Select value={cityFilter} onValueChange={setCityFilter}>
+              <SelectTrigger data-testid="select-city-filter" className="h-12">
+                <Filter className="w-4 h-4 mr-2" />
+                <SelectValue placeholder="Filter by city" />
+              </SelectTrigger>
+              <SelectContent>
+                {CITIES.map((city) => (
+                  <SelectItem key={city.value} value={city.value}>
+                    {city.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          {(categoryFilter !== "all" || priceFilter !== "all" || searchTerm) && (
+          {(categoryFilter !== "all" || priceFilter !== "all" || cityFilter !== "all" || searchTerm) && (
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm text-muted-foreground">Active filters:</span>
               {categoryFilter !== "all" && (
@@ -157,6 +189,7 @@ export function VendorDirectory({ vendors, onSelectVendor, tradition }: VendorDi
                   variant="secondary"
                   className="cursor-pointer"
                   onClick={() => setCategoryFilter("all")}
+                  data-testid="badge-category-filter"
                 >
                   {VENDOR_CATEGORIES.find((c) => c.value === categoryFilter)?.label}
                   <span className="ml-2">×</span>
@@ -167,8 +200,20 @@ export function VendorDirectory({ vendors, onSelectVendor, tradition }: VendorDi
                   variant="secondary"
                   className="cursor-pointer"
                   onClick={() => setPriceFilter("all")}
+                  data-testid="badge-price-filter"
                 >
                   {priceFilter}
+                  <span className="ml-2">×</span>
+                </Badge>
+              )}
+              {cityFilter !== "all" && (
+                <Badge
+                  variant="secondary"
+                  className="cursor-pointer"
+                  onClick={() => setCityFilter("all")}
+                  data-testid="badge-city-filter"
+                >
+                  {CITIES.find((c) => c.value === cityFilter)?.label}
                   <span className="ml-2">×</span>
                 </Badge>
               )}
