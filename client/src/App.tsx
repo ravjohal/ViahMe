@@ -12,6 +12,7 @@ import Tasks from "@/pages/tasks";
 import Timeline from "@/pages/timeline";
 import Budget from "@/pages/budget";
 import Contracts from "@/pages/contracts";
+import VendorDashboard from "@/pages/vendor-dashboard";
 
 function Router() {
   return (
@@ -25,6 +26,7 @@ function Router() {
       <Route path="/timeline" component={Timeline} />
       <Route path="/budget" component={Budget} />
       <Route path="/contracts" component={Contracts} />
+      <Route path="/vendor-dashboard" component={VendorDashboard} />
       <Route component={NotFound} />
     </Switch>
   );

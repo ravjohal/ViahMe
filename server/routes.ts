@@ -307,6 +307,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/bookings/vendor/:vendorId", async (req, res) => {
+    try {
+      const bookings = await storage.getBookingsByVendor(req.params.vendorId);
+      res.json(bookings);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch vendor bookings" });
+    }
+  });
+
   // ============================================================================
   // BUDGET CATEGORIES
   // ============================================================================
