@@ -175,12 +175,12 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                 {STEPS.map((step, idx) => (
                   <div
                     key={step.id}
-                    className={`h-2 rounded-full transition-all duration-300 ${
+                    className={`h-3 rounded-full transition-all duration-300 shadow-md ${
                       idx + 1 === currentStep
-                        ? `w-8 bg-gradient-to-r ${step.color}`
+                        ? `w-12 bg-gradient-to-r ${step.color}`
                         : idx + 1 < currentStep
-                        ? "w-2 bg-gradient-to-r from-orange-400 to-pink-400"
-                        : "w-2 bg-gray-200"
+                        ? `w-3 bg-gradient-to-r ${step.color} opacity-70`
+                        : `w-3 bg-gradient-to-r ${step.color} opacity-30`
                     }`}
                   />
                 ))}
@@ -192,7 +192,13 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
               </div>
             </div>
           </div>
-          <Progress value={progress} className="h-3" data-testid="progress-questionnaire" />
+          <div className="relative h-3 w-full bg-gradient-to-r from-orange-100 via-pink-100 via-purple-100 via-blue-100 to-emerald-100 rounded-full overflow-hidden">
+            <div 
+              className="absolute inset-0 bg-gradient-to-r from-orange-500 via-pink-500 via-purple-500 via-blue-500 to-emerald-500 transition-all duration-500 ease-out rounded-full shadow-lg"
+              style={{ width: `${progress}%` }}
+              data-testid="progress-questionnaire"
+            />
+          </div>
         </div>
 
         <AnimatePresence mode="wait">
