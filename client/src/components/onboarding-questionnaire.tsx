@@ -161,7 +161,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
           <div className="flex items-center justify-between mb-6">
             <div>
               <img 
-                src={new URL("@assets/viah-logo.png", import.meta.url).href}
+                src={new URL("@assets/viah-logo_1763669612969.png", import.meta.url).href}
                 alt="Viah.me"
                 className="h-32 w-auto mb-3 object-contain"
                 data-testid="logo-viah"

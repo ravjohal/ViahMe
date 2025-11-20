@@ -21,7 +21,7 @@ export function DashboardHeader({ wedding }: DashboardHeaderProps) {
       <div className="flex h-24 items-center justify-between px-6">
         <div className="flex items-center gap-4">
           <img 
-            src={new URL("@assets/viah-logo.png", import.meta.url).href}
+            src={new URL("@assets/viah-logo_1763669612969.png", import.meta.url).href}
             alt="Viah.me"
             className="h-20 w-auto object-contain"
             data-testid="logo-viah"
