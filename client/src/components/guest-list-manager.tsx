@@ -62,15 +62,15 @@ export function GuestListManager({ guests, onAddGuest, onEditGuest }: GuestListM
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-display text-2xl font-bold text-foreground mb-1">
-            Guest List
+          <h2 className="text-4xl font-bold bg-gradient-to-r from-pink-600 via-rose-600 to-purple-600 bg-clip-text text-transparent mb-1" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+            Guest List ✨
           </h2>
-          <p className="text-muted-foreground">
-            Manage invitations and RSVPs
+          <p className="text-lg font-semibold bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+            Manage invitations and RSVPs 🎊
           </p>
         </div>
         {onAddGuest && (
-          <Button onClick={onAddGuest} data-testid="button-add-guest">
+          <Button onClick={onAddGuest} data-testid="button-add-guest" className="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white shadow-lg">
             <Plus className="w-4 h-4 mr-2" />
             Add Guest
           </Button>
@@ -78,42 +78,50 @@ export function GuestListManager({ guests, onAddGuest, onEditGuest }: GuestListM
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-4">
+        <Card className="p-4 border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50">
           <div className="flex items-center gap-3">
-            <Users className="w-5 h-5 text-muted-foreground" />
+            <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-500 shadow-lg">
+              <Users className="w-5 h-5 text-white" />
+            </div>
             <div>
-              <p className="text-sm text-muted-foreground">Total Guests</p>
-              <p className="font-mono text-2xl font-bold">{stats.total}</p>
+              <p className="text-sm font-semibold text-purple-600">Total Guests</p>
+              <p className="font-mono text-2xl font-bold text-purple-700">{stats.total}</p>
             </div>
           </div>
         </Card>
 
-        <Card className="p-4">
+        <Card className="p-4 border-2 border-green-200 bg-gradient-to-br from-green-50 to-emerald-50">
           <div className="flex items-center gap-3">
-            <Check className="w-5 h-5 text-green-600" />
+            <div className="p-2 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 shadow-lg">
+              <Check className="w-5 h-5 text-white" />
+            </div>
             <div>
-              <p className="text-sm text-muted-foreground">Confirmed</p>
-              <p className="font-mono text-2xl font-bold">{stats.confirmed}</p>
+              <p className="text-sm font-semibold text-green-600">Confirmed</p>
+              <p className="font-mono text-2xl font-bold text-green-700">{stats.confirmed}</p>
             </div>
           </div>
         </Card>
 
-        <Card className="p-4">
+        <Card className="p-4 border-2 border-yellow-200 bg-gradient-to-br from-yellow-50 to-amber-50">
           <div className="flex items-center gap-3">
-            <Clock className="w-5 h-5 text-yellow-600" />
+            <div className="p-2 rounded-lg bg-gradient-to-br from-yellow-500 to-amber-500 shadow-lg">
+              <Clock className="w-5 h-5 text-white" />
+            </div>
             <div>
-              <p className="text-sm text-muted-foreground">Pending</p>
+              <p className="text-sm font-semibold text-yellow-600">Pending</p>
               <p className="font-mono text-2xl font-bold">{stats.pending}</p>
             </div>
           </div>
         </Card>
 
-        <Card className="p-4">
+        <Card className="p-4 border-2 border-red-200 bg-gradient-to-br from-red-50 to-rose-50">
           <div className="flex items-center gap-3">
-            <X className="w-5 h-5 text-red-600" />
+            <div className="p-2 rounded-lg bg-gradient-to-br from-red-500 to-rose-500 shadow-lg">
+              <X className="w-5 h-5 text-white" />
+            </div>
             <div>
-              <p className="text-sm text-muted-foreground">Declined</p>
-              <p className="font-mono text-2xl font-bold">{stats.declined}</p>
+              <p className="text-sm font-semibold text-red-600">Declined</p>
+              <p className="font-mono text-2xl font-bold text-red-700">{stats.declined}</p>
             </div>
           </div>
         </Card>

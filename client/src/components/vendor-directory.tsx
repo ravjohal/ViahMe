@@ -103,12 +103,12 @@ export function VendorDirectory({ vendors, onSelectVendor, tradition }: VendorDi
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="font-display text-3xl font-bold text-foreground mb-2">
-          Vendor Directory
-        </h2>
-        <p className="text-muted-foreground">
-          Discover culturally-specialized service providers for your celebration
+      <div className="mb-8">
+        <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-600 bg-clip-text text-transparent mb-2" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+          Vendor Directory ✨
+        </h1>
+        <p className="text-lg font-semibold bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+          Discover culturally-specialized service providers 🎊
         </p>
       </div>
 

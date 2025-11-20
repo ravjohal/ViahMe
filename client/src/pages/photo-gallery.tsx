@@ -191,9 +191,11 @@ export default function PhotoGallery() {
       <div className="max-w-7xl mx-auto px-6 py-12">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-playfair font-bold mb-2">Photo Gallery</h1>
-          <p className="text-muted-foreground">
-            Manage your inspiration boards, event photos, and vendor portfolios
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-amber-600 via-orange-600 to-pink-600 bg-clip-text text-transparent mb-2" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+            Photo Gallery ✨
+          </h1>
+          <p className="text-lg font-semibold bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+            Manage your inspiration boards, event photos, and vendor portfolios 🎊
           </p>
         </div>
 
@@ -213,7 +215,7 @@ export default function PhotoGallery() {
 
             <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
               <DialogTrigger asChild>
-                <Button data-testid="button-create-gallery">
+                <Button data-testid="button-create-gallery" className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg">
                   <Plus className="h-4 w-4 mr-2" />
                   Create Gallery
                 </Button>

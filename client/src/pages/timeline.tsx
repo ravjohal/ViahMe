@@ -179,11 +179,11 @@ export default function TimelinePage() {
   return (
     <div className="container mx-auto px-6 py-8">
       <div className="mb-8">
-        <h1 className="font-display text-4xl font-bold text-foreground mb-2">
-          Event Timeline
+        <h1 className="text-5xl font-bold bg-gradient-to-r from-orange-600 via-pink-600 to-purple-600 bg-clip-text text-transparent mb-2" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+          Event Timeline ✨
         </h1>
-        <p className="text-muted-foreground text-lg">
-          Manage your complete celebration schedule
+        <p className="text-lg font-semibold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+          Manage your complete celebration schedule 🎊
         </p>
       </div>
 
@@ -207,7 +207,7 @@ export default function TimelinePage() {
           }
         }}>
           <DialogTrigger asChild>
-            <Button data-testid="button-add-event">
+            <Button data-testid="button-add-event" className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white shadow-lg">
               <Plus className="w-4 h-4 mr-2" />
               Add Event
             </Button>
@@ -386,6 +386,7 @@ export default function TimelinePage() {
                     type="submit"
                     disabled={createMutation.isPending || updateMutation.isPending}
                     data-testid="button-save-event"
+                    className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white shadow-lg"
                   >
                     {createMutation.isPending || updateMutation.isPending ? "Saving..." : editingEvent ? "Update Event" : "Create Event"}
                   </Button>
@@ -410,7 +411,7 @@ export default function TimelinePage() {
             <p className="text-muted-foreground mb-4">
               Start building your celebration timeline
             </p>
-            <Button onClick={() => setDialogOpen(true)} data-testid="button-add-first-event">
+            <Button onClick={() => setDialogOpen(true)} data-testid="button-add-first-event" className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white shadow-lg">
               <Plus className="w-4 h-4 mr-2" />
               Add Your First Event
             </Button>
@@ -422,7 +423,7 @@ export default function TimelinePage() {
             return (
               <Card
                 key={event.id}
-                className={`p-6 border-l-4 ${EVENT_COLORS[event.type] || EVENT_COLORS.custom} hover-elevate transition-all`}
+                className={`p-6 border-l-4 ${EVENT_COLORS[event.type] || EVENT_COLORS.custom} hover-elevate transition-all bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50`}
                 data-testid={`card-event-${event.id}`}
               >
                 <div className="flex items-start justify-between gap-4">

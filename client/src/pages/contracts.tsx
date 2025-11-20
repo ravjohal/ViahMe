@@ -188,10 +188,14 @@ export default function ContractsPage() {
     <div className="p-6 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-serif font-bold" data-testid="heading-contracts">Contract Management</h1>
-          <p className="text-muted-foreground">Manage vendor contracts and payment milestones</p>
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2" style={{ fontFamily: 'Cormorant Garamond, serif' }} data-testid="heading-contracts">
+            Contract Management ✨
+          </h1>
+          <p className="text-lg font-semibold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+            Manage vendor contracts and payment milestones 🎊
+          </p>
         </div>
-        <Button onClick={openAddDialog} data-testid="button-add-contract">
+        <Button onClick={openAddDialog} data-testid="button-add-contract" className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white shadow-lg">
           <Plus className="w-4 h-4 mr-2" />
           Add Contract
         </Button>
@@ -199,32 +203,32 @@ export default function ContractsPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card>
+        <Card className="border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50">
           <CardHeader className="pb-2">
-            <CardDescription>Total Contracts</CardDescription>
-            <CardTitle className="text-2xl" data-testid="text-total-contracts">{contracts.length}</CardTitle>
+            <CardDescription className="text-purple-600 font-semibold">Total Contracts</CardDescription>
+            <CardTitle className="text-2xl text-purple-700" data-testid="text-total-contracts">{contracts.length}</CardTitle>
           </CardHeader>
         </Card>
-        <Card>
+        <Card className="border-2 border-green-200 bg-gradient-to-br from-green-50 to-emerald-50">
           <CardHeader className="pb-2">
-            <CardDescription>Active</CardDescription>
-            <CardTitle className="text-2xl" data-testid="text-active-contracts">
+            <CardDescription className="text-green-600 font-semibold">Active</CardDescription>
+            <CardTitle className="text-2xl text-green-700" data-testid="text-active-contracts">
               {contracts.filter((c) => c.status === "active").length}
             </CardTitle>
           </CardHeader>
         </Card>
-        <Card>
+        <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50">
           <CardHeader className="pb-2">
-            <CardDescription>Signed</CardDescription>
-            <CardTitle className="text-2xl" data-testid="text-signed-contracts">
+            <CardDescription className="text-blue-600 font-semibold">Signed</CardDescription>
+            <CardTitle className="text-2xl text-blue-700" data-testid="text-signed-contracts">
               {contracts.filter((c) => c.status === "signed").length}
             </CardTitle>
           </CardHeader>
         </Card>
-        <Card>
+        <Card className="border-2 border-yellow-200 bg-gradient-to-br from-yellow-50 to-amber-50">
           <CardHeader className="pb-2">
-            <CardDescription>Pending</CardDescription>
-            <CardTitle className="text-2xl" data-testid="text-pending-contracts">
+            <CardDescription className="text-yellow-600 font-semibold">Pending</CardDescription>
+            <CardTitle className="text-2xl text-yellow-700" data-testid="text-pending-contracts">
               {contracts.filter((c) => c.status === "draft" || c.status === "sent").length}
             </CardTitle>
           </CardHeader>

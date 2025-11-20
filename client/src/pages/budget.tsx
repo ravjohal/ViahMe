@@ -243,14 +243,14 @@ export default function Budget() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-display text-2xl font-bold text-foreground mb-1">
-                Budget Management
+              <h2 className="text-5xl font-bold bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 bg-clip-text text-transparent mb-1" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+                Budget Management ✨
               </h2>
-              <p className="text-muted-foreground">
+              <p className="text-lg font-semibold bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
                 Track and manage your wedding expenses
               </p>
             </div>
-            <Button onClick={handleAddCategory} data-testid="button-add-category">
+            <Button onClick={handleAddCategory} data-testid="button-add-category" className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-lg">
               <DollarSign className="w-4 h-4 mr-2" />
               Add Category
             </Button>

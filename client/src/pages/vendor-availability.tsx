@@ -224,9 +224,11 @@ export default function VendorAvailabilityCalendar() {
       <div className="max-w-7xl mx-auto px-6 py-12">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-playfair font-bold mb-2">Vendor Availability</h1>
-          <p className="text-muted-foreground">
-            Real-time vendor calendar with instant booking confirmation
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 bg-clip-text text-transparent mb-2" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+            Vendor Availability ✨
+          </h1>
+          <p className="text-lg font-semibold bg-gradient-to-r from-violet-500 to-purple-500 bg-clip-text text-transparent" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+            Real-time vendor calendar with instant booking confirmation 🎊
           </p>
         </div>
 
