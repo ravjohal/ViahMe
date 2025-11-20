@@ -17,6 +17,8 @@ import VendorDashboard from "@/pages/vendor-dashboard";
 import Messages from "@/pages/messages";
 import Playlists from "@/pages/playlists";
 import Documents from "@/pages/documents";
+import WebsiteBuilder from "@/pages/website-builder";
+import GuestWebsite from "@/pages/guest-website";
 
 function Router() {
   return (
@@ -35,6 +37,8 @@ function Router() {
       <Route path="/messages" component={Messages} />
       <Route path="/playlists" component={Playlists} />
       <Route path="/documents" component={Documents} />
+      <Route path="/website-builder" component={WebsiteBuilder} />
+      <Route path="/wedding/:slug" component={GuestWebsite} />
       <Route component={NotFound} />
     </Switch>
   );
