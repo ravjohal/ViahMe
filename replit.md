@@ -57,6 +57,22 @@ Key architectural decisions include:
   - **Wedding Schema Extensions**: Added partner1Name, partner2Name, coupleEmail, and couplePhone fields to weddings table for email personalization
   - **Booking Schema Extensions**: Added timeSlot field to bookings table for precise scheduling information in emails
   - Architecture: Replit integration-based API key management, uncacheable Resend client instances to prevent stale configuration, and fire-and-forget async pattern for reliability.
+- **Dual-Persona Authentication System**: Fully operational email-based authentication supporting both Couples and Vendors with distinct user journeys:
+  - **Couple Auth Flow**: Onboarding → Registration (creates user + wedding) → Auto-login → Dashboard redirect with wedding context
+  - **Vendor Auth Flow**: Vendor Registration → Login → Vendor Dashboard → Profile Creation (accessible with or without email verification)
+  - **Session Management**: Express-session with PostgreSQL store (connect-pg-simple), secure HTTP-only cookies, automatic session refresh
+  - **Auth Guards**: Protected routes with role-based access control, infinite loop prevention (isLoading checks), graceful redirects for unauthorized access
+  - **Email Verification**: Optional email verification system with verification tokens and expiry timestamps (vendors can create profiles before verification for improved UX)
+  - **Type Safety**: User.id correctly typed as string (UUID), auth response format `{ user: User | null }`, proper null handling throughout
+  - **Cache Management**: TanStack Query v5 with async invalidation, proper refetching after mutations, auth state synchronization
+  - **Critical Fixes Applied**:
+    - Fixed User.id type from number to string (UUID) to match database schema
+    - Corrected auth hook to extract user from envelope response `{ user: {...} }`
+    - Fixed vendor dashboard runtime errors by adding `hasProfile` checks before accessing vendor properties
+    - Removed email verification requirement for vendor profile creation to improve onboarding UX
+    - Implemented proper async cache invalidation with `await queryClient.invalidateQueries()`
+    - Added auth guards with loading state checks to prevent infinite redirect loops
+  - **Testing**: Complete E2E test coverage for both personas with all auth flows verified and passing
 - **UI/UX**: Features a warm orange/gold primary color palette, elegant typography (Playfair Display for headings, Inter for body, JetBrains Mono for data), Shadcn UI components for consistency, hover elevate interactions, responsive design, and cultural icons for event types.
 
 ## External Dependencies
