@@ -33,12 +33,16 @@ export default function WebsiteBuilder() {
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
 
-  // Get current wedding (for MVP, use first wedding)
+  // Get current wedding (for MVP, use most recent wedding)
   const { data: weddings } = useQuery<any[]>({
     queryKey: ["/api/weddings"],
   });
 
-  const weddingId = weddings?.[0]?.id;
+  // Sort by createdAt to get the most recent wedding
+  const sortedWeddings = weddings?.sort((a, b) => 
+    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+  const weddingId = sortedWeddings?.[0]?.id;
 
   // Get wedding website
   const { data: website, isLoading } = useQuery<WeddingWebsite>({

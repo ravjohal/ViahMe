@@ -61,7 +61,7 @@ export default function Onboarding() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
-  const handleComplete = async (data: Omit<InsertWedding, "userId">) => {
+  const handleComplete = async (data: any) => {
     try {
       const response = await apiRequest("POST", "/api/weddings", {
         ...data,

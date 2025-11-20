@@ -14,9 +14,9 @@ import { motion, AnimatePresence } from "framer-motion";
 const questionnaireSchema = z.object({
   tradition: z.enum(['sikh', 'hindu', 'muslim', 'gujarati', 'south_indian', 'mixed', 'general']),
   role: z.enum(['bride', 'groom', 'planner']),
-  weddingDate: z.string().optional().transform(val => val ? new Date(val) : undefined),
+  weddingDate: z.string().optional(),
   location: z.string().min(1, "Location is required"),
-  guestCountEstimate: z.coerce.number().min(1).optional(),
+  guestCountEstimate: z.string().optional(),
   totalBudget: z.string().optional(),
 });
 
@@ -78,7 +78,18 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
     if (currentStep < STEPS.length) {
       setCurrentStep(currentStep + 1);
     } else {
-      onComplete(data);
+      // Transform data before passing to onComplete
+      const transformedData = {
+        ...data,
+        weddingDate: data.weddingDate ? new Date(data.weddingDate) : undefined,
+        guestCountEstimate: data.guestCountEstimate && data.guestCountEstimate !== "" 
+          ? Number(data.guestCountEstimate) 
+          : undefined,
+        totalBudget: data.totalBudget && data.totalBudget !== "" 
+          ? data.totalBudget 
+          : null,
+      };
+      onComplete(transformedData as any);
     }
   };
 
