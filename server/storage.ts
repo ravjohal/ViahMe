@@ -29,6 +29,8 @@ import {
   type InsertPlaylistSong,
   type SongVote,
   type InsertSongVote,
+  type Document,
+  type InsertDocument,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -153,6 +155,14 @@ export interface IStorage {
   createSongVote(vote: InsertSongVote): Promise<SongVote>;
   deleteVote(voterId: string, songId: string): Promise<boolean>; // Remove a user's vote
   hasUserVoted(voterId: string, songId: string): Promise<boolean>; // Check if user already voted
+
+  // Documents
+  getDocument(id: string): Promise<Document | undefined>;
+  getDocumentsByWedding(weddingId: string): Promise<Document[]>;
+  getDocumentsByEvent(eventId: string): Promise<Document[]>;
+  createDocument(document: InsertDocument): Promise<Document>;
+  updateDocument(id: string, document: Partial<InsertDocument>): Promise<Document | undefined>;
+  deleteDocument(id: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -171,6 +181,7 @@ export class MemStorage implements IStorage {
   private playlists: Map<string, Playlist>;
   private playlistSongs: Map<string, PlaylistSong>;
   private songVotes: Map<string, SongVote>;
+  private documents: Map<string, Document>;
 
   constructor() {
     this.users = new Map();
@@ -188,6 +199,7 @@ export class MemStorage implements IStorage {
     this.playlists = new Map();
     this.playlistSongs = new Map();
     this.songVotes = new Map();
+    this.documents = new Map();
   }
 
   // Users
@@ -807,6 +819,51 @@ export class MemStorage implements IStorage {
       (v) => v.voterId === voterId && v.songId === songId
     );
   }
+
+  // Documents
+  async getDocument(id: string): Promise<Document | undefined> {
+    return this.documents.get(id);
+  }
+
+  async getDocumentsByWedding(weddingId: string): Promise<Document[]> {
+    return Array.from(this.documents.values()).filter(
+      (d) => d.weddingId === weddingId
+    );
+  }
+
+  async getDocumentsByEvent(eventId: string): Promise<Document[]> {
+    return Array.from(this.documents.values()).filter(
+      (d) => d.eventId === eventId
+    );
+  }
+
+  async createDocument(document: InsertDocument): Promise<Document> {
+    const newDocument: Document = {
+      id: randomUUID(),
+      ...document,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      sharedWithVendors: document.sharedWithVendors || [],
+    };
+    this.documents.set(newDocument.id, newDocument);
+    return newDocument;
+  }
+
+  async updateDocument(id: string, document: Partial<InsertDocument>): Promise<Document | undefined> {
+    const existing = this.documents.get(id);
+    if (!existing) return undefined;
+    const updated: Document = {
+      ...existing,
+      ...document,
+      updatedAt: new Date(),
+    };
+    this.documents.set(id, updated);
+    return updated;
+  }
+
+  async deleteDocument(id: string): Promise<boolean> {
+    return this.documents.delete(id);
+  }
 }
 
 import { neon } from "@neondatabase/serverless";
@@ -1333,6 +1390,57 @@ export class DBStorage implements IStorage {
         eq(schema.songVotes.voterId, voterId),
         eq(schema.songVotes.songId, songId)
       ));
+    return result.length > 0;
+  }
+
+  // Documents
+  async getDocument(id: string): Promise<Document | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.documents)
+      .where(eq(schema.documents.id, id));
+    return result[0];
+  }
+
+  async getDocumentsByWedding(weddingId: string): Promise<Document[]> {
+    return await this.db
+      .select()
+      .from(schema.documents)
+      .where(eq(schema.documents.weddingId, weddingId));
+  }
+
+  async getDocumentsByEvent(eventId: string): Promise<Document[]> {
+    return await this.db
+      .select()
+      .from(schema.documents)
+      .where(eq(schema.documents.eventId, eventId));
+  }
+
+  async createDocument(document: InsertDocument): Promise<Document> {
+    const result = await this.db
+      .insert(schema.documents)
+      .values(document)
+      .returning();
+    return result[0];
+  }
+
+  async updateDocument(id: string, document: Partial<InsertDocument>): Promise<Document | undefined> {
+    const result = await this.db
+      .update(schema.documents)
+      .set({
+        ...document,
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.documents.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteDocument(id: string): Promise<boolean> {
+    const result = await this.db
+      .delete(schema.documents)
+      .where(eq(schema.documents.id, id))
+      .returning();
     return result.length > 0;
   }
 }
