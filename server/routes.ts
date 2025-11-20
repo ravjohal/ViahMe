@@ -18,6 +18,9 @@ import {
   insertSongVoteSchema,
   insertDocumentSchema,
   insertWeddingWebsiteSchema,
+  insertPhotoGallerySchema,
+  insertPhotoSchema,
+  insertVendorAvailabilitySchema,
 } from "@shared/schema";
 import { seedVendors, seedBudgetBenchmarks } from "./seed-data";
 
@@ -1280,6 +1283,313 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(guest);
     } catch (error) {
       res.status(500).json({ error: "Failed to update RSVP" });
+    }
+  });
+
+  // ============================================================================
+  // PHOTO GALLERIES
+  // ============================================================================
+
+  // Get all galleries for a wedding
+  app.get("/api/galleries/wedding/:weddingId", async (req, res) => {
+    try {
+      const galleries = await storage.getGalleriesByWedding(req.params.weddingId);
+      res.json(galleries);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch galleries" });
+    }
+  });
+
+  // Get all galleries for a vendor
+  app.get("/api/galleries/vendor/:vendorId", async (req, res) => {
+    try {
+      const galleries = await storage.getGalleriesByVendor(req.params.vendorId);
+      res.json(galleries);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch vendor galleries" });
+    }
+  });
+
+  // Get all galleries for an event
+  app.get("/api/galleries/event/:eventId", async (req, res) => {
+    try {
+      const galleries = await storage.getGalleriesByEvent(req.params.eventId);
+      res.json(galleries);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch event galleries" });
+    }
+  });
+
+  // Get galleries by type (inspiration, vendor_portfolio, event_photos)
+  app.get("/api/galleries/type/:type", async (req, res) => {
+    try {
+      const type = req.params.type as 'inspiration' | 'vendor_portfolio' | 'event_photos';
+      const galleries = await storage.getGalleriesByType(type);
+      res.json(galleries);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch galleries by type" });
+    }
+  });
+
+  // Get single gallery
+  app.get("/api/galleries/:id", async (req, res) => {
+    try {
+      const gallery = await storage.getPhotoGallery(req.params.id);
+      if (!gallery) {
+        return res.status(404).json({ error: "Gallery not found" });
+      }
+      res.json(gallery);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch gallery" });
+    }
+  });
+
+  // Create new gallery
+  app.post("/api/galleries", async (req, res) => {
+    try {
+      const validatedData = insertPhotoGallerySchema.parse(req.body);
+      const gallery = await storage.createPhotoGallery(validatedData);
+      res.json(gallery);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      res.status(500).json({ error: "Failed to create gallery" });
+    }
+  });
+
+  // Update gallery
+  app.patch("/api/galleries/:id", async (req, res) => {
+    try {
+      const validatedData = insertPhotoGallerySchema.partial().parse(req.body);
+      const gallery = await storage.updatePhotoGallery(req.params.id, validatedData);
+      if (!gallery) {
+        return res.status(404).json({ error: "Gallery not found" });
+      }
+      res.json(gallery);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      res.status(500).json({ error: "Failed to update gallery" });
+    }
+  });
+
+  // Delete gallery
+  app.delete("/api/galleries/:id", async (req, res) => {
+    try {
+      const success = await storage.deletePhotoGallery(req.params.id);
+      if (!success) {
+        return res.status(404).json({ error: "Gallery not found" });
+      }
+      res.json({ message: "Gallery deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete gallery" });
+    }
+  });
+
+  // ============================================================================
+  // PHOTOS
+  // ============================================================================
+
+  // Get all photos in a gallery
+  app.get("/api/photos/gallery/:galleryId", async (req, res) => {
+    try {
+      const photos = await storage.getPhotosByGallery(req.params.galleryId);
+      res.json(photos);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch photos" });
+    }
+  });
+
+  // Get single photo
+  app.get("/api/photos/:id", async (req, res) => {
+    try {
+      const photo = await storage.getPhoto(req.params.id);
+      if (!photo) {
+        return res.status(404).json({ error: "Photo not found" });
+      }
+      res.json(photo);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch photo" });
+    }
+  });
+
+  // Create new photo
+  app.post("/api/photos", async (req, res) => {
+    try {
+      const validatedData = insertPhotoSchema.parse(req.body);
+      const photo = await storage.createPhoto(validatedData);
+      res.json(photo);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      res.status(500).json({ error: "Failed to create photo" });
+    }
+  });
+
+  // Update photo
+  app.patch("/api/photos/:id", async (req, res) => {
+    try {
+      const validatedData = insertPhotoSchema.partial().parse(req.body);
+      const photo = await storage.updatePhoto(req.params.id, validatedData);
+      if (!photo) {
+        return res.status(404).json({ error: "Photo not found" });
+      }
+      res.json(photo);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      res.status(500).json({ error: "Failed to update photo" });
+    }
+  });
+
+  // Delete photo
+  app.delete("/api/photos/:id", async (req, res) => {
+    try {
+      const success = await storage.deletePhoto(req.params.id);
+      if (!success) {
+        return res.status(404).json({ error: "Photo not found" });
+      }
+      res.json({ message: "Photo deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete photo" });
+    }
+  });
+
+  // ============================================================================
+  // VENDOR AVAILABILITY
+  // ============================================================================
+
+  // Get all availability slots for a vendor
+  app.get("/api/vendor-availability/vendor/:vendorId", async (req, res) => {
+    try {
+      const availability = await storage.getAvailabilityByVendor(req.params.vendorId);
+      res.json(availability);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch vendor availability" });
+    }
+  });
+
+  // Get availability for a vendor within a date range
+  app.get("/api/vendor-availability/vendor/:vendorId/range", async (req, res) => {
+    try {
+      const { startDate, endDate } = req.query;
+      if (!startDate || !endDate) {
+        return res.status(400).json({ error: "startDate and endDate are required" });
+      }
+      const availability = await storage.getAvailabilityByVendorAndDateRange(
+        req.params.vendorId,
+        new Date(startDate as string),
+        new Date(endDate as string)
+      );
+      res.json(availability);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch availability by date range" });
+    }
+  });
+
+  // Get availability for a vendor on a specific date
+  app.get("/api/vendor-availability/vendor/:vendorId/date/:date", async (req, res) => {
+    try {
+      const availability = await storage.getAvailabilityByDate(
+        req.params.vendorId,
+        new Date(req.params.date)
+      );
+      res.json(availability);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch availability for date" });
+    }
+  });
+
+  // Check for booking conflicts
+  app.post("/api/vendor-availability/check-conflicts", async (req, res) => {
+    try {
+      const { vendorId, date, timeSlot, excludeBookingId } = req.body;
+      if (!vendorId || !date || !timeSlot) {
+        return res.status(400).json({ error: "vendorId, date, and timeSlot are required" });
+      }
+      const hasConflicts = await storage.checkAvailabilityConflicts(
+        vendorId,
+        new Date(date),
+        timeSlot,
+        excludeBookingId
+      );
+      res.json({ hasConflicts });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to check conflicts" });
+    }
+  });
+
+  // Get single availability slot
+  app.get("/api/vendor-availability/:id", async (req, res) => {
+    try {
+      const availability = await storage.getVendorAvailability(req.params.id);
+      if (!availability) {
+        return res.status(404).json({ error: "Availability slot not found" });
+      }
+      res.json(availability);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch availability slot" });
+    }
+  });
+
+  // Create new availability slot
+  app.post("/api/vendor-availability", async (req, res) => {
+    try {
+      const validatedData = insertVendorAvailabilitySchema.parse(req.body);
+      
+      // Check for conflicts before creating
+      const hasConflicts = await storage.checkAvailabilityConflicts(
+        validatedData.vendorId,
+        new Date(validatedData.date),
+        validatedData.timeSlot || 'full_day',
+        undefined
+      );
+      
+      if (hasConflicts) {
+        return res.status(409).json({ error: "Vendor is already booked for this time slot" });
+      }
+      
+      const availability = await storage.createVendorAvailability(validatedData);
+      res.json(availability);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      res.status(500).json({ error: "Failed to create availability slot" });
+    }
+  });
+
+  // Update availability slot
+  app.patch("/api/vendor-availability/:id", async (req, res) => {
+    try {
+      const validatedData = insertVendorAvailabilitySchema.partial().parse(req.body);
+      const availability = await storage.updateVendorAvailability(req.params.id, validatedData);
+      if (!availability) {
+        return res.status(404).json({ error: "Availability slot not found" });
+      }
+      res.json(availability);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      res.status(500).json({ error: "Failed to update availability slot" });
+    }
+  });
+
+  // Delete availability slot
+  app.delete("/api/vendor-availability/:id", async (req, res) => {
+    try {
+      const success = await storage.deleteVendorAvailability(req.params.id);
+      if (!success) {
+        return res.status(404).json({ error: "Availability slot not found" });
+      }
+      res.json({ message: "Availability slot deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete availability slot" });
     }
   });
 
