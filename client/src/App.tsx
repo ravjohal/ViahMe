@@ -11,6 +11,7 @@ import Guests from "@/pages/guests";
 import Tasks from "@/pages/tasks";
 import Timeline from "@/pages/timeline";
 import Budget from "@/pages/budget";
+import BudgetIntelligence from "@/pages/budget-intelligence";
 import Contracts from "@/pages/contracts";
 import VendorDashboard from "@/pages/vendor-dashboard";
 import Messages from "@/pages/messages";
@@ -26,6 +27,7 @@ function Router() {
       <Route path="/tasks" component={Tasks} />
       <Route path="/timeline" component={Timeline} />
       <Route path="/budget" component={Budget} />
+      <Route path="/budget-intelligence" component={BudgetIntelligence} />
       <Route path="/contracts" component={Contracts} />
       <Route path="/vendor-dashboard" component={VendorDashboard} />
       <Route path="/messages" component={Messages} />

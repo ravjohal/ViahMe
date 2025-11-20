@@ -399,3 +399,73 @@ export const insertNotificationPreferencesSchema = createInsertSchema(notificati
 
 export type InsertNotificationPreferences = z.infer<typeof insertNotificationPreferencesSchema>;
 export type NotificationPreferences = typeof notificationPreferences.$inferSelect;
+
+// ============================================================================
+// BUDGET BENCHMARKS - Cultural spending benchmarks by city and tradition
+// ============================================================================
+
+export const budgetBenchmarks = pgTable("budget_benchmarks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  city: text("city").notNull(), // 'San Francisco Bay Area' | 'New York City' | 'Los Angeles' | 'Chicago' | 'Seattle'
+  tradition: text("tradition").notNull(), // 'sikh' | 'hindu' | 'general'
+  category: text("category").notNull(), // Vendor category or budget category
+  averageSpend: decimal("average_spend", { precision: 10, scale: 2 }).notNull(),
+  minSpend: decimal("min_spend", { precision: 10, scale: 2 }).notNull(),
+  maxSpend: decimal("max_spend", { precision: 10, scale: 2 }).notNull(),
+  percentageOfBudget: integer("percentage_of_budget"), // Recommended % of total budget
+  sampleSize: integer("sample_size").default(0), // Number of weddings in this benchmark
+  description: text("description"), // Context about this spending category
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertBudgetBenchmarkSchema = createInsertSchema(budgetBenchmarks).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  city: z.enum(['San Francisco Bay Area', 'New York City', 'Los Angeles', 'Chicago', 'Seattle']),
+  tradition: z.enum(['sikh', 'hindu', 'general']),
+  averageSpend: z.string(),
+  minSpend: z.string(),
+  maxSpend: z.string(),
+});
+
+export type InsertBudgetBenchmark = z.infer<typeof insertBudgetBenchmarkSchema>;
+export type BudgetBenchmark = typeof budgetBenchmarks.$inferSelect;
+
+// Budget Analytics Response Type
+export interface BudgetAnalyticsResponse {
+  wedding: {
+    city: string;
+    tradition: string;
+    totalBudget: string | null;
+  };
+  benchmarks: Array<{
+    category: string;
+    averageSpend: string;
+    minSpend: string;
+    maxSpend: string;
+    percentageOfBudget: number | null;
+    sampleSize: number | null;
+    description: string | null;
+  }>;
+  currentBudget: Array<{
+    category: string;
+    allocated: string;
+    spent: string;
+    percentage: number | null;
+  }>;
+  vendorComparison: Array<{
+    category: string;
+    vendorCount: number;
+    priceRangeDistribution: {
+      '$': number;
+      '$$': number;
+      '$$$': number;
+      '$$$$': number;
+    };
+    averageRating: string;
+  }>;
+  recommendations: string[];
+}

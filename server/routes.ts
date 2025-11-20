@@ -12,15 +12,21 @@ import {
   insertContractSchema,
   insertMessageSchema,
   insertReviewSchema,
+  insertBudgetBenchmarkSchema,
 } from "@shared/schema";
-import { seedVendors } from "./seed-data";
+import { seedVendors, seedBudgetBenchmarks } from "./seed-data";
 
 // Seed vendors only if database is empty
 (async () => {
   const existingVendors = await storage.getAllVendors();
   if (existingVendors.length === 0) {
     await seedVendors(storage);
-    console.log("Seeded 20 vendors for Bay Area South Asian weddings");
+  }
+  
+  // Seed budget benchmarks only if database is empty
+  const existingBenchmarks = await storage.getAllBudgetBenchmarks();
+  if (existingBenchmarks.length === 0) {
+    await seedBudgetBenchmarks(storage);
   }
 })();
 
@@ -716,6 +722,210 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================================================
+  // BUDGET BENCHMARKS - Cultural spending benchmarks and analytics
+  // ============================================================================
+
+  // Get all budget benchmarks
+  app.get("/api/budget-benchmarks", async (req, res) => {
+    try {
+      const benchmarks = await storage.getAllBudgetBenchmarks();
+      res.json(benchmarks);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch budget benchmarks" });
+    }
+  });
+
+  // Get budget benchmarks for a city and tradition
+  app.get("/api/budget-benchmarks/:city/:tradition", async (req, res) => {
+    try {
+      const benchmarks = await storage.getBudgetBenchmarks(
+        req.params.city,
+        req.params.tradition
+      );
+      res.json(benchmarks);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch budget benchmarks" });
+    }
+  });
+
+  // Get budget analytics for a wedding
+  app.get("/api/budget-analytics/:weddingId", async (req, res) => {
+    try {
+      const wedding = await storage.getWedding(req.params.weddingId);
+      if (!wedding) {
+        return res.status(404).json({ error: "Wedding not found" });
+      }
+
+      // Get benchmarks for this wedding's city and tradition
+      const benchmarks = await storage.getBudgetBenchmarks(
+        wedding.location,
+        wedding.tradition
+      );
+
+      // Get actual budget categories for this wedding
+      const budgetCategories = await storage.getBudgetCategoriesByWedding(req.params.weddingId);
+
+      // Get vendors with price ranges for comparison
+      const vendors = await storage.getAllVendors();
+      const vendorsByCategory: Record<string, any[]> = {};
+      vendors.forEach((vendor) => {
+        if (!vendorsByCategory[vendor.category]) {
+          vendorsByCategory[vendor.category] = [];
+        }
+        vendorsByCategory[vendor.category].push(vendor);
+      });
+
+      // Calculate analytics
+      const analytics = {
+        wedding: {
+          city: wedding.location,
+          tradition: wedding.tradition,
+          totalBudget: wedding.totalBudget,
+        },
+        benchmarks: benchmarks.map((b) => ({
+          category: b.category,
+          averageSpend: b.averageSpend,
+          minSpend: b.minSpend,
+          maxSpend: b.maxSpend,
+          percentageOfBudget: b.percentageOfBudget,
+          sampleSize: b.sampleSize,
+          description: b.description,
+        })),
+        currentBudget: budgetCategories.map((bc) => ({
+          category: bc.category,
+          allocated: bc.allocatedAmount,
+          spent: bc.spentAmount,
+          percentage: bc.percentage,
+        })),
+        vendorComparison: Object.keys(vendorsByCategory).map((category) => {
+          const categoryVendors = vendorsByCategory[category];
+          const priceRanges = {
+            '$': categoryVendors.filter((v) => v.priceRange === '$').length,
+            '$$': categoryVendors.filter((v) => v.priceRange === '$$').length,
+            '$$$': categoryVendors.filter((v) => v.priceRange === '$$$').length,
+            '$$$$': categoryVendors.filter((v) => v.priceRange === '$$$$').length,
+          };
+          const avgRating = categoryVendors.reduce((sum, v) => {
+            const rating = v.rating ? parseFloat(v.rating) : 0;
+            return sum + rating;
+          }, 0) / categoryVendors.length || 0;
+
+          return {
+            category,
+            vendorCount: categoryVendors.length,
+            priceRangeDistribution: priceRanges,
+            averageRating: avgRating.toFixed(1),
+          };
+        }),
+        recommendations: generateBudgetRecommendations(
+          wedding,
+          benchmarks,
+          budgetCategories
+        ),
+      };
+
+      res.json(analytics);
+    } catch (error) {
+      console.error("Budget analytics error:", error);
+      res.status(500).json({ error: "Failed to generate budget analytics" });
+    }
+  });
+
+  // Create a budget benchmark (admin/seeding)
+  app.post("/api/budget-benchmarks", async (req, res) => {
+    try {
+      const validatedData = insertBudgetBenchmarkSchema.parse(req.body);
+      const benchmark = await storage.createBudgetBenchmark(validatedData);
+      res.json(benchmark);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      res.status(500).json({ error: "Failed to create budget benchmark" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
+}
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+function generateBudgetRecommendations(
+  wedding: any,
+  benchmarks: any[],
+  budgetCategories: any[]
+): string[] {
+  const recommendations: string[] = [];
+  const totalBudget = wedding.totalBudget ? parseFloat(wedding.totalBudget) : 0;
+
+  if (totalBudget === 0) {
+    return ["Set a total budget to receive personalized recommendations"];
+  }
+
+  // Compare current allocations to benchmarks
+  budgetCategories.forEach((bc) => {
+    const benchmark = benchmarks.find((b) => b.category === bc.category);
+    if (benchmark) {
+      const allocated = parseFloat(bc.allocatedAmount);
+      const avg = parseFloat(benchmark.averageSpend);
+      const min = parseFloat(benchmark.minSpend);
+      const max = parseFloat(benchmark.maxSpend);
+
+      if (allocated < min) {
+        recommendations.push(
+          `Consider increasing ${bc.category} budget: You've allocated $${allocated.toLocaleString()}, but the minimum typical spend in ${wedding.location} is $${min.toLocaleString()}`
+        );
+      } else if (allocated > max) {
+        recommendations.push(
+          `${bc.category} budget is above average: You've allocated $${allocated.toLocaleString()}, while the typical maximum is $${max.toLocaleString()}. Consider if this aligns with your priorities.`
+        );
+      } else if (allocated < avg * 0.8) {
+        recommendations.push(
+          `${bc.category} allocation is below average: You've budgeted $${allocated.toLocaleString()} vs average of $${avg.toLocaleString()}`
+        );
+      }
+    }
+  });
+
+  // Check for missing important categories
+  const essentialCategories = ['Catering', 'Venue', 'Photography', 'DJ'];
+  essentialCategories.forEach((cat) => {
+    const hasCategory = budgetCategories.some((bc) => bc.category === cat);
+    if (!hasCategory) {
+      const benchmark = benchmarks.find((b) => b.category === cat);
+      if (benchmark) {
+        recommendations.push(
+          `Add ${cat} to your budget: Average spend in ${wedding.location} is $${parseFloat(benchmark.averageSpend).toLocaleString()}`
+        );
+      }
+    }
+  });
+
+  // Check total allocation vs total budget
+  const totalAllocated = budgetCategories.reduce(
+    (sum, bc) => sum + parseFloat(bc.allocatedAmount),
+    0
+  );
+
+  if (totalAllocated < totalBudget * 0.8) {
+    recommendations.push(
+      `You've only allocated $${totalAllocated.toLocaleString()} of your $${totalBudget.toLocaleString()} budget. Consider planning for additional categories.`
+    );
+  } else if (totalAllocated > totalBudget) {
+    recommendations.push(
+      `⚠️ Budget alert: You've allocated $${totalAllocated.toLocaleString()}, which exceeds your total budget of $${totalBudget.toLocaleString()} by $${(totalAllocated - totalBudget).toLocaleString()}`
+    );
+  }
+
+  if (recommendations.length === 0) {
+    recommendations.push(
+      `✅ Your budget allocation looks well-balanced compared to ${wedding.tradition} wedding benchmarks in ${wedding.location}!`
+    );
+  }
+
+  return recommendations;
 }
