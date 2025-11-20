@@ -2,6 +2,13 @@ import { Resend } from 'resend';
 
 let connectionSettings: any;
 
+export enum EmailTemplate {
+  VERIFICATION = 'verification',
+  PASSWORD_RESET = 'password_reset',
+  WELCOME_COUPLE = 'welcome_couple',
+  WELCOME_VENDOR = 'welcome_vendor',
+}
+
 async function getCredentials() {
   const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
   const xReplitToken = process.env.REPL_IDENTITY 
@@ -502,6 +509,285 @@ export async function sendRsvpConfirmationEmail(params: {
     return result;
   } catch (error) {
     console.error('Failed to send RSVP confirmation email:', error);
+    throw error;
+  }
+}
+
+export async function sendEmail(params: {
+  to: string;
+  subject: string;
+  template: EmailTemplate;
+  data: Record<string, any>;
+}) {
+  const { client, fromEmail } = await getUncachableResendClient();
+  const { to, subject, template, data } = params;
+
+  let html = '';
+
+  if (template === EmailTemplate.VERIFICATION) {
+    const { verificationUrl, userEmail } = data;
+    html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+              line-height: 1.6;
+              color: #333;
+              max-width: 600px;
+              margin: 0 auto;
+              padding: 20px;
+            }
+            .header {
+              background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+              color: white;
+              padding: 30px 20px;
+              border-radius: 8px 8px 0 0;
+              text-align: center;
+            }
+            .content {
+              background: white;
+              padding: 30px;
+              border: 1px solid #e5e7eb;
+              border-top: none;
+              border-radius: 0 0 8px 8px;
+            }
+            .button {
+              display: inline-block;
+              background: #f97316;
+              color: white;
+              padding: 12px 30px;
+              text-decoration: none;
+              border-radius: 6px;
+              font-weight: 600;
+              margin: 20px 0;
+            }
+            .footer {
+              text-align: center;
+              padding: 20px;
+              color: #6b7280;
+              font-size: 14px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Welcome to Viah.me!</h1>
+          </div>
+          <div class="content">
+            <p>Hi there,</p>
+            <p>Thank you for registering with Viah.me! Please verify your email address to complete your account setup.</p>
+            <div style="text-align: center;">
+              <a href="${verificationUrl}" class="button">Verify Email Address</a>
+            </div>
+            <p>Or copy and paste this link into your browser:</p>
+            <p style="color: #6b7280; word-break: break-all;">${verificationUrl}</p>
+            <p>This verification link will expire in 24 hours.</p>
+            <p style="margin-top: 30px;">Best regards,<br><strong>The Viah.me Team</strong></p>
+          </div>
+          <div class="footer">
+            <p>Your South Asian Wedding Planning Platform</p>
+          </div>
+        </body>
+      </html>
+    `;
+  } else if (template === EmailTemplate.PASSWORD_RESET) {
+    const { resetUrl, userEmail } = data;
+    html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+              line-height: 1.6;
+              color: #333;
+              max-width: 600px;
+              margin: 0 auto;
+              padding: 20px;
+            }
+            .header {
+              background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+              color: white;
+              padding: 30px 20px;
+              border-radius: 8px 8px 0 0;
+              text-align: center;
+            }
+            .content {
+              background: white;
+              padding: 30px;
+              border: 1px solid #e5e7eb;
+              border-top: none;
+              border-radius: 0 0 8px 8px;
+            }
+            .button {
+              display: inline-block;
+              background: #f97316;
+              color: white;
+              padding: 12px 30px;
+              text-decoration: none;
+              border-radius: 6px;
+              font-weight: 600;
+              margin: 20px 0;
+            }
+            .footer {
+              text-align: center;
+              padding: 20px;
+              color: #6b7280;
+              font-size: 14px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Password Reset Request</h1>
+          </div>
+          <div class="content">
+            <p>Hi there,</p>
+            <p>You requested to reset your password for your Viah.me account.</p>
+            <div style="text-align: center;">
+              <a href="${resetUrl}" class="button">Reset Password</a>
+            </div>
+            <p>Or copy and paste this link into your browser:</p>
+            <p style="color: #6b7280; word-break: break-all;">${resetUrl}</p>
+            <p><strong>This link will expire in 1 hour.</strong></p>
+            <p>If you didn't request a password reset, you can safely ignore this email.</p>
+            <p style="margin-top: 30px;">Best regards,<br><strong>The Viah.me Team</strong></p>
+          </div>
+          <div class="footer">
+            <p>Your South Asian Wedding Planning Platform</p>
+          </div>
+        </body>
+      </html>
+    `;
+  } else if (template === EmailTemplate.WELCOME_COUPLE) {
+    const { userName } = data;
+    html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+              line-height: 1.6;
+              color: #333;
+              max-width: 600px;
+              margin: 0 auto;
+              padding: 20px;
+            }
+            .header {
+              background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+              color: white;
+              padding: 30px 20px;
+              border-radius: 8px 8px 0 0;
+              text-align: center;
+            }
+            .content {
+              background: white;
+              padding: 30px;
+              border: 1px solid #e5e7eb;
+              border-top: none;
+              border-radius: 0 0 8px 8px;
+            }
+            .footer {
+              text-align: center;
+              padding: 20px;
+              color: #6b7280;
+              font-size: 14px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Welcome to Viah.me!</h1>
+          </div>
+          <div class="content">
+            <p>Congratulations on taking the first step toward planning your dream South Asian wedding!</p>
+            <p>We're thrilled to have you join the Viah.me community. Your account is now active and ready to help you plan every detail of your special celebration.</p>
+            <p>Start exploring culturally-specialized vendors, create your timeline, manage your budget, and so much more!</p>
+            <p style="margin-top: 30px;">Best wishes,<br><strong>The Viah.me Team</strong></p>
+          </div>
+          <div class="footer">
+            <p>Your South Asian Wedding Planning Platform</p>
+          </div>
+        </body>
+      </html>
+    `;
+  } else if (template === EmailTemplate.WELCOME_VENDOR) {
+    const { vendorName } = data;
+    html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+              line-height: 1.6;
+              color: #333;
+              max-width: 600px;
+              margin: 0 auto;
+              padding: 20px;
+            }
+            .header {
+              background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+              color: white;
+              padding: 30px 20px;
+              border-radius: 8px 8px 0 0;
+              text-align: center;
+            }
+            .content {
+              background: white;
+              padding: 30px;
+              border: 1px solid #e5e7eb;
+              border-top: none;
+              border-radius: 0 0 8px 8px;
+            }
+            .footer {
+              text-align: center;
+              padding: 20px;
+              color: #6b7280;
+              font-size: 14px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Welcome to Viah.me!</h1>
+          </div>
+          <div class="content">
+            <p>Welcome to the Viah.me Vendor Network!</p>
+            <p>We're excited to have you join our platform of culturally-specialized wedding service providers. Your vendor account is now active.</p>
+            <p>Next steps:</p>
+            <ul>
+              <li>Complete your vendor profile with photos and descriptions</li>
+              <li>Set your availability and pricing</li>
+              <li>Start connecting with couples planning their dream weddings</li>
+            </ul>
+            <p style="margin-top: 30px;">Best regards,<br><strong>The Viah.me Team</strong></p>
+          </div>
+          <div class="footer">
+            <p>Your South Asian Wedding Vendor Platform</p>
+          </div>
+        </body>
+      </html>
+    `;
+  }
+
+  try {
+    const result = await client.emails.send({
+      from: fromEmail,
+      to,
+      subject,
+      html,
+    });
+    return result;
+  } catch (error) {
+    console.error('Failed to send email:', error);
     throw error;
   }
 }

@@ -9,13 +9,36 @@ import { z } from "zod";
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
+  email: text("email").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  role: text("role").notNull(), // 'couple' | 'vendor'
+  emailVerified: boolean("email_verified").notNull().default(false),
+  verificationToken: text("verification_token"),
+  verificationTokenExpires: timestamp("verification_token_expires"),
+  resetToken: text("reset_token"),
+  resetTokenExpires: timestamp("reset_token_expires"),
+  lastLoginAt: timestamp("last_login_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  // Deprecated fields - keeping for backward compatibility
+  username: text("username"),
+  password: text("password"),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+  emailVerified: true,
+  verificationToken: true,
+  verificationTokenExpires: true,
+  resetToken: true,
+  resetTokenExpires: true,
+  lastLoginAt: true,
+  createdAt: true,
   username: true,
   password: true,
+}).extend({
+  email: z.string().email(),
+  passwordHash: z.string().min(8),
+  role: z.enum(['couple', 'vendor']),
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -109,6 +132,7 @@ export type Event = typeof events.$inferSelect;
 
 export const vendors = pgTable("vendors", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id"), // Link to user account (for vendor-owned profiles)
   name: text("name").notNull(),
   category: text("category").notNull(), // 'makeup' | 'dj' | 'dhol' | 'turban_tier' | 'mehndi' | etc
   location: text("location").notNull(),
@@ -119,9 +143,14 @@ export const vendors = pgTable("vendors", {
   portfolio: jsonb("portfolio"), // Array of image URLs
   availability: jsonb("availability"), // Calendar data
   contact: text("contact"),
+  email: text("email"), // Vendor business email
+  phone: text("phone"), // Vendor business phone
+  website: text("website"), // Vendor website URL
   rating: decimal("rating", { precision: 2, scale: 1 }),
   reviewCount: integer("review_count").default(0),
   featured: boolean("featured").default(false),
+  isPublished: boolean("is_published").notNull().default(false), // Whether vendor profile is visible to couples
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 export const insertVendorSchema = createInsertSchema(vendors).omit({

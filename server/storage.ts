@@ -54,10 +54,19 @@ export function parseConversationId(conversationId: string): { weddingId: string
 }
 
 export interface IStorage {
-  // Users
+  // Users & Auth
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: string, user: Partial<User>): Promise<User | undefined>;
+  updateUserPassword(id: string, passwordHash: string): Promise<boolean>;
+  setVerificationToken(id: string, token: string, expires: Date): Promise<boolean>;
+  setResetToken(id: string, token: string, expires: Date): Promise<boolean>;
+  verifyEmail(userId: string): Promise<boolean>;
+  clearVerificationToken(userId: string): Promise<boolean>;
+  clearResetToken(userId: string): Promise<boolean>;
+  updateLastLogin(userId: string): Promise<boolean>;
 
   // Weddings
   getWedding(id: string): Promise<Wedding | undefined>;
@@ -1176,9 +1185,70 @@ export class DBStorage implements IStorage {
     return result[0];
   }
 
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const result = await this.db.select().from(schema.users).where(eq(schema.users.email, email));
+    return result[0];
+  }
+
   async createUser(insertUser: InsertUser): Promise<User> {
     const result = await this.db.insert(schema.users).values(insertUser).returning();
     return result[0];
+  }
+
+  async updateUser(id: string, update: Partial<User>): Promise<User | undefined> {
+    const result = await this.db.update(schema.users).set(update).where(eq(schema.users.id, id)).returning();
+    return result[0];
+  }
+
+  async updateUserPassword(id: string, passwordHash: string): Promise<boolean> {
+    await this.db.update(schema.users).set({ passwordHash }).where(eq(schema.users.id, id));
+    return true;
+  }
+
+  async setVerificationToken(id: string, token: string, expires: Date): Promise<boolean> {
+    await this.db.update(schema.users).set({ 
+      verificationToken: token, 
+      verificationTokenExpires: expires 
+    }).where(eq(schema.users.id, id));
+    return true;
+  }
+
+  async setResetToken(id: string, token: string, expires: Date): Promise<boolean> {
+    await this.db.update(schema.users).set({ 
+      resetToken: token, 
+      resetTokenExpires: expires 
+    }).where(eq(schema.users.id, id));
+    return true;
+  }
+
+  async verifyEmail(userId: string): Promise<boolean> {
+    await this.db.update(schema.users).set({ 
+      emailVerified: true,
+      verificationToken: null,
+      verificationTokenExpires: null
+    }).where(eq(schema.users.id, userId));
+    return true;
+  }
+
+  async clearVerificationToken(userId: string): Promise<boolean> {
+    await this.db.update(schema.users).set({ 
+      verificationToken: null,
+      verificationTokenExpires: null
+    }).where(eq(schema.users.id, userId));
+    return true;
+  }
+
+  async clearResetToken(userId: string): Promise<boolean> {
+    await this.db.update(schema.users).set({ 
+      resetToken: null,
+      resetTokenExpires: null
+    }).where(eq(schema.users.id, userId));
+    return true;
+  }
+
+  async updateLastLogin(userId: string): Promise<boolean> {
+    await this.db.update(schema.users).set({ lastLoginAt: new Date() }).where(eq(schema.users.id, userId));
+    return true;
   }
 
   // Weddings

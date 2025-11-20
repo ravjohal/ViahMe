@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage, parseConversationId } from "./storage";
+import { registerAuthRoutes } from "./auth-routes";
 import {
   insertWeddingSchema,
   insertEventSchema,
@@ -44,6 +45,11 @@ import {
 })();
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // ============================================================================
+  // AUTHENTICATION
+  // ============================================================================
+  registerAuthRoutes(app, storage);
+
   // ============================================================================
   // WEDDINGS
   // ============================================================================
