@@ -43,7 +43,7 @@ export const insertWeddingSchema = createInsertSchema(weddings).omit({
   createdAt: true,
   status: true,
 }).extend({
-  tradition: z.enum(['sikh', 'hindu', 'general']),
+  tradition: z.enum(['sikh', 'hindu', 'muslim', 'gujarati', 'south_indian', 'mixed', 'general']),
   role: z.enum(['bride', 'groom', 'planner']),
   location: z.string().min(1),
   weddingDate: z.string().optional().transform(val => val ? new Date(val) : undefined),
@@ -79,6 +79,12 @@ export const insertEventSchema = createInsertSchema(events).omit({
     'paath', 'mehndi', 'maiyan', 'sangeet', 'anand_karaj', 'reception',
     // Hindu events
     'haldi', 'mehendi', 'sangeet_hindu', 'pheras', 'vidaai', 'tilak', 'chunni_ceremony',
+    // Muslim events
+    'mangni', 'mehndi_muslim', 'nikah', 'walima', 'rukhsati',
+    // Gujarati events
+    'mandvo_mahurat', 'pithi', 'garba', 'jaan', 'pheras_gujarati', 'vidaai_gujarati',
+    // South Indian events
+    'vratham', 'nalugu', 'muhurtham', 'oonjal', 'saptapadi', 'arundhati',
     // Generic
     'custom'
   ]),
@@ -114,6 +120,7 @@ export const insertVendorSchema = createInsertSchema(vendors).omit({
   reviewCount: true,
 }).extend({
   category: z.enum([
+    // Common vendors
     'makeup_artist',
     'dj',
     'dhol_player',
@@ -139,7 +146,21 @@ export const insertVendorSchema = createInsertSchema(vendors).omit({
     'haldi_supplies',
     'pooja_items',
     'astrologer',
-    'garland_maker'
+    'garland_maker',
+    // Muslim-specific vendors
+    'qazi',
+    'imam',
+    'nikah_decorator',
+    'halal_caterer',
+    'quran_reciter',
+    // Gujarati-specific vendors
+    'garba_instructor',
+    'dandiya_equipment',
+    'rangoli_artist',
+    // South Indian-specific vendors
+    'nadaswaram_player',
+    'silk_saree_rental',
+    'kolam_artist'
   ]),
   priceRange: z.enum(['$', '$$', '$$$', '$$$$']),
 });

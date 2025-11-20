@@ -23,11 +23,45 @@ const HINDU_EVENT_TEMPLATES = [
   { name: "Chunni Ceremony", eventType: "chunni_ceremony", description: "Groom's family presents chunni to the bride" },
 ];
 
+const MUSLIM_EVENT_TEMPLATES = [
+  { name: "Mangni (Engagement)", eventType: "mangni", description: "Formal engagement ceremony with family blessings" },
+  { name: "Mehndi Ceremony", eventType: "mehndi_muslim", description: "Henna application with traditional songs and dances" },
+  { name: "Nikah (Wedding Ceremony)", eventType: "nikah", description: "Sacred Islamic marriage contract witnessed by family" },
+  { name: "Walima Reception", eventType: "walima", description: "Groom's family hosts grand celebration for the couple" },
+  { name: "Rukhsati", eventType: "rukhsati", description: "Bride's emotional farewell from her family" },
+];
+
+const GUJARATI_EVENT_TEMPLATES = [
+  { name: "Mandvo Mahurat", eventType: "mandvo_mahurat", description: "Auspicious installation of the wedding mandap" },
+  { name: "Pithi Ceremony", eventType: "pithi", description: "Turmeric and sandalwood paste application ritual" },
+  { name: "Garba Night", eventType: "garba", description: "Traditional Gujarati dance celebration with dandiya" },
+  { name: "Jaan (Baraat)", eventType: "jaan", description: "Groom's procession with family and friends" },
+  { name: "Pheras (Wedding)", eventType: "pheras_gujarati", description: "Sacred seven circles around the holy fire" },
+  { name: "Vidaai", eventType: "vidaai_gujarati", description: "Bride's farewell from her parental home" },
+];
+
+const SOUTH_INDIAN_EVENT_TEMPLATES = [
+  { name: "Vratham", eventType: "vratham", description: "Pre-wedding purification ritual and prayers" },
+  { name: "Nalugu", eventType: "nalugu", description: "Oil bath ceremony with turmeric and kumkum" },
+  { name: "Muhurtham (Wedding)", eventType: "muhurtham", description: "Auspicious wedding ceremony at temple" },
+  { name: "Oonjal", eventType: "oonjal", description: "Couple seated on swing, blessed by elders" },
+  { name: "Saptapadi (Seven Steps)", eventType: "saptapadi", description: "Seven sacred steps around the holy fire" },
+  { name: "Arundhati Ceremony", eventType: "arundhati", description: "Viewing the Arundhati star for marital bliss" },
+];
+
+const MIXED_EVENT_TEMPLATES = [
+  { name: "Engagement Ceremony", eventType: "custom", description: "Fusion engagement combining multiple traditions" },
+  { name: "Mehndi & Pre-Wedding", eventType: "custom", description: "Henna ceremony with elements from both cultures" },
+  { name: "Sangeet Celebration", eventType: "custom", description: "Music and dance night blending traditions" },
+  { name: "Wedding Ceremony", eventType: "custom", description: "Fusion wedding with rituals from both cultures" },
+  { name: "Reception", eventType: "reception", description: "Grand celebration honoring all cultural backgrounds" },
+];
+
 export default function Onboarding() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
-  const handleComplete = async (data: InsertWedding) => {
+  const handleComplete = async (data: any) => {
     try {
       const response = await apiRequest("POST", "/api/weddings", {
         ...data,
@@ -41,6 +75,14 @@ export default function Onboarding() {
         ? SIKH_EVENT_TEMPLATES 
         : data.tradition === 'hindu' 
         ? HINDU_EVENT_TEMPLATES 
+        : data.tradition === 'muslim'
+        ? MUSLIM_EVENT_TEMPLATES
+        : data.tradition === 'gujarati'
+        ? GUJARATI_EVENT_TEMPLATES
+        : data.tradition === 'south_indian'
+        ? SOUTH_INDIAN_EVENT_TEMPLATES
+        : data.tradition === 'mixed'
+        ? MIXED_EVENT_TEMPLATES
         : [];
 
       if (eventTemplates.length > 0) {

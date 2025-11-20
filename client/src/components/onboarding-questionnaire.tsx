@@ -12,7 +12,7 @@ import { Calendar, Heart, MapPin, Users, DollarSign, Sparkles } from "lucide-rea
 import { motion, AnimatePresence } from "framer-motion";
 
 const questionnaireSchema = z.object({
-  tradition: z.enum(['sikh', 'hindu', 'general']).optional(),
+  tradition: z.enum(['sikh', 'hindu', 'muslim', 'gujarati', 'south_indian', 'mixed', 'general']).optional(),
   role: z.enum(['bride', 'groom', 'planner']).optional(),
   weddingDate: z.string().optional(),
   location: z.string().optional(),
@@ -185,13 +185,46 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                           </FormControl>
                           <SelectContent>
                             <SelectItem value="sikh" data-testid="option-sikh">
-                              Sikh Wedding
+                              <div className="flex flex-col">
+                                <span className="font-semibold">Sikh Wedding</span>
+                                <span className="text-xs text-muted-foreground">Anand Karaj ceremony at Gurdwara</span>
+                              </div>
                             </SelectItem>
                             <SelectItem value="hindu" data-testid="option-hindu">
-                              Hindu Wedding
+                              <div className="flex flex-col">
+                                <span className="font-semibold">Hindu Wedding</span>
+                                <span className="text-xs text-muted-foreground">Pheras ceremony with Vedic rituals</span>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="muslim" data-testid="option-muslim">
+                              <div className="flex flex-col">
+                                <span className="font-semibold">Muslim Wedding</span>
+                                <span className="text-xs text-muted-foreground">Nikah ceremony with Walima</span>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="gujarati" data-testid="option-gujarati">
+                              <div className="flex flex-col">
+                                <span className="font-semibold">Gujarati Wedding</span>
+                                <span className="text-xs text-muted-foreground">Garba night with traditional Pheras</span>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="south_indian" data-testid="option-south-indian">
+                              <div className="flex flex-col">
+                                <span className="font-semibold">South Indian Wedding</span>
+                                <span className="text-xs text-muted-foreground">Muhurtham with Saptapadi</span>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="mixed" data-testid="option-mixed">
+                              <div className="flex flex-col">
+                                <span className="font-semibold">Mixed Tradition</span>
+                                <span className="text-xs text-muted-foreground">Fusion of multiple cultural customs</span>
+                              </div>
                             </SelectItem>
                             <SelectItem value="general" data-testid="option-general">
-                              General Indian Wedding
+                              <div className="flex flex-col">
+                                <span className="font-semibold">General Indian Wedding</span>
+                                <span className="text-xs text-muted-foreground">Custom celebration style</span>
+                              </div>
                             </SelectItem>
                           </SelectContent>
                         </Select>
