@@ -17,6 +17,7 @@ import {
   insertPlaylistSongSchema,
   insertSongVoteSchema,
   insertDocumentSchema,
+  insertWeddingWebsiteSchema,
 } from "@shared/schema";
 import { seedVendors, seedBudgetBenchmarks } from "./seed-data";
 
@@ -1161,6 +1162,124 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Validation failed", details: error });
       }
       res.status(500).json({ error: "Failed to create budget benchmark" });
+    }
+  });
+
+  // ============================================================================
+  // WEDDING WEBSITES - Public guest website management
+  // ============================================================================
+
+  // Get wedding website for a wedding
+  app.get("/api/wedding-websites/wedding/:weddingId", async (req, res) => {
+    try {
+      const website = await storage.getWeddingWebsiteByWeddingId(req.params.weddingId);
+      if (!website) {
+        return res.status(404).json({ error: "Wedding website not found" });
+      }
+      res.json(website);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch wedding website" });
+    }
+  });
+
+  // Get wedding website by slug (for public access)
+  app.get("/api/wedding-websites/slug/:slug", async (req, res) => {
+    try {
+      const website = await storage.getWeddingWebsiteBySlug(req.params.slug);
+      if (!website) {
+        return res.status(404).json({ error: "Wedding website not found" });
+      }
+      res.json(website);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch wedding website" });
+    }
+  });
+
+  // Create wedding website
+  app.post("/api/wedding-websites", async (req, res) => {
+    try {
+      const validatedData = insertWeddingWebsiteSchema.parse(req.body);
+      const website = await storage.createWeddingWebsite(validatedData);
+      res.json(website);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      res.status(500).json({ error: "Failed to create wedding website" });
+    }
+  });
+
+  // Update wedding website
+  app.patch("/api/wedding-websites/:id", async (req, res) => {
+    try {
+      const validatedData = insertWeddingWebsiteSchema.partial().parse(req.body);
+      const website = await storage.updateWeddingWebsite(req.params.id, validatedData);
+      if (!website) {
+        return res.status(404).json({ error: "Wedding website not found" });
+      }
+      res.json(website);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      res.status(500).json({ error: "Failed to update wedding website" });
+    }
+  });
+
+  // Publish/unpublish wedding website
+  app.patch("/api/wedding-websites/:id/publish", async (req, res) => {
+    try {
+      const { isPublished } = req.body;
+      const website = await storage.updateWeddingWebsite(req.params.id, { isPublished });
+      if (!website) {
+        return res.status(404).json({ error: "Wedding website not found" });
+      }
+      res.json(website);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update publish status" });
+    }
+  });
+
+  // Get public wedding data by slug (for guest website)
+  app.get("/api/public/wedding/:slug", async (req, res) => {
+    try {
+      const website = await storage.getWeddingWebsiteBySlug(req.params.slug);
+      if (!website || !website.isPublished) {
+        return res.status(404).json({ error: "Wedding not found or not published" });
+      }
+
+      const wedding = await storage.getWedding(website.weddingId);
+      if (!wedding) {
+        return res.status(404).json({ error: "Wedding not found" });
+      }
+
+      const events = await storage.getEventsByWedding(website.weddingId);
+
+      res.json({
+        website,
+        wedding,
+        events: events.sort((a, b) => a.order - b.order),
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch wedding data" });
+    }
+  });
+
+  // Update guest RSVP status (public endpoint)
+  app.patch("/api/public/rsvp/:guestId", async (req, res) => {
+    try {
+      const { rsvpStatus } = req.body;
+      if (!['confirmed', 'declined'].includes(rsvpStatus)) {
+        return res.status(400).json({ error: "Invalid RSVP status" });
+      }
+
+      const guest = await storage.updateGuest(req.params.guestId, { rsvpStatus });
+      if (!guest) {
+        return res.status(404).json({ error: "Guest not found" });
+      }
+      res.json(guest);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update RSVP" });
     }
   });
 
