@@ -69,6 +69,12 @@ export const events = pgTable("events", {
   guestCount: integer("guest_count"),
   description: text("description"),
   order: integer("order").notNull(), // For sorting timeline
+  // Public-facing guest website fields
+  dressCode: text("dress_code"), // e.g., "Formal Indian attire", "Business casual"
+  locationDetails: text("location_details"), // Detailed venue information
+  directions: text("directions"), // Driving/transit directions
+  mapUrl: text("map_url"), // Google Maps link
+  parkingInfo: text("parking_info"), // Parking instructions
 });
 
 export const insertEventSchema = createInsertSchema(events).omit({
@@ -602,3 +608,38 @@ export interface BudgetAnalyticsResponse {
   }>;
   recommendations: string[];
 }
+
+// ============================================================================
+// WEDDING WEBSITES - Public-facing guest website configuration
+// ============================================================================
+
+export const weddingWebsites = pgTable("wedding_websites", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull().unique(),
+  slug: text("slug").notNull().unique(), // Unique URL slug (e.g., "sarah-and-raj-2024")
+  isPublished: boolean("is_published").default(false),
+  heroImageUrl: text("hero_image_url"),
+  welcomeTitle: text("welcome_title"), // e.g., "Sarah & Raj"
+  welcomeMessage: text("welcome_message"), // Couple's welcome message to guests
+  coupleStory: text("couple_story"), // How we met story
+  travelInfo: text("travel_info"), // Airport info, transportation tips
+  accommodationInfo: text("accommodation_info"), // Hotel blocks, Airbnb recommendations
+  thingsToDoInfo: text("things_to_do_info"), // Local attractions, activities
+  faqInfo: text("faq_info"), // Common questions answered
+  registryLinks: jsonb("registry_links"), // Array of {name, url} objects
+  primaryColor: text("primary_color").default('#f97316'), // Theme color (default orange)
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertWeddingWebsiteSchema = createInsertSchema(weddingWebsites).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  slug: z.string().min(3, "Slug must be at least 3 characters").max(50, "Slug must be less than 50 characters").regex(/^[a-z0-9-]+$/, "Slug can only contain lowercase letters, numbers, and hyphens"),
+  primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Must be a valid hex color").optional(),
+});
+
+export type InsertWeddingWebsite = z.infer<typeof insertWeddingWebsiteSchema>;
+export type WeddingWebsite = typeof weddingWebsites.$inferSelect;
