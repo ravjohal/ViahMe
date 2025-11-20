@@ -15,6 +15,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { Wedding } from "@shared/schema";
 import { differenceInDays } from "date-fns";
 import { cn } from "@/lib/utils";
+import { ViahLogo } from "@/components/viah-logo";
 
 const NAV_ITEMS = [
   { path: "/dashboard", label: "Dashboard", icon: Home },
@@ -49,12 +50,7 @@ export function AppHeader() {
       <div className="flex h-24 items-center justify-between px-6 gap-4">
         {/* Logo and Brand */}
         <Link href="/dashboard" className="flex items-center gap-3 hover-elevate active-elevate-2 rounded-md px-3 py-2 -ml-3">
-          <img 
-            src={new URL("@assets/image_1763619084345.png", import.meta.url).href}
-            alt="Viah.me"
-            className="h-20 w-auto object-contain"
-            data-testid="logo-viah"
-          />
+          <ViahLogo size="md" data-testid="logo-viah" />
           {wedding && (
             <Badge variant="outline" className="text-xs font-mono hidden sm:inline-flex" data-testid="badge-tradition">
               {wedding.tradition.charAt(0).toUpperCase() + wedding.tradition.slice(1)}
