@@ -272,7 +272,7 @@ export default function GuestWebsite() {
           <div className="mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <span>Made with ❤️ on</span>
             <img 
-              src={new URL("@assets/image_1763666639500.png", import.meta.url).href}
+              src={new URL("@assets/Screenshot 2025-11-20 at 11.24.54 AM_1763666696472.png", import.meta.url).href}
               alt="Viah.me"
               className="h-12 w-auto inline-block object-contain"
             />

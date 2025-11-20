@@ -50,7 +50,7 @@ export function AppHeader() {
         {/* Logo and Brand */}
         <Link href="/dashboard" className="flex items-center gap-3 hover-elevate active-elevate-2 rounded-md px-3 py-2 -ml-3">
           <img 
-            src={new URL("@assets/image_1763666639500.png", import.meta.url).href}
+            src={new URL("@assets/Screenshot 2025-11-20 at 11.24.54 AM_1763666696472.png", import.meta.url).href}
             alt="Viah.me"
             className="h-20 w-auto object-contain"
             data-testid="logo-viah"
