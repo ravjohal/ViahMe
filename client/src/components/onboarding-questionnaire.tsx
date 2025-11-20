@@ -29,8 +29,8 @@ interface OnboardingQuestionnaireProps {
 const STEPS = [
   {
     id: 1,
-    title: "Cultural Framework",
-    description: "What traditions will you observe?",
+    title: "Your Wedding Tradition",
+    description: "What cultural celebrations will you honor?",
     icon: Sparkles,
     color: "from-orange-500 to-pink-500",
     bgColor: "bg-gradient-to-br from-orange-50 to-pink-50",
@@ -156,7 +156,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
 
   return (
     <div className={`min-h-screen ${currentStepData.bgColor} flex items-center justify-center p-4 transition-all duration-500`}>
-      <Card className="w-full max-w-2xl p-8 md:p-12 shadow-2xl border-2">
+      <Card className="w-full max-w-4xl p-10 md:p-16 shadow-2xl border-4 border-gradient-to-r from-orange-300 to-pink-300">
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -166,7 +166,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                 className="h-32 w-auto mb-3 object-contain"
                 data-testid="logo-viah"
               />
-              <p className="text-2xl bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 bg-clip-text text-transparent" style={{ fontFamily: 'Great Vibes, cursive' }}>
+              <p className="text-2xl font-semibold bg-gradient-to-r from-orange-600 via-pink-600 to-purple-600 bg-clip-text text-transparent tracking-wide" style={{ fontFamily: 'Playfair Display, serif' }}>
                 Welcome! Let's plan your perfect celebration ✨
               </p>
             </div>
@@ -185,10 +185,10 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                   />
                 ))}
               </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span className="font-mono font-semibold">Step {currentStep}</span>
-                <span>/</span>
-                <span className="font-mono">{STEPS.length}</span>
+              <div className="flex items-center gap-2 text-base font-semibold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+                <span>Step {currentStep}</span>
+                <span>of</span>
+                <span>{STEPS.length}</span>
               </div>
             </div>
           </div>
