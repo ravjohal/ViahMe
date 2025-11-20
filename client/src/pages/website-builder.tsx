@@ -42,7 +42,7 @@ export default function WebsiteBuilder() {
 
   // Get wedding website
   const { data: website, isLoading } = useQuery<WeddingWebsite>({
-    queryKey: ["/api/wedding-websites/wedding", weddingId],
+    queryKey: [`/api/wedding-websites/wedding/${weddingId}`],
     enabled: !!weddingId,
   });
 
@@ -77,7 +77,7 @@ export default function WebsiteBuilder() {
     },
     onSuccess: () => {
       toast({ title: "Website created successfully!" });
-      queryClient.invalidateQueries({ queryKey: ["/api/wedding-websites/wedding", weddingId] });
+      queryClient.invalidateQueries({ queryKey: [`/api/wedding-websites/wedding/${weddingId}`] });
     },
     onError: () => {
       toast({ title: "Failed to create website", variant: "destructive" });
@@ -90,7 +90,7 @@ export default function WebsiteBuilder() {
     },
     onSuccess: () => {
       toast({ title: "Website updated successfully!" });
-      queryClient.invalidateQueries({ queryKey: ["/api/wedding-websites/wedding", weddingId] });
+      queryClient.invalidateQueries({ queryKey: [`/api/wedding-websites/wedding/${weddingId}`] });
     },
     onError: () => {
       toast({ title: "Failed to update website", variant: "destructive" });
@@ -103,7 +103,7 @@ export default function WebsiteBuilder() {
     },
     onSuccess: () => {
       toast({ title: website?.isPublished ? "Website unpublished" : "Website published!" });
-      queryClient.invalidateQueries({ queryKey: ["/api/wedding-websites/wedding", weddingId] });
+      queryClient.invalidateQueries({ queryKey: [`/api/wedding-websites/wedding/${weddingId}`] });
     },
     onError: () => {
       toast({ title: "Failed to update publish status", variant: "destructive" });

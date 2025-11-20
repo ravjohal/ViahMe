@@ -19,7 +19,7 @@ export default function GuestWebsite() {
   const slug = params.slug;
 
   const { data, isLoading, error } = useQuery<PublicWeddingData>({
-    queryKey: ["/api/public/wedding", slug],
+    queryKey: [`/api/public/wedding/${slug}`],
   });
 
   if (isLoading) {
