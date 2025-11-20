@@ -8,7 +8,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
-import { Calendar, MapPin, Users, DollarSign, Flower2, Crown } from "lucide-react";
+import { Calendar, MapPin, Users, DollarSign, Crown, Flame } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const questionnaireSchema = z.object({
@@ -31,7 +31,7 @@ const STEPS = [
     id: 1,
     title: "Your Wedding Tradition",
     description: "What cultural celebrations will you honor?",
-    icon: Flower2,
+    icon: Flame,
     color: "from-orange-500 to-pink-500",
     bgColor: "bg-gradient-to-br from-orange-50 to-pink-50",
     iconBg: "bg-gradient-to-br from-orange-500 to-pink-500",
@@ -167,7 +167,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                 data-testid="logo-viah"
               />
               <p className="text-2xl font-semibold bg-gradient-to-r from-orange-600 via-pink-600 to-purple-600 bg-clip-text text-transparent tracking-wide" style={{ fontFamily: 'Playfair Display, serif' }}>
-                Welcome! Let's plan your perfect celebration ✨
+                Welcome! Let's plan your perfect celebration 🎊
               </p>
             </div>
             <div className="flex flex-col items-end gap-2">
