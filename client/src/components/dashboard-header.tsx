@@ -4,7 +4,6 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { Wedding } from "@shared/schema";
 import { differenceInDays, format } from "date-fns";
-import { ViahLogo } from "@/components/viah-logo";
 
 interface DashboardHeaderProps {
   wedding: Wedding;
@@ -21,7 +20,12 @@ export function DashboardHeader({ wedding }: DashboardHeaderProps) {
     <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-24 items-center justify-between px-6">
         <div className="flex items-center gap-4">
-          <ViahLogo size="md" data-testid="logo-viah" />
+          <img 
+            src={new URL("@assets/image_1763619084345.png", import.meta.url).href}
+            alt="Viah.me"
+            className="h-20 w-auto object-contain"
+            data-testid="logo-viah"
+          />
           <Badge variant="outline" className="text-xs font-mono">
             {wedding.tradition.charAt(0).toUpperCase() + wedding.tradition.slice(1)}
           </Badge>
