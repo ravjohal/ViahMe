@@ -166,7 +166,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                 className="h-32 w-auto mb-3 object-contain"
                 data-testid="logo-viah"
               />
-              <p className="text-lg font-semibold bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 bg-clip-text text-transparent">
+              <p className="text-2xl bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 bg-clip-text text-transparent" style={{ fontFamily: 'Great Vibes, cursive' }}>
                 Welcome! Let's plan your perfect celebration ✨
               </p>
             </div>
@@ -209,10 +209,10 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                   <CurrentIcon className="w-8 h-8 text-white" />
                 </div>
                 <div>
-                  <h2 className={`font-display text-3xl font-bold bg-gradient-to-r ${currentStepData.color} bg-clip-text text-transparent`}>
+                  <h2 className={`text-4xl font-bold bg-gradient-to-r ${currentStepData.color} bg-clip-text text-transparent tracking-wide`} style={{ fontFamily: 'Cormorant Garamond, serif' }}>
                     {currentStepData.title}
                   </h2>
-                  <p className="text-muted-foreground text-lg">
+                  <p className="text-muted-foreground text-lg italic" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
                     {currentStepData.description}
                   </p>
                 </div>
@@ -227,7 +227,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                     name="tradition"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-base font-semibold">Wedding Tradition</FormLabel>
+                        <FormLabel className="text-lg font-semibold tracking-wide" style={{ fontFamily: 'Cormorant Garamond, serif' }}>Wedding Tradition</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger data-testid="select-tradition" className="h-12">
@@ -291,7 +291,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                     name="role"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-base font-semibold">Your Role</FormLabel>
+                        <FormLabel className="text-lg font-semibold tracking-wide" style={{ fontFamily: 'Cormorant Garamond, serif' }}>Your Role</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger data-testid="select-role" className="h-12">
@@ -316,7 +316,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                     name="weddingDate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-base font-semibold">Wedding Date (Optional)</FormLabel>
+                        <FormLabel className="text-lg font-semibold tracking-wide" style={{ fontFamily: 'Cormorant Garamond, serif' }}>Wedding Date (Optional)</FormLabel>
                         <FormControl>
                           <Input
                             type="date"
@@ -338,7 +338,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                       name="location"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-base font-semibold">Location</FormLabel>
+                          <FormLabel className="text-lg font-semibold tracking-wide" style={{ fontFamily: 'Cormorant Garamond, serif' }}>Location</FormLabel>
                           <FormControl>
                             <Input
                               placeholder="e.g., San Francisco Bay Area"
@@ -356,7 +356,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                       name="guestCountEstimate"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-base font-semibold">
+                          <FormLabel className="text-lg font-semibold tracking-wide" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
                             Estimated Guest Count (Optional)
                           </FormLabel>
                           <FormControl>
@@ -382,7 +382,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                     name="totalBudget"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-base font-semibold">
+                        <FormLabel className="text-lg font-semibold tracking-wide" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
                           Total Budget (Optional)
                         </FormLabel>
                         <FormControl>
