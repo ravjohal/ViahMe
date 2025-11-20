@@ -70,16 +70,29 @@ export default function Onboarding() {
       });
 
       // Refetch user to update auth context - WAIT for it to complete
-      const { data: loggedInUser } = await refetchUser();
-      if (!loggedInUser) {
-        throw new Error("Failed to authenticate user");
+      const { data: authData } = await refetchUser();
+      console.log("[Onboarding] Refetched auth data:", authData);
+      
+      // Extract user from response (backend returns { user: {...} })
+      const loggedInUser = authData?.user;
+      
+      if (!loggedInUser || !loggedInUser.id) {
+        console.error("[Onboarding] User authentication failed:", { authData, loggedInUser });
+        throw new Error("Failed to authenticate user - user ID missing");
       }
 
+      console.log("[Onboarding] Authenticated user ID:", loggedInUser.id);
+
       // Step 3: Create the wedding with the authenticated user
-      await apiRequest("POST", "/api/weddings", {
+      const weddingPayload = {
         ...questionnaireData,
         userId: loggedInUser.id,
-      });
+      };
+      console.log("[Onboarding] Creating wedding with payload:", weddingPayload);
+      
+      const weddingResponse = await apiRequest("POST", "/api/weddings", weddingPayload);
+      const weddingData = await weddingResponse.json();
+      console.log("[Onboarding] Wedding created successfully:", weddingData);
 
       // Backend automatically seeds events based on tradition
       queryClient.invalidateQueries({ queryKey: ["/api/weddings"], exact: false });

@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +29,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { Vendor, Booking, Contract, InsertVendor } from "@shared/schema";
 import { insertVendorSchema } from "@shared/schema";
 import { z } from "zod";
+import { Link, useLocation } from "wouter";
 import {
   Star,
   MapPin,
@@ -40,24 +42,27 @@ import {
   CheckCircle,
   XCircle,
   Clock,
+  LogOut,
+  Sparkles,
+  Settings,
 } from "lucide-react";
+import viahLogo from "@assets/viah-logo_1763669612969.png";
 
 export default function VendorDashboard() {
   const { toast } = useToast();
+  const { user, isLoading: authLoading, logout } = useAuth();
+  const [, setLocation] = useLocation();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editFormData, setEditFormData] = useState<Partial<Vendor>>({});
 
-  // DEMO LIMITATION: For demonstration purposes, this dashboard uses the first vendor
-  // from the database. In a production environment with authentication, this would:
-  // 1. Get the vendor ID from the authenticated user session/JWT
-  // 2. Fetch only that specific vendor's data
-  // 3. Prevent unauthorized access to other vendors' information
-  // TODO: Integrate with authentication system once implemented
+  // Fetch vendor profile for authenticated user
   const { data: vendors, isLoading: vendorsLoading } = useQuery<Vendor[]>({
     queryKey: ["/api/vendors"],
+    enabled: !!user && user.role === "vendor",
   });
 
-  const currentVendor = vendors?.[0];
+  // Find vendor by user ID
+  const currentVendor = vendors?.find(v => v.userId === user?.id);
   const vendorId = currentVendor?.id;
 
   const { data: bookings = [], isLoading: bookingsLoading } = useQuery<Booking[]>({
@@ -82,13 +87,38 @@ export default function VendorDashboard() {
     enabled: !!vendorId,
   });
 
+  const createVendorMutation = useMutation({
+    mutationFn: async (data: InsertVendor) => {
+      const response = await apiRequest("POST", "/api/vendors", data);
+      return await response.json();
+    },
+    onSuccess: async () => {
+      // Wait for cache invalidation to complete
+      await queryClient.invalidateQueries({ queryKey: ["/api/vendors"], exact: false });
+      toast({
+        title: "Profile Created",
+        description: "Your vendor profile has been created successfully.",
+      });
+      setEditDialogOpen(false);
+    },
+    onError: () => {
+      toast({
+        title: "Creation Failed",
+        description: "Failed to create your profile. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const updateVendorMutation = useMutation({
     mutationFn: async (data: Partial<Vendor>) => {
       if (!vendorId) throw new Error("No vendor ID");
-      return await apiRequest(`/api/vendors/${vendorId}`, "PATCH", data);
+      const response = await apiRequest("PATCH", `/api/vendors/${vendorId}`, data);
+      return await response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/vendors"] });
+    onSuccess: async () => {
+      // Wait for cache invalidation to complete
+      await queryClient.invalidateQueries({ queryKey: ["/api/vendors"], exact: false });
       toast({
         title: "Profile Updated",
         description: "Your vendor profile has been updated successfully.",
@@ -106,7 +136,8 @@ export default function VendorDashboard() {
 
   const updateBookingMutation = useMutation({
     mutationFn: async ({ bookingId, status }: { bookingId: string; status: string }) => {
-      return await apiRequest(`/api/bookings/${bookingId}`, "PATCH", { status });
+      const response = await apiRequest("PATCH", `/api/bookings/${bookingId}`, { status });
+      return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/bookings/vendor", vendorId] });
@@ -125,62 +156,95 @@ export default function VendorDashboard() {
   });
 
   const openEditDialog = () => {
-    if (!currentVendor) return;
-    setEditFormData({
-      name: currentVendor.name,
-      description: currentVendor.description || "",
-      contact: currentVendor.contact || "",
-      location: currentVendor.location,
-      priceRange: currentVendor.priceRange,
-      culturalSpecialties: currentVendor.culturalSpecialties || [],
-      availability: currentVendor.availability || null,
-    });
+    if (currentVendor) {
+      // Edit existing profile
+      setEditFormData({
+        name: currentVendor.name,
+        category: currentVendor.category,
+        description: currentVendor.description || "",
+        contact: currentVendor.contact || "",
+        location: currentVendor.location,
+        priceRange: currentVendor.priceRange,
+        culturalSpecialties: currentVendor.culturalSpecialties || [],
+        availability: currentVendor.availability || null,
+      });
+    } else {
+      // Create new profile - set defaults
+      setEditFormData({
+        name: "",
+        category: "photographer", // Default category
+        description: "",
+        contact: "",
+        location: "",
+        priceRange: "$",
+        culturalSpecialties: [],
+        availability: null,
+      });
+    }
     setEditDialogOpen(true);
   };
 
   const handleSaveProfile = () => {
     try {
-      if (!currentVendor) return;
+      if (!user) return;
 
-      // Create a schema that enforces non-empty constraints even for partial updates
-      const profileUpdateSchema = z.object({
-        name: z.string().min(1, "Business name is required").optional(),
-        location: z.string().min(1, "Location is required").optional(),
-        priceRange: z.enum(['$', '$$', '$$$', '$$$$'], {
-          errorMap: () => ({ message: "Please select a valid price range" })
-        }).optional(),
-        culturalSpecialties: z.array(z.string()).optional(),
-        description: z.string().optional(),
-        contact: z.string().optional(),
-        availability: z.any().optional(), // JSON field for availability data
-      }).refine((data) => {
-        // Ensure at least one field is provided
-        return Object.values(data).some(v => v !== undefined);
-      }, {
-        message: "Please make at least one change",
-      }).refine((data) => {
-        // Ensure required fields are not empty strings if provided
-        if (data.name !== undefined && data.name.trim() === '') return false;
-        if (data.location !== undefined && data.location.trim() === '') return false;
-        return true;
-      }, {
-        message: "Required fields cannot be empty",
-      });
+      const isCreating = !currentVendor;
 
-      // Build updates object with only the edited fields (trim strings to prevent whitespace-only values)
-      const updates: Record<string, any> = {};
-      if (editFormData.name !== undefined) updates.name = editFormData.name.trim();
-      if (editFormData.location !== undefined) updates.location = editFormData.location.trim();
-      if (editFormData.priceRange !== undefined) updates.priceRange = editFormData.priceRange;
-      if (editFormData.description !== undefined) updates.description = editFormData.description?.trim();
-      if (editFormData.contact !== undefined) updates.contact = editFormData.contact?.trim();
-      if (editFormData.culturalSpecialties !== undefined) updates.culturalSpecialties = editFormData.culturalSpecialties;
-      if (editFormData.availability !== undefined) updates.availability = editFormData.availability;
+      if (isCreating) {
+        // Creating a new vendor profile - all required fields must be present
+        // Use insertVendorSchema directly (no need to extend - userId is already optional)
+        const newVendorData: InsertVendor = {
+          userId: user.id,
+          name: editFormData.name?.trim() || "",
+          category: (editFormData.category as any) || "photographer", // Default to photographer if not selected
+          location: editFormData.location?.trim() || "",
+          city: "San Francisco Bay Area", // Default city
+          priceRange: (editFormData.priceRange as any) || "$",
+          description: editFormData.description?.trim() || "",
+          contact: editFormData.contact?.trim() || "",
+          culturalSpecialties: editFormData.culturalSpecialties || [],
+          availability: editFormData.availability || null,
+        };
 
-      // Validate the update payload with strict rules that prevent empty required fields
-      const validatedUpdates = profileUpdateSchema.parse(updates) as Partial<Vendor>;
+        // Validate with the schema
+        const validatedData = insertVendorSchema.parse(newVendorData);
+        createVendorMutation.mutate(validatedData);
+      } else {
+        // Updating existing profile - partial updates allowed
+        const profileUpdateSchema = z.object({
+          name: z.string().min(1, "Business name is required").optional(),
+          location: z.string().min(1, "Location is required").optional(),
+          priceRange: z.enum(['$', '$$', '$$$', '$$$$'], {
+            errorMap: () => ({ message: "Please select a valid price range" })
+          }).optional(),
+          culturalSpecialties: z.array(z.string()).optional(),
+          description: z.string().optional(),
+          contact: z.string().optional(),
+          availability: z.any().optional(),
+        }).refine((data) => {
+          return Object.values(data).some(v => v !== undefined);
+        }, {
+          message: "Please make at least one change",
+        }).refine((data) => {
+          if (data.name !== undefined && data.name.trim() === '') return false;
+          if (data.location !== undefined && data.location.trim() === '') return false;
+          return true;
+        }, {
+          message: "Required fields cannot be empty",
+        });
 
-      updateVendorMutation.mutate(validatedUpdates);
+        const updates: Record<string, any> = {};
+        if (editFormData.name !== undefined) updates.name = editFormData.name.trim();
+        if (editFormData.location !== undefined) updates.location = editFormData.location.trim();
+        if (editFormData.priceRange !== undefined) updates.priceRange = editFormData.priceRange;
+        if (editFormData.description !== undefined) updates.description = editFormData.description?.trim();
+        if (editFormData.contact !== undefined) updates.contact = editFormData.contact?.trim();
+        if (editFormData.culturalSpecialties !== undefined) updates.culturalSpecialties = editFormData.culturalSpecialties;
+        if (editFormData.availability !== undefined) updates.availability = editFormData.availability;
+
+        const validatedUpdates = profileUpdateSchema.parse(updates) as Partial<Vendor>;
+        updateVendorMutation.mutate(validatedUpdates);
+      }
     } catch (error: any) {
       toast({
         title: "Validation Error",
@@ -194,9 +258,38 @@ export default function VendorDashboard() {
     updateBookingMutation.mutate({ bookingId, status });
   };
 
+  // Redirect if not authenticated - ONLY after auth loading completes
+  useEffect(() => {
+    if (!authLoading && !user) {
+      setLocation("/vendor-login");
+    }
+    // Redirect non-vendor users to couple dashboard
+    if (!authLoading && user && user.role !== "vendor") {
+      setLocation("/dashboard");
+    }
+  }, [authLoading, user, setLocation]);
+
+  // Show loading while checking auth
+  if (authLoading || !user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 flex items-center justify-center">
+        <Skeleton className="h-64 w-96" />
+      </div>
+    );
+  }
+
+  // Redirect non-vendor users (shown briefly during redirect)
+  if (user.role !== "vendor") {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 flex items-center justify-center">
+        <Skeleton className="h-64 w-96" />
+      </div>
+    );
+  }
+
   if (vendorsLoading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50">
         <div className="container mx-auto px-6 py-8">
           <Skeleton className="h-64 w-full" />
         </div>
@@ -204,49 +297,118 @@ export default function VendorDashboard() {
     );
   }
 
-  if (!currentVendor) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card className="max-w-md">
-          <CardHeader>
-            <CardTitle>No Vendor Profile</CardTitle>
-            <CardDescription>
-              No vendor profile found. Please contact support.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
-    );
-  }
-
-  const rating = currentVendor.rating ? parseFloat(currentVendor.rating.toString()) : 0;
+  const hasProfile = !!currentVendor;
+  const rating = currentVendor?.rating ? parseFloat(currentVendor.rating.toString()) : 0;
   const pendingBookings = bookings.filter((b: Booking) => b.status === "pending");
   const confirmedBookings = bookings.filter((b: Booking) => b.status === "confirmed");
   const activeContracts = contracts.filter((c: Contract) => c.status === "active" || c.status === "signed");
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-6 py-6">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50">
+      {/* Header */}
+      <header className="bg-white/90 backdrop-blur-sm border-b border-purple-200 sticky top-0 z-50 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="font-display text-3xl font-bold text-foreground" data-testid="heading-vendor-dashboard">
-                Vendor Dashboard
-              </h1>
-              <p className="text-muted-foreground mt-1">
-                Manage your bookings and profile
-              </p>
+            <div className="flex items-center gap-4">
+              <img src={viahLogo} alt="Viah.me" className="h-12 object-contain" />
+              <div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-orange-500 bg-clip-text text-transparent" data-testid="heading-vendor-dashboard">
+                  Vendor Portal
+                </h1>
+                <p className="text-sm text-muted-foreground">
+                  Welcome back, {currentVendor?.name || user.email}
+                </p>
+              </div>
             </div>
-            <Button onClick={openEditDialog} data-testid="button-edit-profile">
-              <Edit className="w-4 h-4 mr-2" />
-              Edit Profile
-            </Button>
+            <div className="flex items-center gap-2">
+              <Badge
+                variant={user.emailVerified ? "default" : "destructive"}
+                className="rounded-full"
+                data-testid="badge-email-verified"
+              >
+                {user.emailVerified ? (
+                  <>
+                    <CheckCircle className="w-3 h-3 mr-1" />
+                    Verified
+                  </>
+                ) : (
+                  <>
+                    <Clock className="w-3 h-3 mr-1" />
+                    Unverified
+                  </>
+                )}
+              </Badge>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={logout}
+                className="rounded-full"
+                data-testid="button-logout"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
+              </Button>
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-6 py-8">
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {!user.emailVerified && (
+          <Card className="mb-6 border-orange-300 bg-gradient-to-r from-orange-50 to-pink-50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-orange-700">
+                <Mail className="w-5 h-5" />
+                Email Verification Required
+              </CardTitle>
+              <CardDescription className="text-orange-600">
+                Please verify your email address to unlock all vendor features and start receiving
+                bookings from couples.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link href="/verify-email">
+                <Button
+                  variant="default"
+                  className="rounded-full bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600"
+                  data-testid="button-verify-email"
+                >
+                  Verify Email Now
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        )}
+
+        {!hasProfile && user.emailVerified && (
+          <Card className="mb-6 border-purple-300 bg-gradient-to-r from-purple-50 to-pink-50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-purple-700">
+                <Sparkles className="w-5 h-5" />
+                Complete Your Vendor Profile
+              </CardTitle>
+              <CardDescription className="text-purple-600">
+                Set up your business profile to appear in search results and start receiving
+                booking requests from couples planning their weddings.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                variant="default"
+                onClick={openEditDialog}
+                className="rounded-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                data-testid="button-setup-profile"
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Set Up Profile
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Vendor Profile Card */}
+        {currentVendor && (
         <Card className="mb-8" data-testid="card-vendor-profile">
           <CardHeader>
             <div className="flex items-start justify-between">
@@ -319,8 +481,10 @@ export default function VendorDashboard() {
             )}
           </CardContent>
         </Card>
+        )}
 
         {/* Stats Cards */}
+        {currentVendor && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="p-6">
             <div className="flex items-center gap-4">
@@ -378,6 +542,7 @@ export default function VendorDashboard() {
             </div>
           </Card>
         </div>
+        )}
 
         {/* Tabs for Bookings, Contracts, and Availability */}
         <Tabs defaultValue="bookings" className="space-y-6">

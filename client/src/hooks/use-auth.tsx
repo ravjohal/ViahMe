@@ -4,7 +4,7 @@ import { useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 type User = {
-  id: number;
+  id: string; // UUID string from varchar column
   email: string;
   role: "couple" | "vendor";
   emailVerified: boolean;
@@ -24,14 +24,17 @@ export function AuthProvider({ children }: { children: ReactNode}) {
   const [, setLocation] = useLocation();
 
   const {
-    data: user = null,
+    data: authResponse,
     isLoading,
     refetch: refetchUser,
-  } = useQuery<User | null>({
+  } = useQuery<{ user: User | null } | null>({
     queryKey: ["/api/auth/me"],
     retry: false,
     staleTime: 0, // Always fetch fresh user data
   });
+
+  // Extract user from response (backend returns { user: {...} } or { user: null })
+  const user = authResponse?.user ?? null;
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
