@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage, parseConversationId } from "./storage";
 import { registerAuthRoutes } from "./auth-routes";
+import { requireAuth, requireRole, type AuthRequest } from "./auth-middleware";
 import {
   insertWeddingSchema,
   insertEventSchema,
@@ -54,10 +55,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // WEDDINGS
   // ============================================================================
 
-  app.get("/api/weddings", async (req, res) => {
+  app.get("/api/weddings", await requireAuth(storage, false), async (req, res) => {
     try {
-      // For MVP, return all weddings for a demo user
-      const weddings = await storage.getWeddingsByUser("user-1");
+      const authReq = req as AuthRequest;
+      if (!authReq.session.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      const weddings = await storage.getWeddingsByUser(authReq.session.userId);
       res.json(weddings);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch weddings" });
