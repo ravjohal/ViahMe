@@ -70,117 +70,117 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background">
       <main className="container mx-auto px-6 py-8">
         <div className="mb-8">
-          <h1 className="font-display text-4xl font-bold text-foreground mb-2">
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-orange-600 via-pink-600 to-purple-600 bg-clip-text text-transparent mb-2" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
             Your Wedding Dashboard
           </h1>
-          <p className="text-muted-foreground text-lg">
-            Manage every aspect of your {wedding.tradition} celebration
+          <p className="text-lg font-semibold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+            Manage every aspect of your {wedding.tradition} celebration 🎊
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-          <Card className="p-6 hover-elevate transition-all cursor-pointer" onClick={() => setLocation("/timeline")}>
+          <Card className="p-6 hover-elevate transition-all cursor-pointer border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-pink-50" onClick={() => setLocation("/timeline")}>
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-chart-1/10">
-                <Calendar className="w-6 h-6 text-chart-1" />
+              <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500 to-pink-500 shadow-lg">
+                <Calendar className="w-6 h-6 text-white" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Events</p>
-                <p className="font-mono text-2xl font-bold" data-testid="stat-events-count">
+                <p className="text-sm font-semibold text-orange-600">Events</p>
+                <p className="font-mono text-2xl font-bold text-orange-700" data-testid="stat-events-count">
                   {events.length}
                 </p>
               </div>
             </div>
           </Card>
 
-          <Card className="p-6 hover-elevate transition-all cursor-pointer" onClick={() => setLocation("/vendors")}>
+          <Card className="p-6 hover-elevate transition-all cursor-pointer border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50" onClick={() => setLocation("/vendors")}>
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-chart-2/10">
-                <Briefcase className="w-6 h-6 text-chart-2" />
+              <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 shadow-lg">
+                <Briefcase className="w-6 h-6 text-white" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Vendors</p>
-                <p className="font-mono text-2xl font-bold" data-testid="stat-vendors-count">
+                <p className="text-sm font-semibold text-blue-600">Vendors</p>
+                <p className="font-mono text-2xl font-bold text-blue-700" data-testid="stat-vendors-count">
                   {vendors.length}
                 </p>
               </div>
             </div>
           </Card>
 
-          <Card className="p-6 hover-elevate transition-all cursor-pointer" onClick={() => setLocation("/budget")}>
+          <Card className="p-6 hover-elevate transition-all cursor-pointer border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50" onClick={() => setLocation("/budget")}>
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-chart-3/10">
-                <DollarSign className="w-6 h-6 text-chart-3" />
+              <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 shadow-lg">
+                <DollarSign className="w-6 h-6 text-white" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Budget</p>
-                <p className="font-mono text-xl font-bold">
+                <p className="text-sm font-semibold text-emerald-600">Budget</p>
+                <p className="font-mono text-xl font-bold text-emerald-700">
                   ${parseFloat(wedding.totalBudget || "0").toLocaleString()}
                 </p>
               </div>
             </div>
           </Card>
 
-          <Card className="p-6 hover-elevate transition-all cursor-pointer" onClick={() => setLocation("/contracts")}>
+          <Card className="p-6 hover-elevate transition-all cursor-pointer border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50" onClick={() => setLocation("/contracts")}>
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-chart-4/10">
-                <FileText className="w-6 h-6 text-chart-4" />
+              <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-500 shadow-lg">
+                <FileText className="w-6 h-6 text-white" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Contracts</p>
-                <p className="font-mono text-2xl font-bold" data-testid="stat-contracts-count">
+                <p className="text-sm font-semibold text-purple-600">Contracts</p>
+                <p className="font-mono text-2xl font-bold text-purple-700" data-testid="stat-contracts-count">
                   {contracts.length}
                 </p>
               </div>
             </div>
           </Card>
 
-          <Card className="p-6 hover-elevate transition-all cursor-pointer" onClick={() => setLocation("/guests")}>
+          <Card className="p-6 hover-elevate transition-all cursor-pointer border-2 border-pink-200 bg-gradient-to-br from-pink-50 to-rose-50" onClick={() => setLocation("/guests")}>
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-chart-5/10">
-                <Users className="w-6 h-6 text-chart-5" />
+              <div className="p-3 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 shadow-lg">
+                <Users className="w-6 h-6 text-white" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Guests</p>
-                <p className="font-mono text-2xl font-bold" data-testid="stat-guests-count">
+                <p className="text-sm font-semibold text-pink-600">Guests</p>
+                <p className="font-mono text-2xl font-bold text-pink-700" data-testid="stat-guests-count">
                   {wedding.guestCountEstimate || 0}
                 </p>
               </div>
             </div>
           </Card>
 
-          <Card className="p-6 hover-elevate transition-all cursor-pointer" onClick={() => setLocation("/photo-gallery")} data-testid="nav-photo-gallery">
+          <Card className="p-6 hover-elevate transition-all cursor-pointer border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50" onClick={() => setLocation("/photo-gallery")} data-testid="nav-photo-gallery">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-orange-500/10">
-                <Camera className="w-6 h-6 text-orange-600" />
+              <div className="p-3 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 shadow-lg">
+                <Camera className="w-6 h-6 text-white" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Photo Gallery</p>
-                <p className="text-xs text-muted-foreground">Inspiration & Events</p>
+                <p className="text-sm font-semibold text-amber-600">Photo Gallery</p>
+                <p className="text-xs text-amber-700">Inspiration & Events</p>
               </div>
             </div>
           </Card>
 
-          <Card className="p-6 hover-elevate transition-all cursor-pointer" onClick={() => setLocation("/vendor-availability")} data-testid="nav-vendor-availability">
+          <Card className="p-6 hover-elevate transition-all cursor-pointer border-2 border-violet-200 bg-gradient-to-br from-violet-50 to-purple-50" onClick={() => setLocation("/vendor-availability")} data-testid="nav-vendor-availability">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-purple-500/10">
-                <CalendarClock className="w-6 h-6 text-purple-600" />
+              <div className="p-3 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 shadow-lg">
+                <CalendarClock className="w-6 h-6 text-white" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Vendor Availability</p>
-                <p className="text-xs text-muted-foreground">Book vendors instantly</p>
+                <p className="text-sm font-semibold text-violet-600">Vendor Availability</p>
+                <p className="text-xs text-violet-700">Book vendors instantly</p>
               </div>
             </div>
           </Card>
         </div>
 
         <Tabs defaultValue="timeline" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 lg:w-auto lg:inline-grid">
-            <TabsTrigger value="timeline" data-testid="tab-timeline">
+          <TabsList className="grid w-full grid-cols-2 lg:w-auto lg:inline-grid bg-gradient-to-r from-orange-100 via-pink-100 to-purple-100 p-1 h-12">
+            <TabsTrigger value="timeline" data-testid="tab-timeline" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-pink-500 data-[state=active]:text-white font-semibold" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
               <Calendar className="w-4 h-4 mr-2" />
               Timeline
             </TabsTrigger>
-            <TabsTrigger value="budget" data-testid="tab-budget">
+            <TabsTrigger value="budget" data-testid="tab-budget" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-500 data-[state=active]:text-white font-semibold" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
               <DollarSign className="w-4 h-4 mr-2" />
               Budget
             </TabsTrigger>
@@ -210,21 +210,21 @@ export default function Dashboard() {
           </TabsContent>
         </Tabs>
 
-        <Card className="mt-8 p-8 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+        <Card className="mt-8 p-8 bg-gradient-to-br from-orange-100 via-pink-100 to-purple-100 border-2 border-orange-300">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div>
-              <h3 className="font-display text-2xl font-bold text-foreground mb-2">
+              <h3 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent mb-2" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
                 Ready to Find Vendors?
               </h3>
-              <p className="text-muted-foreground">
-                Browse our curated directory of culturally-specialized service providers
+              <p className="text-lg font-semibold text-orange-700" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+                Browse our curated directory of culturally-specialized service providers 🎊
               </p>
             </div>
             <Button
               size="lg"
               onClick={() => setLocation("/vendors")}
               data-testid="button-browse-vendors"
-              className="shrink-0"
+              className="shrink-0 bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white shadow-lg"
             >
               Browse Vendors
             </Button>
