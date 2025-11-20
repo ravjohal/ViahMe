@@ -28,6 +28,18 @@ Key architectural decisions include:
 - **Review System**: Allows for vendor ratings and feedback with automatic aggregation.
 - **Document Storage System**: Secure cloud-based document management using Replit Object Storage (Google Cloud Storage backend) for contracts, permits, licenses, invoices, and receipts. Features include file upload with Uppy, document categorization by type and category, optional event linking, vendor sharing controls, and ACL-based access management. Documents are organized and displayed by category with download and delete capabilities.
 - **Music Playlist Feature**: Collaborative playlist management allowing couples and guests to suggest songs with voting capabilities, enabling democratic music selection for wedding events.
+- **Photo Gallery & Portfolio System**: Comprehensive visual content management with three gallery types:
+  - **Inspiration Boards**: Curated collections of wedding ideas, decor concepts, and style references for planning
+  - **Vendor Portfolios**: Professional showcases for vendors to display their work and attract couples
+  - **Event Photos**: Post-ceremony photo sharing organized by event with support for guest contributions
+  - Features include: Uppy-powered photo uploads to Replit Object Storage, real-time UI updates via TanStack Query v5 with prefix-based cache invalidation, gallery categorization and filtering, photo captions and tagging, and seamless integration with wedding events.
+- **Real-Time Vendor Availability Calendar**: Interactive booking system with instant conflict detection:
+  - **Month View Calendar**: Visual representation of vendor availability across selected date ranges
+  - **Time Slot Management**: Support for morning, afternoon, evening, and full-day bookings
+  - **Instant Booking Workflow**: Direct vendor booking with automatic conflict detection across all wedding events
+  - **Status Tracking**: Real-time availability status (available, booked, pending, blocked) with color-coded indicators
+  - **Multi-Event Awareness**: Prevents double-bookings by checking vendor availability across all events in a wedding
+  - Architecture: UUID-based schema with hardened date validation (z.coerce.date with refinement), TanStack Query v5 prefix matching (exact: false) for comprehensive cache invalidation, ISO string normalization for consistent query keys, and mutation variable-based invalidation to prevent state drift during async operations.
 - **UI/UX**: Features a warm orange/gold primary color palette, elegant typography (Playfair Display for headings, Inter for body, JetBrains Mono for data), Shadcn UI components for consistency, hover elevate interactions, responsive design, and cultural icons for event types.
 
 ## External Dependencies
