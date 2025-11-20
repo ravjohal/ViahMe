@@ -31,6 +31,8 @@ import {
   type InsertSongVote,
   type Document,
   type InsertDocument,
+  type WeddingWebsite,
+  type InsertWeddingWebsite,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -163,6 +165,14 @@ export interface IStorage {
   createDocument(document: InsertDocument): Promise<Document>;
   updateDocument(id: string, document: Partial<InsertDocument>): Promise<Document | undefined>;
   deleteDocument(id: string): Promise<boolean>;
+
+  // Wedding Websites
+  getWeddingWebsite(id: string): Promise<WeddingWebsite | undefined>;
+  getWeddingWebsiteByWeddingId(weddingId: string): Promise<WeddingWebsite | undefined>;
+  getWeddingWebsiteBySlug(slug: string): Promise<WeddingWebsite | undefined>;
+  createWeddingWebsite(website: InsertWeddingWebsite): Promise<WeddingWebsite>;
+  updateWeddingWebsite(id: string, website: Partial<InsertWeddingWebsite>): Promise<WeddingWebsite | undefined>;
+  deleteWeddingWebsite(id: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -182,6 +192,7 @@ export class MemStorage implements IStorage {
   private playlistSongs: Map<string, PlaylistSong>;
   private songVotes: Map<string, SongVote>;
   private documents: Map<string, Document>;
+  private weddingWebsites: Map<string, WeddingWebsite>;
 
   constructor() {
     this.users = new Map();
@@ -200,6 +211,7 @@ export class MemStorage implements IStorage {
     this.playlistSongs = new Map();
     this.songVotes = new Map();
     this.documents = new Map();
+    this.weddingWebsites = new Map();
   }
 
   // Users
@@ -864,6 +876,52 @@ export class MemStorage implements IStorage {
   async deleteDocument(id: string): Promise<boolean> {
     return this.documents.delete(id);
   }
+
+  // Wedding Websites
+  async getWeddingWebsite(id: string): Promise<WeddingWebsite | undefined> {
+    return this.weddingWebsites.get(id);
+  }
+
+  async getWeddingWebsiteByWeddingId(weddingId: string): Promise<WeddingWebsite | undefined> {
+    return Array.from(this.weddingWebsites.values()).find(
+      (w) => w.weddingId === weddingId
+    );
+  }
+
+  async getWeddingWebsiteBySlug(slug: string): Promise<WeddingWebsite | undefined> {
+    return Array.from(this.weddingWebsites.values()).find(
+      (w) => w.slug === slug
+    );
+  }
+
+  async createWeddingWebsite(website: InsertWeddingWebsite): Promise<WeddingWebsite> {
+    const newWebsite: WeddingWebsite = {
+      id: randomUUID(),
+      ...website,
+      isPublished: website.isPublished ?? false,
+      primaryColor: website.primaryColor || '#f97316',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.weddingWebsites.set(newWebsite.id, newWebsite);
+    return newWebsite;
+  }
+
+  async updateWeddingWebsite(id: string, website: Partial<InsertWeddingWebsite>): Promise<WeddingWebsite | undefined> {
+    const existing = this.weddingWebsites.get(id);
+    if (!existing) return undefined;
+    const updated: WeddingWebsite = {
+      ...existing,
+      ...website,
+      updatedAt: new Date(),
+    };
+    this.weddingWebsites.set(id, updated);
+    return updated;
+  }
+
+  async deleteWeddingWebsite(id: string): Promise<boolean> {
+    return this.weddingWebsites.delete(id);
+  }
 }
 
 import { neon } from "@neondatabase/serverless";
@@ -1440,6 +1498,59 @@ export class DBStorage implements IStorage {
     const result = await this.db
       .delete(schema.documents)
       .where(eq(schema.documents.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  // Wedding Websites
+  async getWeddingWebsite(id: string): Promise<WeddingWebsite | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.weddingWebsites)
+      .where(eq(schema.weddingWebsites.id, id));
+    return result[0];
+  }
+
+  async getWeddingWebsiteByWeddingId(weddingId: string): Promise<WeddingWebsite | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.weddingWebsites)
+      .where(eq(schema.weddingWebsites.weddingId, weddingId));
+    return result[0];
+  }
+
+  async getWeddingWebsiteBySlug(slug: string): Promise<WeddingWebsite | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.weddingWebsites)
+      .where(eq(schema.weddingWebsites.slug, slug));
+    return result[0];
+  }
+
+  async createWeddingWebsite(website: InsertWeddingWebsite): Promise<WeddingWebsite> {
+    const result = await this.db
+      .insert(schema.weddingWebsites)
+      .values(website)
+      .returning();
+    return result[0];
+  }
+
+  async updateWeddingWebsite(id: string, website: Partial<InsertWeddingWebsite>): Promise<WeddingWebsite | undefined> {
+    const result = await this.db
+      .update(schema.weddingWebsites)
+      .set({
+        ...website,
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.weddingWebsites.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteWeddingWebsite(id: string): Promise<boolean> {
+    const result = await this.db
+      .delete(schema.weddingWebsites)
+      .where(eq(schema.weddingWebsites.id, id))
       .returning();
     return result.length > 0;
   }
