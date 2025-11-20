@@ -1,28 +1,40 @@
-<svg width="400" height="150" viewBox="0 0 400 150" xmlns="http://www.w3.org/2000/svg">
-  <style>
-    .viah-text {
-      font-family: 'Times New Roman', serif;
-      font-weight: bold;
-      font-size: 80px;
-      fill: #5D101D; /* Deep Maroon */
-    }
-    .me-text {
-      font-family: Arial, sans-serif;
-      font-size: 80px;
-      fill: #F28C28; /* Vibrant Orange */
-    }
-    .icon-color {
-      fill: #F28C28;
-    }
-  </style>
+<svg width="500" height="200" viewBox="0 0 500 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&amp;family=Lato:wght@400&amp;display=swap');
+      
+      .viah-text {
+        font-family: 'Cinzel Decorative', serif; /* Festive, decorative font */
+        font-size: 100px;
+        fill: #5D101D; /* Deep Maroon */
+      }
+      
+      .me-text {
+        font-family: 'Lato', sans-serif; /* Clean sans-serif */
+        font-size: 80px;
+        fill: #F28C28; /* Vibrant Orange */
+      }
 
-  <text x="20" y="110" class="viah-text">Viah</text>
+      .icon-fill {
+        fill: #F28C28; /* Vibrant Orange */
+      }
+    </style>
+  </defs>
+
+  <text x="30" y="140" class="viah-text">Viah</text>
   
-  <text x="190" y="110" class="me-text">.me</text>
+  <text x="280" y="140" class="me-text">.me</text>
 
-  <path class="icon-color" d="M260 50 C 250 30, 290 30, 280 50 C 290 50, 300 40, 310 50 C 300 70, 260 70, 260 50 Z" />
-  <path class="icon-color" d="M265 45 Q 275 35 285 45" fill="none" stroke="#F28C28" stroke-width="2"/>
+  <g transform="translate(175, 30) scale(0.6)">
+     <path class="icon-fill" d="M40,10 C30,10 20,25 20,40 C20,55 35,60 35,60 L35,80 L65,80 L65,60 C65,60 80,55 80,40 C80,25 70,10 60,10 L40,10 Z M80,40 C80,40 100,50 120,40 C110,60 90,65 80,60" />
+     <path class="icon-fill" d="M20,40 Q10,60 0,100 L30,100 Q35,70 40,65" opacity="0.8"/> </g>
 
-  <path class="icon-color" d="M115 50 C 100 50, 90 80, 95 85 L 120 85 C 125 80, 130 50, 115 50 Z" />
-  <path class="icon-color" d="M120 50 Q 140 60 160 55" fill="none" stroke="#F28C28" stroke-width="3"/>
+  <g transform="translate(320, 40) scale(0.5)">
+    <path class="icon-fill" d="M10,40 Q5,20 30,10 Q55,0 80,10 Q105,20 100,40 Q95,60 80,65 Q65,70 55,65 Q45,70 30,65 Q15,60 10,40 Z" />
+    <path fill="none" stroke="#FFFFFF" stroke-width="3" d="M30,10 Q40,30 30,65" />
+    <path fill="none" stroke="#FFFFFF" stroke-width="3" d="M55,5 Q65,30 55,65" />
+    <path fill="none" stroke="#FFFFFF" stroke-width="3" d="M80,10 Q70,30 80,65" />
+    <path class="icon-fill" d="M45,10 L55,-15 L65,10 Z" /> 
+  </g>
+
 </svg>
