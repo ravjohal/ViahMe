@@ -332,3 +332,70 @@ export const insertReviewSchema = createInsertSchema(reviews).omit({
 
 export type InsertReview = z.infer<typeof insertReviewSchema>;
 export type Review = typeof reviews.$inferSelect;
+
+// ============================================================================
+// NOTIFICATIONS - Email/SMS notification system
+// ============================================================================
+
+export const notifications = pgTable("notifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  recipientId: varchar("recipient_id").notNull(), // weddingId for couples, vendorId for vendors
+  recipientType: text("recipient_type").notNull(), // 'couple' | 'vendor'
+  recipientEmail: text("recipient_email"),
+  recipientPhone: text("recipient_phone"),
+  type: text("type").notNull(), // 'booking_confirmation' | 'payment_reminder' | 'event_alert' | 'contract_update'
+  channel: text("channel").notNull(), // 'email' | 'sms' | 'both'
+  status: text("status").notNull().default('scheduled'), // 'scheduled' | 'sent' | 'failed' | 'cancelled'
+  scheduledFor: timestamp("scheduled_for").notNull(), // When to send
+  sentAt: timestamp("sent_at"),
+  subject: text("subject").notNull(),
+  message: text("message").notNull(),
+  metadata: jsonb("metadata"), // Related IDs, event details, etc
+  errorMessage: text("error_message"), // If status is 'failed'
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertNotificationSchema = createInsertSchema(notifications).omit({
+  id: true,
+  createdAt: true,
+  sentAt: true,
+}).extend({
+  recipientType: z.enum(['couple', 'vendor']),
+  type: z.enum(['booking_confirmation', 'payment_reminder', 'event_alert', 'contract_update']),
+  channel: z.enum(['email', 'sms', 'both']),
+  status: z.enum(['scheduled', 'sent', 'failed', 'cancelled']).optional(),
+  scheduledFor: z.string().transform(val => new Date(val)),
+});
+
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type Notification = typeof notifications.$inferSelect;
+
+// ============================================================================
+// NOTIFICATION PREFERENCES - User notification settings
+// ============================================================================
+
+export const notificationPreferences = pgTable("notification_preferences", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull().unique(),
+  email: text("email"),
+  phone: text("phone"),
+  bookingConfirmationsEnabled: boolean("booking_confirmations_enabled").default(true),
+  paymentRemindersEnabled: boolean("payment_reminders_enabled").default(true),
+  eventAlertsEnabled: boolean("event_alerts_enabled").default(true),
+  contractUpdatesEnabled: boolean("contract_updates_enabled").default(true),
+  preferredChannel: text("preferred_channel").default('email'), // 'email' | 'sms' | 'both'
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertNotificationPreferencesSchema = createInsertSchema(notificationPreferences).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  preferredChannel: z.enum(['email', 'sms', 'both']).optional(),
+});
+
+export type InsertNotificationPreferences = z.infer<typeof insertNotificationPreferencesSchema>;
+export type NotificationPreferences = typeof notificationPreferences.$inferSelect;
