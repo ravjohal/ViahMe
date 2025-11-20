@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, DollarSign, Users, Briefcase, FileText } from "lucide-react";
+import { Calendar, DollarSign, Users, Briefcase, FileText, Camera, CalendarClock } from "lucide-react";
 import { useLocation } from "wouter";
 import type { Wedding, Event, BudgetCategory, Contract, Vendor } from "@shared/schema";
 
@@ -81,7 +81,7 @@ export default function Dashboard() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
           <Card className="p-6 hover-elevate transition-all cursor-pointer" onClick={() => setLocation("/timeline")}>
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-xl bg-chart-1/10">
@@ -148,6 +148,30 @@ export default function Dashboard() {
                 <p className="font-mono text-2xl font-bold" data-testid="stat-guests-count">
                   {wedding.guestCountEstimate || 0}
                 </p>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-6 hover-elevate transition-all cursor-pointer" onClick={() => setLocation("/photo-gallery")} data-testid="nav-photo-gallery">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-xl bg-orange-500/10">
+                <Camera className="w-6 h-6 text-orange-600" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Photo Gallery</p>
+                <p className="text-xs text-muted-foreground">Inspiration & Events</p>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-6 hover-elevate transition-all cursor-pointer" onClick={() => setLocation("/vendor-availability")} data-testid="nav-vendor-availability">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-xl bg-purple-500/10">
+                <CalendarClock className="w-6 h-6 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Vendor Availability</p>
+                <p className="text-xs text-muted-foreground">Book vendors instantly</p>
               </div>
             </div>
           </Card>
