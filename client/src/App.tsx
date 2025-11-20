@@ -3,9 +3,16 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider } from "@/hooks/use-auth";
 import { AppHeader } from "@/components/app-header";
 import NotFound from "@/pages/not-found";
 import Onboarding from "@/pages/onboarding";
+import Login from "@/pages/login";
+import VendorLogin from "@/pages/vendor-login";
+import VendorRegister from "@/pages/vendor-register";
+import VerifyEmail from "@/pages/verify-email";
+import ForgotPassword from "@/pages/forgot-password";
+import ResetPassword from "@/pages/reset-password";
 import Dashboard from "@/pages/dashboard";
 import Vendors from "@/pages/vendors";
 import Guests from "@/pages/guests";
@@ -28,6 +35,12 @@ function Router() {
     <Switch>
       <Route path="/" component={Onboarding} />
       <Route path="/onboarding" component={Onboarding} />
+      <Route path="/login" component={Login} />
+      <Route path="/vendor-login" component={VendorLogin} />
+      <Route path="/vendor-register" component={VendorRegister} />
+      <Route path="/verify-email" component={VerifyEmail} />
+      <Route path="/forgot-password" component={ForgotPassword} />
+      <Route path="/reset-password" component={ResetPassword} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/vendors" component={Vendors} />
       <Route path="/guests" component={Guests} />
@@ -52,8 +65,18 @@ function Router() {
 function AppLayout() {
   const [location] = useLocation();
   
-  // Don't show header on onboarding or guest website pages
-  const hideHeader = location === "/" || location === "/onboarding" || location.startsWith("/wedding/");
+  // Don't show header on onboarding, auth pages, or guest website pages
+  const authPages = [
+    "/", 
+    "/onboarding", 
+    "/login", 
+    "/vendor-login", 
+    "/vendor-register", 
+    "/verify-email", 
+    "/forgot-password", 
+    "/reset-password"
+  ];
+  const hideHeader = authPages.includes(location) || location.startsWith("/wedding/");
   
   return (
     <div className="min-h-screen bg-background">
@@ -66,10 +89,12 @@ function AppLayout() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <AppLayout />
-      </TooltipProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <AppLayout />
+        </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Bell, Calendar, Home, Users, CheckSquare, Clock, DollarSign, FileText, MessageSquare, Music, Image, CalendarClock, UserCircle, Menu } from "lucide-react";
+import { Bell, Calendar, Home, Users, CheckSquare, Clock, DollarSign, FileText, MessageSquare, Music, Image, CalendarClock, UserCircle, Menu, LogOut, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/use-auth";
 import type { Wedding } from "@shared/schema";
 import { differenceInDays } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -33,6 +34,7 @@ const NAV_ITEMS = [
 
 export function AppHeader() {
   const [location] = useLocation();
+  const { user, logout } = useAuth();
   
   const { data: weddings } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
@@ -43,6 +45,11 @@ export function AppHeader() {
   const daysUntilWedding = wedding?.weddingDate
     ? differenceInDays(new Date(wedding.weddingDate), new Date())
     : null;
+  
+  const getUserInitials = () => {
+    if (!user) return "?";
+    return user.email.charAt(0).toUpperCase();
+  };
 
   return (
     <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -168,13 +175,48 @@ export function AppHeader() {
             <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full" />
           </Button>
 
-          {/* User Avatar */}
-          {wedding && (
-            <Avatar className="h-9 w-9" data-testid="avatar-user">
-              <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
-                {wedding.role.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+          {/* User Avatar & Dropdown */}
+          {user && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-9 w-9 rounded-full p-0" data-testid="button-user-menu">
+                  <Avatar className="h-9 w-9">
+                    <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
+                      {getUserInitials()}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{user.email}</p>
+                    <p className="text-xs leading-none text-muted-foreground capitalize">
+                      {user.role}
+                      {!user.emailVerified && (
+                        <Badge variant="outline" className="ml-2 text-xs">
+                          Unverified
+                        </Badge>
+                      )}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="gap-2 cursor-pointer" data-testid="menu-item-settings">
+                  <Settings className="w-4 h-4" />
+                  Settings
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  className="gap-2 cursor-pointer text-destructive focus:text-destructive" 
+                  onClick={logout}
+                  data-testid="menu-item-logout"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Log Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
       </div>
