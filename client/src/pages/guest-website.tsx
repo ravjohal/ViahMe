@@ -7,7 +7,6 @@ import { Loader2, MapPin, Calendar, Clock, Navigation, Info, Hotel, HelpCircle }
 import { format } from "date-fns";
 import type { WeddingWebsite, Wedding, Event } from "@shared/schema";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ViahLogo } from "@/components/viah-logo";
 
 interface PublicWeddingData {
   website: WeddingWebsite;
@@ -272,7 +271,11 @@ export default function GuestWebsite() {
           <p className="text-sm text-muted-foreground">We can't wait to celebrate with you!</p>
           <div className="mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <span>Made with ❤️ on</span>
-            <ViahLogo size="sm" className="inline-flex" />
+            <img 
+              src={new URL("@assets/viah_bride_groom_1763618821301.jpg", import.meta.url).href}
+              alt="Viah.me"
+              className="h-12 w-auto inline-block object-contain"
+            />
           </div>
         </div>
       </div>

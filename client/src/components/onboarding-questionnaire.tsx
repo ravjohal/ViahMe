@@ -10,7 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress";
 import { Calendar, Heart, MapPin, Users, DollarSign, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ViahLogo } from "@/components/viah-logo";
 
 const questionnaireSchema = z.object({
   tradition: z.enum(['sikh', 'hindu', 'muslim', 'gujarati', 'south_indian', 'mixed', 'general']),
@@ -145,7 +144,12 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <ViahLogo size="lg" className="mb-3" data-testid="logo-viah" />
+              <img 
+                src={new URL("@assets/viah_bride_groom_1763618821301.jpg", import.meta.url).href}
+                alt="Viah.me"
+                className="h-32 w-auto mb-3 object-contain"
+                data-testid="logo-viah"
+              />
               <p className="text-lg text-muted-foreground">Welcome! Let's plan your perfect celebration</p>
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
