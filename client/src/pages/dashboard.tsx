@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { DashboardHeader } from "@/components/dashboard-header";
 import { TimelineView } from "@/components/timeline-view";
 import { BudgetDashboard } from "@/components/budget-dashboard";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -69,8 +68,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <DashboardHeader wedding={wedding} />
-
       <main className="container mx-auto px-6 py-8">
         <div className="mb-8">
           <h1 className="font-display text-4xl font-bold text-foreground mb-2">
