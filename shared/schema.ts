@@ -432,6 +432,41 @@ export type InsertSongVote = z.infer<typeof insertSongVoteSchema>;
 export type SongVote = typeof songVotes.$inferSelect;
 
 // ============================================================================
+// DOCUMENTS - Contract and file storage
+// ============================================================================
+
+export const documents = pgTable("documents", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  eventId: varchar("event_id"), // Optional: link to specific event
+  name: text("name").notNull(),
+  type: text("type").notNull(), // 'contract' | 'permit' | 'license' | 'invoice' | 'receipt' | 'other'
+  category: text("category").notNull(), // 'vendor' | 'venue' | 'legal' | 'insurance' | 'other'
+  fileUrl: text("file_url").notNull(), // Object storage path
+  fileSize: integer("file_size"), // in bytes
+  mimeType: text("mime_type"),
+  uploadedBy: varchar("uploaded_by").notNull(), // userId
+  sharedWithVendors: text("shared_with_vendors").array().default(sql`ARRAY[]::text[]`),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertDocumentSchema = createInsertSchema(documents).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  type: z.enum(['contract', 'permit', 'license', 'invoice', 'receipt', 'other']),
+  category: z.enum(['vendor', 'venue', 'legal', 'insurance', 'other']),
+  name: z.string().min(1, "Document name is required"),
+  fileUrl: z.string().min(1, "File URL is required"),
+});
+
+export type InsertDocument = z.infer<typeof insertDocumentSchema>;
+export type Document = typeof documents.$inferSelect;
+
+// ============================================================================
 // NOTIFICATIONS - Email/SMS notification system
 // ============================================================================
 
