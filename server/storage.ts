@@ -33,6 +33,12 @@ import {
   type InsertDocument,
   type WeddingWebsite,
   type InsertWeddingWebsite,
+  type PhotoGallery,
+  type InsertPhotoGallery,
+  type Photo,
+  type InsertPhoto,
+  type VendorAvailability,
+  type InsertVendorAvailability,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -173,6 +179,33 @@ export interface IStorage {
   createWeddingWebsite(website: InsertWeddingWebsite): Promise<WeddingWebsite>;
   updateWeddingWebsite(id: string, website: Partial<InsertWeddingWebsite>): Promise<WeddingWebsite | undefined>;
   deleteWeddingWebsite(id: string): Promise<boolean>;
+
+  // Photo Galleries
+  getPhotoGallery(id: string): Promise<PhotoGallery | undefined>;
+  getGalleriesByWedding(weddingId: string): Promise<PhotoGallery[]>;
+  getGalleriesByVendor(vendorId: string): Promise<PhotoGallery[]>;
+  getGalleriesByEvent(eventId: string): Promise<PhotoGallery[]>;
+  getGalleriesByType(type: 'inspiration' | 'vendor_portfolio' | 'event_photos'): Promise<PhotoGallery[]>;
+  createPhotoGallery(gallery: InsertPhotoGallery): Promise<PhotoGallery>;
+  updatePhotoGallery(id: string, gallery: Partial<InsertPhotoGallery>): Promise<PhotoGallery | undefined>;
+  deletePhotoGallery(id: string): Promise<boolean>;
+
+  // Photos
+  getPhoto(id: string): Promise<Photo | undefined>;
+  getPhotosByGallery(galleryId: string): Promise<Photo[]>;
+  createPhoto(photo: InsertPhoto): Promise<Photo>;
+  updatePhoto(id: string, photo: Partial<InsertPhoto>): Promise<Photo | undefined>;
+  deletePhoto(id: string): Promise<boolean>;
+
+  // Vendor Availability
+  getVendorAvailability(id: string): Promise<VendorAvailability | undefined>;
+  getAvailabilityByVendor(vendorId: string): Promise<VendorAvailability[]>;
+  getAvailabilityByVendorAndDateRange(vendorId: string, startDate: Date, endDate: Date): Promise<VendorAvailability[]>;
+  getAvailabilityByDate(vendorId: string, date: Date): Promise<VendorAvailability[]>;
+  checkAvailabilityConflicts(vendorId: string, date: Date, timeSlot: string, excludeBookingId?: string): Promise<boolean>;
+  createVendorAvailability(availability: InsertVendorAvailability): Promise<VendorAvailability>;
+  updateVendorAvailability(id: string, availability: Partial<InsertVendorAvailability>): Promise<VendorAvailability | undefined>;
+  deleteVendorAvailability(id: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -193,6 +226,9 @@ export class MemStorage implements IStorage {
   private songVotes: Map<string, SongVote>;
   private documents: Map<string, Document>;
   private weddingWebsites: Map<string, WeddingWebsite>;
+  private photoGalleries: Map<string, PhotoGallery>;
+  private photos: Map<string, Photo>;
+  private vendorAvailability: Map<string, VendorAvailability>;
 
   constructor() {
     this.users = new Map();
@@ -212,6 +248,9 @@ export class MemStorage implements IStorage {
     this.songVotes = new Map();
     this.documents = new Map();
     this.weddingWebsites = new Map();
+    this.photoGalleries = new Map();
+    this.photos = new Map();
+    this.vendorAvailability = new Map();
   }
 
   // Users
@@ -853,9 +892,13 @@ export class MemStorage implements IStorage {
     const newDocument: Document = {
       id: randomUUID(),
       ...document,
+      eventId: document.eventId ?? null,
+      notes: document.notes ?? null,
+      fileSize: document.fileSize ?? null,
+      mimeType: document.mimeType ?? null,
       createdAt: new Date(),
       updatedAt: new Date(),
-      sharedWithVendors: document.sharedWithVendors || [],
+      sharedWithVendors: document.sharedWithVendors ?? null,
     };
     this.documents.set(newDocument.id, newDocument);
     return newDocument;
@@ -899,7 +942,16 @@ export class MemStorage implements IStorage {
       id: randomUUID(),
       ...website,
       isPublished: website.isPublished ?? false,
-      primaryColor: website.primaryColor || '#f97316',
+      heroImageUrl: website.heroImageUrl ?? null,
+      welcomeTitle: website.welcomeTitle ?? null,
+      welcomeMessage: website.welcomeMessage ?? null,
+      coupleStory: website.coupleStory ?? null,
+      travelInfo: website.travelInfo ?? null,
+      accommodationInfo: website.accommodationInfo ?? null,
+      thingsToDoInfo: website.thingsToDoInfo ?? null,
+      faqInfo: website.faqInfo ?? null,
+      registryLinks: website.registryLinks ?? null,
+      primaryColor: website.primaryColor ?? '#f97316',
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -922,11 +974,187 @@ export class MemStorage implements IStorage {
   async deleteWeddingWebsite(id: string): Promise<boolean> {
     return this.weddingWebsites.delete(id);
   }
+
+  // Photo Galleries
+  async getPhotoGallery(id: string): Promise<PhotoGallery | undefined> {
+    return this.photoGalleries.get(id);
+  }
+
+  async getGalleriesByWedding(weddingId: string): Promise<PhotoGallery[]> {
+    return Array.from(this.photoGalleries.values()).filter(
+      (g) => g.weddingId === weddingId
+    );
+  }
+
+  async getGalleriesByVendor(vendorId: string): Promise<PhotoGallery[]> {
+    return Array.from(this.photoGalleries.values()).filter(
+      (g) => g.vendorId === vendorId
+    );
+  }
+
+  async getGalleriesByEvent(eventId: string): Promise<PhotoGallery[]> {
+    return Array.from(this.photoGalleries.values()).filter(
+      (g) => g.eventId === eventId
+    );
+  }
+
+  async getGalleriesByType(type: 'inspiration' | 'vendor_portfolio' | 'event_photos'): Promise<PhotoGallery[]> {
+    return Array.from(this.photoGalleries.values()).filter(
+      (g) => g.type === type
+    );
+  }
+
+  async createPhotoGallery(gallery: InsertPhotoGallery): Promise<PhotoGallery> {
+    const newGallery: PhotoGallery = {
+      id: randomUUID(),
+      ...gallery,
+      weddingId: gallery.weddingId ?? null,
+      vendorId: gallery.vendorId ?? null,
+      eventId: gallery.eventId ?? null,
+      description: gallery.description ?? null,
+      coverPhotoUrl: gallery.coverPhotoUrl ?? null,
+      isPublic: gallery.isPublic ?? false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.photoGalleries.set(newGallery.id, newGallery);
+    return newGallery;
+  }
+
+  async updatePhotoGallery(id: string, gallery: Partial<InsertPhotoGallery>): Promise<PhotoGallery | undefined> {
+    const existing = this.photoGalleries.get(id);
+    if (!existing) return undefined;
+    const updated: PhotoGallery = {
+      ...existing,
+      ...gallery,
+      updatedAt: new Date(),
+    };
+    this.photoGalleries.set(id, updated);
+    return updated;
+  }
+
+  async deletePhotoGallery(id: string): Promise<boolean> {
+    return this.photoGalleries.delete(id);
+  }
+
+  // Photos
+  async getPhoto(id: string): Promise<Photo | undefined> {
+    return this.photos.get(id);
+  }
+
+  async getPhotosByGallery(galleryId: string): Promise<Photo[]> {
+    return Array.from(this.photos.values())
+      .filter((p) => p.galleryId === galleryId)
+      .sort((a, b) => a.order - b.order);
+  }
+
+  async createPhoto(photo: InsertPhoto): Promise<Photo> {
+    const newPhoto: Photo = {
+      id: randomUUID(),
+      ...photo,
+      order: photo.order ?? 0,
+      caption: photo.caption ?? null,
+      uploadedBy: photo.uploadedBy ?? null,
+      createdAt: new Date(),
+    };
+    this.photos.set(newPhoto.id, newPhoto);
+    return newPhoto;
+  }
+
+  async updatePhoto(id: string, photo: Partial<InsertPhoto>): Promise<Photo | undefined> {
+    const existing = this.photos.get(id);
+    if (!existing) return undefined;
+    const updated: Photo = {
+      ...existing,
+      ...photo,
+    };
+    this.photos.set(id, updated);
+    return updated;
+  }
+
+  async deletePhoto(id: string): Promise<boolean> {
+    return this.photos.delete(id);
+  }
+
+  // Vendor Availability
+  async getVendorAvailability(id: string): Promise<VendorAvailability | undefined> {
+    return this.vendorAvailability.get(id);
+  }
+
+  async getAvailabilityByVendor(vendorId: string): Promise<VendorAvailability[]> {
+    return Array.from(this.vendorAvailability.values())
+      .filter((a) => a.vendorId === vendorId)
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
+  }
+
+  async getAvailabilityByVendorAndDateRange(vendorId: string, startDate: Date, endDate: Date): Promise<VendorAvailability[]> {
+    return Array.from(this.vendorAvailability.values())
+      .filter((a) =>
+        a.vendorId === vendorId &&
+        a.date >= startDate &&
+        a.date <= endDate
+      )
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
+  }
+
+  async getAvailabilityByDate(vendorId: string, date: Date): Promise<VendorAvailability[]> {
+    const targetDate = new Date(date);
+    targetDate.setHours(0, 0, 0, 0);
+    return Array.from(this.vendorAvailability.values()).filter((a) => {
+      if (a.vendorId !== vendorId) return false;
+      const availDate = new Date(a.date);
+      availDate.setHours(0, 0, 0, 0);
+      return availDate.getTime() === targetDate.getTime();
+    });
+  }
+
+  async checkAvailabilityConflicts(vendorId: string, date: Date, timeSlot: string, excludeBookingId?: string): Promise<boolean> {
+    const slots = await this.getAvailabilityByDate(vendorId, date);
+    const conflicts = slots.filter((slot) => {
+      if (excludeBookingId && slot.bookingId === excludeBookingId) return false;
+      if (slot.status === 'available' || slot.status === 'blocked') return false;
+      if (slot.timeSlot === 'full_day' || timeSlot === 'full_day') return true;
+      return slot.timeSlot === timeSlot;
+    });
+    return conflicts.length > 0;
+  }
+
+  async createVendorAvailability(availability: InsertVendorAvailability): Promise<VendorAvailability> {
+    const newAvailability: VendorAvailability = {
+      id: randomUUID(),
+      ...availability,
+      timeSlot: availability.timeSlot ?? null,
+      weddingId: availability.weddingId ?? null,
+      eventId: availability.eventId ?? null,
+      bookingId: availability.bookingId ?? null,
+      notes: availability.notes ?? null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.vendorAvailability.set(newAvailability.id, newAvailability);
+    return newAvailability;
+  }
+
+  async updateVendorAvailability(id: string, availability: Partial<InsertVendorAvailability>): Promise<VendorAvailability | undefined> {
+    const existing = this.vendorAvailability.get(id);
+    if (!existing) return undefined;
+    const updated: VendorAvailability = {
+      ...existing,
+      ...availability,
+      updatedAt: new Date(),
+    };
+    this.vendorAvailability.set(id, updated);
+    return updated;
+  }
+
+  async deleteVendorAvailability(id: string): Promise<boolean> {
+    return this.vendorAvailability.delete(id);
+  }
 }
 
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import * as schema from "@shared/schema";
 
 export class DBStorage implements IStorage {
@@ -1551,6 +1779,205 @@ export class DBStorage implements IStorage {
     const result = await this.db
       .delete(schema.weddingWebsites)
       .where(eq(schema.weddingWebsites.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  // Photo Galleries
+  async getPhotoGallery(id: string): Promise<PhotoGallery | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.photoGalleries)
+      .where(eq(schema.photoGalleries.id, id));
+    return result[0];
+  }
+
+  async getGalleriesByWedding(weddingId: string): Promise<PhotoGallery[]> {
+    return await this.db
+      .select()
+      .from(schema.photoGalleries)
+      .where(eq(schema.photoGalleries.weddingId, weddingId));
+  }
+
+  async getGalleriesByVendor(vendorId: string): Promise<PhotoGallery[]> {
+    return await this.db
+      .select()
+      .from(schema.photoGalleries)
+      .where(eq(schema.photoGalleries.vendorId, vendorId));
+  }
+
+  async getGalleriesByEvent(eventId: string): Promise<PhotoGallery[]> {
+    return await this.db
+      .select()
+      .from(schema.photoGalleries)
+      .where(eq(schema.photoGalleries.eventId, eventId));
+  }
+
+  async getGalleriesByType(type: 'inspiration' | 'vendor_portfolio' | 'event_photos'): Promise<PhotoGallery[]> {
+    return await this.db
+      .select()
+      .from(schema.photoGalleries)
+      .where(eq(schema.photoGalleries.type, type));
+  }
+
+  async createPhotoGallery(gallery: InsertPhotoGallery): Promise<PhotoGallery> {
+    const result = await this.db
+      .insert(schema.photoGalleries)
+      .values(gallery)
+      .returning();
+    return result[0];
+  }
+
+  async updatePhotoGallery(id: string, gallery: Partial<InsertPhotoGallery>): Promise<PhotoGallery | undefined> {
+    const result = await this.db
+      .update(schema.photoGalleries)
+      .set({
+        ...gallery,
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.photoGalleries.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deletePhotoGallery(id: string): Promise<boolean> {
+    const result = await this.db
+      .delete(schema.photoGalleries)
+      .where(eq(schema.photoGalleries.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  // Photos
+  async getPhoto(id: string): Promise<Photo | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.photos)
+      .where(eq(schema.photos.id, id));
+    return result[0];
+  }
+
+  async getPhotosByGallery(galleryId: string): Promise<Photo[]> {
+    return await this.db
+      .select()
+      .from(schema.photos)
+      .where(eq(schema.photos.galleryId, galleryId))
+      .orderBy(schema.photos.order);
+  }
+
+  async createPhoto(photo: InsertPhoto): Promise<Photo> {
+    const result = await this.db
+      .insert(schema.photos)
+      .values(photo)
+      .returning();
+    return result[0];
+  }
+
+  async updatePhoto(id: string, photo: Partial<InsertPhoto>): Promise<Photo | undefined> {
+    const result = await this.db
+      .update(schema.photos)
+      .set(photo)
+      .where(eq(schema.photos.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deletePhoto(id: string): Promise<boolean> {
+    const result = await this.db
+      .delete(schema.photos)
+      .where(eq(schema.photos.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  // Vendor Availability
+  async getVendorAvailability(id: string): Promise<VendorAvailability | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.vendorAvailability)
+      .where(eq(schema.vendorAvailability.id, id));
+    return result[0];
+  }
+
+  async getAvailabilityByVendor(vendorId: string): Promise<VendorAvailability[]> {
+    return await this.db
+      .select()
+      .from(schema.vendorAvailability)
+      .where(eq(schema.vendorAvailability.vendorId, vendorId))
+      .orderBy(schema.vendorAvailability.date);
+  }
+
+  async getAvailabilityByVendorAndDateRange(vendorId: string, startDate: Date, endDate: Date): Promise<VendorAvailability[]> {
+    return await this.db
+      .select()
+      .from(schema.vendorAvailability)
+      .where(
+        and(
+          eq(schema.vendorAvailability.vendorId, vendorId),
+          and(
+            sql`${schema.vendorAvailability.date} >= ${startDate}`,
+            sql`${schema.vendorAvailability.date} <= ${endDate}`
+          )
+        )
+      )
+      .orderBy(schema.vendorAvailability.date);
+  }
+
+  async getAvailabilityByDate(vendorId: string, date: Date): Promise<VendorAvailability[]> {
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+    
+    return await this.db
+      .select()
+      .from(schema.vendorAvailability)
+      .where(
+        and(
+          eq(schema.vendorAvailability.vendorId, vendorId),
+          and(
+            sql`${schema.vendorAvailability.date} >= ${startOfDay}`,
+            sql`${schema.vendorAvailability.date} <= ${endOfDay}`
+          )
+        )
+      );
+  }
+
+  async checkAvailabilityConflicts(vendorId: string, date: Date, timeSlot: string, excludeBookingId?: string): Promise<boolean> {
+    const slots = await this.getAvailabilityByDate(vendorId, date);
+    const conflicts = slots.filter((slot) => {
+      if (excludeBookingId && slot.bookingId === excludeBookingId) return false;
+      if (slot.status === 'available' || slot.status === 'blocked') return false;
+      if (slot.timeSlot === 'full_day' || timeSlot === 'full_day') return true;
+      return slot.timeSlot === timeSlot;
+    });
+    return conflicts.length > 0;
+  }
+
+  async createVendorAvailability(availability: InsertVendorAvailability): Promise<VendorAvailability> {
+    const result = await this.db
+      .insert(schema.vendorAvailability)
+      .values(availability)
+      .returning();
+    return result[0];
+  }
+
+  async updateVendorAvailability(id: string, availability: Partial<InsertVendorAvailability>): Promise<VendorAvailability | undefined> {
+    const result = await this.db
+      .update(schema.vendorAvailability)
+      .set({
+        ...availability,
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.vendorAvailability.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteVendorAvailability(id: string): Promise<boolean> {
+    const result = await this.db
+      .delete(schema.vendorAvailability)
+      .where(eq(schema.vendorAvailability.id, id))
       .returning();
     return result.length > 0;
   }
