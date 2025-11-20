@@ -23,6 +23,12 @@ import {
   type InsertReview,
   type BudgetBenchmark,
   type InsertBudgetBenchmark,
+  type Playlist,
+  type InsertPlaylist,
+  type PlaylistSong,
+  type InsertPlaylistSong,
+  type SongVote,
+  type InsertSongVote,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -124,6 +130,29 @@ export interface IStorage {
   getAllBudgetBenchmarks(): Promise<BudgetBenchmark[]>;
   createBudgetBenchmark(benchmark: InsertBudgetBenchmark): Promise<BudgetBenchmark>;
   updateBudgetBenchmark(id: string, benchmark: Partial<InsertBudgetBenchmark>): Promise<BudgetBenchmark | undefined>;
+
+  // Playlists
+  getPlaylist(id: string): Promise<Playlist | undefined>;
+  getPlaylistsByWedding(weddingId: string): Promise<Playlist[]>;
+  getPlaylistsByEvent(eventId: string): Promise<Playlist[]>;
+  createPlaylist(playlist: InsertPlaylist): Promise<Playlist>;
+  updatePlaylist(id: string, playlist: Partial<InsertPlaylist>): Promise<Playlist | undefined>;
+  deletePlaylist(id: string): Promise<boolean>;
+
+  // Playlist Songs
+  getPlaylistSong(id: string): Promise<PlaylistSong | undefined>;
+  getSongsByPlaylist(playlistId: string): Promise<PlaylistSong[]>;
+  createPlaylistSong(song: InsertPlaylistSong): Promise<PlaylistSong>;
+  updatePlaylistSong(id: string, song: Partial<InsertPlaylistSong>): Promise<PlaylistSong | undefined>;
+  deletePlaylistSong(id: string): Promise<boolean>;
+  updateSongVoteCount(songId: string): Promise<void>; // Recalculate vote count
+
+  // Song Votes
+  getSongVote(id: string): Promise<SongVote | undefined>;
+  getVotesBySong(songId: string): Promise<SongVote[]>;
+  createSongVote(vote: InsertSongVote): Promise<SongVote>;
+  deleteVote(voterId: string, songId: string): Promise<boolean>; // Remove a user's vote
+  hasUserVoted(voterId: string, songId: string): Promise<boolean>; // Check if user already voted
 }
 
 export class MemStorage implements IStorage {
@@ -139,6 +168,9 @@ export class MemStorage implements IStorage {
   private messages: Map<string, Message>;
   private reviews: Map<string, Review>;
   private budgetBenchmarks: Map<string, BudgetBenchmark>;
+  private playlists: Map<string, Playlist>;
+  private playlistSongs: Map<string, PlaylistSong>;
+  private songVotes: Map<string, SongVote>;
 
   constructor() {
     this.users = new Map();
@@ -153,6 +185,9 @@ export class MemStorage implements IStorage {
     this.messages = new Map();
     this.reviews = new Map();
     this.budgetBenchmarks = new Map();
+    this.playlists = new Map();
+    this.playlistSongs = new Map();
+    this.songVotes = new Map();
   }
 
   // Users
@@ -622,6 +657,156 @@ export class MemStorage implements IStorage {
     this.budgetBenchmarks.set(id, updated);
     return updated;
   }
+
+  // Playlists
+  async getPlaylist(id: string): Promise<Playlist | undefined> {
+    return this.playlists.get(id);
+  }
+
+  async getPlaylistsByWedding(weddingId: string): Promise<Playlist[]> {
+    return Array.from(this.playlists.values()).filter((p) => p.weddingId === weddingId);
+  }
+
+  async getPlaylistsByEvent(eventId: string): Promise<Playlist[]> {
+    return Array.from(this.playlists.values()).filter((p) => p.eventId === eventId);
+  }
+
+  async createPlaylist(insertPlaylist: InsertPlaylist): Promise<Playlist> {
+    const id = randomUUID();
+    const playlist: Playlist = {
+      ...insertPlaylist,
+      id,
+      sharedWithVendors: insertPlaylist.sharedWithVendors || [],
+      isPublic: insertPlaylist.isPublic || false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as Playlist;
+    this.playlists.set(id, playlist);
+    return playlist;
+  }
+
+  async updatePlaylist(id: string, update: Partial<InsertPlaylist>): Promise<Playlist | undefined> {
+    const playlist = this.playlists.get(id);
+    if (!playlist) return undefined;
+
+    const updated = { ...playlist, ...update, updatedAt: new Date() };
+    this.playlists.set(id, updated);
+    return updated;
+  }
+
+  async deletePlaylist(id: string): Promise<boolean> {
+    // Also delete all songs in this playlist
+    const songs = await this.getSongsByPlaylist(id);
+    for (const song of songs) {
+      await this.deletePlaylistSong(song.id);
+    }
+    return this.playlists.delete(id);
+  }
+
+  // Playlist Songs
+  async getPlaylistSong(id: string): Promise<PlaylistSong | undefined> {
+    return this.playlistSongs.get(id);
+  }
+
+  async getSongsByPlaylist(playlistId: string): Promise<PlaylistSong[]> {
+    return Array.from(this.playlistSongs.values())
+      .filter((s) => s.playlistId === playlistId)
+      .sort((a, b) => {
+        // Sort by vote count (descending), then by order, then by creation date
+        const aVotes = a.voteCount || 0;
+        const bVotes = b.voteCount || 0;
+        if (bVotes !== aVotes) {
+          return bVotes - aVotes;
+        }
+        if (a.order !== null && b.order !== null) {
+          return a.order - b.order;
+        }
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      });
+  }
+
+  async createPlaylistSong(insertSong: InsertPlaylistSong): Promise<PlaylistSong> {
+    const id = randomUUID();
+    const song: PlaylistSong = {
+      ...insertSong,
+      id,
+      voteCount: 0,
+      status: insertSong.status || 'pending',
+      createdAt: new Date(),
+    } as PlaylistSong;
+    this.playlistSongs.set(id, song);
+    return song;
+  }
+
+  async updatePlaylistSong(id: string, update: Partial<InsertPlaylistSong>): Promise<PlaylistSong | undefined> {
+    const song = this.playlistSongs.get(id);
+    if (!song) return undefined;
+
+    const updated = { ...song, ...update };
+    this.playlistSongs.set(id, updated);
+    return updated;
+  }
+
+  async deletePlaylistSong(id: string): Promise<boolean> {
+    // Also delete all votes for this song
+    const votes = await this.getVotesBySong(id);
+    for (const vote of votes) {
+      this.songVotes.delete(vote.id);
+    }
+    return this.playlistSongs.delete(id);
+  }
+
+  async updateSongVoteCount(songId: string): Promise<void> {
+    const song = this.playlistSongs.get(songId);
+    if (!song) return;
+
+    const votes = await this.getVotesBySong(songId);
+    const updated = { ...song, voteCount: votes.length };
+    this.playlistSongs.set(songId, updated);
+  }
+
+  // Song Votes
+  async getSongVote(id: string): Promise<SongVote | undefined> {
+    return this.songVotes.get(id);
+  }
+
+  async getVotesBySong(songId: string): Promise<SongVote[]> {
+    return Array.from(this.songVotes.values()).filter((v) => v.songId === songId);
+  }
+
+  async createSongVote(insertVote: InsertSongVote): Promise<SongVote> {
+    const id = randomUUID();
+    const vote: SongVote = {
+      ...insertVote,
+      id,
+      voterName: insertVote.voterName || null,
+      createdAt: new Date(),
+    };
+    this.songVotes.set(id, vote);
+    
+    // Update the song's vote count
+    await this.updateSongVoteCount(insertVote.songId);
+    
+    return vote;
+  }
+
+  async deleteVote(voterId: string, songId: string): Promise<boolean> {
+    const vote = Array.from(this.songVotes.values()).find(
+      (v) => v.voterId === voterId && v.songId === songId
+    );
+    
+    if (!vote) return false;
+    
+    this.songVotes.delete(vote.id);
+    await this.updateSongVoteCount(songId);
+    return true;
+  }
+
+  async hasUserVoted(voterId: string, songId: string): Promise<boolean> {
+    return Array.from(this.songVotes.values()).some(
+      (v) => v.voterId === voterId && v.songId === songId
+    );
+  }
 }
 
 import { neon } from "@neondatabase/serverless";
@@ -1021,6 +1206,120 @@ export class DBStorage implements IStorage {
       .where(eq(schema.budgetBenchmarks.id, id))
       .returning();
     return result[0];
+  }
+
+  // Playlists
+  async getPlaylist(id: string): Promise<Playlist | undefined> {
+    const result = await this.db.select().from(schema.playlists).where(eq(schema.playlists.id, id));
+    return result[0];
+  }
+
+  async getPlaylistsByWedding(weddingId: string): Promise<Playlist[]> {
+    return await this.db.select().from(schema.playlists).where(eq(schema.playlists.weddingId, weddingId));
+  }
+
+  async getPlaylistsByEvent(eventId: string): Promise<Playlist[]> {
+    return await this.db.select().from(schema.playlists).where(eq(schema.playlists.eventId, eventId));
+  }
+
+  async createPlaylist(insertPlaylist: InsertPlaylist): Promise<Playlist> {
+    const result = await this.db.insert(schema.playlists).values(insertPlaylist).returning();
+    return result[0];
+  }
+
+  async updatePlaylist(id: string, update: Partial<InsertPlaylist>): Promise<Playlist | undefined> {
+    const result = await this.db
+      .update(schema.playlists)
+      .set({ ...update, updatedAt: new Date() })
+      .where(eq(schema.playlists.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deletePlaylist(id: string): Promise<boolean> {
+    await this.db.delete(schema.playlistSongs).where(eq(schema.playlistSongs.playlistId, id));
+    await this.db.delete(schema.playlists).where(eq(schema.playlists.id, id));
+    return true;
+  }
+
+  // Playlist Songs
+  async getPlaylistSong(id: string): Promise<PlaylistSong | undefined> {
+    const result = await this.db.select().from(schema.playlistSongs).where(eq(schema.playlistSongs.id, id));
+    return result[0];
+  }
+
+  async getSongsByPlaylist(playlistId: string): Promise<PlaylistSong[]> {
+    return await this.db
+      .select()
+      .from(schema.playlistSongs)
+      .where(eq(schema.playlistSongs.playlistId, playlistId))
+      .orderBy(schema.playlistSongs.voteCount, schema.playlistSongs.order);
+  }
+
+  async createPlaylistSong(insertSong: InsertPlaylistSong): Promise<PlaylistSong> {
+    const result = await this.db.insert(schema.playlistSongs).values(insertSong).returning();
+    return result[0];
+  }
+
+  async updatePlaylistSong(id: string, update: Partial<InsertPlaylistSong>): Promise<PlaylistSong | undefined> {
+    const result = await this.db
+      .update(schema.playlistSongs)
+      .set(update)
+      .where(eq(schema.playlistSongs.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deletePlaylistSong(id: string): Promise<boolean> {
+    await this.db.delete(schema.songVotes).where(eq(schema.songVotes.songId, id));
+    await this.db.delete(schema.playlistSongs).where(eq(schema.playlistSongs.id, id));
+    return true;
+  }
+
+  async updateSongVoteCount(songId: string): Promise<void> {
+    const votes = await this.getVotesBySong(songId);
+    await this.db
+      .update(schema.playlistSongs)
+      .set({ voteCount: votes.length })
+      .where(eq(schema.playlistSongs.id, songId));
+  }
+
+  // Song Votes
+  async getSongVote(id: string): Promise<SongVote | undefined> {
+    const result = await this.db.select().from(schema.songVotes).where(eq(schema.songVotes.id, id));
+    return result[0];
+  }
+
+  async getVotesBySong(songId: string): Promise<SongVote[]> {
+    return await this.db.select().from(schema.songVotes).where(eq(schema.songVotes.songId, songId));
+  }
+
+  async createSongVote(insertVote: InsertSongVote): Promise<SongVote> {
+    const result = await this.db.insert(schema.songVotes).values(insertVote).returning();
+    await this.updateSongVoteCount(insertVote.songId);
+    return result[0];
+  }
+
+  async deleteVote(voterId: string, songId: string): Promise<boolean> {
+    await this.db
+      .delete(schema.songVotes)
+      .where(and(
+        eq(schema.songVotes.voterId, voterId),
+        eq(schema.songVotes.songId, songId)
+      ));
+    await this.updateSongVoteCount(songId);
+    return true;
+  }
+
+  async hasUserVoted(voterId: string, songId: string): Promise<boolean> {
+    const result = await this.db
+      .select()
+      .from(schema.songVotes)
+      .where(and(
+        eq(schema.songVotes.voterId, voterId),
+        eq(schema.songVotes.songId, songId)
+      ));
+    return result.length > 0;
   }
 }
 

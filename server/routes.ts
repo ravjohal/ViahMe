@@ -723,6 +723,197 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ============================================================================
+  // PLAYLISTS - Music playlist collaboration for events
+  // ============================================================================
+
+  // Get playlists by wedding
+  app.get("/api/playlists/wedding/:weddingId", async (req, res) => {
+    try {
+      const playlists = await storage.getPlaylistsByWedding(req.params.weddingId);
+      res.json(playlists);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch playlists" });
+    }
+  });
+
+  // Get playlists by event
+  app.get("/api/playlists/event/:eventId", async (req, res) => {
+    try {
+      const playlists = await storage.getPlaylistsByEvent(req.params.eventId);
+      res.json(playlists);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch playlists" });
+    }
+  });
+
+  // Get a single playlist
+  app.get("/api/playlists/:id", async (req, res) => {
+    try {
+      const playlist = await storage.getPlaylist(req.params.id);
+      if (!playlist) {
+        return res.status(404).json({ error: "Playlist not found" });
+      }
+      res.json(playlist);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch playlist" });
+    }
+  });
+
+  // Create a playlist
+  app.post("/api/playlists", async (req, res) => {
+    try {
+      const playlist = await storage.createPlaylist(req.body);
+      res.json(playlist);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create playlist" });
+    }
+  });
+
+  // Update a playlist
+  app.patch("/api/playlists/:id", async (req, res) => {
+    try {
+      const playlist = await storage.updatePlaylist(req.params.id, req.body);
+      if (!playlist) {
+        return res.status(404).json({ error: "Playlist not found" });
+      }
+      res.json(playlist);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update playlist" });
+    }
+  });
+
+  // Delete a playlist
+  app.delete("/api/playlists/:id", async (req, res) => {
+    try {
+      const success = await storage.deletePlaylist(req.params.id);
+      if (!success) {
+        return res.status(404).json({ error: "Playlist not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete playlist" });
+    }
+  });
+
+  // ============================================================================
+  // PLAYLIST SONGS - Individual songs in playlists with voting
+  // ============================================================================
+
+  // Get songs by playlist
+  app.get("/api/playlists/:playlistId/songs", async (req, res) => {
+    try {
+      const songs = await storage.getSongsByPlaylist(req.params.playlistId);
+      res.json(songs);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch songs" });
+    }
+  });
+
+  // Get a single song
+  app.get("/api/songs/:id", async (req, res) => {
+    try {
+      const song = await storage.getPlaylistSong(req.params.id);
+      if (!song) {
+        return res.status(404).json({ error: "Song not found" });
+      }
+      res.json(song);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch song" });
+    }
+  });
+
+  // Add a song to a playlist
+  app.post("/api/songs", async (req, res) => {
+    try {
+      const song = await storage.createPlaylistSong(req.body);
+      res.json(song);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to add song" });
+    }
+  });
+
+  // Update a song
+  app.patch("/api/songs/:id", async (req, res) => {
+    try {
+      const song = await storage.updatePlaylistSong(req.params.id, req.body);
+      if (!song) {
+        return res.status(404).json({ error: "Song not found" });
+      }
+      res.json(song);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update song" });
+    }
+  });
+
+  // Delete a song
+  app.delete("/api/songs/:id", async (req, res) => {
+    try {
+      const success = await storage.deletePlaylistSong(req.params.id);
+      if (!success) {
+        return res.status(404).json({ error: "Song not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete song" });
+    }
+  });
+
+  // ============================================================================
+  // SONG VOTES - Voting system for song requests
+  // ============================================================================
+
+  // Get votes for a song
+  app.get("/api/songs/:songId/votes", async (req, res) => {
+    try {
+      const votes = await storage.getVotesBySong(req.params.songId);
+      res.json(votes);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch votes" });
+    }
+  });
+
+  // Vote for a song
+  app.post("/api/votes", async (req, res) => {
+    try {
+      const { songId, voterId, voterName } = req.body;
+      
+      // Check if user already voted
+      const hasVoted = await storage.hasUserVoted(voterId, songId);
+      if (hasVoted) {
+        return res.status(400).json({ error: "You have already voted for this song" });
+      }
+      
+      const vote = await storage.createSongVote({ songId, voterId, voterName });
+      res.json(vote);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to vote" });
+    }
+  });
+
+  // Remove a vote
+  app.delete("/api/votes/:voterId/:songId", async (req, res) => {
+    try {
+      const success = await storage.deleteVote(req.params.voterId, req.params.songId);
+      if (!success) {
+        return res.status(404).json({ error: "Vote not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to remove vote" });
+    }
+  });
+
+  // Check if user has voted
+  app.get("/api/votes/:voterId/:songId", async (req, res) => {
+    try {
+      const hasVoted = await storage.hasUserVoted(req.params.voterId, req.params.songId);
+      res.json({ hasVoted });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to check vote status" });
+    }
+  });
+
+  // ============================================================================
   // BUDGET BENCHMARKS - Cultural spending benchmarks and analytics
   // ============================================================================
 

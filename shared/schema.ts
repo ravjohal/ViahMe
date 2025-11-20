@@ -355,6 +355,80 @@ export type InsertReview = z.infer<typeof insertReviewSchema>;
 export type Review = typeof reviews.$inferSelect;
 
 // ============================================================================
+// PLAYLISTS - Music playlist collaboration for events
+// ============================================================================
+
+export const playlists = pgTable("playlists", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  eventId: varchar("event_id").notNull(), // Which event this playlist is for
+  name: text("name").notNull(),
+  description: text("description"),
+  sharedWithVendors: text("shared_with_vendors").array().default(sql`ARRAY[]::text[]`), // Array of vendor IDs who can view
+  isPublic: boolean("is_public").default(false), // If true, guests can view and vote
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertPlaylistSchema = createInsertSchema(playlists).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertPlaylist = z.infer<typeof insertPlaylistSchema>;
+export type Playlist = typeof playlists.$inferSelect;
+
+// ============================================================================
+// PLAYLIST SONGS - Individual songs in playlists with voting
+// ============================================================================
+
+export const playlistSongs = pgTable("playlist_songs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  playlistId: varchar("playlist_id").notNull(),
+  title: text("title").notNull(),
+  artist: text("artist").notNull(),
+  duration: text("duration"), // e.g., "3:45"
+  requestedBy: text("requested_by"), // Guest name or "Couple"
+  notes: text("notes"), // Special instructions for DJ
+  voteCount: integer("vote_count").default(0),
+  status: text("status").notNull().default('pending'), // 'pending' | 'approved' | 'declined'
+  order: integer("order"), // For custom playlist ordering
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertPlaylistSongSchema = createInsertSchema(playlistSongs).omit({
+  id: true,
+  createdAt: true,
+  voteCount: true,
+}).extend({
+  status: z.enum(['pending', 'approved', 'declined']).optional(),
+});
+
+export type InsertPlaylistSong = z.infer<typeof insertPlaylistSongSchema>;
+export type PlaylistSong = typeof playlistSongs.$inferSelect;
+
+// ============================================================================
+// SONG VOTES - Track who voted for which songs
+// ============================================================================
+
+export const songVotes = pgTable("song_votes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  songId: varchar("song_id").notNull(),
+  voterId: varchar("voter_id").notNull(), // Guest ID or user ID
+  voterName: text("voter_name"), // For display purposes
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertSongVoteSchema = createInsertSchema(songVotes).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertSongVote = z.infer<typeof insertSongVoteSchema>;
+export type SongVote = typeof songVotes.$inferSelect;
+
+// ============================================================================
 // NOTIFICATIONS - Email/SMS notification system
 // ============================================================================
 
