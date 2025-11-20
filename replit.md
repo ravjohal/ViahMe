@@ -26,6 +26,8 @@ Key architectural decisions include:
 - **Budget Intelligence System**: Provides smart budget recommendations based on cultural spending benchmarks across multiple cities and traditions, real-time comparisons, and vendor marketplace analysis.
 - **Messaging System**: Facilitates couple-vendor communication with conversation threading and vendor metadata enrichment.
 - **Review System**: Allows for vendor ratings and feedback with automatic aggregation.
+- **Document Storage System**: Secure cloud-based document management using Replit Object Storage (Google Cloud Storage backend) for contracts, permits, licenses, invoices, and receipts. Features include file upload with Uppy, document categorization by type and category, optional event linking, vendor sharing controls, and ACL-based access management. Documents are organized and displayed by category with download and delete capabilities.
+- **Music Playlist Feature**: Collaborative playlist management allowing couples and guests to suggest songs with voting capabilities, enabling democratic music selection for wedding events.
 - **UI/UX**: Features a warm orange/gold primary color palette, elegant typography (Playfair Display for headings, Inter for body, JetBrains Mono for data), Shadcn UI components for consistency, hover elevate interactions, responsive design, and cultural icons for event types.
 
 ## External Dependencies
