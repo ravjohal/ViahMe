@@ -1,11 +1,12 @@
 // From blueprint: javascript_object_storage
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { ReactNode } from "react";
+import Dashboard from "@uppy/dashboard";
 import Uppy from "@uppy/core";
-import { DashboardModal } from "@uppy/react";
 import AwsS3 from "@uppy/aws-s3";
 import type { UploadResult } from "@uppy/core";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 interface ObjectUploaderProps {
   maxNumberOfFiles?: number;
@@ -30,22 +31,45 @@ export function ObjectUploader({
   children,
 }: ObjectUploaderProps) {
   const [showModal, setShowModal] = useState(false);
-  const [uppy] = useState(() =>
-    new Uppy({
-      restrictions: {
-        maxNumberOfFiles,
-        maxFileSize,
-      },
-      autoProceed: false,
-    })
-      .use(AwsS3, {
-        shouldUseMultipart: false,
-        getUploadParameters: onGetUploadParameters,
+  const containerRef = useRef<HTMLDivElement>(null);
+  const uppyRef = useRef<Uppy | null>(null);
+
+  useEffect(() => {
+    if (!uppyRef.current) {
+      uppyRef.current = new Uppy({
+        restrictions: {
+          maxNumberOfFiles,
+          maxFileSize,
+        },
+        autoProceed: false,
       })
-      .on("complete", (result) => {
-        onComplete?.(result);
-      })
-  );
+        .use(AwsS3, {
+          shouldUseMultipart: false,
+          getUploadParameters: onGetUploadParameters,
+        })
+        .on("complete", (result) => {
+          onComplete?.(result);
+          setShowModal(false);
+        });
+    }
+
+    if (containerRef.current && uppyRef.current && showModal) {
+      uppyRef.current.use(Dashboard, {
+        target: containerRef.current,
+        inline: true,
+        proudlyDisplayPoweredByUppy: false,
+      });
+    }
+
+    return () => {
+      if (uppyRef.current) {
+        const dashboardPlugin = uppyRef.current.getPlugin("Dashboard");
+        if (dashboardPlugin) {
+          uppyRef.current.removePlugin(dashboardPlugin);
+        }
+      }
+    };
+  }, [showModal, maxNumberOfFiles, maxFileSize, onGetUploadParameters, onComplete]);
 
   return (
     <div>
@@ -53,12 +77,11 @@ export function ObjectUploader({
         {children}
       </Button>
 
-      <DashboardModal
-        uppy={uppy}
-        open={showModal}
-        onRequestClose={() => setShowModal(false)}
-        proudlyDisplayPoweredByUppy={false}
-      />
+      <Dialog open={showModal} onOpenChange={setShowModal}>
+        <DialogContent className="max-w-4xl">
+          <div ref={containerRef} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
