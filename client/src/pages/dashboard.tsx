@@ -17,7 +17,10 @@ export default function Dashboard() {
     queryKey: ["/api/weddings"],
   });
 
-  const wedding = weddings?.[0];
+  // Get the most recent wedding (sorted by createdAt descending)
+  const wedding = weddings?.sort((a, b) => 
+    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  )[0];
 
   const { data: events = [], isLoading: eventsLoading } = useQuery<Event[]>({
     queryKey: ["/api/events", wedding?.id],
