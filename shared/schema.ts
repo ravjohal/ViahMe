@@ -643,3 +643,84 @@ export const insertWeddingWebsiteSchema = createInsertSchema(weddingWebsites).om
 
 export type InsertWeddingWebsite = z.infer<typeof insertWeddingWebsiteSchema>;
 export type WeddingWebsite = typeof weddingWebsites.$inferSelect;
+
+// ============================================================================
+// PHOTO GALLERIES - Inspiration boards, vendor portfolios, event photo sharing
+// ============================================================================
+
+export const photoGalleries = pgTable("photo_galleries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(), // Gallery name/title
+  type: text("type").notNull(), // 'inspiration' | 'vendor_portfolio' | 'event_photos'
+  weddingId: varchar("wedding_id"), // For inspiration boards and event photos (nullable for vendor portfolios)
+  vendorId: varchar("vendor_id"), // For vendor portfolios
+  eventId: varchar("event_id"), // For event-specific photo sharing
+  description: text("description"),
+  coverPhotoUrl: text("cover_photo_url"), // Featured/cover image
+  isPublic: boolean("is_public").default(false), // Whether gallery is publicly viewable
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertPhotoGallerySchema = createInsertSchema(photoGalleries).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  type: z.enum(['inspiration', 'vendor_portfolio', 'event_photos']),
+});
+
+export type InsertPhotoGallery = z.infer<typeof insertPhotoGallerySchema>;
+export type PhotoGallery = typeof photoGalleries.$inferSelect;
+
+// ============================================================================
+// PHOTOS - Individual photos in galleries
+// ============================================================================
+
+export const photos = pgTable("photos", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  galleryId: varchar("gallery_id").notNull(),
+  url: text("url").notNull(), // Cloud storage URL (Replit Object Storage)
+  caption: text("caption"),
+  order: integer("order").notNull().default(0), // For custom ordering in gallery
+  uploadedBy: varchar("uploaded_by"), // User ID who uploaded (could be couple or vendor)
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertPhotoSchema = createInsertSchema(photos).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertPhoto = z.infer<typeof insertPhotoSchema>;
+export type Photo = typeof photos.$inferSelect;
+
+// ============================================================================
+// VENDOR AVAILABILITY - Real-time calendar and booking management
+// ============================================================================
+
+export const vendorAvailability = pgTable("vendor_availability", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  vendorId: varchar("vendor_id").notNull(),
+  date: timestamp("date").notNull(),
+  timeSlot: text("time_slot"), // e.g., "morning" (8am-12pm) | "afternoon" (12pm-5pm) | "evening" (5pm-11pm) | "full_day"
+  status: text("status").notNull().default('available'), // 'available' | 'booked' | 'pending' | 'blocked'
+  weddingId: varchar("wedding_id"), // If booked, which wedding
+  eventId: varchar("event_id"), // If booked for specific event
+  bookingId: varchar("booking_id"), // Reference to booking if status is 'booked' or 'pending'
+  notes: text("notes"), // Internal notes for vendor
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertVendorAvailabilitySchema = createInsertSchema(vendorAvailability).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  timeSlot: z.enum(['morning', 'afternoon', 'evening', 'full_day']).optional(),
+  status: z.enum(['available', 'booked', 'pending', 'blocked']),
+});
+
+export type InsertVendorAvailability = z.infer<typeof insertVendorAvailabilitySchema>;
+export type VendorAvailability = typeof vendorAvailability.$inferSelect;
