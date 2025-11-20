@@ -1,40 +1,84 @@
-<svg width="500" height="200" viewBox="0 0 500 200" xmlns="http://www.w3.org/2000/svg">
+<svg width="600" height="280" viewBox="0 0 600 280" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&amp;family=Lato:wght@400&amp;display=swap');
-      
       .viah-text {
-        font-family: 'Cinzel Decorative', serif; /* Festive, decorative font */
-        font-size: 100px;
-        fill: #5D101D; /* Deep Maroon */
+        font-family: 'Georgia', serif;
+        font-size: 90px;
+        font-weight: bold;
+        fill: #5D101D;
+        letter-spacing: 2px;
       }
       
       .me-text {
-        font-family: 'Lato', sans-serif; /* Clean sans-serif */
-        font-size: 80px;
-        fill: #F28C28; /* Vibrant Orange */
-      }
-
-      .icon-fill {
-        fill: #F28C28; /* Vibrant Orange */
+        font-family: 'Georgia', serif;
+        font-size: 90px;
+        font-weight: bold;
+        fill: #F28C28;
+        letter-spacing: 2px;
       }
     </style>
   </defs>
 
-  <text x="30" y="140" class="viah-text">Viah</text>
-  
-  <text x="280" y="140" class="me-text">.me</text>
-
-  <g transform="translate(175, 30) scale(0.6)">
-     <path class="icon-fill" d="M40,10 C30,10 20,25 20,40 C20,55 35,60 35,60 L35,80 L65,80 L65,60 C65,60 80,55 80,40 C80,25 70,10 60,10 L40,10 Z M80,40 C80,40 100,50 120,40 C110,60 90,65 80,60" />
-     <path class="icon-fill" d="M20,40 Q10,60 0,100 L30,100 Q35,70 40,65" opacity="0.8"/> </g>
-
-  <g transform="translate(320, 40) scale(0.5)">
-    <path class="icon-fill" d="M10,40 Q5,20 30,10 Q55,0 80,10 Q105,20 100,40 Q95,60 80,65 Q65,70 55,65 Q45,70 30,65 Q15,60 10,40 Z" />
-    <path fill="none" stroke="#FFFFFF" stroke-width="3" d="M30,10 Q40,30 30,65" />
-    <path fill="none" stroke="#FFFFFF" stroke-width="3" d="M55,5 Q65,30 55,65" />
-    <path fill="none" stroke="#FFFFFF" stroke-width="3" d="M80,10 Q70,30 80,65" />
-    <path class="icon-fill" d="M45,10 L55,-15 L65,10 Z" /> 
+  <!-- BRIDE ILLUSTRATION (left, above Viah) -->
+  <g transform="translate(80, 20)">
+    <!-- Head -->
+    <circle cx="0" cy="0" r="22" fill="#D4A574"/>
+    
+    <!-- Bindi -->
+    <circle cx="0" cy="-5" r="4" fill="#E63946"/>
+    
+    <!-- Eyes -->
+    <circle cx="-8" cy="-3" r="2" fill="#2C2C2C"/>
+    <circle cx="8" cy="-3" r="2" fill="#2C2C2C"/>
+    
+    <!-- Nose -->
+    <line x1="0" y1="0" x2="0" y2="8" stroke="#2C2C2C" stroke-width="1.5"/>
+    
+    <!-- Lips -->
+    <path d="M -6 12 Q 0 14 6 12" stroke="#D81B60" stroke-width="2" fill="none"/>
+    
+    <!-- Dupatta/Veil (flowing fabric) -->
+    <path d="M -22 5 Q -35 15 -40 35 Q -38 25 -30 20" fill="#F28C28" opacity="0.9"/>
+    <path d="M -22 5 Q -30 20 -35 40 L -25 35 Q -20 20 -15 10" fill="#F28C28" opacity="0.7"/>
+    
+    <!-- Hair strands with dupatta -->
+    <path d="M -18 -15 Q -25 -10 -30 5" stroke="#3D2817" stroke-width="2.5" fill="none"/>
+    <path d="M 18 -15 Q 28 -5 35 15" stroke="#3D2817" stroke-width="2.5" fill="none"/>
+    
+    <!-- Dupatta flowing right -->
+    <path d="M 22 8 Q 35 12 45 20 Q 40 15 32 12" fill="#F28C28" opacity="0.8"/>
+    
+    <!-- Earrings -->
+    <circle cx="-22" cy="8" r="3" fill="#FFD700"/>
+    <circle cx="22" cy="8" r="3" fill="#FFD700"/>
+    
+    <!-- Shoulder/Neck -->
+    <ellipse cx="0" cy="28" rx="24" ry="8" fill="#D4A574"/>
   </g>
+
+  <!-- PAGRI/TURBAN (right, above .me) -->
+  <g transform="translate(440, 15)">
+    <!-- Turban base (circular, layered) -->
+    <ellipse cx="0" cy="0" rx="30" ry="18" fill="#F28C28"/>
+    <ellipse cx="0" cy="-3" rx="28" ry="16" fill="#FF9F43" opacity="0.8"/>
+    
+    <!-- Turban folds -->
+    <path d="M -25 0 Q -28 -8 -20 -12" fill="#E07B39" stroke="none"/>
+    <path d="M -10 -15 Q 0 -18 10 -15" fill="#E07B39" stroke="none"/>
+    <path d="M 20 -12 Q 28 -8 25 0" fill="#E07B39" stroke="none"/>
+    
+    <!-- Decorative ornament (kalgi) at top -->
+    <polygon points="0,-22 -8,-12 -4,-8 0,-18 4,-8 8,-12" fill="#FFD700"/>
+    <circle cx="0" cy="-20" r="3" fill="#FF6B35"/>
+    
+    <!-- Gold details/embellishment -->
+    <circle cx="-12" cy="-2" r="2.5" fill="#FFD700"/>
+    <circle cx="12" cy="-2" r="2.5" fill="#FFD700"/>
+    <circle cx="0" cy="8" r="2" fill="#FFD700"/>
+  </g>
+
+  <!-- TEXT -->
+  <text x="20" y="200" class="viah-text">Viah</text>
+  <text x="340" y="200" class="me-text">.me</text>
 
 </svg>
