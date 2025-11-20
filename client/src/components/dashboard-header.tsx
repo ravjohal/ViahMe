@@ -21,7 +21,7 @@ export function DashboardHeader({ wedding }: DashboardHeaderProps) {
       <div className="flex h-16 items-center justify-between px-6">
         <div className="flex items-center gap-4">
           <h1 className="font-display text-2xl font-bold text-foreground">
-            The Digital Baraat
+            Viah
           </h1>
           <Badge variant="outline" className="text-xs font-mono">
             {wedding.tradition.charAt(0).toUpperCase() + wedding.tradition.slice(1)}

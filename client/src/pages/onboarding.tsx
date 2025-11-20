@@ -22,7 +22,7 @@ export default function Onboarding() {
       queryClient.invalidateQueries({ queryKey: ["/api/events"] });
 
       toast({
-        title: "Welcome to The Digital Baraat!",
+        title: "Welcome to Viah!",
         description: "Your wedding planning journey begins now with pre-configured events for your tradition!",
       });
 

@@ -50,7 +50,7 @@ export function AppHeader() {
         {/* Logo and Brand */}
         <Link href="/dashboard" className="flex items-center gap-3 hover-elevate active-elevate-2 rounded-md px-3 py-2 -ml-3">
           <h1 className="font-display text-2xl font-bold text-primary">
-            The Digital Baraat
+            Viah
           </h1>
           {wedding && (
             <Badge variant="outline" className="text-xs font-mono hidden sm:inline-flex" data-testid="badge-tradition">

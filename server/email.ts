@@ -167,10 +167,10 @@ export async function sendBookingConfirmationEmail(params: {
           </center>
           
           <p style="margin-top: 30px;">Best wishes for your celebration!</p>
-          <p><strong>The Digital Baraat Team</strong></p>
+          <p><strong>Viah Team</strong></p>
         </div>
         <div class="footer">
-          <p>This is an automated confirmation email from The Digital Baraat.</p>
+          <p>This is an automated confirmation email from Viah.</p>
           <p>Your South Asian Wedding Planning Platform</p>
         </div>
       </body>
@@ -284,7 +284,7 @@ export async function sendVendorNotificationEmail(params: {
         <div class="content">
           <p>Dear ${vendorName},</p>
           
-          <p>You have received a new booking request through The Digital Baraat platform!</p>
+          <p>You have received a new booking request through Viah!</p>
           
           <div class="details">
             <div class="details-row">
@@ -325,11 +325,11 @@ export async function sendVendorNotificationEmail(params: {
             <a href="${process.env.REPLIT_DOMAINS?.split(',')[0] || 'https://your-domain.replit.app'}/vendor-availability" class="button">View My Calendar</a>
           </center>
           
-          <p style="margin-top: 30px;">Thank you for being part of The Digital Baraat!</p>
-          <p><strong>The Digital Baraat Team</strong></p>
+          <p style="margin-top: 30px;">Thank you for being part of Viah!</p>
+          <p><strong>Viah Team</strong></p>
         </div>
         <div class="footer">
-          <p>This is an automated notification from The Digital Baraat.</p>
+          <p>This is an automated notification from Viah.</p>
           <p>Connecting South Asian couples with culturally-specialized vendors</p>
         </div>
       </body>
@@ -482,10 +482,10 @@ export async function sendRsvpConfirmationEmail(params: {
           <p>If you need to change your RSVP, you can update it anytime from the wedding website.</p>
           
           <p style="margin-top: 30px;">Warm regards,</p>
-          <p><strong>The Digital Baraat Team</strong><br>on behalf of ${coupleName}</p>
+          <p><strong>Viah Team</strong><br>on behalf of ${coupleName}</p>
         </div>
         <div class="footer">
-          <p>This is an automated confirmation email from The Digital Baraat.</p>
+          <p>This is an automated confirmation email from Viah.</p>
           <p>Your South Asian Wedding Planning Platform</p>
         </div>
       </body>

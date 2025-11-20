@@ -144,7 +144,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground">
-              Welcome to The Digital Baraat
+              Welcome to Viah
             </h1>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span className="font-mono font-semibold">Step {currentStep}</span>
