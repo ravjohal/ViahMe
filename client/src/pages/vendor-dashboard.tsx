@@ -381,7 +381,7 @@ export default function VendorDashboard() {
           </Card>
         )}
 
-        {!hasProfile && user.emailVerified && (
+        {!hasProfile && (
           <Card className="mb-6 border-purple-300 bg-gradient-to-r from-purple-50 to-pink-50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-purple-700">
@@ -391,6 +391,11 @@ export default function VendorDashboard() {
               <CardDescription className="text-purple-600">
                 Set up your business profile to appear in search results and start receiving
                 booking requests from couples planning their weddings.
+                {!user.emailVerified && (
+                  <span className="block mt-2 text-sm text-orange-600 font-medium">
+                    Note: Verify your email to maximize your profile visibility.
+                  </span>
+                )}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -758,23 +763,38 @@ export default function VendorDashboard() {
                 Manage your availability calendar and booking preferences. This helps couples know when you're available for their events.
               </p>
               
-              <div className="space-y-4">
-                <div className="p-4 bg-muted rounded-lg">
-                  <h4 className="font-medium mb-2">Current Availability Status</h4>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    {currentVendor.availability 
-                      ? "You have availability information set. You can update it in your profile settings."
-                      : "No availability information set yet. Add your availability to help couples book you."}
+              {!hasProfile ? (
+                <div className="p-6 text-center">
+                  <p className="text-muted-foreground mb-4">
+                    Create your vendor profile first to manage your availability.
                   </p>
                   <Button 
-                    variant="outline" 
+                    variant="default"
                     onClick={openEditDialog}
-                    data-testid="button-update-availability"
+                    className="rounded-full"
                   >
-                    <Calendar className="w-4 h-4 mr-2" />
-                    Update Availability
+                    <Settings className="w-4 h-4 mr-2" />
+                    Set Up Profile
                   </Button>
                 </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="p-4 bg-muted rounded-lg">
+                    <h4 className="font-medium mb-2">Current Availability Status</h4>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      {currentVendor?.availability 
+                        ? "You have availability information set. You can update it in your profile settings."
+                        : "No availability information set yet. Add your availability to help couples book you."}
+                    </p>
+                    <Button 
+                      variant="outline" 
+                      onClick={openEditDialog}
+                      data-testid="button-update-availability"
+                    >
+                      <Calendar className="w-4 h-4 mr-2" />
+                      Update Availability
+                    </Button>
+                  </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Card className="p-4">
@@ -833,6 +853,7 @@ export default function VendorDashboard() {
                   )}
                 </div>
               </div>
+              )}
             </Card>
           </TabsContent>
         </Tabs>
