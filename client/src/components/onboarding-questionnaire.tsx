@@ -175,7 +175,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                 className="h-32 w-auto mb-3 object-contain"
                 data-testid="logo-viah"
               />
-              <p className="text-2xl font-semibold bg-gradient-to-r from-orange-600 via-pink-600 to-purple-600 bg-clip-text text-transparent tracking-wide" style={{ fontFamily: 'Playfair Display, serif' }}>
+              <p className="text-2xl font-semibold text-orange-600 tracking-wide" style={{ fontFamily: 'Playfair Display, serif' }}>
                 Welcome! Let's plan your perfect celebration 🎊
               </p>
             </div>
@@ -194,16 +194,16 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                   />
                 ))}
               </div>
-              <div className="flex items-center gap-2 text-base font-semibold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+              <div className="flex items-center gap-2 text-base font-semibold text-orange-600" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
                 <span>Step {currentStep}</span>
                 <span>of</span>
                 <span>{STEPS.length}</span>
               </div>
             </div>
           </div>
-          <div className="relative h-3 w-full bg-gradient-to-r from-orange-100 via-pink-100 via-purple-100 via-blue-100 to-emerald-100 rounded-full overflow-hidden">
+          <div className="relative h-3 w-full bg-orange-100 rounded-full overflow-hidden">
             <div 
-              className="absolute inset-0 bg-gradient-to-r from-orange-500 via-pink-500 via-purple-500 via-blue-500 to-emerald-500 transition-all duration-500 ease-out rounded-full shadow-lg"
+              className="absolute inset-0 bg-gradient-to-r from-orange-500 to-amber-500 transition-all duration-500 ease-out rounded-full shadow-lg"
               style={{ width: `${progress}%` }}
               data-testid="progress-questionnaire"
             />
