@@ -757,9 +757,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Wedding not found" });
       }
 
-      // Get benchmarks for this wedding's city and tradition
+      // Get benchmarks for this wedding's city and tradition (normalize city name)
+      const normalizedCity = normalizeCityName(wedding.location);
       const benchmarks = await storage.getBudgetBenchmarks(
-        wedding.location,
+        normalizedCity,
         wedding.tradition
       );
 
@@ -853,6 +854,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
+
+// Normalize city names to match benchmark data
+function normalizeCityName(location: string): string {
+  const cityMap: Record<string, string> = {
+    'San Francisco': 'San Francisco Bay Area',
+    'San Francisco, CA': 'San Francisco Bay Area',
+    'SF': 'San Francisco Bay Area',
+    'Bay Area': 'San Francisco Bay Area',
+    'San Francisco Bay Area': 'San Francisco Bay Area',
+    'New York': 'New York City',
+    'NYC': 'New York City',
+    'New York, NY': 'New York City',
+    'New York City': 'New York City',
+    'LA': 'Los Angeles',
+    'Los Angeles, CA': 'Los Angeles',
+    'Los Angeles': 'Los Angeles',
+    'Chicago, IL': 'Chicago',
+    'Chicago': 'Chicago',
+    'Seattle, WA': 'Seattle',
+    'Seattle': 'Seattle',
+  };
+
+  // Try exact match first
+  if (cityMap[location]) {
+    return cityMap[location];
+  }
+
+  // Try case-insensitive partial match
+  const lowerLocation = location.toLowerCase();
+  for (const [key, value] of Object.entries(cityMap)) {
+    if (lowerLocation.includes(key.toLowerCase())) {
+      return value;
+    }
+  }
+
+  // Default to original if no match
+  return location;
+}
 
 function generateBudgetRecommendations(
   wedding: any,
