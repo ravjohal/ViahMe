@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress";
 import { Calendar, Heart, MapPin, Users, DollarSign, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ViahLogo } from "@/components/viah-logo";
 
 const questionnaireSchema = z.object({
   tradition: z.enum(['sikh', 'hindu', 'muslim', 'gujarati', 'south_indian', 'mixed', 'general']),
@@ -142,10 +143,11 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
     <div className="min-h-screen bg-gradient-to-br from-background via-accent/20 to-background flex items-center justify-center p-4">
       <Card className="w-full max-w-2xl p-8 md:p-12">
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight">
-              Welcome to <span className="bg-gradient-to-r from-primary via-primary to-orange-500 bg-clip-text text-transparent">Viah</span><span className="text-2xl md:text-3xl font-normal text-muted-foreground">.me</span>
-            </h1>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <ViahLogo size="lg" className="mb-3" data-testid="logo-viah" />
+              <p className="text-lg text-muted-foreground">Welcome! Let's plan your perfect celebration</p>
+            </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span className="font-mono font-semibold">Step {currentStep}</span>
               <span>/</span>

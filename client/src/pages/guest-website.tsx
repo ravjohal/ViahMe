@@ -7,6 +7,7 @@ import { Loader2, MapPin, Calendar, Clock, Navigation, Info, Hotel, HelpCircle }
 import { format } from "date-fns";
 import type { WeddingWebsite, Wedding, Event } from "@shared/schema";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ViahLogo } from "@/components/viah-logo";
 
 interface PublicWeddingData {
   website: WeddingWebsite;
@@ -267,9 +268,12 @@ export default function GuestWebsite() {
 
       {/* Footer */}
       <div className="bg-card border-t mt-12 py-8">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>We can't wait to celebrate with you!</p>
-          <p className="mt-2">Made with ❤️ on Viah.me</p>
+        <div className="container mx-auto px-4 text-center">
+          <p className="text-sm text-muted-foreground">We can't wait to celebrate with you!</p>
+          <div className="mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <span>Made with ❤️ on</span>
+            <ViahLogo size="sm" className="inline-flex" />
+          </div>
         </div>
       </div>
     </div>
