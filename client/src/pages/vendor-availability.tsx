@@ -59,7 +59,7 @@ export default function VendorAvailabilityCalendar() {
   const monthEnd = endOfMonth(currentMonth);
 
   const { data: availability } = useQuery<VendorAvailability[]>({
-    queryKey: ['/api/vendor-availability/vendor', selectedVendor?.id, 'range', monthStart, monthEnd],
+    queryKey: ['/api/vendor-availability/vendor', selectedVendor?.id, 'range', monthStart.toISOString(), monthEnd.toISOString()],
     queryFn: async () => {
       if (!selectedVendor) return [];
       const response = await fetch(
@@ -95,7 +95,7 @@ export default function VendorAvailabilityCalendar() {
       timeSlot: string;
       eventId?: string;
     }) => {
-      return await apiRequest('/api/vendor-availability', 'POST', {
+      return await apiRequest('POST', '/api/vendor-availability', {
         vendorId: data.vendorId,
         date: data.date.toISOString(),
         timeSlot: data.timeSlot,
@@ -103,8 +103,12 @@ export default function VendorAvailabilityCalendar() {
         eventId: data.eventId || null,
       });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/vendor-availability/vendor'] });
+    onSuccess: (_data, variables) => {
+      // Invalidate all availability queries for the booked vendor using prefix matching
+      queryClient.invalidateQueries({ 
+        queryKey: ['/api/vendor-availability/vendor', variables.vendorId, 'range'],
+        exact: false
+      });
       setBookingDialogOpen(false);
       toast({
         title: "Booking confirmed!",

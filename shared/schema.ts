@@ -718,6 +718,9 @@ export const insertVendorAvailabilitySchema = createInsertSchema(vendorAvailabil
   createdAt: true,
   updatedAt: true,
 }).extend({
+  date: z.coerce.date().refine((date) => !isNaN(date.getTime()), {
+    message: "Invalid date value",
+  }),
   timeSlot: z.enum(['morning', 'afternoon', 'evening', 'full_day']).optional(),
   status: z.enum(['available', 'booked', 'pending', 'blocked']),
 });

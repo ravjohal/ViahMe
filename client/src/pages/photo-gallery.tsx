@@ -64,21 +64,22 @@ export default function PhotoGallery() {
   // Fetch photos for selected gallery
   const { data: photos } = useQuery<Photo[]>({
     queryKey: ['/api/photos/gallery', selectedGallery?.id],
-    enabled: !!selectedGallery?.id,
+    enabled: !!selectedGallery,
   });
 
   // Create gallery mutation
   const createGalleryMutation = useMutation({
     mutationFn: async (data: typeof newGallery) => {
       if (!wedding?.id) throw new Error("No wedding found");
-      return await apiRequest('/api/galleries', 'POST', {
+      return await apiRequest('POST', '/api/galleries', {
         ...data,
         weddingId: wedding.id,
         metadata: {},
       });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/galleries/type'] });
+    onSuccess: (_data, variables) => {
+      // Invalidate the specific gallery type that was created
+      queryClient.invalidateQueries({ queryKey: ['/api/galleries/type', variables.type] });
       setCreateDialogOpen(false);
       setNewGallery({
         name: '',
@@ -102,17 +103,17 @@ export default function PhotoGallery() {
 
   // Upload photo mutation
   const uploadPhotoMutation = useMutation({
-    mutationFn: async (data: { url: string; caption?: string }) => {
-      if (!selectedGallery) throw new Error("No gallery selected");
-      return await apiRequest('/api/photos', 'POST', {
-        galleryId: selectedGallery.id,
+    mutationFn: async (data: { galleryId: string; url: string; caption?: string }) => {
+      return await apiRequest('POST', '/api/photos', {
+        galleryId: data.galleryId,
         url: data.url,
         caption: data.caption || '',
         tags: [],
       });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/photos/gallery', selectedGallery?.id] });
+    onSuccess: (_data, variables) => {
+      // Invalidate the specific gallery that was uploaded to
+      queryClient.invalidateQueries({ queryKey: ['/api/photos/gallery', variables.galleryId] });
       toast({
         title: "Photo uploaded",
         description: "Your photo has been added to the gallery.",
@@ -129,11 +130,12 @@ export default function PhotoGallery() {
 
   // Delete photo mutation
   const deletePhotoMutation = useMutation({
-    mutationFn: async (photoId: string) => {
-      return await apiRequest(`/api/photos/${photoId}`, 'DELETE');
+    mutationFn: async (data: { photoId: string; galleryId: string }) => {
+      return await apiRequest('DELETE', `/api/photos/${data.photoId}`);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/photos/gallery', selectedGallery?.id] });
+    onSuccess: (_data, variables) => {
+      // Invalidate the specific gallery the photo was deleted from
+      queryClient.invalidateQueries({ queryKey: ['/api/photos/gallery', variables.galleryId] });
       toast({
         title: "Photo deleted",
         description: "The photo has been removed from the gallery.",
@@ -150,8 +152,10 @@ export default function PhotoGallery() {
   };
 
   const handlePhotoUpload = (urls: string[]) => {
+    if (!selectedGallery) return;
+    const galleryId = selectedGallery.id;
     urls.forEach((url) => {
-      uploadPhotoMutation.mutate({ url });
+      uploadPhotoMutation.mutate({ galleryId, url });
     });
     setUploadDialogOpen(false);
   };
@@ -462,7 +466,14 @@ export default function PhotoGallery() {
                           <Button
                             size="icon"
                             variant="destructive"
-                            onClick={() => deletePhotoMutation.mutate(photo.id)}
+                            onClick={() => {
+                              if (selectedGallery) {
+                                deletePhotoMutation.mutate({ 
+                                  photoId: photo.id, 
+                                  galleryId: selectedGallery.id 
+                                });
+                              }
+                            }}
                             data-testid={`button-delete-photo-${photo.id}`}
                           >
                             <Trash2 className="h-4 w-4" />
