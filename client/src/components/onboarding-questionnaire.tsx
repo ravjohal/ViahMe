@@ -65,12 +65,12 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
   const form = useForm<QuestionnaireData>({
     resolver: zodResolver(questionnaireSchema),
     defaultValues: {
-      tradition: undefined,
-      role: undefined,
-      weddingDate: "",
-      location: "",
-      guestCountEstimate: undefined,
-      totalBudget: "",
+      tradition: "sikh",
+      role: "bride",
+      weddingDate: "2025-06-15",
+      location: "San Francisco Bay Area",
+      guestCountEstimate: "300",
+      totalBudget: "50000",
     },
   });
 
