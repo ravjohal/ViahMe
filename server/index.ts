@@ -6,6 +6,10 @@ import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
 
+// Trust proxy - required for Replit's reverse proxy setup
+// This enables express-rate-limit to work correctly with X-Forwarded-For headers
+app.set('trust proxy', 1);
+
 declare module 'http' {
   interface IncomingMessage {
     rawBody: unknown
