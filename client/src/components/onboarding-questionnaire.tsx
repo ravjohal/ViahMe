@@ -8,7 +8,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
-import { Calendar, MapPin, Users, DollarSign, Crown, Star } from "lucide-react";
+import { Calendar, MapPin, Users, DollarSign, Crown, Gift } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const questionnaireSchema = z.object({
@@ -31,8 +31,7 @@ const STEPS = [
     id: 1,
     title: "Your Wedding Tradition",
     description: "What cultural celebrations will you honor?",
-    icon: Star,
-    customEmoji: "🤲",
+    icon: Gift,
     color: "from-orange-500 to-pink-500",
     bgColor: "bg-gradient-to-br from-orange-50 to-pink-50",
     iconBg: "bg-gradient-to-br from-orange-500 to-pink-500",
@@ -206,12 +205,8 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
           >
             <div className="mb-8">
               <div className="flex items-center gap-4 mb-4">
-                <div className={`p-4 rounded-2xl ${currentStepData.iconBg} shadow-lg flex items-center justify-center`}>
-                  {currentStepData.customEmoji ? (
-                    <span className="text-4xl">{currentStepData.customEmoji}</span>
-                  ) : (
-                    <CurrentIcon className="w-8 h-8 text-white" />
-                  )}
+                <div className={`p-4 rounded-2xl ${currentStepData.iconBg} shadow-lg`}>
+                  <CurrentIcon className="w-8 h-8 text-white" />
                 </div>
                 <div>
                   <h2 className={`text-4xl font-bold bg-gradient-to-r ${currentStepData.color} bg-clip-text text-transparent tracking-wide`} style={{ fontFamily: 'Cormorant Garamond, serif' }}>
