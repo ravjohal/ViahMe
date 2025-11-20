@@ -143,8 +143,8 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
       <Card className="w-full max-w-2xl p-8 md:p-12">
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground">
-              Welcome to Viah
+            <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight">
+              Welcome to <span className="bg-gradient-to-r from-primary via-primary to-orange-500 bg-clip-text text-transparent">Viah</span><span className="text-2xl md:text-3xl font-normal text-muted-foreground">.me</span>
             </h1>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span className="font-mono font-semibold">Step {currentStep}</span>

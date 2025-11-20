@@ -49,8 +49,11 @@ export function AppHeader() {
       <div className="flex h-16 items-center justify-between px-6 gap-4">
         {/* Logo and Brand */}
         <Link href="/dashboard" className="flex items-center gap-3 hover-elevate active-elevate-2 rounded-md px-3 py-2 -ml-3">
-          <h1 className="font-display text-2xl font-bold text-primary">
-            Viah
+          <h1 className="font-display text-3xl font-bold tracking-tight">
+            <span className="bg-gradient-to-r from-primary via-primary to-orange-500 bg-clip-text text-transparent">
+              Viah
+            </span>
+            <span className="text-lg font-normal text-muted-foreground">.me</span>
           </h1>
           {wedding && (
             <Badge variant="outline" className="text-xs font-mono hidden sm:inline-flex" data-testid="badge-tradition">

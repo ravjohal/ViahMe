@@ -269,7 +269,7 @@ export default function GuestWebsite() {
       <div className="bg-card border-t mt-12 py-8">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
           <p>We can't wait to celebrate with you!</p>
-          <p className="mt-2">Made with ❤️ on Viah</p>
+          <p className="mt-2">Made with ❤️ on Viah.me</p>
         </div>
       </div>
     </div>

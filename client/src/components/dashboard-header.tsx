@@ -20,8 +20,11 @@ export function DashboardHeader({ wedding }: DashboardHeaderProps) {
     <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-16 items-center justify-between px-6">
         <div className="flex items-center gap-4">
-          <h1 className="font-display text-2xl font-bold text-foreground">
-            Viah
+          <h1 className="font-display text-3xl font-bold tracking-tight">
+            <span className="bg-gradient-to-r from-primary via-primary to-orange-500 bg-clip-text text-transparent">
+              Viah
+            </span>
+            <span className="text-lg font-normal text-muted-foreground">.me</span>
           </h1>
           <Badge variant="outline" className="text-xs font-mono">
             {wedding.tradition.charAt(0).toUpperCase() + wedding.tradition.slice(1)}

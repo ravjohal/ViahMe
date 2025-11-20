@@ -54,7 +54,7 @@
 ### Navigation
 **Top Navigation Bar:**
 - Horizontal layout, full-width, sticky positioning
-- Left: Logo (custom "Viah" with mandala accent)
+- Left: Logo (custom "Viah.me" with gradient styling and elegant typography)
 - Center: Main navigation (Dashboard, Vendors, Budget, Timeline, Guests)
 - Right: Notifications bell + countdown timer + profile avatar
 - Height: h-16, backdrop-blur effect when scrolling
