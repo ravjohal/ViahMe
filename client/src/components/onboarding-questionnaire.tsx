@@ -32,30 +32,45 @@ const STEPS = [
     title: "Cultural Framework",
     description: "What traditions will you observe?",
     icon: Sparkles,
+    color: "from-orange-500 to-pink-500",
+    bgColor: "bg-gradient-to-br from-orange-50 to-pink-50",
+    iconBg: "bg-gradient-to-br from-orange-500 to-pink-500",
   },
   {
     id: 2,
     title: "Your Role",
     description: "How are you involved in this celebration?",
     icon: Heart,
+    color: "from-pink-500 to-rose-500",
+    bgColor: "bg-gradient-to-br from-pink-50 to-rose-50",
+    iconBg: "bg-gradient-to-br from-pink-500 to-rose-500",
   },
   {
     id: 3,
     title: "Wedding Details",
     description: "Tell us about your special day",
     icon: Calendar,
+    color: "from-purple-500 to-indigo-500",
+    bgColor: "bg-gradient-to-br from-purple-50 to-indigo-50",
+    iconBg: "bg-gradient-to-br from-purple-500 to-indigo-500",
   },
   {
     id: 4,
     title: "Location & Scale",
     description: "Where and how big?",
     icon: MapPin,
+    color: "from-blue-500 to-cyan-500",
+    bgColor: "bg-gradient-to-br from-blue-50 to-cyan-50",
+    iconBg: "bg-gradient-to-br from-blue-500 to-cyan-500",
   },
   {
     id: 5,
     title: "Budget Planning",
     description: "Financial considerations",
     icon: DollarSign,
+    color: "from-emerald-500 to-teal-500",
+    bgColor: "bg-gradient-to-br from-emerald-50 to-teal-50",
+    iconBg: "bg-gradient-to-br from-emerald-500 to-teal-500",
   },
 ];
 
@@ -136,11 +151,12 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
   };
 
   const progress = (currentStep / STEPS.length) * 100;
-  const CurrentIcon = STEPS[currentStep - 1].icon;
+  const currentStepData = STEPS[currentStep - 1];
+  const CurrentIcon = currentStepData.icon;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-accent/20 to-background flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl p-8 md:p-12">
+    <div className={`min-h-screen ${currentStepData.bgColor} flex items-center justify-center p-4 transition-all duration-500`}>
+      <Card className="w-full max-w-2xl p-8 md:p-12 shadow-2xl border-2">
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -150,15 +166,33 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                 className="h-32 w-auto mb-3 object-contain"
                 data-testid="logo-viah"
               />
-              <p className="text-lg text-muted-foreground">Welcome! Let's plan your perfect celebration</p>
+              <p className="text-lg font-semibold bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 bg-clip-text text-transparent">
+                Welcome! Let's plan your perfect celebration ✨
+              </p>
             </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span className="font-mono font-semibold">Step {currentStep}</span>
-              <span>/</span>
-              <span className="font-mono">{STEPS.length}</span>
+            <div className="flex flex-col items-end gap-2">
+              <div className="flex gap-1.5">
+                {STEPS.map((step, idx) => (
+                  <div
+                    key={step.id}
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      idx + 1 === currentStep
+                        ? `w-8 bg-gradient-to-r ${step.color}`
+                        : idx + 1 < currentStep
+                        ? "w-2 bg-gradient-to-r from-orange-400 to-pink-400"
+                        : "w-2 bg-gray-200"
+                    }`}
+                  />
+                ))}
+              </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span className="font-mono font-semibold">Step {currentStep}</span>
+                <span>/</span>
+                <span className="font-mono">{STEPS.length}</span>
+              </div>
             </div>
           </div>
-          <Progress value={progress} className="h-2" data-testid="progress-questionnaire" />
+          <Progress value={progress} className="h-3" data-testid="progress-questionnaire" />
         </div>
 
         <AnimatePresence mode="wait">
@@ -171,15 +205,15 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
           >
             <div className="mb-8">
               <div className="flex items-center gap-4 mb-4">
-                <div className="p-3 rounded-xl bg-primary/10">
-                  <CurrentIcon className="w-6 h-6 text-primary" />
+                <div className={`p-4 rounded-2xl ${currentStepData.iconBg} shadow-lg`}>
+                  <CurrentIcon className="w-8 h-8 text-white" />
                 </div>
                 <div>
-                  <h2 className="font-display text-2xl font-semibold text-foreground">
-                    {STEPS[currentStep - 1].title}
+                  <h2 className={`font-display text-3xl font-bold bg-gradient-to-r ${currentStepData.color} bg-clip-text text-transparent`}>
+                    {currentStepData.title}
                   </h2>
-                  <p className="text-muted-foreground">
-                    {STEPS[currentStep - 1].description}
+                  <p className="text-muted-foreground text-lg">
+                    {currentStepData.description}
                   </p>
                 </div>
               </div>
