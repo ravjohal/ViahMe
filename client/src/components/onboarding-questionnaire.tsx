@@ -155,8 +155,17 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
   const CurrentIcon = currentStepData.icon;
 
   return (
-    <div className={`min-h-screen ${currentStepData.bgColor} flex items-center justify-center p-4 transition-all duration-500`}>
-      <Card className="w-full max-w-4xl p-10 md:p-16 shadow-2xl border-4 border-gradient-to-r from-orange-300 to-pink-300">
+    <div 
+      className="min-h-screen flex items-center justify-center p-4 transition-all duration-500 relative"
+      style={{
+        backgroundImage: `url(${new URL("@assets/generated_images/indian_wedding_couples_illustration.png", import.meta.url).href})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
+      <div className="absolute inset-0 bg-gradient-to-br from-orange-50/80 via-pink-50/80 to-purple-50/80 backdrop-blur-sm" />
+      <Card className="w-full max-w-4xl p-10 md:p-16 shadow-2xl border-4 border-orange-300 relative z-10 bg-white/95 backdrop-blur-md">
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
             <div>
