@@ -40,6 +40,16 @@ Key architectural decisions include:
   - **Status Tracking**: Real-time availability status (available, booked, pending, blocked) with color-coded indicators
   - **Multi-Event Awareness**: Prevents double-bookings by checking vendor availability across all events in a wedding
   - Architecture: UUID-based schema with hardened date validation (z.coerce.date with refinement), TanStack Query v5 prefix matching (exact: false) for comprehensive cache invalidation, ISO string normalization for consistent query keys, and mutation variable-based invalidation to prevent state drift during async operations.
+- **Transactional Email System**: Professional email notifications powered by Resend with React Email templates:
+  - **Booking Confirmation Emails**: Sent to couples when vendors are booked, including vendor details, event information, time slots, and booking references
+  - **Vendor Notification Emails**: Sent to vendors when booked, with couple contact information and event details for seamless communication
+  - **RSVP Confirmation Emails**: Sent to guests when they update their RSVP status, with color-coded status badges and event information
+  - **Template Design**: Branded HTML emails with gradient headers, responsive layouts, and culturally-appropriate styling
+  - **Data Integration**: Real couple contact information (partner names, email, phone) from wedding schema with intelligent fallbacks
+  - **Email Reliability**: Asynchronous sending (non-blocking API responses), comprehensive error logging, and graceful degradation when data is missing
+  - **Wedding Schema Extensions**: Added partner1Name, partner2Name, coupleEmail, and couplePhone fields to weddings table for email personalization
+  - **Booking Schema Extensions**: Added timeSlot field to bookings table for precise scheduling information in emails
+  - Architecture: Replit integration-based API key management, uncacheable Resend client instances to prevent stale configuration, and fire-and-forget async pattern for reliability.
 - **UI/UX**: Features a warm orange/gold primary color palette, elegant typography (Playfair Display for headings, Inter for body, JetBrains Mono for data), Shadcn UI components for consistency, hover elevate interactions, responsive design, and cultural icons for event types.
 
 ## External Dependencies
@@ -47,3 +57,5 @@ Key architectural decisions include:
 - **Drizzle ORM**: Object-relational mapper for interacting with PostgreSQL.
 - **TanStack Query (React Query v5)**: Data fetching and caching library.
 - **Recharts**: Charting library used for budget visualizations and analytics.
+- **Resend**: Modern email API service for transactional emails with React Email template support.
+- **Replit Object Storage**: Google Cloud Storage backend for document and photo management.
