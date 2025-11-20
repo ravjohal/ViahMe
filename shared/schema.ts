@@ -30,6 +30,10 @@ export const weddings = pgTable("weddings", {
   userId: varchar("user_id").notNull(),
   tradition: text("tradition").notNull(), // 'sikh' | 'hindu' | 'general'
   role: text("role").notNull(), // 'bride' | 'groom' | 'planner'
+  partner1Name: text("partner1_name"),
+  partner2Name: text("partner2_name"),
+  coupleEmail: text("couple_email"),
+  couplePhone: text("couple_phone"),
   weddingDate: timestamp("wedding_date"),
   location: text("location").notNull(), // 'Bay Area' etc
   guestCountEstimate: integer("guest_count_estimate"),
@@ -183,6 +187,7 @@ export const bookings = pgTable("bookings", {
   weddingId: varchar("wedding_id").notNull(),
   eventId: varchar("event_id"),
   vendorId: varchar("vendor_id").notNull(),
+  timeSlot: text("time_slot"), // 'morning' | 'afternoon' | 'evening' | 'full_day'
   status: text("status").notNull().default('pending'), // 'pending' | 'confirmed' | 'declined' | 'cancelled'
   requestDate: timestamp("request_date").notNull().defaultNow(),
   confirmedDate: timestamp("confirmed_date"),
@@ -196,6 +201,7 @@ export const insertBookingSchema = createInsertSchema(bookings).omit({
   confirmedDate: true,
 }).extend({
   status: z.enum(['pending', 'confirmed', 'declined', 'cancelled']).optional(),
+  timeSlot: z.enum(['morning', 'afternoon', 'evening', 'full_day']).optional(),
 });
 
 export type InsertBooking = z.infer<typeof insertBookingSchema>;

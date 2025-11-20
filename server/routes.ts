@@ -330,9 +330,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Fetch vendor, event, and wedding details for email
           const vendor = await storage.getVendor(booking.vendorId);
           const event = booking.eventId ? await storage.getEvent(booking.eventId) : null;
-          const wedding = event ? await storage.getWedding(event.weddingId) : null;
+          // Fetch wedding directly from booking.weddingId to ensure we have wedding data
+          const wedding = await storage.getWedding(booking.weddingId);
           
-          if (!vendor) return;
+          if (!vendor || !wedding) return;
           
           const eventName = event?.name || 'Your Event';
           const eventDate = event?.date ? new Date(event.date).toLocaleDateString('en-US', {
@@ -341,22 +342,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
             month: 'long',
             day: 'numeric'
           }) : 'Date TBD';
-          const coupleName = 'The Couple'; // Will be populated when we add couple names to wedding schema
-          const timeSlot = 'Full Day'; // Will be populated when we add timeSlot to booking schema
           
-          // Send confirmation email to couple (use demo email for now)
-          await sendBookingConfirmationEmail({
-            to: 'couple@example.com', // Will use actual email when added to schema
-            coupleName,
-            vendorName: vendor.name,
-            vendorCategory: vendor.category,
-            eventName,
-            eventDate,
-            timeSlot,
-            bookingId: booking.id,
-          });
+          // Build couple name from wedding data
+          const coupleName = wedding.partner1Name && wedding.partner2Name 
+            ? `${wedding.partner1Name} & ${wedding.partner2Name}`
+            : wedding.partner1Name || wedding.partner2Name || 'The Couple';
           
-          // Send notification email to vendor (contact field may contain email)
+          // Format time slot (default to Full Day if not specified)
+          const timeSlot = booking.timeSlot === 'full_day' || !booking.timeSlot ? 'Full Day' :
+                          booking.timeSlot === 'morning' ? 'Morning' :
+                          booking.timeSlot === 'afternoon' ? 'Afternoon' :
+                          booking.timeSlot === 'evening' ? 'Evening' : 'Full Day';
+          
+          // Send confirmation email to couple if email is available
+          if (wedding.coupleEmail) {
+            await sendBookingConfirmationEmail({
+              to: wedding.coupleEmail,
+              coupleName,
+              vendorName: vendor.name,
+              vendorCategory: vendor.category,
+              eventName,
+              eventDate,
+              timeSlot,
+              bookingId: booking.id,
+            });
+          }
+          
+          // Send notification email to vendor if contact contains email
           const vendorEmail = vendor.contact && vendor.contact.includes('@') ? vendor.contact : null;
           if (vendorEmail) {
             await sendVendorNotificationEmail({
@@ -367,8 +379,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               eventDate,
               timeSlot,
               bookingId: booking.id,
-              coupleEmail: 'couple@example.com',
-              couplePhone: undefined,
+              coupleEmail: wedding.coupleEmail || undefined,
+              couplePhone: wedding.couplePhone || undefined,
             });
           }
         } catch (emailError) {
@@ -504,7 +516,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
               day: 'numeric'
             }) : 'Date TBD';
             const eventVenue = event?.location || undefined;
-            const coupleName = 'The Couple'; // Will be populated when we add couple names to wedding schema
+            
+            // Build couple name from wedding data
+            const coupleName = wedding?.partner1Name && wedding?.partner2Name 
+              ? `${wedding.partner1Name} & ${wedding.partner2Name}`
+              : wedding?.partner1Name || wedding?.partner2Name || 'The Couple';
             
             await sendRsvpConfirmationEmail({
               to: guestEmail,
