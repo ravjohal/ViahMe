@@ -374,6 +374,8 @@ export const insertPlaylistSchema = createInsertSchema(playlists).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  eventId: z.string().min(1, "Event is required"),
 });
 
 export type InsertPlaylist = z.infer<typeof insertPlaylistSchema>;
@@ -403,6 +405,7 @@ export const insertPlaylistSongSchema = createInsertSchema(playlistSongs).omit({
   voteCount: true,
 }).extend({
   status: z.enum(['pending', 'approved', 'declined']).optional(),
+  requestedBy: z.string().optional(),
 });
 
 export type InsertPlaylistSong = z.infer<typeof insertPlaylistSongSchema>;

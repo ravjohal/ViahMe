@@ -1237,7 +1237,18 @@ export class DBStorage implements IStorage {
   }
 
   async deletePlaylist(id: string): Promise<boolean> {
+    // Get all songs in this playlist
+    const songs = await this.getSongsByPlaylist(id);
+    
+    // Delete all votes for all songs in this playlist
+    for (const song of songs) {
+      await this.db.delete(schema.songVotes).where(eq(schema.songVotes.songId, song.id));
+    }
+    
+    // Delete all songs in this playlist
     await this.db.delete(schema.playlistSongs).where(eq(schema.playlistSongs.playlistId, id));
+    
+    // Delete the playlist
     await this.db.delete(schema.playlists).where(eq(schema.playlists.id, id));
     return true;
   }
@@ -1257,7 +1268,10 @@ export class DBStorage implements IStorage {
   }
 
   async createPlaylistSong(insertSong: InsertPlaylistSong): Promise<PlaylistSong> {
-    const result = await this.db.insert(schema.playlistSongs).values(insertSong).returning();
+    const result = await this.db.insert(schema.playlistSongs).values({
+      ...insertSong,
+      voteCount: 0, // Explicitly initialize vote count
+    }).returning();
     return result[0];
   }
 

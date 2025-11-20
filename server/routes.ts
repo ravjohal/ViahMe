@@ -13,6 +13,9 @@ import {
   insertMessageSchema,
   insertReviewSchema,
   insertBudgetBenchmarkSchema,
+  insertPlaylistSchema,
+  insertPlaylistSongSchema,
+  insertSongVoteSchema,
 } from "@shared/schema";
 import { seedVendors, seedBudgetBenchmarks } from "./seed-data";
 
@@ -762,9 +765,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create a playlist
   app.post("/api/playlists", async (req, res) => {
     try {
-      const playlist = await storage.createPlaylist(req.body);
+      const validatedData = insertPlaylistSchema.parse(req.body);
+      const playlist = await storage.createPlaylist(validatedData);
       res.json(playlist);
     } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
       res.status(500).json({ error: "Failed to create playlist" });
     }
   });
@@ -825,9 +832,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Add a song to a playlist
   app.post("/api/songs", async (req, res) => {
     try {
-      const song = await storage.createPlaylistSong(req.body);
+      const validatedData = insertPlaylistSongSchema.parse(req.body);
+      const song = await storage.createPlaylistSong(validatedData);
       res.json(song);
     } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
       res.status(500).json({ error: "Failed to add song" });
     }
   });
@@ -875,17 +886,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Vote for a song
   app.post("/api/votes", async (req, res) => {
     try {
-      const { songId, voterId, voterName } = req.body;
+      const validatedData = insertSongVoteSchema.parse(req.body);
       
       // Check if user already voted
-      const hasVoted = await storage.hasUserVoted(voterId, songId);
+      const hasVoted = await storage.hasUserVoted(validatedData.voterId, validatedData.songId);
       if (hasVoted) {
         return res.status(400).json({ error: "You have already voted for this song" });
       }
       
-      const vote = await storage.createSongVote({ songId, voterId, voterName });
+      const vote = await storage.createSongVote(validatedData);
       res.json(vote);
     } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
       res.status(500).json({ error: "Failed to vote" });
     }
   });

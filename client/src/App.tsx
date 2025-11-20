@@ -15,6 +15,7 @@ import BudgetIntelligence from "@/pages/budget-intelligence";
 import Contracts from "@/pages/contracts";
 import VendorDashboard from "@/pages/vendor-dashboard";
 import Messages from "@/pages/messages";
+import Playlists from "@/pages/playlists";
 
 function Router() {
   return (
@@ -31,6 +32,7 @@ function Router() {
       <Route path="/contracts" component={Contracts} />
       <Route path="/vendor-dashboard" component={VendorDashboard} />
       <Route path="/messages" component={Messages} />
+      <Route path="/playlists" component={Playlists} />
       <Route component={NotFound} />
     </Switch>
   );
