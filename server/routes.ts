@@ -23,6 +23,11 @@ import {
   insertVendorAvailabilitySchema,
 } from "@shared/schema";
 import { seedVendors, seedBudgetBenchmarks } from "./seed-data";
+import {
+  sendBookingConfirmationEmail,
+  sendVendorNotificationEmail,
+  sendRsvpConfirmationEmail,
+} from "./email";
 
 // Seed vendors only if database is empty
 (async () => {
@@ -318,6 +323,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertBookingSchema.parse(req.body);
       const booking = await storage.createBooking(validatedData);
+      
+      // Send confirmation emails asynchronously (don't block response)
+      (async () => {
+        try {
+          // Fetch vendor, event, and wedding details for email
+          const vendor = await storage.getVendor(booking.vendorId);
+          const event = booking.eventId ? await storage.getEvent(booking.eventId) : null;
+          const wedding = event ? await storage.getWedding(event.weddingId) : null;
+          
+          if (!vendor) return;
+          
+          const eventName = event?.name || 'Your Event';
+          const eventDate = event?.date ? new Date(event.date).toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          }) : 'Date TBD';
+          const coupleName = 'The Couple'; // Will be populated when we add couple names to wedding schema
+          const timeSlot = 'Full Day'; // Will be populated when we add timeSlot to booking schema
+          
+          // Send confirmation email to couple (use demo email for now)
+          await sendBookingConfirmationEmail({
+            to: 'couple@example.com', // Will use actual email when added to schema
+            coupleName,
+            vendorName: vendor.name,
+            vendorCategory: vendor.category,
+            eventName,
+            eventDate,
+            timeSlot,
+            bookingId: booking.id,
+          });
+          
+          // Send notification email to vendor (contact field may contain email)
+          const vendorEmail = vendor.contact && vendor.contact.includes('@') ? vendor.contact : null;
+          if (vendorEmail) {
+            await sendVendorNotificationEmail({
+              to: vendorEmail,
+              vendorName: vendor.name,
+              coupleName,
+              eventName,
+              eventDate,
+              timeSlot,
+              bookingId: booking.id,
+              coupleEmail: 'couple@example.com',
+              couplePhone: undefined,
+            });
+          }
+        } catch (emailError) {
+          console.error('Failed to send booking emails:', emailError);
+        }
+      })();
+      
       res.json(booking);
     } catch (error) {
       if (error instanceof Error && "issues" in error) {
@@ -427,6 +485,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!guest) {
         return res.status(404).json({ error: "Guest not found" });
       }
+      
+      // Send RSVP confirmation email if status was updated
+      if (req.body.rsvpStatus && guest.email) {
+        const guestEmail = guest.email; // Capture email for async context
+        (async () => {
+          try {
+            // Guest has eventIds array, use first one if available
+            const eventId = guest.eventIds && guest.eventIds.length > 0 ? guest.eventIds[0] : null;
+            const event = eventId ? await storage.getEvent(eventId) : null;
+            const wedding = event ? await storage.getWedding(event.weddingId) : null;
+            
+            const eventName = event?.name || 'Wedding Event';
+            const eventDate = event?.date ? new Date(event.date).toLocaleDateString('en-US', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            }) : 'Date TBD';
+            const eventVenue = event?.location || undefined;
+            const coupleName = 'The Couple'; // Will be populated when we add couple names to wedding schema
+            
+            await sendRsvpConfirmationEmail({
+              to: guestEmail,
+              guestName: guest.name,
+              eventName,
+              eventDate,
+              eventVenue,
+              rsvpStatus: guest.rsvpStatus as 'attending' | 'not_attending' | 'maybe',
+              coupleName,
+            });
+          } catch (emailError) {
+            console.error('Failed to send RSVP confirmation email:', emailError);
+          }
+        })();
+      }
+      
       res.json(guest);
     } catch (error) {
       res.status(500).json({ error: "Failed to update guest" });
