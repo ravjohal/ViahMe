@@ -4,10 +4,11 @@
 Viah.me is a specialized vertical SaaS platform designed to manage the unique logistical complexities of multi-day South Asian weddings in the United States. Now supporting **7 wedding traditions** (Sikh, Hindu, Muslim, Gujarati Hindu, South Indian, Mixed/Fusion, and General) across **5 major US cities** (Bay Area, NYC, LA, Chicago, Seattle), the platform provides a centralized solution for planning celebrations that typically span 3-5 days with multiple ceremonies, distinct vendor requirements, and varied guest lists per event. Its core purpose is to streamline the planning process, connect couples with culturally-specialized vendors, manage complex timelines, offer culturally-aware budget tracking with intelligent benchmarking, and segment guest lists across various events. The project envisions becoming the go-to platform for South Asian wedding management, offering tools for cultural event templates, smart date logic, vendor specialization, and detailed budget allocation.
 
 ## Branding
-The platform features a custom logo (`attached_assets/viah_bride_groom_1763618821301.jpg`) with bride and groom illustrations:
+The platform features a custom logo (`attached_assets/image_1763619084345.png`) with bride and groom illustrations on a transparent background:
 - **Bride silhouette** with flowing dupatta in burgundy/maroon
 - **Groom's turban (pagri)** illustration in orange/gold above ".me"
-- **Typography**: "Viah" in burgundy, ".me" in orange
+- **Typography**: "Viah" in burgundy with decorative flourishes, ".me" in orange
+- **Format**: PNG with transparent background for seamless integration
 - **Implementation**: Displayed prominently at h-20 (80px) in headers with h-24 header height, h-32 (128px) on onboarding for maximum impact, and h-12 (48px) in footers. Uses object-contain to prevent distortion.
 
 ## User Preferences
