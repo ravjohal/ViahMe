@@ -16,6 +16,7 @@ import Contracts from "@/pages/contracts";
 import VendorDashboard from "@/pages/vendor-dashboard";
 import Messages from "@/pages/messages";
 import Playlists from "@/pages/playlists";
+import Documents from "@/pages/documents";
 
 function Router() {
   return (
@@ -33,6 +34,7 @@ function Router() {
       <Route path="/vendor-dashboard" component={VendorDashboard} />
       <Route path="/messages" component={Messages} />
       <Route path="/playlists" component={Playlists} />
+      <Route path="/documents" component={Documents} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -16,6 +16,7 @@ import {
   insertPlaylistSchema,
   insertPlaylistSongSchema,
   insertSongVoteSchema,
+  insertDocumentSchema,
 } from "@shared/schema";
 import { seedVendors, seedBudgetBenchmarks } from "./seed-data";
 
@@ -914,6 +915,117 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to remove vote" });
+    }
+  });
+
+  // ============================================================================
+  // DOCUMENTS - Contract and file storage
+  // ============================================================================
+
+  // Get documents by wedding
+  app.get("/api/documents/wedding/:weddingId", async (req, res) => {
+    try {
+      const documents = await storage.getDocumentsByWedding(req.params.weddingId);
+      res.json(documents);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch documents" });
+    }
+  });
+
+  // Get documents by event
+  app.get("/api/documents/event/:eventId", async (req, res) => {
+    try {
+      const documents = await storage.getDocumentsByEvent(req.params.eventId);
+      res.json(documents);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch documents" });
+    }
+  });
+
+  // Get a single document
+  app.get("/api/documents/:id", async (req, res) => {
+    try {
+      const document = await storage.getDocument(req.params.id);
+      if (!document) {
+        return res.status(404).json({ error: "Document not found" });
+      }
+      res.json(document);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch document" });
+    }
+  });
+
+  // Create a document (after file upload)
+  app.post("/api/documents", async (req, res) => {
+    try {
+      const validatedData = insertDocumentSchema.parse(req.body);
+      const document = await storage.createDocument(validatedData);
+      res.json(document);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      res.status(500).json({ error: "Failed to create document" });
+    }
+  });
+
+  // Update a document
+  app.patch("/api/documents/:id", async (req, res) => {
+    try {
+      const document = await storage.updateDocument(req.params.id, req.body);
+      if (!document) {
+        return res.status(404).json({ error: "Document not found" });
+      }
+      res.json(document);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update document" });
+    }
+  });
+
+  // Delete a document
+  app.delete("/api/documents/:id", async (req, res) => {
+    try {
+      const success = await storage.deleteDocument(req.params.id);
+      if (!success) {
+        return res.status(404).json({ error: "Document not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete document" });
+    }
+  });
+
+  // ============================================================================
+  // OBJECT STORAGE - File upload and download from blueprint
+  // ============================================================================
+
+  // Get upload URL for file upload
+  app.post("/api/objects/upload", async (req, res) => {
+    try {
+      const { ObjectStorageService } = await import("./objectStorage");
+      const objectStorageService = new ObjectStorageService();
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      res.json({ uploadURL });
+    } catch (error) {
+      console.error("Error getting upload URL:", error);
+      res.status(500).json({ error: "Failed to get upload URL" });
+    }
+  });
+
+  // Download a document file
+  app.get("/objects/:objectPath(*)", async (req, res) => {
+    try {
+      const { ObjectStorageService, ObjectNotFoundError } = await import("./objectStorage");
+      const objectStorageService = new ObjectStorageService();
+      const objectFile = await objectStorageService.getObjectEntityFile(req.path);
+      objectStorageService.downloadObject(objectFile, res);
+    } catch (error) {
+      console.error("Error downloading object:", error);
+      const { ObjectNotFoundError } = await import("./objectStorage");
+      if (error instanceof ObjectNotFoundError) {
+        return res.sendStatus(404);
+      }
+      return res.sendStatus(500);
     }
   });
 
