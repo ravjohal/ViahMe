@@ -3,7 +3,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider } from "@/hooks/use-auth";
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { AppHeader } from "@/components/app-header";
 import NotFound from "@/pages/not-found";
 import Onboarding from "@/pages/onboarding";
@@ -77,6 +77,7 @@ function Router() {
 
 function AppLayout() {
   const [location] = useLocation();
+  const { user } = useAuth();
   
   // Don't show header on onboarding, auth pages, or guest website pages
   const authPages = [
@@ -89,7 +90,11 @@ function AppLayout() {
     "/forgot-password", 
     "/reset-password"
   ];
-  const hideHeader = authPages.includes(location) || location.startsWith("/wedding/");
+  
+  // Hide header on auth pages, guest websites, and vendors page when not authenticated
+  const hideHeader = authPages.includes(location) || 
+                     location.startsWith("/wedding/") ||
+                     (location === "/vendors" && !user);
   
   return (
     <div className="min-h-screen bg-background">
