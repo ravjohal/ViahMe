@@ -8,6 +8,7 @@ import { useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { Heart } from "lucide-react";
 import type { Wedding, Vendor, Event } from "@shared/schema";
 
 export default function Vendors() {
@@ -123,9 +124,11 @@ export default function Vendors() {
   if (vendorsLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="h-16 border-b flex items-center justify-between px-6">
-          <Skeleton className="h-8 w-48" />
-        </div>
+        {!user && (
+          <div className="h-16 border-b flex items-center justify-between px-6">
+            <Skeleton className="h-8 w-48" />
+          </div>
+        )}
         <div className="container mx-auto px-6 py-8">
           <Skeleton className="h-96 w-full" />
         </div>
@@ -135,6 +138,20 @@ export default function Vendors() {
 
   return (
     <div className="min-h-screen bg-background">
+      {!user && (
+        <header className="h-16 border-b flex items-center px-6 sticky top-0 z-50 bg-background">
+          <button 
+            onClick={() => setLocation("/")}
+            className="flex items-center gap-2 hover-elevate rounded-md p-2 transition-all"
+            data-testid="button-logo-home"
+          >
+            <Heart className="w-6 h-6 fill-orange-600 text-orange-600" />
+            <span className="text-xl font-serif font-bold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">
+              Viah.me
+            </span>
+          </button>
+        </header>
+      )}
       <main className="container mx-auto px-6 py-8">
         <VendorDirectory
           vendors={vendors}
