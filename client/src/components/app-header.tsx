@@ -165,15 +165,26 @@ export function AppHeader() {
           )}
 
           {/* Notifications */}
-          <Button
-            variant="outline"
-            size="icon"
-            className="relative hidden sm:inline-flex"
-            data-testid="button-notifications"
-          >
-            <Bell className="w-5 h-5" />
-            <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className="relative hidden sm:inline-flex"
+                data-testid="button-notifications"
+              >
+                <Bell className="w-5 h-5" />
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-80">
+              <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <div className="p-4 text-center text-sm text-muted-foreground">
+                No new notifications
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {/* User Avatar & Dropdown */}
           {user && (
@@ -202,10 +213,12 @@ export function AppHeader() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="gap-2 cursor-pointer" data-testid="menu-item-settings">
-                  <Settings className="w-4 h-4" />
-                  Settings
-                </DropdownMenuItem>
+                <Link href="/settings">
+                  <DropdownMenuItem className="gap-2 cursor-pointer" data-testid="menu-item-settings">
+                    <Settings className="w-4 h-4" />
+                    Settings
+                  </DropdownMenuItem>
+                </Link>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
                   className="gap-2 cursor-pointer text-destructive focus:text-destructive" 

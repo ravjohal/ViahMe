@@ -29,6 +29,7 @@ import WebsiteBuilder from "@/pages/website-builder";
 import GuestWebsite from "@/pages/guest-website";
 import PhotoGallery from "@/pages/photo-gallery";
 import VendorAvailabilityCalendar from "@/pages/vendor-availability";
+import Settings from "@/pages/settings";
 
 function Router() {
   return (
@@ -56,6 +57,7 @@ function Router() {
       <Route path="/website-builder" component={WebsiteBuilder} />
       <Route path="/photo-gallery" component={PhotoGallery} />
       <Route path="/vendor-availability" component={VendorAvailabilityCalendar} />
+      <Route path="/settings" component={Settings} />
       <Route path="/wedding/:slug" component={GuestWebsite} />
       <Route component={NotFound} />
     </Switch>
