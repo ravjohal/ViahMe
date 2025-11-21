@@ -397,6 +397,7 @@ export default function TimelinePage() {
         </Dialog>
       </div>
 
+      {/* Timeline Visualization */}
       <div className="space-y-4">
         {eventsLoading ? (
           <div className="space-y-4">
@@ -417,86 +418,138 @@ export default function TimelinePage() {
             </Button>
           </Card>
         ) : (
-          sortedEvents.map((event, index) => {
-            const eventType = EVENT_TYPES.find((t) => t.value === event.type);
+          <div className="relative">
+            {/* Horizontal Timeline */}
+            <div className="overflow-x-auto pb-8">
+              <div className="flex items-start gap-0 min-w-max px-4">
+                {sortedEvents.map((event, index) => {
+                  const eventType = EVENT_TYPES.find((t) => t.value === event.type);
+                  const isLast = index === sortedEvents.length - 1;
 
-            return (
-              <Card
-                key={event.id}
-                className={`p-6 border-l-4 ${EVENT_COLORS[event.type] || EVENT_COLORS.custom} hover-elevate transition-all bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50`}
-                data-testid={`card-event-${event.id}`}
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-3">
-                      <span className="text-2xl">{eventType?.icon || "📅"}</span>
-                      <div>
-                        <h3 className="font-display text-2xl font-bold text-foreground">
-                          {event.name}
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          Event {index + 1} of {sortedEvents.length}
-                        </p>
+                  return (
+                    <div key={event.id} className="flex items-start" style={{ minWidth: '280px' }}>
+                      {/* Event Card */}
+                      <div className="flex flex-col items-center">
+                        {/* Event Details Card */}
+                        <Card
+                          className="w-72 p-4 mb-4 hover-elevate transition-all bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 border-2 border-primary/20"
+                          data-testid={`card-event-${event.id}`}
+                        >
+                          <div className="space-y-3">
+                            {/* Header */}
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex items-center gap-2 flex-1">
+                                <span className="text-3xl">{eventType?.icon || "📅"}</span>
+                                <div className="flex-1">
+                                  <h3 className="font-bold text-lg leading-tight text-foreground">
+                                    {event.name}
+                                  </h3>
+                                  <p className="text-xs text-muted-foreground">
+                                    Event {index + 1}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex gap-1">
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-7 w-7"
+                                  onClick={() => handleEdit(event)}
+                                  data-testid={`button-edit-event-${event.id}`}
+                                >
+                                  <Pencil className="w-3 h-3" />
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-7 w-7"
+                                  onClick={() => handleDelete(event.id)}
+                                  data-testid={`button-delete-event-${event.id}`}
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            </div>
+
+                            {/* Event Info */}
+                            <div className="space-y-2 text-sm">
+                              {event.date && (
+                                <div className="flex items-center gap-2">
+                                  <Calendar className="w-4 h-4 text-orange-600" />
+                                  <span className="font-medium">{format(new Date(event.date), "MMM d, yyyy")}</span>
+                                </div>
+                              )}
+
+                              {event.time && (
+                                <div className="flex items-center gap-2">
+                                  <Clock className="w-4 h-4 text-pink-600" />
+                                  <span>{event.time}</span>
+                                </div>
+                              )}
+
+                              {event.location && (
+                                <div className="flex items-center gap-2">
+                                  <MapPin className="w-4 h-4 text-purple-600" />
+                                  <span className="text-xs leading-tight">{event.location}</span>
+                                </div>
+                              )}
+
+                              {event.guestCount && (
+                                <div className="flex items-center gap-2">
+                                  <Users className="w-4 h-4 text-blue-600" />
+                                  <span>{event.guestCount} guests</span>
+                                </div>
+                              )}
+
+                              {event.description && (
+                                <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
+                                  {event.description}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </Card>
+
+                        {/* Timeline Node */}
+                        <div className="flex items-center">
+                          {/* Connecting Line (left side) */}
+                          {index > 0 && (
+                            <div className="h-1 bg-gradient-to-r from-orange-400 to-pink-400" style={{ width: '140px', marginLeft: '-140px' }} />
+                          )}
+
+                          {/* Central Circle */}
+                          <div className="relative z-10">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-pink-500 border-4 border-background shadow-lg flex items-center justify-center">
+                              <div className="w-3 h-3 rounded-full bg-white" />
+                            </div>
+                          </div>
+
+                          {/* Connecting Line (right side) */}
+                          {!isLast && (
+                            <div className="h-1 bg-gradient-to-r from-pink-400 to-purple-400" style={{ width: '140px' }} />
+                          )}
+                        </div>
                       </div>
                     </div>
+                  );
+                })}
+              </div>
+            </div>
 
-                    {event.description && (
-                      <p className="text-muted-foreground mb-4">{event.description}</p>
-                    )}
-
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {event.date && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Calendar className="w-4 h-4 text-muted-foreground" />
-                          <span>{format(new Date(event.date), "MMM d, yyyy")}</span>
-                        </div>
-                      )}
-
-                      {event.time && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Clock className="w-4 h-4 text-muted-foreground" />
-                          <span>{event.time}</span>
-                        </div>
-                      )}
-
-                      {event.location && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <MapPin className="w-4 h-4 text-muted-foreground" />
-                          <span>{event.location}</span>
-                        </div>
-                      )}
-
-                      {event.guestCount && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Users className="w-4 h-4 text-muted-foreground" />
-                          <span>{event.guestCount} guests</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      onClick={() => handleEdit(event)}
-                      data-testid={`button-edit-event-${event.id}`}
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      onClick={() => handleDelete(event.id)}
-                      data-testid={`button-delete-event-${event.id}`}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
+            {/* Timeline Legend */}
+            <div className="mt-8 flex justify-center">
+              <Card className="p-4 inline-flex items-center gap-6 bg-gradient-to-r from-orange-50 to-pink-50">
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="w-3 h-3 rounded-full bg-gradient-to-br from-orange-500 to-pink-500" />
+                  <span className="text-muted-foreground">Your Wedding Journey</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="font-semibold text-primary">{sortedEvents.length}</span>
+                  <span className="text-muted-foreground">events planned</span>
                 </div>
               </Card>
-            );
-          })
+            </div>
+          </div>
         )}
       </div>
     </div>
