@@ -1818,6 +1818,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================================================
+  // ANALYTICS ROUTES
+  // ============================================================================
+
+  // Vendor Analytics
+  app.get("/api/analytics/vendor/:vendorId/summary", async (req, res) => {
+    try {
+      const { vendorId } = req.params;
+      const summary = await storage.getVendorAnalyticsSummary(vendorId);
+      res.json(summary);
+    } catch (error) {
+      console.error("Error fetching vendor analytics summary:", error);
+      res.status(500).json({ error: "Failed to fetch vendor analytics" });
+    }
+  });
+
+  app.get("/api/analytics/vendor/:vendorId/booking-trends", async (req, res) => {
+    try {
+      const { vendorId } = req.params;
+      const { startDate, endDate } = req.query;
+      
+      const trends = await storage.getVendorBookingTrends(
+        vendorId,
+        startDate ? new Date(startDate as string) : undefined,
+        endDate ? new Date(endDate as string) : undefined
+      );
+      res.json(trends);
+    } catch (error) {
+      console.error("Error fetching vendor booking trends:", error);
+      res.status(500).json({ error: "Failed to fetch booking trends" });
+    }
+  });
+
+  app.get("/api/analytics/vendor/:vendorId/revenue-trends", async (req, res) => {
+    try {
+      const { vendorId } = req.params;
+      const { startDate, endDate } = req.query;
+      
+      const trends = await storage.getVendorRevenueTrends(
+        vendorId,
+        startDate ? new Date(startDate as string) : undefined,
+        endDate ? new Date(endDate as string) : undefined
+      );
+      res.json(trends);
+    } catch (error) {
+      console.error("Error fetching vendor revenue trends:", error);
+      res.status(500).json({ error: "Failed to fetch revenue trends" });
+    }
+  });
+
+  // Couple/Wedding Analytics
+  app.get("/api/analytics/wedding/:weddingId/summary", async (req, res) => {
+    try {
+      const { weddingId } = req.params;
+      const summary = await storage.getWeddingAnalyticsSummary(weddingId);
+      res.json(summary);
+    } catch (error) {
+      console.error("Error fetching wedding analytics summary:", error);
+      res.status(500).json({ error: "Failed to fetch wedding analytics" });
+    }
+  });
+
+  app.get("/api/analytics/wedding/:weddingId/budget-breakdown", async (req, res) => {
+    try {
+      const { weddingId } = req.params;
+      const breakdown = await storage.getWeddingBudgetBreakdown(weddingId);
+      res.json(breakdown);
+    } catch (error) {
+      console.error("Error fetching wedding budget breakdown:", error);
+      res.status(500).json({ error: "Failed to fetch budget breakdown" });
+    }
+  });
+
+  app.get("/api/analytics/wedding/:weddingId/spending-trends", async (req, res) => {
+    try {
+      const { weddingId } = req.params;
+      const trends = await storage.getWeddingSpendingTrends(weddingId);
+      res.json(trends);
+    } catch (error) {
+      console.error("Error fetching wedding spending trends:", error);
+      res.status(500).json({ error: "Failed to fetch spending trends" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
@@ -1939,87 +2023,3 @@ function generateBudgetRecommendations(
 
   return recommendations;
 }
-
-// ============================================================================
-// ANALYTICS ROUTES
-// ============================================================================
-
-// Vendor Analytics
-app.get("/api/analytics/vendor/:vendorId/summary", async (req, res) => {
-  try {
-    const { vendorId } = req.params;
-    const summary = await storage.getVendorAnalyticsSummary(vendorId);
-    res.json(summary);
-  } catch (error) {
-    console.error("Error fetching vendor analytics summary:", error);
-    res.status(500).json({ error: "Failed to fetch vendor analytics" });
-  }
-});
-
-app.get("/api/analytics/vendor/:vendorId/booking-trends", async (req, res) => {
-  try {
-    const { vendorId } = req.params;
-    const { startDate, endDate } = req.query;
-    
-    const trends = await storage.getVendorBookingTrends(
-      vendorId,
-      startDate ? new Date(startDate as string) : undefined,
-      endDate ? new Date(endDate as string) : undefined
-    );
-    res.json(trends);
-  } catch (error) {
-    console.error("Error fetching vendor booking trends:", error);
-    res.status(500).json({ error: "Failed to fetch booking trends" });
-  }
-});
-
-app.get("/api/analytics/vendor/:vendorId/revenue-trends", async (req, res) => {
-  try {
-    const { vendorId } = req.params;
-    const { startDate, endDate } = req.query;
-    
-    const trends = await storage.getVendorRevenueTrends(
-      vendorId,
-      startDate ? new Date(startDate as string) : undefined,
-      endDate ? new Date(endDate as string) : undefined
-    );
-    res.json(trends);
-  } catch (error) {
-    console.error("Error fetching vendor revenue trends:", error);
-    res.status(500).json({ error: "Failed to fetch revenue trends" });
-  }
-});
-
-// Couple/Wedding Analytics
-app.get("/api/analytics/wedding/:weddingId/summary", async (req, res) => {
-  try {
-    const { weddingId } = req.params;
-    const summary = await storage.getWeddingAnalyticsSummary(weddingId);
-    res.json(summary);
-  } catch (error) {
-    console.error("Error fetching wedding analytics summary:", error);
-    res.status(500).json({ error: "Failed to fetch wedding analytics" });
-  }
-});
-
-app.get("/api/analytics/wedding/:weddingId/budget-breakdown", async (req, res) => {
-  try {
-    const { weddingId } = req.params;
-    const breakdown = await storage.getWeddingBudgetBreakdown(weddingId);
-    res.json(breakdown);
-  } catch (error) {
-    console.error("Error fetching wedding budget breakdown:", error);
-    res.status(500).json({ error: "Failed to fetch budget breakdown" });
-  }
-});
-
-app.get("/api/analytics/wedding/:weddingId/spending-trends", async (req, res) => {
-  try {
-    const { weddingId } = req.params;
-    const trends = await storage.getWeddingSpendingTrends(weddingId);
-    res.json(trends);
-  } catch (error) {
-    console.error("Error fetching wedding spending trends:", error);
-    res.status(500).json({ error: "Failed to fetch spending trends" });
-  }
-});

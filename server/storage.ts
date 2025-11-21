@@ -2248,21 +2248,26 @@ export class DBStorage implements IStorage {
     totalReviews: number;
     conversionRate: string;
   }> {
-    // Get booking statistics
+    // Get booking statistics (exclude cancelled/declined from totals)
     const bookings = await this.db
       .select()
       .from(schema.bookings)
       .where(eq(schema.bookings.vendorId, vendorId));
 
-    const totalBookings = bookings.length;
-    const confirmedBookings = bookings.filter(b => b.status === 'confirmed').length;
+    // Only count active bookings (confirmed + pending) as total
+    const activeBookings = bookings.filter(b => 
+      b.status === 'confirmed' || b.status === 'pending'
+    );
+    const totalBookings = activeBookings.length;
+    // Compute confirmed from active bookings to ensure consistent denominator/numerator
+    const confirmedBookings = activeBookings.filter(b => b.status === 'confirmed').length;
 
-    // Calculate revenue
+    // Calculate revenue - ONLY from confirmed bookings
     const confirmedWithCost = bookings.filter(b => 
-      b.status === 'confirmed' && b.estimatedCost !== null
+      b.status === 'confirmed' && b.estimatedCost !== null && b.estimatedCost !== ''
     );
     const totalRevenue = confirmedWithCost.reduce((sum, b) => 
-      sum + parseFloat(b.estimatedCost || '0'), 0
+      sum + parseFloat(b.estimatedCost!), 0
     );
     const averageBookingValue = confirmedWithCost.length > 0 
       ? totalRevenue / confirmedWithCost.length 
@@ -2318,14 +2323,17 @@ export class DBStorage implements IStorage {
       });
     }
 
-    // Group by date
+    // Group by date (count only active bookings: confirmed + pending)
     const dateMap = new Map<string, { bookings: number; confirmed: number }>();
     filteredBookings.forEach(booking => {
-      const dateStr = new Date(booking.requestDate).toISOString().split('T')[0];
-      const existing = dateMap.get(dateStr) || { bookings: 0, confirmed: 0 };
-      existing.bookings++;
-      if (booking.status === 'confirmed') existing.confirmed++;
-      dateMap.set(dateStr, existing);
+      // Only count confirmed and pending bookings (exclude cancelled/declined)
+      if (booking.status === 'confirmed' || booking.status === 'pending') {
+        const dateStr = new Date(booking.requestDate).toISOString().split('T')[0];
+        const existing = dateMap.get(dateStr) || { bookings: 0, confirmed: 0 };
+        existing.bookings++;
+        if (booking.status === 'confirmed') existing.confirmed++;
+        dateMap.set(dateStr, existing);
+      }
     });
 
     // Convert to array and sort by date
@@ -2359,14 +2367,19 @@ export class DBStorage implements IStorage {
       });
     }
 
-    // Group revenue by date
+    // Group revenue by date with defensive parsing
     const dateMap = new Map<string, number>();
     filteredBookings.forEach(booking => {
-      const dateStr = booking.confirmedDate 
-        ? new Date(booking.confirmedDate).toISOString().split('T')[0]
-        : new Date(booking.requestDate).toISOString().split('T')[0];
-      const existing = dateMap.get(dateStr) || 0;
-      dateMap.set(dateStr, existing + parseFloat(booking.estimatedCost || '0'));
+      if (booking.estimatedCost && booking.estimatedCost.trim() !== '') {
+        const dateStr = booking.confirmedDate 
+          ? new Date(booking.confirmedDate).toISOString().split('T')[0]
+          : new Date(booking.requestDate).toISOString().split('T')[0];
+        const existing = dateMap.get(dateStr) || 0;
+        const cost = parseFloat(booking.estimatedCost);
+        if (!isNaN(cost)) {
+          dateMap.set(dateStr, existing + cost);
+        }
+      }
     });
 
     // Convert to array and sort by date
@@ -2393,9 +2406,9 @@ export class DBStorage implements IStorage {
     taskCompletionRate: string;
     totalEvents: number;
   }> {
-    // Get wedding data
+    // Get wedding data with null guard
     const wedding = await this.getWedding(weddingId);
-    const totalBudget = parseFloat(wedding?.totalBudget || '0');
+    const totalBudget = wedding?.totalBudget ? parseFloat(wedding.totalBudget) : 0;
 
     // Get budget categories
     const budgetCategories = await this.db
@@ -2403,9 +2416,10 @@ export class DBStorage implements IStorage {
       .from(schema.budgetCategories)
       .where(eq(schema.budgetCategories.weddingId, weddingId));
 
-    const totalSpent = budgetCategories.reduce((sum, cat) => 
-      sum + parseFloat(cat.spentAmount || '0'), 0
-    );
+    const totalSpent = budgetCategories.reduce((sum, cat) => {
+      const amount = cat.spentAmount ? parseFloat(cat.spentAmount) : 0;
+      return sum + (isNaN(amount) ? 0 : amount);
+    }, 0);
     const remainingBudget = totalBudget - totalSpent;
     const budgetUtilization = totalBudget > 0 ? (totalSpent / totalBudget * 100) : 0;
 
@@ -2472,12 +2486,16 @@ export class DBStorage implements IStorage {
       .from(schema.budgetCategories)
       .where(eq(schema.budgetCategories.weddingId, weddingId));
 
-    return budgetCategories.map(cat => ({
-      category: cat.category,
-      allocated: parseFloat(cat.allocatedAmount).toFixed(2),
-      spent: parseFloat(cat.spentAmount || '0').toFixed(2),
-      percentage: cat.percentage || 0,
-    }));
+    return budgetCategories.map(cat => {
+      const allocated = cat.allocatedAmount ? parseFloat(cat.allocatedAmount) : 0;
+      const spent = cat.spentAmount ? parseFloat(cat.spentAmount) : 0;
+      return {
+        category: cat.category,
+        allocated: (isNaN(allocated) ? 0 : allocated).toFixed(2),
+        spent: (isNaN(spent) ? 0 : spent).toFixed(2),
+        percentage: cat.percentage || 0,
+      };
+    });
   }
 
   async getWeddingSpendingTrends(weddingId: string): Promise<Array<{
@@ -2505,14 +2523,15 @@ export class DBStorage implements IStorage {
 
     const vendorMap = new Map(vendors.map(v => [v.id, v]));
 
-    // Map bookings to spending trends
+    // Map bookings to spending trends with defensive parsing
     const trends = bookings
-      .filter(b => b.estimatedCost !== null && b.confirmedDate !== null)
+      .filter(b => b.estimatedCost !== null && b.estimatedCost.trim() !== '' && b.confirmedDate !== null)
       .map(booking => {
         const vendor = vendorMap.get(booking.vendorId);
+        const cost = parseFloat(booking.estimatedCost!);
         return {
           date: new Date(booking.confirmedDate!).toISOString().split('T')[0],
-          amount: parseFloat(booking.estimatedCost || '0').toFixed(2),
+          amount: (isNaN(cost) ? 0 : cost).toFixed(2),
           category: vendor?.category || 'Unknown',
         };
       })

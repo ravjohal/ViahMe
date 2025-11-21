@@ -31,6 +31,8 @@ import PhotoGallery from "@/pages/photo-gallery";
 import VendorAvailabilityCalendar from "@/pages/vendor-availability";
 import Settings from "@/pages/settings";
 import Landing from "@/pages/landing";
+import VendorAnalytics from "@/pages/vendor-analytics";
+import CoupleAnalytics from "@/pages/couple-analytics";
 
 function Router() {
   return (
@@ -58,6 +60,8 @@ function Router() {
       <Route path="/website-builder" component={WebsiteBuilder} />
       <Route path="/photo-gallery" component={PhotoGallery} />
       <Route path="/vendor-availability" component={VendorAvailabilityCalendar} />
+      <Route path="/vendor-analytics" component={VendorAnalytics} />
+      <Route path="/couple-analytics" component={CoupleAnalytics} />
       <Route path="/settings" component={Settings} />
       <Route path="/wedding/:slug" component={GuestWebsite} />
       <Route component={NotFound} />
