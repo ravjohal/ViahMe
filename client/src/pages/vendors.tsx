@@ -146,7 +146,7 @@ export default function Vendors() {
       <VendorComparisonModal
         vendors={comparisonVendors}
         open={showComparison}
-        onClose={() => setShowComparison(false)}
+        onOpenChange={setShowComparison}
         onRemoveVendor={handleRemoveFromComparison}
         onClearAll={handleClearComparison}
       />

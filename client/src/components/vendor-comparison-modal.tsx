@@ -1,6 +1,7 @@
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -14,7 +15,7 @@ import type { Vendor } from "@shared/schema";
 interface VendorComparisonModalProps {
   vendors: Vendor[];
   open: boolean;
-  onClose: () => void;
+  onOpenChange: (open: boolean) => void;
   onRemoveVendor: (vendorId: string) => void;
   onClearAll: () => void;
 }
@@ -50,13 +51,10 @@ const CATEGORY_LABELS: Record<string, string> = {
 export function VendorComparisonModal({
   vendors,
   open,
-  onClose,
+  onOpenChange,
   onRemoveVendor,
   onClearAll,
 }: VendorComparisonModalProps) {
-  if (vendors.length === 0) {
-    return null;
-  }
 
   const comparisonRows = [
     {
@@ -175,7 +173,7 @@ export function VendorComparisonModal({
   ];
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between">
@@ -191,6 +189,9 @@ export function VendorComparisonModal({
               Clear All
             </Button>
           </div>
+          <DialogDescription>
+            View key details side-by-side to make an informed decision about which vendors best fit your wedding needs
+          </DialogDescription>
         </DialogHeader>
 
         <div className="overflow-x-auto">
@@ -208,8 +209,13 @@ export function VendorComparisonModal({
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => onRemoveVendor(vendor.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onRemoveVendor(vendor.id);
+                          }}
+                          className="shrink-0"
                           data-testid={`button-remove-comparison-${vendor.id}`}
+                          aria-label={`Remove ${vendor.name} from comparison`}
                         >
                           <X className="w-4 h-4" />
                         </Button>
@@ -251,7 +257,7 @@ export function VendorComparisonModal({
           <p className="text-sm text-muted-foreground">
             Compare up to 4 vendors side-by-side to make the best choice
           </p>
-          <Button onClick={onClose} data-testid="button-close-comparison">
+          <Button onClick={() => onOpenChange(false)} data-testid="button-close-comparison">
             Close
           </Button>
         </div>

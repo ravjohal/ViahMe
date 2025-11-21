@@ -115,10 +115,10 @@ export function VendorDirectory({
     <div className="space-y-6">
       <div className="mb-8">
         <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-600 bg-clip-text text-transparent mb-2" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-          Vendor Directory ✨
+          Vendor Directory
         </h1>
         <p className="text-lg font-semibold bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-          Discover culturally-specialized service providers 🎊
+          Discover culturally-specialized service providers
         </p>
       </div>
 
