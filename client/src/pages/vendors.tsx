@@ -8,7 +8,7 @@ import { useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { Heart } from "lucide-react";
+import logoUrl from "@assets/viah-logo_1763669612969.png";
 import type { Wedding, Vendor, Event } from "@shared/schema";
 
 export default function Vendors() {
@@ -139,17 +139,14 @@ export default function Vendors() {
   return (
     <div className="min-h-screen bg-background">
       {!user && (
-        <header className="h-16 border-b flex items-center px-6 sticky top-0 z-50 bg-background">
-          <button 
+        <header className="h-20 border-b flex items-center px-6 sticky top-0 z-50 bg-background">
+          <img 
+            src={logoUrl}
+            alt="Viah.me"
+            className="h-16 object-contain cursor-pointer hover-elevate rounded-md p-1"
             onClick={() => setLocation("/")}
-            className="flex items-center gap-2 hover-elevate rounded-md p-2 transition-all"
-            data-testid="button-logo-home"
-          >
-            <Heart className="w-6 h-6 fill-orange-600 text-orange-600" />
-            <span className="text-xl font-serif font-bold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">
-              Viah.me
-            </span>
-          </button>
+            data-testid="img-logo-home"
+          />
         </header>
       )}
       <main className="container mx-auto px-6 py-8">
