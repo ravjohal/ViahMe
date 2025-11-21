@@ -421,18 +421,18 @@ export default function TimelinePage() {
           <div className="relative">
             {/* Horizontal Timeline */}
             <div className="overflow-x-auto pb-8">
-              <div className="flex items-start gap-0 min-w-max px-4">
+              <div className="flex items-start min-w-max px-4">
                 {sortedEvents.map((event, index) => {
                   const eventType = EVENT_TYPES.find((t) => t.value === event.type);
                   const isLast = index === sortedEvents.length - 1;
 
                   return (
-                    <div key={event.id} className="flex items-start" style={{ minWidth: '280px' }}>
-                      {/* Event Card */}
-                      <div className="flex flex-col items-center">
+                    <div key={event.id} className="flex items-start">
+                      {/* Event Card with Timeline Node */}
+                      <div className="flex flex-col items-center w-72">
                         {/* Event Details Card */}
                         <Card
-                          className="w-72 p-4 mb-4 hover-elevate transition-all bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 border-2 border-primary/20"
+                          className="w-full p-4 mb-4 hover-elevate transition-all bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 border-2 border-primary/20"
                           data-testid={`card-event-${event.id}`}
                         >
                           <div className="space-y-3">
@@ -510,26 +510,20 @@ export default function TimelinePage() {
                           </div>
                         </Card>
 
-                        {/* Timeline Node */}
-                        <div className="flex items-center">
-                          {/* Connecting Line (left side) */}
-                          {index > 0 && (
-                            <div className="h-1 bg-gradient-to-r from-orange-400 to-pink-400" style={{ width: '140px', marginLeft: '-140px' }} />
-                          )}
-
-                          {/* Central Circle */}
-                          <div className="relative z-10">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-pink-500 border-4 border-background shadow-lg flex items-center justify-center">
-                              <div className="w-3 h-3 rounded-full bg-white" />
-                            </div>
+                        {/* Timeline Node Circle */}
+                        <div className="relative z-10">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-pink-500 border-4 border-background shadow-lg flex items-center justify-center">
+                            <div className="w-3 h-3 rounded-full bg-white" />
                           </div>
-
-                          {/* Connecting Line (right side) */}
-                          {!isLast && (
-                            <div className="h-1 bg-gradient-to-r from-pink-400 to-purple-400" style={{ width: '140px' }} />
-                          )}
                         </div>
                       </div>
+
+                      {/* Connecting Line to Next Event */}
+                      {!isLast && (
+                        <div className="flex items-center self-end mb-[4px]">
+                          <div className="h-1 w-16 bg-gradient-to-r from-pink-500 to-purple-500" />
+                        </div>
+                      )}
                     </div>
                   );
                 })}
