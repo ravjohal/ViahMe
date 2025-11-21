@@ -282,5 +282,21 @@ export default function Onboarding() {
     );
   }
 
-  return <OnboardingQuestionnaire onComplete={handleQuestionnaireComplete} />;
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50">
+      {/* Login Link in Top Right */}
+      <div className="absolute top-6 right-6 z-50">
+        <Button
+          variant="outline"
+          onClick={() => setLocation("/login")}
+          className="bg-white/80 backdrop-blur-sm border-orange-200 hover:bg-white hover:border-orange-300 text-orange-600 font-semibold"
+          data-testid="button-login-link"
+        >
+          Already have an account? Sign In
+        </Button>
+      </div>
+      
+      <OnboardingQuestionnaire onComplete={handleQuestionnaireComplete} />
+    </div>
+  );
 }
