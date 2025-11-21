@@ -12,7 +12,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Form,
@@ -22,17 +21,12 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Star, MapPin, DollarSign, Phone, Mail, Send, StarIcon, AlertCircle } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Star, MapPin, DollarSign, Phone, Mail, Send, StarIcon, AlertCircle, ExternalLink } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Vendor, Event, Review } from "@shared/schema";
@@ -42,7 +36,7 @@ interface VendorDetailModalProps {
   events: Event[];
   open: boolean;
   onClose: () => void;
-  onBookRequest: (vendorId: string, eventId: string, notes: string, estimatedCost: string) => void;
+  onBookRequest: (vendorId: string, eventIds: string[], notes: string) => void;
 }
 
 const DEMO_WEDDING_ID = "wedding-1"; // TODO: Get from auth context
@@ -61,9 +55,8 @@ export function VendorDetailModal({
   onClose,
   onBookRequest,
 }: VendorDetailModalProps) {
-  const [selectedEvent, setSelectedEvent] = useState("");
+  const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
   const [notes, setNotes] = useState("");
-  const [estimatedCost, setEstimatedCost] = useState("");
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewError, setReviewError] = useState<string | null>(null);
   const { toast } = useToast();
@@ -80,6 +73,32 @@ export function VendorDetailModal({
   // Fetch reviews for this vendor - MUST be called before any early returns
   const { data: reviews = [] } = useQuery<Review[]>({
     queryKey: ["/api/reviews/vendor", vendor?.id],
+    enabled: !!vendor?.id && open,
+  });
+
+  // Fetch Yelp reviews
+  const { data: yelpData } = useQuery<{
+    reviews: any[];
+    total: number;
+    source: string;
+    available: boolean;
+    message?: string;
+  }>({
+    queryKey: ["/api/reviews/yelp", vendor?.id],
+    enabled: !!vendor?.id && open,
+  });
+
+  // Fetch Google reviews
+  const { data: googleData } = useQuery<{
+    reviews: any[];
+    displayName?: string;
+    rating?: number;
+    userRatingCount?: number;
+    source: string;
+    available: boolean;
+    message?: string;
+  }>({
+    queryKey: ["/api/reviews/google", vendor?.id],
     enabled: !!vendor?.id && open,
   });
 
@@ -133,12 +152,19 @@ export function VendorDetailModal({
   };
 
   const handleSubmit = () => {
-    if (!selectedEvent) return;
-    onBookRequest(vendor.id, selectedEvent, notes, estimatedCost);
-    setSelectedEvent("");
+    if (selectedEvents.length === 0) return;
+    onBookRequest(vendor.id, selectedEvents, notes);
+    setSelectedEvents([]);
     setNotes("");
-    setEstimatedCost("");
     onClose();
+  };
+
+  const handleEventToggle = (eventId: string) => {
+    setSelectedEvents(prev => 
+      prev.includes(eventId)
+        ? prev.filter(id => id !== eventId)
+        : [...prev, eventId]
+    );
   };
 
   return (
@@ -218,12 +244,10 @@ export function VendorDetailModal({
 
           <Separator />
 
-          {/* Reviews Section */}
+          {/* Reviews Section with Tabs */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-lg">
-                Reviews ({reviews.length})
-              </h3>
+              <h3 className="font-semibold text-lg">Reviews</h3>
               {!showReviewForm && (
                 <Button 
                   variant="outline" 
@@ -336,59 +360,201 @@ export function VendorDetailModal({
               </div>
             )}
 
-            {reviews.length > 0 ? (
-              <div className="rounded-lg border">
-                <ScrollArea className="h-[300px] p-4">
-                  <div className="space-y-4 pr-4">
-                    {reviews.map((review, index) => (
-                      <div 
-                        key={review.id} 
-                        className={`${index !== reviews.length - 1 ? 'pb-4 border-b' : ''}`}
-                        data-testid={`review-${review.id}`}
-                      >
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            <div className="flex gap-0.5">
-                              {[1, 2, 3, 4, 5].map((star) => (
-                                <Star
-                                  key={star}
-                                  className={`w-4 h-4 ${
-                                    star <= review.rating
-                                      ? "fill-primary text-primary"
-                                      : "text-muted-foreground"
-                                  }`}
-                                />
-                              ))}
+            <Tabs defaultValue="viah" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="viah" data-testid="tab-viah-reviews">
+                  Viah.me ({reviews.length})
+                </TabsTrigger>
+                <TabsTrigger value="yelp" data-testid="tab-yelp-reviews">
+                  Yelp {yelpData?.available && `(${yelpData.reviews.length})`}
+                </TabsTrigger>
+                <TabsTrigger value="google" data-testid="tab-google-reviews">
+                  Google {googleData?.available && `(${googleData.reviews.length})`}
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="viah" className="mt-4">
+                {reviews.length > 0 ? (
+                  <div className="rounded-lg border">
+                    <ScrollArea className="h-[300px] p-4">
+                      <div className="space-y-4 pr-4">
+                        {reviews.map((review, index) => (
+                          <div 
+                            key={review.id} 
+                            className={`${index !== reviews.length - 1 ? 'pb-4 border-b' : ''}`}
+                            data-testid={`review-${review.id}`}
+                          >
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <div className="flex gap-0.5">
+                                  {[1, 2, 3, 4, 5].map((star) => (
+                                    <Star
+                                      key={star}
+                                      className={`w-4 h-4 ${
+                                        star <= review.rating
+                                          ? "fill-primary text-primary"
+                                          : "text-muted-foreground"
+                                      }`}
+                                    />
+                                  ))}
+                                </div>
+                                <span className="font-mono font-semibold text-sm" data-testid={`text-review-rating-${review.id}`}>
+                                  {review.rating}.0
+                                </span>
+                              </div>
+                              <span className="text-xs text-muted-foreground">
+                                {new Date(review.createdAt).toLocaleDateString('en-US', { 
+                                  year: 'numeric', 
+                                  month: 'short', 
+                                  day: 'numeric' 
+                                })}
+                              </span>
                             </div>
-                            <span className="font-mono font-semibold text-sm" data-testid={`text-review-rating-${review.id}`}>
-                              {review.rating}.0
-                            </span>
+                            {review.comment && (
+                              <p className="text-sm leading-relaxed" data-testid={`text-review-comment-${review.id}`}>
+                                {review.comment}
+                              </p>
+                            )}
                           </div>
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(review.createdAt).toLocaleDateString('en-US', { 
-                              year: 'numeric', 
-                              month: 'short', 
-                              day: 'numeric' 
-                            })}
-                          </span>
-                        </div>
-                        {review.comment && (
-                          <p className="text-sm leading-relaxed" data-testid={`text-review-comment-${review.id}`}>
-                            {review.comment}
-                          </p>
-                        )}
+                        ))}
                       </div>
-                    ))}
+                    </ScrollArea>
                   </div>
-                </ScrollArea>
-              </div>
-            ) : (
-              <div className="text-center py-12 text-muted-foreground rounded-lg border bg-muted/20">
-                <StarIcon className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                <p className="font-medium mb-1">No reviews yet</p>
-                <p className="text-sm">Be the first to share your experience!</p>
-              </div>
-            )}
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground rounded-lg border bg-muted/20">
+                    <StarIcon className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                    <p className="font-medium mb-1">No Viah.me reviews yet</p>
+                    <p className="text-sm">Be the first to share your experience!</p>
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="yelp" className="mt-4">
+                {yelpData?.available && yelpData.reviews.length > 0 ? (
+                  <div className="rounded-lg border">
+                    <ScrollArea className="h-[300px] p-4">
+                      <div className="space-y-4 pr-4">
+                        {yelpData.reviews.map((review: any, index: number) => (
+                          <div 
+                            key={review.id} 
+                            className={`${index !== yelpData.reviews.length - 1 ? 'pb-4 border-b' : ''}`}
+                          >
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <div className="flex gap-0.5">
+                                  {[1, 2, 3, 4, 5].map((star) => (
+                                    <Star
+                                      key={star}
+                                      className={`w-4 h-4 ${
+                                        star <= review.rating
+                                          ? "fill-primary text-primary"
+                                          : "text-muted-foreground"
+                                      }`}
+                                    />
+                                  ))}
+                                </div>
+                                <span className="font-mono font-semibold text-sm">
+                                  {review.rating}.0
+                                </span>
+                              </div>
+                              <a 
+                                href={review.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1 text-xs text-primary hover:underline"
+                              >
+                                View on Yelp
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            </div>
+                            <p className="text-sm font-medium mb-1">{review.user?.name}</p>
+                            <p className="text-sm leading-relaxed text-muted-foreground">
+                              {review.text}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground rounded-lg border bg-muted/20">
+                    <StarIcon className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                    <p className="font-medium mb-1">
+                      {yelpData?.message || "No Yelp reviews available"}
+                    </p>
+                    {!yelpData?.available && (
+                      <p className="text-xs">Yelp integration not configured for this vendor</p>
+                    )}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="google" className="mt-4">
+                {googleData?.available && googleData.reviews.length > 0 ? (
+                  <div className="rounded-lg border">
+                    <ScrollArea className="h-[300px] p-4">
+                      <div className="space-y-4 pr-4">
+                        {googleData.reviews.map((review: any, index: number) => (
+                          <div 
+                            key={index} 
+                            className={`${index !== googleData.reviews.length - 1 ? 'pb-4 border-b' : ''}`}
+                          >
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <div className="flex gap-0.5">
+                                  {[1, 2, 3, 4, 5].map((star) => (
+                                    <Star
+                                      key={star}
+                                      className={`w-4 h-4 ${
+                                        star <= review.rating
+                                          ? "fill-primary text-primary"
+                                          : "text-muted-foreground"
+                                      }`}
+                                    />
+                                  ))}
+                                </div>
+                                <span className="font-mono font-semibold text-sm">
+                                  {review.rating}.0
+                                </span>
+                              </div>
+                              {review.authorAttribution?.uri && (
+                                <a 
+                                  href={review.authorAttribution.uri} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-1 text-xs text-primary hover:underline"
+                                >
+                                  View on Google
+                                  <ExternalLink className="w-3 h-3" />
+                                </a>
+                              )}
+                            </div>
+                            <p className="text-sm font-medium mb-1">
+                              {review.authorAttribution?.displayName || 'Anonymous'}
+                            </p>
+                            {review.text?.text && (
+                              <p className="text-sm leading-relaxed text-muted-foreground">
+                                {review.text.text}
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground rounded-lg border bg-muted/20">
+                    <StarIcon className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                    <p className="font-medium mb-1">
+                      {googleData?.message || "No Google reviews available"}
+                    </p>
+                    {!googleData?.available && (
+                      <p className="text-xs">Google Places integration not configured for this vendor</p>
+                    )}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
           </div>
 
           <Separator />
@@ -397,36 +563,36 @@ export function VendorDetailModal({
             <h3 className="font-semibold text-lg mb-4">Request Booking</h3>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="event-select" className="text-base">
-                  Select Event
+                <Label className="text-base mb-3 block">
+                  Select Events ({selectedEvents.length} selected)
                 </Label>
-                <Select value={selectedEvent} onValueChange={setSelectedEvent}>
-                  <SelectTrigger id="event-select" data-testid="select-event-booking" className="mt-2">
-                    <SelectValue placeholder="Choose an event..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {events.map((event) => (
-                      <SelectItem key={event.id} value={event.id}>
-                        {event.name} {event.date && `- ${new Date(event.date).toLocaleDateString()}`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="estimated-cost" className="text-base">
-                  Estimated Cost (Optional)
-                </Label>
-                <Input
-                  id="estimated-cost"
-                  type="number"
-                  placeholder="Enter estimated cost..."
-                  value={estimatedCost}
-                  onChange={(e) => setEstimatedCost(e.target.value)}
-                  data-testid="input-estimated-cost"
-                  className="mt-2"
-                />
+                <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded-lg p-3">
+                  {events.length > 0 ? (
+                    events.map((event) => (
+                      <div 
+                        key={event.id} 
+                        className="flex items-center space-x-3 hover-elevate p-2 rounded-md"
+                        data-testid={`event-checkbox-${event.id}`}
+                      >
+                        <Checkbox
+                          id={`event-${event.id}`}
+                          checked={selectedEvents.includes(event.id)}
+                          onCheckedChange={() => handleEventToggle(event.id)}
+                        />
+                        <label
+                          htmlFor={`event-${event.id}`}
+                          className="flex-1 text-sm font-medium cursor-pointer"
+                        >
+                          {event.name} {event.date && `- ${new Date(event.date).toLocaleDateString()}`}
+                        </label>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      No events created yet. Add events to your wedding first.
+                    </p>
+                  )}
+                </div>
               </div>
 
               <div>
@@ -446,12 +612,12 @@ export function VendorDetailModal({
 
               <Button
                 onClick={handleSubmit}
-                disabled={!selectedEvent}
+                disabled={selectedEvents.length === 0}
                 className="w-full"
                 data-testid="button-submit-booking"
               >
                 <Send className="w-4 h-4 mr-2" />
-                Send Booking Request
+                Send Booking Request for {selectedEvents.length} {selectedEvents.length === 1 ? 'Event' : 'Events'}
               </Button>
             </div>
           </div>

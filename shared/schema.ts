@@ -151,6 +151,8 @@ export const vendors = pgTable("vendors", {
   reviewCount: integer("review_count").default(0),
   featured: boolean("featured").default(false),
   isPublished: boolean("is_published").notNull().default(false), // Whether vendor profile is visible to couples
+  yelpBusinessId: text("yelp_business_id"), // Yelp business ID for fetching external reviews
+  googlePlaceId: text("google_place_id"), // Google Place ID for fetching external reviews
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

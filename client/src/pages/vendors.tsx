@@ -34,24 +34,26 @@ export default function Vendors() {
   const bookingMutation = useMutation({
     mutationFn: async (data: {
       vendorId: string;
-      eventId: string;
+      eventIds: string[];
       notes: string;
-      estimatedCost: string;
     }) => {
-      return apiRequest("POST", "/api/bookings", {
-        weddingId: wedding?.id,
-        vendorId: data.vendorId,
-        eventId: data.eventId,
-        notes: data.notes,
-        estimatedCost: data.estimatedCost,
-        status: "pending",
-      });
+      const bookingPromises = data.eventIds.map(eventId =>
+        apiRequest("POST", "/api/bookings", {
+          weddingId: wedding?.id,
+          vendorId: data.vendorId,
+          eventId: eventId,
+          notes: data.notes,
+          status: "pending",
+        })
+      );
+      return Promise.all(bookingPromises);
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/bookings"] });
+      const eventCount = variables.eventIds.length;
       toast({
         title: "Booking Request Sent",
-        description: "The vendor will receive your request and respond soon.",
+        description: `Your request for ${eventCount} ${eventCount === 1 ? 'event' : 'events'} has been sent to the vendor.`,
       });
     },
     onError: () => {
@@ -138,8 +140,8 @@ export default function Vendors() {
         events={events}
         open={!!selectedVendor}
         onClose={() => setSelectedVendor(null)}
-        onBookRequest={(vendorId, eventId, notes, estimatedCost) => {
-          bookingMutation.mutate({ vendorId, eventId, notes, estimatedCost });
+        onBookRequest={(vendorId, eventIds, notes) => {
+          bookingMutation.mutate({ vendorId, eventIds, notes });
         }}
       />
 

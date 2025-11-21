@@ -955,6 +955,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Fetch Yelp reviews for a vendor
+  app.get("/api/reviews/yelp/:vendorId", async (req, res) => {
+    try {
+      const apiKey = process.env.YELP_API_KEY;
+      if (!apiKey) {
+        return res.json({ reviews: [], source: "yelp", available: false, message: "Yelp API key not configured" });
+      }
+
+      const vendor = await storage.getVendor(req.params.vendorId);
+      if (!vendor || !vendor.yelpBusinessId) {
+        return res.json({ reviews: [], source: "yelp", available: false });
+      }
+
+      const response = await fetch(`https://api.yelp.com/v3/businesses/${vendor.yelpBusinessId}/reviews`, {
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Yelp API error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      res.json({
+        reviews: data.reviews || [],
+        total: data.total || 0,
+        source: "yelp",
+        available: true,
+      });
+    } catch (error) {
+      console.error("Error fetching Yelp reviews:", error);
+      res.json({ reviews: [], source: "yelp", available: false, error: "Failed to fetch Yelp reviews" });
+    }
+  });
+
+  // Fetch Google reviews for a vendor
+  app.get("/api/reviews/google/:vendorId", async (req, res) => {
+    try {
+      const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+      if (!apiKey) {
+        return res.json({ reviews: [], source: "google", available: false, message: "Google Places API key not configured" });
+      }
+
+      const vendor = await storage.getVendor(req.params.vendorId);
+      if (!vendor || !vendor.googlePlaceId) {
+        return res.json({ reviews: [], source: "google", available: false });
+      }
+
+      const response = await fetch(`https://places.googleapis.com/v1/places/${vendor.googlePlaceId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': apiKey,
+          'X-Goog-FieldMask': 'reviews,displayName,rating,userRatingCount',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Google Places API error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      res.json({
+        reviews: data.reviews || [],
+        displayName: data.displayName?.text,
+        rating: data.rating,
+        userRatingCount: data.userRatingCount,
+        source: "google",
+        available: true,
+      });
+    } catch (error) {
+      console.error("Error fetching Google reviews:", error);
+      res.json({ reviews: [], source: "google", available: false, error: "Failed to fetch Google reviews" });
+    }
+  });
+
   // ============================================================================
   // PLAYLISTS - Music playlist collaboration for events
   // ============================================================================
