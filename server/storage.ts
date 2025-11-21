@@ -41,6 +41,12 @@ import {
   type InsertVendorAvailability,
   type ContractSignature,
   type InsertContractSignature,
+  type InvitationCard,
+  type InsertInvitationCard,
+  type Order,
+  type InsertOrder,
+  type OrderItem,
+  type InsertOrderItem,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -271,6 +277,24 @@ export interface IStorage {
     amount: string;
     category: string;
   }>>;
+
+  // Invitation Cards
+  getInvitationCard(id: string): Promise<InvitationCard | undefined>;
+  getAllInvitationCards(): Promise<InvitationCard[]>;
+  getInvitationCardsByTradition(tradition: string): Promise<InvitationCard[]>;
+  getInvitationCardsByCeremony(ceremonyType: string): Promise<InvitationCard[]>;
+  getFeaturedInvitationCards(): Promise<InvitationCard[]>;
+
+  // Orders
+  getOrder(id: string): Promise<Order | undefined>;
+  getOrdersByWedding(weddingId: string): Promise<Order[]>;
+  createOrder(order: InsertOrder): Promise<Order>;
+  updateOrderStatus(id: string, status: string): Promise<Order | undefined>;
+  updateOrderPaymentInfo(id: string, paymentIntentId: string, paymentStatus: string): Promise<Order | undefined>;
+
+  // Order Items
+  getOrderItems(orderId: string): Promise<OrderItem[]>;
+  createOrderItem(item: InsertOrderItem): Promise<OrderItem>;
 }
 
 export class MemStorage implements IStorage {
@@ -2538,6 +2562,137 @@ export class DBStorage implements IStorage {
       .sort((a, b) => a.date.localeCompare(b.date));
 
     return trends;
+  }
+
+  // ============================================================================
+  // Invitation Cards
+  // ============================================================================
+
+  async getInvitationCard(id: string): Promise<InvitationCard | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.invitationCards)
+      .where(eq(schema.invitationCards.id, id))
+      .limit(1);
+    return result[0];
+  }
+
+  async getAllInvitationCards(): Promise<InvitationCard[]> {
+    return await this.db
+      .select()
+      .from(schema.invitationCards)
+      .where(eq(schema.invitationCards.inStock, true))
+      .orderBy(schema.invitationCards.createdAt);
+  }
+
+  async getInvitationCardsByTradition(tradition: string): Promise<InvitationCard[]> {
+    return await this.db
+      .select()
+      .from(schema.invitationCards)
+      .where(
+        and(
+          eq(schema.invitationCards.tradition, tradition),
+          eq(schema.invitationCards.inStock, true)
+        )
+      )
+      .orderBy(schema.invitationCards.createdAt);
+  }
+
+  async getInvitationCardsByCeremony(ceremonyType: string): Promise<InvitationCard[]> {
+    return await this.db
+      .select()
+      .from(schema.invitationCards)
+      .where(
+        and(
+          eq(schema.invitationCards.ceremonyType, ceremonyType),
+          eq(schema.invitationCards.inStock, true)
+        )
+      )
+      .orderBy(schema.invitationCards.createdAt);
+  }
+
+  async getFeaturedInvitationCards(): Promise<InvitationCard[]> {
+    return await this.db
+      .select()
+      .from(schema.invitationCards)
+      .where(
+        and(
+          eq(schema.invitationCards.featured, true),
+          eq(schema.invitationCards.inStock, true)
+        )
+      )
+      .orderBy(schema.invitationCards.createdAt);
+  }
+
+  // ============================================================================
+  // Orders
+  // ============================================================================
+
+  async getOrder(id: string): Promise<Order | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.orders)
+      .where(eq(schema.orders.id, id))
+      .limit(1);
+    return result[0];
+  }
+
+  async getOrdersByWedding(weddingId: string): Promise<Order[]> {
+    return await this.db
+      .select()
+      .from(schema.orders)
+      .where(eq(schema.orders.weddingId, weddingId))
+      .orderBy(schema.orders.createdAt);
+  }
+
+  async createOrder(order: InsertOrder): Promise<Order> {
+    const result = await this.db
+      .insert(schema.orders)
+      .values(order)
+      .returning();
+    return result[0];
+  }
+
+  async updateOrderStatus(id: string, status: string): Promise<Order | undefined> {
+    const result = await this.db
+      .update(schema.orders)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(schema.orders.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async updateOrderPaymentInfo(id: string, paymentIntentId: string, paymentStatus: string): Promise<Order | undefined> {
+    const result = await this.db
+      .update(schema.orders)
+      .set({ 
+        stripePaymentIntentId: paymentIntentId,
+        stripePaymentStatus: paymentStatus,
+        status: paymentStatus === 'succeeded' ? 'paid' : 'pending',
+        updatedAt: new Date()
+      })
+      .where(eq(schema.orders.id, id))
+      .returning();
+    return result[0];
+  }
+
+  // ============================================================================
+  // Order Items
+  // ============================================================================
+
+  async getOrderItems(orderId: string): Promise<OrderItem[]> {
+    return await this.db
+      .select()
+      .from(schema.orderItems)
+      .where(eq(schema.orderItems.orderId, orderId));
+  }
+
+  async createOrderItem(item: InsertOrderItem): Promise<OrderItem> {
+    const result = await this.db
+      .insert(schema.orderItems)
+      .values(item)
+      .returning();
+    return result[0];
   }
 }
 

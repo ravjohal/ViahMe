@@ -33,6 +33,9 @@ import Settings from "@/pages/settings";
 import Landing from "@/pages/landing";
 import VendorAnalytics from "@/pages/vendor-analytics";
 import CoupleAnalytics from "@/pages/couple-analytics";
+import Invitations from "@/pages/invitations";
+import Checkout from "@/pages/checkout";
+import OrderConfirmation from "@/pages/order-confirmation";
 
 function Router() {
   return (
@@ -62,6 +65,9 @@ function Router() {
       <Route path="/vendor-availability" component={VendorAvailabilityCalendar} />
       <Route path="/vendor-analytics" component={VendorAnalytics} />
       <Route path="/couple-analytics" component={CoupleAnalytics} />
+      <Route path="/invitations" component={Invitations} />
+      <Route path="/checkout" component={Checkout} />
+      <Route path="/order-confirmation" component={OrderConfirmation} />
       <Route path="/settings" component={Settings} />
       <Route path="/wedding/:slug" component={GuestWebsite} />
       <Route component={NotFound} />

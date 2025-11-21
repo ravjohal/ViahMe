@@ -1902,6 +1902,155 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================================================
+  // Invitation Cards Routes
+  // ============================================================================
+
+  app.get("/api/invitation-cards", async (req, res) => {
+    try {
+      const { tradition, ceremony, featured } = req.query;
+      
+      let cards;
+      if (featured === 'true') {
+        cards = await storage.getFeaturedInvitationCards();
+      } else if (tradition) {
+        cards = await storage.getInvitationCardsByTradition(tradition as string);
+      } else if (ceremony) {
+        cards = await storage.getInvitationCardsByCeremony(ceremony as string);
+      } else {
+        cards = await storage.getAllInvitationCards();
+      }
+      
+      res.json(cards);
+    } catch (error) {
+      console.error("Error fetching invitation cards:", error);
+      res.status(500).json({ error: "Failed to fetch invitation cards" });
+    }
+  });
+
+  app.get("/api/invitation-cards/:id", async (req, res) => {
+    try {
+      const card = await storage.getInvitationCard(req.params.id);
+      if (!card) {
+        return res.status(404).json({ error: "Invitation card not found" });
+      }
+      res.json(card);
+    } catch (error) {
+      console.error("Error fetching invitation card:", error);
+      res.status(500).json({ error: "Failed to fetch invitation card" });
+    }
+  });
+
+  // ============================================================================
+  // Orders Routes
+  // ============================================================================
+
+  app.post("/api/orders", async (req, res) => {
+    try {
+      const order = await storage.createOrder(req.body);
+      res.status(201).json(order);
+    } catch (error) {
+      console.error("Error creating order:", error);
+      res.status(500).json({ error: "Failed to create order" });
+    }
+  });
+
+  app.get("/api/orders/:orderId", async (req, res) => {
+    try {
+      const order = await storage.getOrder(req.params.orderId);
+      if (!order) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+      res.json(order);
+    } catch (error) {
+      console.error("Error fetching order:", error);
+      res.status(500).json({ error: "Failed to fetch order" });
+    }
+  });
+
+  app.get("/api/orders/wedding/:weddingId", async (req, res) => {
+    try {
+      const orders = await storage.getOrdersByWedding(req.params.weddingId);
+      res.json(orders);
+    } catch (error) {
+      console.error("Error fetching wedding orders:", error);
+      res.status(500).json({ error: "Failed to fetch orders" });
+    }
+  });
+
+  app.get("/api/orders/:orderId/items", async (req, res) => {
+    try {
+      const items = await storage.getOrderItems(req.params.orderId);
+      res.json(items);
+    } catch (error) {
+      console.error("Error fetching order items:", error);
+      res.status(500).json({ error: "Failed to fetch order items" });
+    }
+  });
+
+  // ============================================================================
+  // Stripe Payment Integration - Referenced from blueprint:javascript_stripe
+  // ============================================================================
+
+  app.post("/api/create-payment-intent", async (req, res) => {
+    try {
+      const { amount, orderId } = req.body;
+      
+      if (!process.env.STRIPE_SECRET_KEY) {
+        throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
+      }
+      
+      const Stripe = (await import('stripe')).default;
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+        apiVersion: "2025-11-17.clover",
+      });
+      
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(amount * 100), // Convert to cents
+        currency: "usd",
+        metadata: {
+          orderId: orderId || '',
+        },
+      });
+      
+      // Update order with payment intent ID
+      if (orderId) {
+        await storage.updateOrderPaymentInfo(
+          orderId,
+          paymentIntent.id,
+          'pending'
+        );
+      }
+      
+      res.json({ clientSecret: paymentIntent.client_secret });
+    } catch (error: any) {
+      console.error("Error creating payment intent:", error);
+      res.status(500).json({ message: "Error creating payment intent: " + error.message });
+    }
+  });
+
+  app.post("/api/orders/:orderId/confirm-payment", async (req, res) => {
+    try {
+      const { orderId } = req.params;
+      const { paymentIntentId, paymentStatus } = req.body;
+      
+      const order = await storage.updateOrderPaymentInfo(
+        orderId,
+        paymentIntentId,
+        paymentStatus
+      );
+      
+      if (!order) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+      
+      res.json(order);
+    } catch (error) {
+      console.error("Error confirming payment:", error);
+      res.status(500).json({ error: "Failed to confirm payment" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
