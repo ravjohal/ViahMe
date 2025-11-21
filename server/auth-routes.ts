@@ -80,38 +80,15 @@ export function registerAuthRoutes(app: Express, storage: IStorage) {
       // Hash password
       const passwordHash = await hashPassword(data.password);
 
-      // Generate verification token
-      const { token, expires } = generateVerificationToken();
-
-      // Create user
+      // Create user with email already verified (no verification needed)
       const user = await storage.createUser({
         email: data.email,
         passwordHash,
         role: data.role,
+        emailVerified: true, // Auto-verify on registration
       });
 
-      // Set verification token
-      await storage.setVerificationToken(user.id, token, expires);
-
-      // Send verification email
-      const verificationUrl = `${process.env.REPLIT_DEV_DOMAIN || 'http://localhost:5000'}/verify-email?token=${token}`;
-      
-      try {
-        await sendEmail({
-          to: user.email,
-          subject: "Verify your Viah.me account",
-          template: EmailTemplate.VERIFICATION,
-          data: {
-            verificationUrl,
-            userEmail: user.email,
-          },
-        });
-      } catch (emailError) {
-        console.error("Failed to send verification email:", emailError);
-        // Don't fail registration if email fails
-      }
-
-      // Set session
+      // Set session and auto-login
       req.session.userId = user.id;
       req.session.userRole = user.role;
       req.session.save((err) => {
@@ -121,7 +98,7 @@ export function registerAuthRoutes(app: Express, storage: IStorage) {
         }
 
         res.status(201).json({
-          message: "Registration successful. Please check your email to verify your account.",
+          message: "Registration successful. You can now login.",
           user: sanitizeUser(user),
         });
       });

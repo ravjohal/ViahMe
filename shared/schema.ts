@@ -26,7 +26,6 @@ export const users = pgTable("users", {
 
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
-  emailVerified: true,
   verificationToken: true,
   verificationTokenExpires: true,
   resetToken: true,
@@ -39,6 +38,7 @@ export const insertUserSchema = createInsertSchema(users).omit({
   email: z.string().email(),
   passwordHash: z.string().min(8),
   role: z.enum(['couple', 'vendor']),
+  emailVerified: z.boolean().optional(), // Allow setting emailVerified during registration
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;

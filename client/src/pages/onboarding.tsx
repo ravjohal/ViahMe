@@ -11,7 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Mail, Loader2 } from "lucide-react";
+import { CheckCircle, Loader2 } from "lucide-react";
 import logoUrl from "@assets/viah-logo_1763669612969.png";
 
 const registerSchema = z
@@ -102,7 +102,7 @@ export default function Onboarding() {
 
       toast({
         title: "Account created!",
-        description: "Please verify your email to unlock all features.",
+        description: "You can now access your wedding dashboard.",
       });
     } catch (error: any) {
       const errorMessage = error.message || "Registration failed. Please try again.";
@@ -129,17 +129,16 @@ export default function Onboarding() {
           </div>
 
           <Card className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-orange-100 p-8 text-center">
-            <Mail className="h-16 w-16 text-orange-600 mx-auto mb-4" />
+            <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-4" />
             <h1 className="font-display text-3xl font-bold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent mb-2">
-              Check Your Email
+              Account Created Successfully!
             </h1>
             <p className="text-muted-foreground mb-6">
-              We've sent a verification link to{" "}
-              <strong className="text-foreground">{registeredEmail}</strong>.
-              Please verify your email to unlock all features.
+              Your account <strong className="text-foreground">{registeredEmail}</strong> is ready.
+              You're all set to start planning your wedding!
             </p>
             <p className="text-sm text-muted-foreground mb-6">
-              You can start exploring your wedding dashboard, but some features will be limited until you verify your email.
+              Click below to access your personalized wedding dashboard.
             </p>
             <Button
               onClick={() => setLocation("/dashboard")}
@@ -194,7 +193,7 @@ export default function Onboarding() {
                         />
                       </FormControl>
                       <FormDescription className="text-xs">
-                        We'll send you a verification email
+                        Use this to login to your account
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
