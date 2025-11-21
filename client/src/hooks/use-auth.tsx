@@ -1,5 +1,5 @@
 import { createContext, useContext, ReactNode } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, type UseQueryResult } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
@@ -15,7 +15,7 @@ type AuthContextType = {
   isLoading: boolean;
   isAuthenticated: boolean;
   logout: () => void;
-  refetchUser: () => void;
+  refetchUser: UseQueryResult<{ user: User | null } | null, Error>["refetch"];
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);

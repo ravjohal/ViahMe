@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { OnboardingQuestionnaire } from "@/components/onboarding-questionnaire";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -30,12 +30,24 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 export default function Onboarding() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { refetchUser } = useAuth();
+  const { user, isLoading: isAuthLoading, refetchUser } = useAuth();
   const [showRegister, setShowRegister] = useState(false);
   const [questionnaireData, setQuestionnaireData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [registrationComplete, setRegistrationComplete] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState("");
+
+  // Redirect logged-in users to dashboard
+  useEffect(() => {
+    if (!isAuthLoading && user) {
+      // User is logged in, redirect to appropriate dashboard
+      if (user.role === "vendor") {
+        setLocation("/vendor-dashboard");
+      } else {
+        setLocation("/dashboard");
+      }
+    }
+  }, [user, isAuthLoading, setLocation]);
 
   const registerForm = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -70,14 +82,14 @@ export default function Onboarding() {
       });
 
       // Refetch user to update auth context - WAIT for it to complete
-      const { data: authData } = await refetchUser();
-      console.log("[Onboarding] Refetched auth data:", authData);
+      const { data } = await refetchUser();
+      console.log("[Onboarding] Refetched auth data:", data);
       
       // Extract user from response (backend returns { user: {...} })
-      const loggedInUser = authData?.user;
+      const loggedInUser = data?.user;
       
       if (!loggedInUser || !loggedInUser.id) {
-        console.error("[Onboarding] User authentication failed:", { authData, loggedInUser });
+        console.error("[Onboarding] User authentication failed:", { refetchData: data, loggedInUser });
         throw new Error("Failed to authenticate user - user ID missing");
       }
 
