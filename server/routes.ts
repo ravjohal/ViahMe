@@ -23,6 +23,7 @@ import {
   insertPhotoGallerySchema,
   insertPhotoSchema,
   insertVendorAvailabilitySchema,
+  insertContractSignatureSchema,
 } from "@shared/schema";
 import { seedVendors, seedBudgetBenchmarks } from "./seed-data";
 import {
@@ -684,6 +685,109 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete contract" });
+    }
+  });
+
+  // ============================================================================
+  // CONTRACT SIGNATURES - E-signature functionality
+  // ============================================================================
+
+  // Get all signatures for a contract
+  app.get("/api/contracts/:contractId/signatures", async (req, res) => {
+    try {
+      const signatures = await storage.getSignaturesByContract(req.params.contractId);
+      res.json(signatures);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch contract signatures" });
+    }
+  });
+
+  // Sign a contract with e-signature
+  app.post("/api/contracts/:contractId/sign", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      if (!authReq.session.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const { contractId } = req.params;
+      const { signatureData, signerName, signerEmail, signerRole } = req.body;
+
+      // Validate required fields
+      if (!signatureData || !signerName || !signerEmail || !signerRole) {
+        return res.status(400).json({ error: "Missing required signature data" });
+      }
+
+      // Validate signature data is not empty/whitespace
+      if (typeof signatureData !== 'string' || signatureData.trim().length === 0) {
+        return res.status(400).json({ error: "Signature data cannot be empty" });
+      }
+
+      // Validate signerRole is from allowed enum
+      if (signerRole !== 'couple' && signerRole !== 'vendor') {
+        return res.status(400).json({ error: "Invalid signer role. Must be 'couple' or 'vendor'" });
+      }
+
+      // Check if contract exists
+      const contract = await storage.getContract(contractId);
+      if (!contract) {
+        return res.status(404).json({ error: "Contract not found" });
+      }
+
+      // Authorization check: verify user is authorized to sign for this role
+      if (signerRole === 'couple') {
+        // For couples: ensure the contract belongs to a wedding owned by this user
+        const wedding = await storage.getWedding(contract.weddingId);
+        if (!wedding || wedding.userId !== authReq.session.userId) {
+          return res.status(403).json({ error: "You are not authorized to sign this contract as a couple" });
+        }
+      } else if (signerRole === 'vendor') {
+        // For vendors: ensure the contract is for a vendor owned by this user
+        const user = await storage.getUserById(authReq.session.userId);
+        if (!user || user.role !== 'vendor') {
+          return res.status(403).json({ error: "You are not authorized to sign this contract as a vendor" });
+        }
+        const vendor = await storage.getVendor(contract.vendorId);
+        if (!vendor || vendor.userId !== authReq.session.userId) {
+          return res.status(403).json({ error: "You are not authorized to sign this contract as a vendor" });
+        }
+      }
+
+      // Check if user has already signed this contract
+      const alreadySigned = await storage.hasContractBeenSigned(contractId, authReq.session.userId);
+      if (alreadySigned) {
+        return res.status(400).json({ error: "You have already signed this contract" });
+      }
+
+      // Create signature
+      const signaturePayload = insertContractSignatureSchema.parse({
+        contractId,
+        signerId: authReq.session.userId,
+        signerName,
+        signerEmail,
+        signerRole,
+        signatureData,
+        ipAddress: req.ip || req.headers['x-forwarded-for'] || 'unknown',
+        userAgent: req.headers['user-agent'] || 'unknown',
+      });
+
+      const signature = await storage.createContractSignature(signaturePayload);
+
+      // Update contract status to 'signed' if it was 'sent' or 'draft'
+      if (contract.status === 'sent' || contract.status === 'draft') {
+        await storage.updateContract(contractId, {
+          status: 'signed',
+          signedDate: new Date(),
+        });
+      }
+
+      res.json(signature);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      console.error('Error signing contract:', error);
+      res.status(500).json({ error: "Failed to sign contract" });
     }
   });
 

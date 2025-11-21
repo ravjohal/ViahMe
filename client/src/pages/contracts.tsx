@@ -1,11 +1,12 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { insertContractSchema, type Contract, type Vendor, type Booking } from "@shared/schema";
+import { insertContractSchema, type Contract, type Vendor, type Booking, type ContractSignature } from "@shared/schema";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -14,8 +15,9 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Plus, Edit, Trash2 } from "lucide-react";
+import { FileText, Plus, Edit, Trash2, FileSignature } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { SignaturePad, type SignaturePadRef } from "@/components/contracts/signature-pad";
 
 type ContractFormData = z.infer<typeof insertContractSchema>;
 
@@ -28,10 +30,21 @@ const statusColors = {
   cancelled: "bg-red-500",
 };
 
+const signatureFormSchema = z.object({
+  signerName: z.string().min(1, "Name is required"),
+  signerEmail: z.string().email("Valid email is required"),
+});
+
+type SignatureFormData = z.infer<typeof signatureFormSchema>;
+
 export default function ContractsPage() {
+  const { user } = useAuth();
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
+  const [showSignatureDialog, setShowSignatureDialog] = useState(false);
+  const [signingContract, setSigningContract] = useState<Contract | null>(null);
+  const signaturePadRef = useRef<SignaturePadRef>(null);
 
   // Fetch wedding data
   const { data: weddings } = useQuery({
@@ -139,12 +152,96 @@ export default function ContractsPage() {
     },
   });
 
+  const getDefaultSignerName = () => {
+    const p1 = wedding?.partner1Name?.trim();
+    const p2 = wedding?.partner2Name?.trim();
+    if (p1 && p2) return `${p1} & ${p2}`;
+    if (p1) return p1;
+    if (p2) return p2;
+    return '';
+  };
+
+  const signatureForm = useForm<SignatureFormData>({
+    resolver: zodResolver(signatureFormSchema),
+    defaultValues: {
+      signerName: getDefaultSignerName(),
+      signerEmail: wedding?.coupleEmail || user?.email || '',
+    },
+  });
+
+  const signContractMutation = useMutation({
+    mutationFn: async (data: SignatureFormData & { contractId: string; signatureData: string }) => {
+      return await apiRequest("POST", `/api/contracts/${data.contractId}/sign`, {
+        signatureData: data.signatureData,
+        signerName: data.signerName,
+        signerEmail: data.signerEmail,
+        signerRole: "couple",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/contracts", wedding?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/contracts"] });
+      setShowSignatureDialog(false);
+      setSigningContract(null);
+      signatureForm.reset();
+      toast({
+        title: "Contract signed",
+        description: "Your e-signature has been recorded",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to sign contract",
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmit = (data: ContractFormData) => {
     if (editingContract) {
       updateMutation.mutate({ id: editingContract.id, data });
     } else {
       createMutation.mutate({ ...data, weddingId: wedding?.id || "" });
     }
+  };
+
+  const handleSignContract = async (data: SignatureFormData) => {
+    if (!signingContract) return;
+    
+    if (signaturePadRef.current?.isEmpty()) {
+      toast({
+        title: "Signature required",
+        description: "Please draw your signature in the signature pad",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const signatureData = signaturePadRef.current?.getSignatureData();
+    if (!signatureData) {
+      toast({
+        title: "Signature required",
+        description: "Unable to capture signature. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    signContractMutation.mutate({
+      ...data,
+      contractId: signingContract.id,
+      signatureData,
+    });
+  };
+
+  const openSignatureDialog = (contract: Contract) => {
+    setSigningContract(contract);
+    setShowSignatureDialog(true);
+    signatureForm.reset({
+      signerName: getDefaultSignerName(),
+      signerEmail: wedding?.coupleEmail || user?.email || '',
+    });
   };
 
   const openAddDialog = () => {
@@ -266,6 +363,16 @@ export default function ContractsPage() {
                     </CardDescription>
                   </div>
                   <div className="flex gap-2">
+                    {(contract.status === 'draft' || contract.status === 'sent') && (
+                      <Button
+                        onClick={() => openSignatureDialog(contract)}
+                        className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white"
+                        data-testid={`button-sign-contract-${contract.id}`}
+                      >
+                        <FileSignature className="w-4 h-4 mr-2" />
+                        Sign
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"
@@ -481,6 +588,76 @@ export default function ContractsPage() {
                   data-testid="button-save-contract"
                 >
                   {editingContract ? "Update Contract" : "Add Contract"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* E-Signature Dialog */}
+      <Dialog open={showSignatureDialog} onOpenChange={setShowSignatureDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Sign Contract</DialogTitle>
+            <DialogDescription>
+              Please review and sign this contract digitally. Your signature will be legally binding.
+            </DialogDescription>
+          </DialogHeader>
+
+          <Form {...signatureForm}>
+            <form onSubmit={signatureForm.handleSubmit(handleSignContract)} className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={signatureForm.control}
+                  name="signerName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Full Name</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Your full name" data-testid="input-signer-name" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={signatureForm.control}
+                  name="signerEmail"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email Address</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="email" placeholder="your@email.com" data-testid="input-signer-email" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Digital Signature</label>
+                <SignaturePad ref={signaturePadRef} />
+              </div>
+
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowSignatureDialog(false)}
+                  data-testid="button-cancel-signature"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={signContractMutation.isPending}
+                  className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white"
+                  data-testid="button-submit-signature"
+                >
+                  {signContractMutation.isPending ? "Signing..." : "Sign & Submit"}
                 </Button>
               </DialogFooter>
             </form>

@@ -39,6 +39,8 @@ import {
   type InsertPhoto,
   type VendorAvailability,
   type InsertVendorAvailability,
+  type ContractSignature,
+  type InsertContractSignature,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -216,6 +218,12 @@ export interface IStorage {
   createVendorAvailability(availability: InsertVendorAvailability): Promise<VendorAvailability>;
   updateVendorAvailability(id: string, availability: Partial<InsertVendorAvailability>): Promise<VendorAvailability | undefined>;
   deleteVendorAvailability(id: string): Promise<boolean>;
+
+  // Contract Signatures
+  getContractSignature(id: string): Promise<ContractSignature | undefined>;
+  getSignaturesByContract(contractId: string): Promise<ContractSignature[]>;
+  createContractSignature(signature: InsertContractSignature): Promise<ContractSignature>;
+  hasContractBeenSigned(contractId: string, signerId: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -2134,6 +2142,49 @@ export class DBStorage implements IStorage {
       .delete(schema.vendorAvailability)
       .where(eq(schema.vendorAvailability.id, id))
       .returning();
+    return result.length > 0;
+  }
+
+  // ============================================================================
+  // Contract Signatures
+  // ============================================================================
+
+  async getContractSignature(id: string): Promise<ContractSignature | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.contractSignatures)
+      .where(eq(schema.contractSignatures.id, id))
+      .limit(1);
+    return result[0];
+  }
+
+  async getSignaturesByContract(contractId: string): Promise<ContractSignature[]> {
+    return await this.db
+      .select()
+      .from(schema.contractSignatures)
+      .where(eq(schema.contractSignatures.contractId, contractId))
+      .orderBy(schema.contractSignatures.signedAt);
+  }
+
+  async createContractSignature(signature: InsertContractSignature): Promise<ContractSignature> {
+    const result = await this.db
+      .insert(schema.contractSignatures)
+      .values(signature)
+      .returning();
+    return result[0];
+  }
+
+  async hasContractBeenSigned(contractId: string, signerId: string): Promise<boolean> {
+    const result = await this.db
+      .select()
+      .from(schema.contractSignatures)
+      .where(
+        and(
+          eq(schema.contractSignatures.contractId, contractId),
+          eq(schema.contractSignatures.signerId, signerId)
+        )
+      )
+      .limit(1);
     return result.length > 0;
   }
 }
