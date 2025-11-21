@@ -83,14 +83,10 @@ export function VendorDetailModal({
     enabled: !!vendor?.id && open,
   });
 
-  // Early return AFTER all hooks are called
-  if (!vendor) return null;
-
-  const rating = vendor.rating ? parseFloat(vendor.rating.toString()) : 0;
-
-  // Add review mutation
+  // Add review mutation - MUST also be called before any early returns
   const addReviewMutation = useMutation({
     mutationFn: async (data: ReviewFormValues) => {
+      if (!vendor?.id) throw new Error("Vendor ID is required");
       return apiRequest("POST", "/api/reviews", {
         weddingId: DEMO_WEDDING_ID,
         vendorId: vendor.id,
@@ -99,6 +95,7 @@ export function VendorDetailModal({
       });
     },
     onSuccess: () => {
+      if (!vendor?.id) return;
       queryClient.invalidateQueries({ queryKey: ["/api/reviews/vendor", vendor.id] });
       queryClient.invalidateQueries({ queryKey: ["/api/vendors"] });
       reviewForm.reset();
@@ -124,6 +121,11 @@ export function VendorDetailModal({
       });
     },
   });
+
+  // Early return AFTER all hooks are called
+  if (!vendor) return null;
+
+  const rating = vendor.rating ? parseFloat(vendor.rating.toString()) : 0;
 
   const onReviewSubmit = (data: ReviewFormValues) => {
     setReviewError(null);
