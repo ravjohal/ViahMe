@@ -177,7 +177,7 @@ export default function Landing() {
 
             <div className="pt-4">
               <Button 
-                variant="link"
+                variant="ghost"
                 onClick={() => setLocation("/vendor-register")}
                 data-testid="button-vendor-signup"
                 className="text-muted-foreground"
