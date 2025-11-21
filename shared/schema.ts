@@ -763,3 +763,97 @@ export const insertVendorAvailabilitySchema = createInsertSchema(vendorAvailabil
 
 export type InsertVendorAvailability = z.infer<typeof insertVendorAvailabilitySchema>;
 export type VendorAvailability = typeof vendorAvailability.$inferSelect;
+
+// ============================================================================
+// CONTRACT SIGNATURES - E-signature tracking and vault
+// ============================================================================
+
+export const contractSignatures = pgTable("contract_signatures", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  contractId: varchar("contract_id").notNull(),
+  signerId: varchar("signer_id").notNull(), // User ID (couple or vendor)
+  signerName: text("signer_name").notNull(),
+  signerEmail: text("signer_email").notNull(),
+  signerRole: text("signer_role").notNull(), // 'couple' | 'vendor'
+  signatureData: text("signature_data").notNull(), // Base64 encoded signature image
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  signedAt: timestamp("signed_at").notNull().defaultNow(),
+});
+
+export const insertContractSignatureSchema = createInsertSchema(contractSignatures).omit({
+  id: true,
+  signedAt: true,
+}).extend({
+  signerRole: z.enum(['couple', 'vendor']),
+  signatureData: z.string().min(1, "Signature is required"),
+});
+
+export type InsertContractSignature = z.infer<typeof insertContractSignatureSchema>;
+export type ContractSignature = typeof contractSignatures.$inferSelect;
+
+// ============================================================================
+// VENDOR ANALYTICS - Performance tracking and ROI metrics
+// ============================================================================
+
+export const vendorAnalytics = pgTable("vendor_analytics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  vendorId: varchar("vendor_id").notNull(),
+  // Lead tracking
+  profileViews: integer("profile_views").notNull().default(0),
+  contactClicks: integer("contact_clicks").notNull().default(0),
+  emailSent: integer("email_sent").notNull().default(0),
+  phoneCalls: integer("phone_calls").notNull().default(0),
+  // Conversion tracking
+  inquiriesReceived: integer("inquiries_received").notNull().default(0),
+  proposalsSent: integer("proposals_sent").notNull().default(0),
+  bookingsReceived: integer("bookings_received").notNull().default(0),
+  bookingsConfirmed: integer("bookings_confirmed").notNull().default(0),
+  // Financial tracking
+  totalRevenue: decimal("total_revenue", { precision: 12, scale: 2 }).notNull().default('0'),
+  averageBookingValue: decimal("average_booking_value", { precision: 10, scale: 2 }).default('0'),
+  // Time period
+  periodStart: timestamp("period_start").notNull(),
+  periodEnd: timestamp("period_end").notNull(),
+  periodType: text("period_type").notNull(), // 'daily' | 'weekly' | 'monthly' | 'yearly' | 'all_time'
+  // Metadata
+  lastUpdated: timestamp("last_updated").notNull().defaultNow(),
+});
+
+export const insertVendorAnalyticsSchema = createInsertSchema(vendorAnalytics).omit({
+  id: true,
+  lastUpdated: true,
+}).extend({
+  periodType: z.enum(['daily', 'weekly', 'monthly', 'yearly', 'all_time']),
+  periodStart: z.string().transform(val => new Date(val)),
+  periodEnd: z.string().transform(val => new Date(val)),
+  totalRevenue: z.string().optional(),
+  averageBookingValue: z.string().optional(),
+});
+
+export type InsertVendorAnalytics = z.infer<typeof insertVendorAnalyticsSchema>;
+export type VendorAnalytics = typeof vendorAnalytics.$inferSelect;
+
+// ============================================================================
+// VENDOR INTERACTION EVENTS - Track individual engagement events for analytics
+// ============================================================================
+
+export const vendorInteractionEvents = pgTable("vendor_interaction_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  vendorId: varchar("vendor_id").notNull(),
+  weddingId: varchar("wedding_id"), // Optional - may be anonymous browsing
+  userId: varchar("user_id"), // Optional - may be anonymous
+  eventType: text("event_type").notNull(), // 'profile_view' | 'contact_click' | 'email_sent' | 'phone_call' | 'inquiry' | 'proposal_sent' | 'booking_request' | 'booking_confirmed'
+  metadata: jsonb("metadata"), // Additional data like source, campaign, etc.
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertVendorInteractionEventSchema = createInsertSchema(vendorInteractionEvents).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  eventType: z.enum(['profile_view', 'contact_click', 'email_sent', 'phone_call', 'inquiry', 'proposal_sent', 'booking_request', 'booking_confirmed']),
+});
+
+export type InsertVendorInteractionEvent = z.infer<typeof insertVendorInteractionEventSchema>;
+export type VendorInteractionEvent = typeof vendorInteractionEvents.$inferSelect;
