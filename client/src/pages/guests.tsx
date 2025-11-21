@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { DashboardHeader } from "@/components/dashboard-header";
 import { GuestListManager } from "@/components/guest-list-manager";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -224,8 +223,6 @@ export default function Guests() {
 
   return (
     <div className="min-h-screen bg-background">
-      <DashboardHeader wedding={wedding} />
-
       <main className="container mx-auto px-6 py-8">
         <GuestListManager
           guests={guests}

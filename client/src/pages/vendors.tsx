@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { DashboardHeader } from "@/components/dashboard-header";
 import { VendorDirectory } from "@/components/vendor-directory";
 import { VendorDetailModal } from "@/components/vendor-detail-modal";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -87,8 +86,6 @@ export default function Vendors() {
 
   return (
     <div className="min-h-screen bg-background">
-      <DashboardHeader wedding={wedding} />
-
       <main className="container mx-auto px-6 py-8">
         <VendorDirectory
           vendors={vendors}
