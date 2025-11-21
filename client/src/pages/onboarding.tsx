@@ -37,7 +37,7 @@ export default function Onboarding() {
   const [registrationComplete, setRegistrationComplete] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState("");
 
-  // Redirect logged-in users to dashboard
+  // Redirect logged-in users to dashboard (only from /onboarding route, not from /)
   useEffect(() => {
     if (!isAuthLoading && user) {
       // User is logged in, redirect to appropriate dashboard

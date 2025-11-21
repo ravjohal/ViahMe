@@ -30,11 +30,12 @@ import GuestWebsite from "@/pages/guest-website";
 import PhotoGallery from "@/pages/photo-gallery";
 import VendorAvailabilityCalendar from "@/pages/vendor-availability";
 import Settings from "@/pages/settings";
+import Landing from "@/pages/landing";
 
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Onboarding} />
+      <Route path="/" component={Landing} />
       <Route path="/onboarding" component={Onboarding} />
       <Route path="/login" component={Login} />
       <Route path="/vendor-login" component={VendorLogin} />
