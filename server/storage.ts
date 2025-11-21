@@ -224,6 +224,53 @@ export interface IStorage {
   getSignaturesByContract(contractId: string): Promise<ContractSignature[]>;
   createContractSignature(signature: InsertContractSignature): Promise<ContractSignature>;
   hasContractBeenSigned(contractId: string, signerId: string): Promise<boolean>;
+
+  // Vendor Analytics
+  getVendorAnalyticsSummary(vendorId: string): Promise<{
+    totalBookings: number;
+    confirmedBookings: number;
+    totalRevenue: string;
+    averageBookingValue: string;
+    averageRating: string;
+    totalReviews: number;
+    conversionRate: string;
+  }>;
+  getVendorBookingTrends(vendorId: string, startDate?: Date, endDate?: Date): Promise<Array<{
+    date: string;
+    bookings: number;
+    confirmed: number;
+  }>>;
+  getVendorRevenueTrends(vendorId: string, startDate?: Date, endDate?: Date): Promise<Array<{
+    date: string;
+    revenue: string;
+  }>>;
+
+  // Couple Analytics
+  getWeddingAnalyticsSummary(weddingId: string): Promise<{
+    totalBudget: string;
+    totalSpent: string;
+    remainingBudget: string;
+    budgetUtilization: string;
+    totalVendors: number;
+    confirmedVendors: number;
+    totalGuests: number;
+    confirmedGuests: number;
+    totalTasks: number;
+    completedTasks: number;
+    taskCompletionRate: string;
+    totalEvents: number;
+  }>;
+  getWeddingBudgetBreakdown(weddingId: string): Promise<Array<{
+    category: string;
+    allocated: string;
+    spent: string;
+    percentage: number;
+  }>>;
+  getWeddingSpendingTrends(weddingId: string): Promise<Array<{
+    date: string;
+    amount: string;
+    category: string;
+  }>>;
 }
 
 export class MemStorage implements IStorage {
@@ -1172,7 +1219,7 @@ export class MemStorage implements IStorage {
 
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, inArray } from "drizzle-orm";
 import * as schema from "@shared/schema";
 
 export class DBStorage implements IStorage {
@@ -2186,6 +2233,292 @@ export class DBStorage implements IStorage {
       )
       .limit(1);
     return result.length > 0;
+  }
+
+  // ============================================================================
+  // Vendor Analytics
+  // ============================================================================
+
+  async getVendorAnalyticsSummary(vendorId: string): Promise<{
+    totalBookings: number;
+    confirmedBookings: number;
+    totalRevenue: string;
+    averageBookingValue: string;
+    averageRating: string;
+    totalReviews: number;
+    conversionRate: string;
+  }> {
+    // Get booking statistics
+    const bookings = await this.db
+      .select()
+      .from(schema.bookings)
+      .where(eq(schema.bookings.vendorId, vendorId));
+
+    const totalBookings = bookings.length;
+    const confirmedBookings = bookings.filter(b => b.status === 'confirmed').length;
+
+    // Calculate revenue
+    const confirmedWithCost = bookings.filter(b => 
+      b.status === 'confirmed' && b.estimatedCost !== null
+    );
+    const totalRevenue = confirmedWithCost.reduce((sum, b) => 
+      sum + parseFloat(b.estimatedCost || '0'), 0
+    );
+    const averageBookingValue = confirmedWithCost.length > 0 
+      ? totalRevenue / confirmedWithCost.length 
+      : 0;
+
+    // Get review statistics
+    const reviews = await this.db
+      .select()
+      .from(schema.reviews)
+      .where(eq(schema.reviews.vendorId, vendorId));
+
+    const totalReviews = reviews.length;
+    const averageRating = totalReviews > 0
+      ? reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews
+      : 0;
+
+    // Calculate conversion rate (confirmed / total bookings)
+    const conversionRate = totalBookings > 0 
+      ? (confirmedBookings / totalBookings * 100) 
+      : 0;
+
+    return {
+      totalBookings,
+      confirmedBookings,
+      totalRevenue: totalRevenue.toFixed(2),
+      averageBookingValue: averageBookingValue.toFixed(2),
+      averageRating: averageRating.toFixed(1),
+      totalReviews,
+      conversionRate: conversionRate.toFixed(1),
+    };
+  }
+
+  async getVendorBookingTrends(vendorId: string, startDate?: Date, endDate?: Date): Promise<Array<{
+    date: string;
+    bookings: number;
+    confirmed: number;
+  }>> {
+    let query = this.db
+      .select()
+      .from(schema.bookings)
+      .where(eq(schema.bookings.vendorId, vendorId));
+
+    const bookings = await query;
+
+    // Filter by date range if provided
+    let filteredBookings = bookings;
+    if (startDate || endDate) {
+      filteredBookings = bookings.filter(b => {
+        const bookingDate = new Date(b.requestDate);
+        if (startDate && bookingDate < startDate) return false;
+        if (endDate && bookingDate > endDate) return false;
+        return true;
+      });
+    }
+
+    // Group by date
+    const dateMap = new Map<string, { bookings: number; confirmed: number }>();
+    filteredBookings.forEach(booking => {
+      const dateStr = new Date(booking.requestDate).toISOString().split('T')[0];
+      const existing = dateMap.get(dateStr) || { bookings: 0, confirmed: 0 };
+      existing.bookings++;
+      if (booking.status === 'confirmed') existing.confirmed++;
+      dateMap.set(dateStr, existing);
+    });
+
+    // Convert to array and sort by date
+    return Array.from(dateMap.entries())
+      .map(([date, data]) => ({ date, ...data }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }
+
+  async getVendorRevenueTrends(vendorId: string, startDate?: Date, endDate?: Date): Promise<Array<{
+    date: string;
+    revenue: string;
+  }>> {
+    const bookings = await this.db
+      .select()
+      .from(schema.bookings)
+      .where(
+        and(
+          eq(schema.bookings.vendorId, vendorId),
+          eq(schema.bookings.status, 'confirmed')
+        )
+      );
+
+    // Filter by date range and confirmed with cost
+    let filteredBookings = bookings.filter(b => b.estimatedCost !== null);
+    if (startDate || endDate) {
+      filteredBookings = filteredBookings.filter(b => {
+        const bookingDate = b.confirmedDate ? new Date(b.confirmedDate) : new Date(b.requestDate);
+        if (startDate && bookingDate < startDate) return false;
+        if (endDate && bookingDate > endDate) return false;
+        return true;
+      });
+    }
+
+    // Group revenue by date
+    const dateMap = new Map<string, number>();
+    filteredBookings.forEach(booking => {
+      const dateStr = booking.confirmedDate 
+        ? new Date(booking.confirmedDate).toISOString().split('T')[0]
+        : new Date(booking.requestDate).toISOString().split('T')[0];
+      const existing = dateMap.get(dateStr) || 0;
+      dateMap.set(dateStr, existing + parseFloat(booking.estimatedCost || '0'));
+    });
+
+    // Convert to array and sort by date
+    return Array.from(dateMap.entries())
+      .map(([date, revenue]) => ({ date, revenue: revenue.toFixed(2) }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }
+
+  // ============================================================================
+  // Couple Analytics
+  // ============================================================================
+
+  async getWeddingAnalyticsSummary(weddingId: string): Promise<{
+    totalBudget: string;
+    totalSpent: string;
+    remainingBudget: string;
+    budgetUtilization: string;
+    totalVendors: number;
+    confirmedVendors: number;
+    totalGuests: number;
+    confirmedGuests: number;
+    totalTasks: number;
+    completedTasks: number;
+    taskCompletionRate: string;
+    totalEvents: number;
+  }> {
+    // Get wedding data
+    const wedding = await this.getWedding(weddingId);
+    const totalBudget = parseFloat(wedding?.totalBudget || '0');
+
+    // Get budget categories
+    const budgetCategories = await this.db
+      .select()
+      .from(schema.budgetCategories)
+      .where(eq(schema.budgetCategories.weddingId, weddingId));
+
+    const totalSpent = budgetCategories.reduce((sum, cat) => 
+      sum + parseFloat(cat.spentAmount || '0'), 0
+    );
+    const remainingBudget = totalBudget - totalSpent;
+    const budgetUtilization = totalBudget > 0 ? (totalSpent / totalBudget * 100) : 0;
+
+    // Get vendor statistics
+    const bookings = await this.db
+      .select()
+      .from(schema.bookings)
+      .where(eq(schema.bookings.weddingId, weddingId));
+
+    const totalVendors = bookings.length;
+    const confirmedVendors = bookings.filter(b => b.status === 'confirmed').length;
+
+    // Get guest statistics
+    const guests = await this.db
+      .select()
+      .from(schema.guests)
+      .where(eq(schema.guests.weddingId, weddingId));
+
+    const totalGuests = guests.length;
+    const confirmedGuests = guests.filter(g => g.rsvpStatus === 'attending').length;
+
+    // Get task statistics
+    const tasks = await this.db
+      .select()
+      .from(schema.tasks)
+      .where(eq(schema.tasks.weddingId, weddingId));
+
+    const totalTasks = tasks.length;
+    const completedTasks = tasks.filter(t => t.completed === true).length;
+    const taskCompletionRate = totalTasks > 0 ? (completedTasks / totalTasks * 100) : 0;
+
+    // Get events count
+    const events = await this.db
+      .select()
+      .from(schema.events)
+      .where(eq(schema.events.weddingId, weddingId));
+
+    const totalEvents = events.length;
+
+    return {
+      totalBudget: totalBudget.toFixed(2),
+      totalSpent: totalSpent.toFixed(2),
+      remainingBudget: remainingBudget.toFixed(2),
+      budgetUtilization: budgetUtilization.toFixed(1),
+      totalVendors,
+      confirmedVendors,
+      totalGuests,
+      confirmedGuests,
+      totalTasks,
+      completedTasks,
+      taskCompletionRate: taskCompletionRate.toFixed(1),
+      totalEvents,
+    };
+  }
+
+  async getWeddingBudgetBreakdown(weddingId: string): Promise<Array<{
+    category: string;
+    allocated: string;
+    spent: string;
+    percentage: number;
+  }>> {
+    const budgetCategories = await this.db
+      .select()
+      .from(schema.budgetCategories)
+      .where(eq(schema.budgetCategories.weddingId, weddingId));
+
+    return budgetCategories.map(cat => ({
+      category: cat.category,
+      allocated: parseFloat(cat.allocatedAmount).toFixed(2),
+      spent: parseFloat(cat.spentAmount || '0').toFixed(2),
+      percentage: cat.percentage || 0,
+    }));
+  }
+
+  async getWeddingSpendingTrends(weddingId: string): Promise<Array<{
+    date: string;
+    amount: string;
+    category: string;
+  }>> {
+    // Get confirmed bookings with costs
+    const bookings = await this.db
+      .select()
+      .from(schema.bookings)
+      .where(
+        and(
+          eq(schema.bookings.weddingId, weddingId),
+          eq(schema.bookings.status, 'confirmed')
+        )
+      );
+
+    // Get vendors to map to categories
+    const vendorIds = bookings.map(b => b.vendorId);
+    const vendors = await this.db
+      .select()
+      .from(schema.vendors)
+      .where(inArray(schema.vendors.id, vendorIds));
+
+    const vendorMap = new Map(vendors.map(v => [v.id, v]));
+
+    // Map bookings to spending trends
+    const trends = bookings
+      .filter(b => b.estimatedCost !== null && b.confirmedDate !== null)
+      .map(booking => {
+        const vendor = vendorMap.get(booking.vendorId);
+        return {
+          date: new Date(booking.confirmedDate!).toISOString().split('T')[0],
+          amount: parseFloat(booking.estimatedCost || '0').toFixed(2),
+          category: vendor?.category || 'Unknown',
+        };
+      })
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    return trends;
   }
 }
 
