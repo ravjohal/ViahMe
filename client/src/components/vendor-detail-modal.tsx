@@ -37,6 +37,8 @@ interface VendorDetailModalProps {
   open: boolean;
   onClose: () => void;
   onBookRequest: (vendorId: string, eventIds: string[], notes: string) => void;
+  isAuthenticated?: boolean;
+  onAuthRequired?: () => void;
 }
 
 const DEMO_WEDDING_ID = "wedding-1"; // TODO: Get from auth context
@@ -54,6 +56,8 @@ export function VendorDetailModal({
   open,
   onClose,
   onBookRequest,
+  isAuthenticated = true,
+  onAuthRequired,
 }: VendorDetailModalProps) {
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
   const [notes, setNotes] = useState("");
@@ -561,65 +565,80 @@ export function VendorDetailModal({
 
           <div className="pt-6">
             <h3 className="font-semibold text-lg mb-4">Request Booking</h3>
-            <div className="space-y-4">
-              <div>
-                <Label className="text-base mb-3 block">
-                  Select Events ({selectedEvents.length} selected)
-                </Label>
-                <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded-lg p-3">
-                  {events.length > 0 ? (
-                    events.map((event) => (
-                      <div 
-                        key={event.id} 
-                        className="flex items-center space-x-3 hover-elevate p-2 rounded-md"
-                        data-testid={`event-checkbox-${event.id}`}
-                      >
-                        <Checkbox
-                          id={`event-${event.id}`}
-                          checked={selectedEvents.includes(event.id)}
-                          onCheckedChange={() => handleEventToggle(event.id)}
-                        />
-                        <label
-                          htmlFor={`event-${event.id}`}
-                          className="flex-1 text-sm font-medium cursor-pointer"
+            {!isAuthenticated ? (
+              <div className="p-6 rounded-lg border bg-muted/20 text-center space-y-4">
+                <p className="text-base text-muted-foreground">
+                  Create a free account to book vendors and start planning your dream wedding.
+                </p>
+                <Button
+                  onClick={onAuthRequired}
+                  className="bg-gradient-to-r from-orange-600 to-pink-600 hover:from-orange-700 hover:to-pink-700"
+                  data-testid="button-signup-to-book"
+                >
+                  Sign Up to Book This Vendor
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-base mb-3 block">
+                    Select Events ({selectedEvents.length} selected)
+                  </Label>
+                  <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded-lg p-3">
+                    {events.length > 0 ? (
+                      events.map((event) => (
+                        <div 
+                          key={event.id} 
+                          className="flex items-center space-x-3 hover-elevate p-2 rounded-md"
+                          data-testid={`event-checkbox-${event.id}`}
                         >
-                          {event.name} {event.date && `- ${new Date(event.date).toLocaleDateString()}`}
-                        </label>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-muted-foreground text-center py-4">
-                      No events created yet. Add events to your wedding first.
-                    </p>
-                  )}
+                          <Checkbox
+                            id={`event-${event.id}`}
+                            checked={selectedEvents.includes(event.id)}
+                            onCheckedChange={() => handleEventToggle(event.id)}
+                          />
+                          <label
+                            htmlFor={`event-${event.id}`}
+                            className="flex-1 text-sm font-medium cursor-pointer"
+                          >
+                            {event.name} {event.date && `- ${new Date(event.date).toLocaleDateString()}`}
+                          </label>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        No events created yet. Add events to your wedding first.
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <Label htmlFor="booking-notes" className="text-base">
-                  Message to Vendor (Optional)
-                </Label>
-                <Textarea
-                  id="booking-notes"
-                  placeholder="Tell the vendor about your specific needs, preferences, or questions..."
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  rows={4}
-                  data-testid="textarea-booking-notes"
-                  className="mt-2"
-                />
-              </div>
+                <div>
+                  <Label htmlFor="booking-notes" className="text-base">
+                    Message to Vendor (Optional)
+                  </Label>
+                  <Textarea
+                    id="booking-notes"
+                    placeholder="Tell the vendor about your specific needs, preferences, or questions..."
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    rows={4}
+                    data-testid="textarea-booking-notes"
+                    className="mt-2"
+                  />
+                </div>
 
-              <Button
-                onClick={handleSubmit}
-                disabled={selectedEvents.length === 0}
-                className="w-full"
-                data-testid="button-submit-booking"
-              >
-                <Send className="w-4 h-4 mr-2" />
-                Send Booking Request for {selectedEvents.length} {selectedEvents.length === 1 ? 'Event' : 'Events'}
-              </Button>
-            </div>
+                <Button
+                  onClick={handleSubmit}
+                  disabled={selectedEvents.length === 0}
+                  className="w-full"
+                  data-testid="button-submit-booking"
+                >
+                  <Send className="w-4 h-4 mr-2" />
+                  Send Booking Request for {selectedEvents.length} {selectedEvents.length === 1 ? 'Event' : 'Events'}
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </DialogContent>

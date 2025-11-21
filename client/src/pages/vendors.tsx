@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { VendorDirectory } from "@/components/vendor-directory";
 import { VendorDetailModal } from "@/components/vendor-detail-modal";
@@ -7,17 +7,21 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import type { Wedding, Vendor, Event } from "@shared/schema";
 
 export default function Vendors() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
   const [comparisonVendors, setComparisonVendors] = useState<Vendor[]>([]);
   const [showComparison, setShowComparison] = useState(false);
 
-  const { data: weddings, isLoading: weddingsLoading } = useQuery<Wedding[]>({
+  // Only fetch weddings if user is authenticated
+  const { data: weddings } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
+    enabled: !!user && user.role === "couple",
   });
 
   const wedding = weddings?.[0];
@@ -37,9 +41,18 @@ export default function Vendors() {
       eventIds: string[];
       notes: string;
     }) => {
+      // Check if user is authenticated before booking
+      if (!user || user.role !== "couple") {
+        throw new Error("Authentication required");
+      }
+      
+      if (!wedding) {
+        throw new Error("No wedding found");
+      }
+
       const bookingPromises = data.eventIds.map(eventId =>
         apiRequest("POST", "/api/bookings", {
-          weddingId: wedding?.id,
+          weddingId: wedding.id,
           vendorId: data.vendorId,
           eventId: eventId,
           notes: data.notes,
@@ -56,21 +69,23 @@ export default function Vendors() {
         description: `Your request for ${eventCount} ${eventCount === 1 ? 'event' : 'events'} has been sent to the vendor.`,
       });
     },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to send booking request. Please try again.",
-        variant: "destructive",
-      });
+    onError: (error: Error) => {
+      if (error.message === "Authentication required") {
+        toast({
+          title: "Sign In Required",
+          description: "Please create an account to book vendors.",
+          variant: "destructive",
+        });
+        setLocation("/onboarding");
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to send booking request. Please try again.",
+          variant: "destructive",
+        });
+      }
     },
   });
-
-  // Redirect to onboarding if no wedding exists
-  useEffect(() => {
-    if (!weddingsLoading && !wedding) {
-      setLocation("/onboarding");
-    }
-  }, [weddingsLoading, wedding, setLocation]);
 
   const handleAddToComparison = (vendor: Vendor) => {
     if (comparisonVendors.find(v => v.id === vendor.id)) {
@@ -105,7 +120,7 @@ export default function Vendors() {
     setShowComparison(false);
   };
 
-  if (weddingsLoading || vendorsLoading) {
+  if (vendorsLoading) {
     return (
       <div className="min-h-screen bg-background">
         <div className="h-16 border-b flex items-center justify-between px-6">
@@ -118,17 +133,13 @@ export default function Vendors() {
     );
   }
 
-  if (!wedding) {
-    return null;
-  }
-
   return (
     <div className="min-h-screen bg-background">
       <main className="container mx-auto px-6 py-8">
         <VendorDirectory
           vendors={vendors}
           onSelectVendor={setSelectedVendor}
-          tradition={wedding.tradition}
+          tradition={wedding?.tradition}
           onAddToComparison={handleAddToComparison}
           comparisonVendors={comparisonVendors}
           onOpenComparison={() => setShowComparison(true)}
@@ -143,6 +154,8 @@ export default function Vendors() {
         onBookRequest={(vendorId, eventIds, notes) => {
           bookingMutation.mutate({ vendorId, eventIds, notes });
         }}
+        isAuthenticated={!!user && user.role === "couple"}
+        onAuthRequired={() => setLocation("/onboarding")}
       />
 
       <VendorComparisonModal
