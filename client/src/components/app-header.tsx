@@ -21,7 +21,6 @@ const NAV_ITEMS = [
   { path: "/dashboard", label: "Dashboard", icon: Home },
   { path: "/timeline", label: "Timeline", icon: Clock },
   { path: "/vendors", label: "Vendors", icon: UserCircle },
-  { path: "/vendor-availability", label: "Availability", icon: CalendarClock },
   { path: "/guests", label: "Guests", icon: Users },
   { path: "/tasks", label: "Tasks", icon: CheckSquare },
   { path: "/budget", label: "Budget", icon: DollarSign },

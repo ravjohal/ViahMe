@@ -8,6 +8,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,15 +23,24 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Star, MapPin, DollarSign, Phone, Mail, Send, StarIcon, AlertCircle, ExternalLink } from "lucide-react";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Star, MapPin, DollarSign, Phone, Mail, Send, StarIcon, AlertCircle, ExternalLink, Calendar, CheckCircle2, XCircle } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import type { Vendor, Event, Review } from "@shared/schema";
+import { format, startOfMonth, endOfMonth } from "date-fns";
+import type { Vendor, Event, Review, VendorAvailability } from "@shared/schema";
 
 interface VendorDetailModalProps {
   vendor: Vendor | null;
@@ -64,6 +75,13 @@ export function VendorDetailModal({
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewError, setReviewError] = useState<string | null>(null);
   const { toast } = useToast();
+  
+  // Availability calendar state
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<'morning' | 'afternoon' | 'evening' | 'full_day'>('full_day');
+  const [selectedEventForBooking, setSelectedEventForBooking] = useState<string>('');
 
   const reviewForm = useForm<ReviewFormValues>({
     resolver: zodResolver(reviewFormSchema),
@@ -145,6 +163,77 @@ export function VendorDetailModal({
     },
   });
 
+  // Fetch availability for selected vendor in current month
+  const monthStart = startOfMonth(currentMonth);
+  const monthEnd = endOfMonth(currentMonth);
+
+  const { data: availability } = useQuery<VendorAvailability[]>({
+    queryKey: ['/api/vendor-availability/vendor', vendor?.id, 'range', monthStart.toISOString(), monthEnd.toISOString()],
+    queryFn: async () => {
+      if (!vendor?.id) return [];
+      const response = await fetch(
+        `/api/vendor-availability/vendor/${vendor.id}/range?startDate=${monthStart.toISOString()}&endDate=${monthEnd.toISOString()}`
+      );
+      if (!response.ok) throw new Error('Failed to fetch availability');
+      return response.json();
+    },
+    enabled: !!vendor?.id && open,
+  });
+
+  // Check conflicts mutation
+  const checkConflictsMutation = useMutation<
+    { hasConflicts: boolean },
+    Error,
+    { vendorId: string; date: Date; timeSlot: string }
+  >({
+    mutationFn: async (data: { vendorId: string; date: Date; timeSlot: string }) => {
+      const response = await apiRequest('POST', '/api/vendor-availability/check-conflicts', {
+        vendorId: data.vendorId,
+        date: data.date.toISOString(),
+        timeSlot: data.timeSlot,
+      });
+      return await response.json();
+    },
+  });
+
+  // Create availability/booking mutation
+  const createBookingMutation = useMutation({
+    mutationFn: async (data: {
+      vendorId: string;
+      date: Date;
+      timeSlot: string;
+      eventId?: string;
+    }) => {
+      return await apiRequest('POST', '/api/vendor-availability', {
+        vendorId: data.vendorId,
+        date: data.date.toISOString(),
+        timeSlot: data.timeSlot,
+        status: 'booked',
+        eventId: data.eventId || null,
+      });
+    },
+    onSuccess: (_data, variables) => {
+      // Invalidate all availability queries for the booked vendor
+      queryClient.invalidateQueries({ 
+        queryKey: ['/api/vendor-availability/vendor', variables.vendorId, 'range'],
+        exact: false
+      });
+      setBookingDialogOpen(false);
+      setSelectedDate(undefined);
+      toast({
+        title: "Booking confirmed!",
+        description: `${vendor?.name} has been booked for ${selectedDate ? format(selectedDate, 'MMMM d, yyyy') : 'the selected date'}`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Booking failed",
+        description: error.message || "Failed to create booking. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Early return AFTER all hooks are called
   if (!vendor) return null;
 
@@ -169,6 +258,74 @@ export function VendorDetailModal({
         ? prev.filter(id => id !== eventId)
         : [...prev, eventId]
     );
+  };
+
+  // Availability calendar helper functions
+  const getAvailabilityStatus = (date: Date): 'available' | 'partial' | 'booked' | null => {
+    if (!availability || !vendor) return null;
+
+    const dateStr = format(date, 'yyyy-MM-dd');
+    const dayAvailability = availability.filter(
+      (a) => format(new Date(a.date), 'yyyy-MM-dd') === dateStr
+    );
+
+    if (dayAvailability.length === 0) return 'available';
+
+    const bookedSlots = dayAvailability.filter((a) => a.status === 'booked');
+    if (bookedSlots.some((a) => a.timeSlot === 'full_day')) return 'booked';
+    if (bookedSlots.length >= 3) return 'booked';
+    if (bookedSlots.length > 0) return 'partial';
+
+    return 'available';
+  };
+
+  const modifiers = {
+    available: (date: Date) => getAvailabilityStatus(date) === 'available',
+    partial: (date: Date) => getAvailabilityStatus(date) === 'partial',
+    booked: (date: Date) => getAvailabilityStatus(date) === 'booked',
+  };
+
+  const modifiersStyles = {
+    available: {
+      backgroundColor: 'hsl(var(--success) / 0.2)',
+      color: 'hsl(var(--success-foreground))',
+    },
+    partial: {
+      backgroundColor: 'hsl(var(--warning) / 0.2)',
+      color: 'hsl(var(--warning-foreground))',
+    },
+    booked: {
+      backgroundColor: 'hsl(var(--destructive) / 0.2)',
+      color: 'hsl(var(--destructive-foreground))',
+    },
+  };
+
+  const handleBookVendor = async () => {
+    if (!vendor || !selectedDate) return;
+
+    // Check for conflicts first
+    const conflictCheck = await checkConflictsMutation.mutateAsync({
+      vendorId: vendor.id,
+      date: selectedDate,
+      timeSlot: selectedTimeSlot,
+    });
+
+    if (conflictCheck.hasConflicts) {
+      toast({
+        title: "Time slot unavailable",
+        description: "This vendor is already booked for the selected time slot.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Create the booking
+    createBookingMutation.mutate({
+      vendorId: vendor.id,
+      date: selectedDate,
+      timeSlot: selectedTimeSlot,
+      eventId: selectedEventForBooking || undefined,
+    });
   };
 
   return (
@@ -248,23 +405,35 @@ export function VendorDetailModal({
 
           <Separator />
 
-          {/* Reviews Section with Tabs */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-lg">Reviews</h3>
-              {!showReviewForm && (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => setShowReviewForm(true)}
-                  data-testid="button-write-review"
-                >
-                  Write a Review
-                </Button>
-              )}
-            </div>
+          {/* Main Tabs: Reviews and Availability */}
+          <Tabs defaultValue="reviews" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="reviews" data-testid="tab-reviews-section">
+                <Star className="w-4 h-4 mr-2" />
+                Reviews
+              </TabsTrigger>
+              <TabsTrigger value="availability" data-testid="tab-availability-section">
+                <Calendar className="w-4 h-4 mr-2" />
+                Availability & Booking
+              </TabsTrigger>
+            </TabsList>
 
-            {showReviewForm && (
+            <TabsContent value="reviews" className="mt-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-lg">Reviews</h3>
+                {!showReviewForm && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setShowReviewForm(true)}
+                    data-testid="button-write-review"
+                  >
+                    Write a Review
+                  </Button>
+                )}
+              </div>
+
+              {showReviewForm && (
               <div className="p-4 rounded-lg border bg-muted/30 space-y-4">
                 <div className="flex items-center justify-between">
                   <Label className="text-base font-semibold">Your Review</Label>
@@ -559,7 +728,74 @@ export function VendorDetailModal({
                 )}
               </TabsContent>
             </Tabs>
-          </div>
+            </TabsContent>
+
+            <TabsContent value="availability" className="mt-6 space-y-4">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-semibold text-lg mb-2">Check Availability</h3>
+                  <p className="text-sm text-muted-foreground">
+                    View real-time availability and book {vendor.name} for your wedding events.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-4">
+                    <CalendarComponent
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={(date) => {
+                        if (date) {
+                          setSelectedDate(date);
+                          setBookingDialogOpen(true);
+                        }
+                      }}
+                      month={currentMonth}
+                      onMonthChange={setCurrentMonth}
+                      modifiers={modifiers}
+                      modifiersStyles={modifiersStyles}
+                      disabled={(date) => date < new Date()}
+                      className="rounded-lg border p-3"
+                      data-testid="calendar-vendor-availability"
+                    />
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="p-4 rounded-lg border space-y-3">
+                      <h4 className="font-semibold text-sm">Legend</h4>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 rounded" style={{ backgroundColor: 'hsl(var(--success) / 0.2)' }}></div>
+                          <span className="text-sm">Available</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 rounded" style={{ backgroundColor: 'hsl(var(--warning) / 0.2)' }}></div>
+                          <span className="text-sm">Partially Available</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 rounded" style={{ backgroundColor: 'hsl(var(--destructive) / 0.2)' }}></div>
+                          <span className="text-sm">Fully Booked</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-lg border bg-muted/30 space-y-2">
+                      <h4 className="font-semibold text-sm flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4" />
+                        Booking Information
+                      </h4>
+                      <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                        <li>Click any date to view time slots</li>
+                        <li>Select your preferred time slot</li>
+                        <li>Link the booking to your event</li>
+                        <li>Instant conflict detection</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
 
           <Separator />
 
@@ -641,6 +877,88 @@ export function VendorDetailModal({
             )}
           </div>
         </div>
+
+        {/* Booking Dialog */}
+        <Dialog open={bookingDialogOpen} onOpenChange={setBookingDialogOpen}>
+          <DialogContent data-testid="dialog-booking">
+            <DialogHeader>
+              <DialogTitle>Book {vendor.name}</DialogTitle>
+              <DialogDescription>
+                Confirm your booking for {selectedDate && format(selectedDate, 'MMMM d, yyyy')}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              {checkConflictsMutation.data && (
+                <div className={`p-4 rounded-lg flex items-center gap-2 ${
+                  checkConflictsMutation.data.hasConflicts 
+                    ? 'bg-destructive/10 text-destructive' 
+                    : 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200'
+                }`}>
+                  {checkConflictsMutation.data.hasConflicts ? (
+                    <>
+                      <XCircle className="h-5 w-5" />
+                      <span className="text-sm font-medium">This time slot is unavailable</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="h-5 w-5" />
+                      <span className="text-sm font-medium">This time slot is available!</span>
+                    </>
+                  )}
+                </div>
+              )}
+
+              <div>
+                <label className="text-sm font-medium mb-2 block">Time Slot</label>
+                <Select value={selectedTimeSlot} onValueChange={(v: any) => setSelectedTimeSlot(v)}>
+                  <SelectTrigger data-testid="select-timeslot">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="morning">Morning (8am - 12pm)</SelectItem>
+                    <SelectItem value="afternoon">Afternoon (12pm - 5pm)</SelectItem>
+                    <SelectItem value="evening">Evening (5pm - 11pm)</SelectItem>
+                    <SelectItem value="full_day">Full Day</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-2 block">Link to Event (Optional)</label>
+                <Select value={selectedEventForBooking} onValueChange={setSelectedEventForBooking}>
+                  <SelectTrigger data-testid="select-booking-event">
+                    <SelectValue placeholder="Select an event" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {events.map((event) => (
+                      <SelectItem key={event.id} value={event.id}>
+                        {event.name} {event.date && `- ${new Date(event.date).toLocaleDateString()}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setBookingDialogOpen(false)}
+                data-testid="button-cancel-booking"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleBookVendor}
+                disabled={createBookingMutation.isPending}
+                data-testid="button-confirm-booking"
+              >
+                {createBookingMutation.isPending ? 'Booking...' : 'Confirm Booking'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </DialogContent>
     </Dialog>
   );
