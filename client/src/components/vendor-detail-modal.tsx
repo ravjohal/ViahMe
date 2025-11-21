@@ -329,8 +329,9 @@ export function VendorDetailModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+    <>
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" data-testid="dialog-vendor-detail">
         <DialogHeader>
           <DialogTitle className="font-display text-2xl">
             {vendor.name}
@@ -961,5 +962,6 @@ export function VendorDetailModal({
         </Dialog>
       </DialogContent>
     </Dialog>
+    </>
   );
 }
