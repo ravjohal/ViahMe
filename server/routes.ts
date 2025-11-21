@@ -1947,8 +1947,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/orders", async (req, res) => {
     try {
-      const order = await storage.createOrder(req.body);
-      res.status(201).json(order);
+      const { weddingId, userId, cartItems, shippingInfo } = req.body;
+      
+      // Validate required fields
+      if (!cartItems || !Array.isArray(cartItems) || cartItems.length === 0) {
+        return res.status(400).json({ error: "Cart items are required" });
+      }
+      
+      if (!shippingInfo || !shippingInfo.name || !shippingInfo.email || !shippingInfo.address) {
+        return res.status(400).json({ error: "Complete shipping information is required" });
+      }
+      
+      // Validate cart items and calculate server-side total
+      let totalAmount = 0;
+      const validatedItems = [];
+      
+      for (const item of cartItems) {
+        const card = await storage.getInvitationCard(item.cardId);
+        if (!card) {
+          return res.status(400).json({ error: `Invalid card ID: ${item.cardId}` });
+        }
+        
+        if (!item.quantity || item.quantity < 1) {
+          return res.status(400).json({ error: "Invalid quantity" });
+        }
+        
+        const price = parseFloat(card.price);
+        const subtotal = price * item.quantity;
+        totalAmount += subtotal;
+        
+        validatedItems.push({
+          cardId: card.id,
+          quantity: item.quantity,
+          pricePerItem: price.toFixed(2),
+          subtotal: subtotal.toFixed(2),
+        });
+      }
+      
+      // Create order with server-calculated total
+      const order = await storage.createOrder({
+        weddingId: weddingId || '',
+        userId: userId || '',
+        totalAmount: totalAmount.toFixed(2),
+        shippingName: shippingInfo.name,
+        shippingEmail: shippingInfo.email,
+        shippingPhone: shippingInfo.phone || '',
+        shippingAddress: shippingInfo.address,
+        shippingCity: shippingInfo.city,
+        shippingState: shippingInfo.state,
+        shippingZip: shippingInfo.zip,
+        shippingCountry: shippingInfo.country || 'USA',
+      });
+      
+      // Create order items server-side using validated data - never trust client
+      for (const item of validatedItems) {
+        await storage.createOrderItem({
+          orderId: order.id,
+          cardId: item.cardId,
+          quantity: item.quantity,
+          pricePerItem: item.pricePerItem,
+          subtotal: item.subtotal,
+        });
+      }
+      
+      res.status(201).json({ order });
     } catch (error) {
       console.error("Error creating order:", error);
       res.status(500).json({ error: "Failed to create order" });
@@ -1988,13 +2050,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Order items are created server-side in POST /api/orders - no separate endpoint needed
+
   // ============================================================================
   // Stripe Payment Integration - Referenced from blueprint:javascript_stripe
   // ============================================================================
 
   app.post("/api/create-payment-intent", async (req, res) => {
     try {
-      const { amount, orderId } = req.body;
+      const { orderId } = req.body;
+      
+      if (!orderId) {
+        return res.status(400).json({ error: "Order ID is required" });
+      }
+      
+      // Load order from database to get server-calculated total
+      const order = await storage.getOrder(orderId);
+      if (!order) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+      
+      // Validate total amount can be parsed
+      const totalAmount = parseFloat(order.totalAmount);
+      if (isNaN(totalAmount) || totalAmount <= 0) {
+        return res.status(400).json({ error: "Invalid order total amount" });
+      }
       
       if (!process.env.STRIPE_SECRET_KEY) {
         throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
@@ -2005,27 +2085,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
         apiVersion: "2025-11-17.clover",
       });
       
+      // Use server-calculated total from order - never trust client
+      const amountInCents = Math.round(totalAmount * 100);
+      
       const paymentIntent = await stripe.paymentIntents.create({
-        amount: Math.round(amount * 100), // Convert to cents
+        amount: amountInCents,
         currency: "usd",
         metadata: {
-          orderId: orderId || '',
+          orderId: order.id,
         },
       });
       
       // Update order with payment intent ID
-      if (orderId) {
-        await storage.updateOrderPaymentInfo(
-          orderId,
-          paymentIntent.id,
-          'pending'
-        );
-      }
+      await storage.updateOrderPaymentInfo(
+        orderId,
+        paymentIntent.id,
+        'pending'
+      );
       
       res.json({ clientSecret: paymentIntent.client_secret });
     } catch (error: any) {
       console.error("Error creating payment intent:", error);
       res.status(500).json({ message: "Error creating payment intent: " + error.message });
+    }
+  });
+
+  // Stripe webhook handler for payment confirmation
+  // Note: In production, this should use express.raw() middleware and verify webhook signatures
+  app.post("/api/stripe-webhook", async (req, res) => {
+    try {
+      const Stripe = (await import('stripe')).default;
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+        apiVersion: "2025-11-17.clover",
+      });
+      
+      // For production, implement proper webhook signature verification
+      // For now, we'll handle the event payload directly
+      const event = req.body;
+      
+      // Handle payment intent succeeded
+      if (event.type === 'payment_intent.succeeded') {
+        const paymentIntent = event.data.object;
+        const orderId = paymentIntent.metadata?.orderId;
+        
+        if (orderId) {
+          // Load order to verify payment amount matches
+          const order = await storage.getOrder(orderId);
+          if (!order) {
+            console.error(`Order ${orderId} not found for payment verification`);
+            return res.status(404).json({ error: 'Order not found' });
+          }
+          
+          // Convert order total to cents for comparison
+          const expectedAmountInCents = Math.round(parseFloat(order.totalAmount) * 100);
+          
+          // Verify payment amount matches order total
+          if (paymentIntent.amount !== expectedAmountInCents) {
+            console.error(
+              `SECURITY ALERT: Payment amount mismatch for order ${orderId}: ` +
+              `expected ${expectedAmountInCents}, got ${paymentIntent.amount}`
+            );
+            
+            // Mark order as failed to prevent fulfillment
+            await storage.updateOrderPaymentInfo(
+              orderId,
+              paymentIntent.id,
+              'failed'
+            );
+            
+            // TODO: In production, trigger alerts/notifications to operations team
+            return res.status(400).json({ 
+              error: 'Payment amount mismatch detected - order marked as failed' 
+            });
+          }
+          
+          // Amount verified - mark order as paid
+          await storage.updateOrderPaymentInfo(
+            orderId,
+            paymentIntent.id,
+            'paid'
+          );
+          console.log(`Order ${orderId} marked as paid (verified ${paymentIntent.amount} cents)`);
+        }
+      }
+      
+      res.json({ received: true });
+    } catch (error) {
+      console.error('Webhook error:', error);
+      res.status(500).json({ error: 'Webhook handler failed' });
     }
   });
 

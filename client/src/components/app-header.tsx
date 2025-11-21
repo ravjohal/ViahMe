@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Bell, Calendar, Home, Users, CheckSquare, Clock, DollarSign, FileText, MessageSquare, Music, Image, CalendarClock, UserCircle, Menu, LogOut, Settings } from "lucide-react";
+import { Bell, Calendar, Home, Users, CheckSquare, Clock, DollarSign, FileText, MessageSquare, Music, Image, CalendarClock, UserCircle, Menu, LogOut, Settings, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -25,6 +25,7 @@ const NAV_ITEMS = [
   { path: "/guests", label: "Guests", icon: Users },
   { path: "/tasks", label: "Tasks", icon: CheckSquare },
   { path: "/budget", label: "Budget", icon: DollarSign },
+  { path: "/invitations", label: "Invitations", icon: ShoppingBag },
   { path: "/contracts", label: "Contracts", icon: FileText },
   { path: "/messages", label: "Messages", icon: MessageSquare },
   { path: "/playlists", label: "Playlists", icon: Music },

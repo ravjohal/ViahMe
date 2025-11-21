@@ -119,66 +119,61 @@ export default function Checkout() {
     return sum + (price * item.quantity);
   }, 0);
 
+  const createOrderAndPayment = async () => {
+    // Validate shipping info
+    if (!shippingInfo.name || !shippingInfo.email || !shippingInfo.address || 
+        !shippingInfo.city || !shippingInfo.state || !shippingInfo.zip) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all shipping information before proceeding.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Prepare cart items for server validation
+      const cartItems = cart.map(item => ({
+        cardId: item.card.id,
+        quantity: item.quantity,
+      }));
+
+      // Create order with server-side price validation
+      const orderResponse = await apiRequest("POST", "/api/orders", {
+        weddingId: user?.id || '',
+        userId: user?.id || '',
+        cartItems,
+        shippingInfo,
+      });
+
+      const { order } = await orderResponse.json();
+      setOrderId(order.id);
+
+      // Order items are created server-side - no client action needed
+
+      // Create Stripe Payment Intent - server will use order total
+      const paymentResponse = await apiRequest("POST", "/api/create-payment-intent", {
+        orderId: order.id,
+      });
+
+      const paymentData = await paymentResponse.json();
+      setClientSecret(paymentData.clientSecret);
+    } catch (error: any) {
+      console.error("Error creating order:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create order. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     // Redirect if cart is empty
     if (cart.length === 0) {
       navigate("/invitations");
-      return;
     }
-
-    // Create order and payment intent when component mounts
-    const createOrderAndPayment = async () => {
-      try {
-        // First create the order
-        const orderResponse = await apiRequest("POST", "/api/orders", {
-          weddingId: user?.id || '', // Will need to get actual wedding ID
-          userId: user?.id || '',
-          totalAmount: totalAmount.toFixed(2),
-          shippingName: shippingInfo.name || 'TBD',
-          shippingEmail: shippingInfo.email,
-          shippingPhone: shippingInfo.phone || 'TBD',
-          shippingAddress: shippingInfo.address || 'TBD',
-          shippingCity: shippingInfo.city || 'TBD',
-          shippingState: shippingInfo.state || 'TBD',
-          shippingZip: shippingInfo.zip || 'TBD',
-          shippingCountry: shippingInfo.country,
-        });
-
-        const orderData = await orderResponse.json();
-        setOrderId(orderData.id);
-
-        // Create order items
-        for (const item of cart) {
-          const price = parseFloat(item.card.price);
-          await apiRequest("POST", `/api/orders/${orderData.id}/items`, {
-            orderId: orderData.id,
-            cardId: item.card.id,
-            quantity: item.quantity,
-            pricePerItem: price.toFixed(2),
-            subtotal: (price * item.quantity).toFixed(2),
-          });
-        }
-
-        // Create Stripe Payment Intent
-        const paymentResponse = await apiRequest("POST", "/api/create-payment-intent", {
-          amount: totalAmount,
-          orderId: orderData.id,
-        });
-
-        const paymentData = await paymentResponse.json();
-        setClientSecret(paymentData.clientSecret);
-      } catch (error) {
-        console.error("Error creating order:", error);
-        toast({
-          title: "Error",
-          description: "Failed to create order. Please try again.",
-          variant: "destructive",
-        });
-      }
-    };
-
-    createOrderAndPayment();
-  }, []); // Run once on mount
+  }, [cart, navigate]);
 
   const handleSuccess = () => {
     navigate("/order-confirmation");
@@ -305,9 +300,17 @@ export default function Checkout() {
         <CardContent>
           {!clientSecret ? (
             <div className="space-y-4">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
+              <p className="text-sm text-muted-foreground">
+                Please fill in your shipping information above, then continue to payment.
+              </p>
+              <Button
+                onClick={createOrderAndPayment}
+                className="w-full"
+                size="lg"
+                data-testid="button-continue-to-payment"
+              >
+                Continue to Payment
+              </Button>
             </div>
           ) : (
             <Elements stripe={stripePromise} options={{ clientSecret }}>

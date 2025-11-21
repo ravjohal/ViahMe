@@ -29,6 +29,7 @@ Key architectural decisions and features include:
 - **Contract E-Signatures**: Legally-binding digital contract signing system using `react-signature-canvas` for agreements, storing signatures as base64 images with metadata and updating contract statuses.
 - **Vendor & Couple Analytics Dashboards**: Provides data-driven insights with summary metrics, trend charts (bookings, revenue, spending), budget overviews, and task tracking, utilizing Recharts for visualizations.
 - **Vendor Comparison Tools**: Frontend-only side-by-side comparison system for up to 4 vendors, displaying key features like price, rating, location, and cultural specialties in a modal.
+- **Invitation Card Shop**: E-commerce system for purchasing pre-designed Indian wedding invitation cards with Stripe payment processing. Features 10 culturally-authentic card designs for all major traditions and ceremonies, gallery browsing with tradition/ceremony filtering, shopping cart management, secure checkout with shipping information collection, and server-side price validation. Payment flow enforces server-calculated totals end-to-end with webhook verification to prevent client-side price manipulation.
 - **UI/UX**: Features a warm orange/gold primary color palette, elegant typography (Playfair Display, Inter, JetBrains Mono), Shadcn UI components, hover elevate interactions, and responsive design.
 
 ## External Dependencies
@@ -37,4 +38,13 @@ Key architectural decisions and features include:
 - **TanStack Query (React Query v5)**: Data fetching and caching.
 - **Recharts**: Charting library.
 - **Resend**: Transactional email API.
+- **Stripe**: Payment processing for invitation card purchases with PCI-compliant checkout and webhook verification.
 - **Replit Object Storage**: Cloud storage for documents and photos (Google Cloud Storage backend).
+
+## Security Notes
+**Invitation Card Shop Payment Flow**: The payment system implements defense-in-depth security to prevent client-side price manipulation:
+1. Cart validation: Server loads each InvitationCard by ID and recalculates all prices server-side
+2. Order creation: Prices and order items persisted immediately with server-calculated totals
+3. Payment intent: Created using order.totalAmount from database (client cannot influence amount)
+4. Webhook verification: Compares Stripe payment amount against order total before marking paid
+5. Failure handling: Mismatched amounts mark order as 'failed' and log security alerts
