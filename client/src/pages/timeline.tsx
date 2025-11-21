@@ -187,31 +187,36 @@ export default function TimelinePage() {
         </p>
       </div>
 
-      <div className="mb-6 flex justify-between items-center">
+      <div className="mb-6">
         <div className="flex items-center gap-4">
           <div className="text-sm text-muted-foreground">
             <span className="font-semibold text-foreground">{events.length}</span> events planned
           </div>
         </div>
+      </div>
 
-        <Dialog open={dialogOpen} onOpenChange={(open) => {
-          setDialogOpen(open);
-          if (!open) {
-            setEditingEvent(null);
-            form.reset({
-              weddingId: wedding?.id || "",
-              name: "",
-              type: "custom",
-              order: events.length + 1,
-            });
-          }
-        }}>
-          <DialogTrigger asChild>
-            <Button data-testid="button-add-event" className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white shadow-lg">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Event
-            </Button>
-          </DialogTrigger>
+      {/* Floating Add Event Button */}
+      <Dialog open={dialogOpen} onOpenChange={(open) => {
+        setDialogOpen(open);
+        if (!open) {
+          setEditingEvent(null);
+          form.reset({
+            weddingId: wedding?.id || "",
+            name: "",
+            type: "custom",
+            order: events.length + 1,
+          });
+        }
+      }}>
+        <DialogTrigger asChild>
+          <Button 
+            data-testid="button-add-event" 
+            className="fixed bottom-8 right-8 h-14 w-14 rounded-full bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white shadow-2xl z-50 p-0"
+            size="icon"
+          >
+            <Plus className="w-6 h-6" />
+          </Button>
+        </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingEvent ? "Edit Event" : "Create New Event"}</DialogTitle>
@@ -395,7 +400,6 @@ export default function TimelinePage() {
             </Form>
           </DialogContent>
         </Dialog>
-      </div>
 
       <div className="space-y-4">
         {eventsLoading ? (
