@@ -121,6 +121,7 @@ export const insertEventSchema = createInsertSchema(events).omit({
     // Generic
     'custom'
   ]),
+  date: z.string().optional().transform(val => val ? new Date(val) : undefined),
 });
 
 export type InsertEvent = z.infer<typeof insertEventSchema>;

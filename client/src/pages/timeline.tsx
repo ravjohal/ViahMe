@@ -144,8 +144,8 @@ export default function TimelinePage() {
     form.reset({
       weddingId: event.weddingId,
       name: event.name,
-      type: event.type,
-      date: event.date ? format(new Date(event.date), "yyyy-MM-dd") : "",
+      type: event.type as InsertEvent['type'],
+      date: event.date ? format(new Date(event.date), "yyyy-MM-dd") : "" as any,
       time: event.time || "",
       location: event.location || "",
       guestCount: event.guestCount || undefined,
@@ -275,7 +275,7 @@ export default function TimelinePage() {
                         <FormControl>
                           <Input
                             {...field}
-                            value={field.value || ""}
+                            value={typeof field.value === 'string' ? field.value : ''}
                             type="date"
                             data-testid="input-event-date"
                           />
