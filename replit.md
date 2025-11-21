@@ -74,6 +74,16 @@ Key architectural decisions include:
     - Implemented proper async cache invalidation with `await queryClient.invalidateQueries()`
     - Added auth guards with loading state checks to prevent infinite redirect loops
   - **Testing**: Complete E2E test coverage for both personas with all auth flows verified and passing
+- **Contract E-Signatures**: Legally-binding digital contract signing system for vendor agreements:
+  - **Signature Canvas**: Interactive signature pad using react-signature-canvas with mouse/touch support, clear functionality, and real-time validation
+  - **Signature Storage**: Captures signatures as base64 PNG images with metadata (timestamp, IP address, user agent) for legal validity
+  - **Authorization & Security**: Role-based access control ensures only authorized couples/vendors can sign their contracts; strict validation prevents empty signatures and cross-role spoofing
+  - **Contract Status Workflow**: Automatic status updates from draft/sent → signed when e-signature is completed
+  - **Signature Verification**: GET endpoint to retrieve all signatures for a contract with signer details and timestamps
+  - **Database Schema**: `contract_signatures` table with contractId, signerId, signerName, signerEmail, signerRole ('couple'|'vendor'), signatureData (base64), signedAt, ipAddress, userAgent
+  - **UI Integration**: Sign button appears on draft/sent contracts in Contracts page; modal dialog with pre-filled couple info and signature canvas; instant UI updates via TanStack Query cache invalidation
+  - **Duplicate Prevention**: Backend validates that users haven't already signed a contract before accepting new signatures
+  - **Testing**: Comprehensive E2E test coverage including positive flow (successful signing), negative flow (empty signature rejection), and authorization checks
 - **UI/UX**: Features a warm orange/gold primary color palette, elegant typography (Playfair Display for headings, Inter for body, JetBrains Mono for data), Shadcn UI components for consistency, hover elevate interactions, responsive design, and cultural icons for event types.
 
 ## External Dependencies
