@@ -77,15 +77,16 @@ export function VendorDetailModal({
     },
   });
 
+  // Fetch reviews for this vendor - MUST be called before any early returns
+  const { data: reviews = [] } = useQuery<Review[]>({
+    queryKey: ["/api/reviews/vendor", vendor?.id],
+    enabled: !!vendor?.id && open,
+  });
+
+  // Early return AFTER all hooks are called
   if (!vendor) return null;
 
   const rating = vendor.rating ? parseFloat(vendor.rating.toString()) : 0;
-
-  // Fetch reviews for this vendor
-  const { data: reviews = [] } = useQuery<Review[]>({
-    queryKey: ["/api/reviews/vendor", vendor.id],
-    enabled: !!vendor.id && open,
-  });
 
   // Add review mutation
   const addReviewMutation = useMutation({
