@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Filter, SlidersHorizontal } from "lucide-react";
+import { Search, Filter, SlidersHorizontal, GitCompare, X } from "lucide-react";
 import type { Vendor } from "@shared/schema";
 import { VendorCard } from "./vendor-card";
 
@@ -18,6 +18,9 @@ interface VendorDirectoryProps {
   vendors: Vendor[];
   onSelectVendor?: (vendor: Vendor) => void;
   tradition?: string;
+  onAddToComparison?: (vendor: Vendor) => void;
+  comparisonVendors?: Vendor[];
+  onOpenComparison?: () => void;
 }
 
 const VENDOR_CATEGORIES = [
@@ -67,7 +70,14 @@ const CITIES = [
   { value: "Seattle", label: "Seattle" },
 ];
 
-export function VendorDirectory({ vendors, onSelectVendor, tradition }: VendorDirectoryProps) {
+export function VendorDirectory({
+  vendors,
+  onSelectVendor,
+  tradition,
+  onAddToComparison,
+  comparisonVendors = [],
+  onOpenComparison,
+}: VendorDirectoryProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [priceFilter, setPriceFilter] = useState("all");
@@ -249,6 +259,8 @@ export function VendorDirectory({ vendors, onSelectVendor, tradition }: VendorDi
                 vendor={vendor}
                 onSelect={onSelectVendor}
                 featured
+                onAddToComparison={onAddToComparison}
+                isInComparison={comparisonVendors.some(v => v.id === vendor.id)}
               />
             ))}
           </div>
@@ -287,11 +299,48 @@ export function VendorDirectory({ vendors, onSelectVendor, tradition }: VendorDi
                 key={vendor.id}
                 vendor={vendor}
                 onSelect={onSelectVendor}
+                onAddToComparison={onAddToComparison}
+                isInComparison={comparisonVendors.some(v => v.id === vendor.id)}
               />
             ))}
           </div>
         )}
       </div>
+
+      {comparisonVendors.length > 0 && (
+        <Card className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 shadow-lg border-2 border-primary/20">
+          <div className="p-4">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <GitCompare className="w-5 h-5 text-primary" />
+                <span className="font-semibold">
+                  {comparisonVendors.length} vendor{comparisonVendors.length > 1 ? 's' : ''} selected
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {comparisonVendors.map((vendor) => (
+                  <Badge key={vendor.id} variant="secondary" className="text-xs">
+                    {vendor.name}
+                    <X
+                      className="w-3 h-3 ml-1 cursor-pointer"
+                      onClick={() => onAddToComparison?.(vendor)}
+                    />
+                  </Badge>
+                ))}
+              </div>
+
+              <Button
+                onClick={onOpenComparison}
+                disabled={comparisonVendors.length < 2}
+                data-testid="button-open-comparison"
+              >
+                Compare {comparisonVendors.length > 1 ? `(${comparisonVendors.length})` : ''}
+              </Button>
+            </div>
+          </div>
+        </Card>
+      )}
     </div>
   );
 }

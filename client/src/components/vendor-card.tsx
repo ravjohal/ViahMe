@@ -1,13 +1,15 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, MapPin, DollarSign } from "lucide-react";
+import { Star, MapPin, DollarSign, GitCompare, Check } from "lucide-react";
 import type { Vendor } from "@shared/schema";
 
 interface VendorCardProps {
   vendor: Vendor;
   onSelect?: (vendor: Vendor) => void;
   featured?: boolean;
+  onAddToComparison?: (vendor: Vendor) => void;
+  isInComparison?: boolean;
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -38,7 +40,13 @@ const CATEGORY_LABELS: Record<string, string> = {
   garland_maker: "Garland Maker",
 };
 
-export function VendorCard({ vendor, onSelect, featured }: VendorCardProps) {
+export function VendorCard({
+  vendor,
+  onSelect,
+  featured,
+  onAddToComparison,
+  isInComparison,
+}: VendorCardProps) {
   const rating = vendor.rating ? parseFloat(vendor.rating.toString()) : 0;
   const reviewCount = vendor.reviewCount || 0;
 
@@ -110,16 +118,42 @@ export function VendorCard({ vendor, onSelect, featured }: VendorCardProps) {
           </div>
         )}
 
-        <Button
-          className="w-full"
-          onClick={(e) => {
-            e.stopPropagation();
-            onSelect?.(vendor);
-          }}
-          data-testid={`button-book-vendor-${vendor.id}`}
-        >
-          View Details & Book
-        </Button>
+        <div className="space-y-2">
+          <Button
+            className="w-full"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect?.(vendor);
+            }}
+            data-testid={`button-book-vendor-${vendor.id}`}
+          >
+            View Details & Book
+          </Button>
+
+          {onAddToComparison && (
+            <Button
+              variant={isInComparison ? "secondary" : "outline"}
+              className="w-full"
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddToComparison(vendor);
+              }}
+              data-testid={`button-add-compare-${vendor.id}`}
+            >
+              {isInComparison ? (
+                <>
+                  <Check className="w-4 h-4 mr-2" />
+                  Added to Compare
+                </>
+              ) : (
+                <>
+                  <GitCompare className="w-4 h-4 mr-2" />
+                  Add to Compare
+                </>
+              )}
+            </Button>
+          )}
+        </div>
       </div>
     </Card>
   );

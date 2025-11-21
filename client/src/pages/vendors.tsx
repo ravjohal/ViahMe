@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { VendorDirectory } from "@/components/vendor-directory";
 import { VendorDetailModal } from "@/components/vendor-detail-modal";
+import { VendorComparisonModal } from "@/components/vendor-comparison-modal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -12,6 +13,8 @@ export default function Vendors() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
+  const [comparisonVendors, setComparisonVendors] = useState<Vendor[]>([]);
+  const [showComparison, setShowComparison] = useState(false);
 
   const { data: weddings, isLoading: weddingsLoading } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
@@ -67,6 +70,39 @@ export default function Vendors() {
     }
   }, [weddingsLoading, wedding, setLocation]);
 
+  const handleAddToComparison = (vendor: Vendor) => {
+    if (comparisonVendors.find(v => v.id === vendor.id)) {
+      setComparisonVendors(comparisonVendors.filter(v => v.id !== vendor.id));
+      toast({
+        title: "Removed from comparison",
+        description: `${vendor.name} has been removed from your comparison list.`,
+      });
+    } else {
+      if (comparisonVendors.length >= 4) {
+        toast({
+          title: "Maximum reached",
+          description: "You can compare up to 4 vendors at a time.",
+          variant: "destructive",
+        });
+        return;
+      }
+      setComparisonVendors([...comparisonVendors, vendor]);
+      toast({
+        title: "Added to comparison",
+        description: `${vendor.name} has been added to your comparison list.`,
+      });
+    }
+  };
+
+  const handleRemoveFromComparison = (vendorId: string) => {
+    setComparisonVendors(comparisonVendors.filter(v => v.id !== vendorId));
+  };
+
+  const handleClearComparison = () => {
+    setComparisonVendors([]);
+    setShowComparison(false);
+  };
+
   if (weddingsLoading || vendorsLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -91,6 +127,9 @@ export default function Vendors() {
           vendors={vendors}
           onSelectVendor={setSelectedVendor}
           tradition={wedding.tradition}
+          onAddToComparison={handleAddToComparison}
+          comparisonVendors={comparisonVendors}
+          onOpenComparison={() => setShowComparison(true)}
         />
       </main>
 
@@ -102,6 +141,14 @@ export default function Vendors() {
         onBookRequest={(vendorId, eventId, notes, estimatedCost) => {
           bookingMutation.mutate({ vendorId, eventId, notes, estimatedCost });
         }}
+      />
+
+      <VendorComparisonModal
+        vendors={comparisonVendors}
+        open={showComparison}
+        onClose={() => setShowComparison(false)}
+        onRemoveVendor={handleRemoveFromComparison}
+        onClearAll={handleClearComparison}
       />
     </div>
   );
