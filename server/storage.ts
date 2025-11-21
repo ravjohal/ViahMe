@@ -60,6 +60,7 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, user: Partial<User>): Promise<User | undefined>;
+  deleteUser(id: string): Promise<boolean>;
   updateUserPassword(id: string, passwordHash: string): Promise<boolean>;
   setVerificationToken(id: string, token: string, expires: Date): Promise<boolean>;
   setResetToken(id: string, token: string, expires: Date): Promise<boolean>;
@@ -1198,6 +1199,90 @@ export class DBStorage implements IStorage {
   async updateUser(id: string, update: Partial<User>): Promise<User | undefined> {
     const result = await this.db.update(schema.users).set(update).where(eq(schema.users.id, id)).returning();
     return result[0];
+  }
+
+  async deleteUser(id: string): Promise<boolean> {
+    try {
+      // Get all weddings for this user
+      const weddings = await this.getWeddingsByUser(id);
+      
+      // Delete all wedding-related data
+      for (const wedding of weddings) {
+        // Delete events
+        await this.db.delete(schema.events).where(eq(schema.events.weddingId, wedding.id));
+        
+        // Delete guests
+        await this.db.delete(schema.guests).where(eq(schema.guests.weddingId, wedding.id));
+        
+        // Delete tasks
+        await this.db.delete(schema.tasks).where(eq(schema.tasks.weddingId, wedding.id));
+        
+        // Delete budget categories
+        await this.db.delete(schema.budgetCategories).where(eq(schema.budgetCategories.weddingId, wedding.id));
+        
+        // Delete bookings
+        await this.db.delete(schema.bookings).where(eq(schema.bookings.weddingId, wedding.id));
+        
+        // Delete contracts
+        await this.db.delete(schema.contracts).where(eq(schema.contracts.weddingId, wedding.id));
+        
+        // Delete messages
+        const conversationIds = await this.getConversationsByWedding(wedding.id);
+        for (const convId of conversationIds) {
+          await this.db.delete(schema.messages).where(eq(schema.messages.conversationId, convId));
+        }
+        
+        // Delete reviews
+        await this.db.delete(schema.reviews).where(eq(schema.reviews.weddingId, wedding.id));
+        
+        // Delete playlists and songs
+        const playlists = await this.getPlaylistsByWedding(wedding.id);
+        for (const playlist of playlists) {
+          const songs = await this.getSongsByPlaylist(playlist.id);
+          for (const song of songs) {
+            await this.db.delete(schema.songVotes).where(eq(schema.songVotes.songId, song.id));
+          }
+          await this.db.delete(schema.playlistSongs).where(eq(schema.playlistSongs.playlistId, playlist.id));
+        }
+        await this.db.delete(schema.playlists).where(eq(schema.playlists.weddingId, wedding.id));
+        
+        // Delete documents
+        await this.db.delete(schema.documents).where(eq(schema.documents.weddingId, wedding.id));
+        
+        // Delete photo galleries and photos
+        const galleries = await this.db.select().from(schema.photoGalleries).where(eq(schema.photoGalleries.weddingId, wedding.id));
+        for (const gallery of galleries) {
+          await this.db.delete(schema.photos).where(eq(schema.photos.galleryId, gallery.id));
+        }
+        await this.db.delete(schema.photoGalleries).where(eq(schema.photoGalleries.weddingId, wedding.id));
+        
+        // Delete wedding website
+        await this.db.delete(schema.weddingWebsites).where(eq(schema.weddingWebsites.weddingId, wedding.id));
+        
+        // Delete wedding itself
+        await this.db.delete(schema.weddings).where(eq(schema.weddings.id, wedding.id));
+      }
+      
+      // For vendors: delete vendor profile if they have one
+      const vendor = await this.db.select().from(schema.vendors).where(eq(schema.vendors.userId, id)).limit(1);
+      if (vendor.length > 0) {
+        const vendorId = vendor[0].id;
+        
+        // Delete vendor availability
+        await this.db.delete(schema.vendorAvailability).where(eq(schema.vendorAvailability.vendorId, vendorId));
+        
+        // Delete vendor
+        await this.db.delete(schema.vendors).where(eq(schema.vendors.id, vendorId));
+      }
+      
+      // Finally, delete the user
+      await this.db.delete(schema.users).where(eq(schema.users.id, id));
+      
+      return true;
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      return false;
+    }
   }
 
   async updateUserPassword(id: string, passwordHash: string): Promise<boolean> {

@@ -184,6 +184,28 @@ export function registerAuthRoutes(app: Express, storage: IStorage) {
     }
   });
 
+  // DELETE /api/auth/account - Delete user account and all associated data
+  app.delete("/api/auth/account", requireAuth, async (req: AuthRequest, res: Response) => {
+    try {
+      const userId = req.session.userId!;
+
+      // Delete user and all cascade-related data
+      await storage.deleteUser(userId);
+
+      // Destroy session
+      req.session.destroy((err) => {
+        if (err) {
+          console.error("Session destruction error:", err);
+        }
+      });
+
+      res.json({ message: "Account deleted successfully" });
+    } catch (error) {
+      console.error("Account deletion error:", error);
+      res.status(500).json({ error: "Failed to delete account" });
+    }
+  });
+
   // POST /api/auth/verify-email
   app.post("/api/auth/verify-email", async (req: Request, res: Response) => {
     try {

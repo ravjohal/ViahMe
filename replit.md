@@ -63,6 +63,7 @@ Key architectural decisions include:
   - **Session Management**: Express-session with PostgreSQL store (connect-pg-simple), secure HTTP-only cookies, automatic session refresh
   - **Auth Guards**: Protected routes with role-based access control, infinite loop prevention (isLoading checks), graceful redirects for unauthorized access
   - **Email Verification**: Optional email verification system with verification tokens and expiry timestamps (vendors can create profiles before verification for improved UX)
+  - **Account Deletion**: Secure account deletion with confirmation dialog that permanently removes user and all associated data (weddings, events, guests, bookings, contracts, vendors, photos, documents, etc.)
   - **Type Safety**: User.id correctly typed as string (UUID), auth response format `{ user: User | null }`, proper null handling throughout
   - **Cache Management**: TanStack Query v5 with async invalidation, proper refetching after mutations, auth state synchronization
   - **Critical Fixes Applied**:

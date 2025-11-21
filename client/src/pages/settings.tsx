@@ -5,8 +5,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Settings as SettingsIcon, User, Lock, Bell, LogOut } from "lucide-react";
+import { Settings as SettingsIcon, User, Lock, Bell, LogOut, Trash2 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 
@@ -18,6 +29,7 @@ export default function Settings() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,6 +81,29 @@ export default function Settings() {
   const handleLogout = async () => {
     await logout();
     setLocation("/login");
+  };
+
+  const handleDeleteAccount = async () => {
+    setIsDeletingAccount(true);
+    try {
+      await apiRequest("DELETE", "/api/auth/account");
+      
+      toast({
+        title: "Account Deleted",
+        description: "Your account and all associated data have been permanently deleted.",
+      });
+
+      // Log out and redirect to landing page
+      await logout();
+      setLocation("/");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete account",
+        variant: "destructive",
+      });
+      setIsDeletingAccount(false);
+    }
   };
 
   if (!user) {
@@ -200,23 +235,78 @@ export default function Settings() {
           <Card className="p-6 border-destructive/50">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 rounded-lg bg-destructive/10">
-                <LogOut className="w-5 h-5 text-destructive" />
+                <Trash2 className="w-5 h-5 text-destructive" />
               </div>
               <h2 className="text-xl font-semibold text-destructive">Danger Zone</h2>
             </div>
             <Separator className="mb-4" />
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Once you log out, you'll need to sign in again to access your account.
-              </p>
-              <Button
-                variant="destructive"
-                onClick={handleLogout}
-                data-testid="button-logout"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Log Out
-              </Button>
+            <div className="space-y-6">
+              {/* Logout */}
+              <div>
+                <h3 className="font-semibold mb-2">Log Out</h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Once you log out, you'll need to sign in again to access your account.
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={handleLogout}
+                  data-testid="button-logout"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Log Out
+                </Button>
+              </div>
+
+              <Separator />
+
+              {/* Delete Account */}
+              <div>
+                <h3 className="font-semibold mb-2 text-destructive">Delete Account</h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Permanently delete your account and all associated data. This action cannot be undone.
+                </p>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="destructive"
+                      disabled={isDeletingAccount}
+                      data-testid="button-delete-account"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      {isDeletingAccount ? "Deleting..." : "Delete Account"}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete your account
+                        and remove all your data from our servers, including:
+                        <ul className="list-disc list-inside mt-2 space-y-1">
+                          <li>Wedding details and events</li>
+                          <li>Guest lists and RSVPs</li>
+                          <li>Vendor bookings and contracts</li>
+                          <li>Budget information</li>
+                          <li>Photos and documents</li>
+                          <li>All other personal data</li>
+                        </ul>
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel data-testid="button-cancel-delete">
+                        Cancel
+                      </AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleDeleteAccount}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        data-testid="button-confirm-delete"
+                      >
+                        Yes, Delete My Account
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
             </div>
           </Card>
         </div>
