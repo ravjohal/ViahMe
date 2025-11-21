@@ -857,3 +857,98 @@ export const insertVendorInteractionEventSchema = createInsertSchema(vendorInter
 
 export type InsertVendorInteractionEvent = z.infer<typeof insertVendorInteractionEventSchema>;
 export type VendorInteractionEvent = typeof vendorInteractionEvents.$inferSelect;
+
+// ============================================================================
+// INVITATION CARDS - Pre-designed invitation card templates for purchase
+// ============================================================================
+
+export const invitationCards = pgTable("invitation_cards", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(), // e.g., "Golden Lotus Mehndi Invitation"
+  description: text("description").notNull(),
+  tradition: text("tradition").notNull(), // 'sikh' | 'hindu' | 'muslim' | 'gujarati' | 'south_indian' | 'mixed' | 'general'
+  ceremonyType: text("ceremony_type").notNull(), // e.g., 'mehndi', 'sangeet', 'pheras', etc.
+  imageUrl: text("image_url").notNull(), // Path to the card design image
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(), // Price in USD
+  featured: boolean("featured").notNull().default(false), // Show in featured section
+  inStock: boolean("in_stock").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertInvitationCardSchema = createInsertSchema(invitationCards).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  tradition: z.enum(['sikh', 'hindu', 'muslim', 'gujarati', 'south_indian', 'mixed', 'general']),
+  ceremonyType: z.string().min(1),
+  price: z.string().regex(/^\d+(\.\d{1,2})?$/, "Price must be a valid decimal"),
+});
+
+export type InsertInvitationCard = z.infer<typeof insertInvitationCardSchema>;
+export type InvitationCard = typeof invitationCards.$inferSelect;
+
+// ============================================================================
+// ORDERS - Customer orders for invitation cards
+// ============================================================================
+
+export const orders = pgTable("orders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  userId: varchar("user_id").notNull(),
+  // Stripe payment info
+  stripePaymentIntentId: text("stripe_payment_intent_id"),
+  stripePaymentStatus: text("stripe_payment_status"), // 'pending' | 'succeeded' | 'failed'
+  // Order details
+  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
+  status: text("status").notNull().default('pending'), // 'pending' | 'paid' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
+  // Shipping information
+  shippingName: text("shipping_name").notNull(),
+  shippingEmail: text("shipping_email").notNull(),
+  shippingPhone: text("shipping_phone"),
+  shippingAddress: text("shipping_address").notNull(),
+  shippingCity: text("shipping_city").notNull(),
+  shippingState: text("shipping_state").notNull(),
+  shippingZip: text("shipping_zip").notNull(),
+  shippingCountry: text("shipping_country").notNull().default('USA'),
+  // Metadata
+  orderNotes: text("order_notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertOrderSchema = createInsertSchema(orders).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  status: true,
+}).extend({
+  totalAmount: z.string().regex(/^\d+(\.\d{1,2})?$/, "Total must be a valid decimal"),
+  shippingEmail: z.string().email(),
+});
+
+export type InsertOrder = z.infer<typeof insertOrderSchema>;
+export type Order = typeof orders.$inferSelect;
+
+// ============================================================================
+// ORDER ITEMS - Individual items in an order
+// ============================================================================
+
+export const orderItems = pgTable("order_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  orderId: varchar("order_id").notNull(),
+  cardId: varchar("card_id").notNull(),
+  quantity: integer("quantity").notNull().default(1),
+  pricePerItem: decimal("price_per_item", { precision: 10, scale: 2 }).notNull(),
+  subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
+});
+
+export const insertOrderItemSchema = createInsertSchema(orderItems).omit({
+  id: true,
+}).extend({
+  quantity: z.number().min(1).default(1),
+  pricePerItem: z.string().regex(/^\d+(\.\d{1,2})?$/, "Price must be a valid decimal"),
+  subtotal: z.string().regex(/^\d+(\.\d{1,2})?$/, "Subtotal must be a valid decimal"),
+});
+
+export type InsertOrderItem = z.infer<typeof insertOrderItemSchema>;
+export type OrderItem = typeof orderItems.$inferSelect;
