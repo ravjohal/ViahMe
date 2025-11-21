@@ -85,9 +85,14 @@ export function VendorDirectory({
   const [showFilters, setShowFilters] = useState(false);
 
   const filteredVendors = vendors.filter((vendor) => {
+    // Get human-readable category label for search
+    const categoryLabel = VENDOR_CATEGORIES.find(cat => cat.value === vendor.category)?.label || vendor.category;
+    
     const matchesSearch =
       vendor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vendor.description?.toLowerCase().includes(searchTerm.toLowerCase());
+      vendor.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      categoryLabel.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      vendor.category.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesCategory = categoryFilter === "all" || vendor.category === categoryFilter;
     const matchesPrice = priceFilter === "all" || vendor.priceRange === priceFilter;
