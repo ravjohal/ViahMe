@@ -107,6 +107,13 @@ export default function Landing() {
           <div className="flex items-center gap-4">
             <Button 
               variant="ghost" 
+              onClick={() => setLocation("/vendors")}
+              data-testid="button-browse-vendors"
+            >
+              Browse Vendors
+            </Button>
+            <Button 
+              variant="ghost" 
               onClick={() => setLocation("/login")}
               data-testid="button-signin"
             >
@@ -161,10 +168,21 @@ export default function Landing() {
                 size="lg"
                 variant="outline"
                 className="text-lg px-8 h-14 border-2"
+                onClick={() => setLocation("/vendors")}
+                data-testid="button-browse-vendors-hero"
+              >
+                Browse Vendors
+              </Button>
+            </div>
+
+            <div className="pt-4">
+              <Button 
+                variant="link"
                 onClick={() => setLocation("/vendor-register")}
                 data-testid="button-vendor-signup"
+                className="text-muted-foreground"
               >
-                I'm a Vendor
+                Are you a vendor? Join our marketplace →
               </Button>
             </div>
 
