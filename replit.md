@@ -84,6 +84,16 @@ Key architectural decisions include:
   - **UI Integration**: Sign button appears on draft/sent contracts in Contracts page; modal dialog with pre-filled couple info and signature canvas; instant UI updates via TanStack Query cache invalidation
   - **Duplicate Prevention**: Backend validates that users haven't already signed a contract before accepting new signatures
   - **Testing**: Comprehensive E2E test coverage including positive flow (successful signing), negative flow (empty signature rejection), and authorization checks
+- **Vendor Comparison Tools**: Frontend-only comparison system enabling couples to evaluate vendors side-by-side before making booking decisions:
+  - **Comparison Selection**: Add up to 4 vendors to comparison from Vendors page with "Add to Compare" toggle buttons
+  - **Floating Comparison Bar**: Fixed-bottom UI element displaying selected vendors as badges with inline remove controls and vendor count indicator
+  - **Side-by-Side Comparison Modal**: Full-screen Dialog component with scrollable comparison table featuring vendor columns and feature rows
+  - **Comparison Categories**: Name, Category, Price Range, Rating (with star visualization), Location, City, Cultural Specialties (badge display), Contact info (phone/email/website with icons), and full description
+  - **Vendor Management**: Remove individual vendors from modal header, Clear All functionality to reset comparison, persistent state across modal open/close cycles
+  - **State Management**: React-only implementation (max 4 vendors enforced), uses existing vendor data from TanStack Query cache, no backend API required
+  - **Dialog Control**: Proper Dialog state management with onOpenChange prop for bidirectional state updates, accessibility compliance with DialogDescription
+  - **UX Features**: Toast notifications for add/remove/clear actions, disabled state when max vendors reached, responsive table layout with horizontal scroll
+  - **Testing**: Comprehensive E2E test coverage including vendor selection, modal interactions, removal flows, and Dialog state verification
 - **UI/UX**: Features a warm orange/gold primary color palette, elegant typography (Playfair Display for headings, Inter for body, JetBrains Mono for data), Shadcn UI components for consistency, hover elevate interactions, responsive design, and cultural icons for event types.
 
 ## External Dependencies
