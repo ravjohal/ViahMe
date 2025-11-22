@@ -93,20 +93,22 @@ export default function Landing() {
   }, [user, isAuthLoading, setLocation]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-6 h-20 flex items-center justify-between">
+      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 overflow-x-hidden">
+        <div className="container mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
           <img 
             src={logoUrl} 
             alt="Viah.me" 
-            className="h-16 object-contain cursor-pointer hover-elevate" 
+            className="h-12 sm:h-16 object-contain cursor-pointer hover-elevate shrink-0" 
             onClick={() => setLocation("/")}
             data-testid="img-logo"
           />
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <Button 
               variant="ghost" 
+              size="sm"
+              className="hidden md:flex"
               onClick={() => setLocation("/vendors")}
               data-testid="button-browse-vendors"
             >
@@ -114,17 +116,20 @@ export default function Landing() {
             </Button>
             <Button 
               variant="ghost" 
+              size="sm"
               onClick={() => setLocation("/login")}
               data-testid="button-signin"
             >
               Sign In
             </Button>
             <Button 
-              className="bg-gradient-to-r from-orange-600 to-pink-600 hover:from-orange-700 hover:to-pink-700"
+              size="sm"
+              className="bg-gradient-to-r from-orange-600 to-pink-600 hover:from-orange-700 hover:to-pink-700 text-xs sm:text-sm"
               onClick={() => setLocation("/onboarding")}
               data-testid="button-get-started-header"
             >
-              Get Started Free
+              <span className="hidden sm:inline">Get Started Free</span>
+              <span className="sm:hidden">Start Free</span>
             </Button>
           </div>
         </div>
@@ -134,40 +139,40 @@ export default function Landing() {
       <section className="relative overflow-hidden bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-orange-950/20 dark:via-pink-950/20 dark:to-purple-950/20">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(251,146,60,0.1),transparent_50%),radial-gradient(circle_at_70%_60%,rgba(236,72,153,0.1),transparent_50%)]" />
         
-        <div className="container mx-auto px-6 py-24 lg:py-32 relative">
-          <div className="max-w-4xl mx-auto text-center space-y-8">
-            <Badge variant="outline" className="text-base px-4 py-2 border-orange-200 dark:border-orange-800">
-              <Sparkles className="w-4 h-4 mr-2 text-orange-600" />
-              The #1 Platform for South Asian Weddings in the US
+        <div className="container mx-auto px-4 sm:px-6 py-16 sm:py-24 lg:py-32 relative">
+          <div className="max-w-4xl mx-auto text-center space-y-6 sm:space-y-8">
+            <Badge variant="outline" className="text-xs sm:text-base px-3 sm:px-4 py-1.5 sm:py-2 border-orange-200 dark:border-orange-800">
+              <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 text-orange-600" />
+              <span className="break-words">The #1 Platform for South Asian Weddings in the US</span>
             </Badge>
             
             <h1 
-              className="text-5xl md:text-6xl lg:text-7xl font-bold bg-gradient-to-r from-orange-600 via-pink-600 to-purple-600 bg-clip-text text-transparent leading-tight"
+              className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold bg-gradient-to-r from-orange-600 via-pink-600 to-purple-600 bg-clip-text text-transparent leading-tight px-2"
               style={{ fontFamily: 'Cormorant Garamond, serif' }}
               data-testid="text-hero-heading"
             >
               Start Your Dream Wedding Planning Today
             </h1>
             
-            <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed px-2">
               The only wedding management platform designed specifically for multi-day South Asian celebrations. 
               Manage vendors, budgets, guests, and every detail with ease.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-6">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center pt-4 sm:pt-6 px-4">
               <Button 
                 size="lg"
-                className="bg-gradient-to-r from-orange-600 to-pink-600 hover:from-orange-700 hover:to-pink-700 text-lg px-8 h-14"
+                className="bg-gradient-to-r from-orange-600 to-pink-600 hover:from-orange-700 hover:to-pink-700 text-base sm:text-lg px-6 sm:px-8 h-12 sm:h-14 w-full sm:w-auto"
                 onClick={() => setLocation("/onboarding")}
                 data-testid="button-get-started-hero"
               >
                 Get Started Free
-                <ArrowRight className="w-5 h-5 ml-2" />
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
               </Button>
               <Button 
                 size="lg"
                 variant="outline"
-                className="text-lg px-8 h-14 border-2"
+                className="text-base sm:text-lg px-6 sm:px-8 h-12 sm:h-14 border-2 w-full sm:w-auto"
                 onClick={() => setLocation("/vendors")}
                 data-testid="button-browse-vendors-hero"
               >
@@ -186,18 +191,18 @@ export default function Landing() {
               </Button>
             </div>
 
-            <div className="flex flex-wrap justify-center gap-8 pt-8 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-green-600" />
-                <span>Free to start</span>
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-8 pt-6 sm:pt-8 text-xs sm:text-sm text-muted-foreground px-4">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 shrink-0" />
+                <span className="whitespace-nowrap">Free to start</span>
               </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-green-600" />
-                <span>No credit card required</span>
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 shrink-0" />
+                <span className="whitespace-nowrap">No credit card required</span>
               </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-green-600" />
-                <span>7 wedding traditions</span>
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 shrink-0" />
+                <span className="whitespace-nowrap">7 wedding traditions</span>
               </div>
             </div>
           </div>
@@ -205,34 +210,34 @@ export default function Landing() {
       </section>
 
       {/* Why Viah.me Section */}
-      <section className="py-20 lg:py-32 bg-background">
-        <div className="container mx-auto px-6">
-          <div className="max-w-3xl mx-auto text-center mb-16">
+      <section className="py-12 sm:py-20 lg:py-32 bg-background">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="max-w-3xl mx-auto text-center mb-10 sm:mb-16">
             <h2 
-              className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent"
+              className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent px-2"
               style={{ fontFamily: 'Cormorant Garamond, serif' }}
             >
               Why Choose Viah.me?
             </h2>
-            <p className="text-xl text-muted-foreground">
+            <p className="text-base sm:text-xl text-muted-foreground px-2">
               Generic wedding apps don't understand the unique complexity of South Asian celebrations. We do.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
             {BENEFITS.map((benefit, index) => {
               const Icon = benefit.icon;
               return (
                 <Card 
                   key={index} 
-                  className="p-6 hover-elevate transition-all"
+                  className="p-5 sm:p-6 hover-elevate transition-all"
                   data-testid={`card-benefit-${index}`}
                 >
-                  <div className="p-3 rounded-lg bg-gradient-to-br from-orange-100 to-pink-100 dark:from-orange-950/50 dark:to-pink-950/50 w-fit mb-4">
-                    <Icon className="w-6 h-6 text-orange-600" />
+                  <div className="p-2 sm:p-3 rounded-lg bg-gradient-to-br from-orange-100 to-pink-100 dark:from-orange-950/50 dark:to-pink-950/50 w-fit mb-3 sm:mb-4">
+                    <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600" />
                   </div>
-                  <h3 className="text-xl font-semibold mb-2">{benefit.title}</h3>
-                  <p className="text-muted-foreground">{benefit.description}</p>
+                  <h3 className="text-lg sm:text-xl font-semibold mb-2">{benefit.title}</h3>
+                  <p className="text-sm sm:text-base text-muted-foreground">{benefit.description}</p>
                 </Card>
               );
             })}
@@ -241,32 +246,32 @@ export default function Landing() {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 lg:py-32 bg-muted/30">
-        <div className="container mx-auto px-6">
-          <div className="max-w-3xl mx-auto text-center mb-16">
+      <section className="py-12 sm:py-20 lg:py-32 bg-muted/30">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="max-w-3xl mx-auto text-center mb-10 sm:mb-16">
             <h2 
-              className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent"
+              className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent px-2"
               style={{ fontFamily: 'Cormorant Garamond, serif' }}
             >
               Everything You Need, All in One Place
             </h2>
-            <p className="text-xl text-muted-foreground">
+            <p className="text-base sm:text-xl text-muted-foreground px-2">
               From the first planning steps to your last ceremony, manage every detail effortlessly.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {FEATURES.map((feature, index) => {
               const Icon = feature.icon;
               return (
                 <Card 
                   key={index} 
-                  className="p-8 hover-elevate transition-all"
+                  className="p-6 sm:p-8 hover-elevate transition-all"
                   data-testid={`card-feature-${index}`}
                 >
-                  <Icon className="w-12 h-12 text-orange-600 mb-4" />
-                  <h3 className="text-2xl font-semibold mb-3">{feature.title}</h3>
-                  <p className="text-muted-foreground leading-relaxed">{feature.description}</p>
+                  <Icon className="w-10 h-10 sm:w-12 sm:h-12 text-orange-600 mb-3 sm:mb-4" />
+                  <h3 className="text-xl sm:text-2xl font-semibold mb-2 sm:mb-3">{feature.title}</h3>
+                  <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">{feature.description}</p>
                 </Card>
               );
             })}
@@ -275,21 +280,21 @@ export default function Landing() {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-20 lg:py-32 bg-background">
-        <div className="container mx-auto px-6">
-          <div className="max-w-3xl mx-auto text-center mb-16">
+      <section className="py-12 sm:py-20 lg:py-32 bg-background">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="max-w-3xl mx-auto text-center mb-10 sm:mb-16">
             <h2 
-              className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent"
+              className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent px-2"
               style={{ fontFamily: 'Cormorant Garamond, serif' }}
             >
               Getting Started is Easy
             </h2>
-            <p className="text-xl text-muted-foreground">
+            <p className="text-base sm:text-xl text-muted-foreground px-2">
               Three simple steps to transform your wedding planning experience
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 max-w-5xl mx-auto">
             {[
               {
                 step: "1",
@@ -307,12 +312,12 @@ export default function Landing() {
                 description: "Track budgets, manage guest lists, coordinate timelines, share playlists, and create your wedding website—all from your dashboard.",
               },
             ].map((item, index) => (
-              <div key={index} className="text-center space-y-4" data-testid={`step-${index}`}>
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-600 to-pink-600 text-white flex items-center justify-center text-2xl font-bold mx-auto">
+              <div key={index} className="text-center space-y-3 sm:space-y-4 px-2" data-testid={`step-${index}`}>
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-orange-600 to-pink-600 text-white flex items-center justify-center text-xl sm:text-2xl font-bold mx-auto">
                   {item.step}
                 </div>
-                <h3 className="text-2xl font-semibold">{item.title}</h3>
-                <p className="text-muted-foreground leading-relaxed">{item.description}</p>
+                <h3 className="text-xl sm:text-2xl font-semibold">{item.title}</h3>
+                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">{item.description}</p>
               </div>
             ))}
           </div>
@@ -320,30 +325,30 @@ export default function Landing() {
       </section>
 
       {/* Trust Section */}
-      <section className="py-20 bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-orange-950/20 dark:via-pink-950/20 dark:to-purple-950/20">
-        <div className="container mx-auto px-6">
+      <section className="py-12 sm:py-20 bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-orange-950/20 dark:via-pink-950/20 dark:to-purple-950/20">
+        <div className="container mx-auto px-4 sm:px-6">
           <div className="max-w-4xl mx-auto">
-            <div className="grid md:grid-cols-3 gap-8 text-center">
-              <div>
-                <div className="text-5xl font-bold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent mb-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 text-center">
+              <div className="px-2">
+                <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent mb-2">
                   7
                 </div>
-                <div className="text-lg font-semibold mb-1">Wedding Traditions</div>
-                <div className="text-sm text-muted-foreground">Culturally authentic templates</div>
+                <div className="text-base sm:text-lg font-semibold mb-1">Wedding Traditions</div>
+                <div className="text-xs sm:text-sm text-muted-foreground">Culturally authentic templates</div>
               </div>
-              <div>
-                <div className="text-5xl font-bold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent mb-2">
+              <div className="px-2">
+                <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent mb-2">
                   32
                 </div>
-                <div className="text-lg font-semibold mb-1">Vendor Categories</div>
-                <div className="text-sm text-muted-foreground">Including culturally-specific services</div>
+                <div className="text-base sm:text-lg font-semibold mb-1">Vendor Categories</div>
+                <div className="text-xs sm:text-sm text-muted-foreground">Including culturally-specific services</div>
               </div>
-              <div>
-                <div className="text-5xl font-bold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent mb-2">
+              <div className="px-2">
+                <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent mb-2">
                   5
                 </div>
-                <div className="text-lg font-semibold mb-1">Major US Cities</div>
-                <div className="text-sm text-muted-foreground">Bay Area, NYC, LA, Chicago, Seattle</div>
+                <div className="text-base sm:text-lg font-semibold mb-1">Major US Cities</div>
+                <div className="text-xs sm:text-sm text-muted-foreground">Bay Area, NYC, LA, Chicago, Seattle</div>
               </div>
             </div>
           </div>
@@ -351,34 +356,34 @@ export default function Landing() {
       </section>
 
       {/* Final CTA Section */}
-      <section className="py-20 lg:py-32 bg-background">
-        <div className="container mx-auto px-6">
-          <Card className="max-w-4xl mx-auto p-12 lg:p-16 text-center bg-gradient-to-br from-orange-50 to-pink-50 dark:from-orange-950/30 dark:to-pink-950/30 border-2">
-            <Shield className="w-16 h-16 text-orange-600 mx-auto mb-6" />
+      <section className="py-12 sm:py-20 lg:py-32 bg-background">
+        <div className="container mx-auto px-4 sm:px-6">
+          <Card className="max-w-4xl mx-auto p-6 sm:p-12 lg:p-16 text-center bg-gradient-to-br from-orange-50 to-pink-50 dark:from-orange-950/30 dark:to-pink-950/30 border-2">
+            <Shield className="w-12 h-12 sm:w-16 sm:h-16 text-orange-600 mx-auto mb-4 sm:mb-6" />
             <h2 
-              className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent"
+              className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent px-2"
               style={{ fontFamily: 'Cormorant Garamond, serif' }}
             >
               Ready to Plan Your Dream Wedding?
             </h2>
-            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            <p className="text-base sm:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto px-2">
               Join couples across the US who are planning unforgettable South Asian weddings with Viah.me. 
               Start for free today—no credit card required.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
               <Button 
                 size="lg"
-                className="bg-gradient-to-r from-orange-600 to-pink-600 hover:from-orange-700 hover:to-pink-700 text-lg px-10 h-14"
+                className="bg-gradient-to-r from-orange-600 to-pink-600 hover:from-orange-700 hover:to-pink-700 text-base sm:text-lg px-8 sm:px-10 h-12 sm:h-14 w-full sm:w-auto"
                 onClick={() => setLocation("/onboarding")}
                 data-testid="button-get-started-final"
               >
                 Start Planning Now
-                <ArrowRight className="w-5 h-5 ml-2" />
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
               </Button>
               <Button 
                 size="lg"
                 variant="outline"
-                className="text-lg px-10 h-14 border-2"
+                className="text-base sm:text-lg px-8 sm:px-10 h-12 sm:h-14 border-2 w-full sm:w-auto"
                 onClick={() => setLocation("/vendor-register")}
                 data-testid="button-vendor-signup-final"
               >
@@ -390,29 +395,29 @@ export default function Landing() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t bg-muted/30 py-12">
-        <div className="container mx-auto px-6">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-4">
+      <footer className="border-t bg-muted/30 py-8 sm:py-12">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 sm:gap-6">
+            <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
               <img 
                 src={logoUrl} 
                 alt="Viah.me" 
-                className="h-12 object-contain" 
+                className="h-10 sm:h-12 object-contain" 
               />
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
                 © 2024 Viah.me. All rights reserved.
               </p>
             </div>
-            <div className="flex gap-6 text-sm">
+            <div className="flex gap-4 sm:gap-6 text-xs sm:text-sm">
               <button 
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
                 onClick={() => setLocation("/login")}
                 data-testid="link-footer-signin"
               >
                 Sign In
               </button>
               <button 
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
                 onClick={() => setLocation("/vendor-login")}
                 data-testid="link-footer-vendor-login"
               >
