@@ -167,11 +167,24 @@ export default function Budget() {
       console.log("[BUDGET] PATCH request completed, result:", result);
       return result;
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       console.log("[BUDGET] Mutation success! Response:", data);
-      console.log("[BUDGET] Invalidating and refetching queries...");
-      queryClient.invalidateQueries({ queryKey: ["/api/weddings"] });
-      queryClient.refetchQueries({ queryKey: ["/api/weddings"] });
+      console.log("[BUDGET] Manually updating cache with new budget value...");
+      
+      // Manually update the wedding data in the cache
+      queryClient.setQueryData<Wedding[]>(["/api/weddings"], (oldData) => {
+        if (!oldData || !wedding?.id) return oldData;
+        console.log("[BUDGET] Old wedding data:", oldData);
+        const updated = oldData.map(w => 
+          w.id === wedding.id 
+            ? { ...w, totalBudget: newTotalBudget }
+            : w
+        );
+        console.log("[BUDGET] Updated wedding data:", updated);
+        return updated;
+      });
+      
+      console.log("[BUDGET] Cache updated, closing dialog...");
       setEditBudgetDialogOpen(false);
       setNewTotalBudget("");
       toast({
