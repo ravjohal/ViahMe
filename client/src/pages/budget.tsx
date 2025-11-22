@@ -155,12 +155,21 @@ export default function Budget() {
 
   const updateWeddingBudgetMutation = useMutation({
     mutationFn: async (totalBudget: string) => {
-      if (!wedding?.id) throw new Error("Wedding ID not found");
-      return await apiRequest("PATCH", `/api/weddings/${wedding.id}`, {
+      console.log("[BUDGET] Mutation started - wedding ID:", wedding?.id, "new budget:", totalBudget);
+      if (!wedding?.id) {
+        console.log("[BUDGET] ERROR: Wedding ID not found!");
+        throw new Error("Wedding ID not found");
+      }
+      console.log("[BUDGET] Making PATCH request to /api/weddings/" + wedding.id);
+      const result = await apiRequest("PATCH", `/api/weddings/${wedding.id}`, {
         totalBudget,
       });
+      console.log("[BUDGET] PATCH request completed, result:", result);
+      return result;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("[BUDGET] Mutation success! Response:", data);
+      console.log("[BUDGET] Invalidating and refetching queries...");
       queryClient.invalidateQueries({ queryKey: ["/api/weddings"] });
       queryClient.refetchQueries({ queryKey: ["/api/weddings"] });
       setEditBudgetDialogOpen(false);
@@ -170,7 +179,8 @@ export default function Budget() {
         description: "Your total wedding budget has been updated successfully",
       });
     },
-    onError: () => {
+    onError: (error) => {
+      console.log("[BUDGET] Mutation failed! Error:", error);
       toast({
         title: "Error",
         description: "Failed to update budget. Please try again.",
@@ -228,12 +238,16 @@ export default function Budget() {
   };
 
   const handleEditBudget = () => {
+    console.log("[BUDGET] Edit button clicked, current budget:", wedding?.totalBudget);
     setNewTotalBudget(wedding?.totalBudget?.toString() || "0");
     setEditBudgetDialogOpen(true);
+    console.log("[BUDGET] Dialog opened with value:", wedding?.totalBudget?.toString() || "0");
   };
 
   const handleUpdateBudget = () => {
+    console.log("[BUDGET] Update button clicked, new budget value:", newTotalBudget);
     if (!newTotalBudget || parseFloat(newTotalBudget) < 0) {
+      console.log("[BUDGET] Validation failed - invalid budget:", newTotalBudget);
       toast({
         title: "Invalid Budget",
         description: "Please enter a valid budget amount",
@@ -241,6 +255,7 @@ export default function Budget() {
       });
       return;
     }
+    console.log("[BUDGET] Calling mutation with:", newTotalBudget);
     updateWeddingBudgetMutation.mutate(newTotalBudget);
   };
 
