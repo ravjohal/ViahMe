@@ -48,6 +48,18 @@ const CHART_COLORS = [
   "hsl(var(--muted))",
 ];
 
+// Mapping budget categories to vendor categories
+const BUDGET_TO_VENDOR_CATEGORIES: Record<string, string[]> = {
+  catering: ['caterer', 'halal_caterer', 'mobile_food'],
+  venue: ['banquet_hall', 'gurdwara', 'temple', 'tent_service'],
+  entertainment: ['dj', 'dhol_player', 'baraat_band', 'garba_instructor', 'dandiya_equipment', 'nadaswaram_player'],
+  photography: ['photographer', 'videographer'],
+  decoration: ['decorator', 'florist', 'mandap_decorator', 'nikah_decorator', 'rangoli_artist', 'kolam_artist', 'garland_maker', 'haldi_supplies', 'pooja_items'],
+  attire: ['makeup_artist', 'turban_tier', 'mehndi_artist', 'silk_saree_rental'],
+  transportation: ['limo_service', 'horse_rental'],
+  other: ['sword_rental', 'pandit', 'astrologer', 'qazi', 'imam', 'quran_reciter'],
+};
+
 export default function Budget() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -55,6 +67,8 @@ export default function Budget() {
   const [editingCategory, setEditingCategory] = useState<BudgetCategory | null>(null);
   const [editBudgetDialogOpen, setEditBudgetDialogOpen] = useState(false);
   const [newTotalBudget, setNewTotalBudget] = useState("");
+  const [spendingDetailsOpen, setSpendingDetailsOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const { data: weddings, isLoading: weddingsLoading } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
