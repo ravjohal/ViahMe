@@ -162,6 +162,7 @@ export default function Budget() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/weddings"] });
+      queryClient.refetchQueries({ queryKey: ["/api/weddings"] });
       setEditBudgetDialogOpen(false);
       setNewTotalBudget("");
       toast({
