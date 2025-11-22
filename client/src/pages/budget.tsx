@@ -275,6 +275,9 @@ export default function Budget() {
       // Refetch categories to show updated allocations
       queryClient.invalidateQueries({ queryKey: ["/api/budget-categories", wedding?.id] });
       
+      // CRITICAL: Invalidate weddings query to ensure data persists across sessions
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings"] });
+      
       console.log("[BUDGET] Done, closing dialog...");
       setEditBudgetDialogOpen(false);
       setNewTotalBudget("");
