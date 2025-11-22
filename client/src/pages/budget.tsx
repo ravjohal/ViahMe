@@ -81,6 +81,12 @@ export default function Budget() {
     enabled: !!wedding?.id,
   });
 
+  // Fetch bookings with vendor details for spending breakdown
+  const { data: bookingsWithVendors = [] } = useQuery<Array<{ id: string; weddingId: string; vendorId: string; estimatedCost: string | null; status: string; vendor: { id: string; name: string; category: string } }>>({
+    queryKey: ["/api/bookings-with-vendors", wedding?.id],
+    enabled: !!wedding?.id,
+  });
+
   const form = useForm<BudgetFormData>({
     resolver: zodResolver(budgetFormSchema),
     defaultValues: {
@@ -375,6 +381,7 @@ export default function Budget() {
     name: CATEGORY_LABELS[cat.category] || cat.category,
     value: parseFloat(cat.allocatedAmount.toString()),
     color: CHART_COLORS[index % CHART_COLORS.length],
+    category: cat.category, // Keep original category ID for filtering
   }));
 
   if (weddingsLoading || categoriesLoading) {
@@ -494,6 +501,14 @@ export default function Budget() {
                       outerRadius={80}
                       fill="#8884d8"
                       dataKey="value"
+                      onClick={(data) => {
+                        if (data && data.category) {
+                          setSelectedCategory(data.category);
+                          setSpendingDetailsOpen(true);
+                        }
+                      }}
+                      cursor="pointer"
+                      data-testid="pie-chart"
                     >
                       {chartData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
@@ -766,6 +781,81 @@ export default function Budget() {
                 {updateWeddingBudgetMutation.isPending ? "Updating..." : "Update Budget"}
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Spending Details Dialog */}
+      <Dialog open={spendingDetailsOpen} onOpenChange={setSpendingDetailsOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto" data-testid="dialog-spending-details">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedCategory && CATEGORY_LABELS[selectedCategory]} Spending Details
+            </DialogTitle>
+            <DialogDescription>
+              All bookings that contribute to this budget category
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {selectedCategory && (() => {
+              const vendorCategories = BUDGET_TO_VENDOR_CATEGORIES[selectedCategory] || [];
+              const categoryBookings = bookingsWithVendors.filter(booking => 
+                booking.status === 'confirmed' && 
+                vendorCategories.includes(booking.vendor.category)
+              );
+
+              if (categoryBookings.length === 0) {
+                return (
+                  <div className="text-center py-8">
+                    <DollarSign className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                    <p className="text-muted-foreground">
+                      No confirmed bookings found for this category
+                    </p>
+                  </div>
+                );
+              }
+
+              const totalSpending = categoryBookings.reduce((sum, booking) => 
+                sum + parseFloat(booking.estimatedCost || "0"), 0
+              );
+
+              return (
+                <>
+                  <div className="flex items-center justify-between p-4 bg-primary/10 rounded-md">
+                    <span className="font-semibold">Total Spending:</span>
+                    <span className="font-mono text-lg font-bold">${totalSpending.toLocaleString()}</span>
+                  </div>
+
+                  <div className="space-y-3">
+                    {categoryBookings.map((booking) => (
+                      <Card key={booking.id} className="p-4" data-testid={`booking-card-${booking.id}`}>
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-base mb-1" data-testid={`booking-vendor-name-${booking.id}`}>
+                              {booking.vendor.name}
+                            </h4>
+                            <Badge variant="secondary" className="mb-2">
+                              {booking.vendor.category.replace(/_/g, ' ')}
+                            </Badge>
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Badge variant="outline" className="bg-green-500/10 text-green-700 dark:text-green-400">
+                                {booking.status}
+                              </Badge>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-mono text-lg font-bold" data-testid={`booking-cost-${booking.id}`}>
+                              ${parseFloat(booking.estimatedCost || "0").toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                </>
+              );
+            })()}
           </div>
         </DialogContent>
       </Dialog>
