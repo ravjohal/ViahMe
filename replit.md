@@ -17,7 +17,7 @@ Key architectural decisions and features include:
 - **Comprehensive Data Model**: Designed to support the intricate nature of multi-day South Asian weddings, covering entities like Weddings, Events, Vendors, Bookings, Guests, and Budgets.
 - **Cultural Templates**: Pre-populated event timelines for 7 wedding traditions with auto-seeding during onboarding.
 - **Vendor Specialization**: Support for 32 distinct vendor categories, including culturally-specific services.
-- **Budget Intelligence System**: Provides smart budget recommendations based on cultural spending benchmarks and real-time comparisons.
+- **Budget Intelligence System**: Provides smart budget recommendations based on cultural spending benchmarks and real-time comparisons with proportional scaling capability. Features interactive pie chart visualization where clicking on any category segment displays a detailed spending breakdown showing all confirmed vendor bookings, individual costs, and category totals.
 - **Messaging System**: Facilitates couple-vendor communication with threading.
 - **Review System**: Allows vendor ratings and feedback.
 - **Document Storage System**: Secure cloud-based document management for contracts, permits, and invoices using Replit Object Storage, with categorization and access controls.
