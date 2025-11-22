@@ -101,6 +101,7 @@ export interface IStorage {
   // Bookings
   getBooking(id: string): Promise<Booking | undefined>;
   getBookingsByWedding(weddingId: string): Promise<Booking[]>;
+  getBookingsWithVendorsByWedding(weddingId: string): Promise<Array<Booking & { vendor: Vendor }>>;
   getBookingsByVendor(vendorId: string): Promise<Booking[]>;
   createBooking(booking: InsertBooking): Promise<Booking>;
   updateBooking(id: string, booking: Partial<InsertBooking>): Promise<Booking | undefined>;
@@ -469,6 +470,14 @@ export class MemStorage implements IStorage {
 
   async getBookingsByWedding(weddingId: string): Promise<Booking[]> {
     return Array.from(this.bookings.values()).filter((b) => b.weddingId === weddingId);
+  }
+
+  async getBookingsWithVendorsByWedding(weddingId: string): Promise<Array<Booking & { vendor: Vendor }>> {
+    const bookings = Array.from(this.bookings.values()).filter((b) => b.weddingId === weddingId);
+    return bookings.map(booking => ({
+      ...booking,
+      vendor: this.vendors.get(booking.vendorId)!
+    })).filter(b => b.vendor);
   }
 
   async getBookingsByVendor(vendorId: string): Promise<Booking[]> {
@@ -1501,6 +1510,21 @@ export class DBStorage implements IStorage {
 
   async getBookingsByWedding(weddingId: string): Promise<Booking[]> {
     return await this.db.select().from(schema.bookings).where(eq(schema.bookings.weddingId, weddingId));
+  }
+
+  async getBookingsWithVendorsByWedding(weddingId: string): Promise<Array<Booking & { vendor: Vendor }>> {
+    const results = await this.db
+      .select()
+      .from(schema.bookings)
+      .leftJoin(schema.vendors, eq(schema.bookings.vendorId, schema.vendors.id))
+      .where(eq(schema.bookings.weddingId, weddingId));
+    
+    return results
+      .filter((row): row is { bookings: Booking; vendors: Vendor } => row.vendors !== null)
+      .map(row => ({
+        ...row.bookings,
+        vendor: row.vendors
+      }));
   }
 
   async getBookingsByVendor(vendorId: string): Promise<Booking[]> {

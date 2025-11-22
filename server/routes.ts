@@ -331,6 +331,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/bookings-with-vendors/:weddingId", async (req, res) => {
+    try {
+      const bookings = await storage.getBookingsWithVendorsByWedding(req.params.weddingId);
+      res.json(bookings);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch bookings with vendor details" });
+    }
+  });
+
   app.post("/api/bookings", async (req, res) => {
     try {
       const validatedData = insertBookingSchema.parse(req.body);
