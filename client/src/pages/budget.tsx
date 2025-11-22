@@ -53,6 +53,8 @@ export default function Budget() {
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<BudgetCategory | null>(null);
+  const [editBudgetDialogOpen, setEditBudgetDialogOpen] = useState(false);
+  const [newTotalBudget, setNewTotalBudget] = useState("");
 
   const { data: weddings, isLoading: weddingsLoading } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
@@ -151,6 +153,31 @@ export default function Budget() {
     },
   });
 
+  const updateWeddingBudgetMutation = useMutation({
+    mutationFn: async (totalBudget: string) => {
+      if (!wedding?.id) throw new Error("Wedding ID not found");
+      return await apiRequest("PATCH", `/api/weddings/${wedding.id}`, {
+        totalBudget,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings"] });
+      setEditBudgetDialogOpen(false);
+      setNewTotalBudget("");
+      toast({
+        title: "Budget Updated",
+        description: "Your total wedding budget has been updated successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update budget. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   useEffect(() => {
     if (!weddingsLoading && !wedding) {
       setLocation("/onboarding");
@@ -197,6 +224,23 @@ export default function Budget() {
     if (editingCategory) {
       deleteMutation.mutate(editingCategory.id);
     }
+  };
+
+  const handleEditBudget = () => {
+    setNewTotalBudget(wedding?.totalBudget?.toString() || "0");
+    setEditBudgetDialogOpen(true);
+  };
+
+  const handleUpdateBudget = () => {
+    if (!newTotalBudget || parseFloat(newTotalBudget) < 0) {
+      toast({
+        title: "Invalid Budget",
+        description: "Please enter a valid budget amount",
+        variant: "destructive",
+      });
+      return;
+    }
+    updateWeddingBudgetMutation.mutate(newTotalBudget);
   };
 
   const total = parseFloat(wedding?.totalBudget || "0");
@@ -255,16 +299,27 @@ export default function Budget() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card className="p-6">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <DollarSign className="w-5 h-5 text-primary" />
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <DollarSign className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Budget</p>
+                    <p className="font-mono text-2xl font-bold text-foreground" data-testid="text-total-budget">
+                      ${total.toLocaleString()}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Budget</p>
-                  <p className="font-mono text-2xl font-bold text-foreground" data-testid="text-total-budget">
-                    ${total.toLocaleString()}
-                  </p>
-                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleEditBudget}
+                  data-testid="button-edit-budget"
+                  className="h-8 w-8"
+                >
+                  <Edit2 className="w-4 h-4" />
+                </Button>
               </div>
             </Card>
 
@@ -542,6 +597,60 @@ export default function Budget() {
               </div>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={editBudgetDialogOpen} onOpenChange={setEditBudgetDialogOpen}>
+        <DialogContent data-testid="dialog-edit-budget">
+          <DialogHeader>
+            <DialogTitle>Edit Total Budget</DialogTitle>
+            <DialogDescription>
+              Update your overall wedding budget. This will affect your budget tracking and allocation.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="totalBudget">
+                Total Budget <span className="text-destructive">*</span>
+              </Label>
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="totalBudget"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={newTotalBudget}
+                  onChange={(e) => setNewTotalBudget(e.target.value)}
+                  placeholder="0.00"
+                  className="pl-9"
+                  data-testid="input-total-budget"
+                />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Current budget: ${total.toLocaleString()}
+              </p>
+            </div>
+
+            <div className="flex gap-2 justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEditBudgetDialogOpen(false)}
+                data-testid="button-cancel-budget-edit"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleUpdateBudget}
+                disabled={updateWeddingBudgetMutation.isPending}
+                data-testid="button-save-budget"
+              >
+                {updateWeddingBudgetMutation.isPending ? "Updating..." : "Update Budget"}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
