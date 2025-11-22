@@ -800,8 +800,8 @@ export default function Budget() {
           <div className="space-y-4">
             {selectedCategory && (() => {
               const vendorCategories = BUDGET_TO_VENDOR_CATEGORIES[selectedCategory] || [];
+              // Filter bookings by vendor categories (already filtered to confirmed bookings by API)
               const categoryBookings = bookingsWithVendors.filter(booking => 
-                booking.status === 'confirmed' && 
                 vendorCategories.includes(booking.vendor.category)
               );
 

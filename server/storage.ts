@@ -473,7 +473,9 @@ export class MemStorage implements IStorage {
   }
 
   async getBookingsWithVendorsByWedding(weddingId: string): Promise<Array<Booking & { vendor: Vendor }>> {
-    const bookings = Array.from(this.bookings.values()).filter((b) => b.weddingId === weddingId);
+    const bookings = Array.from(this.bookings.values()).filter((b) => 
+      b.weddingId === weddingId && b.status === 'confirmed'
+    );
     return bookings.map(booking => ({
       ...booking,
       vendor: this.vendors.get(booking.vendorId)!
@@ -1517,7 +1519,12 @@ export class DBStorage implements IStorage {
       .select()
       .from(schema.bookings)
       .leftJoin(schema.vendors, eq(schema.bookings.vendorId, schema.vendors.id))
-      .where(eq(schema.bookings.weddingId, weddingId));
+      .where(
+        and(
+          eq(schema.bookings.weddingId, weddingId),
+          eq(schema.bookings.status, 'confirmed')
+        )
+      );
     
     return results
       .filter((row): row is { bookings: Booking; vendors: Vendor } => row.vendors !== null)
