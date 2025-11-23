@@ -40,6 +40,20 @@ Key architectural decisions and features include:
 - **Vendor & Couple Analytics Dashboards**: Provides data-driven insights with summary metrics, trend charts (bookings, revenue, spending), budget overviews, and task tracking, utilizing Recharts for visualizations.
 - **Vendor Comparison Tools**: Frontend-only side-by-side comparison system for up to 4 vendors, displaying key features like price, rating, location, and cultural specialties in a modal.
 - **Invitation Card Shop**: E-commerce system for purchasing pre-designed Indian wedding invitation cards with Stripe payment processing. Features 10 culturally-authentic card designs for all major traditions and ceremonies, gallery browsing with tradition/ceremony filtering, shopping cart management, secure checkout with shipping information collection, and server-side price validation. Payment flow enforces server-calculated totals end-to-end with webhook verification to prevent client-side price manipulation.
+- **Shopping & Measurements Tracking**: Comprehensive shopping and tailoring management system for wedding attire and accessories. Features include:
+  - **Measurement Profiles**: Store detailed measurements for guests including blouse size, waist, inseam, and sari blouse style preferences, with direct guest assignment and easy editing
+  - **Shopping Order Items**: Track shopping orders with item name, store name, order status, costs in both INR and USD (auto-conversion at 1 INR = 0.012 USD), and weight in kilograms
+  - **Guest Assignment**: Link measurement profiles to specific guests for streamlined coordination
+  - **Status Tracking**: Monitor order progress through statuses like Ordered, In Transit, Received, and Cancelled
+  - **Dual Currency Support**: Automatic INR to USD conversion for international purchases
+- **Cultural Wedding Information Section**: Guest-facing educational resource providing comprehensive guides to South Asian wedding traditions, ceremonies, and etiquette. Features include:
+  - **Ceremony Explanations**: Detailed descriptions of pre-wedding (Mehndi, Sangeet, Haldi), wedding day (Baraat, Main Ceremony), and post-wedding (Reception) events with timing, attire, and duration guidance
+  - **Attire Guide**: Comprehensive guidance for men and women on traditional wedding attire including sarees, lehengas, sherwanis, and fusion options with color recommendations
+  - **Guest Etiquette**: Clear do's and don'ts covering RSVP protocol, punctuality, gift giving (cash gift traditions), photography, and religious customs
+  - **Cultural Traditions**: Explanations of meaningful customs like garland exchange (Jaimala), touching elders' feet, sacred fire (Agni), sindoor and mangalsutra, and fun traditions like Joota Chupai
+  - **Terminology Glossary**: Quick reference of common terms guests will encounter (Baraat, Mandap, Pandit, Dupatta, Phere, etc.)
+  - **Print-Friendly Format**: Built-in print functionality allowing couples to create physical guides for guests
+  - **Tabbed Navigation**: Six organized sections (Overview, Ceremonies, Attire, Etiquette, Traditions, Glossary) for easy information access
 - **UI/UX**: Features a warm orange/gold primary color palette, elegant typography (Playfair Display, Inter, JetBrains Mono), Shadcn UI components, hover elevate interactions, and responsive design.
 
 ## External Dependencies
