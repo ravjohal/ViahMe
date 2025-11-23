@@ -26,6 +26,8 @@ import {
   insertPhotoSchema,
   insertVendorAvailabilitySchema,
   insertContractSignatureSchema,
+  insertMeasurementProfileSchema,
+  insertShoppingOrderItemSchema,
 } from "@shared/schema";
 import { seedVendors, seedBudgetBenchmarks } from "./seed-data";
 import {
@@ -2710,6 +2712,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error confirming payment:", error);
       res.status(500).json({ error: "Failed to confirm payment" });
     }
+  });
+
+  // ============================================================================
+  // MEASUREMENT PROFILES - Guest clothing measurements for South Asian attire
+  // ============================================================================
+
+  // Get measurement profile by guest ID
+  app.get("/api/guests/:guestId/measurement-profile", async (req, res) => {
+    const { guestId } = req.params;
+    const profile = await storage.getMeasurementProfileByGuest(guestId);
+    res.json(profile || null);
+  });
+
+  // Create measurement profile
+  app.post("/api/measurement-profiles", async (req, res) => {
+    try {
+      const profileData = insertMeasurementProfileSchema.parse(req.body);
+      const profile = await storage.createMeasurementProfile(profileData);
+      res.status(201).json(profile);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Update measurement profile
+  app.patch("/api/measurement-profiles/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+      const updates = insertMeasurementProfileSchema.partial().parse(req.body);
+      const profile = await storage.updateMeasurementProfile(id, updates);
+      if (!profile) {
+        return res.status(404).json({ error: "Measurement profile not found" });
+      }
+      res.json(profile);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Delete measurement profile
+  app.delete("/api/measurement-profiles/:id", async (req, res) => {
+    const { id } = req.params;
+    const success = await storage.deleteMeasurementProfile(id);
+    if (!success) {
+      return res.status(404).json({ error: "Measurement profile not found" });
+    }
+    res.status(204).send();
+  });
+
+  // ============================================================================
+  // SHOPPING ORDER ITEMS - Track clothing/outfit purchases and alterations
+  // ============================================================================
+
+  // Get all shopping items for a wedding
+  app.get("/api/weddings/:weddingId/shopping-items", async (req, res) => {
+    const { weddingId } = req.params;
+    const items = await storage.getShoppingOrderItemsByWedding(weddingId);
+    res.json(items);
+  });
+
+  // Create shopping order item
+  app.post("/api/shopping-items", async (req, res) => {
+    try {
+      const itemData = insertShoppingOrderItemSchema.parse(req.body);
+      const item = await storage.createShoppingOrderItem(itemData);
+      res.status(201).json(item);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Update shopping order item
+  app.patch("/api/shopping-items/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+      const updates = insertShoppingOrderItemSchema.partial().parse(req.body);
+      const item = await storage.updateShoppingOrderItem(id, updates);
+      if (!item) {
+        return res.status(404).json({ error: "Shopping item not found" });
+      }
+      res.json(item);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Delete shopping order item
+  app.delete("/api/shopping-items/:id", async (req, res) => {
+    const { id } = req.params;
+    const success = await storage.deleteShoppingOrderItem(id);
+    if (!success) {
+      return res.status(404).json({ error: "Shopping item not found" });
+    }
+    res.status(204).send();
   });
 
   const httpServer = createServer(app);
