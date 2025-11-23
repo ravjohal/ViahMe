@@ -713,6 +713,7 @@ export class MemStorage implements IStorage {
     const household: Household = {
       ...insertHousehold,
       id,
+      contactEmail: insertHousehold.contactEmail ?? null,
       maxCount: insertHousehold.maxCount ?? 1,
       magicLinkTokenHash: null,
       magicLinkToken: null,
