@@ -958,6 +958,7 @@ export default function Guests() {
               });
 
               const filteredGuests = guests.filter(g => {
+                if (!g.householdId) return false;
                 const household = householdById.get(g.householdId);
                 if (!household) return false;
                 const matchesAffiliation = affiliationFilter === 'all' || household.affiliation === affiliationFilter;
@@ -976,14 +977,17 @@ export default function Guests() {
 
               // Count guests by affiliation using filtered guests
               const brideGuests = filteredGuests.filter(g => {
+                if (!g.householdId) return false;
                 const household = householdById.get(g.householdId);
                 return household?.affiliation === 'bride';
               });
               const groomGuests = filteredGuests.filter(g => {
+                if (!g.householdId) return false;
                 const household = householdById.get(g.householdId);
                 return household?.affiliation === 'groom';
               });
               const mutualGuests = filteredGuests.filter(g => {
+                if (!g.householdId) return false;
                 const household = householdById.get(g.householdId);
                 return household?.affiliation === 'mutual';
               });
@@ -999,18 +1003,22 @@ export default function Guests() {
 
                 // Count actual guests per tier by mapping guest to household tier
                 const immediateGuests = affiliationGuests.filter(g => {
+                  if (!g.householdId) return false;
                   const household = householdById.get(g.householdId);
                   return household && household.relationshipTier === 'immediate_family';
                 });
                 const extendedGuests = affiliationGuests.filter(g => {
+                  if (!g.householdId) return false;
                   const household = householdById.get(g.householdId);
                   return household && household.relationshipTier === 'extended_family';
                 });
                 const friendGuests = affiliationGuests.filter(g => {
+                  if (!g.householdId) return false;
                   const household = householdById.get(g.householdId);
                   return household && household.relationshipTier === 'friend';
                 });
                 const parentsFGuests = affiliationGuests.filter(g => {
+                  if (!g.householdId) return false;
                   const household = householdById.get(g.householdId);
                   return household && household.relationshipTier === 'parents_friend';
                 });
