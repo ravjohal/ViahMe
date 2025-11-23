@@ -20,7 +20,8 @@ import { insertGuestSchema, insertHouseholdSchema, type Wedding, type Guest, typ
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
-import { Trash2, Upload, Users, Link as LinkIcon, MailCheck, Copy, Send, BarChart3 } from "lucide-react";
+import { Trash2, Upload, Users, Link as LinkIcon, MailCheck, Copy, Send, BarChart3, Download, QrCode } from "lucide-react";
+import QRCode from "qrcode";
 
 const guestFormSchema = insertGuestSchema.extend({
   eventIds: z.array(z.string()).optional(),
@@ -34,6 +35,49 @@ const householdFormSchema = insertHouseholdSchema.extend({
 });
 
 type HouseholdFormData = z.infer<typeof householdFormSchema>;
+
+// CSV export utility function
+function exportToCSV(households: Household[], guests: Guest[]) {
+  const householdById = new Map(households.map(h => [h.id, h]));
+  
+  // Create CSV header
+  const headers = ['Household Name', 'Affiliation', 'Relationship Tier', 'Max Seats', 'Guest Count', 'Guest Names', 'Contact Email'];
+  
+  // Create CSV rows
+  const rows = households.map(household => {
+    const householdGuests = guests.filter(g => g.householdId === household.id);
+    const guestNames = householdGuests.map(g => g.name).join('; ');
+    
+    return [
+      household.name,
+      household.affiliation === 'bride' ? "Bride's Side" : household.affiliation === 'groom' ? "Groom's Side" : "Mutual",
+      household.relationshipTier === 'immediate_family' ? 'Immediate Family' :
+        household.relationshipTier === 'extended_family' ? 'Extended Family' :
+        household.relationshipTier === 'parents_friend' ? "Parent's Friends" : 'Friends',
+      household.maxCount || 0,
+      householdGuests.length,
+      guestNames || 'No guests added',
+      household.contactEmail || 'Not provided'
+    ];
+  });
+  
+  // Combine headers and rows
+  const csvContent = [
+    headers.join(','),
+    ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+  ].join('\n');
+  
+  // Create and trigger download
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.setAttribute('href', url);
+  link.setAttribute('download', `guest-allocations-${new Date().toISOString().split('T')[0]}.csv`);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
 
 export default function Guests() {
   const [, setLocation] = useLocation();
@@ -53,6 +97,15 @@ export default function Guests() {
   const [selectedHouseholds, setSelectedHouseholds] = useState<string[]>([]);
   const [selectedInviteEvents, setSelectedInviteEvents] = useState<string[]>([]);
   const [personalMessage, setPersonalMessage] = useState("");
+
+  // Allocation view filters
+  const [affiliationFilter, setAffiliationFilter] = useState<string>("all");
+  const [tierFilter, setTierFilter] = useState<string>("all");
+
+  // QR code state
+  const [qrCodeDialogOpen, setQrCodeDialogOpen] = useState(false);
+  const [selectedHouseholdForQR, setSelectedHouseholdForQR] = useState<Household | null>(null);
+  const [qrCodeDataURL, setQrCodeDataURL] = useState<string>("");
 
   const { data: weddings, isLoading: weddingsLoading } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
@@ -307,6 +360,55 @@ export default function Guests() {
       });
     },
   });
+
+  const handleGenerateQRCode = async (household: Household) => {
+    const token = householdTokens.get(household.id);
+    if (!token) {
+      toast({
+        title: "No invitation link",
+        description: "Please generate an invitation link first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const rsvpUrl = `${window.location.origin}/rsvp?token=${token}`;
+      const qrDataURL = await QRCode.toDataURL(rsvpUrl, {
+        width: 300,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF',
+        },
+      });
+      
+      setSelectedHouseholdForQR(household);
+      setQrCodeDataURL(qrDataURL);
+      setQrCodeDialogOpen(true);
+    } catch (error) {
+      console.error('QR code generation error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate QR code",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDownloadQRCode = () => {
+    if (!qrCodeDataURL || !selectedHouseholdForQR) return;
+
+    const link = document.createElement('a');
+    link.download = `qr-code-${selectedHouseholdForQR.name.replace(/\s+/g, '-').toLowerCase()}.png`;
+    link.href = qrCodeDataURL;
+    link.click();
+
+    toast({
+      title: "QR Code downloaded",
+      description: `QR code for ${selectedHouseholdForQR.name} has been downloaded`,
+    });
+  };
 
   const sendBulkInvitationsMutation = useMutation({
     mutationFn: async (data: {
@@ -729,6 +831,15 @@ export default function Guests() {
                             <Button
                               size="sm"
                               variant="outline"
+                              onClick={() => handleGenerateQRCode(household)}
+                              data-testid={`button-qr-code-${household.id}`}
+                            >
+                              <QrCode className="w-3 h-3 mr-1" />
+                              QR Code
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
                               onClick={() => handleRevokeToken(household.id)}
                               data-testid={`button-revoke-link-${household.id}`}
                             >
@@ -772,36 +883,107 @@ export default function Guests() {
           </TabsContent>
 
           <TabsContent value="allocation" className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold">Guest Allocation Overview</h2>
-              <p className="text-muted-foreground mt-1">
-                View guest counts and seat allocations by bride/groom side
-              </p>
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h2 className="text-2xl font-bold">Guest Allocation Overview</h2>
+                <p className="text-muted-foreground mt-1">
+                  View guest counts and seat allocations by bride/groom side
+                </p>
+              </div>
+              
+              <div className="flex flex-wrap gap-2">
+                <Select value={affiliationFilter} onValueChange={setAffiliationFilter}>
+                  <SelectTrigger className="w-[160px]" data-testid="select-affiliation-filter">
+                    <SelectValue placeholder="Filter by side" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Sides</SelectItem>
+                    <SelectItem value="bride">Bride's Side</SelectItem>
+                    <SelectItem value="groom">Groom's Side</SelectItem>
+                    <SelectItem value="mutual">Mutual</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={tierFilter} onValueChange={setTierFilter}>
+                  <SelectTrigger className="w-[180px]" data-testid="select-tier-filter">
+                    <SelectValue placeholder="Filter by tier" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Tiers</SelectItem>
+                    <SelectItem value="immediate_family">Immediate Family</SelectItem>
+                    <SelectItem value="extended_family">Extended Family</SelectItem>
+                    <SelectItem value="friend">Friends</SelectItem>
+                    <SelectItem value="parents_friend">Parent's Friends</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    const filteredHouseholds = households.filter(h => {
+                      const matchesAffiliation = affiliationFilter === 'all' || h.affiliation === affiliationFilter;
+                      const matchesTier = tierFilter === 'all' || h.relationshipTier === tierFilter;
+                      return matchesAffiliation && matchesTier;
+                    });
+                    const filteredGuests = guests.filter(g => {
+                      const household = households.find(h => h.id === g.householdId);
+                      if (!household) return false;
+                      const matchesAffiliation = affiliationFilter === 'all' || household.affiliation === affiliationFilter;
+                      const matchesTier = tierFilter === 'all' || household.relationshipTier === tierFilter;
+                      return matchesAffiliation && matchesTier;
+                    });
+                    exportToCSV(filteredHouseholds, filteredGuests);
+                    toast({
+                      title: "Export successful",
+                      description: `Exported ${filteredHouseholds.length} households to CSV`,
+                    });
+                  }}
+                  data-testid="button-export-csv"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Export CSV
+                </Button>
+              </div>
             </div>
 
             {(() => {
               // Pre-index households by id for efficient lookups
               const householdById = new Map(households.map(h => [h.id, h]));
 
-              // Calculate allocation metrics
-              const brideHouseholds = households.filter(h => h.affiliation === 'bride');
-              const groomHouseholds = households.filter(h => h.affiliation === 'groom');
-              const mutualHouseholds = households.filter(h => h.affiliation === 'mutual');
+              // Apply filters
+              const filteredHouseholds = households.filter(h => {
+                const matchesAffiliation = affiliationFilter === 'all' || h.affiliation === affiliationFilter;
+                const matchesTier = tierFilter === 'all' || h.relationshipTier === tierFilter;
+                return matchesAffiliation && matchesTier;
+              });
+
+              const filteredGuests = guests.filter(g => {
+                const household = householdById.get(g.householdId);
+                if (!household) return false;
+                const matchesAffiliation = affiliationFilter === 'all' || household.affiliation === affiliationFilter;
+                const matchesTier = tierFilter === 'all' || household.relationshipTier === tierFilter;
+                return matchesAffiliation && matchesTier;
+              });
+
+              // Calculate allocation metrics using filtered data
+              const brideHouseholds = filteredHouseholds.filter(h => h.affiliation === 'bride');
+              const groomHouseholds = filteredHouseholds.filter(h => h.affiliation === 'groom');
+              const mutualHouseholds = filteredHouseholds.filter(h => h.affiliation === 'mutual');
 
               const brideSeats = brideHouseholds.reduce((sum, h) => sum + (h.maxCount || 0), 0);
               const groomSeats = groomHouseholds.reduce((sum, h) => sum + (h.maxCount || 0), 0);
               const mutualSeats = mutualHouseholds.reduce((sum, h) => sum + (h.maxCount || 0), 0);
 
-              // Count guests by affiliation using pre-indexed households
-              const brideGuests = guests.filter(g => {
+              // Count guests by affiliation using filtered guests
+              const brideGuests = filteredGuests.filter(g => {
                 const household = householdById.get(g.householdId);
                 return household?.affiliation === 'bride';
               });
-              const groomGuests = guests.filter(g => {
+              const groomGuests = filteredGuests.filter(g => {
                 const household = householdById.get(g.householdId);
                 return household?.affiliation === 'groom';
               });
-              const mutualGuests = guests.filter(g => {
+              const mutualGuests = filteredGuests.filter(g => {
                 const household = householdById.get(g.householdId);
                 return household?.affiliation === 'mutual';
               });
@@ -818,19 +1000,19 @@ export default function Guests() {
                 // Count actual guests per tier by mapping guest to household tier
                 const immediateGuests = affiliationGuests.filter(g => {
                   const household = householdById.get(g.householdId);
-                  return household?.relationshipTier === 'immediate_family';
+                  return household && household.relationshipTier === 'immediate_family';
                 });
                 const extendedGuests = affiliationGuests.filter(g => {
                   const household = householdById.get(g.householdId);
-                  return household?.relationshipTier === 'extended_family';
+                  return household && household.relationshipTier === 'extended_family';
                 });
                 const friendGuests = affiliationGuests.filter(g => {
                   const household = householdById.get(g.householdId);
-                  return household?.relationshipTier === 'friend';
+                  return household && household.relationshipTier === 'friend';
                 });
                 const parentsFGuests = affiliationGuests.filter(g => {
                   const household = householdById.get(g.householdId);
-                  return household?.relationshipTier === 'parents_friend';
+                  return household && household.relationshipTier === 'parents_friend';
                 });
 
                 return {
@@ -1559,6 +1741,50 @@ export default function Guests() {
                   )}
                 </Button>
               </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* QR Code Dialog */}
+      <Dialog open={qrCodeDialogOpen} onOpenChange={setQrCodeDialogOpen}>
+        <DialogContent className="sm:max-w-md" data-testid="dialog-qr-code">
+          <DialogHeader>
+            <DialogTitle>QR Code for {selectedHouseholdForQR?.name}</DialogTitle>
+            <DialogDescription>
+              Scan this QR code to access the RSVP portal. You can download and print it on physical invitation cards.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex flex-col items-center space-y-4 py-4">
+            {qrCodeDataURL && (
+              <div className="bg-white p-4 rounded-lg">
+                <img 
+                  src={qrCodeDataURL} 
+                  alt="QR Code for RSVP"
+                  className="w-64 h-64"
+                  data-testid="img-qr-code"
+                />
+              </div>
+            )}
+            
+            <div className="flex gap-2 w-full">
+              <Button
+                variant="outline"
+                onClick={() => setQrCodeDialogOpen(false)}
+                className="flex-1"
+                data-testid="button-close-qr-dialog"
+              >
+                Close
+              </Button>
+              <Button
+                onClick={handleDownloadQRCode}
+                className="flex-1"
+                data-testid="button-download-qr-code"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Download QR Code
+              </Button>
             </div>
           </div>
         </DialogContent>
