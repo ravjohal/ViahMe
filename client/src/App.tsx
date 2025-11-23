@@ -37,6 +37,8 @@ import Invitations from "@/pages/invitations";
 import Checkout from "@/pages/checkout";
 import OrderConfirmation from "@/pages/order-confirmation";
 import RsvpPortal from "@/pages/rsvp-portal";
+import Shopping from "@/pages/shopping";
+import CulturalInfo from "@/pages/cultural-info";
 
 function Router() {
   return (
@@ -70,6 +72,8 @@ function Router() {
       <Route path="/invitations" component={Invitations} />
       <Route path="/checkout" component={Checkout} />
       <Route path="/order-confirmation" component={OrderConfirmation} />
+      <Route path="/shopping" component={Shopping} />
+      <Route path="/cultural-info" component={CulturalInfo} />
       <Route path="/settings" component={Settings} />
       <Route path="/wedding/:slug" component={GuestWebsite} />
       <Route component={NotFound} />
