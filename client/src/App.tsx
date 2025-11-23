@@ -82,8 +82,15 @@ function Router() {
 }
 
 function AppLayout() {
-  const [location] = useLocation();
-  const { user } = useAuth();
+  const [location, setLocation] = useLocation();
+  const { user, isLoading } = useAuth();
+  
+  // Redirect authenticated users from landing page to dashboard
+  if (!isLoading && user && location === "/") {
+    const dashboardPath = user.role === "vendor" ? "/vendor-dashboard" : "/dashboard";
+    setLocation(dashboardPath);
+    return null; // Don't render anything during redirect
+  }
   
   // Don't show header on onboarding, auth pages, or guest website pages
   const authPages = [
