@@ -271,6 +271,8 @@ export const households = pgTable("households", {
   weddingId: varchar("wedding_id").notNull(),
   name: text("name").notNull(), // e.g., "The Patel Family"
   maxCount: integer("max_count").notNull().default(1), // Total seats allocated (e.g., 4)
+  affiliation: text("affiliation").notNull().default("bride"), // "bride" | "groom" | "mutual"
+  relationshipTier: text("relationship_tier").notNull().default("friend"), // "immediate_family" | "extended_family" | "friend" | "parents_friend"
   magicLinkTokenHash: varchar("magic_link_token_hash").unique(), // HASHED secure token for passwordless access
   magicLinkExpires: timestamp("magic_link_expires"), // Token expiration
   createdAt: timestamp("created_at").notNull().defaultNow(),

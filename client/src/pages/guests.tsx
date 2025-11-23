@@ -9,20 +9,29 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertGuestSchema, type Wedding, type Guest, type Event } from "@shared/schema";
+import { insertGuestSchema, insertHouseholdSchema, type Wedding, type Guest, type Event, type Household } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
-import { Trash2, Upload } from "lucide-react";
+import { Trash2, Upload, Users, Link as LinkIcon, MailCheck, Copy } from "lucide-react";
 
 const guestFormSchema = insertGuestSchema.extend({
   eventIds: z.array(z.string()).optional(),
 });
 
 type GuestFormData = z.infer<typeof guestFormSchema>;
+
+const householdFormSchema = insertHouseholdSchema.extend({
+  maxCount: z.number().min(1, "Max count must be at least 1"),
+});
+
+type HouseholdFormData = z.infer<typeof householdFormSchema>;
 
 export default function Guests() {
   const [, setLocation] = useLocation();
@@ -31,6 +40,11 @@ export default function Guests() {
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
+  
+  // Household state
+  const [householdDialogOpen, setHouseholdDialogOpen] = useState(false);
+  const [editingHousehold, setEditingHousehold] = useState<Household | null>(null);
+  const [householdTokens, setHouseholdTokens] = useState<Map<string, string>>(new Map());
 
   const { data: weddings, isLoading: weddingsLoading } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
@@ -48,6 +62,12 @@ export default function Guests() {
     enabled: !!wedding?.id,
   });
 
+  // Fetch households
+  const { data: households = [], isLoading: householdsLoading } = useQuery<Household[]>({
+    queryKey: ["/api/households", wedding?.id],
+    enabled: !!wedding?.id,
+  });
+
   const form = useForm<GuestFormData>({
     resolver: zodResolver(guestFormSchema),
     defaultValues: {
@@ -58,6 +78,17 @@ export default function Guests() {
       rsvpStatus: "pending",
       plusOne: false,
       eventIds: [],
+      weddingId: wedding?.id || "",
+    },
+  });
+
+  const householdForm = useForm<HouseholdFormData>({
+    resolver: zodResolver(householdFormSchema),
+    defaultValues: {
+      name: "",
+      maxCount: 1,
+      affiliation: "bride",
+      relationshipTier: "friend",
       weddingId: wedding?.id || "",
     },
   });
@@ -133,6 +164,141 @@ export default function Guests() {
     },
   });
 
+  // Household mutations
+  const createHouseholdMutation = useMutation({
+    mutationFn: async (data: HouseholdFormData) => {
+      return await apiRequest("POST", "/api/households", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/households", wedding?.id] });
+      setHouseholdDialogOpen(false);
+      householdForm.reset();
+      toast({
+        title: "Household created",
+        description: "Household has been added successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to create household",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateHouseholdMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<HouseholdFormData> }) => {
+      return await apiRequest("PATCH", `/api/households/${id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/households", wedding?.id] });
+      setHouseholdDialogOpen(false);
+      setEditingHousehold(null);
+      householdForm.reset();
+      toast({
+        title: "Household updated",
+        description: "Household has been updated successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update household",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteHouseholdMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiRequest("DELETE", `/api/households/${id}`);
+    },
+    onSuccess: (_, householdId) => {
+      // Remove token from local state
+      setHouseholdTokens(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(householdId);
+        return newMap;
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/households", wedding?.id] });
+      setHouseholdDialogOpen(false);
+      setEditingHousehold(null);
+      householdForm.reset();
+      toast({
+        title: "Household deleted",
+        description: "Household has been removed successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete household",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const generateTokenMutation = useMutation({
+    mutationFn: async (householdId: string) => {
+      const response = await apiRequest("POST", `/api/households/${householdId}/generate-token`, {});
+      const result = await response.json();
+      return { householdId, token: result.token };
+    },
+    onSuccess: (data) => {
+      // Store the token locally
+      setHouseholdTokens(prev => new Map(prev).set(data.householdId, data.token));
+      queryClient.invalidateQueries({ queryKey: ["/api/households", wedding?.id] });
+      
+      // Auto-copy the link
+      const magicLink = `${window.location.origin}/rsvp/${data.token}`;
+      navigator.clipboard.writeText(magicLink).then(() => {
+        toast({
+          title: "Magic link generated & copied",
+          description: "Invitation link has been copied to clipboard",
+        });
+      }).catch(() => {
+        toast({
+          title: "Magic link generated",
+          description: "Invitation link has been generated successfully",
+        });
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to generate magic link",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const revokeTokenMutation = useMutation({
+    mutationFn: async (householdId: string) => {
+      return await apiRequest("POST", `/api/households/${householdId}/revoke-token`, {});
+    },
+    onSuccess: (_, householdId) => {
+      // Remove token from local state
+      setHouseholdTokens(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(householdId);
+        return newMap;
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/households", wedding?.id] });
+      toast({
+        title: "Link revoked",
+        description: "Invitation link has been revoked successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to revoke invitation link",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleBulkImport = async (guests: any[]) => {
     try {
       const guestsWithWeddingId = guests.map(guest => ({
@@ -140,10 +306,11 @@ export default function Guests() {
         weddingId: wedding?.id || "",
       }));
 
-      const result = await apiRequest("POST", "/api/guests/bulk", {
+      const response = await apiRequest("POST", "/api/guests/bulk", {
         guests: guestsWithWeddingId,
       });
       
+      const result = await response.json();
       queryClient.invalidateQueries({ queryKey: ["/api/guests"] });
       
       if (result.success > 0) {
@@ -240,6 +407,82 @@ export default function Guests() {
     );
   };
 
+  // Household handlers
+  const handleAddHousehold = () => {
+    setEditingHousehold(null);
+    householdForm.reset({
+      name: "",
+      maxCount: 1,
+      affiliation: "bride" as const,
+      relationshipTier: "friend" as const,
+      weddingId: wedding?.id || "",
+    });
+    setHouseholdDialogOpen(true);
+  };
+
+  const handleEditHousehold = (household: Household) => {
+    setEditingHousehold(household);
+    householdForm.reset({
+      name: household.name,
+      maxCount: household.maxCount,
+      affiliation: household.affiliation || "bride",
+      relationshipTier: household.relationshipTier || "friend",
+      weddingId: household.weddingId,
+    });
+    setHouseholdDialogOpen(true);
+  };
+
+  const handleHouseholdSubmit = (data: HouseholdFormData) => {
+    if (editingHousehold) {
+      updateHouseholdMutation.mutate({ id: editingHousehold.id, data });
+    } else {
+      createHouseholdMutation.mutate(data);
+    }
+  };
+
+  const handleDeleteHousehold = () => {
+    if (editingHousehold) {
+      deleteHouseholdMutation.mutate(editingHousehold.id);
+    }
+  };
+
+  const handleGenerateToken = (householdId: string) => {
+    generateTokenMutation.mutate(householdId);
+  };
+
+  const handleRevokeToken = (householdId: string) => {
+    revokeTokenMutation.mutate(householdId);
+  };
+
+  const handleCopyMagicLink = async (household: Household) => {
+    const token = householdTokens.get(household.id);
+    
+    if (!token || !household.magicLinkTokenHash || !household.magicLinkExpires) {
+      toast({
+        title: "Token unavailable",
+        description: "Please regenerate the invitation link to copy it",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const magicLink = `${window.location.origin}/rsvp/${token}`;
+    
+    try {
+      await navigator.clipboard.writeText(magicLink);
+      toast({
+        title: "Link copied",
+        description: "Invitation link has been copied to clipboard",
+      });
+    } catch (error) {
+      toast({
+        title: "Failed to copy",
+        description: "Could not copy link to clipboard",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (weddingsLoading || guestsLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -260,12 +503,152 @@ export default function Guests() {
   return (
     <div className="min-h-screen bg-background">
       <main className="container mx-auto px-6 py-8">
-        <GuestListManager
-          guests={guests}
-          onAddGuest={handleAddGuest}
-          onImportGuests={() => setImportDialogOpen(true)}
-          onEditGuest={handleEditGuest}
-        />
+        <Tabs defaultValue="guests" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="guests" data-testid="tab-guests">
+              Individual Guests
+            </TabsTrigger>
+            <TabsTrigger value="households" data-testid="tab-households">
+              <Users className="w-4 h-4 mr-2" />
+              Households
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="guests" className="space-y-4">
+            <GuestListManager
+              guests={guests}
+              onAddGuest={handleAddGuest}
+              onImportGuests={() => setImportDialogOpen(true)}
+              onEditGuest={handleEditGuest}
+            />
+          </TabsContent>
+
+          <TabsContent value="households" className="space-y-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-2xl font-bold">Household Management</h2>
+                <p className="text-muted-foreground mt-1">
+                  Group families together and manage invitation links
+                </p>
+              </div>
+              <Button onClick={handleAddHousehold} data-testid="button-add-household">
+                <Users className="w-4 h-4 mr-2" />
+                Add Household
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {households.map((household) => {
+                const householdGuests = guests.filter(g => g.householdId === household.id);
+                const hasActiveLink = household.magicLinkTokenHash && household.magicLinkExpires && new Date(household.magicLinkExpires) > new Date();
+
+                return (
+                  <Card key={household.id} className="hover-elevate" data-testid={`card-household-${household.id}`}>
+                    <CardHeader className="pb-3">
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="flex-1 min-w-0">
+                          <CardTitle className="text-lg truncate">{household.name}</CardTitle>
+                          <CardDescription className="mt-1">
+                            {household.maxCount} {household.maxCount === 1 ? 'seat' : 'seats'} • {householdGuests.length} {householdGuests.length === 1 ? 'guest' : 'guests'}
+                          </CardDescription>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleEditHousehold(household)}
+                          data-testid={`button-edit-household-${household.id}`}
+                        >
+                          Edit
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex flex-wrap gap-2">
+                        <Badge variant="outline" data-testid={`badge-affiliation-${household.id}`}>
+                          {household.affiliation === 'bride' ? "Bride's Side" : household.affiliation === 'groom' ? "Groom's Side" : "Mutual"}
+                        </Badge>
+                        <Badge variant="secondary" data-testid={`badge-tier-${household.id}`}>
+                          {household.relationshipTier?.split('_').map(word => 
+                            word.charAt(0).toUpperCase() + word.slice(1)
+                          ).join(' ')}
+                        </Badge>
+                        {hasActiveLink && (
+                          <Badge variant="default" data-testid={`badge-link-active-${household.id}`}>
+                            <LinkIcon className="w-3 h-3 mr-1" />
+                            Link Active
+                          </Badge>
+                        )}
+                      </div>
+
+                      {householdGuests.length > 0 && (
+                        <div className="text-sm text-muted-foreground">
+                          <div className="font-medium mb-1">Members:</div>
+                          <ul className="space-y-0.5">
+                            {householdGuests.map((guest) => (
+                              <li key={guest.id}>{guest.name}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      <div className="flex flex-wrap gap-2 pt-2 border-t">
+                        {hasActiveLink ? (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleCopyMagicLink(household)}
+                              className="flex-1"
+                              data-testid={`button-copy-link-${household.id}`}
+                            >
+                              <Copy className="w-3 h-3 mr-1" />
+                              Copy Link
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleRevokeToken(household.id)}
+                              data-testid={`button-revoke-link-${household.id}`}
+                            >
+                              Revoke
+                            </Button>
+                          </>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleGenerateToken(household.id)}
+                            className="flex-1"
+                            data-testid={`button-generate-link-${household.id}`}
+                          >
+                            <LinkIcon className="w-3 h-3 mr-1" />
+                            Generate Link
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+
+              {households.length === 0 && (
+                <Card className="col-span-full">
+                  <CardContent className="py-12 text-center">
+                    <Users className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                    <h3 className="text-lg font-semibold mb-2">No households yet</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Create households to group families together and manage invitations
+                    </p>
+                    <Button onClick={handleAddHousehold} data-testid="button-add-first-household">
+                      <Users className="w-4 h-4 mr-2" />
+                      Add Your First Household
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
       </main>
 
       <GuestImportDialog
@@ -444,6 +827,133 @@ export default function Guests() {
                   data-testid="button-save-guest"
                 >
                   {editingGuest ? "Update Guest" : "Add Guest"}
+                </Button>
+              </div>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={householdDialogOpen} onOpenChange={setHouseholdDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle data-testid="dialog-title-household">
+              {editingHousehold ? "Edit Household" : "Add Household"}
+            </DialogTitle>
+            <DialogDescription>
+              {editingHousehold
+                ? "Update household information and allocation"
+                : "Create a new household group for your wedding"}
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={householdForm.handleSubmit(handleHouseholdSubmit)} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="household-name">
+                Household Name <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="household-name"
+                {...householdForm.register("name")}
+                placeholder="e.g., The Patel Family"
+                data-testid="input-household-name"
+              />
+              {householdForm.formState.errors.name && (
+                <p className="text-sm text-destructive">
+                  {householdForm.formState.errors.name.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="household-maxCount">
+                Max Seats <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="household-maxCount"
+                type="number"
+                min="1"
+                {...householdForm.register("maxCount", { valueAsNumber: true })}
+                placeholder="e.g., 4"
+                data-testid="input-household-max-count"
+              />
+              {householdForm.formState.errors.maxCount && (
+                <p className="text-sm text-destructive">
+                  {householdForm.formState.errors.maxCount.message}
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Total number of people in this household
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="household-affiliation">
+                Affiliation <span className="text-destructive">*</span>
+              </Label>
+              <Select
+                value={householdForm.watch("affiliation")}
+                onValueChange={(value) => householdForm.setValue("affiliation", value as "bride" | "groom" | "mutual")}
+              >
+                <SelectTrigger id="household-affiliation" data-testid="select-household-affiliation">
+                  <SelectValue placeholder="Select affiliation" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="bride">Bride's Side</SelectItem>
+                  <SelectItem value="groom">Groom's Side</SelectItem>
+                  <SelectItem value="mutual">Mutual</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="household-tier">
+                Relationship Tier <span className="text-destructive">*</span>
+              </Label>
+              <Select
+                value={householdForm.watch("relationshipTier")}
+                onValueChange={(value) => householdForm.setValue("relationshipTier", value)}
+              >
+                <SelectTrigger id="household-tier" data-testid="select-household-tier">
+                  <SelectValue placeholder="Select relationship tier" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="immediate_family">Immediate Family</SelectItem>
+                  <SelectItem value="extended_family">Extended Family</SelectItem>
+                  <SelectItem value="friend">Friend</SelectItem>
+                  <SelectItem value="parents_friend">Parent's Friend</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-wrap gap-2 justify-between pt-4 border-t">
+              {editingHousehold && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={handleDeleteHousehold}
+                  disabled={deleteHouseholdMutation.isPending}
+                  data-testid="button-delete-household"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete
+                </Button>
+              )}
+              <div className="flex gap-2 ml-auto">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setHouseholdDialogOpen(false)}
+                  data-testid="button-cancel-household"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={createHouseholdMutation.isPending || updateHouseholdMutation.isPending}
+                  data-testid="button-save-household"
+                >
+                  {editingHousehold ? "Update Household" : "Add Household"}
                 </Button>
               </div>
             </div>
