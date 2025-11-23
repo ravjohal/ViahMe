@@ -339,6 +339,26 @@ export default function Budget() {
   };
 
   const handleSubmit = (data: BudgetFormData) => {
+    // Calculate current total allocation (excluding the category being edited)
+    const currentAllocated = categories
+      .filter(cat => editingCategory ? cat.id !== editingCategory.id : true)
+      .reduce((sum, cat) => sum + parseFloat(cat.allocatedAmount.toString()), 0);
+    
+    const newAllocation = parseFloat(data.allocatedAmount);
+    const totalAfterChange = currentAllocated + newAllocation;
+    const totalBudget = parseFloat(wedding?.totalBudget || "0");
+    
+    // Warn if allocation would exceed total budget
+    if (totalAfterChange > totalBudget) {
+      const excess = totalAfterChange - totalBudget;
+      toast({
+        title: "Budget Exceeded",
+        description: `This allocation would exceed your total budget by $${excess.toLocaleString()}. Total allocated would be $${totalAfterChange.toLocaleString()} of $${totalBudget.toLocaleString()} budget.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (editingCategory) {
       updateMutation.mutate({ id: editingCategory.id, data });
     } else {
@@ -455,18 +475,19 @@ export default function Budget() {
               </div>
             </Card>
 
-            <Card className="p-6">
+            <Card className={`p-6 ${totalAllocated > total ? 'border-2 border-red-500 bg-red-50 dark:bg-red-950/20' : ''}`}>
               <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 rounded-lg bg-blue-500/10">
-                  <PieChart className="w-5 h-5 text-blue-600" />
+                <div className={`p-2 rounded-lg ${totalAllocated > total ? 'bg-red-500/10' : 'bg-blue-500/10'}`}>
+                  <PieChart className={`w-5 h-5 ${totalAllocated > total ? 'text-red-600' : 'text-blue-600'}`} />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Allocated</p>
-                  <p className="font-mono text-2xl font-bold text-foreground" data-testid="text-total-allocated">
+                  <p className={`font-mono text-2xl font-bold ${totalAllocated > total ? 'text-red-600' : 'text-foreground'}`} data-testid="text-total-allocated">
                     ${totalAllocated.toLocaleString()}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className={`text-xs ${totalAllocated > total ? 'text-red-600 font-semibold' : 'text-muted-foreground'}`}>
                     {total > 0 ? `${((totalAllocated / total) * 100).toFixed(0)}% of budget` : '0%'}
+                    {totalAllocated > total && ' ⚠️ OVER BUDGET'}
                   </p>
                 </div>
               </div>
