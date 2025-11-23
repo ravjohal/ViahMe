@@ -660,12 +660,43 @@ export async function sendInvitationEmail(params: {
     </html>
   `;
 
+  const plaintext = `
+You're Invited!
+
+Dear ${householdName},
+
+You are cordially invited to celebrate the wedding of ${coupleName}!
+
+${weddingDate ? `Wedding Date: ${weddingDate}\n` : ''}
+${personalMessage ? `\nPersonal Message:\n${personalMessage}\n` : ''}
+
+You are invited to the following events:
+${eventNames.map(name => `- ${name}`).join('\n')}
+
+Please RSVP for each event by visiting the link below. You'll be able to let us know who from your household will be attending, any dietary restrictions, and more.
+
+View Invitation & RSVP:
+${magicLink}
+
+IMPORTANT: This invitation link is unique to your household and expires in 30 days from the date of this email. You can return to this link at any time to update your RSVP before it expires. If your link has expired, please contact the couple for a new invitation.
+
+We can't wait to celebrate with you!
+
+With love,
+${coupleName}
+
+---
+This invitation was sent via Viah.me
+Your South Asian Wedding Planning Platform
+  `.trim();
+
   try {
     const result = await client.emails.send({
       from: fromEmail,
       to,
       subject: `Wedding Invitation from ${coupleName}`,
       html,
+      text: plaintext,
     });
     return result;
   } catch (error) {
