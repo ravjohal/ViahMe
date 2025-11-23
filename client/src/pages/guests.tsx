@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,7 +20,7 @@ import { insertGuestSchema, insertHouseholdSchema, type Wedding, type Guest, typ
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
-import { Trash2, Upload, Users, Link as LinkIcon, MailCheck, Copy } from "lucide-react";
+import { Trash2, Upload, Users, Link as LinkIcon, MailCheck, Copy, Send } from "lucide-react";
 
 const guestFormSchema = insertGuestSchema.extend({
   eventIds: z.array(z.string()).optional(),
@@ -29,6 +30,7 @@ type GuestFormData = z.infer<typeof guestFormSchema>;
 
 const householdFormSchema = insertHouseholdSchema.extend({
   maxCount: z.number().min(1, "Max count must be at least 1"),
+  contactEmail: z.string().email("Please enter a valid email address").optional().or(z.literal("")),
 });
 
 type HouseholdFormData = z.infer<typeof householdFormSchema>;
@@ -45,6 +47,12 @@ export default function Guests() {
   const [householdDialogOpen, setHouseholdDialogOpen] = useState(false);
   const [editingHousehold, setEditingHousehold] = useState<Household | null>(null);
   const [householdTokens, setHouseholdTokens] = useState<Map<string, string>>(new Map());
+
+  // Bulk invitation state
+  const [bulkInviteDialogOpen, setBulkInviteDialogOpen] = useState(false);
+  const [selectedHouseholds, setSelectedHouseholds] = useState<string[]>([]);
+  const [selectedInviteEvents, setSelectedInviteEvents] = useState<string[]>([]);
+  const [personalMessage, setPersonalMessage] = useState("");
 
   const { data: weddings, isLoading: weddingsLoading } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
@@ -86,6 +94,7 @@ export default function Guests() {
     resolver: zodResolver(householdFormSchema),
     defaultValues: {
       name: "",
+      contactEmail: "",
       maxCount: 1,
       affiliation: "bride",
       relationshipTier: "friend",
@@ -299,6 +308,41 @@ export default function Guests() {
     },
   });
 
+  const sendBulkInvitationsMutation = useMutation({
+    mutationFn: async (data: {
+      householdIds: string[];
+      weddingId: string;
+      eventIds: string[];
+      personalMessage?: string;
+    }) => {
+      const response = await apiRequest("POST", "/api/households/send-invitations", data);
+      return await response.json();
+    },
+    onSuccess: (result) => {
+      setBulkInviteDialogOpen(false);
+      setSelectedHouseholds([]);
+      setSelectedInviteEvents([]);
+      setPersonalMessage("");
+      
+      toast({
+        title: "Invitations sent",
+        description: `Successfully sent ${result.success} invitation(s)${result.errors?.length ? `, ${result.errors.length} failed` : ""}`,
+      });
+
+      // Show detailed errors if any
+      if (result.errors && result.errors.length > 0) {
+        console.error("Bulk invitation errors:", result.errors);
+      }
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to send invitations",
+        description: error.message || "An error occurred while sending invitations",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleBulkImport = async (guests: any[]) => {
     try {
       const guestsWithWeddingId = guests.map(guest => ({
@@ -412,6 +456,7 @@ export default function Guests() {
     setEditingHousehold(null);
     householdForm.reset({
       name: "",
+      contactEmail: "",
       maxCount: 1,
       affiliation: "bride" as const,
       relationshipTier: "friend" as const,
@@ -424,6 +469,7 @@ export default function Guests() {
     setEditingHousehold(household);
     householdForm.reset({
       name: household.name,
+      contactEmail: household.contactEmail || "",
       maxCount: household.maxCount,
       affiliation: household.affiliation || "bride",
       relationshipTier: household.relationshipTier || "friend",
@@ -483,6 +529,72 @@ export default function Guests() {
     }
   };
 
+  // Bulk invitation handlers
+  const handleOpenBulkInvite = () => {
+    setSelectedHouseholds([]);
+    setSelectedInviteEvents([]);
+    setPersonalMessage("");
+    setBulkInviteDialogOpen(true);
+  };
+
+  const handleToggleHousehold = (householdId: string) => {
+    setSelectedHouseholds(prev =>
+      prev.includes(householdId)
+        ? prev.filter(id => id !== householdId)
+        : [...prev, householdId]
+    );
+  };
+
+  const handleToggleInviteEvent = (eventId: string) => {
+    setSelectedInviteEvents(prev =>
+      prev.includes(eventId)
+        ? prev.filter(id => id !== eventId)
+        : [...prev, eventId]
+    );
+  };
+
+  const handleSendBulkInvitations = () => {
+    if (selectedHouseholds.length === 0) {
+      toast({
+        title: "No households selected",
+        description: "Please select at least one household to send invitations",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (selectedInviteEvents.length === 0) {
+      toast({
+        title: "No events selected",
+        description: "Please select at least one event for the invitation",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Preflight validation: ensure all selected households have contact emails
+    const householdsWithoutEmail = selectedHouseholds.filter(id => {
+      const household = households.find(h => h.id === id);
+      return !household?.contactEmail;
+    });
+
+    if (householdsWithoutEmail.length > 0) {
+      toast({
+        title: "Missing contact emails",
+        description: `${householdsWithoutEmail.length} selected household(s) don't have contact emails. Please add them first or deselect these households.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    sendBulkInvitationsMutation.mutate({
+      householdIds: selectedHouseholds,
+      weddingId: wedding?.id || "",
+      eventIds: selectedInviteEvents,
+      personalMessage: personalMessage || undefined,
+    });
+  };
+
   if (weddingsLoading || guestsLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -531,10 +643,16 @@ export default function Guests() {
                   Group families together and manage invitation links
                 </p>
               </div>
-              <Button onClick={handleAddHousehold} data-testid="button-add-household">
-                <Users className="w-4 h-4 mr-2" />
-                Add Household
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={handleOpenBulkInvite} variant="default" data-testid="button-bulk-invite">
+                  <Send className="w-4 h-4 mr-2" />
+                  Send Invitations
+                </Button>
+                <Button onClick={handleAddHousehold} variant="outline" data-testid="button-add-household">
+                  <Users className="w-4 h-4 mr-2" />
+                  Add Household
+                </Button>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -866,6 +984,27 @@ export default function Guests() {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="household-contactEmail">
+                Contact Email
+              </Label>
+              <Input
+                id="household-contactEmail"
+                type="email"
+                {...householdForm.register("contactEmail")}
+                placeholder="e.g., patel@example.com"
+                data-testid="input-household-contact-email"
+              />
+              {householdForm.formState.errors.contactEmail && (
+                <p className="text-sm text-destructive">
+                  {householdForm.formState.errors.contactEmail.message}
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Email address for sending invitations
+              </p>
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="household-maxCount">
                 Max Seats <span className="text-destructive">*</span>
               </Label>
@@ -958,6 +1097,174 @@ export default function Guests() {
               </div>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={bulkInviteDialogOpen} onOpenChange={setBulkInviteDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle data-testid="dialog-title-bulk-invite">Send Bulk Invitations</DialogTitle>
+            <DialogDescription>
+              Select households and events to send invitation emails with magic RSVP links
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            {/* Household Selection */}
+            <div className="space-y-3">
+              <Label className="text-base font-semibold">Select Households</Label>
+              <p className="text-sm text-muted-foreground">
+                Choose which families should receive invitations
+              </p>
+              <div className="border rounded-md p-4 space-y-2 max-h-60 overflow-y-auto">
+                {households.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No households available. Create households first.
+                  </p>
+                ) : (
+                  households.map((household) => {
+                    const householdGuests = guests.filter(g => g.householdId === household.id);
+                    const missingEmail = !household.contactEmail;
+                    
+                    return (
+                      <div
+                        key={household.id}
+                        className={`flex items-start space-x-3 p-2 rounded ${!missingEmail ? 'hover-elevate' : 'opacity-60'}`}
+                        data-testid={`checkbox-household-${household.id}`}
+                      >
+                        <Checkbox
+                          id={`household-${household.id}`}
+                          checked={selectedHouseholds.includes(household.id)}
+                          onCheckedChange={() => {
+                            if (!missingEmail) {
+                              handleToggleHousehold(household.id);
+                            }
+                          }}
+                          disabled={missingEmail}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <label
+                            htmlFor={`household-${household.id}`}
+                            className={`text-sm font-medium ${!missingEmail ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+                          >
+                            {household.name}
+                          </label>
+                          <p className="text-xs text-muted-foreground">
+                            {householdGuests.length} {householdGuests.length === 1 ? 'guest' : 'guests'}
+                            {household.contactEmail && ` • ${household.contactEmail}`}
+                          </p>
+                          {missingEmail && (
+                            <p className="text-xs text-destructive mt-1">
+                              No contact email - please add one to send invitations
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Selected: {selectedHouseholds.length} household{selectedHouseholds.length !== 1 ? 's' : ''}
+              </p>
+            </div>
+
+            {/* Event Selection */}
+            <div className="space-y-3">
+              <Label className="text-base font-semibold">Select Events</Label>
+              <p className="text-sm text-muted-foreground">
+                Choose which events to include in the invitation
+              </p>
+              <div className="border rounded-md p-4 space-y-2 max-h-40 overflow-y-auto">
+                {events.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No events available
+                  </p>
+                ) : (
+                  events.map((event) => (
+                    <div
+                      key={event.id}
+                      className="flex items-start space-x-3 p-2 rounded hover-elevate"
+                      data-testid={`checkbox-event-${event.id}`}
+                    >
+                      <Checkbox
+                        id={`event-${event.id}`}
+                        checked={selectedInviteEvents.includes(event.id)}
+                        onCheckedChange={() => handleToggleInviteEvent(event.id)}
+                      />
+                      <div className="flex-1">
+                        <label
+                          htmlFor={`event-${event.id}`}
+                          className="text-sm font-medium cursor-pointer"
+                        >
+                          {event.name}
+                        </label>
+                        {event.date && (
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(event.date).toLocaleDateString()}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Selected: {selectedInviteEvents.length} event{selectedInviteEvents.length !== 1 ? 's' : ''}
+              </p>
+            </div>
+
+            {/* Personal Message */}
+            <div className="space-y-2">
+              <Label htmlFor="personal-message">Personal Message (Optional)</Label>
+              <Textarea
+                id="personal-message"
+                value={personalMessage}
+                onChange={(e) => setPersonalMessage(e.target.value)}
+                placeholder="Add a personal message to your invitation..."
+                rows={4}
+                data-testid="textarea-personal-message"
+              />
+              <p className="text-xs text-muted-foreground">
+                This message will be included in the invitation email
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-between items-center pt-4 border-t">
+              <div className="text-sm text-muted-foreground">
+                {selectedHouseholds.length > 0 && selectedInviteEvents.length > 0 && (
+                  <span>
+                    Ready to send {selectedHouseholds.length} invitation{selectedHouseholds.length !== 1 ? 's' : ''} for {selectedInviteEvents.length} event{selectedInviteEvents.length !== 1 ? 's' : ''}
+                  </span>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setBulkInviteDialogOpen(false)}
+                  data-testid="button-cancel-bulk-invite"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSendBulkInvitations}
+                  disabled={sendBulkInvitationsMutation.isPending || selectedHouseholds.length === 0 || selectedInviteEvents.length === 0}
+                  data-testid="button-send-bulk-invitations"
+                >
+                  {sendBulkInvitationsMutation.isPending ? (
+                    <>Sending...</>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4 mr-2" />
+                      Send Invitations
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

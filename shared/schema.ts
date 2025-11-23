@@ -270,6 +270,7 @@ export const households = pgTable("households", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   weddingId: varchar("wedding_id").notNull(),
   name: text("name").notNull(), // e.g., "The Patel Family"
+  contactEmail: text("contact_email"), // Primary contact email for invitations (required for sending)
   maxCount: integer("max_count").notNull().default(1), // Total seats allocated (e.g., 4)
   affiliation: text("affiliation").notNull().default("bride"), // "bride" | "groom" | "mutual"
   relationshipTier: text("relationship_tier").notNull().default("friend"), // "immediate_family" | "extended_family" | "friend" | "parents_friend"
