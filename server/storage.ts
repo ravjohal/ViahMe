@@ -51,6 +51,10 @@ import {
   type InsertOrder,
   type OrderItem,
   type InsertOrderItem,
+  type MeasurementProfile,
+  type InsertMeasurementProfile,
+  type ShoppingOrderItem,
+  type InsertShoppingOrderItem,
 } from "@shared/schema";
 import { randomUUID, randomBytes } from "crypto";
 import bcrypt from "bcrypt";
@@ -325,6 +329,21 @@ export interface IStorage {
   // Order Items
   getOrderItems(orderId: string): Promise<OrderItem[]>;
   createOrderItem(item: InsertOrderItem): Promise<OrderItem>;
+
+  // Measurement Profiles
+  getMeasurementProfile(id: string): Promise<MeasurementProfile | undefined>;
+  getMeasurementProfileByGuest(guestId: string): Promise<MeasurementProfile | undefined>;
+  getMeasurementProfilesByWedding(weddingId: string): Promise<MeasurementProfile[]>;
+  createMeasurementProfile(profile: InsertMeasurementProfile): Promise<MeasurementProfile>;
+  updateMeasurementProfile(id: string, profile: Partial<InsertMeasurementProfile>): Promise<MeasurementProfile | undefined>;
+  deleteMeasurementProfile(id: string): Promise<boolean>;
+
+  // Shopping Order Items
+  getShoppingOrderItem(id: string): Promise<ShoppingOrderItem | undefined>;
+  getShoppingOrderItemsByWedding(weddingId: string): Promise<ShoppingOrderItem[]>;
+  createShoppingOrderItem(item: InsertShoppingOrderItem): Promise<ShoppingOrderItem>;
+  updateShoppingOrderItem(id: string, item: Partial<InsertShoppingOrderItem>): Promise<ShoppingOrderItem | undefined>;
+  deleteShoppingOrderItem(id: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -350,6 +369,8 @@ export class MemStorage implements IStorage {
   private photoGalleries: Map<string, PhotoGallery>;
   private photos: Map<string, Photo>;
   private vendorAvailability: Map<string, VendorAvailability>;
+  private measurementProfiles: Map<string, MeasurementProfile>;
+  private shoppingOrderItems: Map<string, ShoppingOrderItem>;
 
   constructor() {
     this.users = new Map();
@@ -374,6 +395,8 @@ export class MemStorage implements IStorage {
     this.photoGalleries = new Map();
     this.photos = new Map();
     this.vendorAvailability = new Map();
+    this.measurementProfiles = new Map();
+    this.shoppingOrderItems = new Map();
   }
 
   // Users
@@ -1578,6 +1601,428 @@ export class MemStorage implements IStorage {
 
   async deleteVendorAvailability(id: string): Promise<boolean> {
     return this.vendorAvailability.delete(id);
+  }
+
+  // Contract Signatures
+  async getContractSignature(id: string): Promise<ContractSignature | undefined> {
+    // Not implemented for MemStorage - would need a Map
+    return undefined;
+  }
+
+  async getSignaturesByContract(contractId: string): Promise<ContractSignature[]> {
+    // Not implemented for MemStorage - would need a Map
+    return [];
+  }
+
+  async createContractSignature(signature: InsertContractSignature): Promise<ContractSignature> {
+    // Not implemented for MemStorage - would need a Map
+    throw new Error("Contract signatures not supported in MemStorage");
+  }
+
+  async hasContractBeenSigned(contractId: string, signerId: string): Promise<boolean> {
+    // Not implemented for MemStorage - would need a Map
+    return false;
+  }
+
+  // Vendor Analytics
+  async getVendorAnalyticsSummary(vendorId: string): Promise<{
+    totalBookings: number;
+    confirmedBookings: number;
+    totalRevenue: string;
+    averageBookingValue: string;
+    averageRating: string;
+    totalReviews: number;
+    conversionRate: string;
+  }> {
+    const bookings = await this.getBookingsByVendor(vendorId);
+    const activeBookings = bookings.filter(b => b.status === 'confirmed' || b.status === 'pending');
+    const totalBookings = activeBookings.length;
+    const confirmedBookings = activeBookings.filter(b => b.status === 'confirmed').length;
+    
+    const confirmedWithCost = bookings.filter(b => 
+      b.status === 'confirmed' && b.estimatedCost !== null && b.estimatedCost !== ''
+    );
+    const totalRevenue = confirmedWithCost.reduce((sum, b) => 
+      sum + parseFloat(b.estimatedCost!), 0
+    );
+    const averageBookingValue = confirmedWithCost.length > 0 
+      ? totalRevenue / confirmedWithCost.length 
+      : 0;
+
+    const reviews = await this.getReviewsByVendor(vendorId);
+    const totalReviews = reviews.length;
+    const averageRating = totalReviews > 0
+      ? reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews
+      : 0;
+
+    const conversionRate = totalBookings > 0 
+      ? (confirmedBookings / totalBookings * 100) 
+      : 0;
+
+    return {
+      totalBookings,
+      confirmedBookings,
+      totalRevenue: totalRevenue.toFixed(2),
+      averageBookingValue: averageBookingValue.toFixed(2),
+      averageRating: averageRating.toFixed(1),
+      totalReviews,
+      conversionRate: conversionRate.toFixed(1),
+    };
+  }
+
+  async getVendorBookingTrends(vendorId: string, startDate?: Date, endDate?: Date): Promise<Array<{
+    date: string;
+    bookings: number;
+    confirmed: number;
+  }>> {
+    const bookings = await this.getBookingsByVendor(vendorId);
+    let filteredBookings = bookings.filter(b => b.status === 'confirmed' || b.status === 'pending');
+    
+    if (startDate || endDate) {
+      filteredBookings = filteredBookings.filter(b => {
+        const bookingDate = new Date(b.requestDate);
+        if (startDate && bookingDate < startDate) return false;
+        if (endDate && bookingDate > endDate) return false;
+        return true;
+      });
+    }
+
+    const dateMap = new Map<string, { bookings: number; confirmed: number }>();
+    filteredBookings.forEach(booking => {
+      const dateStr = new Date(booking.requestDate).toISOString().split('T')[0];
+      const existing = dateMap.get(dateStr) || { bookings: 0, confirmed: 0 };
+      existing.bookings++;
+      if (booking.status === 'confirmed') existing.confirmed++;
+      dateMap.set(dateStr, existing);
+    });
+
+    return Array.from(dateMap.entries())
+      .map(([date, data]) => ({ date, ...data }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }
+
+  async getVendorRevenueTrends(vendorId: string, startDate?: Date, endDate?: Date): Promise<Array<{
+    date: string;
+    revenue: string;
+  }>> {
+    const bookings = await this.getBookingsByVendor(vendorId);
+    let filteredBookings = bookings.filter(b => 
+      b.status === 'confirmed' && b.estimatedCost !== null && b.estimatedCost !== ''
+    );
+    
+    if (startDate || endDate) {
+      filteredBookings = filteredBookings.filter(b => {
+        const bookingDate = b.confirmedDate ? new Date(b.confirmedDate) : new Date(b.requestDate);
+        if (startDate && bookingDate < startDate) return false;
+        if (endDate && bookingDate > endDate) return false;
+        return true;
+      });
+    }
+
+    const dateMap = new Map<string, number>();
+    filteredBookings.forEach(booking => {
+      if (booking.estimatedCost) {
+        const dateStr = booking.confirmedDate 
+          ? new Date(booking.confirmedDate).toISOString().split('T')[0]
+          : new Date(booking.requestDate).toISOString().split('T')[0];
+        const existing = dateMap.get(dateStr) || 0;
+        const cost = parseFloat(booking.estimatedCost);
+        if (!isNaN(cost)) {
+          dateMap.set(dateStr, existing + cost);
+        }
+      }
+    });
+
+    return Array.from(dateMap.entries())
+      .map(([date, revenue]) => ({ date, revenue: revenue.toFixed(2) }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }
+
+  // Couple Analytics
+  async getWeddingAnalyticsSummary(weddingId: string): Promise<{
+    totalBudget: string;
+    totalSpent: string;
+    remainingBudget: string;
+    budgetUtilization: string;
+    totalVendors: number;
+    confirmedVendors: number;
+    totalGuests: number;
+    confirmedGuests: number;
+    totalTasks: number;
+    completedTasks: number;
+    taskCompletionRate: string;
+    totalEvents: number;
+  }> {
+    const wedding = await this.getWedding(weddingId);
+    const totalBudget = wedding?.totalBudget ? parseFloat(wedding.totalBudget) : 0;
+
+    const budgetCategories = await this.getBudgetCategoriesByWedding(weddingId);
+    const totalSpent = budgetCategories.reduce((sum, cat) => {
+      const amount = cat.spentAmount ? parseFloat(cat.spentAmount) : 0;
+      return sum + (isNaN(amount) ? 0 : amount);
+    }, 0);
+    const remainingBudget = totalBudget - totalSpent;
+    const budgetUtilization = totalBudget > 0 ? (totalSpent / totalBudget * 100) : 0;
+
+    const bookings = await this.getBookingsByWedding(weddingId);
+    const totalVendors = bookings.length;
+    const confirmedVendors = bookings.filter(b => b.status === 'confirmed').length;
+
+    const guests = await this.getGuestsByWedding(weddingId);
+    const totalGuests = guests.length;
+    const confirmedGuests = guests.filter(g => g.rsvpStatus === 'attending').length;
+
+    const tasks = await this.getTasksByWedding(weddingId);
+    const totalTasks = tasks.length;
+    const completedTasks = tasks.filter(t => t.completed === true).length;
+    const taskCompletionRate = totalTasks > 0 ? (completedTasks / totalTasks * 100) : 0;
+
+    const events = await this.getEventsByWedding(weddingId);
+    const totalEvents = events.length;
+
+    return {
+      totalBudget: totalBudget.toFixed(2),
+      totalSpent: totalSpent.toFixed(2),
+      remainingBudget: remainingBudget.toFixed(2),
+      budgetUtilization: budgetUtilization.toFixed(1),
+      totalVendors,
+      confirmedVendors,
+      totalGuests,
+      confirmedGuests,
+      totalTasks,
+      completedTasks,
+      taskCompletionRate: taskCompletionRate.toFixed(1),
+      totalEvents,
+    };
+  }
+
+  async getWeddingBudgetBreakdown(weddingId: string): Promise<Array<{
+    category: string;
+    allocated: string;
+    spent: string;
+    percentage: number;
+  }>> {
+    const budgetCategories = await this.getBudgetCategoriesByWedding(weddingId);
+    return budgetCategories.map(cat => {
+      const allocated = cat.allocatedAmount ? parseFloat(cat.allocatedAmount) : 0;
+      const spent = cat.spentAmount ? parseFloat(cat.spentAmount) : 0;
+      return {
+        category: cat.category,
+        allocated: (isNaN(allocated) ? 0 : allocated).toFixed(2),
+        spent: (isNaN(spent) ? 0 : spent).toFixed(2),
+        percentage: cat.percentage || 0,
+      };
+    });
+  }
+
+  async getWeddingSpendingTrends(weddingId: string): Promise<Array<{
+    date: string;
+    amount: string;
+    category: string;
+  }>> {
+    const bookings = await this.getBookingsByWedding(weddingId);
+    const trends = bookings
+      .filter(b => b.status === 'confirmed' && b.estimatedCost !== null && b.confirmedDate !== null)
+      .map(booking => {
+        const vendor = this.vendors.get(booking.vendorId);
+        const cost = parseFloat(booking.estimatedCost!);
+        return {
+          date: new Date(booking.confirmedDate!).toISOString().split('T')[0],
+          amount: (isNaN(cost) ? 0 : cost).toFixed(2),
+          category: vendor?.category || 'Unknown',
+        };
+      })
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    return trends;
+  }
+
+  // Invitation Cards
+  async getInvitationCard(id: string): Promise<InvitationCard | undefined> {
+    // Not implemented for MemStorage
+    return undefined;
+  }
+
+  async getAllInvitationCards(): Promise<InvitationCard[]> {
+    // Not implemented for MemStorage
+    return [];
+  }
+
+  async getInvitationCardsByTradition(tradition: string): Promise<InvitationCard[]> {
+    // Not implemented for MemStorage
+    return [];
+  }
+
+  async getInvitationCardsByCeremony(ceremonyType: string): Promise<InvitationCard[]> {
+    // Not implemented for MemStorage
+    return [];
+  }
+
+  async getFeaturedInvitationCards(): Promise<InvitationCard[]> {
+    // Not implemented for MemStorage
+    return [];
+  }
+
+  // Orders
+  async getOrder(id: string): Promise<Order | undefined> {
+    // Not implemented for MemStorage
+    return undefined;
+  }
+
+  async getOrdersByWedding(weddingId: string): Promise<Order[]> {
+    // Not implemented for MemStorage
+    return [];
+  }
+
+  async createOrder(order: InsertOrder): Promise<Order> {
+    // Not implemented for MemStorage
+    throw new Error("Orders not supported in MemStorage");
+  }
+
+  async updateOrderStatus(id: string, status: string): Promise<Order | undefined> {
+    // Not implemented for MemStorage
+    return undefined;
+  }
+
+  async updateOrderPaymentInfo(id: string, paymentIntentId: string, paymentStatus: string): Promise<Order | undefined> {
+    // Not implemented for MemStorage
+    return undefined;
+  }
+
+  // Order Items
+  async getOrderItems(orderId: string): Promise<OrderItem[]> {
+    // Not implemented for MemStorage
+    return [];
+  }
+
+  async createOrderItem(item: InsertOrderItem): Promise<OrderItem> {
+    // Not implemented for MemStorage
+    throw new Error("Order items not supported in MemStorage");
+  }
+
+  // Measurement Profiles
+  async getMeasurementProfile(id: string): Promise<MeasurementProfile | undefined> {
+    return this.measurementProfiles.get(id);
+  }
+
+  async getMeasurementProfileByGuest(guestId: string): Promise<MeasurementProfile | undefined> {
+    return Array.from(this.measurementProfiles.values()).find(
+      (profile) => profile.guestId === guestId
+    );
+  }
+
+  async getMeasurementProfilesByWedding(weddingId: string): Promise<MeasurementProfile[]> {
+    // Get all guests for this wedding first
+    const guests = await this.getGuestsByWedding(weddingId);
+    const guestIds = new Set(guests.map(g => g.id));
+    
+    return Array.from(this.measurementProfiles.values()).filter(
+      (profile) => guestIds.has(profile.guestId)
+    );
+  }
+
+  async createMeasurementProfile(profile: InsertMeasurementProfile): Promise<MeasurementProfile> {
+    const id = randomUUID();
+    const newProfile: MeasurementProfile = {
+      id,
+      ...profile,
+      blouseSize: profile.blouseSize ?? null,
+      waist: profile.waist ?? null,
+      inseam: profile.inseam ?? null,
+      sariBlouseStyle: profile.sariBlouseStyle ?? null,
+      notes: profile.notes ?? null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.measurementProfiles.set(id, newProfile);
+    return newProfile;
+  }
+
+  async updateMeasurementProfile(id: string, profile: Partial<InsertMeasurementProfile>): Promise<MeasurementProfile | undefined> {
+    const existing = this.measurementProfiles.get(id);
+    if (!existing) return undefined;
+
+    const updated: MeasurementProfile = {
+      ...existing,
+      ...profile,
+      updatedAt: new Date(),
+    };
+    this.measurementProfiles.set(id, updated);
+    return updated;
+  }
+
+  async deleteMeasurementProfile(id: string): Promise<boolean> {
+    return this.measurementProfiles.delete(id);
+  }
+
+  // Shopping Order Items
+  async getShoppingOrderItem(id: string): Promise<ShoppingOrderItem | undefined> {
+    return this.shoppingOrderItems.get(id);
+  }
+
+  async getShoppingOrderItemsByWedding(weddingId: string): Promise<ShoppingOrderItem[]> {
+    return Array.from(this.shoppingOrderItems.values())
+      .filter((item) => item.weddingId === weddingId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async createShoppingOrderItem(item: InsertShoppingOrderItem): Promise<ShoppingOrderItem> {
+    const id = randomUUID();
+    
+    // Calculate costUSD from costINR if provided (1 INR = 0.012 USD)
+    let costUSD: string | null = null;
+    if (item.costINR) {
+      const inrAmount = parseFloat(item.costINR);
+      if (!isNaN(inrAmount)) {
+        costUSD = (inrAmount * 0.012).toFixed(2);
+      }
+    }
+
+    const newItem: ShoppingOrderItem = {
+      id,
+      ...item,
+      storeName: item.storeName ?? null,
+      costINR: item.costINR ?? null,
+      costUSD,
+      weightKg: item.weightKg ?? null,
+      notes: item.notes ?? null,
+      status: item.status || 'ordered',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.shoppingOrderItems.set(id, newItem);
+    return newItem;
+  }
+
+  async updateShoppingOrderItem(id: string, item: Partial<InsertShoppingOrderItem>): Promise<ShoppingOrderItem | undefined> {
+    const existing = this.shoppingOrderItems.get(id);
+    if (!existing) return undefined;
+
+    // Recalculate costUSD if costINR is being updated
+    let costUSD = existing.costUSD;
+    if (item.costINR !== undefined) {
+      if (item.costINR) {
+        const inrAmount = parseFloat(item.costINR);
+        if (!isNaN(inrAmount)) {
+          costUSD = (inrAmount * 0.012).toFixed(2);
+        }
+      } else {
+        costUSD = null;
+      }
+    }
+
+    const updated: ShoppingOrderItem = {
+      ...existing,
+      ...item,
+      costUSD,
+      updatedAt: new Date(),
+    };
+    this.shoppingOrderItems.set(id, updated);
+    return updated;
+  }
+
+  async deleteShoppingOrderItem(id: string): Promise<boolean> {
+    return this.shoppingOrderItems.delete(id);
   }
 }
 
@@ -3224,6 +3669,154 @@ export class DBStorage implements IStorage {
       .values(item)
       .returning();
     return result[0];
+  }
+
+  // ============================================================================
+  // Measurement Profiles
+  // ============================================================================
+
+  async getMeasurementProfile(id: string): Promise<MeasurementProfile | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.measurementProfiles)
+      .where(eq(schema.measurementProfiles.id, id))
+      .limit(1);
+    return result[0];
+  }
+
+  async getMeasurementProfileByGuest(guestId: string): Promise<MeasurementProfile | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.measurementProfiles)
+      .where(eq(schema.measurementProfiles.guestId, guestId))
+      .limit(1);
+    return result[0];
+  }
+
+  async getMeasurementProfilesByWedding(weddingId: string): Promise<MeasurementProfile[]> {
+    // First get all guests for this wedding
+    const guests = await this.db
+      .select()
+      .from(schema.guests)
+      .where(eq(schema.guests.weddingId, weddingId));
+    
+    if (guests.length === 0) {
+      return [];
+    }
+
+    const guestIds = guests.map(g => g.id);
+    
+    return await this.db
+      .select()
+      .from(schema.measurementProfiles)
+      .where(inArray(schema.measurementProfiles.guestId, guestIds));
+  }
+
+  async createMeasurementProfile(profile: InsertMeasurementProfile): Promise<MeasurementProfile> {
+    const result = await this.db
+      .insert(schema.measurementProfiles)
+      .values(profile)
+      .returning();
+    return result[0];
+  }
+
+  async updateMeasurementProfile(id: string, profile: Partial<InsertMeasurementProfile>): Promise<MeasurementProfile | undefined> {
+    const result = await this.db
+      .update(schema.measurementProfiles)
+      .set({
+        ...profile,
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.measurementProfiles.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteMeasurementProfile(id: string): Promise<boolean> {
+    const result = await this.db
+      .delete(schema.measurementProfiles)
+      .where(eq(schema.measurementProfiles.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  // ============================================================================
+  // Shopping Order Items
+  // ============================================================================
+
+  async getShoppingOrderItem(id: string): Promise<ShoppingOrderItem | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.shoppingOrderItems)
+      .where(eq(schema.shoppingOrderItems.id, id))
+      .limit(1);
+    return result[0];
+  }
+
+  async getShoppingOrderItemsByWedding(weddingId: string): Promise<ShoppingOrderItem[]> {
+    return await this.db
+      .select()
+      .from(schema.shoppingOrderItems)
+      .where(eq(schema.shoppingOrderItems.weddingId, weddingId))
+      .orderBy(sql`${schema.shoppingOrderItems.createdAt} DESC`);
+  }
+
+  async createShoppingOrderItem(item: InsertShoppingOrderItem): Promise<ShoppingOrderItem> {
+    // Calculate costUSD from costINR if provided (1 INR = 0.012 USD)
+    let costUSD: string | null = null;
+    if (item.costINR) {
+      const inrAmount = parseFloat(item.costINR);
+      if (!isNaN(inrAmount)) {
+        costUSD = (inrAmount * 0.012).toFixed(2);
+      }
+    }
+
+    const result = await this.db
+      .insert(schema.shoppingOrderItems)
+      .values({
+        ...item,
+        costUSD,
+      })
+      .returning();
+    return result[0];
+  }
+
+  async updateShoppingOrderItem(id: string, item: Partial<InsertShoppingOrderItem>): Promise<ShoppingOrderItem | undefined> {
+    // Get existing item to check if we need to recalculate costUSD
+    const existing = await this.getShoppingOrderItem(id);
+    if (!existing) return undefined;
+
+    // Recalculate costUSD if costINR is being updated
+    let costUSD = existing.costUSD;
+    if (item.costINR !== undefined) {
+      if (item.costINR) {
+        const inrAmount = parseFloat(item.costINR);
+        if (!isNaN(inrAmount)) {
+          costUSD = (inrAmount * 0.012).toFixed(2);
+        }
+      } else {
+        costUSD = null;
+      }
+    }
+
+    const result = await this.db
+      .update(schema.shoppingOrderItems)
+      .set({
+        ...item,
+        costUSD,
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.shoppingOrderItems.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteShoppingOrderItem(id: string): Promise<boolean> {
+    const result = await this.db
+      .delete(schema.shoppingOrderItems)
+      .where(eq(schema.shoppingOrderItems.id, id))
+      .returning();
+    return result.length > 0;
   }
 }
 

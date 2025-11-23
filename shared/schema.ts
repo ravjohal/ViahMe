@@ -1022,3 +1022,64 @@ export const insertOrderItemSchema = createInsertSchema(orderItems).omit({
 
 export type InsertOrderItem = z.infer<typeof insertOrderItemSchema>;
 export type OrderItem = typeof orderItems.$inferSelect;
+
+// ============================================================================
+// MEASUREMENT PROFILES - Guest clothing measurements for South Asian attire
+// ============================================================================
+
+export const measurementProfiles = pgTable("measurement_profiles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  guestId: varchar("guest_id").notNull(),
+  blouseSize: text("blouse_size"), // e.g., "S", "M", "L", "XL", "36", "38"
+  waist: decimal("waist", { precision: 5, scale: 2 }), // in inches
+  inseam: decimal("inseam", { precision: 5, scale: 2 }), // in inches
+  sariBlouseStyle: text("sari_blouse_style"), // "backless" | "standard"
+  notes: text("notes"), // Additional measurement notes
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertMeasurementProfileSchema = createInsertSchema(measurementProfiles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  sariBlouseStyle: z.enum(['backless', 'standard']).optional(),
+  waist: z.string().regex(/^\d+(\.\d{1,2})?$/, "Waist must be a valid decimal").optional(),
+  inseam: z.string().regex(/^\d+(\.\d{1,2})?$/, "Inseam must be a valid decimal").optional(),
+});
+
+export type InsertMeasurementProfile = z.infer<typeof insertMeasurementProfileSchema>;
+export type MeasurementProfile = typeof measurementProfiles.$inferSelect;
+
+// ============================================================================
+// SHOPPING ORDER ITEMS - Track clothing/outfit purchases and alterations
+// ============================================================================
+
+export const shoppingOrderItems = pgTable("shopping_order_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  itemName: text("item_name").notNull(), // e.g., "Dad's Sherwani", "Mom's Sari"
+  storeName: text("store_name"), // Store where item was purchased
+  status: text("status").notNull().default('ordered'), // "ordered" | "in_alterations" | "picked_up"
+  costINR: decimal("cost_inr", { precision: 10, scale: 2 }), // Cost in Indian Rupees
+  costUSD: decimal("cost_usd", { precision: 10, scale: 2 }), // Auto-calculated USD equivalent
+  weightKg: decimal("weight_kg", { precision: 6, scale: 2 }), // Weight in kilograms
+  notes: text("notes"), // Additional notes
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertShoppingOrderItemSchema = createInsertSchema(shoppingOrderItems).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  costUSD: true, // Auto-calculated from INR
+}).extend({
+  status: z.enum(['ordered', 'in_alterations', 'picked_up']).optional(),
+  costINR: z.string().regex(/^\d+(\.\d{1,2})?$/, "Cost must be a valid decimal").optional(),
+  weightKg: z.string().regex(/^\d+(\.\d{1,2})?$/, "Weight must be a valid decimal").optional(),
+});
+
+export type InsertShoppingOrderItem = z.infer<typeof insertShoppingOrderItemSchema>;
+export type ShoppingOrderItem = typeof shoppingOrderItems.$inferSelect;
