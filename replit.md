@@ -25,7 +25,7 @@ Key architectural decisions and features include:
   - **Invitations Junction Table**: Links guests to specific events with per-event RSVP status, dietary restrictions, and plus-one tracking
   - **Magic Link Authentication**: Secure, hashed token system (bcrypt + 32-byte random tokens) for passwordless guest access with server-side expiration enforcement and sanitized API responses
   - **Public RSVP Portal**: Passwordless guest portal accessible via magic links with per-event RSVP forms, dietary restrictions, and plus-one tracking
-  - **Bulk Invitation Emails**: Automated email distribution via Resend with personalized magic links, event details, and 30-day expiration warnings
+  - **Bulk Invitation Sender UI**: Complete bulk invitation system with household/event multi-selection, personal message customization, and automated email distribution via Resend. Features validation preventing households without contactEmail from being selected, preflight checks ensuring data integrity before submission, visual feedback for ineligible households (disabled checkboxes, opacity, cursor changes), and comprehensive error handling with descriptive toasts. Generates personalized magic links with 30-day expiration warnings for each household.
   - **Complete API Coverage**: 20+ endpoints for household CRUD, invitation management, RSVP submission, and magic token generation/verification
 - **Messaging System**: Facilitates couple-vendor communication with threading.
 - **Review System**: Allows vendor ratings and feedback.

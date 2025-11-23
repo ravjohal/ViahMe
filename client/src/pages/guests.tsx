@@ -66,7 +66,7 @@ export default function Guests() {
   });
 
   const { data: events = [] } = useQuery<Event[]>({
-    queryKey: ["/api/events", wedding?.id],
+    queryKey: [`/api/events/${wedding?.id}`],
     enabled: !!wedding?.id,
   });
 

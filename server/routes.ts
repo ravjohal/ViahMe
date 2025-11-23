@@ -556,6 +556,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const household = await storage.createHousehold(validatedData);
       res.json(household);
     } catch (error) {
+      console.error("Error creating household:", error);
       if (error instanceof Error && "issues" in error) {
         return res.status(400).json({ error: "Validation failed", details: error });
       }
