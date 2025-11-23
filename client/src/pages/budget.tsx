@@ -125,13 +125,19 @@ export default function Budget() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<BudgetFormData> }) => {
-      return await apiRequest("PATCH", `/api/budget-categories/${id}`, {
+      console.log("[CATEGORY UPDATE] Updating category ID:", id, "with data:", data);
+      const payload = {
         ...data,
         allocatedAmount: data.allocatedAmount,
         spentAmount: data.spentAmount,
-      });
+      };
+      console.log("[CATEGORY UPDATE] Sending PATCH payload:", payload);
+      const result = await apiRequest("PATCH", `/api/budget-categories/${id}`, payload);
+      console.log("[CATEGORY UPDATE] Response received");
+      return result;
     },
     onSuccess: () => {
+      console.log("[CATEGORY UPDATE] Success! Invalidating queries");
       queryClient.invalidateQueries({ queryKey: ["/api/budget-categories", wedding?.id] });
       setDialogOpen(false);
       setEditingCategory(null);
