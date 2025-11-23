@@ -20,7 +20,7 @@ import { insertGuestSchema, insertHouseholdSchema, type Wedding, type Guest, typ
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
-import { Trash2, Upload, Users, Link as LinkIcon, MailCheck, Copy, Send } from "lucide-react";
+import { Trash2, Upload, Users, Link as LinkIcon, MailCheck, Copy, Send, BarChart3 } from "lucide-react";
 
 const guestFormSchema = insertGuestSchema.extend({
   eventIds: z.array(z.string()).optional(),
@@ -624,6 +624,10 @@ export default function Guests() {
               <Users className="w-4 h-4 mr-2" />
               Households
             </TabsTrigger>
+            <TabsTrigger value="allocation" data-testid="tab-allocation">
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Allocation View
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="guests" className="space-y-4">
@@ -765,6 +769,298 @@ export default function Guests() {
                 </Card>
               )}
             </div>
+          </TabsContent>
+
+          <TabsContent value="allocation" className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-bold">Guest Allocation Overview</h2>
+              <p className="text-muted-foreground mt-1">
+                View guest counts and seat allocations by bride/groom side
+              </p>
+            </div>
+
+            {(() => {
+              // Pre-index households by id for efficient lookups
+              const householdById = new Map(households.map(h => [h.id, h]));
+
+              // Calculate allocation metrics
+              const brideHouseholds = households.filter(h => h.affiliation === 'bride');
+              const groomHouseholds = households.filter(h => h.affiliation === 'groom');
+              const mutualHouseholds = households.filter(h => h.affiliation === 'mutual');
+
+              const brideSeats = brideHouseholds.reduce((sum, h) => sum + (h.maxCount || 0), 0);
+              const groomSeats = groomHouseholds.reduce((sum, h) => sum + (h.maxCount || 0), 0);
+              const mutualSeats = mutualHouseholds.reduce((sum, h) => sum + (h.maxCount || 0), 0);
+
+              // Count guests by affiliation using pre-indexed households
+              const brideGuests = guests.filter(g => {
+                const household = householdById.get(g.householdId);
+                return household?.affiliation === 'bride';
+              });
+              const groomGuests = guests.filter(g => {
+                const household = householdById.get(g.householdId);
+                return household?.affiliation === 'groom';
+              });
+              const mutualGuests = guests.filter(g => {
+                const household = householdById.get(g.householdId);
+                return household?.affiliation === 'mutual';
+              });
+
+              const totalSeats = brideSeats + groomSeats + mutualSeats;
+              const totalGuests = brideGuests.length + groomGuests.length + mutualGuests.length;
+
+              const tierBreakdown = (affiliationHouseholds: Household[], affiliationGuests: Guest[]) => {
+                const immediate = affiliationHouseholds.filter(h => h.relationshipTier === 'immediate_family');
+                const extended = affiliationHouseholds.filter(h => h.relationshipTier === 'extended_family');
+                const friends = affiliationHouseholds.filter(h => h.relationshipTier === 'friend');
+                const parentsF = affiliationHouseholds.filter(h => h.relationshipTier === 'parents_friend');
+
+                // Count actual guests per tier by mapping guest to household tier
+                const immediateGuests = affiliationGuests.filter(g => {
+                  const household = householdById.get(g.householdId);
+                  return household?.relationshipTier === 'immediate_family';
+                });
+                const extendedGuests = affiliationGuests.filter(g => {
+                  const household = householdById.get(g.householdId);
+                  return household?.relationshipTier === 'extended_family';
+                });
+                const friendGuests = affiliationGuests.filter(g => {
+                  const household = householdById.get(g.householdId);
+                  return household?.relationshipTier === 'friend';
+                });
+                const parentsFGuests = affiliationGuests.filter(g => {
+                  const household = householdById.get(g.householdId);
+                  return household?.relationshipTier === 'parents_friend';
+                });
+
+                return {
+                  immediate: { 
+                    households: immediate.length, 
+                    seats: immediate.reduce((sum, h) => sum + (h.maxCount || 0), 0),
+                    guests: immediateGuests.length
+                  },
+                  extended: { 
+                    households: extended.length, 
+                    seats: extended.reduce((sum, h) => sum + (h.maxCount || 0), 0),
+                    guests: extendedGuests.length
+                  },
+                  friends: { 
+                    households: friends.length, 
+                    seats: friends.reduce((sum, h) => sum + (h.maxCount || 0), 0),
+                    guests: friendGuests.length
+                  },
+                  parentsF: { 
+                    households: parentsF.length, 
+                    seats: parentsF.reduce((sum, h) => sum + (h.maxCount || 0), 0),
+                    guests: parentsFGuests.length
+                  },
+                };
+              };
+
+              const brideTiers = tierBreakdown(brideHouseholds, brideGuests);
+              const groomTiers = tierBreakdown(groomHouseholds, groomGuests);
+              const mutualTiers = tierBreakdown(mutualHouseholds, mutualGuests);
+
+              return (
+                <>
+                  {/* Summary Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <Card data-testid="card-total-allocation">
+                      <CardHeader className="pb-3">
+                        <CardDescription>Total Allocation</CardDescription>
+                        <CardTitle className="text-3xl">{totalSeats}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-muted-foreground">
+                          {households.length} households • {totalGuests} guests added
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card data-testid="card-bride-allocation" className="border-l-4 border-l-primary">
+                      <CardHeader className="pb-3">
+                        <CardDescription>Bride's Side</CardDescription>
+                        <CardTitle className="text-3xl">{brideSeats}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-muted-foreground">
+                          {brideHouseholds.length} households • {brideGuests.length} guests
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card data-testid="card-groom-allocation" className="border-l-4 border-l-accent">
+                      <CardHeader className="pb-3">
+                        <CardDescription>Groom's Side</CardDescription>
+                        <CardTitle className="text-3xl">{groomSeats}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-muted-foreground">
+                          {groomHouseholds.length} households • {groomGuests.length} guests
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card data-testid="card-mutual-allocation" className="border-l-4 border-l-muted">
+                      <CardHeader className="pb-3">
+                        <CardDescription>Mutual</CardDescription>
+                        <CardTitle className="text-3xl">{mutualSeats}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-muted-foreground">
+                          {mutualHouseholds.length} households • {mutualGuests.length} guests
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Detailed Breakdown */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Bride's Side Breakdown */}
+                    <Card data-testid="breakdown-bride">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-primary" />
+                          Bride's Side Breakdown
+                        </CardTitle>
+                        <CardDescription>{brideHouseholds.length} total households</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm">Immediate Family</span>
+                            <div className="flex flex-col items-end">
+                              <Badge variant="outline">{brideTiers.immediate.guests} guests</Badge>
+                              <span className="text-xs text-muted-foreground">{brideTiers.immediate.seats} seats</span>
+                            </div>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm">Extended Family</span>
+                            <div className="flex flex-col items-end">
+                              <Badge variant="outline">{brideTiers.extended.guests} guests</Badge>
+                              <span className="text-xs text-muted-foreground">{brideTiers.extended.seats} seats</span>
+                            </div>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm">Friends</span>
+                            <div className="flex flex-col items-end">
+                              <Badge variant="outline">{brideTiers.friends.guests} guests</Badge>
+                              <span className="text-xs text-muted-foreground">{brideTiers.friends.seats} seats</span>
+                            </div>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm">Parent's Friends</span>
+                            <div className="flex flex-col items-end">
+                              <Badge variant="outline">{brideTiers.parentsF.guests} guests</Badge>
+                              <span className="text-xs text-muted-foreground">{brideTiers.parentsF.seats} seats</span>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Groom's Side Breakdown */}
+                    <Card data-testid="breakdown-groom">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-accent" />
+                          Groom's Side Breakdown
+                        </CardTitle>
+                        <CardDescription>{groomHouseholds.length} total households</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm">Immediate Family</span>
+                            <div className="flex flex-col items-end">
+                              <Badge variant="outline">{groomTiers.immediate.guests} guests</Badge>
+                              <span className="text-xs text-muted-foreground">{groomTiers.immediate.seats} seats</span>
+                            </div>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm">Extended Family</span>
+                            <div className="flex flex-col items-end">
+                              <Badge variant="outline">{groomTiers.extended.guests} guests</Badge>
+                              <span className="text-xs text-muted-foreground">{groomTiers.extended.seats} seats</span>
+                            </div>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm">Friends</span>
+                            <div className="flex flex-col items-end">
+                              <Badge variant="outline">{groomTiers.friends.guests} guests</Badge>
+                              <span className="text-xs text-muted-foreground">{groomTiers.friends.seats} seats</span>
+                            </div>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm">Parent's Friends</span>
+                            <div className="flex flex-col items-end">
+                              <Badge variant="outline">{groomTiers.parentsF.guests} guests</Badge>
+                              <span className="text-xs text-muted-foreground">{groomTiers.parentsF.seats} seats</span>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Mutual Breakdown */}
+                    <Card data-testid="breakdown-mutual">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-muted-foreground" />
+                          Mutual Breakdown
+                        </CardTitle>
+                        <CardDescription>{mutualHouseholds.length} total households</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm">Immediate Family</span>
+                            <div className="flex flex-col items-end">
+                              <Badge variant="outline">{mutualTiers.immediate.guests} guests</Badge>
+                              <span className="text-xs text-muted-foreground">{mutualTiers.immediate.seats} seats</span>
+                            </div>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm">Extended Family</span>
+                            <div className="flex flex-col items-end">
+                              <Badge variant="outline">{mutualTiers.extended.guests} guests</Badge>
+                              <span className="text-xs text-muted-foreground">{mutualTiers.extended.seats} seats</span>
+                            </div>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm">Friends</span>
+                            <div className="flex flex-col items-end">
+                              <Badge variant="outline">{mutualTiers.friends.guests} guests</Badge>
+                              <span className="text-xs text-muted-foreground">{mutualTiers.friends.seats} seats</span>
+                            </div>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm">Parent's Friends</span>
+                            <div className="flex flex-col items-end">
+                              <Badge variant="outline">{mutualTiers.parentsF.guests} guests</Badge>
+                              <span className="text-xs text-muted-foreground">{mutualTiers.parentsF.seats} seats</span>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Empty State */}
+                  {households.length === 0 && (
+                    <Card>
+                      <CardContent className="py-12 text-center">
+                        <BarChart3 className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                        <h3 className="text-lg font-semibold mb-2">No allocation data yet</h3>
+                        <p className="text-muted-foreground mb-4">
+                          Create households to see guest allocation breakdowns by bride/groom side
+                        </p>
+                      </CardContent>
+                    </Card>
+                  )}
+                </>
+              );
+            })()}
           </TabsContent>
         </Tabs>
       </main>
