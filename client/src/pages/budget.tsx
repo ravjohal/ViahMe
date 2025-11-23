@@ -429,7 +429,7 @@ export default function Budget() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card className="p-6">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3">
@@ -457,6 +457,23 @@ export default function Budget() {
 
             <Card className="p-6">
               <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 rounded-lg bg-blue-500/10">
+                  <PieChart className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Allocated</p>
+                  <p className="font-mono text-2xl font-bold text-foreground" data-testid="text-total-allocated">
+                    ${totalAllocated.toLocaleString()}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {total > 0 ? `${((totalAllocated / total) * 100).toFixed(0)}% of budget` : '0%'}
+                  </p>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-6">
+              <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 rounded-lg bg-chart-1/10">
                   <TrendingUp className="w-5 h-5 text-chart-1" />
                 </div>
@@ -464,6 +481,9 @@ export default function Budget() {
                   <p className="text-sm text-muted-foreground">Spent</p>
                   <p className="font-mono text-2xl font-bold text-foreground" data-testid="text-total-spent">
                     ${totalSpent.toLocaleString()}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {totalAllocated > 0 ? `${((totalSpent / totalAllocated) * 100).toFixed(0)}% of allocated` : '0%'}
                   </p>
                 </div>
               </div>
@@ -478,6 +498,9 @@ export default function Budget() {
                   <p className="text-sm text-muted-foreground">Remaining</p>
                   <p className="font-mono text-2xl font-bold text-foreground" data-testid="text-remaining-budget">
                     ${remainingBudget.toLocaleString()}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {total > 0 ? `${((remainingBudget / total) * 100).toFixed(0)}% of budget` : '0%'}
                   </p>
                 </div>
               </div>
