@@ -134,28 +134,34 @@ export default function Guests() {
   });
 
   const handleBulkImport = async (guests: any[]) => {
-    const guestsWithWeddingId = guests.map(guest => ({
-      ...guest,
-      weddingId: wedding?.id || "",
-    }));
+    try {
+      const guestsWithWeddingId = guests.map(guest => ({
+        ...guest,
+        weddingId: wedding?.id || "",
+      }));
 
-    const response = await apiRequest("POST", "/api/guests/bulk", {
-      guests: guestsWithWeddingId,
-    });
-
-    const result = await response.json();
-    
-    queryClient.invalidateQueries({ queryKey: ["/api/guests"] });
-    
-    if (result.success > 0) {
-      toast({
-        title: "Import Successful",
-        description: `Successfully imported ${result.success} guest${result.success > 1 ? 's' : ''}${result.failed > 0 ? `. ${result.failed} failed to import.` : ''}`,
+      const result = await apiRequest("POST", "/api/guests/bulk", {
+        guests: guestsWithWeddingId,
       });
-    } else {
+      
+      queryClient.invalidateQueries({ queryKey: ["/api/guests"] });
+      
+      if (result.success > 0) {
+        toast({
+          title: "Import Successful",
+          description: `Successfully imported ${result.success} guest${result.success > 1 ? 's' : ''}${result.failed > 0 ? `. ${result.failed} failed to import.` : ''}`,
+        });
+      } else {
+        toast({
+          title: "Import Failed",
+          description: "No guests were imported. Please check your file format.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
       toast({
         title: "Import Failed",
-        description: "No guests were imported. Please check your file format.",
+        description: "An error occurred while importing guests. Please try again.",
         variant: "destructive",
       });
     }
