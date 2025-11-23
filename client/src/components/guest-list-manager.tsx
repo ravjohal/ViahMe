@@ -18,12 +18,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Filter, Users, Check, X, Clock } from "lucide-react";
+import { Plus, Search, Filter, Users, Check, X, Clock, Upload } from "lucide-react";
 import type { Guest } from "@shared/schema";
 
 interface GuestListManagerProps {
   guests: Guest[];
   onAddGuest?: () => void;
+  onImportGuests?: () => void;
   onEditGuest?: (guest: Guest) => void;
 }
 
@@ -39,7 +40,7 @@ const RSVP_STATUS_LABELS = {
   pending: "Pending",
 };
 
-export function GuestListManager({ guests, onAddGuest, onEditGuest }: GuestListManagerProps) {
+export function GuestListManager({ guests, onAddGuest, onImportGuests, onEditGuest }: GuestListManagerProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterSide, setFilterSide] = useState<string>("all");
   const [filterRsvp, setFilterRsvp] = useState<string>("all");
@@ -69,12 +70,20 @@ export function GuestListManager({ guests, onAddGuest, onEditGuest }: GuestListM
             Manage invitations and RSVPs 🎊
           </p>
         </div>
-        {onAddGuest && (
-          <Button onClick={onAddGuest} data-testid="button-add-guest" className="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white shadow-lg">
-            <Plus className="w-4 h-4 mr-2" />
-            Add Guest
-          </Button>
-        )}
+        <div className="flex gap-2">
+          {onImportGuests && (
+            <Button onClick={onImportGuests} variant="outline" data-testid="button-import-guests" className="shadow-sm">
+              <Upload className="w-4 h-4 mr-2" />
+              Import
+            </Button>
+          )}
+          {onAddGuest && (
+            <Button onClick={onAddGuest} data-testid="button-add-guest" className="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white shadow-lg">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Guest
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

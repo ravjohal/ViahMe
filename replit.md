@@ -18,6 +18,7 @@ Key architectural decisions and features include:
 - **Cultural Templates**: Pre-populated event timelines for 7 wedding traditions with auto-seeding during onboarding.
 - **Vendor Specialization**: Support for 32 distinct vendor categories, including culturally-specific services.
 - **Budget Intelligence System**: Provides smart budget recommendations based on cultural spending benchmarks and real-time comparisons with proportional scaling capability. Features interactive pie chart visualization where clicking on any category segment displays a detailed spending breakdown showing all confirmed vendor bookings, individual costs, and category totals.
+- **Guest List Import**: Frictionless bulk guest import from CSV and Excel (.xlsx, .xls) files with smart column mapping, data validation, preview before import, and event assignment. Supports drag-and-drop file upload with auto-detection of guest fields.
 - **Messaging System**: Facilitates couple-vendor communication with threading.
 - **Review System**: Allows vendor ratings and feedback.
 - **Document Storage System**: Secure cloud-based document management for contracts, permits, and invoices using Replit Object Storage, with categorization and access controls.

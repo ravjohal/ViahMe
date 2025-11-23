@@ -512,6 +512,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/guests/bulk", async (req, res) => {
+    try {
+      const guestsArray = req.body.guests;
+      if (!Array.isArray(guestsArray)) {
+        return res.status(400).json({ error: "Request body must contain a 'guests' array" });
+      }
+
+      const createdGuests = [];
+      const errors = [];
+
+      for (let i = 0; i < guestsArray.length; i++) {
+        try {
+          const validatedData = insertGuestSchema.parse(guestsArray[i]);
+          const guest = await storage.createGuest(validatedData);
+          createdGuests.push(guest);
+        } catch (error) {
+          errors.push({
+            index: i,
+            data: guestsArray[i],
+            error: error instanceof Error ? error.message : "Validation failed"
+          });
+        }
+      }
+
+      res.json({
+        success: createdGuests.length,
+        failed: errors.length,
+        guests: createdGuests,
+        errors: errors.length > 0 ? errors : undefined
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to bulk import guests" });
+    }
+  });
+
   app.patch("/api/guests/:id", async (req, res) => {
     try {
       const guest = await storage.updateGuest(req.params.id, req.body);

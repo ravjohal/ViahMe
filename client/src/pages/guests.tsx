@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { GuestListManager } from "@/components/guest-list-manager";
+import { GuestImportDialog } from "@/components/guest-import-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,7 @@ import { insertGuestSchema, type Wedding, type Guest, type Event } from "@shared
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
-import { Trash2 } from "lucide-react";
+import { Trash2, Upload } from "lucide-react";
 
 const guestFormSchema = insertGuestSchema.extend({
   eventIds: z.array(z.string()).optional(),
@@ -27,6 +28,7 @@ export default function Guests() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
 
@@ -131,6 +133,34 @@ export default function Guests() {
     },
   });
 
+  const handleBulkImport = async (guests: any[]) => {
+    const guestsWithWeddingId = guests.map(guest => ({
+      ...guest,
+      weddingId: wedding?.id || "",
+    }));
+
+    const response = await apiRequest("POST", "/api/guests/bulk", {
+      guests: guestsWithWeddingId,
+    });
+
+    const result = await response.json();
+    
+    queryClient.invalidateQueries({ queryKey: ["/api/guests"] });
+    
+    if (result.success > 0) {
+      toast({
+        title: "Import Successful",
+        description: `Successfully imported ${result.success} guest${result.success > 1 ? 's' : ''}${result.failed > 0 ? `. ${result.failed} failed to import.` : ''}`,
+      });
+    } else {
+      toast({
+        title: "Import Failed",
+        description: "No guests were imported. Please check your file format.",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Redirect to onboarding if no wedding exists
   useEffect(() => {
     if (!weddingsLoading && !wedding) {
@@ -227,9 +257,18 @@ export default function Guests() {
         <GuestListManager
           guests={guests}
           onAddGuest={handleAddGuest}
+          onImportGuests={() => setImportDialogOpen(true)}
           onEditGuest={handleEditGuest}
         />
       </main>
+
+      <GuestImportDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        weddingId={wedding.id}
+        events={events}
+        onImport={handleBulkImport}
+      />
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
