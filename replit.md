@@ -19,6 +19,12 @@ Key architectural decisions and features include:
 - **Vendor Specialization**: Support for 32 distinct vendor categories, including culturally-specific services.
 - **Budget Intelligence System**: Provides smart budget recommendations based on cultural spending benchmarks and real-time comparisons with proportional scaling capability. Features interactive pie chart visualization where clicking on any category segment displays a detailed spending breakdown showing all confirmed vendor bookings, individual costs, and category totals.
 - **Guest List Import**: Frictionless bulk guest import from CSV and Excel (.xlsx, .xls) files with smart column mapping, data validation, preview before import, and event assignment. Supports drag-and-drop file upload with auto-detection of guest fields.
+- **Advanced Guest Invitation & RSVP System**: Comprehensive passwordless guest management with household grouping, magic link authentication, and per-event RSVP tracking. Features include:
+  - **Household Management**: Family/group grouping with max seat allocation (e.g., "The Patel Family" - 4 seats)
+  - **Cultural Hierarchy Tagging**: Affiliation (Bride Side/Groom Side/Mutual) and RelationshipTier (Immediate Family/Extended Family/Friend/Parent's Friend)
+  - **Invitations Junction Table**: Links guests to specific events with per-event RSVP status, dietary restrictions, and plus-one tracking
+  - **Magic Link Authentication**: Secure, hashed token system (bcrypt + 32-byte random tokens) for passwordless guest access with expiration enforcement
+  - **Allocation View Dashboard**: Totals by side with filtering/export by affiliation and relationship tier
 - **Messaging System**: Facilitates couple-vendor communication with threading.
 - **Review System**: Allows vendor ratings and feedback.
 - **Document Storage System**: Secure cloud-based document management for contracts, permits, and invoices using Replit Object Storage, with categorization and access controls.

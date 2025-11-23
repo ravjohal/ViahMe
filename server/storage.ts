@@ -13,6 +13,8 @@ import {
   type InsertBudgetCategory,
   type Guest,
   type InsertGuest,
+  type Household,
+  type InsertHousehold,
   type Invitation,
   type InsertInvitation,
   type Task,
@@ -50,7 +52,8 @@ import {
   type OrderItem,
   type InsertOrderItem,
 } from "@shared/schema";
-import { randomUUID } from "crypto";
+import { randomUUID, randomBytes } from "crypto";
+import bcrypt from "bcrypt";
 
 // Helper functions for conversationId management
 export function generateConversationId(weddingId: string, vendorId: string): string {
@@ -115,15 +118,26 @@ export interface IStorage {
   updateBudgetCategory(id: string, category: Partial<InsertBudgetCategory>): Promise<BudgetCategory | undefined>;
   deleteBudgetCategory(id: string): Promise<boolean>;
 
+  // Households
+  getHousehold(id: string): Promise<Household | undefined>;
+  getHouseholdsByWedding(weddingId: string): Promise<Household[]>;
+  getHouseholdByMagicToken(token: string): Promise<Household | undefined>; // Accepts plaintext token, compares hash, enforces expiry
+  createHousehold(household: InsertHousehold): Promise<Household>;
+  updateHousehold(id: string, household: Partial<InsertHousehold>): Promise<Household | undefined>;
+  deleteHousehold(id: string): Promise<boolean>;
+  generateHouseholdMagicToken(householdId: string, expiresInDays?: number): Promise<string>; // Returns plaintext, stores hash
+  revokeHouseholdMagicToken(householdId: string): Promise<boolean>;
+
   // Guests
   getGuest(id: string): Promise<Guest | undefined>;
   getGuestsByWedding(weddingId: string): Promise<Guest[]>;
-  getGuestByMagicToken(token: string): Promise<Guest | undefined>; // Accepts plaintext token, compares hash, enforces expiry
+  getGuestsByHousehold(householdId: string): Promise<Guest[]>;
+  getGuestByMagicToken(token: string): Promise<Guest | undefined>; // Accepts plaintext token, compares hash, enforces expiry (deprecated - use household)
   createGuest(guest: InsertGuest): Promise<Guest>;
   updateGuest(id: string, guest: Partial<InsertGuest>): Promise<Guest | undefined>;
   deleteGuest(id: string): Promise<boolean>;
-  generateMagicLinkToken(guestId: string, expiresInDays?: number): Promise<string>; // Returns plaintext token, stores hash
-  revokeMagicLinkToken(guestId: string): Promise<boolean>; // Invalidates token for security
+  generateMagicLinkToken(guestId: string, expiresInDays?: number): Promise<string>; // Returns plaintext token, stores hash (deprecated - use household)
+  revokeMagicLinkToken(guestId: string): Promise<boolean>; // Invalidates token for security (deprecated - use household)
 
   // Invitations
   getInvitation(id: string): Promise<Invitation | undefined>;
@@ -320,7 +334,9 @@ export class MemStorage implements IStorage {
   private vendors: Map<string, Vendor>;
   private bookings: Map<string, Booking>;
   private budgetCategories: Map<string, BudgetCategory>;
+  private households: Map<string, Household>;
   private guests: Map<string, Guest>;
+  private invitations: Map<string, Invitation>;
   private tasks: Map<string, Task>;
   private contracts: Map<string, Contract>;
   private messages: Map<string, Message>;
@@ -342,7 +358,9 @@ export class MemStorage implements IStorage {
     this.vendors = new Map();
     this.bookings = new Map();
     this.budgetCategories = new Map();
+    this.households = new Map();
     this.guests = new Map();
+    this.invitations = new Map();
     this.tasks = new Map();
     this.contracts = new Map();
     this.messages = new Map();
@@ -367,11 +385,116 @@ export class MemStorage implements IStorage {
     return Array.from(this.users.values()).find((user) => user.username === username);
   }
 
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find((user) => user.email === email);
+  }
+
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
-    const user: User = { ...insertUser, id };
+    const user: User = {
+      ...insertUser,
+      id,
+      username: null,
+      password: null,
+      verificationToken: null,
+      verificationTokenExpires: null,
+      resetToken: null,
+      resetTokenExpires: null,
+      lastLoginAt: null,
+      createdAt: new Date(),
+      emailVerified: insertUser.emailVerified ?? false,
+    };
     this.users.set(id, user);
     return user;
+  }
+
+  async updateUser(id: string, update: Partial<User>): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (!user) return undefined;
+
+    const updated = { ...user, ...update };
+    this.users.set(id, updated);
+    return updated;
+  }
+
+  async deleteUser(id: string): Promise<boolean> {
+    return this.users.delete(id);
+  }
+
+  async updateUserPassword(id: string, passwordHash: string): Promise<boolean> {
+    const user = this.users.get(id);
+    if (!user) return false;
+
+    const updated = { ...user, passwordHash };
+    this.users.set(id, updated);
+    return true;
+  }
+
+  async setVerificationToken(id: string, token: string, expires: Date): Promise<boolean> {
+    const user = this.users.get(id);
+    if (!user) return false;
+
+    const updated = { ...user, verificationToken: token, verificationTokenExpires: expires };
+    this.users.set(id, updated);
+    return true;
+  }
+
+  async setResetToken(id: string, token: string, expires: Date): Promise<boolean> {
+    const user = this.users.get(id);
+    if (!user) return false;
+
+    const updated = { ...user, resetToken: token, resetTokenExpires: expires };
+    this.users.set(id, updated);
+    return true;
+  }
+
+  async verifyEmail(userId: string): Promise<boolean> {
+    const user = this.users.get(userId);
+    if (!user) return false;
+
+    const updated = {
+      ...user,
+      emailVerified: true,
+      verificationToken: null,
+      verificationTokenExpires: null,
+    };
+    this.users.set(userId, updated);
+    return true;
+  }
+
+  async clearVerificationToken(userId: string): Promise<boolean> {
+    const user = this.users.get(userId);
+    if (!user) return false;
+
+    const updated = {
+      ...user,
+      verificationToken: null,
+      verificationTokenExpires: null,
+    };
+    this.users.set(userId, updated);
+    return true;
+  }
+
+  async clearResetToken(userId: string): Promise<boolean> {
+    const user = this.users.get(userId);
+    if (!user) return false;
+
+    const updated = {
+      ...user,
+      resetToken: null,
+      resetTokenExpires: null,
+    };
+    this.users.set(userId, updated);
+    return true;
+  }
+
+  async updateLastLogin(userId: string): Promise<boolean> {
+    const user = this.users.get(userId);
+    if (!user) return false;
+
+    const updated = { ...user, lastLoginAt: new Date() };
+    this.users.set(userId, updated);
+    return true;
   }
 
   // Weddings
@@ -562,6 +685,88 @@ export class MemStorage implements IStorage {
     return this.budgetCategories.delete(id);
   }
 
+  // Households
+  async getHousehold(id: string): Promise<Household | undefined> {
+    return this.households.get(id);
+  }
+
+  async getHouseholdsByWedding(weddingId: string): Promise<Household[]> {
+    return Array.from(this.households.values()).filter((h) => h.weddingId === weddingId);
+  }
+
+  async getHouseholdByMagicToken(token: string): Promise<Household | undefined> {
+    const households = Array.from(this.households.values());
+    for (const household of households) {
+      if (!household.magicLinkTokenHash || !household.magicLinkExpires) continue;
+      
+      const now = new Date();
+      if (household.magicLinkExpires < now) continue;
+      
+      const isValid = await bcrypt.compare(token, household.magicLinkTokenHash);
+      if (isValid) return household;
+    }
+    return undefined;
+  }
+
+  async createHousehold(insertHousehold: InsertHousehold): Promise<Household> {
+    const id = randomUUID();
+    const household: Household = {
+      ...insertHousehold,
+      id,
+      maxCount: insertHousehold.maxCount ?? 1,
+      magicLinkTokenHash: null,
+      magicLinkExpires: null,
+      createdAt: new Date(),
+    };
+    this.households.set(id, household);
+    return household;
+  }
+
+  async updateHousehold(id: string, update: Partial<InsertHousehold>): Promise<Household | undefined> {
+    const household = this.households.get(id);
+    if (!household) return undefined;
+
+    const updated = { ...household, ...update };
+    this.households.set(id, updated);
+    return updated;
+  }
+
+  async deleteHousehold(id: string): Promise<boolean> {
+    return this.households.delete(id);
+  }
+
+  async generateHouseholdMagicToken(householdId: string, expiresInDays: number = 30): Promise<string> {
+    const household = this.households.get(householdId);
+    if (!household) throw new Error('Household not found');
+
+    const token = randomBytes(32).toString('hex');
+    const hash = await bcrypt.hash(token, 10);
+    const expires = new Date();
+    expires.setDate(expires.getDate() + expiresInDays);
+
+    const updated = {
+      ...household,
+      magicLinkTokenHash: hash,
+      magicLinkExpires: expires,
+    };
+    this.households.set(householdId, updated);
+
+    return token;
+  }
+
+  async revokeHouseholdMagicToken(householdId: string): Promise<boolean> {
+    const household = this.households.get(householdId);
+    if (!household) return false;
+
+    const updated = {
+      ...household,
+      magicLinkTokenHash: null,
+      magicLinkExpires: null,
+    };
+    this.households.set(householdId, updated);
+    return true;
+  }
+
   // Guests
   async getGuest(id: string): Promise<Guest | undefined> {
     return this.guests.get(id);
@@ -571,6 +776,24 @@ export class MemStorage implements IStorage {
     return Array.from(this.guests.values()).filter((g) => g.weddingId === weddingId);
   }
 
+  async getGuestsByHousehold(householdId: string): Promise<Guest[]> {
+    return Array.from(this.guests.values()).filter((g) => g.householdId === householdId);
+  }
+
+  async getGuestByMagicToken(token: string): Promise<Guest | undefined> {
+    const guests = Array.from(this.guests.values());
+    for (const guest of guests) {
+      if (!guest.magicLinkTokenHash || !guest.magicLinkExpires) continue;
+      
+      const now = new Date();
+      if (guest.magicLinkExpires < now) continue;
+      
+      const isValid = await bcrypt.compare(token, guest.magicLinkTokenHash);
+      if (isValid) return guest;
+    }
+    return undefined;
+  }
+
   async createGuest(insertGuest: InsertGuest): Promise<Guest> {
     const id = randomUUID();
     const guest: Guest = {
@@ -578,6 +801,8 @@ export class MemStorage implements IStorage {
       id,
       rsvpStatus: insertGuest.rsvpStatus || "pending",
       plusOne: insertGuest.plusOne || false,
+      magicLinkTokenHash: null,
+      magicLinkExpires: null,
     } as Guest;
     this.guests.set(id, guest);
     return guest;
@@ -594,6 +819,91 @@ export class MemStorage implements IStorage {
 
   async deleteGuest(id: string): Promise<boolean> {
     return this.guests.delete(id);
+  }
+
+  async generateMagicLinkToken(guestId: string, expiresInDays: number = 30): Promise<string> {
+    const guest = this.guests.get(guestId);
+    if (!guest) throw new Error('Guest not found');
+
+    const token = randomBytes(32).toString('hex');
+    const hash = await bcrypt.hash(token, 10);
+    const expires = new Date();
+    expires.setDate(expires.getDate() + expiresInDays);
+
+    const updated = {
+      ...guest,
+      magicLinkTokenHash: hash,
+      magicLinkExpires: expires,
+    } as Guest;
+    this.guests.set(guestId, updated);
+
+    return token;
+  }
+
+  async revokeMagicLinkToken(guestId: string): Promise<boolean> {
+    const guest = this.guests.get(guestId);
+    if (!guest) return false;
+
+    const updated = {
+      ...guest,
+      magicLinkTokenHash: null,
+      magicLinkExpires: null,
+    } as Guest;
+    this.guests.set(guestId, updated);
+    return true;
+  }
+
+  // Invitations
+  async getInvitation(id: string): Promise<Invitation | undefined> {
+    return this.invitations.get(id);
+  }
+
+  async getInvitationsByGuest(guestId: string): Promise<Invitation[]> {
+    return Array.from(this.invitations.values()).filter((i) => i.guestId === guestId);
+  }
+
+  async getInvitationsByEvent(eventId: string): Promise<Invitation[]> {
+    return Array.from(this.invitations.values()).filter((i) => i.eventId === eventId);
+  }
+
+  async getInvitationByGuestAndEvent(guestId: string, eventId: string): Promise<Invitation | undefined> {
+    return Array.from(this.invitations.values()).find(
+      (i) => i.guestId === guestId && i.eventId === eventId
+    );
+  }
+
+  async createInvitation(insertInvitation: InsertInvitation): Promise<Invitation> {
+    const id = randomUUID();
+    const invitation: Invitation = {
+      ...insertInvitation,
+      id,
+      rsvpStatus: insertInvitation.rsvpStatus || 'pending',
+      invitedAt: new Date(),
+    } as Invitation;
+    this.invitations.set(id, invitation);
+    return invitation;
+  }
+
+  async bulkCreateInvitations(insertInvitations: InsertInvitation[]): Promise<Invitation[]> {
+    const invitations: Invitation[] = [];
+    for (const insertInvitation of insertInvitations) {
+      const invitation = await this.createInvitation(insertInvitation);
+      invitations.push(invitation);
+    }
+    return invitations;
+  }
+
+  async updateInvitation(id: string, update: Partial<InsertInvitation>): Promise<Invitation | undefined> {
+    const invitation = this.invitations.get(id);
+    if (!invitation) return undefined;
+
+    const updated = { ...invitation, ...update } as Invitation;
+    this.invitations.set(id, updated);
+    return updated;
+  }
+
+  async deleteInvitation(id: string): Promise<boolean> {
+    return this.invitations.delete(id);
   }
 
   // Tasks
@@ -1588,6 +1898,77 @@ export class DBStorage implements IStorage {
     return true;
   }
 
+  // Households
+  async getHousehold(id: string): Promise<Household | undefined> {
+    const result = await this.db.select().from(schema.households).where(eq(schema.households.id, id));
+    return result[0];
+  }
+
+  async getHouseholdsByWedding(weddingId: string): Promise<Household[]> {
+    return await this.db.select().from(schema.households).where(eq(schema.households.weddingId, weddingId));
+  }
+
+  async getHouseholdByMagicToken(token: string): Promise<Household | undefined> {
+    const households = await this.db.select().from(schema.households);
+    
+    for (const household of households) {
+      if (!household.magicLinkTokenHash || !household.magicLinkExpires) continue;
+      
+      const now = new Date();
+      if (household.magicLinkExpires < now) continue;
+      
+      const isValid = await bcrypt.compare(token, household.magicLinkTokenHash);
+      if (isValid) return household;
+    }
+    return undefined;
+  }
+
+  async createHousehold(insertHousehold: InsertHousehold): Promise<Household> {
+    const result = await this.db.insert(schema.households).values(insertHousehold).returning();
+    return result[0];
+  }
+
+  async updateHousehold(id: string, update: Partial<InsertHousehold>): Promise<Household | undefined> {
+    const result = await this.db.update(schema.households).set(update).where(eq(schema.households.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteHousehold(id: string): Promise<boolean> {
+    await this.db.delete(schema.households).where(eq(schema.households.id, id));
+    return true;
+  }
+
+  async generateHouseholdMagicToken(householdId: string, expiresInDays: number = 30): Promise<string> {
+    const household = await this.getHousehold(householdId);
+    if (!household) throw new Error('Household not found');
+
+    const token = randomBytes(32).toString('hex');
+    const hash = await bcrypt.hash(token, 10);
+    const expires = new Date();
+    expires.setDate(expires.getDate() + expiresInDays);
+
+    await this.db
+      .update(schema.households)
+      .set({
+        magicLinkTokenHash: hash,
+        magicLinkExpires: expires,
+      })
+      .where(eq(schema.households.id, householdId));
+
+    return token;
+  }
+
+  async revokeHouseholdMagicToken(householdId: string): Promise<boolean> {
+    await this.db
+      .update(schema.households)
+      .set({
+        magicLinkTokenHash: null,
+        magicLinkExpires: null,
+      })
+      .where(eq(schema.households.id, householdId));
+    return true;
+  }
+
   // Guests
   async getGuest(id: string): Promise<Guest | undefined> {
     const result = await this.db.select().from(schema.guests).where(eq(schema.guests.id, id));
@@ -1596,6 +1977,25 @@ export class DBStorage implements IStorage {
 
   async getGuestsByWedding(weddingId: string): Promise<Guest[]> {
     return await this.db.select().from(schema.guests).where(eq(schema.guests.weddingId, weddingId));
+  }
+
+  async getGuestsByHousehold(householdId: string): Promise<Guest[]> {
+    return await this.db.select().from(schema.guests).where(eq(schema.guests.householdId, householdId));
+  }
+
+  async getGuestByMagicToken(token: string): Promise<Guest | undefined> {
+    const guests = await this.db.select().from(schema.guests);
+    
+    for (const guest of guests) {
+      if (!guest.magicLinkTokenHash || !guest.magicLinkExpires) continue;
+      
+      const now = new Date();
+      if (guest.magicLinkExpires < now) continue;
+      
+      const isValid = await bcrypt.compare(token, guest.magicLinkTokenHash);
+      if (isValid) return guest;
+    }
+    return undefined;
   }
 
   async createGuest(insertGuest: InsertGuest): Promise<Guest> {
@@ -1610,6 +2010,85 @@ export class DBStorage implements IStorage {
 
   async deleteGuest(id: string): Promise<boolean> {
     await this.db.delete(schema.guests).where(eq(schema.guests.id, id));
+    return true;
+  }
+
+  async generateMagicLinkToken(guestId: string, expiresInDays: number = 30): Promise<string> {
+    const guest = await this.getGuest(guestId);
+    if (!guest) throw new Error('Guest not found');
+
+    const token = randomBytes(32).toString('hex');
+    const hash = await bcrypt.hash(token, 10);
+    const expires = new Date();
+    expires.setDate(expires.getDate() + expiresInDays);
+
+    await this.db
+      .update(schema.guests)
+      .set({
+        magicLinkTokenHash: hash,
+        magicLinkExpires: expires,
+      })
+      .where(eq(schema.guests.id, guestId));
+
+    return token;
+  }
+
+  async revokeMagicLinkToken(guestId: string): Promise<boolean> {
+    await this.db
+      .update(schema.guests)
+      .set({
+        magicLinkTokenHash: null,
+        magicLinkExpires: null,
+      })
+      .where(eq(schema.guests.id, guestId));
+    return true;
+  }
+
+  // Invitations
+  async getInvitation(id: string): Promise<Invitation | undefined> {
+    const result = await this.db.select().from(schema.invitations).where(eq(schema.invitations.id, id));
+    return result[0];
+  }
+
+  async getInvitationsByGuest(guestId: string): Promise<Invitation[]> {
+    return await this.db.select().from(schema.invitations).where(eq(schema.invitations.guestId, guestId));
+  }
+
+  async getInvitationsByEvent(eventId: string): Promise<Invitation[]> {
+    return await this.db.select().from(schema.invitations).where(eq(schema.invitations.eventId, eventId));
+  }
+
+  async getInvitationByGuestAndEvent(guestId: string, eventId: string): Promise<Invitation | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.invitations)
+      .where(
+        and(
+          eq(schema.invitations.guestId, guestId),
+          eq(schema.invitations.eventId, eventId)
+        )
+      );
+    return result[0];
+  }
+
+  async createInvitation(insertInvitation: InsertInvitation): Promise<Invitation> {
+    const result = await this.db.insert(schema.invitations).values(insertInvitation).returning();
+    return result[0];
+  }
+
+  async bulkCreateInvitations(insertInvitations: InsertInvitation[]): Promise<Invitation[]> {
+    if (insertInvitations.length === 0) return [];
+    const result = await this.db.insert(schema.invitations).values(insertInvitations).returning();
+    return result;
+  }
+
+  async updateInvitation(id: string, update: Partial<InsertInvitation>): Promise<Invitation | undefined> {
+    const result = await this.db.update(schema.invitations).set(update).where(eq(schema.invitations.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteInvitation(id: string): Promise<boolean> {
+    await this.db.delete(schema.invitations).where(eq(schema.invitations.id, id));
     return true;
   }
 

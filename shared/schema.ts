@@ -263,23 +263,49 @@ export type InsertBudgetCategory = z.infer<typeof insertBudgetCategorySchema>;
 export type BudgetCategory = typeof budgetCategories.$inferSelect;
 
 // ============================================================================
+// HOUSEHOLDS - Family/group management for unified RSVPs
+// ============================================================================
+
+export const households = pgTable("households", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  name: text("name").notNull(), // e.g., "The Patel Family"
+  maxCount: integer("max_count").notNull().default(1), // Total seats allocated (e.g., 4)
+  magicLinkTokenHash: varchar("magic_link_token_hash").unique(), // HASHED secure token for passwordless access
+  magicLinkExpires: timestamp("magic_link_expires"), // Token expiration
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertHouseholdSchema = createInsertSchema(households).omit({
+  id: true,
+  magicLinkTokenHash: true,
+  magicLinkExpires: true,
+  createdAt: true,
+});
+
+export type InsertHousehold = z.infer<typeof insertHouseholdSchema>;
+export type Household = typeof households.$inferSelect;
+
+// ============================================================================
 // GUESTS - Multi-event guest management
 // ============================================================================
 
 export const guests = pgTable("guests", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   weddingId: varchar("wedding_id").notNull(),
+  householdId: varchar("household_id"), // Links to households table for family grouping
   name: text("name").notNull(),
   email: text("email"),
   phone: text("phone"),
-  side: text("side"), // 'bride' | 'groom' | 'mutual'
-  group: text("group"), // Household/family group identifier
+  side: text("side").notNull().default('mutual'), // 'bride' | 'groom' | 'mutual' (Affiliation)
+  relationshipTier: text("relationship_tier"), // 'immediate_family' | 'extended_family' | 'friend' | 'parents_friend'
+  group: text("group"), // Legacy field - deprecated, use householdId
   eventIds: text("event_ids").array(), // Which events they're invited to (deprecated - use invitations table)
   rsvpStatus: text("rsvp_status").default('pending'), // 'pending' | 'confirmed' | 'declined' (deprecated - use invitations table)
   plusOne: boolean("plus_one").default(false),
   dietaryRestrictions: text("dietary_restrictions"), // (deprecated - use invitations table)
-  magicLinkTokenHash: varchar("magic_link_token_hash").unique(), // HASHED secure token for passwordless guest access (never stored in plaintext)
-  magicLinkExpires: timestamp("magic_link_expires"), // Token expiration - enforced during lookup
+  magicLinkTokenHash: varchar("magic_link_token_hash").unique(), // HASHED secure token (deprecated - use household token)
+  magicLinkExpires: timestamp("magic_link_expires"), // Token expiration (deprecated - use household token)
 });
 
 export const insertGuestSchema = createInsertSchema(guests).omit({
@@ -288,6 +314,7 @@ export const insertGuestSchema = createInsertSchema(guests).omit({
   magicLinkExpires: true,
 }).extend({
   side: z.enum(['bride', 'groom', 'mutual']).optional(),
+  relationshipTier: z.enum(['immediate_family', 'extended_family', 'friend', 'parents_friend']).optional(),
   rsvpStatus: z.enum(['pending', 'confirmed', 'declined']).optional(),
 });
 
@@ -300,13 +327,18 @@ export type Guest = typeof guests.$inferSelect;
 
 export const invitations = pgTable("invitations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  guestId: varchar("guest_id").notNull(), // Links to guests.id
-  eventId: varchar("event_id").notNull(), // Links to events.id
+  guestId: varchar("guest_id").notNull().references(() => guests.id, { onDelete: 'cascade' }), // Foreign key to guests.id
+  eventId: varchar("event_id").notNull().references(() => events.id, { onDelete: 'cascade' }), // Foreign key to events.id
   rsvpStatus: text("rsvp_status").notNull().default('pending'), // 'attending' | 'not_attending' | 'pending'
   dietaryRestrictions: text("dietary_restrictions"), // Per-event dietary restrictions
   invitedAt: timestamp("invited_at").notNull().defaultNow(),
   respondedAt: timestamp("responded_at"), // When guest responded to RSVP
   plusOneAttending: boolean("plus_one_attending"), // Whether they're bringing a plus one to this event
+}, (table) => {
+  return {
+    // Composite unique constraint to prevent duplicate RSVPs for same guest/event
+    guestEventUnique: sql`UNIQUE(guest_id, event_id)`,
+  };
 });
 
 export const insertInvitationSchema = createInsertSchema(invitations).omit({
