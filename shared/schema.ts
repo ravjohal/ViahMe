@@ -273,14 +273,19 @@ export const guests = pgTable("guests", {
   email: text("email"),
   phone: text("phone"),
   side: text("side"), // 'bride' | 'groom' | 'mutual'
-  eventIds: text("event_ids").array(), // Which events they're invited to
-  rsvpStatus: text("rsvp_status").default('pending'), // 'pending' | 'confirmed' | 'declined'
+  group: text("group"), // Household/family group identifier
+  eventIds: text("event_ids").array(), // Which events they're invited to (deprecated - use invitations table)
+  rsvpStatus: text("rsvp_status").default('pending'), // 'pending' | 'confirmed' | 'declined' (deprecated - use invitations table)
   plusOne: boolean("plus_one").default(false),
-  dietaryRestrictions: text("dietary_restrictions"),
+  dietaryRestrictions: text("dietary_restrictions"), // (deprecated - use invitations table)
+  magicLinkTokenHash: varchar("magic_link_token_hash").unique(), // HASHED secure token for passwordless guest access (never stored in plaintext)
+  magicLinkExpires: timestamp("magic_link_expires"), // Token expiration - enforced during lookup
 });
 
 export const insertGuestSchema = createInsertSchema(guests).omit({
   id: true,
+  magicLinkTokenHash: true,
+  magicLinkExpires: true,
 }).extend({
   side: z.enum(['bride', 'groom', 'mutual']).optional(),
   rsvpStatus: z.enum(['pending', 'confirmed', 'declined']).optional(),
@@ -288,6 +293,32 @@ export const insertGuestSchema = createInsertSchema(guests).omit({
 
 export type InsertGuest = z.infer<typeof insertGuestSchema>;
 export type Guest = typeof guests.$inferSelect;
+
+// ============================================================================
+// INVITATIONS - Junction table linking guests to specific events
+// ============================================================================
+
+export const invitations = pgTable("invitations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  guestId: varchar("guest_id").notNull(), // Links to guests.id
+  eventId: varchar("event_id").notNull(), // Links to events.id
+  rsvpStatus: text("rsvp_status").notNull().default('pending'), // 'attending' | 'not_attending' | 'pending'
+  dietaryRestrictions: text("dietary_restrictions"), // Per-event dietary restrictions
+  invitedAt: timestamp("invited_at").notNull().defaultNow(),
+  respondedAt: timestamp("responded_at"), // When guest responded to RSVP
+  plusOneAttending: boolean("plus_one_attending"), // Whether they're bringing a plus one to this event
+});
+
+export const insertInvitationSchema = createInsertSchema(invitations).omit({
+  id: true,
+  invitedAt: true,
+  respondedAt: true,
+}).extend({
+  rsvpStatus: z.enum(['attending', 'not_attending', 'pending']).optional(),
+});
+
+export type InsertInvitation = z.infer<typeof insertInvitationSchema>;
+export type Invitation = typeof invitations.$inferSelect;
 
 // ============================================================================
 // TASKS - Checklist management

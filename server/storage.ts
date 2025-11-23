@@ -13,6 +13,8 @@ import {
   type InsertBudgetCategory,
   type Guest,
   type InsertGuest,
+  type Invitation,
+  type InsertInvitation,
   type Task,
   type InsertTask,
   type Contract,
@@ -116,9 +118,22 @@ export interface IStorage {
   // Guests
   getGuest(id: string): Promise<Guest | undefined>;
   getGuestsByWedding(weddingId: string): Promise<Guest[]>;
+  getGuestByMagicToken(token: string): Promise<Guest | undefined>; // Accepts plaintext token, compares hash, enforces expiry
   createGuest(guest: InsertGuest): Promise<Guest>;
   updateGuest(id: string, guest: Partial<InsertGuest>): Promise<Guest | undefined>;
   deleteGuest(id: string): Promise<boolean>;
+  generateMagicLinkToken(guestId: string, expiresInDays?: number): Promise<string>; // Returns plaintext token, stores hash
+  revokeMagicLinkToken(guestId: string): Promise<boolean>; // Invalidates token for security
+
+  // Invitations
+  getInvitation(id: string): Promise<Invitation | undefined>;
+  getInvitationsByGuest(guestId: string): Promise<Invitation[]>;
+  getInvitationsByEvent(eventId: string): Promise<Invitation[]>;
+  getInvitationByGuestAndEvent(guestId: string, eventId: string): Promise<Invitation | undefined>;
+  createInvitation(invitation: InsertInvitation): Promise<Invitation>;
+  bulkCreateInvitations(invitations: InsertInvitation[]): Promise<Invitation[]>;
+  updateInvitation(id: string, invitation: Partial<InsertInvitation>): Promise<Invitation | undefined>;
+  deleteInvitation(id: string): Promise<boolean>;
 
   // Tasks
   getTask(id: string): Promise<Task | undefined>;
