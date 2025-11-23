@@ -287,12 +287,22 @@ export default function Budget() {
       console.log("[BUDGET] Done, closing dialog...");
       setEditBudgetDialogOpen(false);
       setNewTotalBudget("");
-      toast({
-        title: "Budget Updated",
-        description: oldBudget > 0 
-          ? "Your total wedding budget and category allocations have been updated successfully"
-          : "Your total wedding budget has been updated successfully",
-      });
+      
+      // Show informative toast about what happened
+      const scalingFactor = oldBudget > 0 ? newBudget / oldBudget : 1;
+      if (scalingFactor !== 1 && categories.length > 0) {
+        const percentChange = ((scalingFactor - 1) * 100).toFixed(0);
+        const direction = scalingFactor > 1 ? "increased" : "decreased";
+        toast({
+          title: "Budget Updated ✓",
+          description: `Budget changed from $${oldBudget.toLocaleString()} → $${newBudget.toLocaleString()}. All ${categories.length} category allocations automatically ${direction} by ${Math.abs(parseFloat(percentChange))}% to maintain proportions.`,
+        });
+      } else {
+        toast({
+          title: "Budget Updated",
+          description: "Your total wedding budget has been updated successfully",
+        });
+      }
     },
     onError: (error) => {
       console.log("[BUDGET] Mutation failed! Error:", error);
@@ -789,11 +799,22 @@ export default function Budget() {
           <DialogHeader>
             <DialogTitle>Edit Total Budget</DialogTitle>
             <DialogDescription>
-              Update your overall wedding budget. This will affect your budget tracking and allocation.
+              Update your overall wedding budget. All category allocations will automatically adjust proportionally to maintain your budget distribution.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
+            {categories.length > 0 && (
+              <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                <p className="text-sm text-blue-900 dark:text-blue-100 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4" />
+                  <span>
+                    <strong>Auto-scaling enabled:</strong> Your {categories.length} budget categories will be automatically adjusted to match the new total.
+                  </span>
+                </p>
+              </div>
+            )}
+            
             <div className="space-y-2">
               <Label htmlFor="totalBudget">
                 Total Budget <span className="text-destructive">*</span>
@@ -813,7 +834,7 @@ export default function Budget() {
                 />
               </div>
               <p className="text-sm text-muted-foreground">
-                Current budget: ${total.toLocaleString()}
+                Current budget: ${total.toLocaleString()} • Current allocated: ${totalAllocated.toLocaleString()}
               </p>
             </div>
 
