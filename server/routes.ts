@@ -610,6 +610,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get magic link for household with active link (retrieves stored token)
+  app.get("/api/households/:id/magic-link", async (req, res) => {
+    try {
+      const household = await storage.getHousehold(req.params.id);
+      if (!household) {
+        return res.status(404).json({ error: "Household not found" });
+      }
+
+      // Check if household has an active magic link
+      if (!household.magicLinkTokenHash || !household.magicLinkExpires || !household.magicLinkToken) {
+        return res.status(404).json({ error: "No active magic link for this household" });
+      }
+
+      // Check if link is expired
+      if (new Date(household.magicLinkExpires) < new Date()) {
+        return res.status(410).json({ error: "Magic link has expired" });
+      }
+
+      // Return stored plaintext token
+      const token = household.magicLinkToken;
+      const baseUrl = process.env.REPLIT_DOMAINS?.split(',')[0] || 'http://localhost:5000';
+      const magicLink = `${baseUrl}/rsvp/${token}`;
+
+      res.json({ token, magicLink });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get magic link" });
+    }
+  });
+
   // Send bulk invitation emails to households
   app.post("/api/households/send-invitations", async (req, res) => {
     try {

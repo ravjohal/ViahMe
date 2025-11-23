@@ -275,6 +275,7 @@ export const households = pgTable("households", {
   affiliation: text("affiliation").notNull().default("bride"), // "bride" | "groom" | "mutual"
   relationshipTier: text("relationship_tier").notNull().default("friend"), // "immediate_family" | "extended_family" | "friend" | "parents_friend"
   magicLinkTokenHash: varchar("magic_link_token_hash").unique(), // HASHED secure token for passwordless access
+  magicLinkToken: varchar("magic_link_token"), // Plaintext token for QR/copy functionality
   magicLinkExpires: timestamp("magic_link_expires"), // Token expiration
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
@@ -282,6 +283,7 @@ export const households = pgTable("households", {
 export const insertHouseholdSchema = createInsertSchema(households).omit({
   id: true,
   magicLinkTokenHash: true,
+  magicLinkToken: true,
   magicLinkExpires: true,
   createdAt: true,
 });

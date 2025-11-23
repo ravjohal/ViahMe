@@ -129,6 +129,40 @@ export default function Guests() {
     enabled: !!wedding?.id,
   });
 
+  // Fetch magic links for households with active links on page load
+  useEffect(() => {
+    if (!households || households.length === 0) return;
+
+    const fetchMagicLinks = async () => {
+      const newTokens = new Map(householdTokens);
+      
+      for (const household of households) {
+        // Skip if already have token or if no active link
+        if (householdTokens.has(household.id)) continue;
+        if (!household.magicLinkTokenHash || !household.magicLinkExpires) continue;
+
+        // Check if link is expired
+        if (new Date(household.magicLinkExpires) < new Date()) continue;
+
+        try {
+          const response = await fetch(`/api/households/${household.id}/magic-link`);
+          if (response.ok) {
+            const data = await response.json();
+            newTokens.set(household.id, data.token);
+          }
+        } catch (error) {
+          console.error(`Failed to fetch magic link for household ${household.id}:`, error);
+        }
+      }
+
+      if (newTokens.size > householdTokens.size) {
+        setHouseholdTokens(newTokens);
+      }
+    };
+
+    fetchMagicLinks();
+  }, [households]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const form = useForm<GuestFormData>({
     resolver: zodResolver(guestFormSchema),
     defaultValues: {

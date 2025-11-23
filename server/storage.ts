@@ -715,6 +715,7 @@ export class MemStorage implements IStorage {
       id,
       maxCount: insertHousehold.maxCount ?? 1,
       magicLinkTokenHash: null,
+      magicLinkToken: null,
       magicLinkExpires: null,
       createdAt: new Date(),
     };
@@ -747,6 +748,7 @@ export class MemStorage implements IStorage {
     const updated = {
       ...household,
       magicLinkTokenHash: hash,
+      magicLinkToken: token, // Store plaintext for QR/copy functionality
       magicLinkExpires: expires,
     };
     this.households.set(householdId, updated);
@@ -761,6 +763,7 @@ export class MemStorage implements IStorage {
     const updated = {
       ...household,
       magicLinkTokenHash: null,
+      magicLinkToken: null, // Clear plaintext token as well
       magicLinkExpires: null,
     };
     this.households.set(householdId, updated);
@@ -1951,6 +1954,7 @@ export class DBStorage implements IStorage {
       .update(schema.households)
       .set({
         magicLinkTokenHash: hash,
+        magicLinkToken: token, // Store plaintext for QR/copy functionality
         magicLinkExpires: expires,
       })
       .where(eq(schema.households.id, householdId));
@@ -1963,6 +1967,7 @@ export class DBStorage implements IStorage {
       .update(schema.households)
       .set({
         magicLinkTokenHash: null,
+        magicLinkToken: null, // Clear plaintext token as well
         magicLinkExpires: null,
       })
       .where(eq(schema.households.id, householdId));
