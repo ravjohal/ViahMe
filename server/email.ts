@@ -513,6 +513,167 @@ export async function sendRsvpConfirmationEmail(params: {
   }
 }
 
+export async function sendInvitationEmail(params: {
+  to: string;
+  householdName: string;
+  coupleName: string;
+  magicLink: string;
+  eventNames: string[];
+  weddingDate?: string;
+  personalMessage?: string;
+}) {
+  const { client, fromEmail } = await getUncachableResendClient();
+  
+  const { to, householdName, coupleName, magicLink, eventNames, weddingDate, personalMessage } = params;
+  
+  const eventsList = eventNames.map(name => `<li>${name}</li>`).join('');
+  
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+          }
+          .header {
+            background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+            color: white;
+            padding: 40px 20px;
+            border-radius: 8px 8px 0 0;
+            text-align: center;
+          }
+          .header h1 {
+            margin: 0;
+            font-size: 32px;
+            font-weight: 700;
+          }
+          .content {
+            background: white;
+            padding: 30px;
+            border: 1px solid #e5e7eb;
+            border-top: none;
+          }
+          .events-box {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+          }
+          .events-box h3 {
+            margin: 0 0 10px 0;
+            color: #92400e;
+            font-size: 16px;
+          }
+          .events-box ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #78350f;
+          }
+          .message-box {
+            background: #ede9fe;
+            border-left: 4px solid #8b5cf6;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+            font-style: italic;
+            color: #5b21b6;
+          }
+          .button {
+            display: inline-block;
+            background: #f97316;
+            color: white;
+            padding: 14px 40px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            margin-top: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          }
+          .footer {
+            text-align: center;
+            padding: 20px;
+            color: #6b7280;
+            font-size: 14px;
+            border-top: 1px solid #e5e7eb;
+            margin-top: 30px;
+          }
+          .highlight {
+            background: #fef3c7;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+            color: #92400e;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>You're Invited!</h1>
+        </div>
+        <div class="content">
+          <p>Dear ${householdName},</p>
+          
+          <p>You are cordially invited to celebrate the wedding of <strong>${coupleName}</strong>!</p>
+          
+          ${weddingDate ? `<p>Wedding Date: <span class="highlight">${weddingDate}</span></p>` : ''}
+          
+          ${personalMessage ? `
+          <div class="message-box">
+            ${personalMessage}
+          </div>
+          ` : ''}
+          
+          <div class="events-box">
+            <h3>You are invited to the following events:</h3>
+            <ul>
+              ${eventsList}
+            </ul>
+          </div>
+          
+          <p><strong>Please RSVP for each event by clicking the link below.</strong> You'll be able to let us know who from your household will be attending, any dietary restrictions, and more.</p>
+          
+          <center>
+            <a href="${magicLink}" class="button">View Invitation & RSVP</a>
+          </center>
+          
+          <p style="margin-top: 30px; font-size: 14px; color: #6b7280;">
+            <strong>Important:</strong> This invitation link is unique to your household and expires in 30 days from the date of this email. You can return to this link at any time to update your RSVP before it expires. If your link has expired, please contact the couple for a new invitation.
+          </p>
+          
+          <p style="margin-top: 30px;">We can't wait to celebrate with you!</p>
+          <p><strong>With love,</strong><br>${coupleName}</p>
+        </div>
+        <div class="footer">
+          <p>This invitation was sent via Viah.me</p>
+          <p>Your South Asian Wedding Planning Platform</p>
+        </div>
+      </body>
+    </html>
+  `;
+
+  try {
+    const result = await client.emails.send({
+      from: fromEmail,
+      to,
+      subject: `Wedding Invitation from ${coupleName}`,
+      html,
+    });
+    return result;
+  } catch (error) {
+    console.error('Failed to send invitation email:', error);
+    throw error;
+  }
+}
+
 export async function sendEmail(params: {
   to: string;
   subject: string;

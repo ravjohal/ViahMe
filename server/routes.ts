@@ -32,6 +32,7 @@ import {
   sendBookingConfirmationEmail,
   sendVendorNotificationEmail,
   sendRsvpConfirmationEmail,
+  sendInvitationEmail,
 } from "./email";
 
 // Seed vendors only if database is empty
@@ -213,6 +214,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(events);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch events" });
+    }
+  });
+
+  // Get single event by ID (for RSVP portal and other frontend needs)
+  app.get("/api/events/by-id/:id", async (req, res) => {
+    try {
+      const event = await storage.getEvent(req.params.id);
+      if (!event) {
+        return res.status(404).json({ error: "Event not found" });
+      }
+      res.json(event);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch event" });
     }
   });
 
@@ -489,12 +503,359 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ============================================================================
+  // HOUSEHOLDS - Family grouping for guest management
+  // ============================================================================
+
+  app.get("/api/households/:weddingId", async (req, res) => {
+    try {
+      const households = await storage.getHouseholdsByWedding(req.params.weddingId);
+      res.json(households);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch households" });
+    }
+  });
+
+  app.get("/api/households/by-id/:id", async (req, res) => {
+    try {
+      const household = await storage.getHousehold(req.params.id);
+      if (!household) {
+        return res.status(404).json({ error: "Household not found" });
+      }
+      res.json(household);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch household" });
+    }
+  });
+
+  // Public endpoint - accessible via magic link token (no auth required)
+  app.get("/api/households/by-token/:token", async (req, res) => {
+    try {
+      const household = await storage.getHouseholdByMagicToken(req.params.token);
+      
+      // Token validation and expiry enforcement
+      if (!household) {
+        return res.status(401).json({ error: "Invalid or expired magic link" });
+      }
+      
+      // Explicit expiry check (defense in depth)
+      if (household.magicLinkExpires && new Date(household.magicLinkExpires) < new Date()) {
+        return res.status(401).json({ error: "Magic link has expired. Please contact the couple for a new invitation." });
+      }
+      
+      // Sanitize response - remove all sensitive token fields
+      const { magicLinkTokenHash, magicLinkExpires, ...sanitizedHousehold } = household;
+      res.json(sanitizedHousehold);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to authenticate household" });
+    }
+  });
+
+  app.post("/api/households", async (req, res) => {
+    try {
+      const validatedData = insertHouseholdSchema.parse(req.body);
+      const household = await storage.createHousehold(validatedData);
+      res.json(household);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      res.status(500).json({ error: "Failed to create household" });
+    }
+  });
+
+  app.patch("/api/households/:id", async (req, res) => {
+    try {
+      const validatedData = insertHouseholdSchema.partial().parse(req.body);
+      const household = await storage.updateHousehold(req.params.id, validatedData);
+      if (!household) {
+        return res.status(404).json({ error: "Household not found" });
+      }
+      res.json(household);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      res.status(500).json({ error: "Failed to update household" });
+    }
+  });
+
+  app.delete("/api/households/:id", async (req, res) => {
+    try {
+      await storage.deleteHousehold(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete household" });
+    }
+  });
+
+  // Generate magic link token for household (30 day expiry)
+  app.post("/api/households/:id/generate-token", async (req, res) => {
+    try {
+      const expiresInDays = req.body.expiresInDays || 30;
+      const token = await storage.generateHouseholdMagicToken(req.params.id, expiresInDays);
+      res.json({ token });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to generate magic link token" });
+    }
+  });
+
+  // Revoke magic link token for household
+  app.post("/api/households/:id/revoke-token", async (req, res) => {
+    try {
+      await storage.revokeHouseholdMagicToken(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to revoke magic link token" });
+    }
+  });
+
+  // Send bulk invitation emails to households
+  app.post("/api/households/send-invitations", async (req, res) => {
+    try {
+      const { householdIds, weddingId, eventIds, personalMessage } = req.body;
+
+      if (!Array.isArray(householdIds) || !Array.isArray(eventIds)) {
+        return res.status(400).json({ error: "householdIds and eventIds must be arrays" });
+      }
+
+      const wedding = await storage.getWedding(weddingId);
+      if (!wedding) {
+        return res.status(404).json({ error: "Wedding not found" });
+      }
+
+      const coupleName = wedding.partner1Name && wedding.partner2Name 
+        ? `${wedding.partner1Name} & ${wedding.partner2Name}`
+        : wedding.partner1Name || wedding.partner2Name || 'The Couple';
+
+      const events = await Promise.all(eventIds.map(id => storage.getEvent(id)));
+      const eventNames = events.filter(e => e).map(e => e!.name);
+      
+      const weddingDate = wedding.date ? new Date(wedding.date).toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }) : undefined;
+
+      const results = [];
+      const errors = [];
+
+      for (const householdId of householdIds) {
+        try {
+          const household = await storage.getHousehold(householdId);
+          if (!household) {
+            errors.push({ householdId, error: "Household not found" });
+            continue;
+          }
+
+          // Generate magic link token
+          const token = await storage.generateHouseholdMagicToken(householdId, 30);
+          const baseUrl = process.env.REPLIT_DOMAINS?.split(',')[0] || 'http://localhost:5000';
+          const magicLink = `${baseUrl}/rsvp/${token}`;
+
+          // Create invitations for each event
+          const guests = await storage.getGuestsByHousehold(householdId);
+          for (const guest of guests) {
+            for (const eventId of eventIds) {
+              // Check if invitation already exists
+              const existing = await storage.getInvitationByGuestAndEvent(guest.id, eventId);
+              if (!existing) {
+                await storage.createInvitation({
+                  guestId: guest.id,
+                  eventId,
+                  rsvpStatus: 'pending',
+                });
+              }
+            }
+          }
+
+          // Send email to household contact
+          if (household.contactEmail) {
+            await sendInvitationEmail({
+              to: household.contactEmail,
+              householdName: household.name,
+              coupleName,
+              magicLink,
+              eventNames,
+              weddingDate,
+              personalMessage,
+            });
+
+            results.push({ householdId, email: household.contactEmail, success: true });
+          } else {
+            errors.push({ householdId, error: "No contact email" });
+          }
+        } catch (error) {
+          errors.push({ 
+            householdId, 
+            error: error instanceof Error ? error.message : "Failed to send invitation" 
+          });
+        }
+      }
+
+      res.json({ 
+        success: results.length,
+        results,
+        errors,
+        total: householdIds.length
+      });
+    } catch (error) {
+      console.error("Failed to send bulk invitations:", error);
+      res.status(500).json({ error: "Failed to send invitations" });
+    }
+  });
+
+  // ============================================================================
+  // INVITATIONS - Per-event RSVP tracking
+  // ============================================================================
+
+  // Get invitations for a specific guest
+  app.get("/api/invitations/by-guest/:guestId", async (req, res) => {
+    try {
+      const invitations = await storage.getInvitationsByGuest(req.params.guestId);
+      res.json(invitations);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch invitations" });
+    }
+  });
+
+  app.get("/api/invitations/by-event/:eventId", async (req, res) => {
+    try {
+      const invitations = await storage.getInvitationsByEvent(req.params.eventId);
+      res.json(invitations);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch invitations" });
+    }
+  });
+
+  // Get all invitations for all guests in a household (for RSVP portal)
+  app.get("/api/invitations/household/:householdId", async (req, res) => {
+    try {
+      const guests = await storage.getGuestsByHousehold(req.params.householdId);
+      const allInvitations = [];
+      
+      for (const guest of guests) {
+        const invitations = await storage.getInvitationsByGuest(guest.id);
+        allInvitations.push(...invitations);
+      }
+      
+      res.json(allInvitations);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch household invitations" });
+    }
+  });
+
+  app.post("/api/invitations", async (req, res) => {
+    try {
+      const validatedData = insertInvitationSchema.parse(req.body);
+      const invitation = await storage.createInvitation(validatedData);
+      res.json(invitation);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      res.status(500).json({ error: "Failed to create invitation" });
+    }
+  });
+
+  // Bulk create invitations (for inviting multiple guests to multiple events)
+  app.post("/api/invitations/bulk", async (req, res) => {
+    try {
+      const invitationsArray = req.body.invitations;
+      if (!Array.isArray(invitationsArray)) {
+        return res.status(400).json({ error: "Request body must contain an 'invitations' array" });
+      }
+
+      const validatedInvitations = invitationsArray.map(inv => 
+        insertInvitationSchema.parse(inv)
+      );
+
+      const createdInvitations = await storage.bulkCreateInvitations(validatedInvitations);
+      res.json({ 
+        success: createdInvitations.length,
+        invitations: createdInvitations 
+      });
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      res.status(500).json({ error: "Failed to create invitations" });
+    }
+  });
+
+  // Public RSVP submission endpoint (accessible via magic link, no auth required)
+  app.patch("/api/invitations/:id/rsvp", async (req, res) => {
+    try {
+      const { rsvpStatus, dietaryRestrictions, plusOneAttending } = req.body;
+      
+      const updatedInvitation = await storage.updateInvitation(req.params.id, {
+        rsvpStatus,
+        dietaryRestrictions,
+        plusOneAttending,
+        respondedAt: new Date(),
+      });
+
+      if (!updatedInvitation) {
+        return res.status(404).json({ error: "Invitation not found" });
+      }
+
+      // Send RSVP confirmation email asynchronously
+      (async () => {
+        try {
+          const guest = await storage.getGuest(updatedInvitation.guestId);
+          const event = await storage.getEvent(updatedInvitation.eventId);
+          
+          if (guest?.email && event) {
+            await sendRsvpConfirmationEmail({
+              to: guest.email,
+              guestName: guest.name,
+              eventName: event.name,
+              eventDate: event.date ? new Date(event.date).toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              }) : 'Date TBD',
+              rsvpStatus: rsvpStatus === 'attending' ? 'Attending' : 'Not Attending',
+            });
+          }
+        } catch (emailError) {
+          console.error('Failed to send RSVP confirmation email:', emailError);
+        }
+      })();
+
+      res.json(updatedInvitation);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to submit RSVP" });
+    }
+  });
+
+  app.delete("/api/invitations/:id", async (req, res) => {
+    try {
+      await storage.deleteInvitation(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete invitation" });
+    }
+  });
+
+  // ============================================================================
   // GUESTS
   // ============================================================================
 
   app.get("/api/guests/:weddingId", async (req, res) => {
     try {
       const guests = await storage.getGuestsByWedding(req.params.weddingId);
+      res.json(guests);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch guests" });
+    }
+  });
+
+  // Get guests by household
+  app.get("/api/guests/by-household/:householdId", async (req, res) => {
+    try {
+      const guests = await storage.getGuestsByHousehold(req.params.householdId);
       res.json(guests);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch guests" });

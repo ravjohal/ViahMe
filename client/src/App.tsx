@@ -36,11 +36,13 @@ import CoupleAnalytics from "@/pages/couple-analytics";
 import Invitations from "@/pages/invitations";
 import Checkout from "@/pages/checkout";
 import OrderConfirmation from "@/pages/order-confirmation";
+import RsvpPortal from "@/pages/rsvp-portal";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Landing} />
+      <Route path="/rsvp/:token" component={RsvpPortal} />
       <Route path="/onboarding" component={Onboarding} />
       <Route path="/login" component={Login} />
       <Route path="/vendor-login" component={VendorLogin} />

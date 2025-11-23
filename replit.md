@@ -23,8 +23,10 @@ Key architectural decisions and features include:
   - **Household Management**: Family/group grouping with max seat allocation (e.g., "The Patel Family" - 4 seats)
   - **Cultural Hierarchy Tagging**: Affiliation (Bride Side/Groom Side/Mutual) and RelationshipTier (Immediate Family/Extended Family/Friend/Parent's Friend)
   - **Invitations Junction Table**: Links guests to specific events with per-event RSVP status, dietary restrictions, and plus-one tracking
-  - **Magic Link Authentication**: Secure, hashed token system (bcrypt + 32-byte random tokens) for passwordless guest access with expiration enforcement
-  - **Allocation View Dashboard**: Totals by side with filtering/export by affiliation and relationship tier
+  - **Magic Link Authentication**: Secure, hashed token system (bcrypt + 32-byte random tokens) for passwordless guest access with server-side expiration enforcement and sanitized API responses
+  - **Public RSVP Portal**: Passwordless guest portal accessible via magic links with per-event RSVP forms, dietary restrictions, and plus-one tracking
+  - **Bulk Invitation Emails**: Automated email distribution via Resend with personalized magic links, event details, and 30-day expiration warnings
+  - **Complete API Coverage**: 20+ endpoints for household CRUD, invitation management, RSVP submission, and magic token generation/verification
 - **Messaging System**: Facilitates couple-vendor communication with threading.
 - **Review System**: Allows vendor ratings and feedback.
 - **Document Storage System**: Secure cloud-based document management for contracts, permits, and invoices using Replit Object Storage, with categorization and access controls.
