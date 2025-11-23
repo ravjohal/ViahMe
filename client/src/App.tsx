@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -86,11 +87,12 @@ function AppLayout() {
   const { user, isLoading } = useAuth();
   
   // Redirect authenticated users from landing page to dashboard
-  if (!isLoading && user && location === "/") {
-    const dashboardPath = user.role === "vendor" ? "/vendor-dashboard" : "/dashboard";
-    setLocation(dashboardPath);
-    return null; // Don't render anything during redirect
-  }
+  useEffect(() => {
+    if (!isLoading && user && location === "/") {
+      const dashboardPath = user.role === "vendor" ? "/vendor-dashboard" : "/dashboard";
+      setLocation(dashboardPath);
+    }
+  }, [user, isLoading, location, setLocation]);
   
   // Don't show header on onboarding, auth pages, or guest website pages
   const authPages = [
