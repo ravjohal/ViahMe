@@ -67,6 +67,19 @@ import {
   type InsertGuestNotification,
   type LiveWeddingStatus,
   type InsertLiveWeddingStatus,
+  type WeddingRole,
+  type InsertWeddingRole,
+  type RolePermission,
+  type InsertRolePermission,
+  type WeddingCollaborator,
+  type InsertWeddingCollaborator,
+  type CollaboratorActivityLog,
+  type InsertCollaboratorActivityLog,
+  type RoleWithPermissions,
+  type CollaboratorWithDetails,
+  type PermissionCategory,
+  type PermissionLevel,
+  PERMISSION_CATEGORIES,
 } from "@shared/schema";
 import { randomUUID, randomBytes } from "crypto";
 import bcrypt from "bcrypt";
@@ -393,6 +406,44 @@ export interface IStorage {
   getLiveWeddingStatus(weddingId: string): Promise<LiveWeddingStatus | undefined>;
   createOrUpdateLiveWeddingStatus(status: InsertLiveWeddingStatus): Promise<LiveWeddingStatus>;
   updateLiveWeddingStatus(weddingId: string, updates: Partial<InsertLiveWeddingStatus>): Promise<LiveWeddingStatus | undefined>;
+
+  // Wedding Roles
+  getWeddingRole(id: string): Promise<WeddingRole | undefined>;
+  getWeddingRolesByWedding(weddingId: string): Promise<WeddingRole[]>;
+  getWeddingRoleWithPermissions(id: string): Promise<RoleWithPermissions | undefined>;
+  createWeddingRole(role: InsertWeddingRole): Promise<WeddingRole>;
+  updateWeddingRole(id: string, role: Partial<InsertWeddingRole>): Promise<WeddingRole | undefined>;
+  deleteWeddingRole(id: string): Promise<boolean>;
+  createDefaultRolesForWedding(weddingId: string): Promise<WeddingRole[]>;
+
+  // Role Permissions
+  getRolePermissions(roleId: string): Promise<RolePermission[]>;
+  setRolePermission(roleId: string, category: PermissionCategory, level: PermissionLevel): Promise<RolePermission>;
+  removeRolePermission(roleId: string, category: PermissionCategory): Promise<boolean>;
+  setRolePermissions(roleId: string, permissions: { category: PermissionCategory; level: PermissionLevel }[]): Promise<RolePermission[]>;
+
+  // Wedding Collaborators
+  getWeddingCollaborator(id: string): Promise<WeddingCollaborator | undefined>;
+  getWeddingCollaboratorByEmail(weddingId: string, email: string): Promise<WeddingCollaborator | undefined>;
+  getWeddingCollaboratorByToken(token: string): Promise<WeddingCollaborator | undefined>;
+  getWeddingCollaboratorsByWedding(weddingId: string): Promise<WeddingCollaborator[]>;
+  getWeddingCollaboratorWithDetails(id: string): Promise<CollaboratorWithDetails | undefined>;
+  getCollaboratorsWithDetailsByWedding(weddingId: string): Promise<CollaboratorWithDetails[]>;
+  getWeddingsByCollaboratorUser(userId: string): Promise<Wedding[]>;
+  createWeddingCollaborator(collaborator: InsertWeddingCollaborator): Promise<WeddingCollaborator>;
+  updateWeddingCollaborator(id: string, updates: Partial<InsertWeddingCollaborator>): Promise<WeddingCollaborator | undefined>;
+  deleteWeddingCollaborator(id: string): Promise<boolean>;
+  generateCollaboratorInviteToken(collaboratorId: string, expiresInDays?: number): Promise<string>;
+  acceptCollaboratorInvite(token: string, userId: string): Promise<WeddingCollaborator | undefined>;
+  revokeCollaboratorInvite(id: string): Promise<boolean>;
+
+  // Collaborator Activity Log
+  logCollaboratorActivity(log: InsertCollaboratorActivityLog): Promise<CollaboratorActivityLog>;
+  getCollaboratorActivityLog(weddingId: string, limit?: number): Promise<CollaboratorActivityLog[]>;
+
+  // Permission Checking
+  getUserPermissionsForWedding(userId: string, weddingId: string): Promise<{ isOwner: boolean; permissions: Map<PermissionCategory, PermissionLevel> }>;
+  checkUserPermission(userId: string, weddingId: string, category: PermissionCategory, requiredLevel: PermissionLevel): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -2159,6 +2210,100 @@ export class MemStorage implements IStorage {
   }
   async updateLiveWeddingStatus(weddingId: string, updates: Partial<InsertLiveWeddingStatus>): Promise<LiveWeddingStatus | undefined> {
     throw new Error("MemStorage does not support Live Wedding Status. Use DBStorage.");
+  }
+
+  // Wedding Roles - MemStorage stubs
+  async getWeddingRole(id: string): Promise<WeddingRole | undefined> {
+    return undefined;
+  }
+  async getWeddingRolesByWedding(weddingId: string): Promise<WeddingRole[]> {
+    return [];
+  }
+  async getWeddingRoleWithPermissions(id: string): Promise<RoleWithPermissions | undefined> {
+    return undefined;
+  }
+  async createWeddingRole(role: InsertWeddingRole): Promise<WeddingRole> {
+    throw new Error("MemStorage does not support Wedding Roles. Use DBStorage.");
+  }
+  async updateWeddingRole(id: string, role: Partial<InsertWeddingRole>): Promise<WeddingRole | undefined> {
+    throw new Error("MemStorage does not support Wedding Roles. Use DBStorage.");
+  }
+  async deleteWeddingRole(id: string): Promise<boolean> {
+    return false;
+  }
+  async createDefaultRolesForWedding(weddingId: string): Promise<WeddingRole[]> {
+    throw new Error("MemStorage does not support Wedding Roles. Use DBStorage.");
+  }
+
+  // Role Permissions - MemStorage stubs
+  async getRolePermissions(roleId: string): Promise<RolePermission[]> {
+    return [];
+  }
+  async setRolePermission(roleId: string, category: PermissionCategory, level: PermissionLevel): Promise<RolePermission> {
+    throw new Error("MemStorage does not support Role Permissions. Use DBStorage.");
+  }
+  async removeRolePermission(roleId: string, category: PermissionCategory): Promise<boolean> {
+    return false;
+  }
+  async setRolePermissions(roleId: string, permissions: { category: PermissionCategory; level: PermissionLevel }[]): Promise<RolePermission[]> {
+    throw new Error("MemStorage does not support Role Permissions. Use DBStorage.");
+  }
+
+  // Wedding Collaborators - MemStorage stubs
+  async getWeddingCollaborator(id: string): Promise<WeddingCollaborator | undefined> {
+    return undefined;
+  }
+  async getWeddingCollaboratorByEmail(weddingId: string, email: string): Promise<WeddingCollaborator | undefined> {
+    return undefined;
+  }
+  async getWeddingCollaboratorByToken(token: string): Promise<WeddingCollaborator | undefined> {
+    return undefined;
+  }
+  async getWeddingCollaboratorsByWedding(weddingId: string): Promise<WeddingCollaborator[]> {
+    return [];
+  }
+  async getWeddingCollaboratorWithDetails(id: string): Promise<CollaboratorWithDetails | undefined> {
+    return undefined;
+  }
+  async getCollaboratorsWithDetailsByWedding(weddingId: string): Promise<CollaboratorWithDetails[]> {
+    return [];
+  }
+  async getWeddingsByCollaboratorUser(userId: string): Promise<Wedding[]> {
+    return [];
+  }
+  async createWeddingCollaborator(collaborator: InsertWeddingCollaborator): Promise<WeddingCollaborator> {
+    throw new Error("MemStorage does not support Wedding Collaborators. Use DBStorage.");
+  }
+  async updateWeddingCollaborator(id: string, updates: Partial<InsertWeddingCollaborator>): Promise<WeddingCollaborator | undefined> {
+    throw new Error("MemStorage does not support Wedding Collaborators. Use DBStorage.");
+  }
+  async deleteWeddingCollaborator(id: string): Promise<boolean> {
+    return false;
+  }
+  async generateCollaboratorInviteToken(collaboratorId: string, expiresInDays?: number): Promise<string> {
+    throw new Error("MemStorage does not support Wedding Collaborators. Use DBStorage.");
+  }
+  async acceptCollaboratorInvite(token: string, userId: string): Promise<WeddingCollaborator | undefined> {
+    throw new Error("MemStorage does not support Wedding Collaborators. Use DBStorage.");
+  }
+  async revokeCollaboratorInvite(id: string): Promise<boolean> {
+    return false;
+  }
+
+  // Collaborator Activity Log - MemStorage stubs
+  async logCollaboratorActivity(log: InsertCollaboratorActivityLog): Promise<CollaboratorActivityLog> {
+    throw new Error("MemStorage does not support Collaborator Activity Log. Use DBStorage.");
+  }
+  async getCollaboratorActivityLog(weddingId: string, limit?: number): Promise<CollaboratorActivityLog[]> {
+    return [];
+  }
+
+  // Permission Checking - MemStorage stubs
+  async getUserPermissionsForWedding(userId: string, weddingId: string): Promise<{ isOwner: boolean; permissions: Map<PermissionCategory, PermissionLevel> }> {
+    return { isOwner: true, permissions: new Map() }; // Default to owner for MemStorage
+  }
+  async checkUserPermission(userId: string, weddingId: string, category: PermissionCategory, requiredLevel: PermissionLevel): Promise<boolean> {
+    return true; // Default to allowed for MemStorage
   }
 }
 
@@ -4207,6 +4352,467 @@ export class DBStorage implements IStorage {
       .where(eq(schema.liveWeddingStatus.weddingId, weddingId))
       .returning();
     return result[0];
+  }
+
+  // ============================================================================
+  // Wedding Roles
+  // ============================================================================
+
+  async getWeddingRole(id: string): Promise<WeddingRole | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.weddingRoles)
+      .where(eq(schema.weddingRoles.id, id))
+      .limit(1);
+    return result[0];
+  }
+
+  async getWeddingRolesByWedding(weddingId: string): Promise<WeddingRole[]> {
+    return await this.db
+      .select()
+      .from(schema.weddingRoles)
+      .where(eq(schema.weddingRoles.weddingId, weddingId))
+      .orderBy(sql`${schema.weddingRoles.isOwner} DESC, ${schema.weddingRoles.isSystem} DESC, ${schema.weddingRoles.createdAt} ASC`);
+  }
+
+  async getWeddingRoleWithPermissions(id: string): Promise<RoleWithPermissions | undefined> {
+    const role = await this.getWeddingRole(id);
+    if (!role) return undefined;
+    
+    const permissions = await this.getRolePermissions(id);
+    return { ...role, permissions };
+  }
+
+  async createWeddingRole(role: InsertWeddingRole): Promise<WeddingRole> {
+    const result = await this.db
+      .insert(schema.weddingRoles)
+      .values(role)
+      .returning();
+    return result[0];
+  }
+
+  async updateWeddingRole(id: string, role: Partial<InsertWeddingRole>): Promise<WeddingRole | undefined> {
+    const result = await this.db
+      .update(schema.weddingRoles)
+      .set(role)
+      .where(eq(schema.weddingRoles.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteWeddingRole(id: string): Promise<boolean> {
+    // First check if this is a system role
+    const role = await this.getWeddingRole(id);
+    if (role?.isSystem || role?.isOwner) {
+      return false; // Cannot delete system or owner roles
+    }
+    
+    // Delete all permissions for this role first
+    await this.db.delete(schema.rolePermissions).where(eq(schema.rolePermissions.roleId, id));
+    
+    const result = await this.db
+      .delete(schema.weddingRoles)
+      .where(eq(schema.weddingRoles.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  async createDefaultRolesForWedding(weddingId: string): Promise<WeddingRole[]> {
+    const roles: WeddingRole[] = [];
+    
+    // Create Owner role with full access
+    const ownerRole = await this.createWeddingRole({
+      weddingId,
+      name: "owner",
+      displayName: "Owner",
+      description: "Full access to all wedding features",
+      isSystem: true,
+      isOwner: true,
+    });
+    roles.push(ownerRole);
+    
+    // Create Wedding Planner role with most access
+    const plannerRole = await this.createWeddingRole({
+      weddingId,
+      name: "wedding_planner",
+      displayName: "Wedding Planner",
+      description: "Professional planner with broad access",
+      isSystem: true,
+      isOwner: false,
+    });
+    // Set planner permissions
+    const plannerPermissions: { category: PermissionCategory; level: PermissionLevel }[] = [
+      { category: "guests", level: "manage" },
+      { category: "invitations", level: "manage" },
+      { category: "timeline", level: "manage" },
+      { category: "tasks", level: "manage" },
+      { category: "vendors", level: "manage" },
+      { category: "budget", level: "view" },
+      { category: "contracts", level: "edit" },
+      { category: "website", level: "edit" },
+      { category: "photos", level: "manage" },
+      { category: "documents", level: "manage" },
+      { category: "playlists", level: "edit" },
+      { category: "concierge", level: "manage" },
+      { category: "shopping", level: "view" },
+      { category: "settings", level: "view" },
+      { category: "collaborators", level: "view" },
+    ];
+    await this.setRolePermissions(plannerRole.id, plannerPermissions);
+    roles.push(plannerRole);
+    
+    // Create Family Member role with limited access
+    const familyRole = await this.createWeddingRole({
+      weddingId,
+      name: "family_member",
+      displayName: "Family Member",
+      description: "Family member with view and limited edit access",
+      isSystem: true,
+      isOwner: false,
+    });
+    const familyPermissions: { category: PermissionCategory; level: PermissionLevel }[] = [
+      { category: "guests", level: "view" },
+      { category: "timeline", level: "view" },
+      { category: "tasks", level: "view" },
+      { category: "vendors", level: "view" },
+      { category: "photos", level: "edit" },
+      { category: "playlists", level: "edit" },
+    ];
+    await this.setRolePermissions(familyRole.id, familyPermissions);
+    roles.push(familyRole);
+    
+    // Create Guest Coordinator role
+    const coordinatorRole = await this.createWeddingRole({
+      weddingId,
+      name: "guest_coordinator",
+      displayName: "Guest Coordinator",
+      description: "Helps manage guest lists and RSVPs",
+      isSystem: true,
+      isOwner: false,
+    });
+    const coordinatorPermissions: { category: PermissionCategory; level: PermissionLevel }[] = [
+      { category: "guests", level: "manage" },
+      { category: "invitations", level: "manage" },
+      { category: "timeline", level: "view" },
+      { category: "concierge", level: "edit" },
+    ];
+    await this.setRolePermissions(coordinatorRole.id, coordinatorPermissions);
+    roles.push(coordinatorRole);
+    
+    return roles;
+  }
+
+  // ============================================================================
+  // Role Permissions
+  // ============================================================================
+
+  async getRolePermissions(roleId: string): Promise<RolePermission[]> {
+    return await this.db
+      .select()
+      .from(schema.rolePermissions)
+      .where(eq(schema.rolePermissions.roleId, roleId));
+  }
+
+  async setRolePermission(roleId: string, category: PermissionCategory, level: PermissionLevel): Promise<RolePermission> {
+    // Delete existing permission for this category
+    await this.db
+      .delete(schema.rolePermissions)
+      .where(and(
+        eq(schema.rolePermissions.roleId, roleId),
+        eq(schema.rolePermissions.category, category)
+      ));
+    
+    // Insert new permission
+    const result = await this.db
+      .insert(schema.rolePermissions)
+      .values({ roleId, category, level })
+      .returning();
+    return result[0];
+  }
+
+  async removeRolePermission(roleId: string, category: PermissionCategory): Promise<boolean> {
+    const result = await this.db
+      .delete(schema.rolePermissions)
+      .where(and(
+        eq(schema.rolePermissions.roleId, roleId),
+        eq(schema.rolePermissions.category, category)
+      ))
+      .returning();
+    return result.length > 0;
+  }
+
+  async setRolePermissions(roleId: string, permissions: { category: PermissionCategory; level: PermissionLevel }[]): Promise<RolePermission[]> {
+    // Delete all existing permissions for this role
+    await this.db.delete(schema.rolePermissions).where(eq(schema.rolePermissions.roleId, roleId));
+    
+    if (permissions.length === 0) return [];
+    
+    // Insert all new permissions
+    const result = await this.db
+      .insert(schema.rolePermissions)
+      .values(permissions.map(p => ({ roleId, category: p.category, level: p.level })))
+      .returning();
+    return result;
+  }
+
+  // ============================================================================
+  // Wedding Collaborators
+  // ============================================================================
+
+  async getWeddingCollaborator(id: string): Promise<WeddingCollaborator | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.weddingCollaborators)
+      .where(eq(schema.weddingCollaborators.id, id))
+      .limit(1);
+    return result[0];
+  }
+
+  async getWeddingCollaboratorByEmail(weddingId: string, email: string): Promise<WeddingCollaborator | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.weddingCollaborators)
+      .where(and(
+        eq(schema.weddingCollaborators.weddingId, weddingId),
+        eq(schema.weddingCollaborators.email, email.toLowerCase())
+      ))
+      .limit(1);
+    return result[0];
+  }
+
+  async getWeddingCollaboratorByToken(token: string): Promise<WeddingCollaborator | undefined> {
+    const collaborators = await this.db
+      .select()
+      .from(schema.weddingCollaborators)
+      .where(eq(schema.weddingCollaborators.status, "pending"));
+    
+    for (const collab of collaborators) {
+      if (collab.inviteToken && collab.inviteTokenExpires) {
+        const isMatch = await bcrypt.compare(token, collab.inviteToken);
+        if (isMatch) {
+          // Check expiry
+          if (new Date() > collab.inviteTokenExpires) {
+            return undefined; // Token expired
+          }
+          return collab;
+        }
+      }
+    }
+    return undefined;
+  }
+
+  async getWeddingCollaboratorsByWedding(weddingId: string): Promise<WeddingCollaborator[]> {
+    return await this.db
+      .select()
+      .from(schema.weddingCollaborators)
+      .where(eq(schema.weddingCollaborators.weddingId, weddingId))
+      .orderBy(sql`${schema.weddingCollaborators.invitedAt} DESC`);
+  }
+
+  async getWeddingCollaboratorWithDetails(id: string): Promise<CollaboratorWithDetails | undefined> {
+    const collaborator = await this.getWeddingCollaborator(id);
+    if (!collaborator) return undefined;
+    
+    const role = await this.getWeddingRole(collaborator.roleId);
+    if (!role) return undefined;
+    
+    const permissions = await this.getRolePermissions(collaborator.roleId);
+    return { ...collaborator, role, permissions };
+  }
+
+  async getCollaboratorsWithDetailsByWedding(weddingId: string): Promise<CollaboratorWithDetails[]> {
+    const collaborators = await this.getWeddingCollaboratorsByWedding(weddingId);
+    const results: CollaboratorWithDetails[] = [];
+    
+    for (const collab of collaborators) {
+      const role = await this.getWeddingRole(collab.roleId);
+      if (role) {
+        const permissions = await this.getRolePermissions(collab.roleId);
+        results.push({ ...collab, role, permissions });
+      }
+    }
+    
+    return results;
+  }
+
+  async getWeddingsByCollaboratorUser(userId: string): Promise<Wedding[]> {
+    const collaborators = await this.db
+      .select()
+      .from(schema.weddingCollaborators)
+      .where(and(
+        eq(schema.weddingCollaborators.userId, userId),
+        eq(schema.weddingCollaborators.status, "accepted")
+      ));
+    
+    const weddings: Wedding[] = [];
+    for (const collab of collaborators) {
+      const wedding = await this.getWedding(collab.weddingId);
+      if (wedding) {
+        weddings.push(wedding);
+      }
+    }
+    return weddings;
+  }
+
+  async createWeddingCollaborator(collaborator: InsertWeddingCollaborator): Promise<WeddingCollaborator> {
+    const result = await this.db
+      .insert(schema.weddingCollaborators)
+      .values({
+        ...collaborator,
+        email: collaborator.email.toLowerCase(),
+        status: collaborator.status || "pending",
+      })
+      .returning();
+    return result[0];
+  }
+
+  async updateWeddingCollaborator(id: string, updates: Partial<InsertWeddingCollaborator>): Promise<WeddingCollaborator | undefined> {
+    const result = await this.db
+      .update(schema.weddingCollaborators)
+      .set(updates)
+      .where(eq(schema.weddingCollaborators.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteWeddingCollaborator(id: string): Promise<boolean> {
+    const result = await this.db
+      .delete(schema.weddingCollaborators)
+      .where(eq(schema.weddingCollaborators.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  async generateCollaboratorInviteToken(collaboratorId: string, expiresInDays: number = 7): Promise<string> {
+    const plainToken = randomBytes(32).toString("hex");
+    const hashedToken = await bcrypt.hash(plainToken, 10);
+    const expires = new Date();
+    expires.setDate(expires.getDate() + expiresInDays);
+    
+    await this.db
+      .update(schema.weddingCollaborators)
+      .set({
+        inviteToken: hashedToken,
+        inviteTokenExpires: expires,
+      })
+      .where(eq(schema.weddingCollaborators.id, collaboratorId));
+    
+    return plainToken;
+  }
+
+  async acceptCollaboratorInvite(token: string, userId: string): Promise<WeddingCollaborator | undefined> {
+    const collaborator = await this.getWeddingCollaboratorByToken(token);
+    if (!collaborator) return undefined;
+    
+    const result = await this.db
+      .update(schema.weddingCollaborators)
+      .set({
+        userId,
+        status: "accepted",
+        acceptedAt: new Date(),
+        inviteToken: null,
+        inviteTokenExpires: null,
+      })
+      .where(eq(schema.weddingCollaborators.id, collaborator.id))
+      .returning();
+    
+    return result[0];
+  }
+
+  async revokeCollaboratorInvite(id: string): Promise<boolean> {
+    const result = await this.db
+      .update(schema.weddingCollaborators)
+      .set({
+        status: "revoked",
+        inviteToken: null,
+        inviteTokenExpires: null,
+      })
+      .where(eq(schema.weddingCollaborators.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  // ============================================================================
+  // Collaborator Activity Log
+  // ============================================================================
+
+  async logCollaboratorActivity(log: InsertCollaboratorActivityLog): Promise<CollaboratorActivityLog> {
+    const result = await this.db
+      .insert(schema.collaboratorActivityLog)
+      .values(log)
+      .returning();
+    return result[0];
+  }
+
+  async getCollaboratorActivityLog(weddingId: string, limit: number = 50): Promise<CollaboratorActivityLog[]> {
+    return await this.db
+      .select()
+      .from(schema.collaboratorActivityLog)
+      .where(eq(schema.collaboratorActivityLog.weddingId, weddingId))
+      .orderBy(sql`${schema.collaboratorActivityLog.performedAt} DESC`)
+      .limit(limit);
+  }
+
+  // ============================================================================
+  // Permission Checking
+  // ============================================================================
+
+  async getUserPermissionsForWedding(userId: string, weddingId: string): Promise<{ isOwner: boolean; permissions: Map<PermissionCategory, PermissionLevel> }> {
+    const permissionMap = new Map<PermissionCategory, PermissionLevel>();
+    
+    // Check if user is the wedding owner (created the wedding)
+    const wedding = await this.getWedding(weddingId);
+    if (wedding && wedding.userId === userId) {
+      // Wedding owner has full access to everything
+      return { isOwner: true, permissions: permissionMap };
+    }
+    
+    // Check if user is a collaborator
+    const collaborators = await this.db
+      .select()
+      .from(schema.weddingCollaborators)
+      .where(and(
+        eq(schema.weddingCollaborators.weddingId, weddingId),
+        eq(schema.weddingCollaborators.userId, userId),
+        eq(schema.weddingCollaborators.status, "accepted")
+      ))
+      .limit(1);
+    
+    if (collaborators.length === 0) {
+      return { isOwner: false, permissions: permissionMap };
+    }
+    
+    const collaborator = collaborators[0];
+    const role = await this.getWeddingRole(collaborator.roleId);
+    
+    if (role?.isOwner) {
+      return { isOwner: true, permissions: permissionMap };
+    }
+    
+    // Get permissions for this role
+    const permissions = await this.getRolePermissions(collaborator.roleId);
+    for (const perm of permissions) {
+      permissionMap.set(perm.category as PermissionCategory, perm.level as PermissionLevel);
+    }
+    
+    return { isOwner: false, permissions: permissionMap };
+  }
+
+  async checkUserPermission(userId: string, weddingId: string, category: PermissionCategory, requiredLevel: PermissionLevel): Promise<boolean> {
+    const { isOwner, permissions } = await this.getUserPermissionsForWedding(userId, weddingId);
+    
+    // Owners have full access
+    if (isOwner) return true;
+    
+    const userLevel = permissions.get(category);
+    if (!userLevel) return false;
+    
+    // Check if user's level meets the required level
+    const levelHierarchy: PermissionLevel[] = ["view", "edit", "manage"];
+    const userLevelIndex = levelHierarchy.indexOf(userLevel);
+    const requiredLevelIndex = levelHierarchy.indexOf(requiredLevel);
+    
+    return userLevelIndex >= requiredLevelIndex;
   }
 }
 
