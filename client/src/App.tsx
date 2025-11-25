@@ -46,6 +46,7 @@ import GapConcierge from "@/pages/gap-concierge";
 import RitualControl from "@/pages/ritual-control";
 import GuestLiveFeed from "@/pages/guest-live-feed";
 import Collaborators from "@/pages/collaborators";
+import GuestManagement from "@/pages/guest-management";
 
 function Router() {
   return (
@@ -76,6 +77,11 @@ function Router() {
       <Route path="/guests">
         <ProtectedRoute requiredPermission="guests">
           <Guests />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/guest-management">
+        <ProtectedRoute requiredPermission="guests">
+          <GuestManagement />
         </ProtectedRoute>
       </Route>
       <Route path="/invitations">
