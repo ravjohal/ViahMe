@@ -80,6 +80,21 @@ import {
   type PermissionCategory,
   type PermissionLevel,
   PERMISSION_CATEGORIES,
+  type GuestSource,
+  type InsertGuestSource,
+  type GuestSuggestion,
+  type InsertGuestSuggestion,
+  type GuestListScenario,
+  type InsertGuestListScenario,
+  type ScenarioHousehold,
+  type InsertScenarioHousehold,
+  type GuestBudgetSettings,
+  type InsertGuestBudgetSettings,
+  type CutListItem,
+  type InsertCutListItem,
+  type GuestSuggestionWithSource,
+  type ScenarioWithStats,
+  type CutListItemWithHousehold,
 } from "@shared/schema";
 import { randomUUID, randomBytes } from "crypto";
 import bcrypt from "bcrypt";
@@ -444,6 +459,54 @@ export interface IStorage {
   // Permission Checking
   getUserPermissionsForWedding(userId: string, weddingId: string): Promise<{ isOwner: boolean; permissions: Map<PermissionCategory, PermissionLevel> }>;
   checkUserPermission(userId: string, weddingId: string, category: PermissionCategory, requiredLevel: PermissionLevel): Promise<boolean>;
+
+  // Guest Sources (who submitted guests - e.g., "Bride's Mom")
+  getGuestSource(id: string): Promise<GuestSource | undefined>;
+  getGuestSourcesByWedding(weddingId: string): Promise<GuestSource[]>;
+  createGuestSource(source: InsertGuestSource): Promise<GuestSource>;
+  updateGuestSource(id: string, source: Partial<InsertGuestSource>): Promise<GuestSource | undefined>;
+  deleteGuestSource(id: string): Promise<boolean>;
+  getGuestSourceStats(weddingId: string): Promise<{ sourceId: string; count: number; seats: number }[]>;
+
+  // Guest Suggestions (for collaborators to suggest guests)
+  getGuestSuggestion(id: string): Promise<GuestSuggestion | undefined>;
+  getGuestSuggestionsByWedding(weddingId: string, status?: string): Promise<GuestSuggestionWithSource[]>;
+  createGuestSuggestion(suggestion: InsertGuestSuggestion): Promise<GuestSuggestion>;
+  updateGuestSuggestion(id: string, suggestion: Partial<GuestSuggestion>): Promise<GuestSuggestion | undefined>;
+  approveSuggestion(id: string, reviewerId: string): Promise<{ household: Household; guests: Guest[] }>;
+  rejectSuggestion(id: string, reviewerId: string, reason?: string): Promise<GuestSuggestion>;
+  getPendingSuggestionsCount(weddingId: string): Promise<number>;
+
+  // Guest List Scenarios (what-if playground)
+  getGuestListScenario(id: string): Promise<GuestListScenario | undefined>;
+  getGuestListScenarioWithStats(id: string): Promise<ScenarioWithStats | undefined>;
+  getGuestListScenariosByWedding(weddingId: string): Promise<ScenarioWithStats[]>;
+  createGuestListScenario(scenario: InsertGuestListScenario): Promise<GuestListScenario>;
+  updateGuestListScenario(id: string, scenario: Partial<InsertGuestListScenario>): Promise<GuestListScenario | undefined>;
+  deleteGuestListScenario(id: string): Promise<boolean>;
+  setActiveScenario(weddingId: string, scenarioId: string): Promise<GuestListScenario>;
+  duplicateScenario(id: string, newName: string, userId: string): Promise<GuestListScenario>;
+  promoteScenarioToMain(id: string): Promise<boolean>;
+
+  // Scenario Households (which households are in each scenario)
+  getScenarioHouseholds(scenarioId: string): Promise<(ScenarioHousehold & { household: Household })[]>;
+  addHouseholdToScenario(scenarioId: string, householdId: string, adjustedMaxCount?: number): Promise<ScenarioHousehold>;
+  removeHouseholdFromScenario(scenarioId: string, householdId: string): Promise<boolean>;
+  updateScenarioHousehold(id: string, updates: Partial<InsertScenarioHousehold>): Promise<ScenarioHousehold | undefined>;
+  copyAllHouseholdsToScenario(scenarioId: string, weddingId: string): Promise<number>;
+
+  // Guest Budget Settings
+  getGuestBudgetSettings(weddingId: string): Promise<GuestBudgetSettings | undefined>;
+  createOrUpdateGuestBudgetSettings(settings: InsertGuestBudgetSettings): Promise<GuestBudgetSettings>;
+  calculateBudgetCapacity(weddingId: string): Promise<{ maxGuests: number; currentCount: number; costPerHead: number; totalBudget: number; remainingBudget: number }>;
+
+  // Cut List (track removed guests)
+  getCutListItem(id: string): Promise<CutListItem | undefined>;
+  getCutListByWedding(weddingId: string): Promise<CutListItemWithHousehold[]>;
+  addToCutList(item: InsertCutListItem): Promise<CutListItem>;
+  restoreFromCutList(id: string, userId: string): Promise<Household>;
+  permanentlyDeleteFromCutList(id: string): Promise<boolean>;
+  bulkCutByPriority(weddingId: string, priorityTier: string, userId: string, reason?: string): Promise<number>;
 }
 
 export class MemStorage implements IStorage {
@@ -2304,6 +2367,126 @@ export class MemStorage implements IStorage {
   }
   async checkUserPermission(userId: string, weddingId: string, category: PermissionCategory, requiredLevel: PermissionLevel): Promise<boolean> {
     return true; // Default to allowed for MemStorage
+  }
+
+  // Guest Sources - MemStorage stubs
+  async getGuestSource(id: string): Promise<GuestSource | undefined> {
+    return undefined;
+  }
+  async getGuestSourcesByWedding(weddingId: string): Promise<GuestSource[]> {
+    return [];
+  }
+  async createGuestSource(source: InsertGuestSource): Promise<GuestSource> {
+    throw new Error("MemStorage does not support Guest Sources. Use DBStorage.");
+  }
+  async updateGuestSource(id: string, source: Partial<InsertGuestSource>): Promise<GuestSource | undefined> {
+    throw new Error("MemStorage does not support Guest Sources. Use DBStorage.");
+  }
+  async deleteGuestSource(id: string): Promise<boolean> {
+    return false;
+  }
+  async getGuestSourceStats(weddingId: string): Promise<{ sourceId: string; count: number; seats: number }[]> {
+    return [];
+  }
+
+  // Guest Suggestions - MemStorage stubs
+  async getGuestSuggestion(id: string): Promise<GuestSuggestion | undefined> {
+    return undefined;
+  }
+  async getGuestSuggestionsByWedding(weddingId: string, status?: string): Promise<GuestSuggestionWithSource[]> {
+    return [];
+  }
+  async createGuestSuggestion(suggestion: InsertGuestSuggestion): Promise<GuestSuggestion> {
+    throw new Error("MemStorage does not support Guest Suggestions. Use DBStorage.");
+  }
+  async updateGuestSuggestion(id: string, suggestion: Partial<GuestSuggestion>): Promise<GuestSuggestion | undefined> {
+    throw new Error("MemStorage does not support Guest Suggestions. Use DBStorage.");
+  }
+  async approveSuggestion(id: string, reviewerId: string): Promise<{ household: Household; guests: Guest[] }> {
+    throw new Error("MemStorage does not support Guest Suggestions. Use DBStorage.");
+  }
+  async rejectSuggestion(id: string, reviewerId: string, reason?: string): Promise<GuestSuggestion> {
+    throw new Error("MemStorage does not support Guest Suggestions. Use DBStorage.");
+  }
+  async getPendingSuggestionsCount(weddingId: string): Promise<number> {
+    return 0;
+  }
+
+  // Guest List Scenarios - MemStorage stubs
+  async getGuestListScenario(id: string): Promise<GuestListScenario | undefined> {
+    return undefined;
+  }
+  async getGuestListScenarioWithStats(id: string): Promise<ScenarioWithStats | undefined> {
+    return undefined;
+  }
+  async getGuestListScenariosByWedding(weddingId: string): Promise<ScenarioWithStats[]> {
+    return [];
+  }
+  async createGuestListScenario(scenario: InsertGuestListScenario): Promise<GuestListScenario> {
+    throw new Error("MemStorage does not support Guest List Scenarios. Use DBStorage.");
+  }
+  async updateGuestListScenario(id: string, scenario: Partial<InsertGuestListScenario>): Promise<GuestListScenario | undefined> {
+    throw new Error("MemStorage does not support Guest List Scenarios. Use DBStorage.");
+  }
+  async deleteGuestListScenario(id: string): Promise<boolean> {
+    return false;
+  }
+  async setActiveScenario(weddingId: string, scenarioId: string): Promise<GuestListScenario> {
+    throw new Error("MemStorage does not support Guest List Scenarios. Use DBStorage.");
+  }
+  async duplicateScenario(id: string, newName: string, userId: string): Promise<GuestListScenario> {
+    throw new Error("MemStorage does not support Guest List Scenarios. Use DBStorage.");
+  }
+  async promoteScenarioToMain(id: string): Promise<boolean> {
+    return false;
+  }
+
+  // Scenario Households - MemStorage stubs
+  async getScenarioHouseholds(scenarioId: string): Promise<(ScenarioHousehold & { household: Household })[]> {
+    return [];
+  }
+  async addHouseholdToScenario(scenarioId: string, householdId: string, adjustedMaxCount?: number): Promise<ScenarioHousehold> {
+    throw new Error("MemStorage does not support Scenario Households. Use DBStorage.");
+  }
+  async removeHouseholdFromScenario(scenarioId: string, householdId: string): Promise<boolean> {
+    return false;
+  }
+  async updateScenarioHousehold(id: string, updates: Partial<InsertScenarioHousehold>): Promise<ScenarioHousehold | undefined> {
+    throw new Error("MemStorage does not support Scenario Households. Use DBStorage.");
+  }
+  async copyAllHouseholdsToScenario(scenarioId: string, weddingId: string): Promise<number> {
+    return 0;
+  }
+
+  // Guest Budget Settings - MemStorage stubs
+  async getGuestBudgetSettings(weddingId: string): Promise<GuestBudgetSettings | undefined> {
+    return undefined;
+  }
+  async createOrUpdateGuestBudgetSettings(settings: InsertGuestBudgetSettings): Promise<GuestBudgetSettings> {
+    throw new Error("MemStorage does not support Guest Budget Settings. Use DBStorage.");
+  }
+  async calculateBudgetCapacity(weddingId: string): Promise<{ maxGuests: number; currentCount: number; costPerHead: number; totalBudget: number; remainingBudget: number }> {
+    return { maxGuests: 0, currentCount: 0, costPerHead: 150, totalBudget: 0, remainingBudget: 0 };
+  }
+
+  // Cut List - MemStorage stubs
+  async getCutListItem(id: string): Promise<CutListItem | undefined> {
+    return undefined;
+  }
+  async getCutListByWedding(weddingId: string): Promise<CutListItemWithHousehold[]> {
+    return [];
+  }
+  async addToCutList(item: InsertCutListItem): Promise<CutListItem> {
+    throw new Error("MemStorage does not support Cut List. Use DBStorage.");
+  }
+  async restoreFromCutList(id: string, userId: string): Promise<Household> {
+    throw new Error("MemStorage does not support Cut List. Use DBStorage.");
+  }
+  async permanentlyDeleteFromCutList(id: string): Promise<boolean> {
+    return false;
+  }
+  async bulkCutByPriority(weddingId: string, priorityTier: string, userId: string, reason?: string): Promise<number> {
+    return 0;
   }
 }
 
@@ -4813,6 +4996,657 @@ export class DBStorage implements IStorage {
     const requiredLevelIndex = levelHierarchy.indexOf(requiredLevel);
     
     return userLevelIndex >= requiredLevelIndex;
+  }
+
+  // ============================================================================
+  // Guest Sources
+  // ============================================================================
+
+  async getGuestSource(id: string): Promise<GuestSource | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.guestSources)
+      .where(eq(schema.guestSources.id, id))
+      .limit(1);
+    return result[0];
+  }
+
+  async getGuestSourcesByWedding(weddingId: string): Promise<GuestSource[]> {
+    return await this.db
+      .select()
+      .from(schema.guestSources)
+      .where(eq(schema.guestSources.weddingId, weddingId))
+      .orderBy(schema.guestSources.label);
+  }
+
+  async createGuestSource(source: InsertGuestSource): Promise<GuestSource> {
+    const result = await this.db
+      .insert(schema.guestSources)
+      .values(source)
+      .returning();
+    return result[0];
+  }
+
+  async updateGuestSource(id: string, source: Partial<InsertGuestSource>): Promise<GuestSource | undefined> {
+    const result = await this.db
+      .update(schema.guestSources)
+      .set(source)
+      .where(eq(schema.guestSources.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteGuestSource(id: string): Promise<boolean> {
+    const result = await this.db
+      .delete(schema.guestSources)
+      .where(eq(schema.guestSources.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  async getGuestSourceStats(weddingId: string): Promise<{ sourceId: string; count: number; seats: number }[]> {
+    const result = await this.db
+      .select({
+        sourceId: schema.households.sourceId,
+        count: sql<number>`count(*)::int`,
+        seats: sql<number>`sum(${schema.households.maxCount})::int`,
+      })
+      .from(schema.households)
+      .where(and(
+        eq(schema.households.weddingId, weddingId),
+        sql`${schema.households.sourceId} IS NOT NULL`
+      ))
+      .groupBy(schema.households.sourceId);
+    return result.map(r => ({
+      sourceId: r.sourceId || '',
+      count: r.count || 0,
+      seats: r.seats || 0,
+    }));
+  }
+
+  // ============================================================================
+  // Guest Suggestions
+  // ============================================================================
+
+  async getGuestSuggestion(id: string): Promise<GuestSuggestion | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.guestSuggestions)
+      .where(eq(schema.guestSuggestions.id, id))
+      .limit(1);
+    return result[0];
+  }
+
+  async getGuestSuggestionsByWedding(weddingId: string, status?: string): Promise<GuestSuggestionWithSource[]> {
+    const conditions = [eq(schema.guestSuggestions.weddingId, weddingId)];
+    if (status) {
+      conditions.push(eq(schema.guestSuggestions.status, status));
+    }
+    
+    const suggestions = await this.db
+      .select()
+      .from(schema.guestSuggestions)
+      .where(and(...conditions))
+      .orderBy(sql`${schema.guestSuggestions.createdAt} DESC`);
+    
+    // Fetch sources for suggestions that have sourceId
+    const result: GuestSuggestionWithSource[] = [];
+    for (const suggestion of suggestions) {
+      let source: GuestSource | undefined;
+      if (suggestion.sourceId) {
+        source = await this.getGuestSource(suggestion.sourceId);
+      }
+      result.push({ ...suggestion, source });
+    }
+    return result;
+  }
+
+  async createGuestSuggestion(suggestion: InsertGuestSuggestion): Promise<GuestSuggestion> {
+    const result = await this.db
+      .insert(schema.guestSuggestions)
+      .values(suggestion)
+      .returning();
+    return result[0];
+  }
+
+  async updateGuestSuggestion(id: string, suggestion: Partial<GuestSuggestion>): Promise<GuestSuggestion | undefined> {
+    const result = await this.db
+      .update(schema.guestSuggestions)
+      .set(suggestion)
+      .where(eq(schema.guestSuggestions.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async approveSuggestion(id: string, reviewerId: string): Promise<{ household: Household; guests: Guest[] }> {
+    const suggestion = await this.getGuestSuggestion(id);
+    if (!suggestion) throw new Error("Suggestion not found");
+    if (suggestion.status !== "pending") throw new Error("Suggestion already reviewed");
+
+    // Create household from suggestion
+    const household = await this.createHousehold({
+      weddingId: suggestion.weddingId,
+      name: suggestion.householdName,
+      contactEmail: suggestion.contactEmail,
+      maxCount: suggestion.maxCount,
+      affiliation: suggestion.affiliation as "bride" | "groom" | "mutual",
+      relationshipTier: suggestion.relationshipTier as "immediate_family" | "extended_family" | "friend" | "parents_friend",
+      priorityTier: suggestion.priorityTier,
+      sourceId: suggestion.sourceId,
+    });
+
+    // Create guests if guest names were provided
+    const guests: Guest[] = [];
+    if (suggestion.guestNames) {
+      const names = suggestion.guestNames.split(',').map(n => n.trim()).filter(n => n);
+      for (const name of names) {
+        const guest = await this.createGuest({
+          weddingId: suggestion.weddingId,
+          householdId: household.id,
+          name,
+          side: suggestion.affiliation as "bride" | "groom" | "mutual",
+          relationshipTier: suggestion.relationshipTier as "immediate_family" | "extended_family" | "friend" | "parents_friend",
+        });
+        guests.push(guest);
+      }
+    }
+
+    // Update suggestion status
+    await this.updateGuestSuggestion(id, {
+      status: "approved",
+      reviewedBy: reviewerId,
+      reviewedAt: new Date(),
+    });
+
+    return { household, guests };
+  }
+
+  async rejectSuggestion(id: string, reviewerId: string, reason?: string): Promise<GuestSuggestion> {
+    const result = await this.updateGuestSuggestion(id, {
+      status: "rejected",
+      reviewedBy: reviewerId,
+      reviewedAt: new Date(),
+      rejectionReason: reason || null,
+    });
+    if (!result) throw new Error("Failed to reject suggestion");
+    return result;
+  }
+
+  async getPendingSuggestionsCount(weddingId: string): Promise<number> {
+    const result = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(schema.guestSuggestions)
+      .where(and(
+        eq(schema.guestSuggestions.weddingId, weddingId),
+        eq(schema.guestSuggestions.status, "pending")
+      ));
+    return result[0]?.count || 0;
+  }
+
+  // ============================================================================
+  // Guest List Scenarios
+  // ============================================================================
+
+  async getGuestListScenario(id: string): Promise<GuestListScenario | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.guestListScenarios)
+      .where(eq(schema.guestListScenarios.id, id))
+      .limit(1);
+    return result[0];
+  }
+
+  async getGuestListScenarioWithStats(id: string): Promise<ScenarioWithStats | undefined> {
+    const scenario = await this.getGuestListScenario(id);
+    if (!scenario) return undefined;
+
+    const scenarioHouseholds = await this.db
+      .select()
+      .from(schema.scenarioHouseholds)
+      .where(and(
+        eq(schema.scenarioHouseholds.scenarioId, id),
+        eq(schema.scenarioHouseholds.isIncluded, true)
+      ));
+
+    let householdCount = 0;
+    let guestCount = 0;
+
+    for (const sh of scenarioHouseholds) {
+      householdCount++;
+      const household = await this.getHousehold(sh.householdId);
+      if (household) {
+        guestCount += sh.adjustedMaxCount || household.maxCount;
+      }
+    }
+
+    const budgetLimit = scenario.budgetLimit ? parseFloat(scenario.budgetLimit) : undefined;
+    const costPerHead = scenario.costPerHead ? parseFloat(scenario.costPerHead) : 0;
+    const totalCost = guestCount * costPerHead;
+    const remainingBudget = budgetLimit ? budgetLimit - totalCost : undefined;
+
+    return {
+      ...scenario,
+      householdCount,
+      guestCount,
+      remainingBudget,
+    };
+  }
+
+  async getGuestListScenariosByWedding(weddingId: string): Promise<ScenarioWithStats[]> {
+    const scenarios = await this.db
+      .select()
+      .from(schema.guestListScenarios)
+      .where(eq(schema.guestListScenarios.weddingId, weddingId))
+      .orderBy(sql`${schema.guestListScenarios.createdAt} DESC`);
+
+    const result: ScenarioWithStats[] = [];
+    for (const scenario of scenarios) {
+      const withStats = await this.getGuestListScenarioWithStats(scenario.id);
+      if (withStats) result.push(withStats);
+    }
+    return result;
+  }
+
+  async createGuestListScenario(scenario: InsertGuestListScenario): Promise<GuestListScenario> {
+    const result = await this.db
+      .insert(schema.guestListScenarios)
+      .values(scenario)
+      .returning();
+    return result[0];
+  }
+
+  async updateGuestListScenario(id: string, scenario: Partial<InsertGuestListScenario>): Promise<GuestListScenario | undefined> {
+    const result = await this.db
+      .update(schema.guestListScenarios)
+      .set({ ...scenario, updatedAt: new Date() })
+      .where(eq(schema.guestListScenarios.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteGuestListScenario(id: string): Promise<boolean> {
+    // Delete scenario households first
+    await this.db
+      .delete(schema.scenarioHouseholds)
+      .where(eq(schema.scenarioHouseholds.scenarioId, id));
+    
+    const result = await this.db
+      .delete(schema.guestListScenarios)
+      .where(eq(schema.guestListScenarios.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  async setActiveScenario(weddingId: string, scenarioId: string): Promise<GuestListScenario> {
+    // Deactivate all scenarios for this wedding
+    await this.db
+      .update(schema.guestListScenarios)
+      .set({ isActive: false })
+      .where(eq(schema.guestListScenarios.weddingId, weddingId));
+    
+    // Activate the specified scenario
+    const result = await this.db
+      .update(schema.guestListScenarios)
+      .set({ isActive: true, updatedAt: new Date() })
+      .where(eq(schema.guestListScenarios.id, scenarioId))
+      .returning();
+    
+    if (!result[0]) throw new Error("Scenario not found");
+    return result[0];
+  }
+
+  async duplicateScenario(id: string, newName: string, userId: string): Promise<GuestListScenario> {
+    const original = await this.getGuestListScenario(id);
+    if (!original) throw new Error("Scenario not found");
+
+    // Create new scenario
+    const newScenario = await this.createGuestListScenario({
+      weddingId: original.weddingId,
+      name: newName,
+      description: original.description,
+      budgetLimit: original.budgetLimit,
+      costPerHead: original.costPerHead,
+      isActive: false,
+      createdBy: userId,
+    });
+
+    // Copy households
+    const households = await this.db
+      .select()
+      .from(schema.scenarioHouseholds)
+      .where(eq(schema.scenarioHouseholds.scenarioId, id));
+
+    for (const h of households) {
+      await this.db
+        .insert(schema.scenarioHouseholds)
+        .values({
+          scenarioId: newScenario.id,
+          householdId: h.householdId,
+          isIncluded: h.isIncluded,
+          adjustedMaxCount: h.adjustedMaxCount,
+          notes: h.notes,
+        });
+    }
+
+    return newScenario;
+  }
+
+  async promoteScenarioToMain(id: string): Promise<boolean> {
+    const scenario = await this.getGuestListScenario(id);
+    if (!scenario) return false;
+
+    // Get scenario households
+    const scenarioHouseholds = await this.db
+      .select()
+      .from(schema.scenarioHouseholds)
+      .where(eq(schema.scenarioHouseholds.scenarioId, id));
+
+    const includedIds = new Set(
+      scenarioHouseholds
+        .filter(sh => sh.isIncluded)
+        .map(sh => sh.householdId)
+    );
+
+    // Get all wedding households
+    const allHouseholds = await this.getHouseholdsByWedding(scenario.weddingId);
+
+    // Cut households not in scenario, restore those that are
+    for (const household of allHouseholds) {
+      if (!includedIds.has(household.id)) {
+        // Add to cut list if not already there
+        const existingCut = await this.db
+          .select()
+          .from(schema.cutListItems)
+          .where(and(
+            eq(schema.cutListItems.householdId, household.id),
+            sql`${schema.cutListItems.restoredAt} IS NULL`
+          ))
+          .limit(1);
+        
+        if (existingCut.length === 0) {
+          await this.addToCutList({
+            weddingId: scenario.weddingId,
+            householdId: household.id,
+            cutReason: "priority",
+            cutNotes: `Cut when promoting scenario "${scenario.name}"`,
+            cutBy: scenario.createdBy,
+            canRestore: true,
+          });
+        }
+      }
+    }
+
+    return true;
+  }
+
+  // ============================================================================
+  // Scenario Households
+  // ============================================================================
+
+  async getScenarioHouseholds(scenarioId: string): Promise<(ScenarioHousehold & { household: Household })[]> {
+    const scenarioHouseholds = await this.db
+      .select()
+      .from(schema.scenarioHouseholds)
+      .where(eq(schema.scenarioHouseholds.scenarioId, scenarioId));
+
+    const result: (ScenarioHousehold & { household: Household })[] = [];
+    for (const sh of scenarioHouseholds) {
+      const household = await this.getHousehold(sh.householdId);
+      if (household) {
+        result.push({ ...sh, household });
+      }
+    }
+    return result;
+  }
+
+  async addHouseholdToScenario(scenarioId: string, householdId: string, adjustedMaxCount?: number): Promise<ScenarioHousehold> {
+    // Check if already exists
+    const existing = await this.db
+      .select()
+      .from(schema.scenarioHouseholds)
+      .where(and(
+        eq(schema.scenarioHouseholds.scenarioId, scenarioId),
+        eq(schema.scenarioHouseholds.householdId, householdId)
+      ))
+      .limit(1);
+
+    if (existing.length > 0) {
+      // Update existing
+      const result = await this.db
+        .update(schema.scenarioHouseholds)
+        .set({ isIncluded: true, adjustedMaxCount })
+        .where(eq(schema.scenarioHouseholds.id, existing[0].id))
+        .returning();
+      return result[0];
+    }
+
+    const result = await this.db
+      .insert(schema.scenarioHouseholds)
+      .values({
+        scenarioId,
+        householdId,
+        isIncluded: true,
+        adjustedMaxCount,
+      })
+      .returning();
+    return result[0];
+  }
+
+  async removeHouseholdFromScenario(scenarioId: string, householdId: string): Promise<boolean> {
+    const result = await this.db
+      .update(schema.scenarioHouseholds)
+      .set({ isIncluded: false })
+      .where(and(
+        eq(schema.scenarioHouseholds.scenarioId, scenarioId),
+        eq(schema.scenarioHouseholds.householdId, householdId)
+      ))
+      .returning();
+    return result.length > 0;
+  }
+
+  async updateScenarioHousehold(id: string, updates: Partial<InsertScenarioHousehold>): Promise<ScenarioHousehold | undefined> {
+    const result = await this.db
+      .update(schema.scenarioHouseholds)
+      .set(updates)
+      .where(eq(schema.scenarioHouseholds.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async copyAllHouseholdsToScenario(scenarioId: string, weddingId: string): Promise<number> {
+    const households = await this.getHouseholdsByWedding(weddingId);
+    
+    // Get households that are not in cut list
+    const cutItems = await this.db
+      .select()
+      .from(schema.cutListItems)
+      .where(and(
+        eq(schema.cutListItems.weddingId, weddingId),
+        sql`${schema.cutListItems.restoredAt} IS NULL`
+      ));
+    
+    const cutHouseholdIds = new Set(cutItems.map(c => c.householdId));
+    const activeHouseholds = households.filter(h => !cutHouseholdIds.has(h.id));
+
+    let count = 0;
+    for (const household of activeHouseholds) {
+      await this.addHouseholdToScenario(scenarioId, household.id);
+      count++;
+    }
+    return count;
+  }
+
+  // ============================================================================
+  // Guest Budget Settings
+  // ============================================================================
+
+  async getGuestBudgetSettings(weddingId: string): Promise<GuestBudgetSettings | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.guestBudgetSettings)
+      .where(eq(schema.guestBudgetSettings.weddingId, weddingId))
+      .limit(1);
+    return result[0];
+  }
+
+  async createOrUpdateGuestBudgetSettings(settings: InsertGuestBudgetSettings): Promise<GuestBudgetSettings> {
+    const existing = await this.getGuestBudgetSettings(settings.weddingId);
+    
+    if (existing) {
+      const result = await this.db
+        .update(schema.guestBudgetSettings)
+        .set({ ...settings, updatedAt: new Date() })
+        .where(eq(schema.guestBudgetSettings.id, existing.id))
+        .returning();
+      return result[0];
+    }
+
+    const result = await this.db
+      .insert(schema.guestBudgetSettings)
+      .values(settings)
+      .returning();
+    return result[0];
+  }
+
+  async calculateBudgetCapacity(weddingId: string): Promise<{ maxGuests: number; currentCount: number; costPerHead: number; totalBudget: number; remainingBudget: number }> {
+    const settings = await this.getGuestBudgetSettings(weddingId);
+    const costPerHead = settings?.defaultCostPerHead ? parseFloat(settings.defaultCostPerHead) : 150; // Default $150/head
+    const totalBudget = settings?.maxGuestBudget ? parseFloat(settings.maxGuestBudget) : 0;
+    
+    // Get current household count (excluding cut list)
+    const households = await this.getHouseholdsByWedding(weddingId);
+    const cutItems = await this.db
+      .select()
+      .from(schema.cutListItems)
+      .where(and(
+        eq(schema.cutListItems.weddingId, weddingId),
+        sql`${schema.cutListItems.restoredAt} IS NULL`
+      ));
+    
+    const cutHouseholdIds = new Set(cutItems.map(c => c.householdId));
+    const activeHouseholds = households.filter(h => !cutHouseholdIds.has(h.id));
+    const currentCount = activeHouseholds.reduce((sum, h) => sum + h.maxCount, 0);
+    
+    const maxGuests = totalBudget > 0 && costPerHead > 0 ? Math.floor(totalBudget / costPerHead) : 0;
+    const remainingBudget = totalBudget - (currentCount * costPerHead);
+
+    return {
+      maxGuests,
+      currentCount,
+      costPerHead,
+      totalBudget,
+      remainingBudget,
+    };
+  }
+
+  // ============================================================================
+  // Cut List
+  // ============================================================================
+
+  async getCutListItem(id: string): Promise<CutListItem | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.cutListItems)
+      .where(eq(schema.cutListItems.id, id))
+      .limit(1);
+    return result[0];
+  }
+
+  async getCutListByWedding(weddingId: string): Promise<CutListItemWithHousehold[]> {
+    const cutItems = await this.db
+      .select()
+      .from(schema.cutListItems)
+      .where(and(
+        eq(schema.cutListItems.weddingId, weddingId),
+        sql`${schema.cutListItems.restoredAt} IS NULL`
+      ))
+      .orderBy(sql`${schema.cutListItems.cutAt} DESC`);
+
+    const result: CutListItemWithHousehold[] = [];
+    for (const item of cutItems) {
+      const household = await this.getHousehold(item.householdId);
+      if (household) {
+        result.push({ ...item, household });
+      }
+    }
+    return result;
+  }
+
+  async addToCutList(item: InsertCutListItem): Promise<CutListItem> {
+    const result = await this.db
+      .insert(schema.cutListItems)
+      .values(item)
+      .returning();
+    return result[0];
+  }
+
+  async restoreFromCutList(id: string, userId: string): Promise<Household> {
+    const cutItem = await this.getCutListItem(id);
+    if (!cutItem) throw new Error("Cut list item not found");
+
+    // Mark as restored
+    await this.db
+      .update(schema.cutListItems)
+      .set({
+        restoredAt: new Date(),
+        restoredBy: userId,
+      })
+      .where(eq(schema.cutListItems.id, id));
+
+    const household = await this.getHousehold(cutItem.householdId);
+    if (!household) throw new Error("Household not found");
+    return household;
+  }
+
+  async permanentlyDeleteFromCutList(id: string): Promise<boolean> {
+    const cutItem = await this.getCutListItem(id);
+    if (!cutItem) return false;
+
+    // Delete the household
+    await this.deleteHousehold(cutItem.householdId);
+
+    // Delete the cut list item
+    const result = await this.db
+      .delete(schema.cutListItems)
+      .where(eq(schema.cutListItems.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  async bulkCutByPriority(weddingId: string, priorityTier: string, userId: string, reason?: string): Promise<number> {
+    const households = await this.db
+      .select()
+      .from(schema.households)
+      .where(and(
+        eq(schema.households.weddingId, weddingId),
+        eq(schema.households.priorityTier, priorityTier)
+      ));
+
+    // Get already cut households
+    const cutItems = await this.db
+      .select()
+      .from(schema.cutListItems)
+      .where(and(
+        eq(schema.cutListItems.weddingId, weddingId),
+        sql`${schema.cutListItems.restoredAt} IS NULL`
+      ));
+    const alreadyCut = new Set(cutItems.map(c => c.householdId));
+
+    let count = 0;
+    for (const household of households) {
+      if (!alreadyCut.has(household.id)) {
+        await this.addToCutList({
+          weddingId,
+          householdId: household.id,
+          cutReason: reason as any || "priority",
+          cutNotes: `Bulk cut: ${priorityTier} tier`,
+          cutBy: userId,
+          canRestore: true,
+        });
+        count++;
+      }
+    }
+    return count;
   }
 }
 
