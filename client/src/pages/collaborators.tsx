@@ -818,11 +818,34 @@ export default function Collaborators() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm">
-                              {item.action === "invited" && "New collaborator invited"}
-                              {item.action === "accepted_invite" && "Invitation accepted"}
-                              {item.action === "removed" && "Collaborator removed"}
-                              {item.action === "role_created" && "New role created"}
-                              {item.action === "invite_resent" && "Invitation resent"}
+                              {item.action === "invited" && (
+                                <>
+                                  Invited <span className="font-medium">{(item.details as any)?.email || "collaborator"}</span>
+                                  {(item.details as any)?.roleName && (
+                                    <> as <span className="font-medium">{(item.details as any).roleName}</span></>
+                                  )}
+                                </>
+                              )}
+                              {item.action === "accepted_invite" && (
+                                <>
+                                  <span className="font-medium">{(item.details as any)?.email || "Collaborator"}</span> accepted invitation
+                                </>
+                              )}
+                              {item.action === "removed" && (
+                                <>
+                                  Removed <span className="font-medium">{(item.details as any)?.email || "collaborator"}</span>
+                                </>
+                              )}
+                              {item.action === "role_created" && (
+                                <>
+                                  Created role <span className="font-medium">"{(item.details as any)?.roleName || "Custom Role"}"</span>
+                                </>
+                              )}
+                              {item.action === "invite_resent" && (
+                                <>
+                                  Resent invitation to <span className="font-medium">{(item.details as any)?.email || "collaborator"}</span>
+                                </>
+                              )}
                               {!["invited", "accepted_invite", "removed", "role_created", "invite_resent"].includes(item.action) && item.action}
                             </p>
                             <p className="text-xs text-muted-foreground mt-1">
