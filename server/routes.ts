@@ -87,6 +87,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/weddings/:id", async (req, res) => {
+    try {
+      const wedding = await storage.updateWedding(req.params.id, req.body);
+      if (!wedding) {
+        return res.status(404).json({ error: "Wedding not found" });
+      }
+      res.json(wedding);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update wedding" });
+    }
+  });
+
   app.post("/api/weddings", async (req, res) => {
     try {
       const validatedData = insertWeddingSchema.parse(req.body);
