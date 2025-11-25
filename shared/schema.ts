@@ -1083,3 +1083,213 @@ export const insertShoppingOrderItemSchema = createInsertSchema(shoppingOrderIte
 
 export type InsertShoppingOrderItem = z.infer<typeof insertShoppingOrderItemSchema>;
 export type ShoppingOrderItem = typeof shoppingOrderItems.$inferSelect;
+
+// ============================================================================
+// GAP WINDOWS - Breaks between events for guest concierge
+// ============================================================================
+
+export const gapWindows = pgTable("gap_windows", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  beforeEventId: varchar("before_event_id").notNull(), // Event that ends before the gap
+  afterEventId: varchar("after_event_id").notNull(), // Event that starts after the gap
+  label: text("label").notNull(), // e.g., "Break between Ceremony & Reception"
+  startTime: timestamp("start_time").notNull(),
+  endTime: timestamp("end_time").notNull(),
+  shuttleSchedule: jsonb("shuttle_schedule"), // Array of shuttle times and destinations
+  specialInstructions: text("special_instructions"), // e.g., "Guests can explore downtown"
+  isActive: boolean("is_active").notNull().default(false), // Is this gap currently happening?
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertGapWindowSchema = createInsertSchema(gapWindows).omit({
+  id: true,
+  isActive: true,
+  createdAt: true,
+}).extend({
+  startTime: z.string().transform(val => new Date(val)),
+  endTime: z.string().transform(val => new Date(val)),
+  shuttleSchedule: z.array(z.object({
+    time: z.string(),
+    destination: z.string(),
+    pickupLocation: z.string().optional(),
+    notes: z.string().optional(),
+  })).optional(),
+});
+
+export type InsertGapWindow = z.infer<typeof insertGapWindowSchema>;
+export type GapWindow = typeof gapWindows.$inferSelect;
+
+// ============================================================================
+// GAP RECOMMENDATIONS - Places to visit during gaps
+// ============================================================================
+
+export const gapRecommendations = pgTable("gap_recommendations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  gapWindowId: varchar("gap_window_id").notNull(),
+  name: text("name").notNull(), // e.g., "Blue Bottle Coffee"
+  type: text("type").notNull(), // 'coffee_shop' | 'restaurant' | 'bar' | 'attraction' | 'shopping'
+  description: text("description"),
+  address: text("address"),
+  mapUrl: text("map_url"), // Google Maps URL
+  googlePlaceId: text("google_place_id"), // For fetching live data
+  estimatedTravelTime: integer("estimated_travel_time"), // Minutes from venue
+  priceLevel: text("price_level"), // '$' | '$$' | '$$$'
+  photoUrl: text("photo_url"),
+  order: integer("order").notNull().default(0), // Display order
+});
+
+export const insertGapRecommendationSchema = createInsertSchema(gapRecommendations).omit({
+  id: true,
+}).extend({
+  type: z.enum(['coffee_shop', 'restaurant', 'bar', 'attraction', 'shopping', 'lounge', 'other']),
+  priceLevel: z.enum(['$', '$$', '$$$', '$$$$']).optional(),
+});
+
+export type InsertGapRecommendation = z.infer<typeof insertGapRecommendationSchema>;
+export type GapRecommendation = typeof gapRecommendations.$inferSelect;
+
+// ============================================================================
+// RITUAL STAGES - Ceremony milestones for live tracking
+// ============================================================================
+
+export const ritualStages = pgTable("ritual_stages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  eventId: varchar("event_id").notNull(),
+  stageKey: text("stage_key").notNull(), // Standardized key for the stage
+  displayName: text("display_name").notNull(), // User-facing name
+  description: text("description"), // What happens during this stage
+  plannedStartTime: timestamp("planned_start_time"),
+  plannedDuration: integer("planned_duration"), // Minutes
+  displayOrder: integer("display_order").notNull(),
+  guestInstructions: text("guest_instructions"), // e.g., "Please be seated at the Mandap"
+  notifyOnStart: boolean("notify_on_start").notNull().default(true), // Send notification when starts
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Common ritual stage keys for different traditions
+export const RITUAL_STAGE_KEYS = {
+  // General
+  'guests_arriving': 'Guests Arriving',
+  'ceremony_starting_soon': 'Ceremony Starting Soon',
+  'ceremony_in_progress': 'Ceremony In Progress',
+  'ceremony_complete': 'Ceremony Complete',
+  'lunch_served': 'Lunch is Served',
+  'dinner_served': 'Dinner is Served',
+  'cocktail_hour': 'Cocktail Hour',
+  'reception_starting': 'Reception Starting',
+  'first_dance': 'First Dance',
+  'speeches': 'Speeches & Toasts',
+  'cake_cutting': 'Cake Cutting',
+  'party_time': 'Party Time!',
+  
+  // Hindu/Sikh specific
+  'baraat_forming': 'Baraat is Forming',
+  'baraat_started': 'Baraat Has Started!',
+  'baraat_arriving': 'Baraat Arriving at Venue',
+  'milni': 'Milni Ceremony',
+  'groom_entering': 'Groom Entering',
+  'bride_entering': 'Bride Entering',
+  'jai_mala': 'Jai Mala (Garland Exchange)',
+  'kanyadaan': 'Kanyadaan',
+  'mangal_pheras': 'Mangal Pheras (Sacred Rounds)',
+  'sindoor_mangalsutra': 'Sindoor & Mangalsutra',
+  'saptapadi': 'Saptapadi (Seven Steps)',
+  'vidaai': 'Vidaai (Farewell)',
+  
+  // Sikh specific
+  'anand_karaj_starting': 'Anand Karaj Starting',
+  'laavan': 'Laavan (Sacred Rounds)',
+  'ardas': 'Ardas (Prayer)',
+  'hukamnama': 'Hukamnama',
+  
+  // Mehndi/Sangeet
+  'mehndi_artists_ready': 'Mehndi Artists Ready',
+  'performances_starting': 'Performances Starting',
+  'dance_floor_open': 'Dance Floor is Open!',
+} as const;
+
+export const insertRitualStageSchema = createInsertSchema(ritualStages).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  plannedStartTime: z.string().optional().transform(val => val ? new Date(val) : undefined),
+});
+
+export type InsertRitualStage = z.infer<typeof insertRitualStageSchema>;
+export type RitualStage = typeof ritualStages.$inferSelect;
+
+// ============================================================================
+// RITUAL STAGE UPDATES - Live status updates for ceremonies
+// ============================================================================
+
+export const ritualStageUpdates = pgTable("ritual_stage_updates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  ritualStageId: varchar("ritual_stage_id").notNull(),
+  status: text("status").notNull(), // 'upcoming' | 'active' | 'completed' | 'delayed' | 'skipped'
+  message: text("message"), // Optional custom message, e.g., "Running 15 minutes late"
+  delayMinutes: integer("delay_minutes"), // How many minutes delayed
+  updatedBy: varchar("updated_by"), // User ID who made the update
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertRitualStageUpdateSchema = createInsertSchema(ritualStageUpdates).omit({
+  id: true,
+  updatedAt: true,
+}).extend({
+  status: z.enum(['upcoming', 'active', 'completed', 'delayed', 'skipped']),
+});
+
+export type InsertRitualStageUpdate = z.infer<typeof insertRitualStageUpdateSchema>;
+export type RitualStageUpdate = typeof ritualStageUpdates.$inferSelect;
+
+// ============================================================================
+// GUEST NOTIFICATIONS - Track notifications sent to guests
+// ============================================================================
+
+export const guestNotifications = pgTable("guest_notifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  householdId: varchar("household_id"), // Optional - if targeting specific household
+  type: text("type").notNull(), // 'gap_started' | 'ritual_update' | 'shuttle_reminder' | 'custom'
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  relatedGapId: varchar("related_gap_id"), // If related to a gap window
+  relatedStageId: varchar("related_stage_id"), // If related to a ritual stage
+  sentAt: timestamp("sent_at").notNull().defaultNow(),
+  channel: text("channel").notNull(), // 'in_app' | 'email' | 'sms'
+});
+
+export const insertGuestNotificationSchema = createInsertSchema(guestNotifications).omit({
+  id: true,
+  sentAt: true,
+}).extend({
+  type: z.enum(['gap_started', 'gap_ending', 'ritual_update', 'shuttle_reminder', 'custom']),
+  channel: z.enum(['in_app', 'email', 'sms']),
+});
+
+export type InsertGuestNotification = z.infer<typeof insertGuestNotificationSchema>;
+export type GuestNotification = typeof guestNotifications.$inferSelect;
+
+// ============================================================================
+// LIVE WEDDING STATUS - Current state of the wedding day
+// ============================================================================
+
+export const liveWeddingStatus = pgTable("live_wedding_status", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull().unique(),
+  isLive: boolean("is_live").notNull().default(false), // Is the wedding day active?
+  currentEventId: varchar("current_event_id"), // Currently active event
+  currentStageId: varchar("current_stage_id"), // Currently active ritual stage
+  currentGapId: varchar("current_gap_id"), // Currently active gap window
+  lastBroadcastMessage: text("last_broadcast_message"), // Most recent announcement
+  lastUpdatedAt: timestamp("last_updated_at").notNull().defaultNow(),
+});
+
+export const insertLiveWeddingStatusSchema = createInsertSchema(liveWeddingStatus).omit({
+  id: true,
+  lastUpdatedAt: true,
+});
+
+export type InsertLiveWeddingStatus = z.infer<typeof insertLiveWeddingStatusSchema>;
+export type LiveWeddingStatus = typeof liveWeddingStatus.$inferSelect;
