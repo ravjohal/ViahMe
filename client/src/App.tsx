@@ -40,12 +40,16 @@ import OrderConfirmation from "@/pages/order-confirmation";
 import RsvpPortal from "@/pages/rsvp-portal";
 import Shopping from "@/pages/shopping";
 import CulturalInfo from "@/pages/cultural-info";
+import GapConcierge from "@/pages/gap-concierge";
+import RitualControl from "@/pages/ritual-control";
+import GuestLiveFeed from "@/pages/guest-live-feed";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Landing} />
       <Route path="/rsvp/:token" component={RsvpPortal} />
+      <Route path="/live/:weddingId" component={GuestLiveFeed} />
       <Route path="/onboarding" component={Onboarding} />
       <Route path="/login" component={Login} />
       <Route path="/vendor-login" component={VendorLogin} />
@@ -75,6 +79,8 @@ function Router() {
       <Route path="/order-confirmation" component={OrderConfirmation} />
       <Route path="/shopping" component={Shopping} />
       <Route path="/cultural-info" component={CulturalInfo} />
+      <Route path="/gap-concierge" component={GapConcierge} />
+      <Route path="/ritual-control" component={RitualControl} />
       <Route path="/settings" component={Settings} />
       <Route path="/wedding/:slug" component={GuestWebsite} />
       <Route component={NotFound} />
