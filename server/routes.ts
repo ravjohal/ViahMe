@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { z } from "zod";
 import { storage, parseConversationId } from "./storage";
 import { registerAuthRoutes } from "./auth-routes";
 import { requireAuth, requireRole, type AuthRequest } from "./auth-middleware";
@@ -3329,7 +3330,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all roles for a wedding
   app.get("/api/weddings/:weddingId/roles", async (req, res) => {
     const { weddingId } = req.params;
-    const userId = req.session?.user?.id;
+    const userId = req.session?.userId;
     
     if (!userId) {
       return res.status(401).json({ error: "Authentication required" });
@@ -3352,7 +3353,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get a specific role with permissions
   app.get("/api/roles/:roleId", async (req, res) => {
     const { roleId } = req.params;
-    const userId = req.session?.user?.id;
+    const userId = req.session?.userId;
     
     if (!userId) {
       return res.status(401).json({ error: "Authentication required" });
@@ -3379,7 +3380,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create a new role
   app.post("/api/weddings/:weddingId/roles", async (req, res) => {
     const { weddingId } = req.params;
-    const userId = req.session?.user?.id;
+    const userId = req.session?.userId;
     
     if (!userId) {
       return res.status(401).json({ error: "Authentication required" });
@@ -3404,11 +3405,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.logCollaboratorActivity({
         weddingId,
         collaboratorId: null,
-        actorUserId: userId,
+        userId,
         action: "role_created",
-        resourceType: "role",
-        resourceId: role.id,
-        description: `Created role "${role.displayName}"`,
+        targetType: "role",
+        targetId: role.id,
+        details: { roleName: role.displayName },
       });
       
       res.status(201).json(role);
@@ -3420,7 +3421,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update a role
   app.patch("/api/roles/:roleId", async (req, res) => {
     const { roleId } = req.params;
-    const userId = req.session?.user?.id;
+    const userId = req.session?.userId;
     
     if (!userId) {
       return res.status(401).json({ error: "Authentication required" });
@@ -3459,7 +3460,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Delete a role
   app.delete("/api/roles/:roleId", async (req, res) => {
     const { roleId } = req.params;
-    const userId = req.session?.user?.id;
+    const userId = req.session?.userId;
     
     if (!userId) {
       return res.status(401).json({ error: "Authentication required" });
@@ -3491,7 +3492,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all collaborators for a wedding
   app.get("/api/weddings/:weddingId/collaborators", async (req, res) => {
     const { weddingId } = req.params;
-    const userId = req.session?.user?.id;
+    const userId = req.session?.userId;
     
     if (!userId) {
       return res.status(401).json({ error: "Authentication required" });
@@ -3520,25 +3521,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Invite a collaborator
+  const inviteCollaboratorSchema = z.object({
+    email: z.string().email("Valid email is required"),
+    name: z.string().optional(),
+    roleId: z.string().min(1, "Role ID is required"),
+  });
+
   app.post("/api/weddings/:weddingId/collaborators", async (req, res) => {
     const { weddingId } = req.params;
-    const userId = req.session?.user?.id;
+    const userId = req.session?.userId;
     
     if (!userId) {
       return res.status(401).json({ error: "Authentication required" });
     }
     
     try {
+      // Validate request body with Zod
+      const parseResult = inviteCollaboratorSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ 
+          error: "Validation failed", 
+          details: parseResult.error.errors 
+        });
+      }
+      const { email, name, roleId } = parseResult.data;
+      
       // Only owners or those with manage collaborators permission can invite
       const hasPermission = await storage.checkUserPermission(userId, weddingId, "collaborators", "manage");
       if (!hasPermission) {
         return res.status(403).json({ error: "You do not have permission to invite collaborators" });
-      }
-      
-      const { email, name, roleId } = req.body;
-      
-      if (!email || !roleId) {
-        return res.status(400).json({ error: "Email and roleId are required" });
       }
       
       // Check if collaborator already exists
@@ -3575,11 +3586,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.logCollaboratorActivity({
         weddingId,
         collaboratorId: collaborator.id,
-        actorUserId: userId,
+        userId,
         action: "invited",
-        resourceType: "collaborator",
-        resourceId: collaborator.id,
-        description: `Invited ${email} as ${role.displayName}`,
+        targetType: "collaborator",
+        targetId: collaborator.id,
+        details: { email, roleName: role.displayName },
       });
       
       // Get wedding details for email
@@ -3599,7 +3610,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Accept collaborator invite (public endpoint)
   app.post("/api/collaborator-invites/:token", async (req, res) => {
     const { token } = req.params;
-    const userId = req.session?.user?.id;
+    const userId = req.session?.userId;
     
     if (!userId) {
       return res.status(401).json({ error: "Please log in to accept this invitation" });
@@ -3616,11 +3627,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.logCollaboratorActivity({
         weddingId: collaborator.weddingId,
         collaboratorId: collaborator.id,
-        actorUserId: userId,
+        userId,
         action: "accepted_invite",
-        resourceType: "collaborator",
-        resourceId: collaborator.id,
-        description: `Accepted invitation`,
+        targetType: "collaborator",
+        targetId: collaborator.id,
+        details: { email: collaborator.email },
       });
       
       res.json({ success: true, weddingId: collaborator.weddingId });
@@ -3659,7 +3670,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update collaborator (change role, etc.)
   app.patch("/api/collaborators/:collaboratorId", async (req, res) => {
     const { collaboratorId } = req.params;
-    const userId = req.session?.user?.id;
+    const userId = req.session?.userId;
     
     if (!userId) {
       return res.status(401).json({ error: "Authentication required" });
@@ -3698,7 +3709,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Remove collaborator
   app.delete("/api/collaborators/:collaboratorId", async (req, res) => {
     const { collaboratorId } = req.params;
-    const userId = req.session?.user?.id;
+    const userId = req.session?.userId;
     
     if (!userId) {
       return res.status(401).json({ error: "Authentication required" });
@@ -3720,11 +3731,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.logCollaboratorActivity({
         weddingId: collaborator.weddingId,
         collaboratorId: collaborator.id,
-        actorUserId: userId,
+        userId,
         action: "removed",
-        resourceType: "collaborator",
-        resourceId: collaborator.id,
-        description: `Removed collaborator ${collaborator.email}`,
+        targetType: "collaborator",
+        targetId: collaborator.id,
+        details: { email: collaborator.email },
       });
       
       await storage.deleteWeddingCollaborator(collaboratorId);
@@ -3737,7 +3748,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Resend collaborator invite
   app.post("/api/collaborators/:collaboratorId/resend-invite", async (req, res) => {
     const { collaboratorId } = req.params;
-    const userId = req.session?.user?.id;
+    const userId = req.session?.userId;
     
     if (!userId) {
       return res.status(401).json({ error: "Authentication required" });
@@ -3766,11 +3777,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.logCollaboratorActivity({
         weddingId: collaborator.weddingId,
         collaboratorId: collaborator.id,
-        actorUserId: userId,
+        userId,
         action: "invite_resent",
-        resourceType: "collaborator",
-        resourceId: collaborator.id,
-        description: `Resent invitation to ${collaborator.email}`,
+        targetType: "collaborator",
+        targetId: collaborator.id,
+        details: { email: collaborator.email },
       });
       
       const wedding = await storage.getWedding(collaborator.weddingId);
@@ -3789,7 +3800,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get collaborator activity log
   app.get("/api/weddings/:weddingId/collaborator-activity", async (req, res) => {
     const { weddingId } = req.params;
-    const userId = req.session?.user?.id;
+    const userId = req.session?.userId;
     const limit = parseInt(req.query.limit as string) || 50;
     
     if (!userId) {
@@ -3813,7 +3824,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user's permissions for a wedding
   app.get("/api/weddings/:weddingId/my-permissions", async (req, res) => {
     const { weddingId } = req.params;
-    const userId = req.session?.user?.id;
+    const userId = req.session?.userId;
     
     if (!userId) {
       return res.status(401).json({ error: "Authentication required" });
@@ -3840,7 +3851,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize default roles for a wedding (called during wedding creation or on-demand)
   app.post("/api/weddings/:weddingId/initialize-roles", async (req, res) => {
     const { weddingId } = req.params;
-    const userId = req.session?.user?.id;
+    const userId = req.session?.userId;
     
     if (!userId) {
       return res.status(401).json({ error: "Authentication required" });
@@ -3864,6 +3875,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const roles = await storage.createDefaultRolesForWedding(weddingId);
+      
+      // Log activity for each role created
+      for (const role of roles) {
+        await storage.logCollaboratorActivity({
+          weddingId,
+          collaboratorId: null,
+          userId,
+          action: "role_created",
+          targetType: "role",
+          targetId: role.id,
+          details: { roleName: role.displayName },
+        });
+      }
+      
       res.status(201).json(roles);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -3872,7 +3897,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get weddings user collaborates on
   app.get("/api/my-collaborations", async (req, res) => {
-    const userId = req.session?.user?.id;
+    const userId = req.session?.userId;
     
     if (!userId) {
       return res.status(401).json({ error: "Authentication required" });

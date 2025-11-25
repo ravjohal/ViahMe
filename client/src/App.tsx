@@ -43,6 +43,7 @@ import CulturalInfo from "@/pages/cultural-info";
 import GapConcierge from "@/pages/gap-concierge";
 import RitualControl from "@/pages/ritual-control";
 import GuestLiveFeed from "@/pages/guest-live-feed";
+import Collaborators from "@/pages/collaborators";
 
 function Router() {
   return (
@@ -81,6 +82,7 @@ function Router() {
       <Route path="/cultural-info" component={CulturalInfo} />
       <Route path="/gap-concierge" component={GapConcierge} />
       <Route path="/ritual-control" component={RitualControl} />
+      <Route path="/collaborators" component={Collaborators} />
       <Route path="/settings" component={Settings} />
       <Route path="/wedding/:slug" component={GuestWebsite} />
       <Route component={NotFound} />

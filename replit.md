@@ -46,6 +46,14 @@ Key architectural decisions and features include:
   - **Guest Assignment**: Link measurement profiles to specific guests for streamlined coordination
   - **Status Tracking**: Monitor order progress through statuses like Ordered, In Transit, Received, and Cancelled
   - **Dual Currency Support**: Automatic INR to USD conversion for international purchases
+- **Team Collaboration & Roles System**: Comprehensive permissions management allowing couples to invite and manage collaborators with granular access control. Features include:
+  - **Wedding Roles**: Four default roles (Owner, Wedding Planner, Family Member, Guest Coordinator) with customizable permissions across 7 resource categories (Planning, Guests, Vendors, Budget, Concierge, Content, Settings)
+  - **Permission Levels**: Three levels per category - none, view, edit - allowing fine-grained access control
+  - **Collaborator Invitations**: Email-based invitation system with secure magic tokens, pending/accepted status tracking, and resend functionality
+  - **Activity Logging**: Complete audit trail of all collaborator actions including role creation, invitations sent, and status changes
+  - **Team Management UI**: Full-featured collaborators page at /collaborators with tabs for team members, roles overview, and activity log
+  - **Session-Based Auth**: Uses req.session.userId for consistent authentication across all collaborator endpoints
+  - **Zod Validation**: Server-side validation for collaborator invite requests with proper error handling
 - **Real-Time Guest Concierge System**: Comprehensive live wedding experience management with gap management and ritual tracking. Features include:
   - **Gap Concierge Designer (Couple-facing)**: Configure gap windows between events with labels, time ranges, shuttle schedules, and special instructions. Add venue-specific recommendations for nearby restaurants, attractions, and activities during downtime.
   - **Ritual Control Panel (Couple-facing)**: Manage ceremony stages with display names, descriptions, planned durations, and guest instructions. Post live status updates (pending/in_progress/completed/delayed) with optional delay notifications and broadcast messages.
