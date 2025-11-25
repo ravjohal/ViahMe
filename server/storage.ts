@@ -2073,6 +2073,93 @@ export class MemStorage implements IStorage {
   async deleteShoppingOrderItem(id: string): Promise<boolean> {
     return this.shoppingOrderItems.delete(id);
   }
+
+  // Gap Windows - MemStorage stubs (not fully implemented, use DBStorage)
+  async getGapWindow(id: string): Promise<GapWindow | undefined> {
+    throw new Error("MemStorage does not support Gap Windows. Use DBStorage.");
+  }
+  async getGapWindowsByWedding(weddingId: string): Promise<GapWindow[]> {
+    return [];
+  }
+  async createGapWindow(gap: InsertGapWindow): Promise<GapWindow> {
+    throw new Error("MemStorage does not support Gap Windows. Use DBStorage.");
+  }
+  async updateGapWindow(id: string, gap: Partial<InsertGapWindow>): Promise<GapWindow | undefined> {
+    throw new Error("MemStorage does not support Gap Windows. Use DBStorage.");
+  }
+  async deleteGapWindow(id: string): Promise<boolean> {
+    return false;
+  }
+  async activateGapWindow(id: string, isActive: boolean): Promise<GapWindow | undefined> {
+    throw new Error("MemStorage does not support Gap Windows. Use DBStorage.");
+  }
+
+  // Gap Recommendations - MemStorage stubs
+  async getGapRecommendation(id: string): Promise<GapRecommendation | undefined> {
+    throw new Error("MemStorage does not support Gap Recommendations. Use DBStorage.");
+  }
+  async getRecommendationsByGapWindow(gapWindowId: string): Promise<GapRecommendation[]> {
+    return [];
+  }
+  async createGapRecommendation(rec: InsertGapRecommendation): Promise<GapRecommendation> {
+    throw new Error("MemStorage does not support Gap Recommendations. Use DBStorage.");
+  }
+  async updateGapRecommendation(id: string, rec: Partial<InsertGapRecommendation>): Promise<GapRecommendation | undefined> {
+    throw new Error("MemStorage does not support Gap Recommendations. Use DBStorage.");
+  }
+  async deleteGapRecommendation(id: string): Promise<boolean> {
+    return false;
+  }
+
+  // Ritual Stages - MemStorage stubs
+  async getRitualStage(id: string): Promise<RitualStage | undefined> {
+    throw new Error("MemStorage does not support Ritual Stages. Use DBStorage.");
+  }
+  async getRitualStagesByEvent(eventId: string): Promise<RitualStage[]> {
+    return [];
+  }
+  async createRitualStage(stage: InsertRitualStage): Promise<RitualStage> {
+    throw new Error("MemStorage does not support Ritual Stages. Use DBStorage.");
+  }
+  async updateRitualStage(id: string, stage: Partial<InsertRitualStage>): Promise<RitualStage | undefined> {
+    throw new Error("MemStorage does not support Ritual Stages. Use DBStorage.");
+  }
+  async deleteRitualStage(id: string): Promise<boolean> {
+    return false;
+  }
+
+  // Ritual Stage Updates - MemStorage stubs
+  async getRitualStageUpdates(ritualStageId: string): Promise<RitualStageUpdate[]> {
+    return [];
+  }
+  async getLatestRitualStageUpdate(ritualStageId: string): Promise<RitualStageUpdate | undefined> {
+    return undefined;
+  }
+  async createRitualStageUpdate(update: InsertRitualStageUpdate): Promise<RitualStageUpdate> {
+    throw new Error("MemStorage does not support Ritual Stage Updates. Use DBStorage.");
+  }
+
+  // Guest Notifications - MemStorage stubs
+  async getGuestNotification(id: string): Promise<GuestNotification | undefined> {
+    throw new Error("MemStorage does not support Guest Notifications. Use DBStorage.");
+  }
+  async getNotificationsByWedding(weddingId: string): Promise<GuestNotification[]> {
+    return [];
+  }
+  async createGuestNotification(notification: InsertGuestNotification): Promise<GuestNotification> {
+    throw new Error("MemStorage does not support Guest Notifications. Use DBStorage.");
+  }
+
+  // Live Wedding Status - MemStorage stubs
+  async getLiveWeddingStatus(weddingId: string): Promise<LiveWeddingStatus | undefined> {
+    return undefined;
+  }
+  async createOrUpdateLiveWeddingStatus(status: InsertLiveWeddingStatus): Promise<LiveWeddingStatus> {
+    throw new Error("MemStorage does not support Live Wedding Status. Use DBStorage.");
+  }
+  async updateLiveWeddingStatus(weddingId: string, updates: Partial<InsertLiveWeddingStatus>): Promise<LiveWeddingStatus | undefined> {
+    throw new Error("MemStorage does not support Live Wedding Status. Use DBStorage.");
+  }
 }
 
 import { neon } from "@neondatabase/serverless";

@@ -28,6 +28,12 @@ import {
   insertContractSignatureSchema,
   insertMeasurementProfileSchema,
   insertShoppingOrderItemSchema,
+  insertGapWindowSchema,
+  insertGapRecommendationSchema,
+  insertRitualStageSchema,
+  insertRitualStageUpdateSchema,
+  insertGuestNotificationSchema,
+  insertLiveWeddingStatusSchema,
 } from "@shared/schema";
 import { seedVendors, seedBudgetBenchmarks } from "./seed-data";
 import {
@@ -2818,6 +2824,502 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(404).json({ error: "Shopping item not found" });
     }
     res.status(204).send();
+  });
+
+  // ============================================================================
+  // GAP WINDOWS - Guest Concierge (managing gaps between events)
+  // ============================================================================
+
+  // Get all gap windows for a wedding
+  app.get("/api/weddings/:weddingId/gap-windows", async (req, res) => {
+    try {
+      const { weddingId } = req.params;
+      const gapWindows = await storage.getGapWindowsByWedding(weddingId);
+      
+      // Get recommendations for each gap window
+      const gapsWithRecommendations = await Promise.all(
+        gapWindows.map(async (gap) => {
+          const recommendations = await storage.getRecommendationsByGapWindow(gap.id);
+          return { ...gap, recommendations };
+        })
+      );
+      
+      res.json(gapsWithRecommendations);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get a single gap window with recommendations
+  app.get("/api/gap-windows/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const gap = await storage.getGapWindow(id);
+      if (!gap) {
+        return res.status(404).json({ error: "Gap window not found" });
+      }
+      const recommendations = await storage.getRecommendationsByGapWindow(id);
+      res.json({ ...gap, recommendations });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Create a gap window
+  app.post("/api/gap-windows", async (req, res) => {
+    try {
+      const gapData = insertGapWindowSchema.parse(req.body);
+      const gap = await storage.createGapWindow(gapData);
+      res.status(201).json(gap);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Update a gap window
+  app.patch("/api/gap-windows/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = insertGapWindowSchema.partial().parse(req.body);
+      const gap = await storage.updateGapWindow(id, updates);
+      if (!gap) {
+        return res.status(404).json({ error: "Gap window not found" });
+      }
+      res.json(gap);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Delete a gap window
+  app.delete("/api/gap-windows/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const success = await storage.deleteGapWindow(id);
+      if (!success) {
+        return res.status(404).json({ error: "Gap window not found" });
+      }
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Activate/deactivate a gap window
+  app.patch("/api/gap-windows/:id/activate", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { isActive } = req.body;
+      const gap = await storage.activateGapWindow(id, isActive === true);
+      if (!gap) {
+        return res.status(404).json({ error: "Gap window not found" });
+      }
+      res.json(gap);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // ============================================================================
+  // GAP RECOMMENDATIONS - Places to visit during event gaps
+  // ============================================================================
+
+  // Get recommendations for a gap window
+  app.get("/api/gap-windows/:gapWindowId/recommendations", async (req, res) => {
+    try {
+      const { gapWindowId } = req.params;
+      const recommendations = await storage.getRecommendationsByGapWindow(gapWindowId);
+      res.json(recommendations);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Create a recommendation
+  app.post("/api/gap-recommendations", async (req, res) => {
+    try {
+      const recData = insertGapRecommendationSchema.parse(req.body);
+      const rec = await storage.createGapRecommendation(recData);
+      res.status(201).json(rec);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Update a recommendation
+  app.patch("/api/gap-recommendations/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = insertGapRecommendationSchema.partial().parse(req.body);
+      const rec = await storage.updateGapRecommendation(id, updates);
+      if (!rec) {
+        return res.status(404).json({ error: "Recommendation not found" });
+      }
+      res.json(rec);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Delete a recommendation
+  app.delete("/api/gap-recommendations/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const success = await storage.deleteGapRecommendation(id);
+      if (!success) {
+        return res.status(404).json({ error: "Recommendation not found" });
+      }
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ============================================================================
+  // RITUAL STAGES - Live ceremony tracking
+  // ============================================================================
+
+  // Get all ritual stages for an event
+  app.get("/api/events/:eventId/ritual-stages", async (req, res) => {
+    try {
+      const { eventId } = req.params;
+      const stages = await storage.getRitualStagesByEvent(eventId);
+      
+      // Get latest update for each stage
+      const stagesWithStatus = await Promise.all(
+        stages.map(async (stage) => {
+          const latestUpdate = await storage.getLatestRitualStageUpdate(stage.id);
+          return { 
+            ...stage, 
+            currentStatus: latestUpdate?.status || 'pending',
+            lastMessage: latestUpdate?.message,
+            delayMinutes: latestUpdate?.delayMinutes || 0
+          };
+        })
+      );
+      
+      res.json(stagesWithStatus);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get a single ritual stage with history
+  app.get("/api/ritual-stages/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const stage = await storage.getRitualStage(id);
+      if (!stage) {
+        return res.status(404).json({ error: "Ritual stage not found" });
+      }
+      const updates = await storage.getRitualStageUpdates(id);
+      res.json({ ...stage, updates });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Create a ritual stage
+  app.post("/api/ritual-stages", async (req, res) => {
+    try {
+      const stageData = insertRitualStageSchema.parse(req.body);
+      const stage = await storage.createRitualStage(stageData);
+      res.status(201).json(stage);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Update a ritual stage
+  app.patch("/api/ritual-stages/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = insertRitualStageSchema.partial().parse(req.body);
+      const stage = await storage.updateRitualStage(id, updates);
+      if (!stage) {
+        return res.status(404).json({ error: "Ritual stage not found" });
+      }
+      res.json(stage);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Delete a ritual stage
+  app.delete("/api/ritual-stages/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const success = await storage.deleteRitualStage(id);
+      if (!success) {
+        return res.status(404).json({ error: "Ritual stage not found" });
+      }
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ============================================================================
+  // RITUAL STAGE UPDATES - Live status updates
+  // ============================================================================
+
+  // Create a ritual stage update (triggers live update to guests)
+  app.post("/api/ritual-stage-updates", async (req, res) => {
+    try {
+      const updateData = insertRitualStageUpdateSchema.parse(req.body);
+      const update = await storage.createRitualStageUpdate(updateData);
+      
+      // TODO: Broadcast to connected clients via WebSocket
+      
+      res.status(201).json(update);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Get update history for a ritual stage
+  app.get("/api/ritual-stages/:id/updates", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = await storage.getRitualStageUpdates(id);
+      res.json(updates);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ============================================================================
+  // GUEST NOTIFICATIONS - Send notifications to guests
+  // ============================================================================
+
+  // Get all notifications for a wedding
+  app.get("/api/weddings/:weddingId/guest-notifications", async (req, res) => {
+    try {
+      const { weddingId } = req.params;
+      const notifications = await storage.getNotificationsByWedding(weddingId);
+      res.json(notifications);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Create a notification
+  app.post("/api/guest-notifications", async (req, res) => {
+    try {
+      const notificationData = insertGuestNotificationSchema.parse(req.body);
+      const notification = await storage.createGuestNotification(notificationData);
+      
+      // TODO: Actually send notification via email/push
+      
+      res.status(201).json(notification);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // ============================================================================
+  // LIVE WEDDING STATUS - Real-time wedding state
+  // ============================================================================
+
+  // Get live status for a wedding
+  app.get("/api/weddings/:weddingId/live-status", async (req, res) => {
+    try {
+      const { weddingId } = req.params;
+      const status = await storage.getLiveWeddingStatus(weddingId);
+      
+      if (!status) {
+        // Return default status if none exists
+        return res.json({
+          weddingId,
+          isLive: false,
+          currentEventId: null,
+          currentStageId: null,
+          currentGapId: null,
+          lastBroadcastMessage: null,
+          lastUpdatedAt: new Date()
+        });
+      }
+      
+      // If live, enrich with current event/stage details
+      let enrichedStatus: any = { ...status };
+      
+      if (status.currentEventId) {
+        const event = await storage.getEvent(status.currentEventId);
+        enrichedStatus.currentEvent = event;
+      }
+      
+      if (status.currentStageId) {
+        const stage = await storage.getRitualStage(status.currentStageId);
+        if (stage) {
+          const latestUpdate = await storage.getLatestRitualStageUpdate(stage.id);
+          enrichedStatus.currentStage = {
+            ...stage,
+            currentStatus: latestUpdate?.status || 'pending',
+            lastMessage: latestUpdate?.message,
+            delayMinutes: latestUpdate?.delayMinutes || 0
+          };
+        }
+      }
+      
+      if (status.currentGapId) {
+        const gap = await storage.getGapWindow(status.currentGapId);
+        if (gap) {
+          const recommendations = await storage.getRecommendationsByGapWindow(gap.id);
+          enrichedStatus.currentGap = { ...gap, recommendations };
+        }
+      }
+      
+      res.json(enrichedStatus);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Update live wedding status
+  app.patch("/api/weddings/:weddingId/live-status", async (req, res) => {
+    try {
+      const { weddingId } = req.params;
+      const statusData = insertLiveWeddingStatusSchema.partial().parse(req.body);
+      
+      // Ensure weddingId is set
+      const status = await storage.createOrUpdateLiveWeddingStatus({
+        weddingId,
+        ...statusData
+      });
+      
+      // TODO: Broadcast status change via WebSocket
+      
+      res.json(status);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Toggle live mode on/off
+  app.post("/api/weddings/:weddingId/go-live", async (req, res) => {
+    try {
+      const { weddingId } = req.params;
+      const { isLive, currentEventId, lastBroadcastMessage } = req.body;
+      
+      const status = await storage.createOrUpdateLiveWeddingStatus({
+        weddingId,
+        isLive: isLive === true,
+        currentEventId: currentEventId || null,
+        lastBroadcastMessage: lastBroadcastMessage || (isLive ? "Wedding is now live!" : "Wedding broadcast has ended.")
+      });
+      
+      // TODO: Broadcast to connected guests via WebSocket
+      
+      res.json(status);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // ============================================================================
+  // PUBLIC GUEST PORTAL - Guest-facing endpoints (no auth required)
+  // ============================================================================
+
+  // Get public live feed for guests (read-only, minimal data)
+  app.get("/api/public/weddings/:weddingId/live-feed", async (req, res) => {
+    try {
+      const { weddingId } = req.params;
+      const status = await storage.getLiveWeddingStatus(weddingId);
+      
+      if (!status || !status.isLive) {
+        return res.json({
+          isLive: false,
+          message: "The wedding broadcast hasn't started yet. Check back soon!"
+        });
+      }
+      
+      // Build public-safe response
+      const publicFeed: any = {
+        isLive: true,
+        lastUpdatedAt: status.lastUpdatedAt,
+        lastBroadcastMessage: status.lastBroadcastMessage
+      };
+      
+      // Include current event info if available
+      if (status.currentEventId) {
+        const event = await storage.getEvent(status.currentEventId);
+        if (event) {
+          publicFeed.currentEvent = {
+            name: event.name,
+            eventType: event.type,
+            date: event.date,
+            time: event.time,
+            location: event.location
+          };
+        }
+      }
+      
+      // Include current stage progress if available
+      if (status.currentStageId) {
+        const stage = await storage.getRitualStage(status.currentStageId);
+        if (stage) {
+          const latestUpdate = await storage.getLatestRitualStageUpdate(stage.id);
+          
+          // Get all stages for this event to show progress
+          const allStages = await storage.getRitualStagesByEvent(stage.eventId);
+          const stagesWithStatus = await Promise.all(
+            allStages.map(async (s) => {
+              const update = await storage.getLatestRitualStageUpdate(s.id);
+              return {
+                id: s.id,
+                displayName: s.displayName,
+                description: s.description,
+                displayOrder: s.displayOrder,
+                guestInstructions: s.guestInstructions,
+                status: update?.status || 'pending',
+                delayMinutes: update?.delayMinutes || 0
+              };
+            })
+          );
+          
+          publicFeed.ritualProgress = {
+            currentStage: {
+              displayName: stage.displayName,
+              description: stage.description,
+              guestInstructions: stage.guestInstructions,
+              status: latestUpdate?.status || 'pending',
+              message: latestUpdate?.message,
+              delayMinutes: latestUpdate?.delayMinutes || 0
+            },
+            allStages: stagesWithStatus
+          };
+        }
+      }
+      
+      // Include gap information if in a gap period
+      if (status.currentGapId) {
+        const gap = await storage.getGapWindow(status.currentGapId);
+        if (gap) {
+          const recommendations = await storage.getRecommendationsByGapWindow(gap.id);
+          publicFeed.currentGap = {
+            label: gap.label,
+            startTime: gap.startTime,
+            endTime: gap.endTime,
+            shuttleSchedule: gap.shuttleSchedule,
+            specialInstructions: gap.specialInstructions,
+            recommendations: recommendations.map(r => ({
+              name: r.name,
+              type: r.type,
+              description: r.description,
+              address: r.address,
+              mapUrl: r.mapUrl,
+              estimatedTravelTime: r.estimatedTravelTime,
+              priceLevel: r.priceLevel,
+              photoUrl: r.photoUrl
+            }))
+          };
+        }
+      }
+      
+      res.json(publicFeed);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
   });
 
   const httpServer = createServer(app);
