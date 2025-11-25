@@ -20,7 +20,8 @@ import { insertGuestSchema, insertHouseholdSchema, type Wedding, type Guest, typ
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
-import { Trash2, Upload, Users, Link as LinkIcon, MailCheck, Copy, Send, BarChart3, Download, QrCode, ListFilter } from "lucide-react";
+import { Trash2, Upload, Users, Link as LinkIcon, MailCheck, Copy, Send, BarChart3, Download, QrCode, ListFilter, Scissors, MoreVertical } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import QRCode from "qrcode";
 
 const guestFormSchema = insertGuestSchema.extend({
@@ -106,6 +107,11 @@ export default function Guests() {
   const [qrCodeDialogOpen, setQrCodeDialogOpen] = useState(false);
   const [selectedHouseholdForQR, setSelectedHouseholdForQR] = useState<Household | null>(null);
   const [qrCodeDataURL, setQrCodeDataURL] = useState<string>("");
+
+  // Cut list state
+  const [cutListDialogOpen, setCutListDialogOpen] = useState(false);
+  const [householdToCut, setHouseholdToCut] = useState<Household | null>(null);
+  const [cutReason, setCutReason] = useState("");
 
   const { data: weddings, isLoading: weddingsLoading } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
@@ -479,6 +485,44 @@ export default function Guests() {
     },
   });
 
+  const addToCutListMutation = useMutation({
+    mutationFn: async (data: { householdId: string; cutReason?: string }) => {
+      return await apiRequest("POST", `/api/weddings/${wedding?.id}/cut-list`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/households", wedding?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "cut-list"] });
+      setCutListDialogOpen(false);
+      setHouseholdToCut(null);
+      setCutReason("");
+      toast({
+        title: "Moved to cut list",
+        description: "Household has been moved to the cut list. You can restore it from Guest Planning.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to move household to cut list",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleMoveToCutList = (household: Household) => {
+    setHouseholdToCut(household);
+    setCutReason("");
+    setCutListDialogOpen(true);
+  };
+
+  const confirmMoveToCutList = () => {
+    if (!householdToCut) return;
+    addToCutListMutation.mutate({
+      householdId: householdToCut.id,
+      cutReason: cutReason || undefined,
+    });
+  };
+
   const handleBulkImport = async (guests: any[]) => {
     try {
       const guestsWithWeddingId = guests.map(guest => ({
@@ -814,14 +858,34 @@ export default function Guests() {
                             {household.maxCount} {household.maxCount === 1 ? 'seat' : 'seats'} • {householdGuests.length} {householdGuests.length === 1 ? 'guest' : 'guests'}
                           </CardDescription>
                         </div>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleEditHousehold(household)}
-                          data-testid={`button-edit-household-${household.id}`}
-                        >
-                          Edit
-                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              data-testid={`button-household-menu-${household.id}`}
+                            >
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => handleEditHousehold(household)}
+                              data-testid={`menu-edit-household-${household.id}`}
+                            >
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => handleMoveToCutList(household)}
+                              className="text-destructive"
+                              data-testid={`menu-cut-household-${household.id}`}
+                            >
+                              <Scissors className="w-4 h-4 mr-2" />
+                              Move to Cut List
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-3">
@@ -1830,6 +1894,56 @@ export default function Guests() {
               >
                 <Download className="w-4 h-4 mr-2" />
                 Download QR Code
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cut List Confirmation Dialog */}
+      <Dialog open={cutListDialogOpen} onOpenChange={setCutListDialogOpen}>
+        <DialogContent className="sm:max-w-md" data-testid="dialog-cut-list">
+          <DialogHeader>
+            <DialogTitle>Move to Cut List</DialogTitle>
+            <DialogDescription>
+              Move "{householdToCut?.name}" to the cut list. This won't delete them permanently - you can restore the household later from Guest Planning.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="cutReason">Reason (optional)</Label>
+              <Select
+                value={cutReason}
+                onValueChange={(value) => setCutReason(value)}
+              >
+                <SelectTrigger data-testid="select-cut-reason">
+                  <SelectValue placeholder="Select a reason" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="budget">Budget constraints</SelectItem>
+                  <SelectItem value="space">Venue capacity</SelectItem>
+                  <SelectItem value="priority">Lower priority</SelectItem>
+                  <SelectItem value="other">Other reason</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="flex gap-2 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setCutListDialogOpen(false)}
+                data-testid="button-cancel-cut"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={confirmMoveToCutList}
+                disabled={addToCutListMutation.isPending}
+                data-testid="button-confirm-cut"
+              >
+                {addToCutListMutation.isPending ? "Moving..." : "Move to Cut List"}
               </Button>
             </div>
           </div>
