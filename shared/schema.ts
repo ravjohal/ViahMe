@@ -274,6 +274,9 @@ export const households = pgTable("households", {
   maxCount: integer("max_count").notNull().default(1), // Total seats allocated (e.g., 4)
   affiliation: text("affiliation").notNull().default("bride"), // "bride" | "groom" | "mutual"
   relationshipTier: text("relationship_tier").notNull().default("friend"), // "immediate_family" | "extended_family" | "friend" | "parents_friend"
+  // Priority and source tracking for advanced guest management
+  priorityTier: text("priority_tier").notNull().default("should_invite"), // "must_invite" | "should_invite" | "nice_to_have"
+  sourceId: varchar("source_id"), // Reference to guest_sources table
   magicLinkTokenHash: varchar("magic_link_token_hash").unique(), // HASHED secure token for passwordless access
   magicLinkToken: varchar("magic_link_token"), // Plaintext token for QR/copy functionality
   magicLinkExpires: timestamp("magic_link_expires"), // Token expiration
@@ -1486,4 +1489,195 @@ export type RoleWithPermissions = WeddingRole & {
 export type CollaboratorWithDetails = WeddingCollaborator & {
   role: WeddingRole;
   permissions: RolePermission[];
+};
+
+// ============================================================================
+// GUEST MANAGEMENT SYSTEM - Advanced guest list management
+// ============================================================================
+
+// Guest Sources - Track who submitted each guest (e.g., "Bride's Mom", "Groom's Grandfather")
+export const guestSources = pgTable("guest_sources", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  name: text("name").notNull(), // "mom", "dad", "grandma", etc.
+  label: text("label").notNull(), // "Bride's Mom", "Groom's Grandfather"
+  side: text("side").notNull().default("bride"), // "bride" | "groom" | "mutual"
+  quotaLimit: integer("quota_limit"), // Optional max guests this source can suggest
+  color: text("color"), // Color for UI display
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertGuestSourceSchema = createInsertSchema(guestSources).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  side: z.enum(["bride", "groom", "mutual"]),
+});
+
+export type InsertGuestSource = z.infer<typeof insertGuestSourceSchema>;
+export type GuestSource = typeof guestSources.$inferSelect;
+
+// Guest Suggestions - For collaborators to suggest guests pending approval
+export const guestSuggestions = pgTable("guest_suggestions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  suggestedBy: varchar("suggested_by").notNull(), // User ID who made the suggestion
+  suggestedByName: text("suggested_by_name"), // Display name of suggester
+  status: text("status").notNull().default("pending"), // "pending" | "approved" | "rejected"
+  
+  // Household suggestion fields
+  householdName: text("household_name").notNull(), // e.g., "The Patel Family"
+  contactEmail: text("contact_email"),
+  maxCount: integer("max_count").notNull().default(1), // Seats requested
+  affiliation: text("affiliation").notNull().default("bride"), // "bride" | "groom" | "mutual"
+  relationshipTier: text("relationship_tier").notNull().default("friend"),
+  priorityTier: text("priority_tier").notNull().default("nice_to_have"), // "must_invite" | "should_invite" | "nice_to_have"
+  
+  // Guest names within household (comma separated or JSON)
+  guestNames: text("guest_names"), // Individual guest names
+  
+  // Source tracking
+  sourceId: varchar("source_id"), // Who submitted originally (e.g., Mom, Grandma)
+  notes: text("notes"), // Suggester's notes
+  
+  // Review fields
+  reviewedBy: varchar("reviewed_by"), // User who reviewed
+  reviewedAt: timestamp("reviewed_at"),
+  rejectionReason: text("rejection_reason"),
+  
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertGuestSuggestionSchema = createInsertSchema(guestSuggestions).omit({
+  id: true,
+  status: true,
+  reviewedBy: true,
+  reviewedAt: true,
+  rejectionReason: true,
+  createdAt: true,
+}).extend({
+  affiliation: z.enum(["bride", "groom", "mutual"]),
+  relationshipTier: z.enum(["immediate_family", "extended_family", "friend", "parents_friend"]),
+  priorityTier: z.enum(["must_invite", "should_invite", "nice_to_have"]),
+});
+
+export type InsertGuestSuggestion = z.infer<typeof insertGuestSuggestionSchema>;
+export type GuestSuggestion = typeof guestSuggestions.$inferSelect;
+
+// Guest List Scenarios - What-if playground for comparing guest lists
+export const guestListScenarios = pgTable("guest_list_scenarios", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  name: text("name").notNull(), // "Dream List", "Budget A", "Tight Budget"
+  description: text("description"),
+  budgetLimit: decimal("budget_limit", { precision: 10, scale: 2 }), // Total budget for this scenario
+  costPerHead: decimal("cost_per_head", { precision: 8, scale: 2 }), // Cost per guest
+  isActive: boolean("is_active").notNull().default(false), // Is this the active/final list?
+  totalSeats: integer("total_seats"), // Calculated total seats in this scenario
+  totalCost: decimal("total_cost", { precision: 10, scale: 2 }), // Calculated total cost
+  createdBy: varchar("created_by").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertGuestListScenarioSchema = createInsertSchema(guestListScenarios).omit({
+  id: true,
+  totalSeats: true,
+  totalCost: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  budgetLimit: z.string().nullable().optional(),
+  costPerHead: z.string().nullable().optional(),
+});
+
+export type InsertGuestListScenario = z.infer<typeof insertGuestListScenarioSchema>;
+export type GuestListScenario = typeof guestListScenarios.$inferSelect;
+
+// Scenario Households - Which households are included in each scenario
+export const scenarioHouseholds = pgTable("scenario_households", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  scenarioId: varchar("scenario_id").notNull(),
+  householdId: varchar("household_id").notNull(),
+  isIncluded: boolean("is_included").notNull().default(true),
+  adjustedMaxCount: integer("adjusted_max_count"), // Override seat count for this scenario
+  notes: text("notes"),
+  addedAt: timestamp("added_at").notNull().defaultNow(),
+});
+
+export const insertScenarioHouseholdSchema = createInsertSchema(scenarioHouseholds).omit({
+  id: true,
+  addedAt: true,
+});
+
+export type InsertScenarioHousehold = z.infer<typeof insertScenarioHouseholdSchema>;
+export type ScenarioHousehold = typeof scenarioHouseholds.$inferSelect;
+
+// Guest Budget Settings - Per-wedding budget configuration
+export const guestBudgetSettings = pgTable("guest_budget_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull().unique(),
+  defaultCostPerHead: decimal("default_cost_per_head", { precision: 8, scale: 2 }),
+  maxGuestBudget: decimal("max_guest_budget", { precision: 10, scale: 2 }),
+  targetGuestCount: integer("target_guest_count"),
+  notes: text("notes"),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertGuestBudgetSettingsSchema = createInsertSchema(guestBudgetSettings).omit({
+  id: true,
+  updatedAt: true,
+}).extend({
+  defaultCostPerHead: z.string().nullable().optional(),
+  maxGuestBudget: z.string().nullable().optional(),
+});
+
+export type InsertGuestBudgetSettings = z.infer<typeof insertGuestBudgetSettingsSchema>;
+export type GuestBudgetSettings = typeof guestBudgetSettings.$inferSelect;
+
+// Cut List - Track households that were removed from guest list
+export const cutListItems = pgTable("cut_list_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  householdId: varchar("household_id").notNull(),
+  cutReason: text("cut_reason"), // "budget", "space", "priority", "other"
+  cutNotes: text("cut_notes"),
+  cutBy: varchar("cut_by").notNull(), // User who cut
+  cutAt: timestamp("cut_at").notNull().defaultNow(),
+  canRestore: boolean("can_restore").notNull().default(true),
+  restoredAt: timestamp("restored_at"),
+  restoredBy: varchar("restored_by"),
+});
+
+export const insertCutListItemSchema = createInsertSchema(cutListItems).omit({
+  id: true,
+  cutAt: true,
+  restoredAt: true,
+  restoredBy: true,
+}).extend({
+  cutReason: z.enum(["budget", "space", "priority", "other"]).optional(),
+});
+
+export type InsertCutListItem = z.infer<typeof insertCutListItemSchema>;
+export type CutListItem = typeof cutListItems.$inferSelect;
+
+// Extended types for guest management
+export type GuestSuggestionWithSource = GuestSuggestion & {
+  source?: GuestSource;
+};
+
+export type ScenarioWithStats = GuestListScenario & {
+  householdCount: number;
+  guestCount: number;
+  remainingBudget?: number;
+};
+
+export type HouseholdWithPriority = Household & {
+  priorityTier?: string;
+  sourceId?: string;
+  source?: GuestSource;
+};
+
+export type CutListItemWithHousehold = CutListItem & {
+  household: Household;
 };
