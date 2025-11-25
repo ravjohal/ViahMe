@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, DollarSign, Users, Briefcase, FileText, Camera, CalendarClock } from "lucide-react";
+import { Calendar, DollarSign, Users, Briefcase, FileText, Camera } from "lucide-react";
 import { useLocation } from "wouter";
 import type { Wedding, Event, BudgetCategory, Contract, Vendor } from "@shared/schema";
 
@@ -164,17 +164,6 @@ export default function Dashboard() {
             </div>
           </Card>
 
-          <Card className="p-6 hover-elevate transition-all cursor-pointer border-2 border-violet-200 bg-gradient-to-br from-violet-50 to-purple-50" onClick={() => setLocation("/vendor-availability")} data-testid="nav-vendor-availability">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 shadow-lg">
-                <CalendarClock className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-violet-600">Vendor Availability</p>
-                <p className="text-xs text-violet-700">Book vendors instantly</p>
-              </div>
-            </div>
-          </Card>
         </div>
 
         <Tabs defaultValue="timeline" className="space-y-6">
