@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -56,6 +57,10 @@ import {
   Shield,
   History,
   Copy,
+  Plus,
+  Eye,
+  Pencil,
+  Ban,
 } from "lucide-react";
 import type {
   Wedding,
@@ -64,6 +69,14 @@ import type {
   CollaboratorActivityLog,
   RolePermission,
 } from "@shared/schema";
+import { PERMISSION_CATEGORIES, type PermissionCategory } from "@shared/schema";
+
+type PermissionLevel = "none" | "view" | "edit";
+
+interface RolePermissionConfig {
+  category: PermissionCategory;
+  level: PermissionLevel;
+}
 
 interface CollaboratorWithDetails extends WeddingCollaborator {
   role: WeddingRole;
@@ -76,6 +89,14 @@ interface InviteResponse extends WeddingCollaborator {
   weddingTitle: string;
 }
 
+const defaultPermissions = (): Record<PermissionCategory, PermissionLevel> => {
+  const perms: Partial<Record<PermissionCategory, PermissionLevel>> = {};
+  Object.keys(PERMISSION_CATEGORIES).forEach((key) => {
+    perms[key as PermissionCategory] = "none";
+  });
+  return perms as Record<PermissionCategory, PermissionLevel>;
+};
+
 export default function Collaborators() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -84,6 +105,11 @@ export default function Collaborators() {
   const [inviteName, setInviteName] = useState("");
   const [selectedRoleId, setSelectedRoleId] = useState("");
   const [lastInviteResult, setLastInviteResult] = useState<InviteResponse | null>(null);
+  
+  const [isCreateRoleOpen, setIsCreateRoleOpen] = useState(false);
+  const [newRoleName, setNewRoleName] = useState("");
+  const [newRoleDescription, setNewRoleDescription] = useState("");
+  const [rolePermissions, setRolePermissions] = useState<Record<PermissionCategory, PermissionLevel>>(defaultPermissions());
 
   const { data: weddings = [] } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
@@ -202,6 +228,56 @@ export default function Collaborators() {
       });
     },
   });
+
+  const createCustomRoleMutation = useMutation({
+    mutationFn: async (data: { name: string; description: string; permissions: Record<PermissionCategory, PermissionLevel> }) => {
+      const res = await apiRequest("POST", `/api/weddings/${weddingId}/roles`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", weddingId, "roles"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", weddingId, "collaborator-activity"] });
+      setIsCreateRoleOpen(false);
+      setNewRoleName("");
+      setNewRoleDescription("");
+      setRolePermissions(defaultPermissions());
+      toast({
+        title: "Role Created",
+        description: "Your custom role has been created successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleCreateRole = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newRoleName) {
+      toast({
+        title: "Error",
+        description: "Please enter a role name",
+        variant: "destructive",
+      });
+      return;
+    }
+    createCustomRoleMutation.mutate({
+      name: newRoleName,
+      description: newRoleDescription,
+      permissions: rolePermissions,
+    });
+  };
+
+  const updatePermission = (category: PermissionCategory, level: PermissionLevel) => {
+    setRolePermissions((prev) => ({
+      ...prev,
+      [category]: level,
+    }));
+  };
 
   const handleInvite = (e: React.FormEvent) => {
     e.preventDefault();
@@ -557,31 +633,158 @@ export default function Collaborators() {
                   )}
                 </Card>
               ) : (
-                <div className="grid gap-4 md:grid-cols-2">
-                  {roles.map((role) => (
-                    <Card key={role.id} className={`p-4 ${role.isOwner ? 'border-primary' : ''}`} data-testid={`card-role-${role.id}`}>
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <h3 className="font-semibold flex items-center gap-2">
-                            {role.displayName}
-                            {role.isOwner && <Badge className="bg-primary">Owner</Badge>}
-                            {role.isSystem && !role.isOwner && <Badge variant="secondary">System</Badge>}
-                          </h3>
-                          <p className="text-sm text-muted-foreground mt-1">{role.description}</p>
+                <div className="space-y-4">
+                  {canManageCollaborators && (
+                    <div className="flex justify-end">
+                      <Dialog open={isCreateRoleOpen} onOpenChange={setIsCreateRoleOpen}>
+                        <DialogTrigger asChild>
+                          <Button
+                            className="bg-gradient-to-r from-orange-600 to-pink-600 hover:from-orange-700 hover:to-pink-700"
+                            data-testid="button-create-custom-role"
+                          >
+                            <Plus className="w-4 h-4 mr-2" />
+                            Create Custom Role
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                          <form onSubmit={handleCreateRole}>
+                            <DialogHeader>
+                              <DialogTitle>Create Custom Role</DialogTitle>
+                              <DialogDescription>
+                                Define a custom role with specific permissions for each module.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-6 py-4">
+                              <div className="space-y-2">
+                                <Label htmlFor="role-name">Role Name</Label>
+                                <Input
+                                  id="role-name"
+                                  placeholder="e.g., Wedding Coordinator, Day-of Helper"
+                                  value={newRoleName}
+                                  onChange={(e) => setNewRoleName(e.target.value)}
+                                  data-testid="input-role-name"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="role-description">Description (optional)</Label>
+                                <Input
+                                  id="role-description"
+                                  placeholder="What is this role responsible for?"
+                                  value={newRoleDescription}
+                                  onChange={(e) => setNewRoleDescription(e.target.value)}
+                                  data-testid="input-role-description"
+                                />
+                              </div>
+                              <Separator />
+                              <div className="space-y-4">
+                                <h4 className="font-semibold">Module Permissions</h4>
+                                <p className="text-sm text-muted-foreground">
+                                  Set access level for each module. "None" means no access, "View" allows read-only access, "Edit" allows full modification.
+                                </p>
+                                <div className="space-y-3">
+                                  {Object.entries(PERMISSION_CATEGORIES).map(([key, config]) => {
+                                    const category = key as PermissionCategory;
+                                    const currentLevel = rolePermissions[category];
+                                    return (
+                                      <div
+                                        key={category}
+                                        className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                                        data-testid={`permission-row-${category}`}
+                                      >
+                                        <div className="flex-1">
+                                          <p className="font-medium text-sm">{config.label}</p>
+                                          <p className="text-xs text-muted-foreground">{config.description}</p>
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                          <Button
+                                            type="button"
+                                            size="sm"
+                                            variant={currentLevel === "none" ? "default" : "outline"}
+                                            className={`w-16 ${currentLevel === "none" ? "bg-destructive/80 hover:bg-destructive" : ""}`}
+                                            onClick={() => updatePermission(category, "none")}
+                                            data-testid={`button-permission-${category}-none`}
+                                          >
+                                            <Ban className="w-3 h-3 mr-1" />
+                                            None
+                                          </Button>
+                                          <Button
+                                            type="button"
+                                            size="sm"
+                                            variant={currentLevel === "view" ? "default" : "outline"}
+                                            className={currentLevel === "view" ? "bg-blue-600 hover:bg-blue-700" : ""}
+                                            onClick={() => updatePermission(category, "view")}
+                                            data-testid={`button-permission-${category}-view`}
+                                          >
+                                            <Eye className="w-3 h-3 mr-1" />
+                                            View
+                                          </Button>
+                                          <Button
+                                            type="button"
+                                            size="sm"
+                                            variant={currentLevel === "edit" ? "default" : "outline"}
+                                            className={currentLevel === "edit" ? "bg-green-600 hover:bg-green-700" : ""}
+                                            onClick={() => updatePermission(category, "edit")}
+                                            data-testid={`button-permission-${category}-edit`}
+                                          >
+                                            <Pencil className="w-3 h-3 mr-1" />
+                                            Edit
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            </div>
+                            <DialogFooter>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setIsCreateRoleOpen(false)}
+                                data-testid="button-cancel-role"
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                type="submit"
+                                disabled={createCustomRoleMutation.isPending || !newRoleName}
+                                className="bg-gradient-to-r from-orange-600 to-pink-600 hover:from-orange-700 hover:to-pink-700"
+                                data-testid="button-save-role"
+                              >
+                                {createCustomRoleMutation.isPending ? "Creating..." : "Create Role"}
+                              </Button>
+                            </DialogFooter>
+                          </form>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
+                  )}
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {roles.map((role) => (
+                      <Card key={role.id} className={`p-4 ${role.isOwner ? 'border-primary' : ''}`} data-testid={`card-role-${role.id}`}>
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <h3 className="font-semibold flex items-center gap-2">
+                              {role.displayName}
+                              {role.isOwner && <Badge className="bg-primary">Owner</Badge>}
+                              {role.isSystem && !role.isOwner && <Badge variant="secondary">System</Badge>}
+                              {!role.isSystem && !role.isOwner && <Badge variant="outline">Custom</Badge>}
+                            </h3>
+                            <p className="text-sm text-muted-foreground mt-1">{role.description}</p>
+                          </div>
                         </div>
-                      </div>
-                      {!role.isOwner && (
-                        <div className="text-xs text-muted-foreground">
-                          <p className="font-medium mb-1">Permissions:</p>
-                          <p>
-                            {role.isOwner
-                              ? "Full access to all features"
-                              : "Permissions are set based on role configuration"}
-                          </p>
-                        </div>
-                      )}
-                    </Card>
-                  ))}
+                        {role.isOwner ? (
+                          <div className="text-xs text-muted-foreground">
+                            <p className="font-medium">Full access to all features</p>
+                          </div>
+                        ) : (
+                          <div className="text-xs text-muted-foreground">
+                            <p className="font-medium mb-1">Permissions configured</p>
+                          </div>
+                        )}
+                      </Card>
+                    ))}
+                  </div>
                 </div>
               )}
             </TabsContent>

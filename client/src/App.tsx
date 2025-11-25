@@ -5,6 +5,8 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { PermissionsProvider } from "@/hooks/use-permissions";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AppHeader } from "@/components/app-header";
 import NotFound from "@/pages/not-found";
 import Onboarding from "@/pages/onboarding";
@@ -48,6 +50,7 @@ import Collaborators from "@/pages/collaborators";
 function Router() {
   return (
     <Switch>
+      {/* Public routes */}
       <Route path="/" component={Landing} />
       <Route path="/rsvp/:token" component={RsvpPortal} />
       <Route path="/live/:weddingId" component={GuestLiveFeed} />
@@ -58,33 +61,109 @@ function Router() {
       <Route path="/verify-email" component={VerifyEmail} />
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/reset-password" component={ResetPassword} />
-      <Route path="/dashboard" component={Dashboard} />
-      <Route path="/vendors" component={Vendors} />
-      <Route path="/guests" component={Guests} />
-      <Route path="/tasks" component={Tasks} />
-      <Route path="/timeline" component={Timeline} />
-      <Route path="/budget" component={Budget} />
-      <Route path="/budget-intelligence" component={BudgetIntelligence} />
-      <Route path="/contracts" component={Contracts} />
-      <Route path="/vendor-dashboard" component={VendorDashboard} />
-      <Route path="/messages" component={Messages} />
-      <Route path="/playlists" component={Playlists} />
-      <Route path="/documents" component={Documents} />
-      <Route path="/website-builder" component={WebsiteBuilder} />
-      <Route path="/photo-gallery" component={PhotoGallery} />
-      <Route path="/vendor-availability" component={VendorAvailabilityCalendar} />
-      <Route path="/vendor-analytics" component={VendorAnalytics} />
-      <Route path="/couple-analytics" component={CoupleAnalytics} />
-      <Route path="/invitations" component={Invitations} />
+      <Route path="/wedding/:slug" component={GuestWebsite} />
+      <Route path="/cultural-info" component={CulturalInfo} />
       <Route path="/checkout" component={Checkout} />
       <Route path="/order-confirmation" component={OrderConfirmation} />
-      <Route path="/shopping" component={Shopping} />
-      <Route path="/cultural-info" component={CulturalInfo} />
-      <Route path="/gap-concierge" component={GapConcierge} />
-      <Route path="/ritual-control" component={RitualControl} />
-      <Route path="/collaborators" component={Collaborators} />
-      <Route path="/settings" component={Settings} />
-      <Route path="/wedding/:slug" component={GuestWebsite} />
+      
+      {/* Dashboard - no specific permission, just authentication */}
+      <Route path="/dashboard" component={Dashboard} />
+      <Route path="/vendor-dashboard" component={VendorDashboard} />
+      <Route path="/couple-analytics" component={CoupleAnalytics} />
+      <Route path="/vendor-analytics" component={VendorAnalytics} />
+      
+      {/* Protected routes with permission checks */}
+      <Route path="/guests">
+        <ProtectedRoute requiredPermission="guests">
+          <Guests />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/invitations">
+        <ProtectedRoute requiredPermission="invitations">
+          <Invitations />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/vendors">
+        <ProtectedRoute requiredPermission="vendors">
+          <Vendors />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/vendor-availability">
+        <ProtectedRoute requiredPermission="vendors">
+          <VendorAvailabilityCalendar />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/tasks">
+        <ProtectedRoute requiredPermission="tasks">
+          <Tasks />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/timeline">
+        <ProtectedRoute requiredPermission="timeline">
+          <Timeline />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/budget">
+        <ProtectedRoute requiredPermission="budget">
+          <Budget />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/budget-intelligence">
+        <ProtectedRoute requiredPermission="budget">
+          <BudgetIntelligence />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/contracts">
+        <ProtectedRoute requiredPermission="contracts">
+          <Contracts />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/messages" component={Messages} />
+      <Route path="/playlists">
+        <ProtectedRoute requiredPermission="playlists">
+          <Playlists />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/documents">
+        <ProtectedRoute requiredPermission="documents">
+          <Documents />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/website-builder">
+        <ProtectedRoute requiredPermission="website">
+          <WebsiteBuilder />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/photo-gallery">
+        <ProtectedRoute requiredPermission="photos">
+          <PhotoGallery />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/shopping">
+        <ProtectedRoute requiredPermission="shopping">
+          <Shopping />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/gap-concierge">
+        <ProtectedRoute requiredPermission="concierge">
+          <GapConcierge />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/ritual-control">
+        <ProtectedRoute requiredPermission="concierge">
+          <RitualControl />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/collaborators">
+        <ProtectedRoute requiredPermission="collaborators">
+          <Collaborators />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/settings">
+        <ProtectedRoute requiredPermission="settings">
+          <Settings />
+        </ProtectedRoute>
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );
@@ -131,10 +210,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <AppLayout />
-        </TooltipProvider>
+        <PermissionsProvider>
+          <TooltipProvider>
+            <Toaster />
+            <AppLayout />
+          </TooltipProvider>
+        </PermissionsProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

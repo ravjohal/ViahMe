@@ -35,6 +35,7 @@ import {
   insertRitualStageUpdateSchema,
   insertGuestNotificationSchema,
   insertLiveWeddingStatusSchema,
+  insertWeddingRoleSchema,
 } from "@shared/schema";
 import { seedVendors, seedBudgetBenchmarks } from "./seed-data";
 import {
@@ -3393,12 +3394,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "You do not have permission to manage roles" });
       }
       
-      const roleData = insertWeddingRoleSchema.parse({ ...req.body, weddingId });
+      // Support both object format {category: level} and array format [{category, level}]
+      let permissionsArray: Array<{ category: string; level: string }> = [];
+      if (req.body.permissions) {
+        if (Array.isArray(req.body.permissions)) {
+          permissionsArray = req.body.permissions;
+        } else if (typeof req.body.permissions === 'object') {
+          // Convert object format to array format, filtering out "none" permissions
+          permissionsArray = Object.entries(req.body.permissions)
+            .filter(([_, level]) => level !== "none")
+            .map(([category, level]) => ({ category, level: level as string }));
+        }
+      }
+      
+      const roleData = insertWeddingRoleSchema.parse({
+        weddingId,
+        name: req.body.name,
+        displayName: req.body.name, // Use name as displayName for custom roles
+        description: req.body.description || null,
+        isSystem: false,
+        isOwner: false,
+      });
       const role = await storage.createWeddingRole(roleData);
       
-      // If permissions are provided, set them
-      if (req.body.permissions && Array.isArray(req.body.permissions)) {
-        await storage.setRolePermissions(role.id, req.body.permissions);
+      // Set permissions if any were provided
+      if (permissionsArray.length > 0) {
+        await storage.setRolePermissions(role.id, permissionsArray as any);
       }
       
       // Log activity

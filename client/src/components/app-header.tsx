@@ -13,33 +13,43 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
+import { usePermissions } from "@/hooks/use-permissions";
 import type { Wedding } from "@shared/schema";
+import type { PermissionCategory } from "@shared/schema";
 import { differenceInDays } from "date-fns";
 import { cn } from "@/lib/utils";
 
-const NAV_ITEMS = [
+interface NavItem {
+  path: string;
+  label: string;
+  icon: any;
+  permission?: PermissionCategory;
+}
+
+const NAV_ITEMS: NavItem[] = [
   { path: "/dashboard", label: "Dashboard", icon: Home },
-  { path: "/timeline", label: "Timeline", icon: Clock },
-  { path: "/gap-concierge", label: "Gap Concierge", icon: Coffee },
-  { path: "/ritual-control", label: "Live Control", icon: Radio },
-  { path: "/vendors", label: "Vendors", icon: UserCircle },
-  { path: "/guests", label: "Guests", icon: Users },
-  { path: "/collaborators", label: "Team", icon: UsersRound },
-  { path: "/tasks", label: "Tasks", icon: CheckSquare },
-  { path: "/budget", label: "Budget", icon: DollarSign },
-  { path: "/shopping", label: "Shopping", icon: Package },
+  { path: "/timeline", label: "Timeline", icon: Clock, permission: "timeline" },
+  { path: "/gap-concierge", label: "Gap Concierge", icon: Coffee, permission: "concierge" },
+  { path: "/ritual-control", label: "Live Control", icon: Radio, permission: "concierge" },
+  { path: "/vendors", label: "Vendors", icon: UserCircle, permission: "vendors" },
+  { path: "/guests", label: "Guests", icon: Users, permission: "guests" },
+  { path: "/collaborators", label: "Team", icon: UsersRound, permission: "collaborators" },
+  { path: "/tasks", label: "Tasks", icon: CheckSquare, permission: "tasks" },
+  { path: "/budget", label: "Budget", icon: DollarSign, permission: "budget" },
+  { path: "/shopping", label: "Shopping", icon: Package, permission: "shopping" },
   { path: "/cultural-info", label: "Cultural Info", icon: BookOpen },
-  { path: "/invitations", label: "Invitations", icon: ShoppingBag },
-  { path: "/contracts", label: "Contracts", icon: FileText },
+  { path: "/invitations", label: "Invitations", icon: ShoppingBag, permission: "invitations" },
+  { path: "/contracts", label: "Contracts", icon: FileText, permission: "contracts" },
   { path: "/messages", label: "Messages", icon: MessageSquare },
-  { path: "/playlists", label: "Playlists", icon: Music },
-  { path: "/photo-gallery", label: "Photos", icon: Image },
-  { path: "/documents", label: "Documents", icon: FileText },
+  { path: "/playlists", label: "Playlists", icon: Music, permission: "playlists" },
+  { path: "/photo-gallery", label: "Photos", icon: Image, permission: "photos" },
+  { path: "/documents", label: "Documents", icon: FileText, permission: "documents" },
 ];
 
 export function AppHeader() {
   const [location] = useLocation();
   const { user, logout } = useAuth();
+  const { canView, isOwner } = usePermissions();
   
   const { data: weddings } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
@@ -55,6 +65,14 @@ export function AppHeader() {
     if (!user) return "?";
     return user.email.charAt(0).toUpperCase();
   };
+
+  const hasAccess = (item: NavItem): boolean => {
+    if (!item.permission) return true;
+    if (isOwner) return true;
+    return canView(item.permission);
+  };
+
+  const visibleNavItems = NAV_ITEMS.filter(hasAccess);
 
   return (
     <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -76,7 +94,7 @@ export function AppHeader() {
 
         {/* Desktop Navigation */}
         <nav className="hidden lg:flex items-center gap-1 flex-1 justify-center">
-          {NAV_ITEMS.slice(0, 6).map((item) => {
+          {visibleNavItems.slice(0, 6).map((item) => {
             const Icon = item.icon;
             const isActive = location === item.path;
             return (
@@ -97,30 +115,32 @@ export function AppHeader() {
             );
           })}
           
-          {/* More Menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="gap-2" data-testid="button-more-menu">
-                <Menu className="w-4 h-4" />
-                <span className="hidden xl:inline">More</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuLabel>More Pages</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {NAV_ITEMS.slice(6).map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link key={item.path} href={item.path}>
-                    <DropdownMenuItem className="gap-2 cursor-pointer" data-testid={`nav-dropdown-${item.path.replace("/", "")}`}>
-                      <Icon className="w-4 h-4" />
-                      {item.label}
-                    </DropdownMenuItem>
-                  </Link>
-                );
-              })}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* More Menu - only show if there are more items */}
+          {visibleNavItems.length > 6 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="gap-2" data-testid="button-more-menu">
+                  <Menu className="w-4 h-4" />
+                  <span className="hidden xl:inline">More</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuLabel>More Pages</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {visibleNavItems.slice(6).map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <Link key={item.path} href={item.path}>
+                      <DropdownMenuItem className="gap-2 cursor-pointer" data-testid={`nav-dropdown-${item.path.replace("/", "")}`}>
+                        <Icon className="w-4 h-4" />
+                        {item.label}
+                      </DropdownMenuItem>
+                    </Link>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </nav>
 
         {/* Mobile Navigation Menu */}
@@ -134,7 +154,7 @@ export function AppHeader() {
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>Navigation</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              {NAV_ITEMS.map((item) => {
+              {visibleNavItems.map((item) => {
                 const Icon = item.icon;
                 return (
                   <Link key={item.path} href={item.path}>
