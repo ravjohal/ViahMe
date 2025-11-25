@@ -1293,3 +1293,197 @@ export const insertLiveWeddingStatusSchema = createInsertSchema(liveWeddingStatu
 
 export type InsertLiveWeddingStatus = z.infer<typeof insertLiveWeddingStatusSchema>;
 export type LiveWeddingStatus = typeof liveWeddingStatus.$inferSelect;
+
+// ============================================================================
+// ROLES & PERMISSIONS - Wedding-scoped access control
+// ============================================================================
+
+// Define all available permissions in the system
+export const PERMISSION_CATEGORIES = {
+  // Guest Management
+  guests: {
+    label: "Guest Management",
+    description: "Manage guest lists, households, and RSVPs",
+    permissions: ["view", "edit", "manage"] as const,
+  },
+  invitations: {
+    label: "Invitations",
+    description: "Send and manage invitations",
+    permissions: ["view", "edit", "manage"] as const,
+  },
+  // Planning
+  timeline: {
+    label: "Timeline & Events",
+    description: "Manage events, schedule, and ceremony timeline",
+    permissions: ["view", "edit", "manage"] as const,
+  },
+  tasks: {
+    label: "Tasks",
+    description: "View and manage wedding tasks",
+    permissions: ["view", "edit", "manage"] as const,
+  },
+  // Vendors & Budget
+  vendors: {
+    label: "Vendors",
+    description: "Manage vendor relationships and bookings",
+    permissions: ["view", "edit", "manage"] as const,
+  },
+  budget: {
+    label: "Budget & Payments",
+    description: "View and manage wedding budget",
+    permissions: ["view", "edit", "manage"] as const,
+  },
+  contracts: {
+    label: "Contracts",
+    description: "View and sign vendor contracts",
+    permissions: ["view", "edit", "manage"] as const,
+  },
+  // Content
+  website: {
+    label: "Wedding Website",
+    description: "Manage the public wedding website",
+    permissions: ["view", "edit", "manage"] as const,
+  },
+  photos: {
+    label: "Photos & Media",
+    description: "Upload and manage photos",
+    permissions: ["view", "edit", "manage"] as const,
+  },
+  documents: {
+    label: "Documents",
+    description: "Access and manage documents",
+    permissions: ["view", "edit", "manage"] as const,
+  },
+  playlists: {
+    label: "Music & Playlists",
+    description: "Manage music playlists",
+    permissions: ["view", "edit", "manage"] as const,
+  },
+  // Concierge
+  concierge: {
+    label: "Guest Concierge",
+    description: "Manage live updates, gaps, and rituals",
+    permissions: ["view", "edit", "manage"] as const,
+  },
+  // Shopping
+  shopping: {
+    label: "Shopping & Measurements",
+    description: "Track shopping and measurements",
+    permissions: ["view", "edit", "manage"] as const,
+  },
+  // Admin
+  settings: {
+    label: "Wedding Settings",
+    description: "Modify wedding settings",
+    permissions: ["view", "edit", "manage"] as const,
+  },
+  collaborators: {
+    label: "Team Members",
+    description: "Invite and manage collaborators",
+    permissions: ["view", "manage"] as const,
+  },
+} as const;
+
+export type PermissionCategory = keyof typeof PERMISSION_CATEGORIES;
+export type PermissionLevel = "view" | "edit" | "manage";
+
+// Wedding Roles - system and custom roles
+export const weddingRoles = pgTable("wedding_roles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  name: text("name").notNull(), // 'owner', 'wedding_planner', 'family_member', 'custom'
+  displayName: text("display_name").notNull(), // User-friendly name
+  description: text("description"),
+  isSystem: boolean("is_system").notNull().default(false), // System roles can't be deleted
+  isOwner: boolean("is_owner").notNull().default(false), // Owner has full access
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertWeddingRoleSchema = createInsertSchema(weddingRoles).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertWeddingRole = z.infer<typeof insertWeddingRoleSchema>;
+export type WeddingRole = typeof weddingRoles.$inferSelect;
+
+// Role Permissions - What each role can do
+export const rolePermissions = pgTable("role_permissions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  roleId: varchar("role_id").notNull(),
+  category: text("category").notNull(), // Permission category key
+  level: text("level").notNull(), // 'view' | 'edit' | 'manage'
+});
+
+export const insertRolePermissionSchema = createInsertSchema(rolePermissions).omit({
+  id: true,
+}).extend({
+  category: z.string().min(1),
+  level: z.enum(["view", "edit", "manage"]),
+});
+
+export type InsertRolePermission = z.infer<typeof insertRolePermissionSchema>;
+export type RolePermission = typeof rolePermissions.$inferSelect;
+
+// Wedding Collaborators - Users who can access a wedding
+export const weddingCollaborators = pgTable("wedding_collaborators", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  userId: varchar("user_id"), // Null until they accept and create account
+  email: text("email").notNull(), // Email to send invitation to
+  roleId: varchar("role_id").notNull(),
+  status: text("status").notNull().default("pending"), // 'pending' | 'accepted' | 'declined' | 'revoked'
+  inviteToken: text("invite_token"), // Hashed token for magic link
+  inviteTokenExpires: timestamp("invite_token_expires"),
+  invitedBy: varchar("invited_by").notNull(), // User who sent the invite
+  invitedAt: timestamp("invited_at").notNull().defaultNow(),
+  acceptedAt: timestamp("accepted_at"),
+  displayName: text("display_name"), // Optional name for the collaborator
+  notes: text("notes"), // Private notes about this collaborator
+});
+
+export const insertWeddingCollaboratorSchema = createInsertSchema(weddingCollaborators).omit({
+  id: true,
+  inviteToken: true,
+  inviteTokenExpires: true,
+  invitedAt: true,
+  acceptedAt: true,
+}).extend({
+  email: z.string().email(),
+  status: z.enum(["pending", "accepted", "declined", "revoked"]).optional(),
+});
+
+export type InsertWeddingCollaborator = z.infer<typeof insertWeddingCollaboratorSchema>;
+export type WeddingCollaborator = typeof weddingCollaborators.$inferSelect;
+
+// Collaborator Activity Log - Track actions for transparency
+export const collaboratorActivityLog = pgTable("collaborator_activity_log", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  collaboratorId: varchar("collaborator_id"), // Who did the action
+  userId: varchar("user_id"), // The user account if known
+  action: text("action").notNull(), // 'invited' | 'accepted' | 'declined' | 'revoked' | 'role_changed' | etc.
+  targetType: text("target_type"), // What was affected: 'guest', 'vendor', 'event', etc.
+  targetId: varchar("target_id"), // ID of the affected entity
+  details: jsonb("details"), // Additional action details
+  performedAt: timestamp("performed_at").notNull().defaultNow(),
+});
+
+export const insertCollaboratorActivityLogSchema = createInsertSchema(collaboratorActivityLog).omit({
+  id: true,
+  performedAt: true,
+});
+
+export type InsertCollaboratorActivityLog = z.infer<typeof insertCollaboratorActivityLogSchema>;
+export type CollaboratorActivityLog = typeof collaboratorActivityLog.$inferSelect;
+
+// Type for role with permissions
+export type RoleWithPermissions = WeddingRole & {
+  permissions: RolePermission[];
+};
+
+// Type for collaborator with role and user info
+export type CollaboratorWithDetails = WeddingCollaborator & {
+  role: WeddingRole;
+  permissions: RolePermission[];
+};
