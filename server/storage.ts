@@ -55,6 +55,18 @@ import {
   type InsertMeasurementProfile,
   type ShoppingOrderItem,
   type InsertShoppingOrderItem,
+  type GapWindow,
+  type InsertGapWindow,
+  type GapRecommendation,
+  type InsertGapRecommendation,
+  type RitualStage,
+  type InsertRitualStage,
+  type RitualStageUpdate,
+  type InsertRitualStageUpdate,
+  type GuestNotification,
+  type InsertGuestNotification,
+  type LiveWeddingStatus,
+  type InsertLiveWeddingStatus,
 } from "@shared/schema";
 import { randomUUID, randomBytes } from "crypto";
 import bcrypt from "bcrypt";
@@ -344,6 +356,43 @@ export interface IStorage {
   createShoppingOrderItem(item: InsertShoppingOrderItem): Promise<ShoppingOrderItem>;
   updateShoppingOrderItem(id: string, item: Partial<InsertShoppingOrderItem>): Promise<ShoppingOrderItem | undefined>;
   deleteShoppingOrderItem(id: string): Promise<boolean>;
+
+  // Gap Windows (Guest Concierge)
+  getGapWindow(id: string): Promise<GapWindow | undefined>;
+  getGapWindowsByWedding(weddingId: string): Promise<GapWindow[]>;
+  createGapWindow(gap: InsertGapWindow): Promise<GapWindow>;
+  updateGapWindow(id: string, gap: Partial<InsertGapWindow>): Promise<GapWindow | undefined>;
+  deleteGapWindow(id: string): Promise<boolean>;
+  activateGapWindow(id: string, isActive: boolean): Promise<GapWindow | undefined>;
+
+  // Gap Recommendations
+  getGapRecommendation(id: string): Promise<GapRecommendation | undefined>;
+  getRecommendationsByGapWindow(gapWindowId: string): Promise<GapRecommendation[]>;
+  createGapRecommendation(rec: InsertGapRecommendation): Promise<GapRecommendation>;
+  updateGapRecommendation(id: string, rec: Partial<InsertGapRecommendation>): Promise<GapRecommendation | undefined>;
+  deleteGapRecommendation(id: string): Promise<boolean>;
+
+  // Ritual Stages
+  getRitualStage(id: string): Promise<RitualStage | undefined>;
+  getRitualStagesByEvent(eventId: string): Promise<RitualStage[]>;
+  createRitualStage(stage: InsertRitualStage): Promise<RitualStage>;
+  updateRitualStage(id: string, stage: Partial<InsertRitualStage>): Promise<RitualStage | undefined>;
+  deleteRitualStage(id: string): Promise<boolean>;
+
+  // Ritual Stage Updates
+  getRitualStageUpdates(ritualStageId: string): Promise<RitualStageUpdate[]>;
+  getLatestRitualStageUpdate(ritualStageId: string): Promise<RitualStageUpdate | undefined>;
+  createRitualStageUpdate(update: InsertRitualStageUpdate): Promise<RitualStageUpdate>;
+
+  // Guest Notifications
+  getGuestNotification(id: string): Promise<GuestNotification | undefined>;
+  getNotificationsByWedding(weddingId: string): Promise<GuestNotification[]>;
+  createGuestNotification(notification: InsertGuestNotification): Promise<GuestNotification>;
+
+  // Live Wedding Status
+  getLiveWeddingStatus(weddingId: string): Promise<LiveWeddingStatus | undefined>;
+  createOrUpdateLiveWeddingStatus(status: InsertLiveWeddingStatus): Promise<LiveWeddingStatus>;
+  updateLiveWeddingStatus(weddingId: string, updates: Partial<InsertLiveWeddingStatus>): Promise<LiveWeddingStatus | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -3817,6 +3866,260 @@ export class DBStorage implements IStorage {
       .where(eq(schema.shoppingOrderItems.id, id))
       .returning();
     return result.length > 0;
+  }
+
+  // ============================================================================
+  // Gap Windows (Guest Concierge)
+  // ============================================================================
+
+  async getGapWindow(id: string): Promise<GapWindow | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.gapWindows)
+      .where(eq(schema.gapWindows.id, id))
+      .limit(1);
+    return result[0];
+  }
+
+  async getGapWindowsByWedding(weddingId: string): Promise<GapWindow[]> {
+    return await this.db
+      .select()
+      .from(schema.gapWindows)
+      .where(eq(schema.gapWindows.weddingId, weddingId))
+      .orderBy(schema.gapWindows.startTime);
+  }
+
+  async createGapWindow(gap: InsertGapWindow): Promise<GapWindow> {
+    const result = await this.db
+      .insert(schema.gapWindows)
+      .values(gap)
+      .returning();
+    return result[0];
+  }
+
+  async updateGapWindow(id: string, gap: Partial<InsertGapWindow>): Promise<GapWindow | undefined> {
+    const result = await this.db
+      .update(schema.gapWindows)
+      .set(gap)
+      .where(eq(schema.gapWindows.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteGapWindow(id: string): Promise<boolean> {
+    const result = await this.db
+      .delete(schema.gapWindows)
+      .where(eq(schema.gapWindows.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  async activateGapWindow(id: string, isActive: boolean): Promise<GapWindow | undefined> {
+    const result = await this.db
+      .update(schema.gapWindows)
+      .set({ isActive })
+      .where(eq(schema.gapWindows.id, id))
+      .returning();
+    return result[0];
+  }
+
+  // ============================================================================
+  // Gap Recommendations
+  // ============================================================================
+
+  async getGapRecommendation(id: string): Promise<GapRecommendation | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.gapRecommendations)
+      .where(eq(schema.gapRecommendations.id, id))
+      .limit(1);
+    return result[0];
+  }
+
+  async getRecommendationsByGapWindow(gapWindowId: string): Promise<GapRecommendation[]> {
+    return await this.db
+      .select()
+      .from(schema.gapRecommendations)
+      .where(eq(schema.gapRecommendations.gapWindowId, gapWindowId))
+      .orderBy(schema.gapRecommendations.order);
+  }
+
+  async createGapRecommendation(rec: InsertGapRecommendation): Promise<GapRecommendation> {
+    const result = await this.db
+      .insert(schema.gapRecommendations)
+      .values(rec)
+      .returning();
+    return result[0];
+  }
+
+  async updateGapRecommendation(id: string, rec: Partial<InsertGapRecommendation>): Promise<GapRecommendation | undefined> {
+    const result = await this.db
+      .update(schema.gapRecommendations)
+      .set(rec)
+      .where(eq(schema.gapRecommendations.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteGapRecommendation(id: string): Promise<boolean> {
+    const result = await this.db
+      .delete(schema.gapRecommendations)
+      .where(eq(schema.gapRecommendations.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  // ============================================================================
+  // Ritual Stages
+  // ============================================================================
+
+  async getRitualStage(id: string): Promise<RitualStage | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.ritualStages)
+      .where(eq(schema.ritualStages.id, id))
+      .limit(1);
+    return result[0];
+  }
+
+  async getRitualStagesByEvent(eventId: string): Promise<RitualStage[]> {
+    return await this.db
+      .select()
+      .from(schema.ritualStages)
+      .where(eq(schema.ritualStages.eventId, eventId))
+      .orderBy(schema.ritualStages.displayOrder);
+  }
+
+  async createRitualStage(stage: InsertRitualStage): Promise<RitualStage> {
+    const result = await this.db
+      .insert(schema.ritualStages)
+      .values(stage)
+      .returning();
+    return result[0];
+  }
+
+  async updateRitualStage(id: string, stage: Partial<InsertRitualStage>): Promise<RitualStage | undefined> {
+    const result = await this.db
+      .update(schema.ritualStages)
+      .set(stage)
+      .where(eq(schema.ritualStages.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteRitualStage(id: string): Promise<boolean> {
+    const result = await this.db
+      .delete(schema.ritualStages)
+      .where(eq(schema.ritualStages.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  // ============================================================================
+  // Ritual Stage Updates
+  // ============================================================================
+
+  async getRitualStageUpdates(ritualStageId: string): Promise<RitualStageUpdate[]> {
+    return await this.db
+      .select()
+      .from(schema.ritualStageUpdates)
+      .where(eq(schema.ritualStageUpdates.ritualStageId, ritualStageId))
+      .orderBy(sql`${schema.ritualStageUpdates.updatedAt} DESC`);
+  }
+
+  async getLatestRitualStageUpdate(ritualStageId: string): Promise<RitualStageUpdate | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.ritualStageUpdates)
+      .where(eq(schema.ritualStageUpdates.ritualStageId, ritualStageId))
+      .orderBy(sql`${schema.ritualStageUpdates.updatedAt} DESC`)
+      .limit(1);
+    return result[0];
+  }
+
+  async createRitualStageUpdate(update: InsertRitualStageUpdate): Promise<RitualStageUpdate> {
+    const result = await this.db
+      .insert(schema.ritualStageUpdates)
+      .values(update)
+      .returning();
+    return result[0];
+  }
+
+  // ============================================================================
+  // Guest Notifications
+  // ============================================================================
+
+  async getGuestNotification(id: string): Promise<GuestNotification | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.guestNotifications)
+      .where(eq(schema.guestNotifications.id, id))
+      .limit(1);
+    return result[0];
+  }
+
+  async getNotificationsByWedding(weddingId: string): Promise<GuestNotification[]> {
+    return await this.db
+      .select()
+      .from(schema.guestNotifications)
+      .where(eq(schema.guestNotifications.weddingId, weddingId))
+      .orderBy(sql`${schema.guestNotifications.sentAt} DESC`);
+  }
+
+  async createGuestNotification(notification: InsertGuestNotification): Promise<GuestNotification> {
+    const result = await this.db
+      .insert(schema.guestNotifications)
+      .values(notification)
+      .returning();
+    return result[0];
+  }
+
+  // ============================================================================
+  // Live Wedding Status
+  // ============================================================================
+
+  async getLiveWeddingStatus(weddingId: string): Promise<LiveWeddingStatus | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.liveWeddingStatus)
+      .where(eq(schema.liveWeddingStatus.weddingId, weddingId))
+      .limit(1);
+    return result[0];
+  }
+
+  async createOrUpdateLiveWeddingStatus(status: InsertLiveWeddingStatus): Promise<LiveWeddingStatus> {
+    // Check if status exists for this wedding
+    const existing = await this.getLiveWeddingStatus(status.weddingId);
+    
+    if (existing) {
+      const result = await this.db
+        .update(schema.liveWeddingStatus)
+        .set({
+          ...status,
+          lastUpdatedAt: new Date(),
+        })
+        .where(eq(schema.liveWeddingStatus.weddingId, status.weddingId))
+        .returning();
+      return result[0];
+    }
+    
+    const result = await this.db
+      .insert(schema.liveWeddingStatus)
+      .values(status)
+      .returning();
+    return result[0];
+  }
+
+  async updateLiveWeddingStatus(weddingId: string, updates: Partial<InsertLiveWeddingStatus>): Promise<LiveWeddingStatus | undefined> {
+    const result = await this.db
+      .update(schema.liveWeddingStatus)
+      .set({
+        ...updates,
+        lastUpdatedAt: new Date(),
+      })
+      .where(eq(schema.liveWeddingStatus.weddingId, weddingId))
+      .returning();
+    return result[0];
   }
 }
 
