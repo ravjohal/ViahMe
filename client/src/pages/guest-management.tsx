@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -416,12 +417,20 @@ export default function GuestManagement() {
           <h1 className="text-2xl font-bold" data-testid="text-page-title">Guest Management</h1>
           <p className="text-muted-foreground">Advanced tools for managing your guest list</p>
         </div>
-        {suggestionsCount && suggestionsCount.count > 0 && (
-          <Badge variant="secondary" className="gap-1" data-testid="badge-pending-suggestions">
-            <Clock className="h-3 w-3" />
-            {suggestionsCount.count} pending {suggestionsCount.count === 1 ? "suggestion" : "suggestions"}
-          </Badge>
-        )}
+        <div className="flex items-center gap-3">
+          {suggestionsCount && suggestionsCount.count > 0 && (
+            <Badge variant="secondary" className="gap-1" data-testid="badge-pending-suggestions">
+              <Clock className="h-3 w-3" />
+              {suggestionsCount.count} pending {suggestionsCount.count === 1 ? "suggestion" : "suggestions"}
+            </Badge>
+          )}
+          <Link href="/guests">
+            <Button variant="outline" size="sm" data-testid="button-back-to-guests">
+              <Users className="h-4 w-4 mr-2" />
+              View Guest List
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>

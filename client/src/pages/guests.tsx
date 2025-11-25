@@ -20,7 +20,7 @@ import { insertGuestSchema, insertHouseholdSchema, type Wedding, type Guest, typ
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
-import { Trash2, Upload, Users, Link as LinkIcon, MailCheck, Copy, Send, BarChart3, Download, QrCode } from "lucide-react";
+import { Trash2, Upload, Users, Link as LinkIcon, MailCheck, Copy, Send, BarChart3, Download, QrCode, ListFilter } from "lucide-react";
 import QRCode from "qrcode";
 
 const guestFormSchema = insertGuestSchema.extend({
@@ -783,7 +783,11 @@ export default function Guests() {
                   Group families together and manage invitation links
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
+                <Button onClick={() => setLocation("/guest-management")} variant="secondary" data-testid="button-guest-planning">
+                  <ListFilter className="w-4 h-4 mr-2" />
+                  Guest Planning
+                </Button>
                 <Button onClick={handleOpenBulkInvite} variant="default" data-testid="button-bulk-invite">
                   <Send className="w-4 h-4 mr-2" />
                   Send Invitations
