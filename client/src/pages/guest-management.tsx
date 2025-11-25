@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useForm } from "react-hook-form";
@@ -1133,6 +1134,22 @@ export default function GuestManagement() {
               <div className="space-y-2">
                 <Label htmlFor="scenarioCost">Cost/Head</Label>
                 <Input id="scenarioCost" type="number" {...scenarioForm.register("costPerHead")} placeholder="150" data-testid="input-scenario-cost" />
+              </div>
+            </div>
+            <div className="flex items-center space-x-2 p-3 bg-muted/50 rounded-lg">
+              <Checkbox 
+                id="copyHouseholds" 
+                checked={scenarioForm.watch("copyCurrentHouseholds")}
+                onCheckedChange={(checked: boolean) => scenarioForm.setValue("copyCurrentHouseholds", checked)}
+                data-testid="checkbox-copy-households"
+              />
+              <div className="space-y-1">
+                <Label htmlFor="copyHouseholds" className="font-medium cursor-pointer">
+                  Copy current guest list
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Include all existing households in this scenario
+                </p>
               </div>
             </div>
             <DialogFooter>
