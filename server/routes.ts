@@ -3322,6 +3322,570 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================================================
+  // WEDDING ROLES & COLLABORATORS - Role-based access control
+  // ============================================================================
+
+  // Get all roles for a wedding
+  app.get("/api/weddings/:weddingId/roles", async (req, res) => {
+    const { weddingId } = req.params;
+    const userId = req.session?.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      // Check if user has access to this wedding
+      const { isOwner, permissions } = await storage.getUserPermissionsForWedding(userId, weddingId);
+      if (!isOwner && permissions.size === 0) {
+        return res.status(403).json({ error: "You do not have access to this wedding" });
+      }
+      
+      const roles = await storage.getWeddingRolesByWedding(weddingId);
+      res.json(roles);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get a specific role with permissions
+  app.get("/api/roles/:roleId", async (req, res) => {
+    const { roleId } = req.params;
+    const userId = req.session?.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      const role = await storage.getWeddingRoleWithPermissions(roleId);
+      if (!role) {
+        return res.status(404).json({ error: "Role not found" });
+      }
+      
+      // Check if user has access to this wedding
+      const { isOwner, permissions } = await storage.getUserPermissionsForWedding(userId, role.weddingId);
+      if (!isOwner && permissions.size === 0) {
+        return res.status(403).json({ error: "You do not have access to this wedding" });
+      }
+      
+      res.json(role);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Create a new role
+  app.post("/api/weddings/:weddingId/roles", async (req, res) => {
+    const { weddingId } = req.params;
+    const userId = req.session?.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      // Only owners can create roles
+      const hasPermission = await storage.checkUserPermission(userId, weddingId, "collaborators", "manage");
+      if (!hasPermission) {
+        return res.status(403).json({ error: "You do not have permission to manage roles" });
+      }
+      
+      const roleData = insertWeddingRoleSchema.parse({ ...req.body, weddingId });
+      const role = await storage.createWeddingRole(roleData);
+      
+      // If permissions are provided, set them
+      if (req.body.permissions && Array.isArray(req.body.permissions)) {
+        await storage.setRolePermissions(role.id, req.body.permissions);
+      }
+      
+      // Log activity
+      await storage.logCollaboratorActivity({
+        weddingId,
+        collaboratorId: null,
+        actorUserId: userId,
+        action: "role_created",
+        resourceType: "role",
+        resourceId: role.id,
+        description: `Created role "${role.displayName}"`,
+      });
+      
+      res.status(201).json(role);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Update a role
+  app.patch("/api/roles/:roleId", async (req, res) => {
+    const { roleId } = req.params;
+    const userId = req.session?.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      const role = await storage.getWeddingRole(roleId);
+      if (!role) {
+        return res.status(404).json({ error: "Role not found" });
+      }
+      
+      // Only owners can update roles
+      const hasPermission = await storage.checkUserPermission(userId, role.weddingId, "collaborators", "manage");
+      if (!hasPermission) {
+        return res.status(403).json({ error: "You do not have permission to manage roles" });
+      }
+      
+      // Cannot update system roles' core properties
+      if (role.isSystem && (req.body.name || req.body.isOwner !== undefined)) {
+        return res.status(400).json({ error: "Cannot modify system role core properties" });
+      }
+      
+      const updatedRole = await storage.updateWeddingRole(roleId, req.body);
+      
+      // If permissions are provided, update them
+      if (req.body.permissions && Array.isArray(req.body.permissions)) {
+        await storage.setRolePermissions(roleId, req.body.permissions);
+      }
+      
+      res.json(updatedRole);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Delete a role
+  app.delete("/api/roles/:roleId", async (req, res) => {
+    const { roleId } = req.params;
+    const userId = req.session?.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      const role = await storage.getWeddingRole(roleId);
+      if (!role) {
+        return res.status(404).json({ error: "Role not found" });
+      }
+      
+      // Only owners can delete roles
+      const hasPermission = await storage.checkUserPermission(userId, role.weddingId, "collaborators", "manage");
+      if (!hasPermission) {
+        return res.status(403).json({ error: "You do not have permission to manage roles" });
+      }
+      
+      const success = await storage.deleteWeddingRole(roleId);
+      if (!success) {
+        return res.status(400).json({ error: "Cannot delete system or owner roles" });
+      }
+      
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get all collaborators for a wedding
+  app.get("/api/weddings/:weddingId/collaborators", async (req, res) => {
+    const { weddingId } = req.params;
+    const userId = req.session?.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      // Check if user has access to this wedding
+      const { isOwner, permissions } = await storage.getUserPermissionsForWedding(userId, weddingId);
+      if (!isOwner && !permissions.get("collaborators")) {
+        return res.status(403).json({ error: "You do not have access to view collaborators" });
+      }
+      
+      const collaborators = await storage.getCollaboratorsWithDetailsByWedding(weddingId);
+      
+      // Sanitize response to hide tokens
+      const sanitized = collaborators.map(c => ({
+        ...c,
+        inviteToken: undefined,
+        inviteTokenExpires: c.inviteTokenExpires ? c.inviteTokenExpires : undefined,
+      }));
+      
+      res.json(sanitized);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Invite a collaborator
+  app.post("/api/weddings/:weddingId/collaborators", async (req, res) => {
+    const { weddingId } = req.params;
+    const userId = req.session?.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      // Only owners or those with manage collaborators permission can invite
+      const hasPermission = await storage.checkUserPermission(userId, weddingId, "collaborators", "manage");
+      if (!hasPermission) {
+        return res.status(403).json({ error: "You do not have permission to invite collaborators" });
+      }
+      
+      const { email, name, roleId } = req.body;
+      
+      if (!email || !roleId) {
+        return res.status(400).json({ error: "Email and roleId are required" });
+      }
+      
+      // Check if collaborator already exists
+      const existing = await storage.getWeddingCollaboratorByEmail(weddingId, email);
+      if (existing) {
+        return res.status(400).json({ error: "This email has already been invited" });
+      }
+      
+      // Verify the role exists and belongs to this wedding
+      const role = await storage.getWeddingRole(roleId);
+      if (!role || role.weddingId !== weddingId) {
+        return res.status(400).json({ error: "Invalid role" });
+      }
+      
+      // Don't allow assigning owner role to invitees
+      if (role.isOwner) {
+        return res.status(400).json({ error: "Cannot assign owner role to collaborators" });
+      }
+      
+      // Create the collaborator with pending status
+      const collaborator = await storage.createWeddingCollaborator({
+        weddingId,
+        email: email.toLowerCase(),
+        name: name || null,
+        roleId,
+        invitedBy: userId,
+        status: "pending",
+      });
+      
+      // Generate invite token
+      const inviteToken = await storage.generateCollaboratorInviteToken(collaborator.id);
+      
+      // Log activity
+      await storage.logCollaboratorActivity({
+        weddingId,
+        collaboratorId: collaborator.id,
+        actorUserId: userId,
+        action: "invited",
+        resourceType: "collaborator",
+        resourceId: collaborator.id,
+        description: `Invited ${email} as ${role.displayName}`,
+      });
+      
+      // Get wedding details for email
+      const wedding = await storage.getWedding(weddingId);
+      
+      res.status(201).json({
+        ...collaborator,
+        inviteToken, // Return the raw token so it can be used to construct invite URL
+        inviteUrl: `/accept-invite?token=${inviteToken}`,
+        weddingTitle: wedding?.title || "Wedding",
+      });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Accept collaborator invite (public endpoint)
+  app.post("/api/collaborator-invites/:token", async (req, res) => {
+    const { token } = req.params;
+    const userId = req.session?.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: "Please log in to accept this invitation" });
+    }
+    
+    try {
+      const collaborator = await storage.acceptCollaboratorInvite(token, userId);
+      
+      if (!collaborator) {
+        return res.status(400).json({ error: "Invalid or expired invitation" });
+      }
+      
+      // Log activity
+      await storage.logCollaboratorActivity({
+        weddingId: collaborator.weddingId,
+        collaboratorId: collaborator.id,
+        actorUserId: userId,
+        action: "accepted_invite",
+        resourceType: "collaborator",
+        resourceId: collaborator.id,
+        description: `Accepted invitation`,
+      });
+      
+      res.json({ success: true, weddingId: collaborator.weddingId });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get invite details by token (public endpoint for preview)
+  app.get("/api/collaborator-invites/:token", async (req, res) => {
+    const { token } = req.params;
+    
+    try {
+      const collaborator = await storage.getWeddingCollaboratorByToken(token);
+      
+      if (!collaborator) {
+        return res.status(404).json({ error: "Invalid or expired invitation" });
+      }
+      
+      const wedding = await storage.getWedding(collaborator.weddingId);
+      const role = await storage.getWeddingRole(collaborator.roleId);
+      
+      res.json({
+        email: collaborator.email,
+        name: collaborator.name,
+        roleName: role?.displayName,
+        weddingTitle: wedding?.title,
+        partnerNames: wedding ? `${wedding.partner1Name} & ${wedding.partner2Name}` : undefined,
+        expiresAt: collaborator.inviteTokenExpires,
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Update collaborator (change role, etc.)
+  app.patch("/api/collaborators/:collaboratorId", async (req, res) => {
+    const { collaboratorId } = req.params;
+    const userId = req.session?.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      const collaborator = await storage.getWeddingCollaborator(collaboratorId);
+      if (!collaborator) {
+        return res.status(404).json({ error: "Collaborator not found" });
+      }
+      
+      // Only owners or those with manage collaborators permission can update
+      const hasPermission = await storage.checkUserPermission(userId, collaborator.weddingId, "collaborators", "manage");
+      if (!hasPermission) {
+        return res.status(403).json({ error: "You do not have permission to manage collaborators" });
+      }
+      
+      // If changing role, verify the new role exists and is valid
+      if (req.body.roleId) {
+        const role = await storage.getWeddingRole(req.body.roleId);
+        if (!role || role.weddingId !== collaborator.weddingId) {
+          return res.status(400).json({ error: "Invalid role" });
+        }
+        if (role.isOwner) {
+          return res.status(400).json({ error: "Cannot assign owner role to collaborators" });
+        }
+      }
+      
+      const updated = await storage.updateWeddingCollaborator(collaboratorId, req.body);
+      res.json(updated);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Remove collaborator
+  app.delete("/api/collaborators/:collaboratorId", async (req, res) => {
+    const { collaboratorId } = req.params;
+    const userId = req.session?.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      const collaborator = await storage.getWeddingCollaborator(collaboratorId);
+      if (!collaborator) {
+        return res.status(404).json({ error: "Collaborator not found" });
+      }
+      
+      // Only owners or those with manage collaborators permission can remove
+      const hasPermission = await storage.checkUserPermission(userId, collaborator.weddingId, "collaborators", "manage");
+      if (!hasPermission) {
+        return res.status(403).json({ error: "You do not have permission to manage collaborators" });
+      }
+      
+      // Log activity before deletion
+      await storage.logCollaboratorActivity({
+        weddingId: collaborator.weddingId,
+        collaboratorId: collaborator.id,
+        actorUserId: userId,
+        action: "removed",
+        resourceType: "collaborator",
+        resourceId: collaborator.id,
+        description: `Removed collaborator ${collaborator.email}`,
+      });
+      
+      await storage.deleteWeddingCollaborator(collaboratorId);
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Resend collaborator invite
+  app.post("/api/collaborators/:collaboratorId/resend-invite", async (req, res) => {
+    const { collaboratorId } = req.params;
+    const userId = req.session?.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      const collaborator = await storage.getWeddingCollaborator(collaboratorId);
+      if (!collaborator) {
+        return res.status(404).json({ error: "Collaborator not found" });
+      }
+      
+      if (collaborator.status !== "pending") {
+        return res.status(400).json({ error: "Can only resend invites for pending collaborators" });
+      }
+      
+      // Only owners or those with manage collaborators permission can resend
+      const hasPermission = await storage.checkUserPermission(userId, collaborator.weddingId, "collaborators", "manage");
+      if (!hasPermission) {
+        return res.status(403).json({ error: "You do not have permission to manage collaborators" });
+      }
+      
+      // Generate new invite token
+      const inviteToken = await storage.generateCollaboratorInviteToken(collaboratorId);
+      
+      // Log activity
+      await storage.logCollaboratorActivity({
+        weddingId: collaborator.weddingId,
+        collaboratorId: collaborator.id,
+        actorUserId: userId,
+        action: "invite_resent",
+        resourceType: "collaborator",
+        resourceId: collaborator.id,
+        description: `Resent invitation to ${collaborator.email}`,
+      });
+      
+      const wedding = await storage.getWedding(collaborator.weddingId);
+      
+      res.json({
+        success: true,
+        inviteToken,
+        inviteUrl: `/accept-invite?token=${inviteToken}`,
+        weddingTitle: wedding?.title || "Wedding",
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get collaborator activity log
+  app.get("/api/weddings/:weddingId/collaborator-activity", async (req, res) => {
+    const { weddingId } = req.params;
+    const userId = req.session?.user?.id;
+    const limit = parseInt(req.query.limit as string) || 50;
+    
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      // Only owners or those with view collaborators permission can view activity
+      const hasPermission = await storage.checkUserPermission(userId, weddingId, "collaborators", "view");
+      if (!hasPermission) {
+        return res.status(403).json({ error: "You do not have permission to view collaborator activity" });
+      }
+      
+      const activity = await storage.getCollaboratorActivityLog(weddingId, limit);
+      res.json(activity);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get user's permissions for a wedding
+  app.get("/api/weddings/:weddingId/my-permissions", async (req, res) => {
+    const { weddingId } = req.params;
+    const userId = req.session?.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      const { isOwner, permissions } = await storage.getUserPermissionsForWedding(userId, weddingId);
+      
+      // Convert Map to object for JSON serialization
+      const permissionsObject: Record<string, string> = {};
+      permissions.forEach((level, category) => {
+        permissionsObject[category] = level;
+      });
+      
+      res.json({
+        isOwner,
+        permissions: permissionsObject,
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Initialize default roles for a wedding (called during wedding creation or on-demand)
+  app.post("/api/weddings/:weddingId/initialize-roles", async (req, res) => {
+    const { weddingId } = req.params;
+    const userId = req.session?.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      // Only the wedding owner can initialize roles
+      const wedding = await storage.getWedding(weddingId);
+      if (!wedding) {
+        return res.status(404).json({ error: "Wedding not found" });
+      }
+      
+      if (wedding.userId !== userId) {
+        return res.status(403).json({ error: "Only the wedding owner can initialize roles" });
+      }
+      
+      // Check if roles already exist
+      const existingRoles = await storage.getWeddingRolesByWedding(weddingId);
+      if (existingRoles.length > 0) {
+        return res.status(400).json({ error: "Roles already initialized for this wedding" });
+      }
+      
+      const roles = await storage.createDefaultRolesForWedding(weddingId);
+      res.status(201).json(roles);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get weddings user collaborates on
+  app.get("/api/my-collaborations", async (req, res) => {
+    const userId = req.session?.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      const weddings = await storage.getWeddingsByCollaboratorUser(userId);
+      res.json(weddings);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
