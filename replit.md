@@ -46,6 +46,12 @@ Key architectural decisions and features include:
   - **Guest Assignment**: Link measurement profiles to specific guests for streamlined coordination
   - **Status Tracking**: Monitor order progress through statuses like Ordered, In Transit, Received, and Cancelled
   - **Dual Currency Support**: Automatic INR to USD conversion for international purchases
+- **Real-Time Guest Concierge System**: Comprehensive live wedding experience management with gap management and ritual tracking. Features include:
+  - **Gap Concierge Designer (Couple-facing)**: Configure gap windows between events with labels, time ranges, shuttle schedules, and special instructions. Add venue-specific recommendations for nearby restaurants, attractions, and activities during downtime.
+  - **Ritual Control Panel (Couple-facing)**: Manage ceremony stages with display names, descriptions, planned durations, and guest instructions. Post live status updates (pending/in_progress/completed/delayed) with optional delay notifications and broadcast messages.
+  - **Guest Live Feed (Public-facing)**: Real-time wedding dashboard accessible via magic link showing current ceremony progress with Uber-style progress bar, upcoming events timeline, gap period recommendations, and shuttle schedules. Auto-refreshes every 30 seconds for live updates.
+  - **Database Schema**: Gap windows, gap recommendations, ritual stages, and ritual stage updates tables with proper foreign key relationships and validation.
+  - **Full API Coverage**: Authenticated CRUD endpoints for couples plus public read-only endpoints for guest portal integration.
 - **Cultural Wedding Information Section**: Guest-facing educational resource providing comprehensive guides to South Asian wedding traditions, ceremonies, and etiquette. Features include:
   - **Ceremony Explanations**: Detailed descriptions of pre-wedding (Mehndi, Sangeet, Haldi), wedding day (Baraat, Main Ceremony), and post-wedding (Reception) events with timing, attire, and duration guidance
   - **Attire Guide**: Comprehensive guidance for men and women on traditional wedding attire including sarees, lehengas, sherwanis, and fusion options with color recommendations
