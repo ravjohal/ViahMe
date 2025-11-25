@@ -181,31 +181,17 @@ export default function Budget() {
 
   const updateWeddingBudgetMutation = useMutation({
     mutationFn: async (totalBudget: string) => {
-      console.log("[BUDGET] Mutation started - wedding ID:", wedding?.id, "new budget:", totalBudget);
       if (!wedding?.id) {
-        console.log("[BUDGET] ERROR: Wedding ID not found!");
         throw new Error("Wedding ID not found");
       }
-      console.log("[BUDGET] Making PATCH request to /api/weddings/" + wedding.id);
-      const result = await apiRequest("PATCH", `/api/weddings/${wedding.id}`, {
+      return await apiRequest("PATCH", `/api/weddings/${wedding.id}`, {
         totalBudget,
       });
-      console.log("[BUDGET] PATCH request completed, result:", result);
-      return result;
     },
-    onSuccess: async (data) => {
-      console.log("[BUDGET] Mutation success! Response:", data);
-      
-      // Calculate scaling factor
-      const oldBudget = parseFloat(wedding?.totalBudget || "0");
-      const newBudget = parseFloat(newTotalBudget);
-      
-      console.log("[BUDGET] Old budget:", oldBudget, "New budget:", newBudget);
-      
-      // Manually update the wedding data in the cache first
+    onSuccess: () => {
+      // Update the wedding data in the cache
       queryClient.setQueryData<Wedding[]>(["/api/weddings"], (oldData) => {
         if (!oldData || !wedding?.id) return oldData;
-        console.log("[BUDGET] Updating wedding cache");
         return oldData.map(w => 
           w.id === wedding.id 
             ? { ...w, totalBudget: newTotalBudget }
@@ -213,99 +199,18 @@ export default function Budget() {
         );
       });
       
-      // Fetch latest categories from the server to avoid stale data
-      if (wedding?.id) {
-        try {
-          console.log("[BUDGET] Fetching latest categories from server...");
-          const latestCategories = await fetch(`/api/budget-categories/${wedding.id}`, {
-            credentials: "include",
-          }).then(res => res.json()) as BudgetCategory[];
-          
-          console.log("[BUDGET] Fetched", latestCategories.length, "categories");
-          
-          if (latestCategories.length > 0) {
-            let scalingFactor: number;
-            
-            if (oldBudget > 0) {
-              // Normal case: scale based on budget change
-              scalingFactor = newBudget / oldBudget;
-              console.log("[BUDGET] Scaling factor (from budget change):", scalingFactor);
-            } else {
-              // Old budget was $0 - derive scaling from current allocations
-              const totalCurrentAllocated = latestCategories.reduce(
-                (sum, cat) => sum + parseFloat(cat.allocatedAmount.toString()),
-                0
-              );
-              
-              if (totalCurrentAllocated > 0) {
-                // Scale allocations to match new budget proportionally
-                scalingFactor = newBudget / totalCurrentAllocated;
-                console.log("[BUDGET] Old budget was $0. Total allocated:", totalCurrentAllocated, "Scaling to:", newBudget, "Factor:", scalingFactor);
-              } else {
-                // No allocations exist - nothing to scale
-                console.log("[BUDGET] Old budget was $0 and no allocations exist - skipping scaling");
-                scalingFactor = 1;
-              }
-            }
-            
-            if (scalingFactor !== 1) {
-              // Update each category's allocated amount (preserve spent amounts)
-              const updatePromises = latestCategories.map(async (category) => {
-                const oldAllocated = parseFloat(category.allocatedAmount.toString());
-                const newAllocated = (oldAllocated * scalingFactor).toFixed(2);
-                
-                console.log("[BUDGET] Category", category.category, "- Old:", oldAllocated, "New:", newAllocated);
-                
-                return apiRequest("PATCH", `/api/budget-categories/${category.id}`, {
-                  allocatedAmount: newAllocated,
-                }).catch(err => {
-                  console.error("[BUDGET] Failed to update category", category.id, err);
-                  throw err; // Re-throw to trigger Promise.all rejection
-                });
-              });
-              
-              await Promise.all(updatePromises);
-              console.log("[BUDGET] All categories updated successfully");
-            }
-          }
-        } catch (error) {
-          console.error("[BUDGET] Error scaling categories:", error);
-          toast({
-            title: "Partial Update",
-            description: "Budget updated but some categories may not have scaled. Please refresh the page.",
-            variant: "destructive",
-          });
-        }
-      }
-      
-      // Refetch categories to show updated allocations
-      queryClient.invalidateQueries({ queryKey: ["/api/budget-categories", wedding?.id] });
-      
-      // CRITICAL: Invalidate weddings query to ensure data persists across sessions
+      // Invalidate weddings query to ensure data persists
       queryClient.invalidateQueries({ queryKey: ["/api/weddings"] });
       
-      console.log("[BUDGET] Done, closing dialog...");
       setEditBudgetDialogOpen(false);
       setNewTotalBudget("");
       
-      // Show informative toast about what happened
-      const scalingFactor = oldBudget > 0 ? newBudget / oldBudget : 1;
-      if (scalingFactor !== 1 && categories.length > 0) {
-        const percentChange = ((scalingFactor - 1) * 100).toFixed(0);
-        const direction = scalingFactor > 1 ? "increased" : "decreased";
-        toast({
-          title: "Budget Updated ✓",
-          description: `Budget changed from $${oldBudget.toLocaleString()} → $${newBudget.toLocaleString()}. All ${categories.length} category allocations automatically ${direction} by ${Math.abs(parseFloat(percentChange))}% to maintain proportions.`,
-        });
-      } else {
-        toast({
-          title: "Budget Updated",
-          description: "Your total wedding budget has been updated successfully",
-        });
-      }
+      toast({
+        title: "Budget Updated",
+        description: "Your total wedding budget has been updated. Category allocations remain unchanged.",
+      });
     },
-    onError: (error) => {
-      console.log("[BUDGET] Mutation failed! Error:", error);
+    onError: () => {
       toast({
         title: "Error",
         description: "Failed to update budget. Please try again.",
@@ -799,22 +704,11 @@ export default function Budget() {
           <DialogHeader>
             <DialogTitle>Edit Total Budget</DialogTitle>
             <DialogDescription>
-              Update your overall wedding budget. All category allocations will automatically adjust proportionally to maintain your budget distribution.
+              Update your overall wedding budget. Your category allocations will remain unchanged.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
-            {categories.length > 0 && (
-              <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-                <p className="text-sm text-blue-900 dark:text-blue-100 flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4" />
-                  <span>
-                    <strong>Auto-scaling enabled:</strong> Your {categories.length} budget categories will be automatically adjusted to match the new total.
-                  </span>
-                </p>
-              </div>
-            )}
-            
             <div className="space-y-2">
               <Label htmlFor="totalBudget">
                 Total Budget <span className="text-destructive">*</span>
