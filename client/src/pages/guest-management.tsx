@@ -56,6 +56,10 @@ import {
   Target,
   CheckSquare,
   Lightbulb,
+  Sparkles,
+  Heart,
+  CircleDot,
+  Circle,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -418,34 +422,60 @@ export default function GuestManagement() {
     unassigned: households.filter(h => !h.priorityTier),
   };
 
+  // Detailed checklist items for each step
+  const collectChecklist = [
+    { id: "add-source", label: "Add at least one guest source", done: sources.length > 0, action: () => setSourceDialogOpen(true) },
+    { id: "review-suggestions", label: "Review pending suggestions", done: pendingSuggestions.length === 0, count: pendingSuggestions.length },
+  ];
+
+  const organizeChecklist = [
+    { id: "assign-priority", label: "Assign priority to all households", done: households.length === 0 || priorityBreakdown.unassigned.length === 0, count: priorityBreakdown.unassigned.length },
+    { id: "create-scenario", label: "Create a What-If list to compare options", done: scenarios.length > 0, action: () => setScenarioDialogOpen(true) },
+  ];
+
+  const finalizeChecklist = [
+    { id: "set-budget", label: "Set your guest budget", done: budgetData?.settings?.maxGuestBudget && Number(budgetData.settings.maxGuestBudget) > 0 },
+    { id: "review-capacity", label: "Check if you're within capacity", done: budgetData?.capacity && budgetData.capacity.currentCount <= budgetData.capacity.maxGuests },
+  ];
+
+  const collectProgress = collectChecklist.filter(c => c.done).length / collectChecklist.length * 100;
+  const organizeProgress = organizeChecklist.filter(c => c.done).length / organizeChecklist.length * 100;
+  const finalizeProgress = finalizeChecklist.filter(c => c.done).length / finalizeChecklist.length * 100;
+
   // Workflow step status - matches the 3 consolidated tabs
   const workflowSteps = [
     {
       id: "collect",
       label: "Collect",
-      description: "Gather suggestions",
+      description: "Gather guest names",
       icon: Inbox,
-      isComplete: sources.length > 0 || suggestions.length > 0,
+      isComplete: collectProgress === 100,
+      progress: collectProgress,
       count: pendingSuggestions.length,
       tab: "suggestions",
+      checklist: collectChecklist,
     },
     {
       id: "organize",
       label: "Organize",
       description: "Priority & compare",
       icon: Target,
-      isComplete: priorityBreakdown.unassigned.length === 0 && households.length > 0 && scenarios.length > 0,
+      isComplete: organizeProgress === 100,
+      progress: organizeProgress,
       count: priorityBreakdown.unassigned.length,
       tab: "priority",
+      checklist: organizeChecklist,
     },
     {
       id: "finalize",
       label: "Finalize",
-      description: "Budget & cuts",
+      description: "Budget & decisions",
       icon: CheckSquare,
-      isComplete: budgetData?.settings?.maxGuestBudget && Number(budgetData.settings.maxGuestBudget) > 0,
+      isComplete: finalizeProgress === 100,
+      progress: finalizeProgress,
       count: cutList.length,
       tab: "budget",
+      checklist: finalizeChecklist,
     },
   ];
 
@@ -476,66 +506,174 @@ export default function GuestManagement() {
       {/* Workflow Overview - Step by Step Guide */}
       <Card className="bg-gradient-to-r from-orange-50 to-pink-50 dark:from-orange-950/20 dark:to-pink-950/20 border-orange-200 dark:border-orange-800">
         <CardContent className="p-3 sm:p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Lightbulb className="h-4 w-4 text-orange-500" />
-            <span className="text-sm font-medium">Your Planning Workflow</span>
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <div className="flex items-center gap-2">
+              <Lightbulb className="h-4 w-4 text-orange-500" />
+              <span className="text-sm font-medium">Your Planning Journey</span>
+            </div>
+            {workflowSteps.every(s => s.isComplete) && (
+              <Badge className="bg-green-500 text-white gap-1">
+                <Sparkles className="h-3 w-3" />
+                All done!
+              </Badge>
+            )}
           </div>
-          <div className="grid grid-cols-3 gap-2 sm:flex sm:items-center sm:justify-between sm:gap-2">
+          
+          <div className="grid grid-cols-3 gap-2 sm:gap-4">
             {workflowSteps.map((step, index) => (
-              <div key={step.id} className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
-                <button
-                  onClick={() => setActiveTab(step.tab)}
-                  className={`flex flex-col items-center p-2 sm:p-3 rounded-lg transition-all w-full sm:w-auto sm:min-w-[100px] ${
-                    activeTab === step.tab 
-                      ? "bg-white dark:bg-gray-800 shadow-md ring-2 ring-orange-400" 
-                      : "hover:bg-white/50 dark:hover:bg-gray-800/50"
-                  }`}
-                  data-testid={`workflow-step-${step.id}`}
-                >
-                  <div className={`p-1.5 sm:p-2 rounded-full mb-1 ${
-                    step.isComplete 
-                      ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400" 
-                      : "bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400"
-                  }`}>
+              <button
+                key={step.id}
+                onClick={() => setActiveTab(step.tab)}
+                className={`relative flex flex-col items-center p-2 sm:p-4 rounded-xl transition-all ${
+                  activeTab === step.tab 
+                    ? "bg-white dark:bg-gray-800 shadow-lg ring-2 ring-orange-400" 
+                    : "hover:bg-white/50 dark:hover:bg-gray-800/50"
+                }`}
+                data-testid={`workflow-step-${step.id}`}
+              >
+                {/* Step Number */}
+                <div className="absolute -top-1 -left-1 sm:top-1 sm:left-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-background border-2 border-orange-300 flex items-center justify-center text-[10px] sm:text-xs font-bold text-orange-600">
+                  {index + 1}
+                </div>
+                
+                {/* Progress Ring */}
+                <div className="relative mb-2">
+                  <svg className="w-10 h-10 sm:w-14 sm:h-14 -rotate-90">
+                    <circle
+                      cx="50%"
+                      cy="50%"
+                      r="45%"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                      className="text-muted/30"
+                    />
+                    <circle
+                      cx="50%"
+                      cy="50%"
+                      r="45%"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                      strokeDasharray={`${step.progress * 2.83} 283`}
+                      className={step.isComplete ? "text-green-500" : "text-orange-500"}
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
                     {step.isComplete ? (
-                      <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" />
+                      <CheckCircle2 className="h-4 w-4 sm:h-6 sm:w-6 text-green-500" />
                     ) : (
-                      <step.icon className="h-4 w-4 sm:h-5 sm:w-5" />
+                      <step.icon className="h-4 w-4 sm:h-5 sm:w-5 text-orange-500" />
                     )}
                   </div>
-                  <span className="text-xs sm:text-sm font-medium">{step.label}</span>
-                  <span className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">{step.description}</span>
-                  {step.count > 0 && !step.isComplete && (
-                    <Badge variant="secondary" className="mt-1 text-[10px] sm:text-xs px-1 sm:px-1.5">
-                      {step.count}
-                    </Badge>
-                  )}
-                </button>
-                {index < workflowSteps.length - 1 && (
-                  <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground hidden sm:block" />
+                </div>
+                
+                <span className="text-xs sm:text-sm font-semibold">{step.label}</span>
+                <span className="text-[9px] sm:text-xs text-muted-foreground text-center leading-tight">{step.description}</span>
+                
+                {/* Task count badge */}
+                {step.count > 0 && !step.isComplete && (
+                  <Badge variant="destructive" className="mt-1 text-[10px] sm:text-xs h-4 sm:h-5 px-1.5">
+                    {step.count} to do
+                  </Badge>
                 )}
-              </div>
+                {step.isComplete && (
+                  <Badge variant="outline" className="mt-1 text-[10px] sm:text-xs h-4 sm:h-5 px-1.5 text-green-600 border-green-300">
+                    Complete
+                  </Badge>
+                )}
+              </button>
             ))}
           </div>
+
+          {/* Active step checklist preview */}
+          {activeTab && (
+            <div className="mt-4 pt-3 border-t border-orange-200 dark:border-orange-800">
+              <p className="text-xs font-medium text-muted-foreground mb-2">
+                {workflowSteps.find(s => s.tab === activeTab)?.isComplete 
+                  ? "Great job! This step is complete." 
+                  : "What you need to do:"}
+              </p>
+              <div className="space-y-1.5">
+                {workflowSteps.find(s => s.tab === activeTab)?.checklist.map((item) => (
+                  <div key={item.id} className="flex items-center gap-2 text-xs sm:text-sm">
+                    {item.done ? (
+                      <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-500 flex-shrink-0" />
+                    ) : (
+                      <Circle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
+                    )}
+                    <span className={item.done ? "text-muted-foreground line-through" : ""}>
+                      {item.label}
+                    </span>
+                    {!item.done && "count" in item && (item as any).count > 0 && (
+                      <Badge variant="secondary" className="text-[10px] h-4 px-1">
+                        {(item as any).count}
+                      </Badge>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
       {/* Main Tabs - Using workflow stepper as navigation, hiding redundant TabsList */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsContent value="suggestions" className="space-y-4 sm:space-y-6">
-          {/* Intro Card */}
-          <Card className="bg-muted/30 border-dashed">
+          {/* Step Guidance Card */}
+          <Card className={`border-2 ${collectProgress === 100 ? "border-green-300 bg-green-50/50 dark:bg-green-950/20" : "border-orange-200 bg-orange-50/50 dark:bg-orange-950/20"}`}>
             <CardContent className="p-3 sm:p-4">
-              <div className="flex items-start gap-2 sm:gap-3">
-                <div className="p-1.5 sm:p-2 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 flex-shrink-0">
-                  <HelpCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+              <div className="flex items-start gap-3">
+                <div className={`p-2 rounded-full flex-shrink-0 ${collectProgress === 100 ? "bg-green-100 dark:bg-green-900/30" : "bg-orange-100 dark:bg-orange-900/30"}`}>
+                  {collectProgress === 100 ? (
+                    <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                  ) : (
+                    <Inbox className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
+                  )}
                 </div>
-                <div className="min-w-0">
-                  <p className="font-medium text-xs sm:text-sm">How this works</p>
-                  <p className="text-xs sm:text-sm text-muted-foreground">
-                    Family members can suggest guests. You review and approve or reject each.
-                    <span className="hidden sm:inline"> Use "Sources" to track who submitted guests and set limits.</span>
-                  </p>
+                <div className="min-w-0 flex-1">
+                  {collectProgress === 100 ? (
+                    <>
+                      <p className="font-semibold text-sm sm:text-base text-green-700 dark:text-green-400">Step 1 Complete!</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                        You've collected your guest suggestions. Ready to organize them by priority?
+                      </p>
+                      <Button 
+                        size="sm" 
+                        className="mt-3 gap-2"
+                        onClick={() => setActiveTab("priority")}
+                      >
+                        Continue to Organize
+                        <ArrowRight className="h-3 w-3" />
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <p className="font-semibold text-sm sm:text-base">Step 1: Collect Guest Names</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                        Start by setting up who will submit guests (parents, siblings, etc.), then review their suggestions.
+                        <span className="hidden sm:inline"> Don't worry about being perfect - you can always adjust later!</span>
+                      </p>
+                      {!sources.length && (
+                        <div className="mt-3 p-2 rounded-lg bg-background/80 border">
+                          <p className="text-xs font-medium flex items-center gap-2">
+                            <ArrowRight className="h-3 w-3 text-orange-500" />
+                            <span>Start here:</span>
+                          </p>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            className="mt-2 gap-2"
+                            onClick={() => setSourceDialogOpen(true)}
+                          >
+                            <Plus className="h-3 w-3" />
+                            Add Your First Guest Source
+                          </Button>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -721,19 +859,54 @@ export default function GuestManagement() {
         </TabsContent>
 
         <TabsContent value="budget" className="space-y-4 sm:space-y-6">
-          {/* Intro Card */}
-          <Card className="bg-muted/30 border-dashed">
+          {/* Step Guidance Card */}
+          <Card className={`border-2 ${finalizeProgress === 100 ? "border-green-300 bg-green-50/50 dark:bg-green-950/20" : "border-emerald-200 bg-emerald-50/50 dark:bg-emerald-950/20"}`}>
             <CardContent className="p-3 sm:p-4">
-              <div className="flex items-start gap-2 sm:gap-3">
-                <div className="p-1.5 sm:p-2 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 flex-shrink-0">
-                  <HelpCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+              <div className="flex items-start gap-3">
+                <div className={`p-2 rounded-full flex-shrink-0 ${finalizeProgress === 100 ? "bg-green-100 dark:bg-green-900/30" : "bg-emerald-100 dark:bg-emerald-900/30"}`}>
+                  {finalizeProgress === 100 ? (
+                    <Heart className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                  ) : (
+                    <CheckSquare className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600" />
+                  )}
                 </div>
-                <div className="min-w-0">
-                  <p className="font-medium text-xs sm:text-sm">How this works</p>
-                  <p className="text-xs sm:text-sm text-muted-foreground">
-                    Set your budget and cost per person to see capacity.
-                    <span className="hidden sm:inline"> Use "Maybe Later" to park guests you might not invite - they can be restored anytime.</span>
-                  </p>
+                <div className="min-w-0 flex-1">
+                  {finalizeProgress === 100 ? (
+                    <>
+                      <p className="font-semibold text-sm sm:text-base text-green-700 dark:text-green-400 flex items-center gap-2">
+                        <Sparkles className="h-4 w-4" />
+                        You're All Set!
+                      </p>
+                      <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                        Your guest list is planned and within budget. You can always come back to make adjustments.
+                      </p>
+                      <Link href="/guests">
+                        <Button size="sm" className="mt-3 gap-2">
+                          View Final Guest List
+                          <ArrowRight className="h-3 w-3" />
+                        </Button>
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      <p className="font-semibold text-sm sm:text-base">Step 3: Finalize Your Guest List</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                        {!budgetData?.settings?.maxGuestBudget || Number(budgetData.settings.maxGuestBudget) === 0
+                          ? "Set your total guest budget and cost per person to see how many guests you can actually afford."
+                          : budgetData?.capacity && budgetData.capacity.currentCount > budgetData.capacity.maxGuests
+                            ? `You're ${budgetData.capacity.currentCount - budgetData.capacity.maxGuests} guests over capacity. Use "Maybe Later" below to park some guests for now.`
+                            : "Great! You're within budget. Review your list and make any final adjustments."}
+                      </p>
+                      {(!budgetData?.settings?.maxGuestBudget || Number(budgetData.settings.maxGuestBudget) === 0) && (
+                        <div className="mt-3 p-2 rounded-lg bg-background/80 border">
+                          <p className="text-xs font-medium flex items-center gap-2">
+                            <ArrowRight className="h-3 w-3 text-emerald-500" />
+                            <span>Start by entering your budget below</span>
+                          </p>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -918,19 +1091,69 @@ export default function GuestManagement() {
         </TabsContent>
 
         <TabsContent value="priority" className="space-y-4 sm:space-y-6">
-          {/* Intro Card */}
-          <Card className="bg-muted/30 border-dashed">
+          {/* Step Guidance Card */}
+          <Card className={`border-2 ${organizeProgress === 100 ? "border-green-300 bg-green-50/50 dark:bg-green-950/20" : "border-blue-200 bg-blue-50/50 dark:bg-blue-950/20"}`}>
             <CardContent className="p-3 sm:p-4">
-              <div className="flex items-start gap-2 sm:gap-3">
-                <div className="p-1.5 sm:p-2 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex-shrink-0">
-                  <HelpCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+              <div className="flex items-start gap-3">
+                <div className={`p-2 rounded-full flex-shrink-0 ${organizeProgress === 100 ? "bg-green-100 dark:bg-green-900/30" : "bg-blue-100 dark:bg-blue-900/30"}`}>
+                  {organizeProgress === 100 ? (
+                    <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                  ) : (
+                    <Target className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                  )}
                 </div>
-                <div className="min-w-0">
-                  <p className="font-medium text-xs sm:text-sm">How this works</p>
-                  <p className="text-xs sm:text-sm text-muted-foreground">
-                    Assign priority levels to decide who to keep if you need to cut your list.
-                    <span className="hidden sm:inline"> Then create "What-If Lists" to compare different options before making final decisions.</span>
-                  </p>
+                <div className="min-w-0 flex-1">
+                  {organizeProgress === 100 ? (
+                    <>
+                      <p className="font-semibold text-sm sm:text-base text-green-700 dark:text-green-400">Step 2 Complete!</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                        Your guests are organized by priority. Now let's finalize your budget and capacity.
+                      </p>
+                      <Button 
+                        size="sm" 
+                        className="mt-3 gap-2"
+                        onClick={() => setActiveTab("budget")}
+                      >
+                        Continue to Finalize
+                        <ArrowRight className="h-3 w-3" />
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <p className="font-semibold text-sm sm:text-base">Step 2: Organize Your Guest List</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                        {priorityBreakdown.unassigned.length > 0 
+                          ? `You have ${priorityBreakdown.unassigned.length} household${priorityBreakdown.unassigned.length > 1 ? 's' : ''} without priority. Assign each one to help with tough decisions later.`
+                          : "Great start! Now create a What-If List to compare different guest list scenarios."}
+                        <span className="hidden sm:inline"> This is totally normal - weddings involve tricky family politics!</span>
+                      </p>
+                      {priorityBreakdown.unassigned.length > 0 && (
+                        <div className="mt-3 p-2 rounded-lg bg-background/80 border">
+                          <p className="text-xs font-medium flex items-center gap-2">
+                            <ArrowRight className="h-3 w-3 text-blue-500" />
+                            <span>Next: Scroll down to assign priorities to unassigned households</span>
+                          </p>
+                        </div>
+                      )}
+                      {priorityBreakdown.unassigned.length === 0 && scenarios.length === 0 && (
+                        <div className="mt-3 p-2 rounded-lg bg-background/80 border">
+                          <p className="text-xs font-medium flex items-center gap-2">
+                            <ArrowRight className="h-3 w-3 text-blue-500" />
+                            <span>Next:</span>
+                          </p>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            className="mt-2 gap-2"
+                            onClick={() => setScenarioDialogOpen(true)}
+                          >
+                            <Plus className="h-3 w-3" />
+                            Create Your First What-If List
+                          </Button>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
             </CardContent>
