@@ -318,14 +318,17 @@ export default function Documents() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Event (Optional)</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select 
+                        onValueChange={(value) => field.onChange(value === "none" ? "" : value)} 
+                        value={field.value || "none"}
+                      >
                         <FormControl>
                           <SelectTrigger data-testid="select-event">
                             <SelectValue placeholder="None - General document" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">None - General document</SelectItem>
+                          <SelectItem value="none">None - General document</SelectItem>
                           {events.map((event: any) => (
                             <SelectItem key={event.id} value={event.id}>
                               {event.name}
