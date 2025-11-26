@@ -450,14 +450,14 @@ export default function GuestManagement() {
   ];
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold" data-testid="text-page-title">Guest Planning</h1>
-          <p className="text-muted-foreground">Plan and organize your perfect guest list</p>
+          <h1 className="text-xl sm:text-2xl font-bold" data-testid="text-page-title">Guest Planning</h1>
+          <p className="text-sm text-muted-foreground">Plan and organize your perfect guest list</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           {suggestionsCount && suggestionsCount.count > 0 && (
             <Badge variant="secondary" className="gap-1" data-testid="badge-pending-suggestions">
               <Clock className="h-3 w-3" />
@@ -466,8 +466,8 @@ export default function GuestManagement() {
           )}
           <Link href="/guests">
             <Button variant="outline" size="sm" data-testid="button-back-to-guests">
-              <Users className="h-4 w-4 mr-2" />
-              View Guest List
+              <Users className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">View Guest List</span>
             </Button>
           </Link>
         </div>
@@ -475,44 +475,44 @@ export default function GuestManagement() {
 
       {/* Workflow Overview - Step by Step Guide */}
       <Card className="bg-gradient-to-r from-orange-50 to-pink-50 dark:from-orange-950/20 dark:to-pink-950/20 border-orange-200 dark:border-orange-800">
-        <CardContent className="p-4">
+        <CardContent className="p-3 sm:p-4">
           <div className="flex items-center gap-2 mb-3">
             <Lightbulb className="h-4 w-4 text-orange-500" />
             <span className="text-sm font-medium">Your Planning Workflow</span>
           </div>
-          <div className="flex items-center justify-between gap-2 overflow-x-auto pb-2">
+          <div className="grid grid-cols-3 gap-2 sm:flex sm:items-center sm:justify-between sm:gap-2">
             {workflowSteps.map((step, index) => (
-              <div key={step.id} className="flex items-center gap-2 flex-shrink-0">
+              <div key={step.id} className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
                 <button
                   onClick={() => setActiveTab(step.tab)}
-                  className={`flex flex-col items-center p-3 rounded-lg transition-all min-w-[100px] ${
+                  className={`flex flex-col items-center p-2 sm:p-3 rounded-lg transition-all w-full sm:w-auto sm:min-w-[100px] ${
                     activeTab === step.tab 
                       ? "bg-white dark:bg-gray-800 shadow-md ring-2 ring-orange-400" 
                       : "hover:bg-white/50 dark:hover:bg-gray-800/50"
                   }`}
                   data-testid={`workflow-step-${step.id}`}
                 >
-                  <div className={`p-2 rounded-full mb-1 ${
+                  <div className={`p-1.5 sm:p-2 rounded-full mb-1 ${
                     step.isComplete 
                       ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400" 
                       : "bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400"
                   }`}>
                     {step.isComplete ? (
-                      <CheckCircle2 className="h-5 w-5" />
+                      <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" />
                     ) : (
-                      <step.icon className="h-5 w-5" />
+                      <step.icon className="h-4 w-4 sm:h-5 sm:w-5" />
                     )}
                   </div>
-                  <span className="text-sm font-medium">{step.label}</span>
-                  <span className="text-xs text-muted-foreground">{step.description}</span>
+                  <span className="text-xs sm:text-sm font-medium">{step.label}</span>
+                  <span className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">{step.description}</span>
                   {step.count > 0 && !step.isComplete && (
-                    <Badge variant="secondary" className="mt-1 text-xs">
-                      {step.count} {step.id === "collect" ? "pending" : step.id === "organize" ? "unassigned" : ""}
+                    <Badge variant="secondary" className="mt-1 text-[10px] sm:text-xs px-1 sm:px-1.5">
+                      {step.count}
                     </Badge>
                   )}
                 </button>
                 {index < workflowSteps.length - 1 && (
-                  <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground hidden sm:block" />
                 )}
               </div>
             ))}
@@ -522,49 +522,49 @@ export default function GuestManagement() {
 
       {/* Main Tabs - Consolidated into 3 groups */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3 h-auto p-1" data-testid="tabs-guest-management">
+        <TabsList className="grid w-full grid-cols-3 h-auto p-1 gap-1" data-testid="tabs-guest-management">
           <TabsTrigger 
             value="suggestions" 
-            className="flex flex-col py-3 gap-1 data-[state=active]:bg-orange-100 dark:data-[state=active]:bg-orange-900/30" 
+            className="flex flex-col py-2 sm:py-3 gap-0.5 sm:gap-1 px-1 sm:px-3 data-[state=active]:bg-orange-100 dark:data-[state=active]:bg-orange-900/30" 
             data-testid="tab-suggestions"
           >
-            <div className="flex items-center gap-2">
-              <Inbox className="h-4 w-4" />
-              <span className="font-medium">Collect</span>
+            <div className="flex items-center gap-1 sm:gap-2">
+              <Inbox className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="text-xs sm:text-sm font-medium">Collect</span>
               {pendingSuggestions.length > 0 && (
-                <Badge variant="destructive" className="h-5 px-1.5 text-xs">
+                <Badge variant="destructive" className="h-4 sm:h-5 px-1 sm:px-1.5 text-[10px] sm:text-xs">
                   {pendingSuggestions.length}
                 </Badge>
               )}
             </div>
-            <span className="text-xs text-muted-foreground hidden sm:block">Suggestions & Sources</span>
+            <span className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">Suggestions & Sources</span>
           </TabsTrigger>
           <TabsTrigger 
             value="priority" 
-            className="flex flex-col py-3 gap-1 data-[state=active]:bg-blue-100 dark:data-[state=active]:bg-blue-900/30" 
+            className="flex flex-col py-2 sm:py-3 gap-0.5 sm:gap-1 px-1 sm:px-3 data-[state=active]:bg-blue-100 dark:data-[state=active]:bg-blue-900/30" 
             data-testid="tab-priority"
           >
-            <div className="flex items-center gap-2">
-              <Target className="h-4 w-4" />
-              <span className="font-medium">Organize</span>
+            <div className="flex items-center gap-1 sm:gap-2">
+              <Target className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="text-xs sm:text-sm font-medium">Organize</span>
               {priorityBreakdown.unassigned.length > 0 && (
-                <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+                <Badge variant="secondary" className="h-4 sm:h-5 px-1 sm:px-1.5 text-[10px] sm:text-xs">
                   {priorityBreakdown.unassigned.length}
                 </Badge>
               )}
             </div>
-            <span className="text-xs text-muted-foreground hidden sm:block">Priority & What-If Lists</span>
+            <span className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">Priority & What-If Lists</span>
           </TabsTrigger>
           <TabsTrigger 
             value="budget" 
-            className="flex flex-col py-3 gap-1 data-[state=active]:bg-green-100 dark:data-[state=active]:bg-green-900/30" 
+            className="flex flex-col py-2 sm:py-3 gap-0.5 sm:gap-1 px-1 sm:px-3 data-[state=active]:bg-green-100 dark:data-[state=active]:bg-green-900/30" 
             data-testid="tab-budget"
           >
-            <div className="flex items-center gap-2">
-              <CheckSquare className="h-4 w-4" />
-              <span className="font-medium">Finalize</span>
+            <div className="flex items-center gap-1 sm:gap-2">
+              <CheckSquare className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="text-xs sm:text-sm font-medium">Finalize</span>
               {cutList.length > 0 && (
-                <Badge variant="outline" className="h-5 px-1.5 text-xs">
+                <Badge variant="outline" className="h-4 sm:h-5 px-1 sm:px-1.5 text-[10px] sm:text-xs">
                   {cutList.length}
                 </Badge>
               )}
@@ -573,19 +573,19 @@ export default function GuestManagement() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="suggestions" className="space-y-6">
+        <TabsContent value="suggestions" className="space-y-4 sm:space-y-6">
           {/* Intro Card */}
           <Card className="bg-muted/30 border-dashed">
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                <div className="p-2 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400">
-                  <HelpCircle className="h-4 w-4" />
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-start gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 flex-shrink-0">
+                  <HelpCircle className="h-3 w-3 sm:h-4 sm:w-4" />
                 </div>
-                <div>
-                  <p className="font-medium text-sm">How this works</p>
-                  <p className="text-sm text-muted-foreground">
-                    Family members can suggest guests for your wedding. You review and approve or reject each suggestion. 
-                    Use "Sources" to track who submitted guests (e.g., "Mom's list", "Dad's friends") and set limits.
+                <div className="min-w-0">
+                  <p className="font-medium text-xs sm:text-sm">How this works</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
+                    Family members can suggest guests. You review and approve or reject each.
+                    <span className="hidden sm:inline"> Use "Sources" to track who submitted guests and set limits.</span>
                   </p>
                 </div>
               </div>
@@ -593,18 +593,18 @@ export default function GuestManagement() {
           </Card>
 
           {/* Guest Sources Section */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h2 className="text-lg font-semibold flex items-center gap-2">
-                  <UserCog className="h-5 w-5 text-muted-foreground" />
-                  Who's Submitting Guests?
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
+              <div className="min-w-0">
+                <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+                  <UserCog className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0" />
+                  <span className="truncate">Who's Submitting Guests?</span>
                 </h2>
-                <p className="text-sm text-muted-foreground">Track who added which guests (e.g., "Mom's list" or "Groom's college friends")</p>
+                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Track who added which guests (e.g., "Mom's list" or "Groom's college friends")</p>
               </div>
-              <Button onClick={() => setSourceDialogOpen(true)} size="sm" variant="outline" data-testid="button-add-source">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Source
+              <Button onClick={() => setSourceDialogOpen(true)} size="sm" variant="outline" className="self-start sm:self-auto" data-testid="button-add-source">
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Add Source</span>
               </Button>
             </div>
 
@@ -655,21 +655,21 @@ export default function GuestManagement() {
           <Separator />
 
           {/* Guest Suggestions Section */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h2 className="text-lg font-semibold flex items-center gap-2">
-                  <UserPlus className="h-5 w-5 text-muted-foreground" />
-                  Guest Suggestions
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
+              <div className="min-w-0">
+                <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2 flex-wrap">
+                  <UserPlus className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0" />
+                  <span>Suggestions</span>
                   {pendingSuggestions.length > 0 && (
-                    <Badge variant="destructive">{pendingSuggestions.length} to review</Badge>
+                    <Badge variant="destructive" className="text-xs">{pendingSuggestions.length} to review</Badge>
                   )}
                 </h2>
-                <p className="text-sm text-muted-foreground">Approve or reject suggested guests</p>
+                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Approve or reject suggested guests</p>
               </div>
-              <Button onClick={() => setSuggestionDialogOpen(true)} data-testid="button-suggest-guest">
-                <Plus className="h-4 w-4 mr-2" />
-                Suggest Guest
+              <Button onClick={() => setSuggestionDialogOpen(true)} size="sm" className="self-start sm:self-auto" data-testid="button-suggest-guest">
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Suggest Guest</span>
               </Button>
             </div>
 
@@ -771,19 +771,19 @@ export default function GuestManagement() {
           </div>
         </TabsContent>
 
-        <TabsContent value="budget" className="space-y-6">
+        <TabsContent value="budget" className="space-y-4 sm:space-y-6">
           {/* Intro Card */}
           <Card className="bg-muted/30 border-dashed">
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                <div className="p-2 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">
-                  <HelpCircle className="h-4 w-4" />
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-start gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 flex-shrink-0">
+                  <HelpCircle className="h-3 w-3 sm:h-4 sm:w-4" />
                 </div>
-                <div>
-                  <p className="font-medium text-sm">How this works</p>
-                  <p className="text-sm text-muted-foreground">
-                    Set your guest budget and cost per person to see how many guests you can afford.
-                    Use "Maybe Later" to park guests you might not invite - they're not deleted and can be restored anytime.
+                <div className="min-w-0">
+                  <p className="font-medium text-xs sm:text-sm">How this works</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
+                    Set your budget and cost per person to see capacity.
+                    <span className="hidden sm:inline"> Use "Maybe Later" to park guests you might not invite - they can be restored anytime.</span>
                   </p>
                 </div>
               </div>
@@ -791,14 +791,14 @@ export default function GuestManagement() {
           </Card>
 
           {/* Budget Calculator Section */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h2 className="text-lg font-semibold flex items-center gap-2">
-                  <DollarSign className="h-5 w-5 text-muted-foreground" />
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
+              <div className="min-w-0">
+                <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+                  <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0" />
                   Budget Calculator
                 </h2>
-                <p className="text-sm text-muted-foreground">How many guests can you afford?</p>
+                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">How many guests can you afford?</p>
               </div>
             </div>
 
@@ -898,17 +898,17 @@ export default function GuestManagement() {
           <Separator />
 
           {/* Maybe Later Section (formerly Cut List) */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h2 className="text-lg font-semibold flex items-center gap-2">
-                  <Scissors className="h-5 w-5 text-muted-foreground" />
-                  Maybe Later
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
+              <div className="min-w-0">
+                <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2 flex-wrap">
+                  <Scissors className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0" />
+                  <span>Maybe Later</span>
                   {cutList.length > 0 && (
-                    <Badge variant="secondary">{cutList.length} parked</Badge>
+                    <Badge variant="secondary" className="text-xs">{cutList.length} parked</Badge>
                   )}
                 </h2>
-                <p className="text-sm text-muted-foreground">Guests you might not invite - restore them anytime</p>
+                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Guests you might not invite - restore them anytime</p>
               </div>
             </div>
 
@@ -968,19 +968,19 @@ export default function GuestManagement() {
           </div>
         </TabsContent>
 
-        <TabsContent value="priority" className="space-y-6">
+        <TabsContent value="priority" className="space-y-4 sm:space-y-6">
           {/* Intro Card */}
           <Card className="bg-muted/30 border-dashed">
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
-                  <HelpCircle className="h-4 w-4" />
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-start gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex-shrink-0">
+                  <HelpCircle className="h-3 w-3 sm:h-4 sm:w-4" />
                 </div>
-                <div>
-                  <p className="font-medium text-sm">How this works</p>
-                  <p className="text-sm text-muted-foreground">
-                    Assign priority levels to each household to help decide who to keep if you need to cut your list.
-                    Then create "What-If Lists" to compare different guest list options before making final decisions.
+                <div className="min-w-0">
+                  <p className="font-medium text-xs sm:text-sm">How this works</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
+                    Assign priority levels to decide who to keep if you need to cut your list.
+                    <span className="hidden sm:inline"> Then create "What-If Lists" to compare different options before making final decisions.</span>
                   </p>
                 </div>
               </div>
@@ -988,14 +988,14 @@ export default function GuestManagement() {
           </Card>
 
           {/* Priority Tiers Section */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h2 className="text-lg font-semibold flex items-center gap-2">
-                  <ListFilter className="h-5 w-5 text-muted-foreground" />
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
+              <div className="min-w-0">
+                <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+                  <ListFilter className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0" />
                   Guest Priority
                 </h2>
-                <p className="text-sm text-muted-foreground">Who's most important? Assign priority to help with tough decisions.</p>
+                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Who's most important? Assign priority to help with tough decisions.</p>
               </div>
             </div>
 
@@ -1099,18 +1099,18 @@ export default function GuestManagement() {
           <Separator />
 
           {/* What-If Lists Section (formerly Scenarios) */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h2 className="text-lg font-semibold flex items-center gap-2">
-                  <Layers className="h-5 w-5 text-muted-foreground" />
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
+              <div className="min-w-0">
+                <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+                  <Layers className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0" />
                   What-If Lists
                 </h2>
-                <p className="text-sm text-muted-foreground">Create different versions of your guest list to compare options</p>
+                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Create different versions of your guest list to compare options</p>
               </div>
-              <Button onClick={() => setScenarioDialogOpen(true)} data-testid="button-create-scenario">
-                <Plus className="h-4 w-4 mr-2" />
-                New List
+              <Button onClick={() => setScenarioDialogOpen(true)} size="sm" className="self-start sm:self-auto" data-testid="button-create-scenario">
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">New List</span>
               </Button>
             </div>
 
