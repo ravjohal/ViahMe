@@ -4973,6 +4973,213 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to sync vendor calendar" });
     }
   });
+
+  // ============================================================================
+  // OUTLOOK CALENDAR INTEGRATION - Vendor availability from Microsoft 365
+  // ============================================================================
+
+  // List connected Outlook calendars (requires authentication)
+  app.get("/api/outlook-calendar/list", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const { listOutlookCalendars } = await import("./outlookCalendar");
+      const calendars = await listOutlookCalendars();
+      res.json(calendars);
+    } catch (error: any) {
+      console.error("Error listing Outlook calendars:", error);
+      if (error.message?.includes('not connected')) {
+        return res.status(401).json({ error: "Outlook not connected", needsAuth: true });
+      }
+      res.status(500).json({ error: "Failed to list Outlook calendars" });
+    }
+  });
+
+  // Get Outlook calendar events for a date range (requires authentication)
+  app.get("/api/outlook-calendar/events", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const { calendarId = 'primary', startDate, endDate } = req.query;
+      
+      if (!startDate || !endDate) {
+        return res.status(400).json({ error: "startDate and endDate are required" });
+      }
+
+      const { getOutlookCalendarEvents } = await import("./outlookCalendar");
+      const events = await getOutlookCalendarEvents(
+        calendarId as string,
+        new Date(startDate as string),
+        new Date(endDate as string)
+      );
+      res.json(events);
+    } catch (error: any) {
+      console.error("Error fetching Outlook calendar events:", error);
+      if (error.message?.includes('not connected')) {
+        return res.status(401).json({ error: "Outlook not connected", needsAuth: true });
+      }
+      res.status(500).json({ error: "Failed to fetch Outlook calendar events" });
+    }
+  });
+
+  // Get Outlook free/busy information (requires authentication)
+  app.get("/api/outlook-calendar/freebusy", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const { startDate, endDate } = req.query;
+      
+      if (!startDate || !endDate) {
+        return res.status(400).json({ error: "startDate and endDate are required" });
+      }
+
+      const { getOutlookFreeBusy } = await import("./outlookCalendar");
+      const busySlots = await getOutlookFreeBusy(
+        new Date(startDate as string),
+        new Date(endDate as string)
+      );
+      res.json(busySlots);
+    } catch (error: any) {
+      console.error("Error fetching Outlook free/busy:", error);
+      if (error.message?.includes('not connected')) {
+        return res.status(401).json({ error: "Outlook not connected", needsAuth: true });
+      }
+      res.status(500).json({ error: "Failed to fetch Outlook free/busy information" });
+    }
+  });
+
+  // Get Outlook availability windows for booking (requires authentication)
+  app.get("/api/outlook-calendar/availability", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const { 
+        startDate, 
+        endDate,
+        workingHoursStart = '9',
+        workingHoursEnd = '18',
+        slotDuration = '60'
+      } = req.query;
+      
+      if (!startDate || !endDate) {
+        return res.status(400).json({ error: "startDate and endDate are required" });
+      }
+
+      const { getOutlookAvailabilityWindows } = await import("./outlookCalendar");
+      const availability = await getOutlookAvailabilityWindows(
+        new Date(startDate as string),
+        new Date(endDate as string),
+        parseInt(workingHoursStart as string),
+        parseInt(workingHoursEnd as string),
+        parseInt(slotDuration as string)
+      );
+      res.json(availability);
+    } catch (error: any) {
+      console.error("Error fetching Outlook availability:", error);
+      if (error.message?.includes('not connected')) {
+        return res.status(401).json({ error: "Outlook not connected", needsAuth: true });
+      }
+      res.status(500).json({ error: "Failed to fetch Outlook availability" });
+    }
+  });
+
+  // Check if a specific Outlook slot is available (requires authentication)
+  app.get("/api/outlook-calendar/check-slot", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const { startTime, endTime } = req.query;
+      
+      if (!startTime || !endTime) {
+        return res.status(400).json({ error: "startTime and endTime are required" });
+      }
+
+      const { isOutlookSlotAvailable } = await import("./outlookCalendar");
+      const available = await isOutlookSlotAvailable(
+        new Date(startTime as string),
+        new Date(endTime as string)
+      );
+      res.json({ available });
+    } catch (error: any) {
+      console.error("Error checking Outlook slot:", error);
+      if (error.message?.includes('not connected')) {
+        return res.status(401).json({ error: "Outlook not connected", needsAuth: true });
+      }
+      res.status(500).json({ error: "Failed to check Outlook slot availability" });
+    }
+  });
+
+  // Create a calendar event in Outlook (for confirmed bookings, requires authentication)
+  app.post("/api/outlook-calendar/events", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const { calendarId = 'primary', subject, body, startTime, endTime, attendees } = req.body;
+      
+      if (!subject || !startTime || !endTime) {
+        return res.status(400).json({ error: "subject, startTime, and endTime are required" });
+      }
+
+      const { createOutlookCalendarEvent } = await import("./outlookCalendar");
+      const event = await createOutlookCalendarEvent(
+        calendarId,
+        subject,
+        body || '',
+        new Date(startTime),
+        new Date(endTime),
+        attendees
+      );
+      res.json(event);
+    } catch (error: any) {
+      console.error("Error creating Outlook calendar event:", error);
+      if (error.message?.includes('not connected')) {
+        return res.status(401).json({ error: "Outlook not connected", needsAuth: true });
+      }
+      res.status(500).json({ error: "Failed to create Outlook calendar event" });
+    }
+  });
+
+  // Sync vendor availability from Outlook Calendar to the app (requires authentication)
+  app.post("/api/vendors/:vendorId/sync-outlook-calendar", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const { vendorId } = req.params;
+      const { calendarId = 'primary', startDate, endDate } = req.body;
+      
+      if (!startDate || !endDate) {
+        return res.status(400).json({ error: "startDate and endDate are required" });
+      }
+
+      const vendor = await storage.getVendor(vendorId);
+      if (!vendor) {
+        return res.status(404).json({ error: "Vendor not found" });
+      }
+
+      const { getOutlookCalendarEvents } = await import("./outlookCalendar");
+      const events = await getOutlookCalendarEvents(
+        calendarId,
+        new Date(startDate),
+        new Date(endDate)
+      );
+
+      // Convert calendar events to vendor availability records
+      const availabilityRecords = [];
+      for (const event of events) {
+        const dateStr = event.start.toISOString().split('T')[0];
+        const timeSlot = event.isAllDay 
+          ? 'all-day'
+          : `${event.start.toTimeString().slice(0, 5)}-${event.end.toTimeString().slice(0, 5)}`;
+
+        // Create blocked availability for busy times
+        const record = await storage.createVendorAvailability({
+          vendorId,
+          date: new Date(dateStr),
+          timeSlot,
+          status: 'blocked',
+          notes: `Synced from Outlook Calendar: ${event.subject}`,
+        });
+        availabilityRecords.push(record);
+      }
+
+      res.json({ 
+        message: `Synced ${events.length} events from Outlook Calendar`,
+        records: availabilityRecords 
+      });
+    } catch (error: any) {
+      console.error("Error syncing Outlook vendor calendar:", error);
+      if (error.message?.includes('not connected')) {
+        return res.status(401).json({ error: "Outlook not connected", needsAuth: true });
+      }
+      res.status(500).json({ error: "Failed to sync Outlook vendor calendar" });
+    }
+  });
   
   return httpServer;
 }

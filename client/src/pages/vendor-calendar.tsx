@@ -38,6 +38,14 @@ interface CalendarInfo {
   backgroundColor?: string;
 }
 
+interface OutlookCalendarInfo {
+  id: string;
+  name: string;
+  color?: string;
+  isDefaultCalendar?: boolean;
+  canEdit?: boolean;
+}
+
 interface AvailabilitySlot {
   start: string;
   end: string;
@@ -125,7 +133,16 @@ export default function VendorCalendar() {
     enabled: currentCalendarSource === 'google',
   });
 
+  const { data: outlookCalendars, isLoading: outlookCalendarsLoading, error: outlookCalendarsError } = useQuery<OutlookCalendarInfo[]>({
+    queryKey: ["/api/outlook-calendar/list"],
+    retry: false,
+    enabled: currentCalendarSource === 'outlook',
+  });
+
+  const [selectedOutlookCalendar, setSelectedOutlookCalendar] = useState<string>("primary");
+
   const googleNeedsAuth = (calendarsError as any)?.needsAuth || (!calendarsLoading && !calendars && currentCalendarSource === 'google');
+  const outlookNeedsAuth = (outlookCalendarsError as any)?.needsAuth || (!outlookCalendarsLoading && !outlookCalendars && currentCalendarSource === 'outlook');
 
   const startDate = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
   const endDate = format(addMonths(new Date(startDate), 1), 'yyyy-MM-dd');
@@ -143,6 +160,20 @@ export default function VendorCalendar() {
       return res.json();
     },
     enabled: currentCalendarSource === 'google' && !!calendars && calendars.length > 0,
+  });
+
+  const { data: outlookAvailability, isLoading: outlookAvailabilityLoading } = useQuery<AvailabilityWindow[]>({
+    queryKey: ["/api/outlook-calendar/availability", startDate, endDate],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        startDate: startDate,
+        endDate: endDate,
+      });
+      const res = await fetch(`/api/outlook-calendar/availability?${params}`);
+      if (!res.ok) throw new Error("Failed to fetch Outlook availability");
+      return res.json();
+    },
+    enabled: currentCalendarSource === 'outlook' && !!outlookCalendars && outlookCalendars.length > 0,
   });
 
   const syncMutation = useMutation({
@@ -165,6 +196,31 @@ export default function VendorCalendar() {
       toast({
         title: "Sync failed",
         description: error.message || "Failed to sync calendar",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const syncOutlookMutation = useMutation({
+    mutationFn: async () => {
+      if (!myVendor) throw new Error("No vendor profile found");
+      return apiRequest("POST", `/api/vendors/${myVendor.id}/sync-outlook-calendar`, {
+        calendarId: selectedOutlookCalendar,
+        startDate: syncStartDate.toISOString(),
+        endDate: syncEndDate.toISOString(),
+      });
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/vendor-availability"] });
+      toast({
+        title: "Outlook Calendar synced",
+        description: data.message || "Your Outlook calendar has been synced successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Sync failed",
+        description: error.message || "Failed to sync Outlook calendar",
         variant: "destructive",
       });
     },
@@ -767,59 +823,269 @@ export default function VendorCalendar() {
 
       {/* Outlook Calendar Integration */}
       {currentCalendarSource === 'outlook' && (
-        <Card className="max-w-2xl mx-auto">
-          <CardHeader className="text-center">
-            <div className="mx-auto w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mb-4">
-              <Mail className="h-8 w-8 text-blue-600" />
+        <>
+          {outlookCalendarsLoading && (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center space-y-4">
+                <Loader2 className="h-12 w-12 animate-spin mx-auto text-blue-600" />
+                <p className="text-muted-foreground">Connecting to Outlook Calendar...</p>
+              </div>
             </div>
-            <CardTitle className="text-2xl">Connect Outlook Calendar</CardTitle>
-            <CardDescription className="text-base">
-              Connect your Microsoft 365 or Outlook.com calendar to sync your availability.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="bg-muted/50 p-4 rounded-lg space-y-3">
-              <h3 className="font-medium">What you'll get:</h3>
-              <ul className="space-y-2">
-                <li className="flex items-center gap-2 text-sm">
-                  <Check className="h-4 w-4 text-green-600" />
-                  Automatic availability sync from Outlook
-                </li>
-                <li className="flex items-center gap-2 text-sm">
-                  <Check className="h-4 w-4 text-green-600" />
-                  Real-time free/busy status for couples
-                </li>
-                <li className="flex items-center gap-2 text-sm">
-                  <Check className="h-4 w-4 text-green-600" />
-                  Booking confirmations added to your calendar
-                </li>
-                <li className="flex items-center gap-2 text-sm">
-                  <Check className="h-4 w-4 text-green-600" />
-                  Works with Microsoft 365 and Outlook.com
-                </li>
-              </ul>
-            </div>
+          )}
 
-            <div className="bg-amber-50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-200 p-4 rounded-lg">
-              <AlertCircle className="h-4 w-4 inline mr-2" />
-              <span className="font-medium">Coming Soon</span>
-              <p className="text-sm mt-1">
-                Outlook Calendar integration is being set up. In the meantime, you can use the Viah.me Calendar 
-                or Google Calendar to manage your availability.
-              </p>
-            </div>
+          {outlookNeedsAuth && !outlookCalendarsLoading && (
+            <Card className="max-w-2xl mx-auto">
+              <CardHeader className="text-center">
+                <div className="mx-auto w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mb-4">
+                  <Mail className="h-8 w-8 text-blue-600" />
+                </div>
+                <CardTitle className="text-2xl">Connect Outlook Calendar</CardTitle>
+                <CardDescription className="text-base">
+                  Connect your Microsoft 365 or Outlook.com calendar to sync your availability.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="bg-muted/50 p-4 rounded-lg space-y-3">
+                  <h3 className="font-medium">What you'll get:</h3>
+                  <ul className="space-y-2">
+                    <li className="flex items-center gap-2 text-sm">
+                      <Check className="h-4 w-4 text-green-600" />
+                      Automatic availability sync from Outlook
+                    </li>
+                    <li className="flex items-center gap-2 text-sm">
+                      <Check className="h-4 w-4 text-green-600" />
+                      Real-time free/busy status for couples
+                    </li>
+                    <li className="flex items-center gap-2 text-sm">
+                      <Check className="h-4 w-4 text-green-600" />
+                      Booking confirmations added to your calendar
+                    </li>
+                    <li className="flex items-center gap-2 text-sm">
+                      <Check className="h-4 w-4 text-green-600" />
+                      Works with Microsoft 365 and Outlook.com
+                    </li>
+                  </ul>
+                </div>
 
-            <Button 
-              variant="outline"
-              className="w-full"
-              onClick={() => handleCalendarSourceChange('local')}
-              data-testid="button-use-local-instead"
-            >
-              <Home className="mr-2 h-4 w-4" />
-              Use Viah.me Calendar Instead
-            </Button>
-          </CardContent>
-        </Card>
+                <div className="flex flex-col gap-3">
+                  <Button 
+                    size="lg" 
+                    className="w-full bg-blue-600 hover:bg-blue-700"
+                    onClick={() => window.location.reload()}
+                    data-testid="button-connect-outlook"
+                  >
+                    <Link2 className="mr-2 h-5 w-5" />
+                    Connect Outlook Calendar
+                  </Button>
+                  <p className="text-xs text-muted-foreground text-center">
+                    Your Outlook Calendar connection is managed through Replit's secure integration.
+                    Refresh this page after connecting your account.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {outlookCalendars && outlookCalendars.length > 0 && (
+            <>
+              <div className="flex items-center gap-2 mb-4">
+                <Badge variant="outline" className="flex items-center gap-2">
+                  <div className="h-2 w-2 bg-blue-500 rounded-full" />
+                  Outlook Calendar Connected
+                </Badge>
+              </div>
+
+              <div className="grid gap-6 lg:grid-cols-3">
+                <Card className="lg:col-span-1">
+                  <CardHeader>
+                    <CardTitle className="text-lg">Calendar Selection</CardTitle>
+                    <CardDescription>Choose which Outlook calendar to sync</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="outlook-calendar-select">Active Calendar</Label>
+                      <Select value={selectedOutlookCalendar} onValueChange={setSelectedOutlookCalendar}>
+                        <SelectTrigger id="outlook-calendar-select" data-testid="select-outlook-calendar">
+                          <SelectValue placeholder="Select a calendar" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {outlookCalendars?.map((cal) => (
+                            <SelectItem key={cal.id} value={cal.id}>
+                              <div className="flex items-center gap-2">
+                                {cal.color && (
+                                  <div 
+                                    className="h-3 w-3 rounded-full" 
+                                    style={{ backgroundColor: cal.color }}
+                                  />
+                                )}
+                                <span>{cal.name}</span>
+                                {cal.isDefaultCalendar && (
+                                  <Badge variant="secondary" className="text-xs">Default</Badge>
+                                )}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="pt-4 border-t">
+                      <h4 className="text-sm font-medium mb-3">Sync Date Range</h4>
+                      <div className="grid gap-3">
+                        <div>
+                          <Label className="text-xs text-muted-foreground">From</Label>
+                          <Calendar
+                            mode="single"
+                            selected={syncStartDate}
+                            onSelect={(d) => d && setSyncStartDate(d)}
+                            className="rounded-md border"
+                            data-testid="calendar-sync-start"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs text-muted-foreground">To</Label>
+                          <Calendar
+                            mode="single"
+                            selected={syncEndDate}
+                            onSelect={(d) => d && setSyncEndDate(d)}
+                            disabled={(date) => date < syncStartDate}
+                            className="rounded-md border"
+                            data-testid="calendar-sync-end"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <Button 
+                      className="w-full" 
+                      onClick={() => syncOutlookMutation.mutate()}
+                      disabled={syncOutlookMutation.isPending}
+                      data-testid="button-sync-outlook"
+                    >
+                      {syncOutlookMutation.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Syncing...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="mr-2 h-4 w-4" />
+                          Sync to Viah.me
+                        </>
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <Card className="lg:col-span-2">
+                  <CardHeader>
+                    <CardTitle className="text-lg">Availability Preview</CardTitle>
+                    <CardDescription>
+                      View your overall free/busy status from your Outlook account
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="mb-4">
+                      <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={setSelectedDate}
+                        className="rounded-md border mx-auto"
+                        data-testid="calendar-outlook-preview"
+                      />
+                    </div>
+
+                    {outlookAvailabilityLoading && (
+                      <div className="flex justify-center py-4">
+                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                      </div>
+                    )}
+
+                    {selectedDate && outlookAvailability && (
+                      <div className="space-y-2">
+                        <h4 className="font-medium text-sm">
+                          {format(selectedDate, 'EEEE, MMMM d, yyyy')}
+                        </h4>
+                        {(() => {
+                          const dayAvailability = outlookAvailability.find(
+                            (a) => a.date === format(selectedDate, 'yyyy-MM-dd')
+                          );
+                          if (!dayAvailability) {
+                            return (
+                              <p className="text-sm text-muted-foreground">
+                                No availability data for this date
+                              </p>
+                            );
+                          }
+                          return (
+                            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                              {dayAvailability.slots.map((slot, idx) => (
+                                <div
+                                  key={idx}
+                                  className={`p-2 rounded-md text-sm flex items-center gap-2 ${
+                                    slot.available
+                                      ? 'bg-green-50 text-green-700 border border-green-200 dark:bg-green-950/20 dark:text-green-300 dark:border-green-800'
+                                      : 'bg-red-50 text-red-700 border border-red-200 dark:bg-red-950/20 dark:text-red-300 dark:border-red-800'
+                                  }`}
+                                >
+                                  {slot.available ? (
+                                    <Check className="h-3 w-3" />
+                                  ) : (
+                                    <X className="h-3 w-3" />
+                                  )}
+                                  <Clock className="h-3 w-3" />
+                                  {format(new Date(slot.start), 'h:mm a')} - {format(new Date(slot.end), 'h:mm a')}
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Your Outlook Calendars</CardTitle>
+                  <CardDescription>All calendars connected to your Microsoft account</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {outlookCalendars.map((cal) => (
+                      <div
+                        key={cal.id}
+                        className={`p-4 rounded-lg border cursor-pointer transition-colors hover-elevate ${
+                          selectedOutlookCalendar === cal.id
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/20'
+                            : 'border-border bg-card'
+                        }`}
+                        onClick={() => setSelectedOutlookCalendar(cal.id)}
+                        data-testid={`outlook-calendar-card-${cal.id}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div 
+                            className="h-10 w-10 rounded-lg flex items-center justify-center bg-blue-600"
+                          >
+                            <Mail className="h-5 w-5 text-white" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h4 className="font-medium truncate">{cal.name}</h4>
+                            <p className="text-xs text-muted-foreground truncate">{cal.id.slice(0, 20)}...</p>
+                          </div>
+                        </div>
+                        {cal.isDefaultCalendar && (
+                          <Badge variant="secondary" className="mt-3">Default Calendar</Badge>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
+        </>
       )}
     </div>
   );
