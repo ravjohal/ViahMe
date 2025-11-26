@@ -152,6 +152,8 @@ export const vendors = pgTable("vendors", {
   featured: boolean("featured").default(false),
   isPublished: boolean("is_published").notNull().default(false), // Whether vendor profile is visible to couples
   calendarShared: boolean("calendar_shared").notNull().default(false), // Whether vendor shares availability calendar with couples
+  calendarSource: text("calendar_source").notNull().default('local'), // 'local' | 'google' | 'outlook' - which calendar is source of truth
+  externalCalendarId: text("external_calendar_id"), // The ID of the external calendar (Google/Outlook) to sync with
   yelpBusinessId: text("yelp_business_id"), // Yelp business ID for fetching external reviews
   googlePlaceId: text("google_place_id"), // Google Place ID for fetching external reviews
   createdAt: timestamp("created_at").notNull().defaultNow(),
