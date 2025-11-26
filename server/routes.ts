@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { WebSocketServer, WebSocket } from "ws";
 import { z } from "zod";
 import { storage, parseConversationId } from "./storage";
 import { registerAuthRoutes } from "./auth-routes";
@@ -63,6 +64,41 @@ import {
     await seedBudgetBenchmarks(storage);
   }
 })();
+
+// ============================================================================
+// LIVE VIEWER TRACKING - In-memory tracking of active guests viewing live feed
+// ============================================================================
+interface ViewerSession {
+  viewerId: string;
+  weddingId: string;
+  lastHeartbeat: number;
+}
+
+const activeViewers = new Map<string, ViewerSession>();
+const VIEWER_TIMEOUT_MS = 60000; // Consider viewer inactive after 60 seconds
+
+function cleanupStaleViewers() {
+  const now = Date.now();
+  for (const [viewerId, session] of activeViewers.entries()) {
+    if (now - session.lastHeartbeat > VIEWER_TIMEOUT_MS) {
+      activeViewers.delete(viewerId);
+    }
+  }
+}
+
+function getViewerCount(weddingId: string): number {
+  cleanupStaleViewers();
+  let count = 0;
+  for (const session of activeViewers.values()) {
+    if (session.weddingId === weddingId) {
+      count++;
+    }
+  }
+  return count;
+}
+
+// Cleanup stale viewers every 30 seconds
+setInterval(cleanupStaleViewers, 30000);
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================================================
@@ -3133,6 +3169,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { weddingId } = req.params;
       const status = await storage.getLiveWeddingStatus(weddingId);
+      const viewerCount = getViewerCount(weddingId);
       
       if (!status) {
         // Return default status if none exists
@@ -3143,12 +3180,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           currentStageId: null,
           currentGapId: null,
           lastBroadcastMessage: null,
-          lastUpdatedAt: new Date()
+          lastUpdatedAt: new Date(),
+          viewerCount
         });
       }
       
       // If live, enrich with current event/stage details
-      let enrichedStatus: any = { ...status };
+      let enrichedStatus: any = { ...status, viewerCount };
       
       if (status.currentEventId) {
         const event = await storage.getEvent(status.currentEventId);
@@ -3182,6 +3220,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Viewer heartbeat - guests call this periodically to register as active
+  app.post("/api/public/weddings/:weddingId/viewer-heartbeat", async (req, res) => {
+    try {
+      const { weddingId } = req.params;
+      const viewerId = req.body.viewerId || req.headers['x-viewer-id'] as string;
+      
+      if (!viewerId) {
+        return res.status(400).json({ error: "viewerId is required" });
+      }
+      
+      activeViewers.set(viewerId, {
+        viewerId,
+        weddingId,
+        lastHeartbeat: Date.now()
+      });
+      
+      const viewerCount = getViewerCount(weddingId);
+      res.json({ success: true, viewerCount });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get viewer count for a wedding (public endpoint)
+  app.get("/api/public/weddings/:weddingId/viewer-count", async (req, res) => {
+    try {
+      const { weddingId } = req.params;
+      const viewerCount = getViewerCount(weddingId);
+      res.json({ viewerCount });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Update live wedding status
   app.patch("/api/weddings/:weddingId/live-status", async (req, res) => {
     try {
@@ -3194,7 +3266,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...statusData
       });
       
-      // TODO: Broadcast status change via WebSocket
+      // Broadcast status change via WebSocket
+      if ((global as any).broadcastToWedding) {
+        (global as any).broadcastToWedding(weddingId, {
+          type: 'status_update',
+          data: status
+        });
+      }
       
       res.json(status);
     } catch (error: any) {
@@ -3215,7 +3293,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lastBroadcastMessage: lastBroadcastMessage || (isLive ? "Wedding is now live!" : "Wedding broadcast has ended.")
       });
       
-      // TODO: Broadcast to connected guests via WebSocket
+      // Broadcast to connected guests via WebSocket
+      if ((global as any).broadcastToWedding) {
+        (global as any).broadcastToWedding(weddingId, {
+          type: isLive ? 'went_live' : 'went_offline',
+          data: status
+        });
+      }
       
       res.json(status);
     } catch (error: any) {
@@ -4599,6 +4683,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  
+  // ============================================================================
+  // WEBSOCKET SERVER - Real-time updates for guests
+  // ============================================================================
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws/live-feed' });
+  
+  const weddingConnections = new Map<string, Set<WebSocket>>();
+  
+  wss.on('connection', (ws, req) => {
+    const url = new URL(req.url || '', `http://${req.headers.host}`);
+    const weddingId = url.searchParams.get('weddingId');
+    
+    if (!weddingId) {
+      ws.close(1008, 'weddingId required');
+      return;
+    }
+    
+    if (!weddingConnections.has(weddingId)) {
+      weddingConnections.set(weddingId, new Set());
+    }
+    weddingConnections.get(weddingId)!.add(ws);
+    
+    ws.on('close', () => {
+      weddingConnections.get(weddingId)?.delete(ws);
+      if (weddingConnections.get(weddingId)?.size === 0) {
+        weddingConnections.delete(weddingId);
+      }
+    });
+    
+    ws.send(JSON.stringify({ type: 'connected', weddingId }));
+  });
+  
+  (global as any).broadcastToWedding = (weddingId: string, data: any) => {
+    const connections = weddingConnections.get(weddingId);
+    if (connections) {
+      const message = JSON.stringify(data);
+      connections.forEach((ws) => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(message);
+        }
+      });
+    }
+  };
+  
   return httpServer;
 }
 

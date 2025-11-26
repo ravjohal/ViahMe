@@ -1,5 +1,6 @@
 import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,19 @@ import {
   Wine
 } from "lucide-react";
 import { format, parseISO, differenceInMinutes, isAfter, isBefore } from "date-fns";
+
+function getOrCreateViewerId(): string {
+  const storageKey = 'viah_viewer_id';
+  if (typeof window === 'undefined') {
+    return `viewer_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+  let viewerId = localStorage.getItem(storageKey);
+  if (!viewerId) {
+    viewerId = `viewer_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    localStorage.setItem(storageKey, viewerId);
+  }
+  return viewerId;
+}
 
 const RECOMMENDATION_ICONS: Record<string, typeof Coffee> = {
   restaurant: Utensils,
@@ -100,12 +114,76 @@ interface LiveFeedData {
 
 export default function GuestLiveFeed() {
   const { weddingId } = useParams<{ weddingId: string }>();
+  const viewerIdRef = useRef<string | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
 
   const { data: liveFeed, isLoading, error, refetch, isRefetching } = useQuery<LiveFeedData>({
     queryKey: ["/api/public/weddings", weddingId, "live-feed"],
     enabled: !!weddingId,
     refetchInterval: 30000,
   });
+
+  useEffect(() => {
+    if (!weddingId) return;
+    
+    viewerIdRef.current = getOrCreateViewerId();
+    
+    const sendHeartbeat = async () => {
+      try {
+        await fetch(`/api/public/weddings/${weddingId}/viewer-heartbeat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ viewerId: viewerIdRef.current }),
+        });
+      } catch (error) {
+        console.error('Failed to send viewer heartbeat:', error);
+      }
+    };
+    
+    sendHeartbeat();
+    const heartbeatInterval = setInterval(sendHeartbeat, 30000);
+    
+    return () => {
+      clearInterval(heartbeatInterval);
+    };
+  }, [weddingId]);
+
+  useEffect(() => {
+    if (!weddingId) return;
+    
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws/live-feed?weddingId=${weddingId}`;
+    
+    const ws = new WebSocket(wsUrl);
+    wsRef.current = ws;
+    
+    ws.onopen = () => {
+      console.log('WebSocket connected for live updates');
+    };
+    
+    ws.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data);
+        if (message.type === 'status_update' || message.type === 'went_live' || message.type === 'went_offline') {
+          refetch();
+        }
+      } catch (error) {
+        console.error('Failed to parse WebSocket message:', error);
+      }
+    };
+    
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+    
+    ws.onclose = () => {
+      console.log('WebSocket disconnected');
+    };
+    
+    return () => {
+      ws.close();
+    };
+  }, [weddingId, refetch]);
 
   if (isLoading) {
     return (
