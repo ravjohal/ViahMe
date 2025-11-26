@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { PermissionsProvider } from "@/hooks/use-permissions";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AppHeader } from "@/components/app-header";
+import { FloatingChecklist } from "@/components/floating-checklist";
 import NotFound from "@/pages/not-found";
 import Onboarding from "@/pages/onboarding";
 import Login from "@/pages/login";
@@ -208,6 +209,7 @@ function AppLayout() {
     <div className="min-h-screen bg-background">
       {!hideHeader && <AppHeader />}
       <Router />
+      <FloatingChecklist />
     </div>
   );
 }
