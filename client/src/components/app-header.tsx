@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Bell, Calendar, Home, Users, CheckSquare, Clock, DollarSign, FileText, MessageSquare, Music, Image, CalendarClock, UserCircle, Menu, LogOut, Settings, ShoppingBag, Package, BookOpen, Coffee, Radio, UsersRound, ListFilter } from "lucide-react";
+import { Bell, Calendar, Home, Users, CheckSquare, Clock, DollarSign, FileText, MessageSquare, Music, Image, CalendarClock, UserCircle, Menu, LogOut, Settings, ShoppingBag, Package, BookOpen, Coffee, Radio, UsersRound, ListFilter, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -37,6 +37,7 @@ const NAV_ITEMS: NavItem[] = [
   { path: "/collaborators", label: "Team", icon: UsersRound, permission: "collaborators" },
   { path: "/tasks", label: "Tasks", icon: CheckSquare, permission: "tasks" },
   { path: "/budget", label: "Budget", icon: DollarSign, permission: "budget" },
+  { path: "/website-builder", label: "Website", icon: Globe, permission: "website" },
   { path: "/shopping", label: "Shopping", icon: Package, permission: "shopping" },
   { path: "/cultural-info", label: "Cultural Info", icon: BookOpen },
   { path: "/invitations", label: "Invitations", icon: ShoppingBag, permission: "invitations" },
