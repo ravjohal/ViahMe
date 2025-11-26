@@ -520,59 +520,8 @@ export default function GuestManagement() {
         </CardContent>
       </Card>
 
-      {/* Main Tabs - Consolidated into 3 groups */}
+      {/* Main Tabs - Using workflow stepper as navigation, hiding redundant TabsList */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3 h-auto p-1 gap-1" data-testid="tabs-guest-management">
-          <TabsTrigger 
-            value="suggestions" 
-            className="flex flex-col py-2 sm:py-3 gap-0.5 sm:gap-1 px-1 sm:px-3 data-[state=active]:bg-orange-100 dark:data-[state=active]:bg-orange-900/30" 
-            data-testid="tab-suggestions"
-          >
-            <div className="flex items-center gap-1 sm:gap-2">
-              <Inbox className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="text-xs sm:text-sm font-medium">Collect</span>
-              {pendingSuggestions.length > 0 && (
-                <Badge variant="destructive" className="h-4 sm:h-5 px-1 sm:px-1.5 text-[10px] sm:text-xs">
-                  {pendingSuggestions.length}
-                </Badge>
-              )}
-            </div>
-            <span className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">Suggestions & Sources</span>
-          </TabsTrigger>
-          <TabsTrigger 
-            value="priority" 
-            className="flex flex-col py-2 sm:py-3 gap-0.5 sm:gap-1 px-1 sm:px-3 data-[state=active]:bg-blue-100 dark:data-[state=active]:bg-blue-900/30" 
-            data-testid="tab-priority"
-          >
-            <div className="flex items-center gap-1 sm:gap-2">
-              <Target className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="text-xs sm:text-sm font-medium">Organize</span>
-              {priorityBreakdown.unassigned.length > 0 && (
-                <Badge variant="secondary" className="h-4 sm:h-5 px-1 sm:px-1.5 text-[10px] sm:text-xs">
-                  {priorityBreakdown.unassigned.length}
-                </Badge>
-              )}
-            </div>
-            <span className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">Priority & What-If Lists</span>
-          </TabsTrigger>
-          <TabsTrigger 
-            value="budget" 
-            className="flex flex-col py-2 sm:py-3 gap-0.5 sm:gap-1 px-1 sm:px-3 data-[state=active]:bg-green-100 dark:data-[state=active]:bg-green-900/30" 
-            data-testid="tab-budget"
-          >
-            <div className="flex items-center gap-1 sm:gap-2">
-              <CheckSquare className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="text-xs sm:text-sm font-medium">Finalize</span>
-              {cutList.length > 0 && (
-                <Badge variant="outline" className="h-4 sm:h-5 px-1 sm:px-1.5 text-[10px] sm:text-xs">
-                  {cutList.length}
-                </Badge>
-              )}
-            </div>
-            <span className="text-xs text-muted-foreground hidden sm:block">Budget & Maybe Later</span>
-          </TabsTrigger>
-        </TabsList>
-
         <TabsContent value="suggestions" className="space-y-4 sm:space-y-6">
           {/* Intro Card */}
           <Card className="bg-muted/30 border-dashed">
