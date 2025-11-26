@@ -48,6 +48,7 @@ import RitualControl from "@/pages/ritual-control";
 import GuestLiveFeed from "@/pages/guest-live-feed";
 import Collaborators from "@/pages/collaborators";
 import GuestManagement from "@/pages/guest-management";
+import VendorCalendar from "@/pages/vendor-calendar";
 
 function Router() {
   return (
@@ -171,6 +172,10 @@ function Router() {
           <Settings />
         </ProtectedRoute>
       </Route>
+      
+      {/* Vendor calendar integration */}
+      <Route path="/vendor-calendar" component={VendorCalendar} />
+      
       <Route component={NotFound} />
     </Switch>
   );

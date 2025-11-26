@@ -4726,6 +4726,217 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   };
+
+  // ============================================================================
+  // GOOGLE CALENDAR INTEGRATION - Vendor availability from external calendars
+  // ============================================================================
+
+  // List connected calendars
+  app.get("/api/calendar/list", async (req, res) => {
+    try {
+      const { listCalendars } = await import("./googleCalendar");
+      const calendars = await listCalendars();
+      res.json(calendars);
+    } catch (error: any) {
+      console.error("Error listing calendars:", error);
+      if (error.message?.includes('not connected')) {
+        return res.status(401).json({ error: "Google Calendar not connected", needsAuth: true });
+      }
+      res.status(500).json({ error: "Failed to list calendars" });
+    }
+  });
+
+  // Get calendar events for a date range
+  app.get("/api/calendar/events", async (req, res) => {
+    try {
+      const { calendarId = 'primary', startDate, endDate } = req.query;
+      
+      if (!startDate || !endDate) {
+        return res.status(400).json({ error: "startDate and endDate are required" });
+      }
+
+      const { getCalendarEvents } = await import("./googleCalendar");
+      const events = await getCalendarEvents(
+        calendarId as string,
+        new Date(startDate as string),
+        new Date(endDate as string)
+      );
+      res.json(events);
+    } catch (error: any) {
+      console.error("Error fetching calendar events:", error);
+      if (error.message?.includes('not connected')) {
+        return res.status(401).json({ error: "Google Calendar not connected", needsAuth: true });
+      }
+      res.status(500).json({ error: "Failed to fetch calendar events" });
+    }
+  });
+
+  // Get free/busy information
+  app.get("/api/calendar/freebusy", async (req, res) => {
+    try {
+      const { calendarId = 'primary', startDate, endDate } = req.query;
+      
+      if (!startDate || !endDate) {
+        return res.status(400).json({ error: "startDate and endDate are required" });
+      }
+
+      const { getFreeBusy } = await import("./googleCalendar");
+      const busySlots = await getFreeBusy(
+        calendarId as string,
+        new Date(startDate as string),
+        new Date(endDate as string)
+      );
+      res.json(busySlots);
+    } catch (error: any) {
+      console.error("Error fetching free/busy:", error);
+      if (error.message?.includes('not connected')) {
+        return res.status(401).json({ error: "Google Calendar not connected", needsAuth: true });
+      }
+      res.status(500).json({ error: "Failed to fetch free/busy information" });
+    }
+  });
+
+  // Get availability windows for booking
+  app.get("/api/calendar/availability", async (req, res) => {
+    try {
+      const { 
+        calendarId = 'primary', 
+        startDate, 
+        endDate,
+        workingHoursStart = '9',
+        workingHoursEnd = '18',
+        slotDuration = '60'
+      } = req.query;
+      
+      if (!startDate || !endDate) {
+        return res.status(400).json({ error: "startDate and endDate are required" });
+      }
+
+      const { getAvailabilityWindows } = await import("./googleCalendar");
+      const availability = await getAvailabilityWindows(
+        calendarId as string,
+        new Date(startDate as string),
+        new Date(endDate as string),
+        parseInt(workingHoursStart as string),
+        parseInt(workingHoursEnd as string),
+        parseInt(slotDuration as string)
+      );
+      res.json(availability);
+    } catch (error: any) {
+      console.error("Error fetching availability:", error);
+      if (error.message?.includes('not connected')) {
+        return res.status(401).json({ error: "Google Calendar not connected", needsAuth: true });
+      }
+      res.status(500).json({ error: "Failed to fetch availability" });
+    }
+  });
+
+  // Check if a specific slot is available
+  app.get("/api/calendar/check-slot", async (req, res) => {
+    try {
+      const { calendarId = 'primary', startTime, endTime } = req.query;
+      
+      if (!startTime || !endTime) {
+        return res.status(400).json({ error: "startTime and endTime are required" });
+      }
+
+      const { isSlotAvailable } = await import("./googleCalendar");
+      const available = await isSlotAvailable(
+        calendarId as string,
+        new Date(startTime as string),
+        new Date(endTime as string)
+      );
+      res.json({ available });
+    } catch (error: any) {
+      console.error("Error checking slot:", error);
+      if (error.message?.includes('not connected')) {
+        return res.status(401).json({ error: "Google Calendar not connected", needsAuth: true });
+      }
+      res.status(500).json({ error: "Failed to check slot availability" });
+    }
+  });
+
+  // Create a calendar event (for confirmed bookings)
+  app.post("/api/calendar/events", async (req, res) => {
+    try {
+      const { calendarId = 'primary', summary, description, startTime, endTime, attendees } = req.body;
+      
+      if (!summary || !startTime || !endTime) {
+        return res.status(400).json({ error: "summary, startTime, and endTime are required" });
+      }
+
+      const { createCalendarEvent } = await import("./googleCalendar");
+      const event = await createCalendarEvent(
+        calendarId,
+        summary,
+        description || '',
+        new Date(startTime),
+        new Date(endTime),
+        attendees
+      );
+      res.json(event);
+    } catch (error: any) {
+      console.error("Error creating calendar event:", error);
+      if (error.message?.includes('not connected')) {
+        return res.status(401).json({ error: "Google Calendar not connected", needsAuth: true });
+      }
+      res.status(500).json({ error: "Failed to create calendar event" });
+    }
+  });
+
+  // Sync vendor availability from Google Calendar to the app
+  app.post("/api/vendors/:vendorId/sync-calendar", async (req, res) => {
+    try {
+      const { vendorId } = req.params;
+      const { calendarId = 'primary', startDate, endDate } = req.body;
+      
+      if (!startDate || !endDate) {
+        return res.status(400).json({ error: "startDate and endDate are required" });
+      }
+
+      const vendor = await storage.getVendor(vendorId);
+      if (!vendor) {
+        return res.status(404).json({ error: "Vendor not found" });
+      }
+
+      const { getCalendarEvents } = await import("./googleCalendar");
+      const events = await getCalendarEvents(
+        calendarId,
+        new Date(startDate),
+        new Date(endDate)
+      );
+
+      // Convert calendar events to vendor availability records
+      const availabilityRecords = [];
+      for (const event of events) {
+        const dateStr = event.start.toISOString().split('T')[0];
+        const timeSlot = event.isAllDay 
+          ? 'all-day'
+          : `${event.start.toTimeString().slice(0, 5)}-${event.end.toTimeString().slice(0, 5)}`;
+
+        // Create blocked availability for busy times
+        const record = await storage.createVendorAvailability({
+          vendorId,
+          date: new Date(dateStr),
+          timeSlot,
+          status: 'blocked',
+          notes: `Synced from Google Calendar: ${event.summary}`,
+        });
+        availabilityRecords.push(record);
+      }
+
+      res.json({ 
+        message: `Synced ${events.length} events from Google Calendar`,
+        records: availabilityRecords 
+      });
+    } catch (error: any) {
+      console.error("Error syncing vendor calendar:", error);
+      if (error.message?.includes('not connected')) {
+        return res.status(401).json({ error: "Google Calendar not connected", needsAuth: true });
+      }
+      res.status(500).json({ error: "Failed to sync vendor calendar" });
+    }
+  });
   
   return httpServer;
 }
