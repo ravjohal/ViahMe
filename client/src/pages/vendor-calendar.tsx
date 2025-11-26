@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Calendar as CalendarIcon, 
@@ -16,9 +17,13 @@ import {
   Link2, 
   Clock,
   AlertCircle,
-  Loader2
+  Loader2,
+  Eye,
+  EyeOff,
+  Users
 } from "lucide-react";
 import { format, addMonths, startOfMonth, endOfMonth } from "date-fns";
+import type { Vendor } from "@shared/schema";
 
 interface CalendarInfo {
   id: string;
@@ -45,11 +50,34 @@ export default function VendorCalendar() {
   const [syncStartDate, setSyncStartDate] = useState<Date>(startOfMonth(new Date()));
   const [syncEndDate, setSyncEndDate] = useState<Date>(endOfMonth(addMonths(new Date(), 3)));
 
-  const { data: vendors = [] } = useQuery<any[]>({
+  const { data: vendors = [] } = useQuery<Vendor[]>({
     queryKey: ["/api/vendors"],
   });
 
   const myVendor = vendors.find(v => v.userId);
+
+  const toggleCalendarSharingMutation = useMutation({
+    mutationFn: async (calendarShared: boolean) => {
+      if (!myVendor) throw new Error("No vendor profile found");
+      return apiRequest("PATCH", `/api/vendors/${myVendor.id}`, { calendarShared });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/vendors"] });
+      toast({
+        title: myVendor?.calendarShared ? "Calendar hidden" : "Calendar shared",
+        description: myVendor?.calendarShared 
+          ? "Couples can no longer see your availability"
+          : "Couples can now view your available time slots",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update calendar sharing",
+        variant: "destructive",
+      });
+    },
+  });
 
   const { data: calendars, isLoading: calendarsLoading, error: calendarsError } = useQuery<CalendarInfo[]>({
     queryKey: ["/api/calendar/list"],
@@ -188,6 +216,53 @@ export default function VendorCalendar() {
           Connected
         </Badge>
       </div>
+
+      {/* Calendar Sharing Toggle */}
+      <Card className="border-primary/20">
+        <CardHeader className="pb-3">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Users className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">Share Calendar with Couples</CardTitle>
+                <CardDescription>
+                  When enabled, couples can see your available time slots and request bookings
+                </CardDescription>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Switch
+                id="calendar-sharing"
+                checked={myVendor?.calendarShared || false}
+                onCheckedChange={(checked) => toggleCalendarSharingMutation.mutate(checked)}
+                disabled={!myVendor || toggleCalendarSharingMutation.isPending}
+                data-testid="switch-calendar-sharing"
+              />
+              <Label htmlFor="calendar-sharing" className="text-sm font-medium">
+                {myVendor?.calendarShared ? (
+                  <span className="flex items-center gap-1 text-green-600">
+                    <Eye className="h-4 w-4" /> Visible to couples
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1 text-muted-foreground">
+                    <EyeOff className="h-4 w-4" /> Hidden
+                  </span>
+                )}
+              </Label>
+            </div>
+          </div>
+        </CardHeader>
+        {!myVendor?.calendarShared && (
+          <CardContent className="pt-0">
+            <div className="bg-amber-50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-200 p-3 rounded-lg text-sm">
+              <AlertCircle className="h-4 w-4 inline mr-2" />
+              Your availability is currently hidden. Enable sharing so couples can see when you're available and request bookings.
+            </div>
+          </CardContent>
+        )}
+      </Card>
 
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-1">

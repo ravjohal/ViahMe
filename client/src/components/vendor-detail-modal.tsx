@@ -50,9 +50,8 @@ interface VendorDetailModalProps {
   onBookRequest: (vendorId: string, eventIds: string[], notes: string) => void;
   isAuthenticated?: boolean;
   onAuthRequired?: () => void;
+  weddingId?: string;
 }
-
-const DEMO_WEDDING_ID = "wedding-1"; // TODO: Get from auth context
 
 const reviewFormSchema = z.object({
   rating: z.number().min(1).max(5),
@@ -69,6 +68,7 @@ export function VendorDetailModal({
   onBookRequest,
   isAuthenticated = true,
   onAuthRequired,
+  weddingId,
 }: VendorDetailModalProps) {
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
   const [notes, setNotes] = useState("");
@@ -82,6 +82,7 @@ export function VendorDetailModal({
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<'morning' | 'afternoon' | 'evening' | 'full_day'>('full_day');
   const [selectedEventForBooking, setSelectedEventForBooking] = useState<string>('');
+  const [calendarBookingNotes, setCalendarBookingNotes] = useState<string>('');
 
   const reviewForm = useForm<ReviewFormValues>({
     resolver: zodResolver(reviewFormSchema),
@@ -128,8 +129,9 @@ export function VendorDetailModal({
   const addReviewMutation = useMutation({
     mutationFn: async (data: ReviewFormValues) => {
       if (!vendor?.id) throw new Error("Vendor ID is required");
+      if (!weddingId) throw new Error("Wedding ID is required to submit a review");
       return apiRequest("POST", "/api/reviews", {
-        weddingId: DEMO_WEDDING_ID,
+        weddingId: weddingId,
         vendorId: vendor.id,
         rating: data.rating,
         comment: data.comment?.trim() || null,
@@ -177,7 +179,7 @@ export function VendorDetailModal({
       if (!response.ok) throw new Error('Failed to fetch availability');
       return response.json();
     },
-    enabled: !!vendor?.id && open,
+    enabled: !!vendor?.id && open && vendor?.calendarShared === true,
   });
 
   // Check conflicts mutation
@@ -196,39 +198,59 @@ export function VendorDetailModal({
     },
   });
 
-  // Create availability/booking mutation
+  // Create booking request mutation - creates actual Booking record for vendor approval
   const createBookingMutation = useMutation({
     mutationFn: async (data: {
       vendorId: string;
       date: Date;
       timeSlot: string;
       eventId?: string;
+      coupleNotes?: string;
     }) => {
-      return await apiRequest('POST', '/api/vendor-availability', {
+      if (!weddingId) throw new Error("Wedding ID is required to create a booking");
+      
+      // Create a Booking record with pending status (requires vendor confirmation)
+      const bookingResponse = await apiRequest('POST', '/api/bookings', {
+        weddingId: weddingId,
+        vendorId: data.vendorId,
+        eventId: data.eventId || null,
+        requestedDate: data.date.toISOString(),
+        timeSlot: data.timeSlot,
+        status: 'pending',
+        coupleNotes: data.coupleNotes || null,
+      });
+      
+      // Also create a vendor availability entry to block the slot as "pending"
+      await apiRequest('POST', '/api/vendor-availability', {
         vendorId: data.vendorId,
         date: data.date.toISOString(),
         timeSlot: data.timeSlot,
-        status: 'booked',
+        status: 'pending',
+        weddingId: weddingId,
         eventId: data.eventId || null,
       });
+      
+      return bookingResponse;
     },
     onSuccess: (_data, variables) => {
-      // Invalidate all availability queries for the booked vendor
+      // Invalidate all relevant queries
       queryClient.invalidateQueries({ 
         queryKey: ['/api/vendor-availability/vendor', variables.vendorId, 'range'],
         exact: false
       });
+      queryClient.invalidateQueries({ queryKey: ['/api/bookings'] });
       setBookingDialogOpen(false);
       setSelectedDate(undefined);
+      setCalendarBookingNotes('');
       toast({
-        title: "Booking confirmed!",
-        description: `${vendor?.name} has been booked for ${selectedDate ? format(selectedDate, 'MMMM d, yyyy') : 'the selected date'}`,
+        title: "Booking request sent!",
+        description: `Your booking request for ${selectedDate ? format(selectedDate, 'MMMM d, yyyy') : 'the selected date'} has been sent to ${vendor?.name}. They will confirm or suggest alternative dates.`,
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Booking failed",
-        description: error.message || "Failed to create booking. Please try again.",
+        title: "Request failed",
+        description: error.message || "Failed to send booking request. Please try again.",
         variant: "destructive",
       });
     },
@@ -302,6 +324,15 @@ export function VendorDetailModal({
 
   const handleBookVendor = async () => {
     if (!vendor || !selectedDate) return;
+    
+    if (!weddingId) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to request a booking.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     // Check for conflicts first
     const conflictCheck = await checkConflictsMutation.mutateAsync({
@@ -319,12 +350,13 @@ export function VendorDetailModal({
       return;
     }
 
-    // Create the booking
+    // Create the booking request (vendor will need to confirm)
     createBookingMutation.mutate({
       vendorId: vendor.id,
       date: selectedDate,
       timeSlot: selectedTimeSlot,
       eventId: selectedEventForBooking || undefined,
+      coupleNotes: calendarBookingNotes || undefined,
     });
   };
 
@@ -731,69 +763,84 @@ export function VendorDetailModal({
             </TabsContent>
 
             <TabsContent value="availability" className="mt-6 space-y-4">
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-semibold text-lg mb-2">Check Availability</h3>
-                  <p className="text-sm text-muted-foreground">
-                    View real-time availability and book {vendor.name} for your wedding events.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-4">
-                    <CalendarComponent
-                      mode="single"
-                      selected={selectedDate}
-                      onSelect={(date) => {
-                        if (date) {
-                          setSelectedDate(date);
-                          setBookingDialogOpen(true);
-                        }
-                      }}
-                      month={currentMonth}
-                      onMonthChange={setCurrentMonth}
-                      modifiers={modifiers}
-                      modifiersStyles={modifiersStyles}
-                      disabled={(date) => date < new Date()}
-                      className="rounded-lg border p-3"
-                      data-testid="calendar-vendor-availability"
-                    />
+              {vendor.calendarShared ? (
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2">Check Availability</h3>
+                    <p className="text-sm text-muted-foreground">
+                      View real-time availability and request a booking for your wedding events.
+                    </p>
                   </div>
 
-                  <div className="space-y-4">
-                    <div className="p-4 rounded-lg border space-y-3">
-                      <h4 className="font-semibold text-sm">Legend</h4>
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <div className="w-4 h-4 rounded" style={{ backgroundColor: 'hsl(var(--success) / 0.2)' }}></div>
-                          <span className="text-sm">Available</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-4 h-4 rounded" style={{ backgroundColor: 'hsl(var(--warning) / 0.2)' }}></div>
-                          <span className="text-sm">Partially Available</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-4 h-4 rounded" style={{ backgroundColor: 'hsl(var(--destructive) / 0.2)' }}></div>
-                          <span className="text-sm">Fully Booked</span>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-4">
+                      <CalendarComponent
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={(date) => {
+                          if (date) {
+                            setSelectedDate(date);
+                            setBookingDialogOpen(true);
+                          }
+                        }}
+                        month={currentMonth}
+                        onMonthChange={setCurrentMonth}
+                        modifiers={modifiers}
+                        modifiersStyles={modifiersStyles}
+                        disabled={(date) => date < new Date()}
+                        className="rounded-lg border p-3"
+                        data-testid="calendar-vendor-availability"
+                      />
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="p-4 rounded-lg border space-y-3">
+                        <h4 className="font-semibold text-sm">Legend</h4>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 rounded" style={{ backgroundColor: 'hsl(var(--success) / 0.2)' }}></div>
+                            <span className="text-sm">Available</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 rounded" style={{ backgroundColor: 'hsl(var(--warning) / 0.2)' }}></div>
+                            <span className="text-sm">Partially Available</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 rounded" style={{ backgroundColor: 'hsl(var(--destructive) / 0.2)' }}></div>
+                            <span className="text-sm">Fully Booked</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="p-4 rounded-lg border bg-muted/30 space-y-2">
-                      <h4 className="font-semibold text-sm flex items-center gap-2">
-                        <AlertCircle className="w-4 h-4" />
-                        Booking Information
-                      </h4>
-                      <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-                        <li>Click any date to view time slots</li>
-                        <li>Select your preferred time slot</li>
-                        <li>Link the booking to your event</li>
-                        <li>Instant conflict detection</li>
-                      </ul>
+                      <div className="p-4 rounded-lg border bg-muted/30 space-y-2">
+                        <h4 className="font-semibold text-sm flex items-center gap-2">
+                          <AlertCircle className="w-4 h-4" />
+                          How Booking Works
+                        </h4>
+                        <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                          <li>Click any date to select your preferred time</li>
+                          <li>Your request will be sent to the vendor</li>
+                          <li>The vendor will confirm or suggest alternatives</li>
+                          <li>Once confirmed, create a contract to finalize</li>
+                        </ul>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="text-center py-12 space-y-4">
+                  <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+                    <Calendar className="w-8 h-8 text-muted-foreground" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="font-semibold text-lg">Calendar Not Available</h3>
+                    <p className="text-muted-foreground max-w-md mx-auto">
+                      This vendor hasn't shared their availability calendar yet. 
+                      You can still send a booking request using the form below, and they'll respond with available dates.
+                    </p>
+                  </div>
+                </div>
+              )}
             </TabsContent>
           </Tabs>
 
@@ -878,13 +925,14 @@ export function VendorDetailModal({
           </div>
         </div>
 
-        {/* Booking Dialog */}
+        {/* Booking Request Dialog */}
         <Dialog open={bookingDialogOpen} onOpenChange={setBookingDialogOpen}>
           <DialogContent data-testid="dialog-booking">
             <DialogHeader>
-              <DialogTitle>Book {vendor.name}</DialogTitle>
+              <DialogTitle>Request Booking with {vendor.name}</DialogTitle>
               <DialogDescription>
-                Confirm your booking for {selectedDate && format(selectedDate, 'MMMM d, yyyy')}
+                Send a booking request for {selectedDate && format(selectedDate, 'MMMM d, yyyy')}. 
+                The vendor will confirm or suggest alternative dates.
               </DialogDescription>
             </DialogHeader>
             
@@ -898,19 +946,19 @@ export function VendorDetailModal({
                   {checkConflictsMutation.data.hasConflicts ? (
                     <>
                       <XCircle className="h-5 w-5" />
-                      <span className="text-sm font-medium">This time slot is unavailable</span>
+                      <span className="text-sm font-medium">This time slot may be unavailable</span>
                     </>
                   ) : (
                     <>
                       <CheckCircle2 className="h-5 w-5" />
-                      <span className="text-sm font-medium">This time slot is available!</span>
+                      <span className="text-sm font-medium">This time slot appears available!</span>
                     </>
                   )}
                 </div>
               )}
 
               <div>
-                <label className="text-sm font-medium mb-2 block">Time Slot</label>
+                <label className="text-sm font-medium mb-2 block">Preferred Time Slot</label>
                 <Select value={selectedTimeSlot} onValueChange={(v: any) => setSelectedTimeSlot(v)}>
                   <SelectTrigger data-testid="select-timeslot">
                     <SelectValue />
@@ -939,22 +987,37 @@ export function VendorDetailModal({
                   </SelectContent>
                 </Select>
               </div>
+
+              <div>
+                <label className="text-sm font-medium mb-2 block">Message to Vendor (Optional)</label>
+                <Textarea
+                  placeholder="Tell the vendor about your specific needs, event details, or any questions..."
+                  value={calendarBookingNotes}
+                  onChange={(e) => setCalendarBookingNotes(e.target.value)}
+                  rows={3}
+                  data-testid="textarea-calendar-booking-notes"
+                />
+              </div>
             </div>
 
-            <DialogFooter>
+            <DialogFooter className="gap-2">
               <Button
                 variant="outline"
-                onClick={() => setBookingDialogOpen(false)}
+                onClick={() => {
+                  setBookingDialogOpen(false);
+                  setCalendarBookingNotes('');
+                }}
                 data-testid="button-cancel-booking"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleBookVendor}
-                disabled={createBookingMutation.isPending}
+                disabled={createBookingMutation.isPending || !weddingId}
                 data-testid="button-confirm-booking"
               >
-                {createBookingMutation.isPending ? 'Booking...' : 'Confirm Booking'}
+                <Send className="w-4 h-4 mr-2" />
+                {createBookingMutation.isPending ? 'Sending...' : 'Send Booking Request'}
               </Button>
             </DialogFooter>
           </DialogContent>

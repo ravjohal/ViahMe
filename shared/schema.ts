@@ -151,6 +151,7 @@ export const vendors = pgTable("vendors", {
   reviewCount: integer("review_count").default(0),
   featured: boolean("featured").default(false),
   isPublished: boolean("is_published").notNull().default(false), // Whether vendor profile is visible to couples
+  calendarShared: boolean("calendar_shared").notNull().default(false), // Whether vendor shares availability calendar with couples
   yelpBusinessId: text("yelp_business_id"), // Yelp business ID for fetching external reviews
   googlePlaceId: text("google_place_id"), // Google Place ID for fetching external reviews
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -219,21 +220,29 @@ export const bookings = pgTable("bookings", {
   weddingId: varchar("wedding_id").notNull(),
   eventId: varchar("event_id"),
   vendorId: varchar("vendor_id").notNull(),
+  requestedDate: timestamp("requested_date"), // The date couple is requesting for the service
   timeSlot: text("time_slot"), // 'morning' | 'afternoon' | 'evening' | 'full_day'
   status: text("status").notNull().default('pending'), // 'pending' | 'confirmed' | 'declined' | 'cancelled'
   requestDate: timestamp("request_date").notNull().defaultNow(),
   confirmedDate: timestamp("confirmed_date"),
+  declinedDate: timestamp("declined_date"),
+  declineReason: text("decline_reason"), // Vendor's reason for declining
+  alternateSlots: jsonb("alternate_slots"), // Array of {date: Date, timeSlot: string, notes: string} suggested by vendor
   estimatedCost: decimal("estimated_cost", { precision: 10, scale: 2 }),
   notes: text("notes"),
+  coupleNotes: text("couple_notes"), // Notes from the couple when requesting
+  vendorNotes: text("vendor_notes"), // Notes from vendor when responding
 });
 
 export const insertBookingSchema = createInsertSchema(bookings).omit({
   id: true,
   requestDate: true,
   confirmedDate: true,
+  declinedDate: true,
 }).extend({
   status: z.enum(['pending', 'confirmed', 'declined', 'cancelled']).optional(),
   timeSlot: z.enum(['morning', 'afternoon', 'evening', 'full_day']).optional(),
+  requestedDate: z.coerce.date().optional(),
 });
 
 export type InsertBooking = z.infer<typeof insertBookingSchema>;

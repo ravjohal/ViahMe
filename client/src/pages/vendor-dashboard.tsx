@@ -45,8 +45,19 @@ import {
   LogOut,
   Sparkles,
   Settings,
+  Plus,
+  Trash2,
+  MessageSquare,
+  CalendarDays,
 } from "lucide-react";
+import { format } from "date-fns";
 import viahLogo from "@assets/viah-logo_1763669612969.png";
+
+interface AlternateSlot {
+  date: string;
+  timeSlot: string;
+  notes?: string;
+}
 
 export default function VendorDashboard() {
   const { toast } = useToast();
@@ -54,6 +65,14 @@ export default function VendorDashboard() {
   const [, setLocation] = useLocation();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editFormData, setEditFormData] = useState<Partial<Vendor>>({});
+  
+  const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
+  const [selectedBookingForDecline, setSelectedBookingForDecline] = useState<Booking | null>(null);
+  const [declineReason, setDeclineReason] = useState("");
+  const [alternateSlots, setAlternateSlots] = useState<AlternateSlot[]>([]);
+  const [newSlotDate, setNewSlotDate] = useState("");
+  const [newSlotTime, setNewSlotTime] = useState("morning");
+  const [newSlotNotes, setNewSlotNotes] = useState("");
 
   // Fetch vendor profile for authenticated user
   const { data: vendors, isLoading: vendorsLoading } = useQuery<Vendor[]>({
@@ -135,16 +154,41 @@ export default function VendorDashboard() {
   });
 
   const updateBookingMutation = useMutation({
-    mutationFn: async ({ bookingId, status }: { bookingId: string; status: string }) => {
-      const response = await apiRequest("PATCH", `/api/bookings/${bookingId}`, { status });
+    mutationFn: async ({ 
+      bookingId, 
+      status, 
+      declineReason, 
+      alternateSlots 
+    }: { 
+      bookingId: string; 
+      status: string; 
+      declineReason?: string;
+      alternateSlots?: AlternateSlot[];
+    }) => {
+      const response = await apiRequest("PATCH", `/api/bookings/${bookingId}`, { 
+        status, 
+        declineReason, 
+        alternateSlots 
+      });
       return await response.json();
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/bookings/vendor", vendorId] });
+      const isDecline = variables.status === "declined";
       toast({
-        title: "Booking Updated",
-        description: "Booking status has been updated successfully.",
+        title: isDecline ? "Booking Declined" : "Booking Updated",
+        description: isDecline 
+          ? (variables.alternateSlots?.length 
+              ? "Booking declined with alternate dates suggested." 
+              : "Booking has been declined.")
+          : "Booking status has been updated successfully.",
       });
+      if (isDecline) {
+        setDeclineDialogOpen(false);
+        setSelectedBookingForDecline(null);
+        setDeclineReason("");
+        setAlternateSlots([]);
+      }
     },
     onError: (error: any) => {
       toast({
@@ -256,6 +300,59 @@ export default function VendorDashboard() {
 
   const handleUpdateBooking = (bookingId: string, status: string) => {
     updateBookingMutation.mutate({ bookingId, status });
+  };
+
+  const openDeclineDialog = (booking: Booking) => {
+    setSelectedBookingForDecline(booking);
+    setDeclineReason("");
+    setAlternateSlots([]);
+    setNewSlotDate("");
+    setNewSlotTime("morning");
+    setNewSlotNotes("");
+    setDeclineDialogOpen(true);
+  };
+
+  const addAlternateSlot = () => {
+    if (!newSlotDate) {
+      toast({
+        title: "Date Required",
+        description: "Please select a date for the alternate slot.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setAlternateSlots([...alternateSlots, {
+      date: newSlotDate,
+      timeSlot: newSlotTime,
+      notes: newSlotNotes || undefined,
+    }]);
+    setNewSlotDate("");
+    setNewSlotTime("morning");
+    setNewSlotNotes("");
+  };
+
+  const removeAlternateSlot = (index: number) => {
+    setAlternateSlots(alternateSlots.filter((_, i) => i !== index));
+  };
+
+  const handleDeclineWithSlots = () => {
+    if (!selectedBookingForDecline) return;
+    updateBookingMutation.mutate({
+      bookingId: selectedBookingForDecline.id,
+      status: "declined",
+      declineReason: declineReason || undefined,
+      alternateSlots: alternateSlots.length > 0 ? alternateSlots : undefined,
+    });
+  };
+
+  const formatTimeSlot = (slot: string) => {
+    switch (slot) {
+      case "morning": return "Morning (8am - 12pm)";
+      case "afternoon": return "Afternoon (12pm - 5pm)";
+      case "evening": return "Evening (5pm - 11pm)";
+      case "full_day": return "Full Day";
+      default: return slot;
+    }
   };
 
   // Redirect if not authenticated - ONLY after auth loading completes
@@ -586,10 +683,11 @@ export default function VendorDashboard() {
                     <div className="flex items-start justify-between mb-4">
                       <div>
                         <h3 className="font-semibold text-lg" data-testid={`text-booking-event-${booking.id}`}>
-                          Booking Request - Event ID: {booking.eventId}
+                          Booking Request
                         </h3>
                         <p className="text-sm text-muted-foreground mt-1">
-                          Wedding ID: {booking.weddingId}
+                          Wedding #{booking.weddingId?.slice(0, 8)}
+                          {booking.eventId && ` • Event #${booking.eventId.slice(0, 8)}`}
                         </p>
                       </div>
                       <Badge
@@ -606,26 +704,56 @@ export default function VendorDashboard() {
                       </Badge>
                     </div>
 
-                    {booking.notes && (
-                      <div className="mb-4">
-                        <p className="text-sm text-muted-foreground mb-1">Notes from couple:</p>
-                        <p className="text-sm" data-testid={`text-booking-notes-${booking.id}`}>
-                          {booking.notes}
-                        </p>
-                      </div>
-                    )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      {booking.requestedDate && (
+                        <div className="flex items-center gap-2">
+                          <CalendarDays className="w-4 h-4 text-muted-foreground" />
+                          <div>
+                            <p className="text-xs text-muted-foreground">Requested Date</p>
+                            <p className="font-medium" data-testid={`text-booking-date-${booking.id}`}>
+                              {format(new Date(booking.requestedDate), 'MMMM d, yyyy')}
+                            </p>
+                          </div>
+                        </div>
+                      )}
 
-                    {booking.estimatedCost && (
-                      <div className="mb-4">
-                        <p className="text-sm text-muted-foreground">Estimated Cost:</p>
-                        <p className="font-mono font-semibold" data-testid={`text-booking-cost-${booking.id}`}>
-                          ${parseFloat(booking.estimatedCost).toLocaleString()}
+                      {booking.timeSlot && (
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-muted-foreground" />
+                          <div>
+                            <p className="text-xs text-muted-foreground">Time Slot</p>
+                            <p className="font-medium">{formatTimeSlot(booking.timeSlot)}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {booking.estimatedCost && (
+                        <div className="flex items-center gap-2">
+                          <DollarSign className="w-4 h-4 text-muted-foreground" />
+                          <div>
+                            <p className="text-xs text-muted-foreground">Estimated Cost</p>
+                            <p className="font-mono font-semibold" data-testid={`text-booking-cost-${booking.id}`}>
+                              ${parseFloat(booking.estimatedCost).toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {(booking.coupleNotes || booking.notes) && (
+                      <div className="mb-4 p-3 bg-muted/30 rounded-lg">
+                        <div className="flex items-center gap-2 mb-1">
+                          <MessageSquare className="w-4 h-4 text-muted-foreground" />
+                          <p className="text-sm font-medium">Message from Couple</p>
+                        </div>
+                        <p className="text-sm text-muted-foreground" data-testid={`text-booking-notes-${booking.id}`}>
+                          {booking.coupleNotes || booking.notes}
                         </p>
                       </div>
                     )}
 
                     {booking.status === "pending" && (
-                      <div className="flex gap-2 mt-4">
+                      <div className="flex gap-2 mt-4 pt-4 border-t">
                         <Button
                           size="sm"
                           onClick={() => handleUpdateBooking(booking.id, "confirmed")}
@@ -633,18 +761,47 @@ export default function VendorDashboard() {
                           data-testid={`button-confirm-booking-${booking.id}`}
                         >
                           <CheckCircle className="w-4 h-4 mr-2" />
-                          Confirm
+                          Accept Booking
                         </Button>
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleUpdateBooking(booking.id, "declined")}
+                          onClick={() => openDeclineDialog(booking)}
                           disabled={updateBookingMutation.isPending}
                           data-testid={`button-decline-booking-${booking.id}`}
                         >
                           <XCircle className="w-4 h-4 mr-2" />
-                          Decline
+                          Decline / Suggest Dates
                         </Button>
+                      </div>
+                    )}
+
+                    {booking.status === "declined" && booking.declineReason && (
+                      <div className="mt-4 p-3 bg-destructive/10 rounded-lg">
+                        <p className="text-sm font-medium text-destructive mb-1">Decline Reason</p>
+                        <p className="text-sm">{booking.declineReason}</p>
+                      </div>
+                    )}
+
+                    {booking.status === "declined" && booking.alternateSlots && Array.isArray(booking.alternateSlots) && (booking.alternateSlots as AlternateSlot[]).length > 0 && (
+                      <div className="mt-4 p-3 bg-muted/30 rounded-lg">
+                        <p className="text-sm font-medium mb-2">Alternate Dates Suggested</p>
+                        <div className="space-y-2">
+                          {(booking.alternateSlots as AlternateSlot[]).map((slot: AlternateSlot, idx: number) => (
+                            <div key={idx} className="flex items-center gap-2 text-sm">
+                              <CalendarDays className="w-4 h-4 text-muted-foreground" />
+                              <span>{format(new Date(slot.date), 'MMMM d, yyyy')}</span>
+                              <span className="text-muted-foreground">•</span>
+                              <span>{formatTimeSlot(slot.timeSlot)}</span>
+                              {slot.notes && (
+                                <>
+                                  <span className="text-muted-foreground">•</span>
+                                  <span className="text-muted-foreground">{slot.notes}</span>
+                                </>
+                              )}
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </Card>
@@ -984,6 +1141,154 @@ export default function VendorDashboard() {
               data-testid="button-save-profile"
             >
               {updateVendorMutation.isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Decline Booking Dialog */}
+      <Dialog open={declineDialogOpen} onOpenChange={setDeclineDialogOpen}>
+        <DialogContent className="max-w-lg" data-testid="dialog-decline-booking">
+          <DialogHeader>
+            <DialogTitle>Decline Booking Request</DialogTitle>
+            <DialogDescription>
+              You can decline this booking and optionally suggest alternative dates that work better for you.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {selectedBookingForDecline?.requestedDate && (
+              <div className="p-3 bg-muted/30 rounded-lg">
+                <p className="text-sm text-muted-foreground">Originally Requested Date</p>
+                <p className="font-medium">
+                  {format(new Date(selectedBookingForDecline.requestedDate), 'MMMM d, yyyy')}
+                  {selectedBookingForDecline.timeSlot && ` - ${formatTimeSlot(selectedBookingForDecline.timeSlot)}`}
+                </p>
+              </div>
+            )}
+
+            <div>
+              <Label htmlFor="decline-reason">Reason for Declining (Optional)</Label>
+              <Textarea
+                id="decline-reason"
+                placeholder="e.g., Already booked for this date, Outside service area, etc."
+                value={declineReason}
+                onChange={(e) => setDeclineReason(e.target.value)}
+                rows={2}
+                data-testid="textarea-decline-reason"
+                className="mt-1"
+              />
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label>Suggest Alternative Dates</Label>
+                <span className="text-xs text-muted-foreground">{alternateSlots.length} slot(s) added</span>
+              </div>
+
+              {alternateSlots.length > 0 && (
+                <div className="space-y-2 p-3 bg-muted/30 rounded-lg">
+                  {alternateSlots.map((slot, idx) => (
+                    <div key={idx} className="flex items-center justify-between gap-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <CalendarDays className="w-4 h-4 text-muted-foreground" />
+                        <span>{format(new Date(slot.date), 'MMM d, yyyy')}</span>
+                        <span className="text-muted-foreground">•</span>
+                        <span>{formatTimeSlot(slot.timeSlot)}</span>
+                        {slot.notes && (
+                          <>
+                            <span className="text-muted-foreground">•</span>
+                            <span className="text-muted-foreground text-xs">{slot.notes}</span>
+                          </>
+                        )}
+                      </div>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => removeAlternateSlot(idx)}
+                        data-testid={`button-remove-slot-${idx}`}
+                      >
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label htmlFor="new-slot-date" className="text-xs">Date</Label>
+                  <Input
+                    id="new-slot-date"
+                    type="date"
+                    value={newSlotDate}
+                    onChange={(e) => setNewSlotDate(e.target.value)}
+                    data-testid="input-new-slot-date"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="new-slot-time" className="text-xs">Time Slot</Label>
+                  <Select value={newSlotTime} onValueChange={setNewSlotTime}>
+                    <SelectTrigger id="new-slot-time" className="mt-1" data-testid="select-new-slot-time">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="morning">Morning</SelectItem>
+                      <SelectItem value="afternoon">Afternoon</SelectItem>
+                      <SelectItem value="evening">Evening</SelectItem>
+                      <SelectItem value="full_day">Full Day</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="new-slot-notes" className="text-xs">Notes for this slot (Optional)</Label>
+                <Input
+                  id="new-slot-notes"
+                  placeholder="e.g., Available with discount"
+                  value={newSlotNotes}
+                  onChange={(e) => setNewSlotNotes(e.target.value)}
+                  data-testid="input-new-slot-notes"
+                  className="mt-1"
+                />
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addAlternateSlot}
+                className="w-full"
+                data-testid="button-add-alternate-slot"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Alternative Date
+              </Button>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeclineDialogOpen(false);
+                setSelectedBookingForDecline(null);
+                setDeclineReason("");
+                setAlternateSlots([]);
+              }}
+              data-testid="button-cancel-decline"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleDeclineWithSlots}
+              disabled={updateBookingMutation.isPending}
+              variant="destructive"
+              data-testid="button-confirm-decline"
+            >
+              {updateBookingMutation.isPending ? "Declining..." : "Decline Booking"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -497,20 +497,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/bookings/:id", async (req, res) => {
+  app.patch("/api/bookings/:id", await requireAuth(storage, false), async (req, res) => {
     try {
-      const booking = await storage.updateBooking(req.params.id, req.body);
-      if (!booking) {
+      const authReq = req as AuthRequest;
+      const existingBooking = await storage.getBooking(req.params.id);
+      
+      if (!existingBooking) {
         return res.status(404).json({ error: "Booking not found" });
       }
+      
+      // Only vendors can update booking status (accept/decline)
+      // Couples can only add notes, not change status
+      if (authReq.user?.role === 'vendor') {
+        // Verify vendor owns this booking
+        const vendors = await storage.getAllVendors();
+        const userVendor = vendors.find((v: Vendor) => v.userId === authReq.user?.id);
+        if (!userVendor || userVendor.id !== existingBooking.vendorId) {
+          return res.status(403).json({ error: "You can only update bookings for your own vendor profile" });
+        }
+      } else if (authReq.user?.role === 'couple') {
+        // Couples can only update notes, not status
+        const allowedFields = ['notes', 'coupleNotes'];
+        const updateFields = Object.keys(req.body);
+        const hasDisallowedFields = updateFields.some(f => !allowedFields.includes(f));
+        if (hasDisallowedFields) {
+          return res.status(403).json({ error: "Couples can only update notes, not booking status" });
+        }
+      } else {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      const booking = await storage.updateBooking(req.params.id, req.body);
       res.json(booking);
     } catch (error) {
       res.status(500).json({ error: "Failed to update booking" });
     }
   });
 
-  app.get("/api/bookings/vendor/:vendorId", async (req, res) => {
+  app.get("/api/bookings/vendor/:vendorId", await requireAuth(storage, false), async (req, res) => {
     try {
+      const authReq = req as AuthRequest;
+      
+      // Verify vendor owns this vendor profile
+      if (authReq.user?.role === 'vendor') {
+        const vendors = await storage.getAllVendors();
+        const userVendor = vendors.find((v: Vendor) => v.userId === authReq.user?.id);
+        if (!userVendor || userVendor.id !== req.params.vendorId) {
+          return res.status(403).json({ error: "You can only view bookings for your own vendor profile" });
+        }
+      }
+      
       const bookings = await storage.getBookingsByVendor(req.params.vendorId);
       res.json(bookings);
     } catch (error) {

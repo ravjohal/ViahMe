@@ -56,7 +56,7 @@ export default function Vendors() {
           weddingId: wedding.id,
           vendorId: data.vendorId,
           eventId: eventId,
-          notes: data.notes,
+          coupleNotes: data.notes,
           status: "pending",
         })
       );
@@ -170,6 +170,7 @@ export default function Vendors() {
         }}
         isAuthenticated={!!user && user.role === "couple"}
         onAuthRequired={() => setLocation("/onboarding")}
+        weddingId={wedding?.id}
       />
 
       <VendorComparisonModal
