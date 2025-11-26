@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { TimelineView } from "@/components/timeline-view";
 import { BudgetDashboard } from "@/components/budget-dashboard";
+import { WelcomeTour } from "@/components/welcome-tour";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -82,84 +83,107 @@ export default function Dashboard() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-          <Card className="p-6 hover-elevate transition-all cursor-pointer border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-pink-50" onClick={() => setLocation("/timeline")}>
+          <Card 
+            className="p-6 hover-elevate transition-all cursor-pointer border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-pink-50 dark:from-orange-950/30 dark:to-pink-950/30 dark:border-orange-800" 
+            onClick={() => setLocation("/timeline")}
+            data-tour="events-card"
+          >
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500 to-pink-500 shadow-lg">
                 <Calendar className="w-6 h-6 text-white" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-orange-600">Events</p>
-                <p className="font-mono text-2xl font-bold text-orange-700" data-testid="stat-events-count">
+                <p className="text-sm font-semibold text-orange-600 dark:text-orange-400">Events</p>
+                <p className="font-mono text-2xl font-bold text-orange-700 dark:text-orange-300" data-testid="stat-events-count">
                   {events.length}
                 </p>
               </div>
             </div>
           </Card>
 
-          <Card className="p-6 hover-elevate transition-all cursor-pointer border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50" onClick={() => setLocation("/vendors")}>
+          <Card 
+            className="p-6 hover-elevate transition-all cursor-pointer border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30 dark:border-blue-800" 
+            onClick={() => setLocation("/vendors")}
+            data-tour="vendors-card"
+          >
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 shadow-lg">
                 <Briefcase className="w-6 h-6 text-white" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-blue-600">Vendors</p>
-                <p className="font-mono text-2xl font-bold text-blue-700" data-testid="stat-vendors-count">
+                <p className="text-sm font-semibold text-blue-600 dark:text-blue-400">Vendors</p>
+                <p className="font-mono text-2xl font-bold text-blue-700 dark:text-blue-300" data-testid="stat-vendors-count">
                   {vendors.length}
                 </p>
               </div>
             </div>
           </Card>
 
-          <Card className="p-6 hover-elevate transition-all cursor-pointer border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50" onClick={() => setLocation("/budget")}>
+          <Card 
+            className="p-6 hover-elevate transition-all cursor-pointer border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 dark:border-emerald-800" 
+            onClick={() => setLocation("/budget")}
+            data-tour="budget-card"
+          >
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 shadow-lg">
                 <DollarSign className="w-6 h-6 text-white" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-emerald-600">Budget</p>
-                <p className="font-mono text-xl font-bold text-emerald-700">
+                <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">Budget</p>
+                <p className="font-mono text-xl font-bold text-emerald-700 dark:text-emerald-300">
                   ${parseFloat(wedding.totalBudget || "0").toLocaleString()}
                 </p>
               </div>
             </div>
           </Card>
 
-          <Card className="p-6 hover-elevate transition-all cursor-pointer border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50" onClick={() => setLocation("/contracts")}>
+          <Card 
+            className="p-6 hover-elevate transition-all cursor-pointer border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-950/30 dark:to-indigo-950/30 dark:border-purple-800" 
+            onClick={() => setLocation("/contracts")}
+          >
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-500 shadow-lg">
                 <FileText className="w-6 h-6 text-white" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-purple-600">Contracts</p>
-                <p className="font-mono text-2xl font-bold text-purple-700" data-testid="stat-contracts-count">
+                <p className="text-sm font-semibold text-purple-600 dark:text-purple-400">Contracts</p>
+                <p className="font-mono text-2xl font-bold text-purple-700 dark:text-purple-300" data-testid="stat-contracts-count">
                   {contracts.length}
                 </p>
               </div>
             </div>
           </Card>
 
-          <Card className="p-6 hover-elevate transition-all cursor-pointer border-2 border-pink-200 bg-gradient-to-br from-pink-50 to-rose-50" onClick={() => setLocation("/guests")}>
+          <Card 
+            className="p-6 hover-elevate transition-all cursor-pointer border-2 border-pink-200 bg-gradient-to-br from-pink-50 to-rose-50 dark:from-pink-950/30 dark:to-rose-950/30 dark:border-pink-800" 
+            onClick={() => setLocation("/guests")}
+            data-tour="guests-card"
+          >
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 shadow-lg">
                 <Users className="w-6 h-6 text-white" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-pink-600">Guests</p>
-                <p className="font-mono text-2xl font-bold text-pink-700" data-testid="stat-guests-count">
+                <p className="text-sm font-semibold text-pink-600 dark:text-pink-400">Guests</p>
+                <p className="font-mono text-2xl font-bold text-pink-700 dark:text-pink-300" data-testid="stat-guests-count">
                   {wedding.guestCountEstimate || 0}
                 </p>
               </div>
             </div>
           </Card>
 
-          <Card className="p-6 hover-elevate transition-all cursor-pointer border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50" onClick={() => setLocation("/photo-gallery")} data-testid="nav-photo-gallery">
+          <Card 
+            className="p-6 hover-elevate transition-all cursor-pointer border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 dark:border-amber-800" 
+            onClick={() => setLocation("/photo-gallery")} 
+            data-testid="nav-photo-gallery"
+          >
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 shadow-lg">
                 <Camera className="w-6 h-6 text-white" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-amber-600">Photo Gallery</p>
-                <p className="text-xs text-amber-700">Inspiration & Events</p>
+                <p className="text-sm font-semibold text-amber-600 dark:text-amber-400">Photo Gallery</p>
+                <p className="text-xs text-amber-700 dark:text-amber-300">Inspiration & Events</p>
               </div>
             </div>
           </Card>
@@ -202,14 +226,14 @@ export default function Dashboard() {
           </TabsContent>
         </Tabs>
 
-        <Card className="mt-8 p-8 bg-gradient-to-br from-orange-100 via-pink-100 to-purple-100 border-2 border-orange-300">
+        <Card className="mt-8 p-8 bg-gradient-to-br from-orange-100 via-pink-100 to-purple-100 dark:from-orange-950/30 dark:via-pink-950/30 dark:to-purple-950/30 border-2 border-orange-300 dark:border-orange-800">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div>
               <h3 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent mb-2" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
                 Ready to Find Vendors?
               </h3>
-              <p className="text-lg font-semibold text-orange-700" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-                Browse our curated directory of culturally-specialized service providers 🎊
+              <p className="text-lg font-semibold text-orange-700 dark:text-orange-300" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+                Browse our curated directory of culturally-specialized service providers
               </p>
             </div>
             <Button
@@ -223,6 +247,8 @@ export default function Dashboard() {
           </div>
         </Card>
       </main>
+
+      <WelcomeTour weddingTradition={wedding.tradition} />
     </div>
   );
 }

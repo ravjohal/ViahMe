@@ -165,7 +165,7 @@ export function FloatingChecklist() {
   // Minimized bubble view
   if (isMinimized) {
     return (
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-6 right-6 z-50" data-tour="floating-checklist">
         <Button
           onClick={toggleMinimize}
           className="h-14 w-14 rounded-full shadow-lg bg-gradient-to-br from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 relative"
@@ -188,8 +188,8 @@ export function FloatingChecklist() {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 w-80 max-w-[calc(100vw-3rem)]">
-      <Card className="shadow-xl border-2 border-orange-200 overflow-hidden">
+    <div className="fixed bottom-6 right-6 z-50 w-80 max-w-[calc(100vw-3rem)]" data-tour="floating-checklist">
+      <Card className="shadow-xl border-2 border-orange-200 dark:border-orange-800 overflow-hidden">
         {/* Header */}
         <div 
           className="bg-gradient-to-r from-orange-500 to-pink-500 p-4 cursor-pointer flex items-center justify-between"
