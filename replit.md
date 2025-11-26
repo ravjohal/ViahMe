@@ -19,7 +19,10 @@ Key architectural decisions and features include:
 - **Vendor Specialization**: Support for 32 distinct vendor categories, including culturally-specific services.
 - **Budget Intelligence System**: Provides smart budget recommendations based on cultural spending benchmarks, real-time comparisons, and interactive visualizations.
 - **Guest List Management**: Frictionless bulk guest import (CSV, Excel), advanced guest invitation & RSVP system with household grouping, magic link authentication, per-event RSVP tracking, and bulk invitation sender. Includes an Allocation View Dashboard for analytics.
-- **Advanced Guest Management System**: Comprehensive guest list planning with Guest Suggestions Queue, Scenario Playground for what-if analysis, Budget Calculator, Priority Tiers, Guest Sources tracking, and Cut List management.
+- **Advanced Guest Management System**: Comprehensive guest list planning with intuitive 3-step workflow (Collect → Organize → Finalize). Features consolidated tabs with progressive disclosure:
+  - **Collect**: Guest Suggestions Queue + Guest Sources tracking with quota limits
+  - **Organize**: Priority Tiers (Must/Should/Nice to Have) + What-If Lists for scenario comparison
+  - **Finalize**: Budget Calculator with per-head cost tracking + Maybe Later list for deferred guests
 - **Communication & Collaboration**: Messaging system for couple-vendor communication, review system, document storage, and team collaboration with granular role-based access control and activity logging.
 - **Live Wedding Experience**: Real-Time Guest Concierge system including a Gap Concierge Designer and Ritual Control Panel for couples, feeding into a public-facing Guest Live Feed.
 - **Vendor Tools**: Real-Time Vendor Availability Calendar, Vendor Comparison Tools.

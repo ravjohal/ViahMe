@@ -50,7 +50,14 @@ import {
   ChevronDown,
   ChevronUp,
   Star,
+  ArrowRight,
+  HelpCircle,
+  Inbox,
+  Target,
+  CheckSquare,
+  Lightbulb,
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 type GuestSuggestionWithSource = GuestSuggestion & {
   source?: GuestSource;
@@ -411,18 +418,50 @@ export default function GuestManagement() {
     unassigned: households.filter(h => !h.priorityTier),
   };
 
+  // Workflow step status - matches the 3 consolidated tabs
+  const workflowSteps = [
+    {
+      id: "collect",
+      label: "Collect",
+      description: "Gather suggestions",
+      icon: Inbox,
+      isComplete: sources.length > 0 || suggestions.length > 0,
+      count: pendingSuggestions.length,
+      tab: "suggestions",
+    },
+    {
+      id: "organize",
+      label: "Organize",
+      description: "Priority & compare",
+      icon: Target,
+      isComplete: priorityBreakdown.unassigned.length === 0 && households.length > 0 && scenarios.length > 0,
+      count: priorityBreakdown.unassigned.length,
+      tab: "priority",
+    },
+    {
+      id: "finalize",
+      label: "Finalize",
+      description: "Budget & cuts",
+      icon: CheckSquare,
+      isComplete: budgetData?.settings?.maxGuestBudget && Number(budgetData.settings.maxGuestBudget) > 0,
+      count: cutList.length,
+      tab: "budget",
+    },
+  ];
+
   return (
     <div className="p-6 space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold" data-testid="text-page-title">Guest Management</h1>
-          <p className="text-muted-foreground">Advanced tools for managing your guest list</p>
+          <h1 className="text-2xl font-bold" data-testid="text-page-title">Guest Planning</h1>
+          <p className="text-muted-foreground">Plan and organize your perfect guest list</p>
         </div>
         <div className="flex items-center gap-3">
           {suggestionsCount && suggestionsCount.count > 0 && (
             <Badge variant="secondary" className="gap-1" data-testid="badge-pending-suggestions">
               <Clock className="h-3 w-3" />
-              {suggestionsCount.count} pending {suggestionsCount.count === 1 ? "suggestion" : "suggestions"}
+              {suggestionsCount.count} to review
             </Badge>
           )}
           <Link href="/guests">
@@ -434,61 +473,205 @@ export default function GuestManagement() {
         </div>
       </div>
 
+      {/* Workflow Overview - Step by Step Guide */}
+      <Card className="bg-gradient-to-r from-orange-50 to-pink-50 dark:from-orange-950/20 dark:to-pink-950/20 border-orange-200 dark:border-orange-800">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Lightbulb className="h-4 w-4 text-orange-500" />
+            <span className="text-sm font-medium">Your Planning Workflow</span>
+          </div>
+          <div className="flex items-center justify-between gap-2 overflow-x-auto pb-2">
+            {workflowSteps.map((step, index) => (
+              <div key={step.id} className="flex items-center gap-2 flex-shrink-0">
+                <button
+                  onClick={() => setActiveTab(step.tab)}
+                  className={`flex flex-col items-center p-3 rounded-lg transition-all min-w-[100px] ${
+                    activeTab === step.tab 
+                      ? "bg-white dark:bg-gray-800 shadow-md ring-2 ring-orange-400" 
+                      : "hover:bg-white/50 dark:hover:bg-gray-800/50"
+                  }`}
+                  data-testid={`workflow-step-${step.id}`}
+                >
+                  <div className={`p-2 rounded-full mb-1 ${
+                    step.isComplete 
+                      ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400" 
+                      : "bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400"
+                  }`}>
+                    {step.isComplete ? (
+                      <CheckCircle2 className="h-5 w-5" />
+                    ) : (
+                      <step.icon className="h-5 w-5" />
+                    )}
+                  </div>
+                  <span className="text-sm font-medium">{step.label}</span>
+                  <span className="text-xs text-muted-foreground">{step.description}</span>
+                  {step.count > 0 && !step.isComplete && (
+                    <Badge variant="secondary" className="mt-1 text-xs">
+                      {step.count} {step.id === "collect" ? "pending" : step.id === "organize" ? "unassigned" : ""}
+                    </Badge>
+                  )}
+                </button>
+                {index < workflowSteps.length - 1 && (
+                  <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                )}
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Main Tabs - Consolidated into 3 groups */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-6 lg:grid-cols-6" data-testid="tabs-guest-management">
-          <TabsTrigger value="suggestions" className="gap-1" data-testid="tab-suggestions">
-            <UserPlus className="h-4 w-4 hidden sm:inline" />
-            <span className="hidden sm:inline">Suggestions</span>
-            <span className="sm:hidden">Suggest</span>
-            {pendingSuggestions.length > 0 && (
-              <Badge variant="destructive" className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
-                {pendingSuggestions.length}
-              </Badge>
-            )}
+        <TabsList className="grid w-full grid-cols-3 h-auto p-1" data-testid="tabs-guest-management">
+          <TabsTrigger 
+            value="suggestions" 
+            className="flex flex-col py-3 gap-1 data-[state=active]:bg-orange-100 dark:data-[state=active]:bg-orange-900/30" 
+            data-testid="tab-suggestions"
+          >
+            <div className="flex items-center gap-2">
+              <Inbox className="h-4 w-4" />
+              <span className="font-medium">Collect</span>
+              {pendingSuggestions.length > 0 && (
+                <Badge variant="destructive" className="h-5 px-1.5 text-xs">
+                  {pendingSuggestions.length}
+                </Badge>
+              )}
+            </div>
+            <span className="text-xs text-muted-foreground hidden sm:block">Suggestions & Sources</span>
           </TabsTrigger>
-          <TabsTrigger value="scenarios" className="gap-1" data-testid="tab-scenarios">
-            <Layers className="h-4 w-4 hidden sm:inline" />
-            <span className="hidden sm:inline">Scenarios</span>
-            <span className="sm:hidden">Plan</span>
+          <TabsTrigger 
+            value="priority" 
+            className="flex flex-col py-3 gap-1 data-[state=active]:bg-blue-100 dark:data-[state=active]:bg-blue-900/30" 
+            data-testid="tab-priority"
+          >
+            <div className="flex items-center gap-2">
+              <Target className="h-4 w-4" />
+              <span className="font-medium">Organize</span>
+              {priorityBreakdown.unassigned.length > 0 && (
+                <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+                  {priorityBreakdown.unassigned.length}
+                </Badge>
+              )}
+            </div>
+            <span className="text-xs text-muted-foreground hidden sm:block">Priority & What-If Lists</span>
           </TabsTrigger>
-          <TabsTrigger value="budget" className="gap-1" data-testid="tab-budget">
-            <DollarSign className="h-4 w-4 hidden sm:inline" />
-            <span className="hidden sm:inline">Budget</span>
-            <span className="sm:hidden">$</span>
-          </TabsTrigger>
-          <TabsTrigger value="priority" className="gap-1" data-testid="tab-priority">
-            <ListFilter className="h-4 w-4 hidden sm:inline" />
-            <span className="hidden sm:inline">Priority</span>
-            <span className="sm:hidden">Tier</span>
-          </TabsTrigger>
-          <TabsTrigger value="sources" className="gap-1" data-testid="tab-sources">
-            <UserCog className="h-4 w-4 hidden sm:inline" />
-            <span className="hidden sm:inline">Sources</span>
-            <span className="sm:hidden">Who</span>
-          </TabsTrigger>
-          <TabsTrigger value="cutlist" className="gap-1" data-testid="tab-cutlist">
-            <Scissors className="h-4 w-4 hidden sm:inline" />
-            <span className="hidden sm:inline">Cut List</span>
-            <span className="sm:hidden">Cut</span>
-            {cutList.length > 0 && (
-              <Badge variant="outline" className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
-                {cutList.length}
-              </Badge>
-            )}
+          <TabsTrigger 
+            value="budget" 
+            className="flex flex-col py-3 gap-1 data-[state=active]:bg-green-100 dark:data-[state=active]:bg-green-900/30" 
+            data-testid="tab-budget"
+          >
+            <div className="flex items-center gap-2">
+              <CheckSquare className="h-4 w-4" />
+              <span className="font-medium">Finalize</span>
+              {cutList.length > 0 && (
+                <Badge variant="outline" className="h-5 px-1.5 text-xs">
+                  {cutList.length}
+                </Badge>
+              )}
+            </div>
+            <span className="text-xs text-muted-foreground hidden sm:block">Budget & Maybe Later</span>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="suggestions" className="space-y-4">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h2 className="text-lg font-semibold">Guest Suggestions Queue</h2>
-              <p className="text-sm text-muted-foreground">Review guest suggestions from family members and collaborators</p>
+        <TabsContent value="suggestions" className="space-y-6">
+          {/* Intro Card */}
+          <Card className="bg-muted/30 border-dashed">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <div className="p-2 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400">
+                  <HelpCircle className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="font-medium text-sm">How this works</p>
+                  <p className="text-sm text-muted-foreground">
+                    Family members can suggest guests for your wedding. You review and approve or reject each suggestion. 
+                    Use "Sources" to track who submitted guests (e.g., "Mom's list", "Dad's friends") and set limits.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Guest Sources Section */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-semibold flex items-center gap-2">
+                  <UserCog className="h-5 w-5 text-muted-foreground" />
+                  Who's Submitting Guests?
+                </h2>
+                <p className="text-sm text-muted-foreground">Track who added which guests (e.g., "Mom's list" or "Groom's college friends")</p>
+              </div>
+              <Button onClick={() => setSourceDialogOpen(true)} size="sm" variant="outline" data-testid="button-add-source">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Source
+              </Button>
             </div>
-            <Button onClick={() => setSuggestionDialogOpen(true)} data-testid="button-suggest-guest">
-              <Plus className="h-4 w-4 mr-2" />
-              Suggest Guest
-            </Button>
+
+            {sources.length === 0 ? (
+              <Card className="border-dashed">
+                <CardContent className="p-6 text-center">
+                  <UserCog className="h-10 w-10 mx-auto text-muted-foreground mb-3 opacity-50" />
+                  <p className="font-medium mb-1">No sources yet</p>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Add sources like "Bride's Mom" or "Groom's Dad" to track who submitted each guest
+                  </p>
+                  <Button onClick={() => setSourceDialogOpen(true)} variant="outline" size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add First Source
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+                {sources.map(source => {
+                  const stat = sourceStats.find(s => s.sourceId === source.id);
+                  const isOverLimit = source.quotaLimit && stat && stat.seats > source.quotaLimit;
+                  return (
+                    <Card key={source.id} className={isOverLimit ? "border-destructive" : ""} data-testid={`card-source-${source.id}`}>
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium">{source.label}</span>
+                          <Badge variant="outline" className="text-xs">
+                            {source.side === "bride" ? "Bride" : source.side === "groom" ? "Groom" : "Both"}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">{stat?.seats || 0} guests</span>
+                          {source.quotaLimit && (
+                            <span className={isOverLimit ? "text-destructive font-medium" : "text-muted-foreground"}>
+                              / {source.quotaLimit} limit
+                            </span>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
           </div>
+
+          <Separator />
+
+          {/* Guest Suggestions Section */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-semibold flex items-center gap-2">
+                  <UserPlus className="h-5 w-5 text-muted-foreground" />
+                  Guest Suggestions
+                  {pendingSuggestions.length > 0 && (
+                    <Badge variant="destructive">{pendingSuggestions.length} to review</Badge>
+                  )}
+                </h2>
+                <p className="text-sm text-muted-foreground">Approve or reject suggested guests</p>
+              </div>
+              <Button onClick={() => setSuggestionDialogOpen(true)} data-testid="button-suggest-guest">
+                <Plus className="h-4 w-4 mr-2" />
+                Suggest Guest
+              </Button>
+            </div>
 
           {suggestionsLoading ? (
             <div className="space-y-3">
@@ -585,115 +768,41 @@ export default function GuestManagement() {
               </ScrollArea>
             </div>
           )}
+          </div>
         </TabsContent>
 
-        <TabsContent value="scenarios" className="space-y-4">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h2 className="text-lg font-semibold">Scenario Playground</h2>
-              <p className="text-sm text-muted-foreground">Create what-if scenarios to explore different guest list options</p>
-            </div>
-            <Button onClick={() => setScenarioDialogOpen(true)} data-testid="button-create-scenario">
-              <Plus className="h-4 w-4 mr-2" />
-              New Scenario
-            </Button>
-          </div>
+        <TabsContent value="budget" className="space-y-6">
+          {/* Intro Card */}
+          <Card className="bg-muted/30 border-dashed">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <div className="p-2 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">
+                  <HelpCircle className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="font-medium text-sm">How this works</p>
+                  <p className="text-sm text-muted-foreground">
+                    Set your guest budget and cost per person to see how many guests you can afford.
+                    Use "Maybe Later" to park guests you might not invite - they're not deleted and can be restored anytime.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-          {scenariosLoading ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {[1, 2, 3].map(i => <Skeleton key={i} className="h-48" />)}
+          {/* Budget Calculator Section */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-semibold flex items-center gap-2">
+                  <DollarSign className="h-5 w-5 text-muted-foreground" />
+                  Budget Calculator
+                </h2>
+                <p className="text-sm text-muted-foreground">How many guests can you afford?</p>
+              </div>
             </div>
-          ) : scenarios.length === 0 ? (
-            <Card>
-              <CardContent className="p-6 text-center">
-                <Layers className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                <p className="text-muted-foreground">No scenarios yet. Create one to start planning!</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {scenarios.map(scenario => (
-                <Card key={scenario.id} className={scenario.isActive ? "border-primary" : ""} data-testid={`card-scenario-${scenario.id}`}>
-                  <CardHeader className="pb-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <CardTitle className="text-base flex items-center gap-2">
-                          {scenario.name}
-                          {scenario.isActive && <Badge variant="default" className="text-xs">Active</Badge>}
-                        </CardTitle>
-                        {scenario.description && (
-                          <CardDescription className="text-xs">{scenario.description}</CardDescription>
-                        )}
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Households:</span>
-                      <span className="font-medium">{scenario.householdCount}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Total Guests:</span>
-                      <span className="font-medium">{scenario.guestCount}</span>
-                    </div>
-                    {scenario.budgetLimit && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Budget:</span>
-                        <span className={`font-medium ${scenario.remainingBudget && scenario.remainingBudget < 0 ? "text-destructive" : ""}`}>
-                          ${Number(scenario.remainingBudget || 0).toLocaleString()} remaining
-                        </span>
-                      </div>
-                    )}
-                  </CardContent>
-                  <CardFooter className="gap-2 flex-wrap">
-                    {!scenario.isActive && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setActiveScenarioMutation.mutate(scenario.id)}
-                        disabled={setActiveScenarioMutation.isPending}
-                        data-testid={`button-activate-${scenario.id}`}
-                      >
-                        <Play className="h-3 w-3 mr-1" />
-                        Set Active
-                      </Button>
-                    )}
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => duplicateScenarioMutation.mutate({ id: scenario.id, name: `${scenario.name} (copy)` })}
-                      disabled={duplicateScenarioMutation.isPending}
-                      data-testid={`button-duplicate-${scenario.id}`}
-                    >
-                      <Copy className="h-3 w-3 mr-1" />
-                      Duplicate
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => deleteScenarioMutation.mutate(scenario.id)}
-                      disabled={deleteScenarioMutation.isPending}
-                      className="text-destructive hover:text-destructive"
-                      data-testid={`button-delete-${scenario.id}`}
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
 
-        <TabsContent value="budget" className="space-y-4">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h2 className="text-lg font-semibold">Budget Calculator</h2>
-              <p className="text-sm text-muted-foreground">Calculate guest capacity based on your per-head budget</p>
-            </div>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-6 md:grid-cols-2">
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Budget Settings</CardTitle>
@@ -784,15 +893,111 @@ export default function GuestManagement() {
               </CardContent>
             </Card>
           </div>
+          </div>
+
+          <Separator />
+
+          {/* Maybe Later Section (formerly Cut List) */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-semibold flex items-center gap-2">
+                  <Scissors className="h-5 w-5 text-muted-foreground" />
+                  Maybe Later
+                  {cutList.length > 0 && (
+                    <Badge variant="secondary">{cutList.length} parked</Badge>
+                  )}
+                </h2>
+                <p className="text-sm text-muted-foreground">Guests you might not invite - restore them anytime</p>
+              </div>
+            </div>
+
+            {cutListLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map(i => <Skeleton key={i} className="h-24 w-full" />)}
+              </div>
+            ) : cutList.length === 0 ? (
+              <Card className="border-dashed">
+                <CardContent className="p-6 text-center">
+                  <Scissors className="h-10 w-10 mx-auto text-muted-foreground mb-3 opacity-50" />
+                  <p className="font-medium mb-1">No guests parked yet</p>
+                  <p className="text-sm text-muted-foreground">
+                    When you need to trim your list, move guests here instead of deleting them.
+                    You can always restore them later.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {cutList.map(item => (
+                  <Card key={item.id} data-testid={`card-cut-${item.id}`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between gap-4">
+                        <div>
+                          <p className="font-medium">{item.household?.name || "Unknown"}</p>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <span>{item.household?.maxCount || 0} guests</span>
+                            {item.cutReason && (
+                              <>
+                                <span>•</span>
+                                <Badge variant="outline" className="text-xs">
+                                  {item.cutReason === "budget" ? "Budget" : 
+                                   item.cutReason === "space" ? "Space" : 
+                                   item.cutReason === "priority" ? "Priority" : "Other"}
+                                </Badge>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => restoreFromCutListMutation.mutate(item.id)}
+                          disabled={restoreFromCutListMutation.isPending}
+                          data-testid={`button-restore-${item.id}`}
+                        >
+                          <RotateCcw className="h-4 w-4 mr-1" />
+                          Restore
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
         </TabsContent>
 
-        <TabsContent value="priority" className="space-y-4">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h2 className="text-lg font-semibold">Priority Tiers</h2>
-              <p className="text-sm text-muted-foreground">Organize households by priority for smarter list management</p>
+        <TabsContent value="priority" className="space-y-6">
+          {/* Intro Card */}
+          <Card className="bg-muted/30 border-dashed">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                  <HelpCircle className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="font-medium text-sm">How this works</p>
+                  <p className="text-sm text-muted-foreground">
+                    Assign priority levels to each household to help decide who to keep if you need to cut your list.
+                    Then create "What-If Lists" to compare different guest list options before making final decisions.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Priority Tiers Section */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-semibold flex items-center gap-2">
+                  <ListFilter className="h-5 w-5 text-muted-foreground" />
+                  Guest Priority
+                </h2>
+                <p className="text-sm text-muted-foreground">Who's most important? Assign priority to help with tough decisions.</p>
+              </div>
             </div>
-          </div>
 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card className="border-green-500/50">
@@ -889,141 +1094,119 @@ export default function GuestManagement() {
               </Button>
             </CardContent>
           </Card>
-        </TabsContent>
-
-        <TabsContent value="sources" className="space-y-4">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h2 className="text-lg font-semibold">Guest Sources</h2>
-              <p className="text-sm text-muted-foreground">Track who submitted each guest for fair allocation</p>
-            </div>
-            <Button onClick={() => setSourceDialogOpen(true)} data-testid="button-add-source">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Source
-            </Button>
           </div>
 
-          {sources.length === 0 ? (
-            <Card>
-              <CardContent className="p-6 text-center">
-                <UserCog className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                <p className="text-muted-foreground">No sources defined yet. Add sources like "Bride's Mom" or "Groom's Dad".</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {sources.map(source => {
-                const stat = sourceStats.find(s => s.sourceId === source.id);
-                return (
-                  <Card key={source.id} data-testid={`card-source-${source.id}`}>
+          <Separator />
+
+          {/* What-If Lists Section (formerly Scenarios) */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-semibold flex items-center gap-2">
+                  <Layers className="h-5 w-5 text-muted-foreground" />
+                  What-If Lists
+                </h2>
+                <p className="text-sm text-muted-foreground">Create different versions of your guest list to compare options</p>
+              </div>
+              <Button onClick={() => setScenarioDialogOpen(true)} data-testid="button-create-scenario">
+                <Plus className="h-4 w-4 mr-2" />
+                New List
+              </Button>
+            </div>
+
+            {scenariosLoading ? (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {[1, 2, 3].map(i => <Skeleton key={i} className="h-48" />)}
+              </div>
+            ) : scenarios.length === 0 ? (
+              <Card className="border-dashed">
+                <CardContent className="p-6 text-center">
+                  <Layers className="h-10 w-10 mx-auto text-muted-foreground mb-3 opacity-50" />
+                  <p className="font-medium mb-1">No what-if lists yet</p>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Create different versions of your guest list to see how changes affect your count and budget
+                  </p>
+                  <Button onClick={() => setScenarioDialogOpen(true)} variant="outline" size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create First List
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {scenarios.map(scenario => (
+                  <Card key={scenario.id} className={scenario.isActive ? "border-primary ring-1 ring-primary" : ""} data-testid={`card-scenario-${scenario.id}`}>
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-base flex items-center gap-2">
-                        {source.label}
-                        {source.side && (
-                          <Badge variant="outline" className="text-xs">
-                            {source.side === "bride" ? "Bride's Side" : source.side === "groom" ? "Groom's Side" : "Mutual"}
-                          </Badge>
-                        )}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Households:</span>
-                        <span className="font-medium">{stat?.count || 0}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Total Seats:</span>
-                        <span className="font-medium">{stat?.seats || 0}</span>
-                      </div>
-                      {source.quotaLimit && (
-                        <div className="mt-2">
-                          <Progress
-                            value={((stat?.seats || 0) / source.quotaLimit) * 100}
-                            className="h-2"
-                          />
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {stat?.seats || 0} / {source.quotaLimit} limit
-                          </p>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="cutlist" className="space-y-4">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h2 className="text-lg font-semibold">Cut List</h2>
-              <p className="text-sm text-muted-foreground">Households removed from the main list - easy to restore</p>
-            </div>
-          </div>
-
-          {cutListLoading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map(i => <Skeleton key={i} className="h-24 w-full" />)}
-            </div>
-          ) : cutList.length === 0 ? (
-            <Card>
-              <CardContent className="p-6 text-center">
-                <CheckCircle2 className="h-12 w-12 mx-auto text-green-500 mb-3" />
-                <p className="text-muted-foreground">No households in the cut list. Your guest list is complete!</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-3">
-              {cutList.map(item => (
-                <Card key={item.id} data-testid={`card-cut-${item.id}`}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between gap-4 flex-wrap">
-                      <div>
-                        <p className="font-medium">{item.household.name}</p>
-                        <div className="flex items-center gap-2 mt-1 flex-wrap">
-                          <Badge variant="outline" className="text-xs">
-                            {item.household.maxCount} guests
-                          </Badge>
-                          <Badge variant="secondary" className="text-xs">
-                            {item.cutReason === "priority" ? "Priority Cut" :
-                             item.cutReason === "budget" ? "Budget Cut" :
-                             item.cutReason === "manual" ? "Manually Cut" : "Other"}
-                          </Badge>
-                          {item.cutNotes && (
-                            <span className="text-xs text-muted-foreground">{item.cutNotes}</span>
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <CardTitle className="text-base flex items-center gap-2">
+                            {scenario.name}
+                            {scenario.isActive && <Badge variant="default" className="text-xs">Active</Badge>}
+                          </CardTitle>
+                          {scenario.description && (
+                            <CardDescription className="text-xs">{scenario.description}</CardDescription>
                           )}
                         </div>
                       </div>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => restoreFromCutListMutation.mutate(item.id)}
-                          disabled={restoreFromCutListMutation.isPending}
-                          data-testid={`button-restore-${item.id}`}
-                        >
-                          <RotateCcw className="h-4 w-4 mr-1" />
-                          Restore
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => permanentDeleteMutation.mutate(item.id)}
-                          disabled={permanentDeleteMutation.isPending}
-                          data-testid={`button-permanent-delete-${item.id}`}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Households:</span>
+                        <span className="font-medium">{scenario.householdCount}</span>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Total Guests:</span>
+                        <span className="font-medium">{scenario.guestCount}</span>
+                      </div>
+                      {scenario.budgetLimit && scenario.costPerHead && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Budget Left:</span>
+                          <span className={`font-medium ${scenario.remainingBudget && scenario.remainingBudget < 0 ? "text-destructive" : "text-green-600"}`}>
+                            ${scenario.remainingBudget?.toLocaleString() || 0}
+                          </span>
+                        </div>
+                      )}
+                    </CardContent>
+                    <CardFooter className="gap-2 pt-2 flex-wrap">
+                      {!scenario.isActive && (
+                        <Button
+                          size="sm"
+                          onClick={() => setActiveScenarioMutation.mutate(scenario.id)}
+                          disabled={setActiveScenarioMutation.isPending}
+                          data-testid={`button-activate-${scenario.id}`}
+                        >
+                          <Play className="h-3 w-3 mr-1" />
+                          Use This
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => duplicateScenarioMutation.mutate({ id: scenario.id, name: `${scenario.name} (copy)` })}
+                        disabled={duplicateScenarioMutation.isPending}
+                        data-testid={`button-duplicate-${scenario.id}`}
+                      >
+                        <Copy className="h-3 w-3 mr-1" />
+                        Copy
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => deleteScenarioMutation.mutate(scenario.id)}
+                        disabled={deleteScenarioMutation.isPending}
+                        className="text-destructive hover:text-destructive"
+                        data-testid={`button-delete-${scenario.id}`}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
         </TabsContent>
+
       </Tabs>
 
       <Dialog open={suggestionDialogOpen} onOpenChange={setSuggestionDialogOpen}>
