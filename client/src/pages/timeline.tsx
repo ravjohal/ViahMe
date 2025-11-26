@@ -94,6 +94,8 @@ export default function TimelinePage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/events", wedding?.id] });
+      setDialogOpen(false);
+      setEditingEvent(null);
       toast({
         title: "Event updated",
         description: "Your event has been updated successfully.",
@@ -127,16 +129,10 @@ export default function TimelinePage() {
   const onSubmit = (data: InsertEvent) => {
     if (editingEvent) {
       updateMutation.mutate({ id: editingEvent.id, data });
-      setEditingEvent(null);
     } else {
       createMutation.mutate(data);
     }
-    form.reset({
-      weddingId: wedding?.id || "",
-      name: "",
-      type: "custom",
-      order: events.length + 1,
-    });
+    // Note: Form reset and dialog close happen in onSuccess callbacks
   };
 
   const handleEdit = (event: Event) => {
