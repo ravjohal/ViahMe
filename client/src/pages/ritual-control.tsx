@@ -86,10 +86,11 @@ const broadcastFormSchema = z.object({
 type BroadcastFormValues = z.infer<typeof broadcastFormSchema>;
 
 const STAGE_STATUSES = [
-  { value: "pending", label: "Pending", color: "bg-muted text-muted-foreground" },
-  { value: "in_progress", label: "In Progress", color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200" },
+  { value: "upcoming", label: "Upcoming", color: "bg-muted text-muted-foreground" },
+  { value: "active", label: "In Progress", color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200" },
   { value: "completed", label: "Completed", color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" },
   { value: "delayed", label: "Delayed", color: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200" },
+  { value: "skipped", label: "Skipped", color: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200" },
 ] as const;
 
 type StageStatus = typeof STAGE_STATUSES[number]['value'];
@@ -263,7 +264,7 @@ export default function RitualControlPage() {
   const updateForm = useForm<UpdateFormValues>({
     resolver: zodResolver(updateFormSchema),
     defaultValues: {
-      status: "in_progress",
+      status: "active",
       message: "",
       delayMinutes: 0,
     },
@@ -346,7 +347,7 @@ export default function RitualControlPage() {
   const handlePostUpdate = (stageId: string) => {
     setSelectedStageId(stageId);
     updateForm.reset({
-      status: "in_progress",
+      status: "active",
       message: "",
       delayMinutes: 0,
     });
@@ -635,6 +636,7 @@ export default function RitualControlPage() {
                         data-testid="input-stage-description"
                         placeholder="Brief description of what happens during this stage"
                         {...field}
+                        value={field.value ?? ""}
                       />
                     </FormControl>
                     <FormMessage />
@@ -688,6 +690,7 @@ export default function RitualControlPage() {
                         data-testid="input-guest-instructions"
                         placeholder="e.g., Please remain seated during this sacred ritual"
                         {...field}
+                        value={field.value ?? ""}
                       />
                     </FormControl>
                     <FormDescription>Instructions guests will see during this stage</FormDescription>
@@ -887,13 +890,13 @@ function EventStagesCard({ event, isExpanded, onToggle, onAddStage, onEditStage,
                       <div className="flex items-start gap-3 min-w-0">
                         <div className={`p-2 rounded-full flex-shrink-0 ${
                           latestUpdate?.status === 'completed' ? 'bg-green-100 dark:bg-green-900' :
-                          latestUpdate?.status === 'in_progress' ? 'bg-yellow-100 dark:bg-yellow-900' :
+                          latestUpdate?.status === 'active' ? 'bg-yellow-100 dark:bg-yellow-900' :
                           latestUpdate?.status === 'delayed' ? 'bg-red-100 dark:bg-red-900' :
                           'bg-muted'
                         }`}>
                           {latestUpdate?.status === 'completed' ? (
                             <CheckCircle className="w-4 h-4 text-green-600" />
-                          ) : latestUpdate?.status === 'in_progress' ? (
+                          ) : latestUpdate?.status === 'active' ? (
                             <Play className="w-4 h-4 text-yellow-600" />
                           ) : latestUpdate?.status === 'delayed' ? (
                             <AlertCircle className="w-4 h-4 text-red-600" />

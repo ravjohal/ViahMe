@@ -330,8 +330,8 @@ export default function GapConciergePage() {
       description: rec.description || "",
       address: rec.address || "",
       mapUrl: rec.mapUrl || "",
-      estimatedTravelTime: rec.estimatedTravelTime?.toString() || "",
-      priceLevel: rec.priceLevel || "$$",
+      estimatedTravelTime: rec.estimatedTravelTime ?? undefined,
+      priceLevel: (rec.priceLevel as "$" | "$$" | "$$$" | "$$$$") || "$$",
       photoUrl: rec.photoUrl || "",
       order: rec.order,
     });
@@ -347,7 +347,7 @@ export default function GapConciergePage() {
       description: "",
       address: "",
       mapUrl: "",
-      estimatedTravelTime: "",
+      estimatedTravelTime: undefined,
       priceLevel: "$$",
       photoUrl: "",
       order: 0,
@@ -575,6 +575,7 @@ export default function GapConciergePage() {
                           data-testid="input-special-instructions"
                           placeholder="e.g., Please wear comfortable shoes for the next event"
                           {...field}
+                          value={field.value ?? ""}
                         />
                       </FormControl>
                       <FormMessage />
@@ -914,6 +915,7 @@ export default function GapConciergePage() {
                         data-testid="input-rec-description"
                         placeholder="Brief description of this place"
                         {...field}
+                        value={field.value ?? ""}
                       />
                     </FormControl>
                     <FormMessage />
@@ -932,6 +934,7 @@ export default function GapConciergePage() {
                         data-testid="input-rec-address"
                         placeholder="123 Main St, City, State"
                         {...field}
+                        value={field.value ?? ""}
                       />
                     </FormControl>
                     <FormMessage />
@@ -950,6 +953,7 @@ export default function GapConciergePage() {
                         data-testid="input-rec-map"
                         placeholder="https://maps.google.com/..."
                         {...field}
+                        value={field.value ?? ""}
                       />
                     </FormControl>
                     <FormMessage />
@@ -988,6 +992,7 @@ export default function GapConciergePage() {
                         data-testid="input-rec-photo"
                         placeholder="https://..."
                         {...field}
+                        value={field.value ?? ""}
                       />
                     </FormControl>
                     <FormMessage />
