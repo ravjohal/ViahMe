@@ -137,7 +137,7 @@ export function FloatingChecklist() {
       label: "Start your guest list",
       description: "Who's coming to celebrate?",
       done: guests.length > 0,
-      link: "/guest-management",
+      link: "/guests",
       icon: Users,
     },
     {
