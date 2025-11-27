@@ -1320,6 +1320,11 @@ export const PERMISSION_CATEGORIES = {
     description: "Manage guest lists, households, and RSVPs",
     permissions: ["view", "edit", "manage"] as const,
   },
+  guest_suggestions: {
+    label: "Suggest Guests",
+    description: "Suggest guests for the couple to approve",
+    permissions: ["edit"] as const,
+  },
   invitations: {
     label: "Invitations",
     description: "Send and manage invitations",
