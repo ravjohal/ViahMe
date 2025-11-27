@@ -105,6 +105,7 @@ type GuestPlanningSnapshot = {
     date: string | null;
     costPerHead: number | null;
     venueCapacity: number | null;
+    budgetAllocation: number | null;
     confirmedInvited: number;
     potentialTotal: number;
     confirmedCost: number;
@@ -112,14 +113,17 @@ type GuestPlanningSnapshot = {
     capacityUsed: number;
     capacityRemaining: number | null;
     isOverCapacity: boolean;
+    isOverBudget: boolean;
   }>;
   budget: {
-    totalBudget: number;
+    weddingTotalBudget: number;
+    guestBudget: number;
     defaultCostPerHead: number;
     confirmedSpend: number;
     potentialSpend: number;
     remainingBudget: number;
     potentialOverage: number;
+    isOverBudget: boolean;
   };
 };
 
@@ -552,6 +556,7 @@ export default function Guests() {
       queryClient.invalidateQueries({ queryKey: ["/api/households", wedding?.id] });
       queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "cut-list"] });
       queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-budget"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-planning-snapshot"] });
       setCutListDialogOpen(false);
       setHouseholdToCut(null);
       setCutReason("");
@@ -613,6 +618,7 @@ export default function Guests() {
       queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "cut-list"] });
       queryClient.invalidateQueries({ queryKey: ["/api/households", wedding?.id] });
       queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-budget"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-planning-snapshot"] });
       toast({ title: "Restored", description: "Household has been restored to your guest list." });
     },
     onError: () => {
@@ -1713,7 +1719,7 @@ export default function Guests() {
                           </p>
                           <p className="text-sm text-muted-foreground">Projected Cost</p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            Budget: ${planningSnapshot?.budget.totalBudget?.toLocaleString() || 0}
+                            Guest Budget: ${planningSnapshot?.budget.guestBudget?.toLocaleString() || 0}
                           </p>
                         </CardContent>
                       </Card>
@@ -1781,17 +1787,22 @@ export default function Guests() {
                           {planningSnapshot.events.map(event => (
                             <Card 
                               key={event.id} 
-                              className={`${event.isOverCapacity ? "border-red-300 bg-red-50/30 dark:bg-red-950/20" : ""}`}
+                              className={`${event.isOverCapacity || event.isOverBudget ? "border-red-300 bg-red-50/30 dark:bg-red-950/20" : ""}`}
                               data-testid={`card-event-${event.id}`}
                             >
                               <CardContent className="p-4">
                                 <div className="flex items-start justify-between gap-4 flex-wrap">
                                   <div className="flex-1 min-w-[200px]">
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 flex-wrap">
                                       <h3 className="font-semibold">{event.name}</h3>
                                       {event.isOverCapacity && (
                                         <Badge variant="destructive" className="text-xs">
                                           Over Capacity
+                                        </Badge>
+                                      )}
+                                      {event.isOverBudget && (
+                                        <Badge variant="destructive" className="text-xs">
+                                          Over Budget
                                         </Badge>
                                       )}
                                     </div>
@@ -1812,10 +1823,15 @@ export default function Guests() {
                                       <p className="text-xs text-muted-foreground">Per Head</p>
                                     </div>
                                     <div>
-                                      <p className={`text-lg font-bold ${event.isOverCapacity ? "text-red-600" : ""}`}>
+                                      <p className={`text-lg font-bold ${event.isOverCapacity || event.isOverBudget ? "text-red-600" : ""}`}>
                                         ${event.potentialCost?.toLocaleString() || 0}
                                       </p>
                                       <p className="text-xs text-muted-foreground">Total Cost</p>
+                                      {event.budgetAllocation && (
+                                        <p className="text-xs text-muted-foreground">
+                                          of ${event.budgetAllocation.toLocaleString()}
+                                        </p>
+                                      )}
                                     </div>
                                   </div>
 
@@ -1951,6 +1967,93 @@ export default function Guests() {
                           </CardContent>
                         </Card>
                       </div>
+                    </div>
+
+                    {/* Household List with Quick Cut Actions */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h2 className="text-lg font-semibold flex items-center gap-2">
+                            <Users className="h-5 w-5 text-muted-foreground" />
+                            Households to Consider
+                          </h2>
+                          <p className="text-sm text-muted-foreground">
+                            Review households and move to "Maybe Later" if needed
+                          </p>
+                        </div>
+                      </div>
+
+                      {planningSnapshot?.confirmedHouseholds && planningSnapshot.confirmedHouseholds.length > 0 ? (
+                        <div className="space-y-2">
+                          {planningSnapshot.confirmedHouseholds
+                            .sort((a, b) => {
+                              const priorityOrder = { nice_to_have: 0, should_invite: 1, must_invite: 2 };
+                              return (priorityOrder[a.priorityTier as keyof typeof priorityOrder] || 1) - 
+                                     (priorityOrder[b.priorityTier as keyof typeof priorityOrder] || 1);
+                            })
+                            .map(household => (
+                              <Card key={household.id} className="hover-elevate" data-testid={`card-household-assess-${household.id}`}>
+                                <CardContent className="p-3">
+                                  <div className="flex items-center justify-between gap-4">
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <p className="font-medium truncate">{household.name}</p>
+                                        <Badge 
+                                          variant={
+                                            household.priorityTier === 'must_invite' ? 'default' : 
+                                            household.priorityTier === 'should_invite' ? 'secondary' : 
+                                            'outline'
+                                          }
+                                          className="text-xs"
+                                        >
+                                          {household.priorityTier === 'must_invite' ? 'Must' : 
+                                           household.priorityTier === 'should_invite' ? 'Should' : 
+                                           'Nice'}
+                                        </Badge>
+                                      </div>
+                                      <p className="text-xs text-muted-foreground">
+                                        {household.maxCount} guests • {household.affiliation === 'bride' ? "Bride's" : household.affiliation === 'groom' ? "Groom's" : "Mutual"}
+                                        {household.relationshipTier && ` • ${household.relationshipTier.replace('_', ' ')}`}
+                                      </p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <p className="text-sm font-medium">
+                                        ${(household.maxCount * (planningSnapshot?.budget?.defaultCostPerHead || 150)).toLocaleString()}
+                                      </p>
+                                      {household.priorityTier !== 'must_invite' && (
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={() => {
+                                            addToCutListMutation.mutate({
+                                              householdId: household.id,
+                                              cutReason: 'priority',
+                                            });
+                                          }}
+                                          disabled={addToCutListMutation.isPending}
+                                          data-testid={`button-cut-${household.id}`}
+                                        >
+                                          <Scissors className="h-3 w-3 mr-1" />
+                                          Maybe Later
+                                        </Button>
+                                      )}
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                        </div>
+                      ) : (
+                        <Card className="border-dashed">
+                          <CardContent className="p-6 text-center">
+                            <Users className="h-10 w-10 mx-auto text-muted-foreground mb-3 opacity-50" />
+                            <p className="font-medium mb-1">No Households Yet</p>
+                            <p className="text-sm text-muted-foreground">
+                              Add households in the Guest List tab to see them here.
+                            </p>
+                          </CardContent>
+                        </Card>
+                      )}
                     </div>
 
                     {/* Action Button */}

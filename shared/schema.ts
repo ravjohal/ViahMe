@@ -1677,6 +1677,7 @@ export const insertCutListItemSchema = createInsertSchema(cutListItems).omit({
   restoredBy: true,
 }).extend({
   cutReason: z.enum(["budget", "space", "priority", "other"]).optional(),
+  cutNotes: z.string().optional().nullable(),
 });
 
 export type InsertCutListItem = z.infer<typeof insertCutListItemSchema>;

@@ -540,6 +540,7 @@ export interface GuestPlanningSnapshot {
     date: Date | null;
     costPerHead: number | null;
     venueCapacity: number | null;
+    budgetAllocation: number | null; // From budget category for this event
     
     // Guest counts for this event
     confirmedInvited: number; // Guests invited to this event
@@ -553,16 +554,19 @@ export interface GuestPlanningSnapshot {
     capacityUsed: number;
     capacityRemaining: number | null;
     isOverCapacity: boolean;
+    isOverBudget: boolean;
   }>;
   
   // Overall budget analysis
   budget: {
-    totalBudget: number;
+    weddingTotalBudget: number; // From wedding.totalBudget
+    guestBudget: number; // From guest budget settings (or defaulted from wedding)
     defaultCostPerHead: number;
     confirmedSpend: number;
     potentialSpend: number; // If all pending approved
     remainingBudget: number;
     potentialOverage: number; // How much over budget if all approved
+    isOverBudget: boolean;
   };
 }
 
@@ -5724,10 +5728,26 @@ export class DBStorage implements IStorage {
     // Get pending suggestions
     const pendingSuggestions = await this.getGuestSuggestionsByWedding(weddingId, 'pending');
 
-    // Get budget settings
+    // Get wedding for total budget
+    const wedding = await this.getWedding(weddingId);
+    const weddingTotalBudget = wedding?.totalBudget ? parseFloat(wedding.totalBudget) : 0;
+
+    // Get budget settings (for guest-specific budget)
     const budgetSettings = await this.getGuestBudgetSettings(weddingId);
     const defaultCostPerHead = budgetSettings?.defaultCostPerHead ? parseFloat(budgetSettings.defaultCostPerHead) : 150;
-    const totalBudget = budgetSettings?.maxGuestBudget ? parseFloat(budgetSettings.maxGuestBudget) : 0;
+    
+    // Use guest budget settings if set, otherwise use the wedding's total budget
+    // If neither is set, use 0 (no budget limit means nothing is over budget)
+    let guestBudget = 0;
+    if (budgetSettings?.maxGuestBudget) {
+      guestBudget = parseFloat(budgetSettings.maxGuestBudget);
+    } else if (weddingTotalBudget > 0) {
+      // Default to the wedding's total budget when no guest-specific budget is set
+      guestBudget = weddingTotalBudget;
+    }
+    
+    // Get budget categories for per-event allocations
+    const budgetCategories = await this.getBudgetCategories(weddingId);
 
     // Calculate confirmed and pending seat counts
     const confirmedSeats = confirmedHouseholds.reduce((sum, h) => sum + h.maxCount, 0);
@@ -5783,9 +5803,36 @@ export class DBStorage implements IStorage {
     }
 
     // Calculate per-event analysis
+    // Calculate proportional allocation per event if no explicit allocation found
+    const numEvents = allEvents.length || 1;
+    const defaultEventAllocation = guestBudget > 0 ? guestBudget / numEvents : null;
+    
     const eventAnalysis = allEvents.map(event => {
       const costPerHead = event.costPerHead ? parseFloat(event.costPerHead) : defaultCostPerHead;
       const venueCapacity = event.venueCapacity || null;
+      
+      // Find budget allocation for this event (match by event type/name to budget category)
+      // Check multiple matching strategies for better accuracy
+      const eventTypeLower = event.type.toLowerCase();
+      const eventNameLower = event.name.toLowerCase();
+      
+      const matchingCategory = budgetCategories.find(cat => {
+        const catLower = cat.category.toLowerCase();
+        // Exact match on type or name
+        if (catLower === eventTypeLower || catLower === eventNameLower) return true;
+        // Check if category contains event type or name
+        if (catLower.includes(eventTypeLower) || catLower.includes(eventNameLower)) return true;
+        // Check if event name/type contains category (for cases like "Sangeet Ceremony" containing "Sangeet")
+        if (eventTypeLower.includes(catLower) || eventNameLower.includes(catLower)) return true;
+        // Check for common categories that apply to all events
+        if (['catering', 'food', 'venue', 'hospitality'].some(k => catLower.includes(k))) return false; // Skip general categories for specific event matching
+        return false;
+      });
+      
+      // Use matched category, or fall back to proportional allocation of guest budget
+      const budgetAllocation = matchingCategory?.allocatedAmount 
+        ? parseFloat(matchingCategory.allocatedAmount) 
+        : defaultEventAllocation;
       
       // Count confirmed guests for this event
       const invitedGuestIds = guestEventMap.get(event.id) || new Set();
@@ -5802,6 +5849,8 @@ export class DBStorage implements IStorage {
       const capacityUsed = confirmedInvited;
       const capacityRemaining = venueCapacity !== null ? venueCapacity - potentialTotal : null;
       const isOverCapacity = venueCapacity !== null && potentialTotal > venueCapacity;
+      // Only flag as over budget if we have a positive budget allocation to compare against
+      const isOverBudget = budgetAllocation !== null && budgetAllocation > 0 && potentialCost > budgetAllocation;
 
       return {
         id: event.id,
@@ -5810,6 +5859,7 @@ export class DBStorage implements IStorage {
         date: event.date,
         costPerHead,
         venueCapacity,
+        budgetAllocation,
         confirmedInvited,
         potentialTotal,
         confirmedCost,
@@ -5817,14 +5867,19 @@ export class DBStorage implements IStorage {
         capacityUsed,
         capacityRemaining,
         isOverCapacity,
+        isOverBudget,
       };
     });
 
     // Calculate overall budget
     const confirmedSpend = confirmedSeats * defaultCostPerHead;
     const potentialSpend = (confirmedSeats + pendingSeats) * defaultCostPerHead;
-    const remainingBudget = totalBudget - confirmedSpend;
-    const potentialOverage = potentialSpend > totalBudget ? potentialSpend - totalBudget : 0;
+    
+    // Only calculate remaining/overage if budget is set (guestBudget > 0)
+    // If no budget set, we use 0 for remaining and overage, and isOverBudget is false
+    const remainingBudget = guestBudget > 0 ? guestBudget - confirmedSpend : 0;
+    const potentialOverage = guestBudget > 0 && potentialSpend > guestBudget ? potentialSpend - guestBudget : 0;
+    const isOverBudget = guestBudget > 0 && potentialSpend > guestBudget;
 
     return {
       confirmedHouseholds,
@@ -5839,12 +5894,14 @@ export class DBStorage implements IStorage {
       },
       events: eventAnalysis,
       budget: {
-        totalBudget,
+        weddingTotalBudget,
+        guestBudget,
         defaultCostPerHead,
         confirmedSpend,
         potentialSpend,
         remainingBudget,
         potentialOverage,
+        isOverBudget,
       },
     };
   }
