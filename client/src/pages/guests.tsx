@@ -13,14 +13,48 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertGuestSchema, insertHouseholdSchema, type Wedding, type Guest, type Event, type Household } from "@shared/schema";
+import { insertGuestSchema, insertHouseholdSchema, type Wedding, type Guest, type Event, type Household, type GuestSuggestion, type CutListItem } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
-import { Trash2, Upload, Users, Link as LinkIcon, MailCheck, Copy, Send, BarChart3, Download, QrCode, ListFilter, Scissors, MoreVertical } from "lucide-react";
+import {
+  Trash2,
+  Upload,
+  Users,
+  Link as LinkIcon,
+  MailCheck,
+  Copy,
+  Send,
+  BarChart3,
+  Download,
+  QrCode,
+  ListFilter,
+  Scissors,
+  MoreVertical,
+  ClipboardList,
+  UserPlus,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  DollarSign,
+  RotateCcw,
+  Inbox,
+  Target,
+  CheckSquare,
+  ArrowRight,
+  Lightbulb,
+  Sparkles,
+  Circle,
+  Star,
+  TrendingUp,
+  AlertTriangle,
+} from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import QRCode from "qrcode";
 
@@ -37,14 +71,21 @@ const householdFormSchema = insertHouseholdSchema.extend({
 
 type HouseholdFormData = z.infer<typeof householdFormSchema>;
 
-// CSV export utility function
+type CutListItemWithHousehold = CutListItem & {
+  household: Household;
+};
+
+type BudgetCapacity = {
+  maxGuests: number;
+  currentCount: number;
+  costPerHead: number;
+  totalBudget: number;
+  remainingBudget: number;
+};
+
 function exportToCSV(households: Household[], guests: Guest[]) {
-  const householdById = new Map(households.map(h => [h.id, h]));
-  
-  // Create CSV header
   const headers = ['Household Name', 'Affiliation', 'Relationship Tier', 'Max Seats', 'Guest Count', 'Guest Names', 'Contact Email'];
   
-  // Create CSV rows
   const rows = households.map(household => {
     const householdGuests = guests.filter(g => g.householdId === household.id);
     const guestNames = householdGuests.map(g => g.name).join('; ');
@@ -62,13 +103,11 @@ function exportToCSV(households: Household[], guests: Guest[]) {
     ];
   });
   
-  // Combine headers and rows
   const csvContent = [
     headers.join(','),
     ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
   ].join('\n');
   
-  // Create and trigger download
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   const url = URL.createObjectURL(blob);
@@ -83,6 +122,11 @@ function exportToCSV(households: Household[], guests: Guest[]) {
 export default function Guests() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  
+  // Top-level tab state
+  const [mainTab, setMainTab] = useState("guest-list");
+  const [planningTab, setPlanningTab] = useState("suggestions");
+  
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
@@ -113,6 +157,11 @@ export default function Guests() {
   const [householdToCut, setHouseholdToCut] = useState<Household | null>(null);
   const [cutReason, setCutReason] = useState("");
 
+  // Guest Planning state
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [selectedSuggestion, setSelectedSuggestion] = useState<GuestSuggestion | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+
   const { data: weddings, isLoading: weddingsLoading } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
   });
@@ -129,9 +178,29 @@ export default function Guests() {
     enabled: !!wedding?.id,
   });
 
-  // Fetch households
   const { data: households = [], isLoading: householdsLoading } = useQuery<Household[]>({
     queryKey: ["/api/households", wedding?.id],
+    enabled: !!wedding?.id,
+  });
+
+  // Guest Planning queries
+  const { data: suggestions = [], isLoading: suggestionsLoading } = useQuery<GuestSuggestion[]>({
+    queryKey: ["/api/weddings", wedding?.id, "guest-suggestions"],
+    enabled: !!wedding?.id,
+  });
+
+  const { data: suggestionsCount } = useQuery<{ count: number }>({
+    queryKey: ["/api/weddings", wedding?.id, "guest-suggestions", "count"],
+    enabled: !!wedding?.id,
+  });
+
+  const { data: budgetData } = useQuery<{ settings: any; capacity: BudgetCapacity }>({
+    queryKey: ["/api/weddings", wedding?.id, "guest-budget"],
+    enabled: !!wedding?.id,
+  });
+
+  const { data: cutList = [], isLoading: cutListLoading } = useQuery<CutListItemWithHousehold[]>({
+    queryKey: ["/api/weddings", wedding?.id, "cut-list"],
     enabled: !!wedding?.id,
   });
 
@@ -143,11 +212,8 @@ export default function Guests() {
       const newTokens = new Map(householdTokens);
       
       for (const household of households) {
-        // Skip if already have token or if no active link
         if (householdTokens.has(household.id)) continue;
         if (!household.magicLinkTokenHash || !household.magicLinkExpires) continue;
-
-        // Check if link is expired
         if (new Date(household.magicLinkExpires) < new Date()) continue;
 
         try {
@@ -317,7 +383,6 @@ export default function Guests() {
       return await apiRequest("DELETE", `/api/households/${id}`);
     },
     onSuccess: (_, householdId) => {
-      // Remove token from local state
       setHouseholdTokens(prev => {
         const newMap = new Map(prev);
         newMap.delete(householdId);
@@ -348,11 +413,9 @@ export default function Guests() {
       return { householdId, token: result.token };
     },
     onSuccess: (data) => {
-      // Store the token locally
       setHouseholdTokens(prev => new Map(prev).set(data.householdId, data.token));
       queryClient.invalidateQueries({ queryKey: ["/api/households", wedding?.id] });
       
-      // Auto-copy the link
       const magicLink = `${window.location.origin}/rsvp/${data.token}`;
       navigator.clipboard.writeText(magicLink).then(() => {
         toast({
@@ -380,7 +443,6 @@ export default function Guests() {
       return await apiRequest("POST", `/api/households/${householdId}/revoke-token`, {});
     },
     onSuccess: (_, householdId) => {
-      // Remove token from local state
       setHouseholdTokens(prev => {
         const newMap = new Map(prev);
         newMap.delete(householdId);
@@ -401,6 +463,127 @@ export default function Guests() {
     },
   });
 
+  const sendBulkInvitationsMutation = useMutation({
+    mutationFn: async (data: {
+      householdIds: string[];
+      weddingId: string;
+      eventIds: string[];
+      personalMessage?: string;
+    }) => {
+      const response = await apiRequest("POST", "/api/households/send-invitations", data);
+      return await response.json();
+    },
+    onSuccess: (result) => {
+      setBulkInviteDialogOpen(false);
+      setSelectedHouseholds([]);
+      setSelectedInviteEvents([]);
+      setPersonalMessage("");
+      
+      toast({
+        title: "Invitations sent",
+        description: `Successfully sent ${result.success} invitation(s)${result.errors?.length ? `, ${result.errors.length} failed` : ""}`,
+      });
+
+      if (result.errors && result.errors.length > 0) {
+        console.error("Bulk invitation errors:", result.errors);
+      }
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to send invitations",
+        description: error.message || "An error occurred while sending invitations",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const addToCutListMutation = useMutation({
+    mutationFn: async (data: { householdId: string; cutReason?: string }) => {
+      return await apiRequest("POST", `/api/weddings/${wedding?.id}/cut-list`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/households", wedding?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "cut-list"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-budget"] });
+      setCutListDialogOpen(false);
+      setHouseholdToCut(null);
+      setCutReason("");
+      toast({
+        title: "Moved to Maybe Later",
+        description: "Household has been parked. You can restore it anytime from Guest Planning.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to move household to cut list",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Guest Planning mutations
+  const approveSuggestionMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiRequest("POST", `/api/guest-suggestions/${id}/approve`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-suggestions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-suggestions", "count"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/households", wedding?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-budget"] });
+      toast({ title: "Approved", description: "Guest suggestion has been approved and added to your list." });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to approve suggestion", variant: "destructive" });
+    },
+  });
+
+  const rejectSuggestionMutation = useMutation({
+    mutationFn: async ({ id, reason }: { id: string; reason: string }) => {
+      return await apiRequest("POST", `/api/guest-suggestions/${id}/reject`, { reason });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-suggestions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-suggestions", "count"] });
+      setRejectDialogOpen(false);
+      setSelectedSuggestion(null);
+      setRejectReason("");
+      toast({ title: "Rejected", description: "Guest suggestion has been declined." });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to reject suggestion", variant: "destructive" });
+    },
+  });
+
+  const restoreFromCutListMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiRequest("POST", `/api/cut-list/${id}/restore`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "cut-list"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/households", wedding?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-budget"] });
+      toast({ title: "Restored", description: "Household has been restored to your guest list." });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to restore household", variant: "destructive" });
+    },
+  });
+
+  const updateBudgetMutation = useMutation({
+    mutationFn: async (data: { maxGuestBudget: string; defaultCostPerHead: string }) => {
+      return await apiRequest("POST", `/api/weddings/${wedding?.id}/guest-budget`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-budget"] });
+      toast({ title: "Budget updated", description: "Guest budget settings have been saved." });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to update budget", variant: "destructive" });
+    },
+  });
+
   const handleGenerateQRCode = async (household: Household) => {
     const token = householdTokens.get(household.id);
     if (!token) {
@@ -417,10 +600,7 @@ export default function Guests() {
       const qrDataURL = await QRCode.toDataURL(rsvpUrl, {
         width: 300,
         margin: 2,
-        color: {
-          dark: '#000000',
-          light: '#FFFFFF',
-        },
+        color: { dark: '#000000', light: '#FFFFFF' },
       });
       
       setSelectedHouseholdForQR(household);
@@ -449,65 +629,6 @@ export default function Guests() {
       description: `QR code for ${selectedHouseholdForQR.name} has been downloaded`,
     });
   };
-
-  const sendBulkInvitationsMutation = useMutation({
-    mutationFn: async (data: {
-      householdIds: string[];
-      weddingId: string;
-      eventIds: string[];
-      personalMessage?: string;
-    }) => {
-      const response = await apiRequest("POST", "/api/households/send-invitations", data);
-      return await response.json();
-    },
-    onSuccess: (result) => {
-      setBulkInviteDialogOpen(false);
-      setSelectedHouseholds([]);
-      setSelectedInviteEvents([]);
-      setPersonalMessage("");
-      
-      toast({
-        title: "Invitations sent",
-        description: `Successfully sent ${result.success} invitation(s)${result.errors?.length ? `, ${result.errors.length} failed` : ""}`,
-      });
-
-      // Show detailed errors if any
-      if (result.errors && result.errors.length > 0) {
-        console.error("Bulk invitation errors:", result.errors);
-      }
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Failed to send invitations",
-        description: error.message || "An error occurred while sending invitations",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const addToCutListMutation = useMutation({
-    mutationFn: async (data: { householdId: string; cutReason?: string }) => {
-      return await apiRequest("POST", `/api/weddings/${wedding?.id}/cut-list`, data);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/households", wedding?.id] });
-      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "cut-list"] });
-      setCutListDialogOpen(false);
-      setHouseholdToCut(null);
-      setCutReason("");
-      toast({
-        title: "Moved to cut list",
-        description: "Household has been moved to the cut list. You can restore it from Guest Planning.",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to move household to cut list",
-        variant: "destructive",
-      });
-    },
-  });
 
   const handleMoveToCutList = (household: Household) => {
     setHouseholdToCut(household);
@@ -558,14 +679,12 @@ export default function Guests() {
     }
   };
 
-  // Redirect to onboarding if no wedding exists
   useEffect(() => {
     if (!weddingsLoading && !wedding) {
       setLocation("/onboarding");
     }
   }, [weddingsLoading, wedding, setLocation]);
 
-  // Update form when wedding is loaded
   useEffect(() => {
     if (wedding?.id) {
       form.setValue("weddingId", wedding.id);
@@ -623,23 +742,14 @@ export default function Guests() {
     }
   };
 
-  const toggleEvent = (eventId: string) => {
-    setSelectedEvents(prev =>
-      prev.includes(eventId)
-        ? prev.filter(id => id !== eventId)
-        : [...prev, eventId]
-    );
-  };
-
-  // Household handlers
   const handleAddHousehold = () => {
     setEditingHousehold(null);
     householdForm.reset({
       name: "",
       contactEmail: "",
       maxCount: 1,
-      affiliation: "bride" as const,
-      relationshipTier: "friend" as const,
+      affiliation: "bride",
+      relationshipTier: "friend",
       weddingId: wedding?.id || "",
     });
     setHouseholdDialogOpen(true);
@@ -650,8 +760,8 @@ export default function Guests() {
     householdForm.reset({
       name: household.name,
       contactEmail: household.contactEmail || "",
-      maxCount: household.maxCount,
-      affiliation: household.affiliation || "bride",
+      maxCount: household.maxCount || 1,
+      affiliation: household.affiliation as "bride" | "groom" | "mutual",
       relationshipTier: household.relationshipTier || "friend",
       weddingId: household.weddingId,
     });
@@ -659,10 +769,15 @@ export default function Guests() {
   };
 
   const handleHouseholdSubmit = (data: HouseholdFormData) => {
+    const householdData = {
+      ...data,
+      contactEmail: data.contactEmail || undefined,
+    };
+
     if (editingHousehold) {
-      updateHouseholdMutation.mutate({ id: editingHousehold.id, data });
+      updateHouseholdMutation.mutate({ id: editingHousehold.id, data: householdData });
     } else {
-      createHouseholdMutation.mutate(data);
+      createHouseholdMutation.mutate(householdData);
     }
   };
 
@@ -680,36 +795,32 @@ export default function Guests() {
     revokeTokenMutation.mutate(householdId);
   };
 
-  const handleCopyMagicLink = async (household: Household) => {
+  const handleCopyMagicLink = (household: Household) => {
     const token = householdTokens.get(household.id);
-    
-    if (!token || !household.magicLinkTokenHash || !household.magicLinkExpires) {
+    if (!token) {
       toast({
-        title: "Token unavailable",
-        description: "Please regenerate the invitation link to copy it",
+        title: "No link available",
+        description: "Generate a magic link first",
         variant: "destructive",
       });
       return;
     }
 
     const magicLink = `${window.location.origin}/rsvp/${token}`;
-    
-    try {
-      await navigator.clipboard.writeText(magicLink);
+    navigator.clipboard.writeText(magicLink).then(() => {
       toast({
         title: "Link copied",
-        description: "Invitation link has been copied to clipboard",
+        description: `Invitation link for ${household.name} copied to clipboard`,
       });
-    } catch (error) {
+    }).catch(() => {
       toast({
         title: "Failed to copy",
-        description: "Could not copy link to clipboard",
+        description: "Please try again",
         variant: "destructive",
       });
-    }
+    });
   };
 
-  // Bulk invitation handlers
   const handleOpenBulkInvite = () => {
     setSelectedHouseholds([]);
     setSelectedInviteEvents([]);
@@ -752,7 +863,6 @@ export default function Guests() {
       return;
     }
 
-    // Preflight validation: ensure all selected households have contact emails
     const householdsWithoutEmail = selectedHouseholds.filter(id => {
       const household = households.find(h => h.id === id);
       return !household?.contactEmail;
@@ -792,581 +902,981 @@ export default function Guests() {
     return null;
   }
 
+  // Guest Planning calculations
+  const pendingSuggestions = suggestions.filter(s => s.status === "pending");
+  const reviewedSuggestions = suggestions.filter(s => s.status !== "pending");
+
+  const priorityBreakdown = {
+    must_invite: households.filter(h => h.priorityTier === "must_invite"),
+    should_invite: households.filter(h => h.priorityTier === "should_invite"),
+    nice_to_have: households.filter(h => h.priorityTier === "nice_to_have"),
+    unassigned: households.filter(h => !h.priorityTier),
+  };
+
+  // Workflow step progress
+  const hasSuggestions = pendingSuggestions.length === 0;
+  const hasBudgetSet = budgetData?.settings?.maxGuestBudget && Number(budgetData.settings.maxGuestBudget) > 0;
+  const isWithinCapacity = budgetData?.capacity && budgetData.capacity.currentCount <= budgetData.capacity.maxGuests;
+
+  const workflowSteps = [
+    {
+      id: "suggestions",
+      label: "Review",
+      description: "Team suggestions",
+      icon: Inbox,
+      isComplete: hasSuggestions,
+      count: pendingSuggestions.length,
+    },
+    {
+      id: "budget",
+      label: "Budget",
+      description: "Set capacity",
+      icon: DollarSign,
+      isComplete: hasBudgetSet && isWithinCapacity,
+      count: 0,
+    },
+    {
+      id: "finalize",
+      label: "Finalize",
+      description: "Maybe Later",
+      icon: CheckSquare,
+      isComplete: cutList.length === 0,
+      count: cutList.length,
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-background">
       <main className="container mx-auto px-6 py-8">
-        <Tabs defaultValue="guests" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="guests" data-testid="tab-guests">
-              Individual Guests
-            </TabsTrigger>
-            <TabsTrigger value="households" data-testid="tab-households">
-              <Users className="w-4 h-4 mr-2" />
-              Households
-            </TabsTrigger>
-            <TabsTrigger value="allocation" data-testid="tab-allocation">
-              <BarChart3 className="w-4 h-4 mr-2" />
-              Allocation View
-            </TabsTrigger>
-          </TabsList>
+        {/* Top-level tabs: Guest List and Guest Planning */}
+        <Tabs value={mainTab} onValueChange={setMainTab} className="space-y-6">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <TabsList className="grid grid-cols-2 w-auto">
+              <TabsTrigger value="guest-list" data-testid="tab-guest-list" className="gap-2">
+                <Users className="w-4 h-4" />
+                Guest List
+              </TabsTrigger>
+              <TabsTrigger value="guest-planning" data-testid="tab-guest-planning" className="gap-2">
+                <ClipboardList className="w-4 h-4" />
+                Guest Planning
+                {pendingSuggestions.length > 0 && (
+                  <Badge variant="destructive" className="ml-1 h-5 px-1.5 text-xs">
+                    {pendingSuggestions.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-          <TabsContent value="guests" className="space-y-4">
-            <GuestListManager
-              guests={guests}
-              onAddGuest={handleAddGuest}
-              onImportGuests={() => setImportDialogOpen(true)}
-              onEditGuest={handleEditGuest}
-            />
-          </TabsContent>
-
-          <TabsContent value="households" className="space-y-4">
-            <div className="flex justify-between items-center">
-              <div>
-                <h2 className="text-2xl font-bold">Household Management</h2>
-                <p className="text-muted-foreground mt-1">
-                  Group families together and manage invitation links
-                </p>
-              </div>
-              <div className="flex gap-2 flex-wrap">
-                <Button onClick={() => setLocation("/guest-management")} variant="secondary" data-testid="button-guest-planning">
-                  <ListFilter className="w-4 h-4 mr-2" />
-                  Guest Planning
-                </Button>
-                <Button onClick={handleOpenBulkInvite} variant="default" data-testid="button-bulk-invite">
-                  <Send className="w-4 h-4 mr-2" />
-                  Send Invitations
-                </Button>
-                <Button onClick={handleAddHousehold} variant="outline" data-testid="button-add-household">
+          {/* Guest List Tab - Current functionality */}
+          <TabsContent value="guest-list" className="space-y-6">
+            <Tabs defaultValue="guests" className="space-y-6">
+              <TabsList>
+                <TabsTrigger value="guests" data-testid="tab-guests">
+                  Individual Guests
+                </TabsTrigger>
+                <TabsTrigger value="households" data-testid="tab-households">
                   <Users className="w-4 h-4 mr-2" />
-                  Add Household
-                </Button>
-              </div>
-            </div>
+                  Households
+                </TabsTrigger>
+                <TabsTrigger value="allocation" data-testid="tab-allocation">
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  Allocation View
+                </TabsTrigger>
+              </TabsList>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {households.map((household) => {
-                const householdGuests = guests.filter(g => g.householdId === household.id);
-                const hasActiveLink = household.magicLinkTokenHash && household.magicLinkExpires && new Date(household.magicLinkExpires) > new Date();
+              <TabsContent value="guests" className="space-y-4">
+                <GuestListManager
+                  guests={guests}
+                  onAddGuest={handleAddGuest}
+                  onImportGuests={() => setImportDialogOpen(true)}
+                  onEditGuest={handleEditGuest}
+                />
+              </TabsContent>
 
-                return (
-                  <Card key={household.id} className="hover-elevate" data-testid={`card-household-${household.id}`}>
-                    <CardHeader className="pb-3">
-                      <div className="flex justify-between items-start gap-2">
-                        <div className="flex-1 min-w-0">
-                          <CardTitle className="text-lg truncate">{household.name}</CardTitle>
-                          <CardDescription className="mt-1">
-                            {household.maxCount} {household.maxCount === 1 ? 'seat' : 'seats'} • {householdGuests.length} {householdGuests.length === 1 ? 'guest' : 'guests'}
-                          </CardDescription>
-                        </div>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              data-testid={`button-household-menu-${household.id}`}
-                            >
-                              <MoreVertical className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => handleEditHousehold(household)}
-                              data-testid={`menu-edit-household-${household.id}`}
-                            >
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => handleMoveToCutList(household)}
-                              className="text-destructive"
-                              data-testid={`menu-cut-household-${household.id}`}
-                            >
-                              <Scissors className="w-4 h-4 mr-2" />
-                              Move to Cut List
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="flex flex-wrap gap-2">
-                        <Badge variant="outline" data-testid={`badge-affiliation-${household.id}`}>
-                          {household.affiliation === 'bride' ? "Bride's Side" : household.affiliation === 'groom' ? "Groom's Side" : "Mutual"}
-                        </Badge>
-                        <Badge variant="secondary" data-testid={`badge-tier-${household.id}`}>
-                          {household.relationshipTier?.split('_').map(word => 
-                            word.charAt(0).toUpperCase() + word.slice(1)
-                          ).join(' ')}
-                        </Badge>
-                        {hasActiveLink && (
-                          <Badge variant="default" data-testid={`badge-link-active-${household.id}`}>
-                            <LinkIcon className="w-3 h-3 mr-1" />
-                            Link Active
-                          </Badge>
-                        )}
-                      </div>
-
-                      {householdGuests.length > 0 && (
-                        <div className="text-sm text-muted-foreground">
-                          <div className="font-medium mb-1">Members:</div>
-                          <ul className="space-y-0.5">
-                            {householdGuests.map((guest) => (
-                              <li key={guest.id}>{guest.name}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-
-                      <div className="flex flex-wrap gap-2 pt-2 border-t">
-                        {hasActiveLink ? (
-                          <>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleCopyMagicLink(household)}
-                              className="flex-1"
-                              data-testid={`button-copy-link-${household.id}`}
-                            >
-                              <Copy className="w-3 h-3 mr-1" />
-                              Copy Link
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleGenerateQRCode(household)}
-                              data-testid={`button-qr-code-${household.id}`}
-                            >
-                              <QrCode className="w-3 h-3 mr-1" />
-                              QR Code
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleRevokeToken(household.id)}
-                              data-testid={`button-revoke-link-${household.id}`}
-                            >
-                              Revoke
-                            </Button>
-                          </>
-                        ) : (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleGenerateToken(household.id)}
-                            className="flex-1"
-                            data-testid={`button-generate-link-${household.id}`}
-                          >
-                            <LinkIcon className="w-3 h-3 mr-1" />
-                            Generate Link
-                          </Button>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-
-              {households.length === 0 && (
-                <Card className="col-span-full">
-                  <CardContent className="py-12 text-center">
-                    <Users className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                    <h3 className="text-lg font-semibold mb-2">No households yet</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Create households to group families together and manage invitations
+              <TabsContent value="households" className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-2xl font-bold">Household Management</h2>
+                    <p className="text-muted-foreground mt-1">
+                      Group families together and manage invitation links
                     </p>
-                    <Button onClick={handleAddHousehold} data-testid="button-add-first-household">
-                      <Users className="w-4 h-4 mr-2" />
-                      Add Your First Household
+                  </div>
+                  <div className="flex gap-2 flex-wrap">
+                    <Button onClick={handleOpenBulkInvite} variant="default" data-testid="button-bulk-invite">
+                      <Send className="w-4 h-4 mr-2" />
+                      Send Invitations
                     </Button>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="allocation" className="space-y-6">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div>
-                <h2 className="text-2xl font-bold">Guest Allocation Overview</h2>
-                <p className="text-muted-foreground mt-1">
-                  View guest counts and seat allocations by bride/groom side
-                </p>
-              </div>
-              
-              <div className="flex flex-wrap gap-2">
-                <Select value={affiliationFilter} onValueChange={setAffiliationFilter}>
-                  <SelectTrigger className="w-[160px]" data-testid="select-affiliation-filter">
-                    <SelectValue placeholder="Filter by side" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Sides</SelectItem>
-                    <SelectItem value="bride">Bride's Side</SelectItem>
-                    <SelectItem value="groom">Groom's Side</SelectItem>
-                    <SelectItem value="mutual">Mutual</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select value={tierFilter} onValueChange={setTierFilter}>
-                  <SelectTrigger className="w-[180px]" data-testid="select-tier-filter">
-                    <SelectValue placeholder="Filter by tier" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Tiers</SelectItem>
-                    <SelectItem value="immediate_family">Immediate Family</SelectItem>
-                    <SelectItem value="extended_family">Extended Family</SelectItem>
-                    <SelectItem value="friend">Friends</SelectItem>
-                    <SelectItem value="parents_friend">Parent's Friends</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    const filteredHouseholds = households.filter(h => {
-                      const matchesAffiliation = affiliationFilter === 'all' || h.affiliation === affiliationFilter;
-                      const matchesTier = tierFilter === 'all' || h.relationshipTier === tierFilter;
-                      return matchesAffiliation && matchesTier;
-                    });
-                    const filteredGuests = guests.filter(g => {
-                      const household = households.find(h => h.id === g.householdId);
-                      if (!household) return false;
-                      const matchesAffiliation = affiliationFilter === 'all' || household.affiliation === affiliationFilter;
-                      const matchesTier = tierFilter === 'all' || household.relationshipTier === tierFilter;
-                      return matchesAffiliation && matchesTier;
-                    });
-                    exportToCSV(filteredHouseholds, filteredGuests);
-                    toast({
-                      title: "Export successful",
-                      description: `Exported ${filteredHouseholds.length} households to CSV`,
-                    });
-                  }}
-                  data-testid="button-export-csv"
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Export CSV
-                </Button>
-              </div>
-            </div>
-
-            {(() => {
-              // Pre-index households by id for efficient lookups
-              const householdById = new Map(households.map(h => [h.id, h]));
-
-              // Apply filters
-              const filteredHouseholds = households.filter(h => {
-                const matchesAffiliation = affiliationFilter === 'all' || h.affiliation === affiliationFilter;
-                const matchesTier = tierFilter === 'all' || h.relationshipTier === tierFilter;
-                return matchesAffiliation && matchesTier;
-              });
-
-              const filteredGuests = guests.filter(g => {
-                if (!g.householdId) return false;
-                const household = householdById.get(g.householdId);
-                if (!household) return false;
-                const matchesAffiliation = affiliationFilter === 'all' || household.affiliation === affiliationFilter;
-                const matchesTier = tierFilter === 'all' || household.relationshipTier === tierFilter;
-                return matchesAffiliation && matchesTier;
-              });
-
-              // Calculate allocation metrics using filtered data
-              const brideHouseholds = filteredHouseholds.filter(h => h.affiliation === 'bride');
-              const groomHouseholds = filteredHouseholds.filter(h => h.affiliation === 'groom');
-              const mutualHouseholds = filteredHouseholds.filter(h => h.affiliation === 'mutual');
-
-              const brideSeats = brideHouseholds.reduce((sum, h) => sum + (h.maxCount || 0), 0);
-              const groomSeats = groomHouseholds.reduce((sum, h) => sum + (h.maxCount || 0), 0);
-              const mutualSeats = mutualHouseholds.reduce((sum, h) => sum + (h.maxCount || 0), 0);
-
-              // Count guests by affiliation using filtered guests
-              const brideGuests = filteredGuests.filter(g => {
-                if (!g.householdId) return false;
-                const household = householdById.get(g.householdId);
-                return household?.affiliation === 'bride';
-              });
-              const groomGuests = filteredGuests.filter(g => {
-                if (!g.householdId) return false;
-                const household = householdById.get(g.householdId);
-                return household?.affiliation === 'groom';
-              });
-              const mutualGuests = filteredGuests.filter(g => {
-                if (!g.householdId) return false;
-                const household = householdById.get(g.householdId);
-                return household?.affiliation === 'mutual';
-              });
-
-              const totalSeats = brideSeats + groomSeats + mutualSeats;
-              const totalGuests = brideGuests.length + groomGuests.length + mutualGuests.length;
-
-              const tierBreakdown = (affiliationHouseholds: Household[], affiliationGuests: Guest[]) => {
-                const immediate = affiliationHouseholds.filter(h => h.relationshipTier === 'immediate_family');
-                const extended = affiliationHouseholds.filter(h => h.relationshipTier === 'extended_family');
-                const friends = affiliationHouseholds.filter(h => h.relationshipTier === 'friend');
-                const parentsF = affiliationHouseholds.filter(h => h.relationshipTier === 'parents_friend');
-
-                // Count actual guests per tier by mapping guest to household tier
-                const immediateGuests = affiliationGuests.filter(g => {
-                  if (!g.householdId) return false;
-                  const household = householdById.get(g.householdId);
-                  return household && household.relationshipTier === 'immediate_family';
-                });
-                const extendedGuests = affiliationGuests.filter(g => {
-                  if (!g.householdId) return false;
-                  const household = householdById.get(g.householdId);
-                  return household && household.relationshipTier === 'extended_family';
-                });
-                const friendGuests = affiliationGuests.filter(g => {
-                  if (!g.householdId) return false;
-                  const household = householdById.get(g.householdId);
-                  return household && household.relationshipTier === 'friend';
-                });
-                const parentsFGuests = affiliationGuests.filter(g => {
-                  if (!g.householdId) return false;
-                  const household = householdById.get(g.householdId);
-                  return household && household.relationshipTier === 'parents_friend';
-                });
-
-                return {
-                  immediate: { 
-                    households: immediate.length, 
-                    seats: immediate.reduce((sum, h) => sum + (h.maxCount || 0), 0),
-                    guests: immediateGuests.length
-                  },
-                  extended: { 
-                    households: extended.length, 
-                    seats: extended.reduce((sum, h) => sum + (h.maxCount || 0), 0),
-                    guests: extendedGuests.length
-                  },
-                  friends: { 
-                    households: friends.length, 
-                    seats: friends.reduce((sum, h) => sum + (h.maxCount || 0), 0),
-                    guests: friendGuests.length
-                  },
-                  parentsF: { 
-                    households: parentsF.length, 
-                    seats: parentsF.reduce((sum, h) => sum + (h.maxCount || 0), 0),
-                    guests: parentsFGuests.length
-                  },
-                };
-              };
-
-              const brideTiers = tierBreakdown(brideHouseholds, brideGuests);
-              const groomTiers = tierBreakdown(groomHouseholds, groomGuests);
-              const mutualTiers = tierBreakdown(mutualHouseholds, mutualGuests);
-
-              return (
-                <>
-                  {/* Summary Cards */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <Card data-testid="card-total-allocation">
-                      <CardHeader className="pb-3">
-                        <CardDescription>Total Allocation</CardDescription>
-                        <CardTitle className="text-3xl">{totalSeats}</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-sm text-muted-foreground">
-                          {households.length} households • {totalGuests} guests added
-                        </p>
-                      </CardContent>
-                    </Card>
-
-                    <Card data-testid="card-bride-allocation" className="border-l-4 border-l-primary">
-                      <CardHeader className="pb-3">
-                        <CardDescription>Bride's Side</CardDescription>
-                        <CardTitle className="text-3xl">{brideSeats}</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-sm text-muted-foreground">
-                          {brideHouseholds.length} households • {brideGuests.length} guests
-                        </p>
-                      </CardContent>
-                    </Card>
-
-                    <Card data-testid="card-groom-allocation" className="border-l-4 border-l-accent">
-                      <CardHeader className="pb-3">
-                        <CardDescription>Groom's Side</CardDescription>
-                        <CardTitle className="text-3xl">{groomSeats}</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-sm text-muted-foreground">
-                          {groomHouseholds.length} households • {groomGuests.length} guests
-                        </p>
-                      </CardContent>
-                    </Card>
-
-                    <Card data-testid="card-mutual-allocation" className="border-l-4 border-l-muted">
-                      <CardHeader className="pb-3">
-                        <CardDescription>Mutual</CardDescription>
-                        <CardTitle className="text-3xl">{mutualSeats}</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-sm text-muted-foreground">
-                          {mutualHouseholds.length} households • {mutualGuests.length} guests
-                        </p>
-                      </CardContent>
-                    </Card>
+                    <Button onClick={handleAddHousehold} variant="outline" data-testid="button-add-household">
+                      <Users className="w-4 h-4 mr-2" />
+                      Add Household
+                    </Button>
                   </div>
+                </div>
 
-                  {/* Detailed Breakdown */}
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Bride's Side Breakdown */}
-                    <Card data-testid="breakdown-bride">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <div className="w-3 h-3 rounded-full bg-primary" />
-                          Bride's Side Breakdown
-                        </CardTitle>
-                        <CardDescription>{brideHouseholds.length} total households</CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm">Immediate Family</span>
-                            <div className="flex flex-col items-end">
-                              <Badge variant="outline">{brideTiers.immediate.guests} guests</Badge>
-                              <span className="text-xs text-muted-foreground">{brideTiers.immediate.seats} seats</span>
-                            </div>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm">Extended Family</span>
-                            <div className="flex flex-col items-end">
-                              <Badge variant="outline">{brideTiers.extended.guests} guests</Badge>
-                              <span className="text-xs text-muted-foreground">{brideTiers.extended.seats} seats</span>
-                            </div>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm">Friends</span>
-                            <div className="flex flex-col items-end">
-                              <Badge variant="outline">{brideTiers.friends.guests} guests</Badge>
-                              <span className="text-xs text-muted-foreground">{brideTiers.friends.seats} seats</span>
-                            </div>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm">Parent's Friends</span>
-                            <div className="flex flex-col items-end">
-                              <Badge variant="outline">{brideTiers.parentsF.guests} guests</Badge>
-                              <span className="text-xs text-muted-foreground">{brideTiers.parentsF.seats} seats</span>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {households.map((household) => {
+                    const householdGuests = guests.filter(g => g.householdId === household.id);
+                    const hasActiveLink = household.magicLinkTokenHash && household.magicLinkExpires && new Date(household.magicLinkExpires) > new Date();
 
-                    {/* Groom's Side Breakdown */}
-                    <Card data-testid="breakdown-groom">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <div className="w-3 h-3 rounded-full bg-accent" />
-                          Groom's Side Breakdown
-                        </CardTitle>
-                        <CardDescription>{groomHouseholds.length} total households</CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm">Immediate Family</span>
-                            <div className="flex flex-col items-end">
-                              <Badge variant="outline">{groomTiers.immediate.guests} guests</Badge>
-                              <span className="text-xs text-muted-foreground">{groomTiers.immediate.seats} seats</span>
+                    return (
+                      <Card key={household.id} className="hover-elevate" data-testid={`card-household-${household.id}`}>
+                        <CardHeader className="pb-3">
+                          <div className="flex justify-between items-start gap-2">
+                            <div className="flex-1 min-w-0">
+                              <CardTitle className="text-lg truncate">{household.name}</CardTitle>
+                              <CardDescription className="mt-1">
+                                {household.maxCount} {household.maxCount === 1 ? 'seat' : 'seats'} • {householdGuests.length} {householdGuests.length === 1 ? 'guest' : 'guests'}
+                              </CardDescription>
                             </div>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  data-testid={`button-household-menu-${household.id}`}
+                                >
+                                  <MoreVertical className="w-4 h-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() => handleEditHousehold(household)}
+                                  data-testid={`menu-edit-household-${household.id}`}
+                                >
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => handleMoveToCutList(household)}
+                                  className="text-destructive"
+                                  data-testid={`menu-cut-household-${household.id}`}
+                                >
+                                  <Scissors className="w-4 h-4 mr-2" />
+                                  Move to Maybe Later
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm">Extended Family</span>
-                            <div className="flex flex-col items-end">
-                              <Badge variant="outline">{groomTiers.extended.guests} guests</Badge>
-                              <span className="text-xs text-muted-foreground">{groomTiers.extended.seats} seats</span>
-                            </div>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <div className="flex flex-wrap gap-2">
+                            <Badge variant="outline" data-testid={`badge-affiliation-${household.id}`}>
+                              {household.affiliation === 'bride' ? "Bride's Side" : household.affiliation === 'groom' ? "Groom's Side" : "Mutual"}
+                            </Badge>
+                            <Badge variant="secondary" data-testid={`badge-tier-${household.id}`}>
+                              {household.relationshipTier?.split('_').map(word => 
+                                word.charAt(0).toUpperCase() + word.slice(1)
+                              ).join(' ')}
+                            </Badge>
+                            {hasActiveLink && (
+                              <Badge variant="default" data-testid={`badge-link-active-${household.id}`}>
+                                <LinkIcon className="w-3 h-3 mr-1" />
+                                Link Active
+                              </Badge>
+                            )}
                           </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm">Friends</span>
-                            <div className="flex flex-col items-end">
-                              <Badge variant="outline">{groomTiers.friends.guests} guests</Badge>
-                              <span className="text-xs text-muted-foreground">{groomTiers.friends.seats} seats</span>
-                            </div>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm">Parent's Friends</span>
-                            <div className="flex flex-col items-end">
-                              <Badge variant="outline">{groomTiers.parentsF.guests} guests</Badge>
-                              <span className="text-xs text-muted-foreground">{groomTiers.parentsF.seats} seats</span>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
 
-                    {/* Mutual Breakdown */}
-                    <Card data-testid="breakdown-mutual">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <div className="w-3 h-3 rounded-full bg-muted-foreground" />
-                          Mutual Breakdown
-                        </CardTitle>
-                        <CardDescription>{mutualHouseholds.length} total households</CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm">Immediate Family</span>
-                            <div className="flex flex-col items-end">
-                              <Badge variant="outline">{mutualTiers.immediate.guests} guests</Badge>
-                              <span className="text-xs text-muted-foreground">{mutualTiers.immediate.seats} seats</span>
+                          {householdGuests.length > 0 && (
+                            <div className="text-sm text-muted-foreground">
+                              <div className="font-medium mb-1">Members:</div>
+                              <ul className="space-y-0.5">
+                                {householdGuests.map((guest) => (
+                                  <li key={guest.id}>{guest.name}</li>
+                                ))}
+                              </ul>
                             </div>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm">Extended Family</span>
-                            <div className="flex flex-col items-end">
-                              <Badge variant="outline">{mutualTiers.extended.guests} guests</Badge>
-                              <span className="text-xs text-muted-foreground">{mutualTiers.extended.seats} seats</span>
-                            </div>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm">Friends</span>
-                            <div className="flex flex-col items-end">
-                              <Badge variant="outline">{mutualTiers.friends.guests} guests</Badge>
-                              <span className="text-xs text-muted-foreground">{mutualTiers.friends.seats} seats</span>
-                            </div>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm">Parent's Friends</span>
-                            <div className="flex flex-col items-end">
-                              <Badge variant="outline">{mutualTiers.parentsF.guests} guests</Badge>
-                              <span className="text-xs text-muted-foreground">{mutualTiers.parentsF.seats} seats</span>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
+                          )}
 
-                  {/* Empty State */}
+                          <div className="flex flex-wrap gap-2 pt-2 border-t">
+                            {hasActiveLink ? (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleCopyMagicLink(household)}
+                                  className="flex-1"
+                                  data-testid={`button-copy-link-${household.id}`}
+                                >
+                                  <Copy className="w-3 h-3 mr-1" />
+                                  Copy Link
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleGenerateQRCode(household)}
+                                  data-testid={`button-qr-code-${household.id}`}
+                                >
+                                  <QrCode className="w-3 h-3 mr-1" />
+                                  QR Code
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleRevokeToken(household.id)}
+                                  data-testid={`button-revoke-link-${household.id}`}
+                                >
+                                  Revoke
+                                </Button>
+                              </>
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleGenerateToken(household.id)}
+                                className="flex-1"
+                                data-testid={`button-generate-link-${household.id}`}
+                              >
+                                <LinkIcon className="w-3 h-3 mr-1" />
+                                Generate Link
+                              </Button>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                  
                   {households.length === 0 && (
-                    <Card>
-                      <CardContent className="py-12 text-center">
-                        <BarChart3 className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                        <h3 className="text-lg font-semibold mb-2">No allocation data yet</h3>
+                    <Card className="col-span-full border-dashed">
+                      <CardContent className="p-8 text-center">
+                        <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+                        <h3 className="font-semibold mb-2">No Households Yet</h3>
                         <p className="text-muted-foreground mb-4">
-                          Create households to see guest allocation breakdowns by bride/groom side
+                          Create households to group families and manage invitations together.
                         </p>
+                        <Button onClick={handleAddHousehold} data-testid="button-add-first-household">
+                          <Users className="w-4 h-4 mr-2" />
+                          Add Your First Household
+                        </Button>
                       </CardContent>
                     </Card>
                   )}
-                </>
-              );
-            })()}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="allocation" className="space-y-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-2xl font-bold">Guest Allocation</h2>
+                    <p className="text-muted-foreground mt-1">
+                      Overview of guest distribution by side and relationship tier
+                    </p>
+                  </div>
+                  <div className="flex gap-2 flex-wrap">
+                    <Select value={affiliationFilter} onValueChange={setAffiliationFilter}>
+                      <SelectTrigger className="w-[150px]" data-testid="select-affiliation-filter">
+                        <SelectValue placeholder="Filter by side" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Sides</SelectItem>
+                        <SelectItem value="bride">Bride's Side</SelectItem>
+                        <SelectItem value="groom">Groom's Side</SelectItem>
+                        <SelectItem value="mutual">Mutual</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={tierFilter} onValueChange={setTierFilter}>
+                      <SelectTrigger className="w-[180px]" data-testid="select-tier-filter">
+                        <SelectValue placeholder="Filter by tier" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Tiers</SelectItem>
+                        <SelectItem value="immediate_family">Immediate Family</SelectItem>
+                        <SelectItem value="extended_family">Extended Family</SelectItem>
+                        <SelectItem value="friend">Friends</SelectItem>
+                        <SelectItem value="parents_friend">Parent's Friends</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      variant="outline"
+                      onClick={() => exportToCSV(households, guests)}
+                      data-testid="button-export-csv"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Export CSV
+                    </Button>
+                  </div>
+                </div>
+
+                {(() => {
+                  const householdById = new Map(households.map(h => [h.id, h]));
+                  const filteredHouseholds = households.filter(h => {
+                    const matchesAffiliation = affiliationFilter === 'all' || h.affiliation === affiliationFilter;
+                    const matchesTier = tierFilter === 'all' || h.relationshipTier === tierFilter;
+                    return matchesAffiliation && matchesTier;
+                  });
+
+                  const filteredGuests = guests.filter(g => {
+                    if (!g.householdId) return false;
+                    const household = householdById.get(g.householdId);
+                    if (!household) return false;
+                    const matchesAffiliation = affiliationFilter === 'all' || household.affiliation === affiliationFilter;
+                    const matchesTier = tierFilter === 'all' || household.relationshipTier === tierFilter;
+                    return matchesAffiliation && matchesTier;
+                  });
+
+                  const brideHouseholds = filteredHouseholds.filter(h => h.affiliation === 'bride');
+                  const groomHouseholds = filteredHouseholds.filter(h => h.affiliation === 'groom');
+                  const mutualHouseholds = filteredHouseholds.filter(h => h.affiliation === 'mutual');
+
+                  const brideSeats = brideHouseholds.reduce((sum, h) => sum + (h.maxCount || 0), 0);
+                  const groomSeats = groomHouseholds.reduce((sum, h) => sum + (h.maxCount || 0), 0);
+                  const mutualSeats = mutualHouseholds.reduce((sum, h) => sum + (h.maxCount || 0), 0);
+                  const totalSeats = brideSeats + groomSeats + mutualSeats;
+                  const totalGuests = filteredGuests.length;
+
+                  const brideGuests = filteredGuests.filter(g => {
+                    if (!g.householdId) return false;
+                    const household = householdById.get(g.householdId);
+                    return household?.affiliation === 'bride';
+                  });
+                  const groomGuests = filteredGuests.filter(g => {
+                    if (!g.householdId) return false;
+                    const household = householdById.get(g.householdId);
+                    return household?.affiliation === 'groom';
+                  });
+                  const mutualGuests = filteredGuests.filter(g => {
+                    if (!g.householdId) return false;
+                    const household = householdById.get(g.householdId);
+                    return household?.affiliation === 'mutual';
+                  });
+
+                  return (
+                    <>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <Card data-testid="card-total-allocation">
+                          <CardHeader className="pb-3">
+                            <CardDescription>Total Allocation</CardDescription>
+                            <CardTitle className="text-3xl">{totalSeats}</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-sm text-muted-foreground">
+                              {filteredHouseholds.length} households • {totalGuests} guests added
+                            </p>
+                          </CardContent>
+                        </Card>
+
+                        <Card data-testid="card-bride-allocation" className="border-l-4 border-l-primary">
+                          <CardHeader className="pb-3">
+                            <CardDescription>Bride's Side</CardDescription>
+                            <CardTitle className="text-3xl">{brideSeats}</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-sm text-muted-foreground">
+                              {brideHouseholds.length} households • {brideGuests.length} guests
+                            </p>
+                          </CardContent>
+                        </Card>
+
+                        <Card data-testid="card-groom-allocation" className="border-l-4 border-l-accent">
+                          <CardHeader className="pb-3">
+                            <CardDescription>Groom's Side</CardDescription>
+                            <CardTitle className="text-3xl">{groomSeats}</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-sm text-muted-foreground">
+                              {groomHouseholds.length} households • {groomGuests.length} guests
+                            </p>
+                          </CardContent>
+                        </Card>
+
+                        <Card data-testid="card-mutual-allocation" className="border-l-4 border-l-muted">
+                          <CardHeader className="pb-3">
+                            <CardDescription>Mutual</CardDescription>
+                            <CardTitle className="text-3xl">{mutualSeats}</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-sm text-muted-foreground">
+                              {mutualHouseholds.length} households • {mutualGuests.length} guests
+                            </p>
+                          </CardContent>
+                        </Card>
+                      </div>
+
+                      {filteredHouseholds.length === 0 && (
+                        <Card className="border-dashed">
+                          <CardContent className="p-8 text-center">
+                            <BarChart3 className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+                            <h3 className="font-semibold mb-2">No Allocation Data</h3>
+                            <p className="text-muted-foreground">
+                              Create households to see guest allocation breakdowns by bride/groom side
+                            </p>
+                          </CardContent>
+                        </Card>
+                      )}
+                    </>
+                  );
+                })()}
+              </TabsContent>
+            </Tabs>
+          </TabsContent>
+
+          {/* Guest Planning Tab - New integrated functionality */}
+          <TabsContent value="guest-planning" className="space-y-6">
+            {/* Workflow Overview */}
+            <Card className="bg-gradient-to-r from-orange-50 to-pink-50 dark:from-orange-950/20 dark:to-pink-950/20 border-orange-200 dark:border-orange-800">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between gap-2 mb-4">
+                  <div className="flex items-center gap-2">
+                    <Lightbulb className="h-4 w-4 text-orange-500" />
+                    <span className="text-sm font-medium">Guest Planning Workflow</span>
+                  </div>
+                  {workflowSteps.every(s => s.isComplete) && (
+                    <Badge className="bg-green-500 text-white gap-1">
+                      <Sparkles className="h-3 w-3" />
+                      All done!
+                    </Badge>
+                  )}
+                </div>
+                
+                <div className="grid grid-cols-3 gap-4">
+                  {workflowSteps.map((step, index) => (
+                    <button
+                      key={step.id}
+                      onClick={() => setPlanningTab(step.id)}
+                      className={`relative flex flex-col items-center p-4 rounded-xl transition-all ${
+                        planningTab === step.id 
+                          ? "bg-white dark:bg-gray-800 shadow-lg ring-2 ring-orange-400" 
+                          : "hover:bg-white/50 dark:hover:bg-gray-800/50"
+                      }`}
+                      data-testid={`workflow-step-${step.id}`}
+                    >
+                      <div className="absolute -top-1 -left-1 w-6 h-6 rounded-full bg-background border-2 border-orange-300 flex items-center justify-center text-xs font-bold text-orange-600">
+                        {index + 1}
+                      </div>
+                      
+                      <div className="mb-2">
+                        {step.isComplete ? (
+                          <CheckCircle2 className="h-8 w-8 text-green-500" />
+                        ) : (
+                          <step.icon className="h-8 w-8 text-orange-500" />
+                        )}
+                      </div>
+                      
+                      <span className="text-sm font-semibold">{step.label}</span>
+                      <span className="text-xs text-muted-foreground text-center">{step.description}</span>
+                      
+                      {step.count > 0 && !step.isComplete && (
+                        <Badge variant="destructive" className="mt-2 text-xs">
+                          {step.count} to do
+                        </Badge>
+                      )}
+                      {step.isComplete && (
+                        <Badge variant="outline" className="mt-2 text-xs text-green-600 border-green-300">
+                          Complete
+                        </Badge>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Planning Tabs Content */}
+            <Tabs value={planningTab} onValueChange={setPlanningTab}>
+              <TabsList className="hidden">
+                <TabsTrigger value="suggestions">Suggestions</TabsTrigger>
+                <TabsTrigger value="budget">Budget</TabsTrigger>
+                <TabsTrigger value="finalize">Finalize</TabsTrigger>
+              </TabsList>
+
+              {/* Suggestions Tab - Review team suggestions */}
+              <TabsContent value="suggestions" className="space-y-6">
+                <Card className={`border-2 ${hasSuggestions ? "border-green-300 bg-green-50/50 dark:bg-green-950/20" : "border-orange-200 bg-orange-50/50 dark:bg-orange-950/20"}`}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <div className={`p-2 rounded-full flex-shrink-0 ${hasSuggestions ? "bg-green-100 dark:bg-green-900/30" : "bg-orange-100 dark:bg-orange-900/30"}`}>
+                        {hasSuggestions ? (
+                          <Sparkles className="h-5 w-5 text-green-600" />
+                        ) : (
+                          <Inbox className="h-5 w-5 text-orange-600" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        {hasSuggestions ? (
+                          <>
+                            <p className="font-semibold text-green-700 dark:text-green-400">All Caught Up!</p>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              No pending suggestions from your team. When team members with "Suggest Guests" permission add suggestions, they'll appear here.
+                            </p>
+                            <Button 
+                              size="sm" 
+                              className="mt-3 gap-2"
+                              onClick={() => setPlanningTab("budget")}
+                            >
+                              Continue to Budget
+                              <ArrowRight className="h-3 w-3" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <p className="font-semibold">Review Team Suggestions</p>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Your team members have submitted {pendingSuggestions.length} guest suggestion{pendingSuggestions.length !== 1 ? 's' : ''} for you to review. Approve to add to your guest list or decline.
+                            </p>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-lg font-semibold flex items-center gap-2">
+                        <UserPlus className="h-5 w-5 text-muted-foreground" />
+                        Pending Suggestions
+                        {pendingSuggestions.length > 0 && (
+                          <Badge variant="destructive">{pendingSuggestions.length}</Badge>
+                        )}
+                      </h2>
+                      <p className="text-sm text-muted-foreground">
+                        Guest suggestions from team members with permission
+                      </p>
+                    </div>
+                  </div>
+
+                  {suggestionsLoading ? (
+                    <div className="space-y-3">
+                      {[1, 2, 3].map(i => <Skeleton key={i} className="h-32 w-full" />)}
+                    </div>
+                  ) : pendingSuggestions.length === 0 ? (
+                    <Card className="border-dashed">
+                      <CardContent className="p-6 text-center">
+                        <CheckCircle2 className="h-12 w-12 mx-auto text-green-500 mb-3" />
+                        <p className="font-medium mb-1">No Pending Suggestions</p>
+                        <p className="text-sm text-muted-foreground">
+                          When team members with "Suggest Guests" permission submit suggestions, they'll appear here for your review.
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="space-y-3">
+                      {pendingSuggestions.map(suggestion => (
+                        <Card key={suggestion.id} data-testid={`card-suggestion-${suggestion.id}`}>
+                          <CardHeader className="pb-2">
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <CardTitle className="text-base">{suggestion.householdName}</CardTitle>
+                                <CardDescription className="flex items-center gap-2 flex-wrap mt-1">
+                                  <Badge variant="outline" className="text-xs">
+                                    {suggestion.affiliation === "bride" ? "Bride's Side" : suggestion.affiliation === "groom" ? "Groom's Side" : "Mutual"}
+                                  </Badge>
+                                  <Badge variant="secondary" className="text-xs">
+                                    {suggestion.maxCount} {suggestion.maxCount === 1 ? "guest" : "guests"}
+                                  </Badge>
+                                  {suggestion.suggestedByName && (
+                                    <Badge variant="outline" className="text-xs">
+                                      by {suggestion.suggestedByName}
+                                    </Badge>
+                                  )}
+                                </CardDescription>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="default"
+                                  onClick={() => approveSuggestionMutation.mutate(suggestion.id)}
+                                  disabled={approveSuggestionMutation.isPending}
+                                  data-testid={`button-approve-${suggestion.id}`}
+                                >
+                                  <CheckCircle2 className="h-4 w-4 mr-1" />
+                                  Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => {
+                                    setSelectedSuggestion(suggestion);
+                                    setRejectDialogOpen(true);
+                                  }}
+                                  data-testid={`button-reject-${suggestion.id}`}
+                                >
+                                  <XCircle className="h-4 w-4 mr-1" />
+                                  Decline
+                                </Button>
+                              </div>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="pt-2">
+                            {suggestion.guestNames && (
+                              <p className="text-sm"><strong>Guests:</strong> {suggestion.guestNames}</p>
+                            )}
+                            {suggestion.notes && (
+                              <p className="text-sm text-muted-foreground mt-1">{suggestion.notes}</p>
+                            )}
+                            {suggestion.contactEmail && (
+                              <p className="text-xs text-muted-foreground mt-1">Contact: {suggestion.contactEmail}</p>
+                            )}
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+
+                  {reviewedSuggestions.length > 0 && (
+                    <div className="mt-6">
+                      <h3 className="text-sm font-medium text-muted-foreground mb-3">Previously Reviewed</h3>
+                      <ScrollArea className="h-48">
+                        <div className="space-y-2">
+                          {reviewedSuggestions.map(suggestion => (
+                            <div key={suggestion.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                              <div>
+                                <p className="font-medium">{suggestion.householdName}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {suggestion.maxCount} guests
+                                  {suggestion.suggestedByName && ` • by ${suggestion.suggestedByName}`}
+                                </p>
+                              </div>
+                              <Badge variant={suggestion.status === "approved" ? "default" : "destructive"}>
+                                {suggestion.status === "approved" ? "Approved" : "Declined"}
+                              </Badge>
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+
+              {/* Budget Tab */}
+              <TabsContent value="budget" className="space-y-6">
+                <Card className={`border-2 ${hasBudgetSet && isWithinCapacity ? "border-green-300 bg-green-50/50 dark:bg-green-950/20" : "border-emerald-200 bg-emerald-50/50 dark:bg-emerald-950/20"}`}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <div className={`p-2 rounded-full flex-shrink-0 ${hasBudgetSet && isWithinCapacity ? "bg-green-100 dark:bg-green-900/30" : "bg-emerald-100 dark:bg-emerald-900/30"}`}>
+                        {hasBudgetSet && isWithinCapacity ? (
+                          <Sparkles className="h-5 w-5 text-green-600" />
+                        ) : (
+                          <DollarSign className="h-5 w-5 text-emerald-600" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        {hasBudgetSet && isWithinCapacity ? (
+                          <>
+                            <p className="font-semibold text-green-700 dark:text-green-400">Within Budget!</p>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Great! You have {budgetData?.capacity?.maxGuests ? Math.max(0, budgetData.capacity.maxGuests - budgetData.capacity.currentCount) : 0} spots remaining within your budget.
+                            </p>
+                            <Button 
+                              size="sm" 
+                              className="mt-3 gap-2"
+                              onClick={() => setPlanningTab("finalize")}
+                            >
+                              Continue to Finalize
+                              <ArrowRight className="h-3 w-3" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <p className="font-semibold">Set Your Guest Budget</p>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {!hasBudgetSet 
+                                ? "Enter your total guest budget and cost per person to see how many guests you can afford."
+                                : `You're ${budgetData?.capacity ? budgetData.capacity.currentCount - budgetData.capacity.maxGuests : 0} guests over capacity. Consider moving some guests to "Maybe Later".`}
+                            </p>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <div className="grid gap-6 md:grid-cols-2">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Budget Settings</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="totalBudget">Total Guest Budget</Label>
+                        <Input
+                          id="totalBudget"
+                          type="number"
+                          placeholder="e.g., 50000"
+                          defaultValue={budgetData?.settings?.maxGuestBudget || ""}
+                          onBlur={(e) => {
+                            updateBudgetMutation.mutate({
+                              maxGuestBudget: e.target.value,
+                              defaultCostPerHead: budgetData?.settings?.defaultCostPerHead || "150",
+                            });
+                          }}
+                          data-testid="input-total-budget"
+                        />
+                        <p className="text-xs text-muted-foreground">Total amount allocated for guest-related expenses</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="costPerHead">Cost Per Head</Label>
+                        <Input
+                          id="costPerHead"
+                          type="number"
+                          placeholder="e.g., 150"
+                          defaultValue={budgetData?.settings?.defaultCostPerHead || "150"}
+                          onBlur={(e) => {
+                            updateBudgetMutation.mutate({
+                              maxGuestBudget: budgetData?.settings?.maxGuestBudget || "0",
+                              defaultCostPerHead: e.target.value,
+                            });
+                          }}
+                          data-testid="input-cost-per-head"
+                        />
+                        <p className="text-xs text-muted-foreground">Average cost for catering, favors, etc. per guest</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Capacity Overview</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {budgetData?.capacity ? (
+                        <>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Current Guests</span>
+                              <span className="font-medium">{budgetData.capacity.currentCount}</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span>Max Capacity</span>
+                              <span className="font-medium">{budgetData.capacity.maxGuests || "Set budget"}</span>
+                            </div>
+                            {budgetData.capacity.maxGuests > 0 && (
+                              <Progress
+                                value={(budgetData.capacity.currentCount / budgetData.capacity.maxGuests) * 100}
+                                className="h-2"
+                                data-testid="progress-capacity"
+                              />
+                            )}
+                          </div>
+                          <Separator />
+                          <div className="grid grid-cols-2 gap-4 text-center">
+                            <div>
+                              <p className="text-2xl font-bold" data-testid="text-remaining-budget">
+                                ${budgetData.capacity.remainingBudget?.toLocaleString() || 0}
+                              </p>
+                              <p className="text-xs text-muted-foreground">Remaining Budget</p>
+                            </div>
+                            <div>
+                              <p className="text-2xl font-bold" data-testid="text-spots-left">
+                                {budgetData.capacity.maxGuests > 0
+                                  ? Math.max(0, budgetData.capacity.maxGuests - budgetData.capacity.currentCount)
+                                  : "-"}
+                              </p>
+                              <p className="text-xs text-muted-foreground">Spots Available</p>
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <p className="text-muted-foreground text-center py-4">Set your budget to see capacity</p>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Priority Breakdown */}
+                <div className="space-y-4">
+                  <h2 className="text-lg font-semibold flex items-center gap-2">
+                    <ListFilter className="h-5 w-5 text-muted-foreground" />
+                    Priority Breakdown
+                  </h2>
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    <Card className="border-green-500/50">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-base flex items-center gap-2">
+                          <Star className="h-4 w-4 text-green-500" />
+                          Must Invite
+                        </CardTitle>
+                        <CardDescription className="text-xs">Cannot be cut</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-3xl font-bold">{priorityBreakdown.must_invite.length}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {priorityBreakdown.must_invite.reduce((sum, h) => sum + h.maxCount, 0)} guests
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-yellow-500/50">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-base flex items-center gap-2">
+                          <TrendingUp className="h-4 w-4 text-yellow-500" />
+                          Should Invite
+                        </CardTitle>
+                        <CardDescription className="text-xs">High priority</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-3xl font-bold">{priorityBreakdown.should_invite.length}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {priorityBreakdown.should_invite.reduce((sum, h) => sum + h.maxCount, 0)} guests
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-orange-500/50">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-base flex items-center gap-2">
+                          <Users className="h-4 w-4 text-orange-500" />
+                          Nice to Have
+                        </CardTitle>
+                        <CardDescription className="text-xs">First to consider for cuts</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-3xl font-bold">{priorityBreakdown.nice_to_have.length}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {priorityBreakdown.nice_to_have.reduce((sum, h) => sum + h.maxCount, 0)} guests
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-muted">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-base flex items-center gap-2 text-muted-foreground">
+                          <AlertTriangle className="h-4 w-4" />
+                          Unassigned
+                        </CardTitle>
+                        <CardDescription className="text-xs">Needs priority</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-3xl font-bold">{priorityBreakdown.unassigned.length}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {priorityBreakdown.unassigned.reduce((sum, h) => sum + h.maxCount, 0)} guests
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              </TabsContent>
+
+              {/* Finalize Tab - Maybe Later (Cut List) */}
+              <TabsContent value="finalize" className="space-y-6">
+                <Card className={`border-2 ${cutList.length === 0 ? "border-green-300 bg-green-50/50 dark:bg-green-950/20" : "border-amber-200 bg-amber-50/50 dark:bg-amber-950/20"}`}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <div className={`p-2 rounded-full flex-shrink-0 ${cutList.length === 0 ? "bg-green-100 dark:bg-green-900/30" : "bg-amber-100 dark:bg-amber-900/30"}`}>
+                        {cutList.length === 0 ? (
+                          <Sparkles className="h-5 w-5 text-green-600" />
+                        ) : (
+                          <Scissors className="h-5 w-5 text-amber-600" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        {cutList.length === 0 ? (
+                          <>
+                            <p className="font-semibold text-green-700 dark:text-green-400">Ready to Go!</p>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Your guest list is finalized. No households have been parked in "Maybe Later".
+                            </p>
+                            <Button 
+                              size="sm" 
+                              className="mt-3 gap-2"
+                              onClick={() => setMainTab("guest-list")}
+                            >
+                              View Final Guest List
+                              <ArrowRight className="h-3 w-3" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <p className="font-semibold">Maybe Later</p>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              You have {cutList.length} household{cutList.length !== 1 ? 's' : ''} parked. These won't receive invitations unless you restore them.
+                            </p>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-lg font-semibold flex items-center gap-2">
+                        <Scissors className="h-5 w-5 text-muted-foreground" />
+                        Maybe Later
+                        {cutList.length > 0 && (
+                          <Badge variant="secondary">{cutList.length} parked</Badge>
+                        )}
+                      </h2>
+                      <p className="text-sm text-muted-foreground">
+                        Guests you might not invite - restore them anytime
+                      </p>
+                    </div>
+                  </div>
+
+                  {cutListLoading ? (
+                    <div className="space-y-3">
+                      {[1, 2, 3].map(i => <Skeleton key={i} className="h-24 w-full" />)}
+                    </div>
+                  ) : cutList.length === 0 ? (
+                    <Card className="border-dashed">
+                      <CardContent className="p-6 text-center">
+                        <Scissors className="h-10 w-10 mx-auto text-muted-foreground mb-3 opacity-50" />
+                        <p className="font-medium mb-1">No Guests Parked</p>
+                        <p className="text-sm text-muted-foreground">
+                          When you need to trim your list, move households here from the Guest List tab.
+                          You can always restore them later.
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="space-y-3">
+                      {cutList.map(item => (
+                        <Card key={item.id} data-testid={`card-cut-${item.id}`}>
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between gap-4">
+                              <div>
+                                <p className="font-medium">{item.household?.name || "Unknown"}</p>
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <span>{item.household?.maxCount || 0} guests</span>
+                                  {item.cutReason && (
+                                    <>
+                                      <span>•</span>
+                                      <Badge variant="outline" className="text-xs">
+                                        {item.cutReason === "budget" ? "Budget" : 
+                                         item.cutReason === "space" ? "Space" : 
+                                         item.cutReason === "priority" ? "Priority" : "Other"}
+                                      </Badge>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => restoreFromCutListMutation.mutate(item.id)}
+                                disabled={restoreFromCutListMutation.isPending}
+                                data-testid={`button-restore-${item.id}`}
+                              >
+                                <RotateCcw className="h-4 w-4 mr-1" />
+                                Restore
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+            </Tabs>
           </TabsContent>
         </Tabs>
       </main>
 
+      {/* Guest Import Dialog */}
       <GuestImportDialog
         open={importDialogOpen}
         onOpenChange={setImportDialogOpen}
-        weddingId={wedding.id}
-        events={events}
         onImport={handleBulkImport}
       />
 
+      {/* Guest Form Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle data-testid="dialog-title-guest">
               {editingGuest ? "Edit Guest" : "Add Guest"}
@@ -1378,50 +1888,49 @@ export default function Guests() {
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">
-                  Name <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="name"
-                  {...form.register("name")}
-                  placeholder="Guest name"
-                  data-testid="input-guest-name"
-                />
-                {form.formState.errors.name && (
-                  <p className="text-sm text-destructive">
-                    {form.formState.errors.name.message}
-                  </p>
-                )}
-              </div>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">
+                Name <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="name"
+                {...form.register("name")}
+                placeholder="Guest name"
+                data-testid="input-guest-name"
+              />
+              {form.formState.errors.name && (
+                <p className="text-sm text-destructive">
+                  {form.formState.errors.name.message}
+                </p>
+              )}
+            </div>
 
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
                   {...form.register("email")}
-                  placeholder="guest@example.com"
+                  placeholder="email@example.com"
                   data-testid="input-guest-email"
                 />
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone</Label>
                 <Input
                   id="phone"
                   {...form.register("phone")}
-                  placeholder="(555) 123-4567"
+                  placeholder="+1 (555) 123-4567"
                   data-testid="input-guest-phone"
                 />
               </div>
+            </div>
 
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="side">
-                  Side <span className="text-destructive">*</span>
-                </Label>
+                <Label htmlFor="side">Side</Label>
                 <Select
                   value={form.watch("side")}
                   onValueChange={(value) => form.setValue("side", value as "bride" | "groom" | "mutual")}
@@ -1436,11 +1945,8 @@ export default function Guests() {
                   </SelectContent>
                 </Select>
               </div>
-
               <div className="space-y-2">
-                <Label htmlFor="rsvpStatus">
-                  RSVP Status <span className="text-destructive">*</span>
-                </Label>
+                <Label htmlFor="rsvpStatus">RSVP Status</Label>
                 <Select
                   value={form.watch("rsvpStatus")}
                   onValueChange={(value) => form.setValue("rsvpStatus", value as "confirmed" | "declined" | "pending")}
@@ -1455,43 +1961,39 @@ export default function Guests() {
                   </SelectContent>
                 </Select>
               </div>
-
-              <div className="flex items-center space-x-2 pt-8">
-                <Checkbox
-                  id="plusOne"
-                  checked={form.watch("plusOne") || false}
-                  onCheckedChange={(checked) => form.setValue("plusOne", !!checked)}
-                  data-testid="checkbox-guest-plus-one"
-                />
-                <Label htmlFor="plusOne" className="cursor-pointer">
-                  Plus One
-                </Label>
-              </div>
             </div>
 
-            <div className="space-y-3">
-              <Label>Event Assignments</Label>
-              <p className="text-sm text-muted-foreground">
-                Select which events this guest will attend
-              </p>
-              <div className="space-y-2 max-h-48 overflow-y-auto border rounded-md p-4">
-                {events.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    No events created yet. Add events to assign guests.
-                  </p>
-                ) : (
-                  events.map((event) => (
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="plusOne"
+                checked={form.watch("plusOne")}
+                onCheckedChange={(checked) => form.setValue("plusOne", checked as boolean)}
+                data-testid="checkbox-plus-one"
+              />
+              <Label htmlFor="plusOne" className="cursor-pointer">
+                Bringing a plus one
+              </Label>
+            </div>
+
+            {events.length > 0 && (
+              <div className="space-y-2">
+                <Label>Events</Label>
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {events.map((event) => (
                     <div key={event.id} className="flex items-center space-x-2">
                       <Checkbox
                         id={`event-${event.id}`}
                         checked={selectedEvents.includes(event.id)}
-                        onCheckedChange={() => toggleEvent(event.id)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedEvents([...selectedEvents, event.id]);
+                          } else {
+                            setSelectedEvents(selectedEvents.filter(id => id !== event.id));
+                          }
+                        }}
                         data-testid={`checkbox-event-${event.id}`}
                       />
-                      <Label
-                        htmlFor={`event-${event.id}`}
-                        className="cursor-pointer flex-1"
-                      >
+                      <Label htmlFor={`event-${event.id}`} className="cursor-pointer flex-1">
                         {event.name}
                         {event.date && (
                           <span className="text-sm text-muted-foreground ml-2">
@@ -1500,12 +2002,12 @@ export default function Guests() {
                         )}
                       </Label>
                     </div>
-                  ))
-                )}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
-            <div className="flex flex-wrap gap-2 justify-between">
+            <div className="flex justify-between pt-4">
               {editingGuest && (
                 <Button
                   type="button"
@@ -1518,7 +2020,7 @@ export default function Guests() {
                   Delete
                 </Button>
               )}
-              <div className="flex gap-2 ml-auto">
+              <div className={`flex gap-2 ${editingGuest ? "" : "ml-auto"}`}>
                 <Button
                   type="button"
                   variant="outline"
@@ -1540,6 +2042,7 @@ export default function Guests() {
         </DialogContent>
       </Dialog>
 
+      {/* Household Form Dialog */}
       <Dialog open={householdDialogOpen} onOpenChange={setHouseholdDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
@@ -1642,18 +2145,18 @@ export default function Guests() {
                 onValueChange={(value) => householdForm.setValue("relationshipTier", value)}
               >
                 <SelectTrigger id="household-tier" data-testid="select-household-tier">
-                  <SelectValue placeholder="Select relationship tier" />
+                  <SelectValue placeholder="Select tier" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="immediate_family">Immediate Family</SelectItem>
                   <SelectItem value="extended_family">Extended Family</SelectItem>
-                  <SelectItem value="friend">Friend</SelectItem>
-                  <SelectItem value="parents_friend">Parent's Friend</SelectItem>
+                  <SelectItem value="friend">Friends</SelectItem>
+                  <SelectItem value="parents_friend">Parent's Friends</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="flex flex-wrap gap-2 justify-between pt-4 border-t">
+            <div className="flex justify-between pt-4">
               {editingHousehold && (
                 <Button
                   type="button"
@@ -1666,7 +2169,7 @@ export default function Guests() {
                   Delete
                 </Button>
               )}
-              <div className="flex gap-2 ml-auto">
+              <div className={`flex gap-2 ${editingHousehold ? "" : "ml-auto"}`}>
                 <Button
                   type="button"
                   variant="outline"
@@ -1688,6 +2191,7 @@ export default function Guests() {
         </DialogContent>
       </Dialog>
 
+      {/* Bulk Invitation Dialog */}
       <Dialog open={bulkInviteDialogOpen} onOpenChange={setBulkInviteDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -1698,7 +2202,6 @@ export default function Guests() {
           </DialogHeader>
 
           <div className="space-y-6">
-            {/* Household Selection */}
             <div className="space-y-3">
               <Label className="text-base font-semibold">Select Households</Label>
               <p className="text-sm text-muted-foreground">
@@ -1738,26 +2241,19 @@ export default function Guests() {
                             {household.name}
                           </label>
                           <p className="text-xs text-muted-foreground">
-                            {householdGuests.length} {householdGuests.length === 1 ? 'guest' : 'guests'}
-                            {household.contactEmail && ` • ${household.contactEmail}`}
+                            {household.maxCount} seats • {householdGuests.length} guests
+                            {missingEmail && (
+                              <span className="text-destructive ml-2">(No email)</span>
+                            )}
                           </p>
-                          {missingEmail && (
-                            <p className="text-xs text-destructive mt-1">
-                              No contact email - please add one to send invitations
-                            </p>
-                          )}
                         </div>
                       </div>
                     );
                   })
                 )}
               </div>
-              <p className="text-sm text-muted-foreground">
-                Selected: {selectedHouseholds.length} household{selectedHouseholds.length !== 1 ? 's' : ''}
-              </p>
             </div>
 
-            {/* Event Selection */}
             <div className="space-y-3">
               <Label className="text-base font-semibold">Select Events</Label>
               <p className="text-sm text-muted-foreground">
@@ -1766,62 +2262,53 @@ export default function Guests() {
               <div className="border rounded-md p-4 space-y-2 max-h-40 overflow-y-auto">
                 {events.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-4">
-                    No events available
+                    No events available. Create events first.
                   </p>
                 ) : (
                   events.map((event) => (
                     <div
                       key={event.id}
-                      className="flex items-start space-x-3 p-2 rounded hover-elevate"
-                      data-testid={`checkbox-event-${event.id}`}
+                      className="flex items-center space-x-3 p-2 rounded hover-elevate"
                     >
                       <Checkbox
-                        id={`event-${event.id}`}
+                        id={`invite-event-${event.id}`}
                         checked={selectedInviteEvents.includes(event.id)}
                         onCheckedChange={() => handleToggleInviteEvent(event.id)}
                       />
-                      <div className="flex-1">
-                        <label
-                          htmlFor={`event-${event.id}`}
-                          className="text-sm font-medium cursor-pointer"
-                        >
-                          {event.name}
-                        </label>
+                      <label
+                        htmlFor={`invite-event-${event.id}`}
+                        className="text-sm font-medium cursor-pointer flex-1"
+                      >
+                        {event.name}
                         {event.date && (
-                          <p className="text-xs text-muted-foreground">
-                            {new Date(event.date).toLocaleDateString()}
-                          </p>
+                          <span className="text-muted-foreground ml-2">
+                            ({new Date(event.date).toLocaleDateString()})
+                          </span>
                         )}
-                      </div>
+                      </label>
                     </div>
                   ))
                 )}
               </div>
-              <p className="text-sm text-muted-foreground">
-                Selected: {selectedInviteEvents.length} event{selectedInviteEvents.length !== 1 ? 's' : ''}
-              </p>
             </div>
 
-            {/* Personal Message */}
             <div className="space-y-2">
-              <Label htmlFor="personal-message">Personal Message (Optional)</Label>
+              <Label htmlFor="personalMessage">Personal Message (Optional)</Label>
               <Textarea
-                id="personal-message"
+                id="personalMessage"
                 value={personalMessage}
                 onChange={(e) => setPersonalMessage(e.target.value)}
-                placeholder="Add a personal message to your invitation..."
-                rows={4}
+                placeholder="Add a personal note to include in the invitation email..."
+                className="min-h-[100px]"
                 data-testid="textarea-personal-message"
               />
-              <p className="text-xs text-muted-foreground">
-                This message will be included in the invitation email
-              </p>
             </div>
 
-            {/* Actions */}
-            <div className="flex justify-between items-center pt-4 border-t">
+            <div className="flex items-center justify-between pt-4 border-t">
               <div className="text-sm text-muted-foreground">
-                {selectedHouseholds.length > 0 && selectedInviteEvents.length > 0 && (
+                {selectedHouseholds.length === 0 || selectedInviteEvents.length === 0 ? (
+                  <span>Select households and events to continue</span>
+                ) : (
                   <span>
                     Ready to send {selectedHouseholds.length} invitation{selectedHouseholds.length !== 1 ? 's' : ''} for {selectedInviteEvents.length} event{selectedInviteEvents.length !== 1 ? 's' : ''}
                   </span>
@@ -1904,9 +2391,9 @@ export default function Guests() {
       <Dialog open={cutListDialogOpen} onOpenChange={setCutListDialogOpen}>
         <DialogContent className="sm:max-w-md" data-testid="dialog-cut-list">
           <DialogHeader>
-            <DialogTitle>Move to Cut List</DialogTitle>
+            <DialogTitle>Move to Maybe Later</DialogTitle>
             <DialogDescription>
-              Move "{householdToCut?.name}" to the cut list. This won't delete them permanently - you can restore the household later from Guest Planning.
+              Move "{householdToCut?.name}" to the Maybe Later list. This won't delete them permanently - you can restore the household anytime from Guest Planning.
             </DialogDescription>
           </DialogHeader>
           
@@ -1943,7 +2430,62 @@ export default function Guests() {
                 disabled={addToCutListMutation.isPending}
                 data-testid="button-confirm-cut"
               >
-                {addToCutListMutation.isPending ? "Moving..." : "Move to Cut List"}
+                {addToCutListMutation.isPending ? "Moving..." : "Move to Maybe Later"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reject Suggestion Dialog */}
+      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <DialogContent className="sm:max-w-md" data-testid="dialog-reject-suggestion">
+          <DialogHeader>
+            <DialogTitle>Decline Suggestion</DialogTitle>
+            <DialogDescription>
+              Decline the suggestion for "{selectedSuggestion?.householdName}". This won't add them to your guest list.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="rejectReason">Reason (optional)</Label>
+              <Textarea
+                id="rejectReason"
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                placeholder="e.g., Budget constraints, not enough room..."
+                className="min-h-[80px]"
+                data-testid="textarea-reject-reason"
+              />
+            </div>
+            
+            <div className="flex gap-2 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setRejectDialogOpen(false);
+                  setSelectedSuggestion(null);
+                  setRejectReason("");
+                }}
+                data-testid="button-cancel-reject"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  if (selectedSuggestion) {
+                    rejectSuggestionMutation.mutate({
+                      id: selectedSuggestion.id,
+                      reason: rejectReason,
+                    });
+                  }
+                }}
+                disabled={rejectSuggestionMutation.isPending}
+                data-testid="button-confirm-reject"
+              >
+                {rejectSuggestionMutation.isPending ? "Declining..." : "Decline Suggestion"}
               </Button>
             </div>
           </div>
