@@ -5747,7 +5747,7 @@ export class DBStorage implements IStorage {
     }
     
     // Get budget categories for per-event allocations
-    const budgetCategories = await this.getBudgetCategories(weddingId);
+    const budgetCategories = await this.getBudgetCategoriesByWedding(weddingId);
 
     // Calculate confirmed and pending seat counts
     const confirmedSeats = confirmedHouseholds.reduce((sum, h) => sum + h.maxCount, 0);
@@ -5816,7 +5816,7 @@ export class DBStorage implements IStorage {
       const eventTypeLower = event.type.toLowerCase();
       const eventNameLower = event.name.toLowerCase();
       
-      const matchingCategory = budgetCategories.find(cat => {
+      const matchingCategory = budgetCategories.find((cat: BudgetCategory) => {
         const catLower = cat.category.toLowerCase();
         // Exact match on type or name
         if (catLower === eventTypeLower || catLower === eventNameLower) return true;
