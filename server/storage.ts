@@ -507,6 +507,63 @@ export interface IStorage {
   restoreFromCutList(id: string, userId: string): Promise<Household>;
   permanentlyDeleteFromCutList(id: string): Promise<boolean>;
   bulkCutByPriority(weddingId: string, priorityTier: string, userId: string, reason?: string): Promise<number>;
+
+  // Guest Planning Snapshot (comprehensive view for planning)
+  getGuestPlanningSnapshot(weddingId: string): Promise<GuestPlanningSnapshot>;
+}
+
+// Guest Planning Snapshot - comprehensive view of all guests and per-event costs
+export interface GuestPlanningSnapshot {
+  // Combined guest pool (confirmed + pending suggestions)
+  confirmedHouseholds: Household[];
+  pendingSuggestions: GuestSuggestionWithSource[];
+  cutList: CutListItemWithHousehold[];
+  
+  // Summary counts
+  summary: {
+    confirmedSeats: number;
+    pendingSeats: number;
+    cutSeats: number;
+    totalPotentialSeats: number; // confirmed + pending
+    priorityBreakdown: {
+      must_invite: { confirmed: number; pending: number };
+      should_invite: { confirmed: number; pending: number };
+      nice_to_have: { confirmed: number; pending: number };
+    };
+  };
+  
+  // Per-event analysis
+  events: Array<{
+    id: string;
+    name: string;
+    type: string;
+    date: Date | null;
+    costPerHead: number | null;
+    venueCapacity: number | null;
+    
+    // Guest counts for this event
+    confirmedInvited: number; // Guests invited to this event
+    potentialTotal: number; // If all pending approved
+    
+    // Budget impact
+    confirmedCost: number;
+    potentialCost: number;
+    
+    // Capacity status
+    capacityUsed: number;
+    capacityRemaining: number | null;
+    isOverCapacity: boolean;
+  }>;
+  
+  // Overall budget analysis
+  budget: {
+    totalBudget: number;
+    defaultCostPerHead: number;
+    confirmedSpend: number;
+    potentialSpend: number; // If all pending approved
+    remainingBudget: number;
+    potentialOverage: number; // How much over budget if all approved
+  };
 }
 
 export class MemStorage implements IStorage {
@@ -2487,6 +2544,10 @@ export class MemStorage implements IStorage {
   }
   async bulkCutByPriority(weddingId: string, priorityTier: string, userId: string, reason?: string): Promise<number> {
     return 0;
+  }
+
+  async getGuestPlanningSnapshot(weddingId: string): Promise<GuestPlanningSnapshot> {
+    throw new Error("MemStorage does not support Guest Planning Snapshot. Use DBStorage.");
   }
 }
 
@@ -5647,6 +5708,145 @@ export class DBStorage implements IStorage {
       }
     }
     return count;
+  }
+
+  // ============================================================================
+  // Guest Planning Snapshot - Comprehensive view for planning workflow
+  // ============================================================================
+
+  async getGuestPlanningSnapshot(weddingId: string): Promise<GuestPlanningSnapshot> {
+    // Get all confirmed households (excluding cut ones)
+    const allHouseholds = await this.getHouseholdsByWedding(weddingId);
+    const cutList = await this.getCutListByWedding(weddingId);
+    const cutHouseholdIds = new Set(cutList.map(c => c.householdId));
+    const confirmedHouseholds = allHouseholds.filter(h => !cutHouseholdIds.has(h.id));
+
+    // Get pending suggestions
+    const pendingSuggestions = await this.getGuestSuggestionsByWedding(weddingId, 'pending');
+
+    // Get budget settings
+    const budgetSettings = await this.getGuestBudgetSettings(weddingId);
+    const defaultCostPerHead = budgetSettings?.defaultCostPerHead ? parseFloat(budgetSettings.defaultCostPerHead) : 150;
+    const totalBudget = budgetSettings?.maxGuestBudget ? parseFloat(budgetSettings.maxGuestBudget) : 0;
+
+    // Calculate confirmed and pending seat counts
+    const confirmedSeats = confirmedHouseholds.reduce((sum, h) => sum + h.maxCount, 0);
+    const pendingSeats = pendingSuggestions.reduce((sum, s) => sum + s.maxCount, 0);
+    const cutSeats = cutList.reduce((sum, c) => sum + c.household.maxCount, 0);
+
+    // Priority breakdown
+    const priorityBreakdown = {
+      must_invite: { confirmed: 0, pending: 0 },
+      should_invite: { confirmed: 0, pending: 0 },
+      nice_to_have: { confirmed: 0, pending: 0 },
+    };
+
+    for (const h of confirmedHouseholds) {
+      const tier = h.priorityTier as keyof typeof priorityBreakdown;
+      if (priorityBreakdown[tier]) {
+        priorityBreakdown[tier].confirmed += h.maxCount;
+      }
+    }
+
+    for (const s of pendingSuggestions) {
+      const tier = s.priorityTier as keyof typeof priorityBreakdown;
+      if (priorityBreakdown[tier]) {
+        priorityBreakdown[tier].pending += s.maxCount;
+      }
+    }
+
+    // Get events with per-event analysis
+    const allEvents = await this.db
+      .select()
+      .from(schema.events)
+      .where(eq(schema.events.weddingId, weddingId))
+      .orderBy(schema.events.order);
+
+    // Get all guests from confirmed households
+    const confirmedGuests: Guest[] = [];
+    for (const household of confirmedHouseholds) {
+      const guests = await this.getGuestsByHousehold(household.id);
+      confirmedGuests.push(...guests);
+    }
+
+    // Get invitations to understand which guests are invited to which events
+    const allInvitations = await this.db
+      .select()
+      .from(schema.invitations);
+
+    const guestEventMap = new Map<string, Set<string>>(); // eventId -> Set of guestIds
+    for (const inv of allInvitations) {
+      if (!guestEventMap.has(inv.eventId)) {
+        guestEventMap.set(inv.eventId, new Set());
+      }
+      guestEventMap.get(inv.eventId)!.add(inv.guestId);
+    }
+
+    // Calculate per-event analysis
+    const eventAnalysis = allEvents.map(event => {
+      const costPerHead = event.costPerHead ? parseFloat(event.costPerHead) : defaultCostPerHead;
+      const venueCapacity = event.venueCapacity || null;
+      
+      // Count confirmed guests for this event
+      const invitedGuestIds = guestEventMap.get(event.id) || new Set();
+      const confirmedInvited = confirmedGuests.filter(g => invitedGuestIds.has(g.id)).length;
+      
+      // Potential total if all pending suggestions are approved (assume they'd all attend all events)
+      const potentialTotal = confirmedInvited + pendingSeats;
+      
+      // Budget impact
+      const confirmedCost = confirmedInvited * costPerHead;
+      const potentialCost = potentialTotal * costPerHead;
+      
+      // Capacity status
+      const capacityUsed = confirmedInvited;
+      const capacityRemaining = venueCapacity !== null ? venueCapacity - potentialTotal : null;
+      const isOverCapacity = venueCapacity !== null && potentialTotal > venueCapacity;
+
+      return {
+        id: event.id,
+        name: event.name,
+        type: event.type,
+        date: event.date,
+        costPerHead,
+        venueCapacity,
+        confirmedInvited,
+        potentialTotal,
+        confirmedCost,
+        potentialCost,
+        capacityUsed,
+        capacityRemaining,
+        isOverCapacity,
+      };
+    });
+
+    // Calculate overall budget
+    const confirmedSpend = confirmedSeats * defaultCostPerHead;
+    const potentialSpend = (confirmedSeats + pendingSeats) * defaultCostPerHead;
+    const remainingBudget = totalBudget - confirmedSpend;
+    const potentialOverage = potentialSpend > totalBudget ? potentialSpend - totalBudget : 0;
+
+    return {
+      confirmedHouseholds,
+      pendingSuggestions,
+      cutList,
+      summary: {
+        confirmedSeats,
+        pendingSeats,
+        cutSeats,
+        totalPotentialSeats: confirmedSeats + pendingSeats,
+        priorityBreakdown,
+      },
+      events: eventAnalysis,
+      budget: {
+        totalBudget,
+        defaultCostPerHead,
+        confirmedSpend,
+        potentialSpend,
+        remainingBudget,
+        potentialOverage,
+      },
+    };
   }
 }
 

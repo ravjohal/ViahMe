@@ -96,6 +96,9 @@ export const events = pgTable("events", {
   guestCount: integer("guest_count"),
   description: text("description"),
   order: integer("order").notNull(), // For sorting timeline
+  // Budget & capacity planning fields
+  costPerHead: decimal("cost_per_head", { precision: 8, scale: 2 }), // Cost per guest for this event
+  venueCapacity: integer("venue_capacity"), // Maximum venue capacity for this event
   // Public-facing guest website fields
   dressCode: text("dress_code"), // e.g., "Formal Indian attire", "Business casual"
   locationDetails: text("location_details"), // Detailed venue information
@@ -122,6 +125,8 @@ export const insertEventSchema = createInsertSchema(events).omit({
     'custom'
   ]),
   date: z.string().optional().transform(val => val ? new Date(val) : undefined),
+  costPerHead: z.string().nullable().optional(),
+  venueCapacity: z.number().nullable().optional(),
 });
 
 export type InsertEvent = z.infer<typeof insertEventSchema>;

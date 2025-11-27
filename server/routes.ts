@@ -4550,6 +4550,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ============================================================================
+  // GUEST PLANNING SNAPSHOT - Comprehensive view for planning workflow
+  // ============================================================================
+
+  app.get("/api/weddings/:weddingId/guest-planning-snapshot", async (req, res) => {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      const { weddingId } = req.params;
+      const snapshot = await storage.getGuestPlanningSnapshot(weddingId);
+      res.json(snapshot);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ============================================================================
   // CUT LIST - Track removed guests with reasons and restore capability
   // ============================================================================
 
