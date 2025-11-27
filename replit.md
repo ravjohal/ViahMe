@@ -21,10 +21,12 @@ Key architectural decisions and features include:
 - **Guest List Management**: Frictionless bulk guest import (CSV, Excel), advanced guest invitation & RSVP system with household grouping, magic link authentication, per-event RSVP tracking, and bulk invitation sender. Includes an Allocation View Dashboard for analytics.
 - **Integrated Guest Management Module**: Two-tier tabbed UI structure with "Guest List" and "Guest Planning" tabs:
   - **Guest List Tab**: Individual Guests, Households, and Allocation View for managing the final guest list
-  - **Guest Planning Tab**: Comprehensive planning workflow with:
-    - **Review**: Team member suggestions queue - team members with `guest_suggestions` permission can submit guest suggestions for couple approval
-    - **Budget**: Budget calculator with total budget, cost-per-head settings, capacity overview, and priority breakdown (Must/Should/Nice to Have)
-    - **Finalize**: Maybe Later list for parking guests temporarily without deleting them
+  - **Guest Planning Tab**: Intuitive 3-phase planning workflow:
+    - **Phase 1 - Review**: Team member suggestions queue - review and approve/decline suggestions from family members with `guest_suggestions` permission
+    - **Phase 2 - Assess Impact**: Comprehensive "whole picture" view combining confirmed guests + pending suggestions, with per-event cost breakdowns, capacity analysis, and priority tier summaries
+    - **Phase 3 - Decide & Cut**: Make final decisions based on budget/capacity constraints, manage the "Maybe Later" cut list
+  - **Per-Event Cost & Capacity Tracking**: Events table includes costPerHead and venueCapacity fields for precise budgeting
+  - **Planning Snapshot API**: `/api/weddings/:id/guest-planning-snapshot` endpoint aggregates all planning data server-side for accurate analysis
   - Note: "Source" concept removed - suggestions now come directly from team members via the permission-based collaboration system
 - **Communication & Collaboration**: Messaging system for couple-vendor communication, review system, document storage, and team collaboration with granular role-based access control and activity logging.
 - **Live Wedding Experience**: Real-Time Guest Concierge system including a Gap Concierge Designer and Ritual Control Panel for couples, feeding into a public-facing Guest Live Feed.

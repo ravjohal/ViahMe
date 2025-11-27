@@ -83,6 +83,46 @@ type BudgetCapacity = {
   remainingBudget: number;
 };
 
+type GuestPlanningSnapshot = {
+  confirmedHouseholds: Household[];
+  pendingSuggestions: Array<GuestSuggestion & { suggestedByName?: string }>;
+  cutList: CutListItemWithHousehold[];
+  summary: {
+    confirmedSeats: number;
+    pendingSeats: number;
+    cutSeats: number;
+    totalPotentialSeats: number;
+    priorityBreakdown: {
+      must_invite: { confirmed: number; pending: number };
+      should_invite: { confirmed: number; pending: number };
+      nice_to_have: { confirmed: number; pending: number };
+    };
+  };
+  events: Array<{
+    id: string;
+    name: string;
+    type: string;
+    date: string | null;
+    costPerHead: number | null;
+    venueCapacity: number | null;
+    confirmedInvited: number;
+    potentialTotal: number;
+    confirmedCost: number;
+    potentialCost: number;
+    capacityUsed: number;
+    capacityRemaining: number | null;
+    isOverCapacity: boolean;
+  }>;
+  budget: {
+    totalBudget: number;
+    defaultCostPerHead: number;
+    confirmedSpend: number;
+    potentialSpend: number;
+    remainingBudget: number;
+    potentialOverage: number;
+  };
+};
+
 function exportToCSV(households: Household[], guests: Guest[]) {
   const headers = ['Household Name', 'Affiliation', 'Relationship Tier', 'Max Seats', 'Guest Count', 'Guest Names', 'Contact Email'];
   
@@ -125,7 +165,7 @@ export default function Guests() {
   
   // Top-level tab state
   const [mainTab, setMainTab] = useState("guest-list");
-  const [planningTab, setPlanningTab] = useState("suggestions");
+  const [planningTab, setPlanningTab] = useState("review");
   
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
@@ -201,6 +241,12 @@ export default function Guests() {
 
   const { data: cutList = [], isLoading: cutListLoading } = useQuery<CutListItemWithHousehold[]>({
     queryKey: ["/api/weddings", wedding?.id, "cut-list"],
+    enabled: !!wedding?.id,
+  });
+
+  // Guest Planning Snapshot - comprehensive view for the new 3-phase workflow
+  const { data: planningSnapshot, isLoading: snapshotLoading, isError: snapshotError, refetch: refetchSnapshot } = useQuery<GuestPlanningSnapshot>({
+    queryKey: ["/api/weddings", wedding?.id, "guest-planning-snapshot"],
     enabled: !!wedding?.id,
   });
 
@@ -532,6 +578,7 @@ export default function Guests() {
       queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-suggestions", "count"] });
       queryClient.invalidateQueries({ queryKey: ["/api/households", wedding?.id] });
       queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-budget"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-planning-snapshot"] });
       toast({ title: "Approved", description: "Guest suggestion has been approved and added to your list." });
     },
     onError: () => {
@@ -546,6 +593,7 @@ export default function Guests() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-suggestions"] });
       queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-suggestions", "count"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-planning-snapshot"] });
       setRejectDialogOpen(false);
       setSelectedSuggestion(null);
       setRejectReason("");
@@ -577,6 +625,7 @@ export default function Guests() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-budget"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-planning-snapshot"] });
       toast({ title: "Budget updated", description: "Guest budget settings have been saved." });
     },
     onError: () => {
@@ -918,29 +967,34 @@ export default function Guests() {
   const hasBudgetSet = budgetData?.settings?.maxGuestBudget && Number(budgetData.settings.maxGuestBudget) > 0;
   const isWithinCapacity = budgetData?.capacity && budgetData.capacity.currentCount <= budgetData.capacity.maxGuests;
 
+  // New 3-phase workflow based on user's mental model
+  const hasEventsOverCapacity = planningSnapshot?.events.some(e => e.isOverCapacity) || false;
+  const hasOverBudget = (planningSnapshot?.budget.potentialOverage || 0) > 0;
+  const needsCuts = hasEventsOverCapacity || hasOverBudget;
+
   const workflowSteps = [
     {
-      id: "suggestions",
+      id: "review",
       label: "Review",
-      description: "Team suggestions",
+      description: "Family suggestions",
       icon: Inbox,
-      isComplete: hasSuggestions,
+      isComplete: hasSuggestions, // All suggestions reviewed
       count: pendingSuggestions.length,
     },
     {
-      id: "budget",
-      label: "Budget",
-      description: "Set capacity",
-      icon: DollarSign,
-      isComplete: hasBudgetSet && isWithinCapacity,
-      count: 0,
+      id: "assess",
+      label: "Assess Impact",
+      description: "See the whole picture",
+      icon: Target,
+      isComplete: hasBudgetSet && !needsCuts,
+      count: needsCuts ? 1 : 0, // Show alert if over capacity/budget
     },
     {
-      id: "finalize",
-      label: "Finalize",
-      description: "Maybe Later",
-      icon: CheckSquare,
-      isComplete: cutList.length === 0,
+      id: "decide",
+      label: "Decide & Cut",
+      description: "Finalize list",
+      icon: Scissors,
+      isComplete: !needsCuts && cutList.length >= 0, // Complete when within limits
       count: cutList.length,
     },
   ];
@@ -1372,16 +1426,16 @@ export default function Guests() {
               </CardContent>
             </Card>
 
-            {/* Planning Tabs Content */}
+            {/* Planning Tabs Content - 3-phase workflow */}
             <Tabs value={planningTab} onValueChange={setPlanningTab}>
               <TabsList className="hidden">
-                <TabsTrigger value="suggestions">Suggestions</TabsTrigger>
-                <TabsTrigger value="budget">Budget</TabsTrigger>
-                <TabsTrigger value="finalize">Finalize</TabsTrigger>
+                <TabsTrigger value="review">Review</TabsTrigger>
+                <TabsTrigger value="assess">Assess Impact</TabsTrigger>
+                <TabsTrigger value="decide">Decide & Cut</TabsTrigger>
               </TabsList>
 
-              {/* Suggestions Tab - Review team suggestions */}
-              <TabsContent value="suggestions" className="space-y-6">
+              {/* Phase 1: Review - Review family suggestions */}
+              <TabsContent value="review" className="space-y-6">
                 <Card className={`border-2 ${hasSuggestions ? "border-green-300 bg-green-50/50 dark:bg-green-950/20" : "border-orange-200 bg-orange-50/50 dark:bg-orange-950/20"}`}>
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">
@@ -1402,9 +1456,9 @@ export default function Guests() {
                             <Button 
                               size="sm" 
                               className="mt-3 gap-2"
-                              onClick={() => setPlanningTab("budget")}
+                              onClick={() => setPlanningTab("assess")}
                             >
-                              Continue to Budget
+                              See the Full Picture
                               <ArrowRight className="h-3 w-3" />
                             </Button>
                           </>
@@ -1541,217 +1595,387 @@ export default function Guests() {
                 </div>
               </TabsContent>
 
-              {/* Budget Tab */}
-              <TabsContent value="budget" className="space-y-6">
-                <Card className={`border-2 ${hasBudgetSet && isWithinCapacity ? "border-green-300 bg-green-50/50 dark:bg-green-950/20" : "border-emerald-200 bg-emerald-50/50 dark:bg-emerald-950/20"}`}>
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <div className={`p-2 rounded-full flex-shrink-0 ${hasBudgetSet && isWithinCapacity ? "bg-green-100 dark:bg-green-900/30" : "bg-emerald-100 dark:bg-emerald-900/30"}`}>
-                        {hasBudgetSet && isWithinCapacity ? (
-                          <Sparkles className="h-5 w-5 text-green-600" />
-                        ) : (
-                          <DollarSign className="h-5 w-5 text-emerald-600" />
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        {hasBudgetSet && isWithinCapacity ? (
-                          <>
-                            <p className="font-semibold text-green-700 dark:text-green-400">Within Budget!</p>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              Great! You have {budgetData?.capacity?.maxGuests ? Math.max(0, budgetData.capacity.maxGuests - budgetData.capacity.currentCount) : 0} spots remaining within your budget.
-                            </p>
-                            <Button 
-                              size="sm" 
-                              className="mt-3 gap-2"
-                              onClick={() => setPlanningTab("finalize")}
-                            >
-                              Continue to Finalize
-                              <ArrowRight className="h-3 w-3" />
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            <p className="font-semibold">Set Your Guest Budget</p>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {!hasBudgetSet 
-                                ? "Enter your total guest budget and cost per person to see how many guests you can afford."
-                                : `You're ${budgetData?.capacity ? budgetData.capacity.currentCount - budgetData.capacity.maxGuests : 0} guests over capacity. Consider moving some guests to "Maybe Later".`}
-                            </p>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <div className="grid gap-6 md:grid-cols-2">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-base">Budget Settings</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="totalBudget">Total Guest Budget</Label>
-                        <Input
-                          id="totalBudget"
-                          type="number"
-                          placeholder="e.g., 50000"
-                          defaultValue={budgetData?.settings?.maxGuestBudget || ""}
-                          onBlur={(e) => {
-                            updateBudgetMutation.mutate({
-                              maxGuestBudget: e.target.value,
-                              defaultCostPerHead: budgetData?.settings?.defaultCostPerHead || "150",
-                            });
-                          }}
-                          data-testid="input-total-budget"
-                        />
-                        <p className="text-xs text-muted-foreground">Total amount allocated for guest-related expenses</p>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="costPerHead">Cost Per Head</Label>
-                        <Input
-                          id="costPerHead"
-                          type="number"
-                          placeholder="e.g., 150"
-                          defaultValue={budgetData?.settings?.defaultCostPerHead || "150"}
-                          onBlur={(e) => {
-                            updateBudgetMutation.mutate({
-                              maxGuestBudget: budgetData?.settings?.maxGuestBudget || "0",
-                              defaultCostPerHead: e.target.value,
-                            });
-                          }}
-                          data-testid="input-cost-per-head"
-                        />
-                        <p className="text-xs text-muted-foreground">Average cost for catering, favors, etc. per guest</p>
-                      </div>
+              {/* Phase 2: Assess Impact - See the WHOLE picture before cutting */}
+              <TabsContent value="assess" className="space-y-6">
+                {snapshotLoading ? (
+                  <div className="space-y-4">
+                    <Skeleton className="h-32 w-full" />
+                    <Skeleton className="h-64 w-full" />
+                  </div>
+                ) : snapshotError || !planningSnapshot ? (
+                  <Card className="border-2 border-amber-200 bg-amber-50/50 dark:bg-amber-950/20">
+                    <CardContent className="p-6 text-center">
+                      <AlertTriangle className="h-12 w-12 mx-auto text-amber-500 mb-3" />
+                      <h3 className="font-semibold text-lg">Unable to Load Planning Data</h3>
+                      <p className="text-sm text-muted-foreground mt-2 mb-4">
+                        We couldn't fetch your guest planning snapshot. This might be a temporary issue.
+                      </p>
+                      <Button
+                        variant="outline"
+                        onClick={() => refetchSnapshot()}
+                      >
+                        Try Again
+                      </Button>
                     </CardContent>
                   </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-base">Capacity Overview</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {budgetData?.capacity ? (
-                        <>
-                          <div className="space-y-2">
-                            <div className="flex justify-between text-sm">
-                              <span>Current Guests</span>
-                              <span className="font-medium">{budgetData.capacity.currentCount}</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                              <span>Max Capacity</span>
-                              <span className="font-medium">{budgetData.capacity.maxGuests || "Set budget"}</span>
-                            </div>
-                            {budgetData.capacity.maxGuests > 0 && (
-                              <Progress
-                                value={(budgetData.capacity.currentCount / budgetData.capacity.maxGuests) * 100}
-                                className="h-2"
-                                data-testid="progress-capacity"
-                              />
+                ) : (
+                  <>
+                    {/* Status Banner */}
+                    <Card className={`border-2 ${!needsCuts ? "border-green-300 bg-green-50/50 dark:bg-green-950/20" : "border-amber-300 bg-amber-50/50 dark:bg-amber-950/20"}`}>
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-3">
+                          <div className={`p-2 rounded-full flex-shrink-0 ${!needsCuts ? "bg-green-100 dark:bg-green-900/30" : "bg-amber-100 dark:bg-amber-900/30"}`}>
+                            {!needsCuts ? (
+                              <Sparkles className="h-5 w-5 text-green-600" />
+                            ) : (
+                              <AlertTriangle className="h-5 w-5 text-amber-600" />
                             )}
                           </div>
-                          <Separator />
-                          <div className="grid grid-cols-2 gap-4 text-center">
-                            <div>
-                              <p className="text-2xl font-bold" data-testid="text-remaining-budget">
-                                ${budgetData.capacity.remainingBudget?.toLocaleString() || 0}
-                              </p>
-                              <p className="text-xs text-muted-foreground">Remaining Budget</p>
-                            </div>
-                            <div>
-                              <p className="text-2xl font-bold" data-testid="text-spots-left">
-                                {budgetData.capacity.maxGuests > 0
-                                  ? Math.max(0, budgetData.capacity.maxGuests - budgetData.capacity.currentCount)
-                                  : "-"}
-                              </p>
-                              <p className="text-xs text-muted-foreground">Spots Available</p>
-                            </div>
+                          <div className="flex-1">
+                            {!needsCuts ? (
+                              <>
+                                <p className="font-semibold text-green-700 dark:text-green-400">Looking Good!</p>
+                                <p className="text-sm text-muted-foreground mt-1">
+                                  All your guests (including pending suggestions) fit within your budget and venue capacities.
+                                </p>
+                                <Button 
+                                  size="sm" 
+                                  className="mt-3 gap-2"
+                                  onClick={() => setPlanningTab("decide")}
+                                >
+                                  Review & Finalize
+                                  <ArrowRight className="h-3 w-3" />
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <p className="font-semibold text-amber-700 dark:text-amber-400">Decisions Needed</p>
+                                <p className="text-sm text-muted-foreground mt-1">
+                                  {hasOverBudget && `Over budget by $${planningSnapshot?.budget.potentialOverage?.toLocaleString()}. `}
+                                  {hasEventsOverCapacity && `Some events exceed venue capacity. `}
+                                  Review the details below and proceed to cut guests if needed.
+                                </p>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  className="mt-3 gap-2"
+                                  onClick={() => setPlanningTab("decide")}
+                                >
+                                  Start Cutting
+                                  <Scissors className="h-3 w-3" />
+                                </Button>
+                              </>
+                            )}
                           </div>
-                        </>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* The Whole Picture Summary */}
+                    <div className="grid gap-4 md:grid-cols-4">
+                      <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/20">
+                        <CardContent className="p-4 text-center">
+                          <p className="text-3xl font-bold text-blue-600" data-testid="text-confirmed-seats">
+                            {planningSnapshot?.summary.confirmedSeats || 0}
+                          </p>
+                          <p className="text-sm text-muted-foreground">Confirmed Guests</p>
+                          <p className="text-xs text-muted-foreground mt-1">Your current list</p>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="border-orange-200 bg-orange-50/50 dark:bg-orange-950/20">
+                        <CardContent className="p-4 text-center">
+                          <p className="text-3xl font-bold text-orange-600" data-testid="text-pending-seats">
+                            +{planningSnapshot?.summary.pendingSeats || 0}
+                          </p>
+                          <p className="text-sm text-muted-foreground">Pending Suggestions</p>
+                          <p className="text-xs text-muted-foreground mt-1">From family members</p>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="border-purple-200 bg-purple-50/50 dark:bg-purple-950/20">
+                        <CardContent className="p-4 text-center">
+                          <p className="text-3xl font-bold text-purple-600" data-testid="text-total-potential">
+                            {planningSnapshot?.summary.totalPotentialSeats || 0}
+                          </p>
+                          <p className="text-sm text-muted-foreground">Total Potential</p>
+                          <p className="text-xs text-muted-foreground mt-1">If all approved</p>
+                        </CardContent>
+                      </Card>
+
+                      <Card className={`${!needsCuts ? "border-green-200 bg-green-50/50 dark:bg-green-950/20" : "border-red-200 bg-red-50/50 dark:bg-red-950/20"}`}>
+                        <CardContent className="p-4 text-center">
+                          <p className={`text-3xl font-bold ${!needsCuts ? "text-green-600" : "text-red-600"}`} data-testid="text-budget-status">
+                            ${planningSnapshot?.budget.potentialSpend?.toLocaleString() || 0}
+                          </p>
+                          <p className="text-sm text-muted-foreground">Projected Cost</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Budget: ${planningSnapshot?.budget.totalBudget?.toLocaleString() || 0}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* Budget Settings */}
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-base flex items-center gap-2">
+                          <DollarSign className="h-4 w-4" />
+                          Budget Settings
+                        </CardTitle>
+                        <CardDescription>Set your guest budget and default cost per head</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <div className="space-y-2">
+                            <Label htmlFor="totalBudget">Total Guest Budget</Label>
+                            <Input
+                              id="totalBudget"
+                              type="number"
+                              placeholder="e.g., 50000"
+                              defaultValue={budgetData?.settings?.maxGuestBudget || ""}
+                              onBlur={(e) => {
+                                updateBudgetMutation.mutate({
+                                  maxGuestBudget: e.target.value,
+                                  defaultCostPerHead: budgetData?.settings?.defaultCostPerHead || "150",
+                                });
+                              }}
+                              data-testid="input-total-budget"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="costPerHead">Default Cost Per Head</Label>
+                            <Input
+                              id="costPerHead"
+                              type="number"
+                              placeholder="e.g., 150"
+                              defaultValue={budgetData?.settings?.defaultCostPerHead || "150"}
+                              onBlur={(e) => {
+                                updateBudgetMutation.mutate({
+                                  maxGuestBudget: budgetData?.settings?.maxGuestBudget || "0",
+                                  defaultCostPerHead: e.target.value,
+                                });
+                              }}
+                              data-testid="input-cost-per-head"
+                            />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Per-Event Cost & Capacity Breakdown */}
+                    <div className="space-y-4">
+                      <h2 className="text-lg font-semibold flex items-center gap-2">
+                        <BarChart3 className="h-5 w-5 text-muted-foreground" />
+                        Per-Event Cost & Capacity
+                      </h2>
+                      <p className="text-sm text-muted-foreground">
+                        See how your guest list impacts each event. This shows the cost and capacity for ALL potential guests (confirmed + pending suggestions).
+                      </p>
+
+                      {planningSnapshot?.events && planningSnapshot.events.length > 0 ? (
+                        <div className="space-y-3">
+                          {planningSnapshot.events.map(event => (
+                            <Card 
+                              key={event.id} 
+                              className={`${event.isOverCapacity ? "border-red-300 bg-red-50/30 dark:bg-red-950/20" : ""}`}
+                              data-testid={`card-event-${event.id}`}
+                            >
+                              <CardContent className="p-4">
+                                <div className="flex items-start justify-between gap-4 flex-wrap">
+                                  <div className="flex-1 min-w-[200px]">
+                                    <div className="flex items-center gap-2">
+                                      <h3 className="font-semibold">{event.name}</h3>
+                                      {event.isOverCapacity && (
+                                        <Badge variant="destructive" className="text-xs">
+                                          Over Capacity
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">
+                                      {event.date ? new Date(event.date).toLocaleDateString() : "Date TBD"}
+                                    </p>
+                                  </div>
+                                  
+                                  <div className="grid grid-cols-3 gap-4 text-center">
+                                    <div>
+                                      <p className="text-lg font-bold">{event.potentialTotal}</p>
+                                      <p className="text-xs text-muted-foreground">Potential Guests</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-lg font-bold">
+                                        ${event.costPerHead?.toLocaleString() || planningSnapshot?.budget?.defaultCostPerHead || 0}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground">Per Head</p>
+                                    </div>
+                                    <div>
+                                      <p className={`text-lg font-bold ${event.isOverCapacity ? "text-red-600" : ""}`}>
+                                        ${event.potentialCost?.toLocaleString() || 0}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground">Total Cost</p>
+                                    </div>
+                                  </div>
+
+                                  {event.venueCapacity && (
+                                    <div className="w-full mt-2">
+                                      <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                                        <span>Capacity: {event.potentialTotal} / {event.venueCapacity}</span>
+                                        {event.isOverCapacity && (
+                                          <span className="text-red-600 font-medium">
+                                            {Math.abs(event.capacityRemaining || 0)} over
+                                          </span>
+                                        )}
+                                      </div>
+                                      <Progress
+                                        value={Math.min((event.potentialTotal / event.venueCapacity) * 100, 100)}
+                                        className={`h-2 ${event.isOverCapacity ? "[&>div]:bg-red-500" : ""}`}
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
                       ) : (
-                        <p className="text-muted-foreground text-center py-4">Set your budget to see capacity</p>
+                        <Card className="border-dashed">
+                          <CardContent className="p-6 text-center">
+                            <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground opacity-50 mb-3" />
+                            <p className="font-medium">No Events Yet</p>
+                            <p className="text-sm text-muted-foreground">
+                              Add events to your wedding timeline to see per-event cost breakdowns.
+                            </p>
+                          </CardContent>
+                        </Card>
                       )}
-                    </CardContent>
-                  </Card>
-                </div>
+                    </div>
 
-                {/* Priority Breakdown */}
-                <div className="space-y-4">
-                  <h2 className="text-lg font-semibold flex items-center gap-2">
-                    <ListFilter className="h-5 w-5 text-muted-foreground" />
-                    Priority Breakdown
-                  </h2>
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    <Card className="border-green-500/50">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-base flex items-center gap-2">
-                          <Star className="h-4 w-4 text-green-500" />
-                          Must Invite
-                        </CardTitle>
-                        <CardDescription className="text-xs">Cannot be cut</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-3xl font-bold">{priorityBreakdown.must_invite.length}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {priorityBreakdown.must_invite.reduce((sum, h) => sum + h.maxCount, 0)} guests
-                        </p>
-                      </CardContent>
-                    </Card>
+                    {/* Priority Breakdown */}
+                    <div className="space-y-4">
+                      <h2 className="text-lg font-semibold flex items-center gap-2">
+                        <ListFilter className="h-5 w-5 text-muted-foreground" />
+                        Priority Breakdown
+                      </h2>
+                      <p className="text-sm text-muted-foreground">
+                        Combined view of confirmed guests and pending suggestions by priority tier.
+                      </p>
 
-                    <Card className="border-yellow-500/50">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-base flex items-center gap-2">
-                          <TrendingUp className="h-4 w-4 text-yellow-500" />
-                          Should Invite
-                        </CardTitle>
-                        <CardDescription className="text-xs">High priority</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-3xl font-bold">{priorityBreakdown.should_invite.length}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {priorityBreakdown.should_invite.reduce((sum, h) => sum + h.maxCount, 0)} guests
-                        </p>
-                      </CardContent>
-                    </Card>
+                      <div className="grid gap-4 md:grid-cols-3">
+                        <Card className="border-green-500/50">
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-base flex items-center gap-2">
+                              <Star className="h-4 w-4 text-green-500" />
+                              Must Invite
+                            </CardTitle>
+                            <CardDescription className="text-xs">Cannot be cut</CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="flex items-baseline gap-2">
+                              <p className="text-3xl font-bold">
+                                {(planningSnapshot?.summary.priorityBreakdown.must_invite.confirmed || 0) + 
+                                 (planningSnapshot?.summary.priorityBreakdown.must_invite.pending || 0)}
+                              </p>
+                              <span className="text-sm text-muted-foreground">guests</span>
+                            </div>
+                            <div className="mt-2 text-xs space-y-1">
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Confirmed:</span>
+                                <span>{planningSnapshot?.summary.priorityBreakdown.must_invite.confirmed || 0}</span>
+                              </div>
+                              <div className="flex justify-between text-orange-600">
+                                <span>Pending:</span>
+                                <span>+{planningSnapshot?.summary.priorityBreakdown.must_invite.pending || 0}</span>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
 
-                    <Card className="border-orange-500/50">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-base flex items-center gap-2">
-                          <Users className="h-4 w-4 text-orange-500" />
-                          Nice to Have
-                        </CardTitle>
-                        <CardDescription className="text-xs">First to consider for cuts</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-3xl font-bold">{priorityBreakdown.nice_to_have.length}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {priorityBreakdown.nice_to_have.reduce((sum, h) => sum + h.maxCount, 0)} guests
-                        </p>
-                      </CardContent>
-                    </Card>
+                        <Card className="border-yellow-500/50">
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-base flex items-center gap-2">
+                              <TrendingUp className="h-4 w-4 text-yellow-500" />
+                              Should Invite
+                            </CardTitle>
+                            <CardDescription className="text-xs">High priority</CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="flex items-baseline gap-2">
+                              <p className="text-3xl font-bold">
+                                {(planningSnapshot?.summary.priorityBreakdown.should_invite.confirmed || 0) + 
+                                 (planningSnapshot?.summary.priorityBreakdown.should_invite.pending || 0)}
+                              </p>
+                              <span className="text-sm text-muted-foreground">guests</span>
+                            </div>
+                            <div className="mt-2 text-xs space-y-1">
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Confirmed:</span>
+                                <span>{planningSnapshot?.summary.priorityBreakdown.should_invite.confirmed || 0}</span>
+                              </div>
+                              <div className="flex justify-between text-orange-600">
+                                <span>Pending:</span>
+                                <span>+{planningSnapshot?.summary.priorityBreakdown.should_invite.pending || 0}</span>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
 
-                    <Card className="border-muted">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-base flex items-center gap-2 text-muted-foreground">
-                          <AlertTriangle className="h-4 w-4" />
-                          Unassigned
-                        </CardTitle>
-                        <CardDescription className="text-xs">Needs priority</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-3xl font-bold">{priorityBreakdown.unassigned.length}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {priorityBreakdown.unassigned.reduce((sum, h) => sum + h.maxCount, 0)} guests
-                        </p>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </div>
+                        <Card className="border-orange-500/50">
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-base flex items-center gap-2">
+                              <Users className="h-4 w-4 text-orange-500" />
+                              Nice to Have
+                            </CardTitle>
+                            <CardDescription className="text-xs">First to consider for cuts</CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="flex items-baseline gap-2">
+                              <p className="text-3xl font-bold">
+                                {(planningSnapshot?.summary.priorityBreakdown.nice_to_have.confirmed || 0) + 
+                                 (planningSnapshot?.summary.priorityBreakdown.nice_to_have.pending || 0)}
+                              </p>
+                              <span className="text-sm text-muted-foreground">guests</span>
+                            </div>
+                            <div className="mt-2 text-xs space-y-1">
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Confirmed:</span>
+                                <span>{planningSnapshot?.summary.priorityBreakdown.nice_to_have.confirmed || 0}</span>
+                              </div>
+                              <div className="flex justify-between text-orange-600">
+                                <span>Pending:</span>
+                                <span>+{planningSnapshot?.summary.priorityBreakdown.nice_to_have.pending || 0}</span>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    </div>
+
+                    {/* Action Button */}
+                    <div className="flex justify-end">
+                      <Button 
+                        size="lg"
+                        onClick={() => setPlanningTab("decide")}
+                        className="gap-2"
+                      >
+                        {needsCuts ? (
+                          <>
+                            <Scissors className="h-4 w-4" />
+                            Start Cutting Guests
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 className="h-4 w-4" />
+                            Review & Finalize
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </>
+                )}
               </TabsContent>
 
-              {/* Finalize Tab - Maybe Later (Cut List) */}
-              <TabsContent value="finalize" className="space-y-6">
+              {/* Phase 3: Decide & Cut - Make final decisions */}
+              <TabsContent value="decide" className="space-y-6">
                 <Card className={`border-2 ${cutList.length === 0 ? "border-green-300 bg-green-50/50 dark:bg-green-950/20" : "border-amber-200 bg-amber-50/50 dark:bg-amber-950/20"}`}>
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">
