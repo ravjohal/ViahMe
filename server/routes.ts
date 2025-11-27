@@ -314,7 +314,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json(event);
     } catch (error) {
-      res.status(500).json({ error: "Failed to update event" });
+      console.error("Error updating event:", error);
+      res.status(500).json({ error: "Failed to update event", details: error instanceof Error ? error.message : String(error) });
     }
   });
 
