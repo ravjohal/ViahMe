@@ -308,7 +308,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/events/:id", async (req, res) => {
     try {
-      const event = await storage.updateEvent(req.params.id, req.body);
+      const updateData = { ...req.body };
+      // Convert date string to Date object if present
+      if (updateData.date && typeof updateData.date === 'string') {
+        updateData.date = new Date(updateData.date);
+      }
+      const event = await storage.updateEvent(req.params.id, updateData);
       if (!event) {
         return res.status(404).json({ error: "Event not found" });
       }
