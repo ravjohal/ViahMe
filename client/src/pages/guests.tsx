@@ -303,6 +303,7 @@ export default function Guests() {
       maxCount: 1,
       affiliation: "bride",
       relationshipTier: "friend",
+      priorityTier: "should_invite",
       weddingId: wedding?.id || "",
     },
   });
@@ -799,6 +800,7 @@ export default function Guests() {
       maxCount: 1,
       affiliation: "bride",
       relationshipTier: "friend",
+      priorityTier: "should_invite",
       weddingId: wedding?.id || "",
     });
     setHouseholdDialogOpen(true);
@@ -812,6 +814,7 @@ export default function Guests() {
       maxCount: household.maxCount || 1,
       affiliation: household.affiliation as "bride" | "groom" | "mutual",
       relationshipTier: household.relationshipTier || "friend",
+      priorityTier: (household.priorityTier as "must_invite" | "should_invite" | "nice_to_have") || "should_invite",
       weddingId: household.weddingId,
     });
     setHouseholdDialogOpen(true);
@@ -2378,6 +2381,43 @@ export default function Guests() {
                   <SelectItem value="parents_friend">Parent's Friends</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="household-priority">
+                Priority Tier <span className="text-destructive">*</span>
+              </Label>
+              <Select
+                value={householdForm.watch("priorityTier")}
+                onValueChange={(value) => householdForm.setValue("priorityTier", value as "must_invite" | "should_invite" | "nice_to_have")}
+              >
+                <SelectTrigger id="household-priority" data-testid="select-household-priority">
+                  <SelectValue placeholder="Select priority" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="must_invite">
+                    <div className="flex items-center gap-2">
+                      <Star className="h-4 w-4 text-green-500" />
+                      Must Invite
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="should_invite">
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4 text-yellow-500" />
+                      Should Invite
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="nice_to_have">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-orange-500" />
+                      Nice to Have
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Used for budget planning - "Nice to Have" guests are considered first for cuts
+              </p>
             </div>
 
             <div className="flex justify-between pt-4">
