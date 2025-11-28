@@ -100,6 +100,7 @@ const defaultPermissions = (): Record<PermissionCategory, PermissionLevel> => {
 export default function Collaborators() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState("roles");
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteName, setInviteName] = useState("");
@@ -575,13 +576,13 @@ export default function Collaborators() {
             </Dialog>
           )}
 
-          {/* Getting Started Guide */}
-          <Card className="p-6 bg-gradient-to-br from-orange-50 to-pink-50 dark:from-orange-950/30 dark:to-pink-950/30 border-orange-200 dark:border-orange-800">
-            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-              <span className="bg-orange-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">?</span>
-              How to Set Up Your Team
-            </h3>
-            <div className="grid md:grid-cols-4 gap-4">
+          {/* Getting Started Guide - Clickable Steps */}
+          <div className="grid md:grid-cols-4 gap-4 cursor-pointer">
+            <Card 
+              className={`p-6 transition-all hover-elevate ${activeTab === "roles" ? "bg-gradient-to-br from-orange-100 to-pink-100 dark:from-orange-900/40 dark:to-pink-900/40 border-orange-400 dark:border-orange-600" : "bg-gradient-to-br from-orange-50 to-pink-50 dark:from-orange-950/30 dark:to-pink-950/30 border-orange-200 dark:border-orange-800"}`}
+              onClick={() => setActiveTab("roles")}
+              data-testid="step-card-1"
+            >
               <div className="space-y-2">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="bg-orange-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">1</div>
@@ -591,6 +592,13 @@ export default function Collaborators() {
                   Set up the different roles (Wedding Planner, Coordinator, etc.) with their permissions.
                 </p>
               </div>
+            </Card>
+
+            <Card 
+              className={`p-6 transition-all hover-elevate ${activeTab === "invite" ? "bg-gradient-to-br from-orange-100 to-pink-100 dark:from-orange-900/40 dark:to-pink-900/40 border-orange-400 dark:border-orange-600" : "bg-gradient-to-br from-orange-50 to-pink-50 dark:from-orange-950/30 dark:to-pink-950/30 border-orange-200 dark:border-orange-800"}`}
+              onClick={() => setActiveTab("invite")}
+              data-testid="step-card-2"
+            >
               <div className="space-y-2">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="bg-orange-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">2</div>
@@ -600,6 +608,13 @@ export default function Collaborators() {
                   Send invitations to family, friends, and vendors. Assign each person a job title.
                 </p>
               </div>
+            </Card>
+
+            <Card 
+              className={`p-6 transition-all hover-elevate ${activeTab === "manage" ? "bg-gradient-to-br from-orange-100 to-pink-100 dark:from-orange-900/40 dark:to-pink-900/40 border-orange-400 dark:border-orange-600" : "bg-gradient-to-br from-orange-50 to-pink-50 dark:from-orange-950/30 dark:to-pink-950/30 border-orange-200 dark:border-orange-800"}`}
+              onClick={() => setActiveTab("manage")}
+              data-testid="step-card-3"
+            >
               <div className="space-y-2">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="bg-orange-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">3</div>
@@ -609,6 +624,13 @@ export default function Collaborators() {
                   Assign roles to team members and control what each role can do.
                 </p>
               </div>
+            </Card>
+
+            <Card 
+              className={`p-6 transition-all hover-elevate ${activeTab === "activity" ? "bg-gradient-to-br from-orange-100 to-pink-100 dark:from-orange-900/40 dark:to-pink-900/40 border-orange-400 dark:border-orange-600" : "bg-gradient-to-br from-orange-50 to-pink-50 dark:from-orange-950/30 dark:to-pink-950/30 border-orange-200 dark:border-orange-800"}`}
+              onClick={() => setActiveTab("activity")}
+              data-testid="step-card-4"
+            >
               <div className="space-y-2">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="bg-orange-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">4</div>
@@ -618,26 +640,30 @@ export default function Collaborators() {
                   See all actions and changes made by your team members.
                 </p>
               </div>
-            </div>
-          </Card>
+            </Card>
+          </div>
 
-          <Tabs defaultValue="roles" className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="roles" data-testid="tab-create-roles">
                 <Shield className="w-4 h-4 mr-2" />
-                Create Roles
+                <span className="hidden sm:inline">1. Create Roles</span>
+                <span className="sm:hidden">1</span>
               </TabsTrigger>
               <TabsTrigger value="invite" data-testid="tab-invite">
                 <UserPlus className="w-4 h-4 mr-2" />
-                Invite
+                <span className="hidden sm:inline">2. Invite</span>
+                <span className="sm:hidden">2</span>
               </TabsTrigger>
               <TabsTrigger value="manage" data-testid="tab-manage">
                 <Users className="w-4 h-4 mr-2" />
-                Manage
+                <span className="hidden sm:inline">3. Manage</span>
+                <span className="sm:hidden">3</span>
               </TabsTrigger>
               <TabsTrigger value="activity" data-testid="tab-activity">
                 <History className="w-4 h-4 mr-2" />
-                Activity
+                <span className="hidden sm:inline">4. Activity</span>
+                <span className="sm:hidden">4</span>
               </TabsTrigger>
             </TabsList>
 
