@@ -5840,6 +5840,9 @@ export class DBStorage implements IStorage {
       guestBudget = weddingTotalBudget;
     }
     
+    // Get the couple's target guest count for fallback capacity
+    const coupleTargetGuestCount = wedding?.guestCountEstimate || null;
+    
     // Get budget categories for per-event allocations
     const budgetCategories = await this.getBudgetCategoriesByWedding(weddingId);
 
@@ -5913,8 +5916,8 @@ export class DBStorage implements IStorage {
         eventCapacity = event.guestCount;
       } else if (event.venueCapacity !== null && event.venueCapacity !== undefined) {
         eventCapacity = event.venueCapacity;
-      } else if (budgetSettings?.targetGuestCount && budgetSettings.targetGuestCount > 0) {
-        eventCapacity = budgetSettings.targetGuestCount;
+      } else if (coupleTargetGuestCount && coupleTargetGuestCount > 0) {
+        eventCapacity = coupleTargetGuestCount;
       }
       
       // Find budget allocation for this event (match by event type/name to budget category)
