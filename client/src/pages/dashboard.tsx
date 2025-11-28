@@ -3,17 +3,14 @@ import { useQuery } from "@tanstack/react-query";
 import { TimelineView } from "@/components/timeline-view";
 import { BudgetDashboard } from "@/components/budget-dashboard";
 import { WelcomeTour } from "@/components/welcome-tour";
+import { EventDetailModal } from "@/components/event-detail-modal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Calendar, DollarSign, Users, Briefcase, FileText, Camera, Clock, MapPin, Tag } from "lucide-react";
+import { Calendar, DollarSign, Users, Briefcase, FileText, Camera } from "lucide-react";
 import { useLocation } from "wouter";
 import type { Wedding, Event, BudgetCategory, Contract, Vendor, EventCostItem } from "@shared/schema";
-import { format } from "date-fns";
 
 const CATEGORY_LABELS: Record<string, string> = {
   catering: "Catering & Food",
@@ -272,146 +269,20 @@ export default function Dashboard() {
 
       <WelcomeTour weddingTradition={wedding.tradition} />
 
-      <Dialog open={!!selectedEvent} onOpenChange={(open) => {
-        if (!open) setSelectedEvent(null);
-      }}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          {selectedEvent && (
-            <>
-              <DialogHeader>
-                <DialogTitle>{selectedEvent.name}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-6">
-                {selectedEvent.description && (
-                  <div>
-                    <h3 className="font-semibold text-sm text-muted-foreground mb-2">Description</h3>
-                    <p className="text-foreground">{selectedEvent.description}</p>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {selectedEvent.date && (
-                    <div>
-                      <h3 className="font-semibold text-sm text-muted-foreground mb-2">Date</h3>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-foreground">{format(new Date(selectedEvent.date), "MMMM dd, yyyy")}</span>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {selectedEvent.time && (
-                    <div>
-                      <h3 className="font-semibold text-sm text-muted-foreground mb-2">Time</h3>
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-foreground">{selectedEvent.time}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {selectedEvent.location && (
-                    <div>
-                      <h3 className="font-semibold text-sm text-muted-foreground mb-2">Location</h3>
-                      <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-foreground">{selectedEvent.location}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {selectedEvent.guestCount && (
-                    <div>
-                      <h3 className="font-semibold text-sm text-muted-foreground mb-2">Guests</h3>
-                      <div className="flex items-center gap-2">
-                        <Users className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-foreground">{selectedEvent.guestCount} guests</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {selectedEvent.costPerHead && (
-                    <div>
-                      <h3 className="font-semibold text-sm text-muted-foreground mb-2">Cost Per Head</h3>
-                      <span className="text-foreground font-semibold">${parseFloat(selectedEvent.costPerHead).toLocaleString()}</span>
-                    </div>
-                  )}
-
-                  {selectedEvent.venueCapacity && (
-                    <div>
-                      <h3 className="font-semibold text-sm text-muted-foreground mb-2">Venue Capacity</h3>
-                      <span className="text-foreground">{selectedEvent.venueCapacity} people</span>
-                    </div>
-                  )}
-                </div>
-
-                <Collapsible defaultOpen className="border rounded-lg p-4 space-y-4">
-                  <CollapsibleTrigger asChild>
-                    <Button variant="ghost" className="w-full flex items-center justify-between p-0 h-auto hover:bg-transparent">
-                      <div className="flex items-center gap-2">
-                        <DollarSign className="w-5 h-5 text-primary" />
-                        <span className="font-medium">Cost Breakdown</span>
-                        {costItems.length > 0 && (
-                          <Badge variant="secondary" className="ml-2">{costItems.length} items</Badge>
-                        )}
-                      </div>
-                    </Button>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="space-y-4 pt-4">
-                    {costItemsLoading ? (
-                      <div className="text-center text-muted-foreground py-2">Loading costs...</div>
-                    ) : costItems.length === 0 ? (
-                      <div className="text-center text-muted-foreground py-4">No costs added yet</div>
-                    ) : (
-                      <div className="space-y-2">
-                        {costItems.map((item) => {
-                          const linkedCategory = budgetCategories.find(c => c.id === item.categoryId);
-                          return (
-                            <div key={item.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-medium">{item.name}</span>
-                                <Badge variant="outline" className="text-xs">
-                                  {item.costType === "per_head" ? "Per Guest" : "Fixed"}
-                                </Badge>
-                                {linkedCategory && (
-                                  <Badge variant="secondary" className="text-xs">
-                                    <Tag className="w-3 h-3 mr-1" />
-                                    {CATEGORY_LABELS[linkedCategory.category] || linkedCategory.category}
-                                  </Badge>
-                                )}
-                              </div>
-                              <span className="font-semibold text-primary">${parseFloat(item.amount).toLocaleString()}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </CollapsibleContent>
-                </Collapsible>
-
-                <div className="flex justify-end gap-2">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setSelectedEvent(null)}
-                    data-testid="button-close-event-modal"
-                  >
-                    Close
-                  </Button>
-                  <Button 
-                    onClick={() => {
-                      setLocation(`/timeline?eventId=${selectedEvent.id}`);
-                      setSelectedEvent(null);
-                    }}
-                    data-testid="button-edit-event-from-modal"
-                  >
-                    Edit Event
-                  </Button>
-                </div>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+      <EventDetailModal
+        open={!!selectedEvent}
+        onOpenChange={(open) => {
+          if (!open) setSelectedEvent(null);
+        }}
+        event={selectedEvent}
+        costItems={costItems}
+        costItemsLoading={costItemsLoading}
+        budgetCategories={budgetCategories}
+        onEdit={() => {
+          setLocation(`/timeline?eventId=${selectedEvent?.id}`);
+          setSelectedEvent(null);
+        }}
+      />
     </div>
   );
 }

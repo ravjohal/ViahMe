@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import type { Event, InsertEvent, EventCostItem, BudgetCategory } from "@shared/schema";
+import { EventDetailModal } from "@/components/event-detail-modal";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Calendar, MapPin, Users, Clock, Pencil, Trash2, DollarSign, X, Tag } from "lucide-react";
@@ -796,132 +797,22 @@ export default function TimelinePage() {
         )}
       </div>
 
-      {/* Event Details Dialog */}
-      <Dialog open={!!viewingEventId} onOpenChange={(open) => {
-        if (!open) setViewingEventId(null);
-      }}>
-        {getViewingEvent() && (
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-2xl flex items-center gap-2">
-                <span>{EVENT_TYPES.find((t) => t.value === getViewingEvent()?.type)?.icon}</span>
-                {getViewingEvent()?.name}
-              </DialogTitle>
-            </DialogHeader>
-
-            <div className="space-y-6">
-              {/* Basic Info */}
-              <div className="space-y-4">
-                <h3 className="font-semibold text-lg text-foreground">Event Details</h3>
-                
-                {getViewingEvent()?.description && (
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Description</p>
-                    <p className="text-foreground">{getViewingEvent()?.description}</p>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-2 gap-4">
-                  {getViewingEvent()?.date && getViewingEvent()?.date !== null && (
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Date</p>
-                      <p className="font-medium">{format(new Date(getViewingEvent()!.date!), "MMMM d, yyyy")}</p>
-                    </div>
-                  )}
-
-                  {getViewingEvent()?.time && (
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Time</p>
-                      <p className="font-medium">{getViewingEvent()?.time}</p>
-                    </div>
-                  )}
-
-                  {getViewingEvent()?.location && (
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Location</p>
-                      <p className="font-medium">{getViewingEvent()?.location}</p>
-                    </div>
-                  )}
-
-                  {getViewingEvent()?.guestCount && (
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Expected Guests</p>
-                      <p className="font-medium">{getViewingEvent()?.guestCount}</p>
-                    </div>
-                  )}
-
-                  {getViewingEvent()?.venueCapacity && (
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Venue Capacity</p>
-                      <p className="font-medium">{getViewingEvent()?.venueCapacity}</p>
-                    </div>
-                  )}
-
-                  {getViewingEvent()?.costPerHead && getViewingEvent()?.costPerHead !== null && (
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Cost Per Head</p>
-                      <p className="font-medium">${parseFloat(getViewingEvent()!.costPerHead!).toLocaleString()}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Cost Breakdown */}
-              {(viewingCostItems.length > 0 || viewingCostItemsLoading) && (
-                <div className="space-y-3 border-t pt-4">
-                  <h3 className="font-semibold text-lg text-foreground">Cost Breakdown</h3>
-                  
-                  {viewingCostItemsLoading ? (
-                    <p className="text-center text-muted-foreground py-2">Loading costs...</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {viewingCostItems.map((item) => (
-                        <div key={item.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg" data-testid={`view-cost-item-${item.id}`}>
-                          <div className="flex items-center gap-3">
-                            <span className="font-medium">{item.name}</span>
-                            <Badge variant="outline" className="text-xs">
-                              {item.costType === "per_head" ? "Per Guest" : "Fixed"}
-                            </Badge>
-                          </div>
-                          <span className="font-semibold text-primary">${parseFloat(item.amount).toLocaleString()}</span>
-                        </div>
-                      ))}
-                      <div className="flex items-center justify-between p-3 bg-primary/10 rounded-lg mt-3">
-                        <span className="font-semibold">Total Costs</span>
-                        <span className="font-bold text-primary">
-                          ${viewingCostItems.reduce((sum, item) => sum + parseFloat(item.amount), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="flex justify-end gap-3 pt-4 border-t">
-                <Button
-                  variant="outline"
-                  onClick={() => setViewingEventId(null)}
-                  data-testid="button-close-event-details"
-                >
-                  Close
-                </Button>
-                <Button
-                  onClick={() => {
-                    setViewingEventId(null);
-                    handleEdit(getViewingEvent()!);
-                  }}
-                  className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white shadow-lg"
-                  data-testid="button-edit-from-details"
-                >
-                  <Pencil className="w-4 h-4 mr-2" />
-                  Edit Event
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        )}
-      </Dialog>
+      {/* Event Details Modal */}
+      <EventDetailModal
+        open={!!viewingEventId}
+        onOpenChange={(open) => {
+          if (!open) setViewingEventId(null);
+        }}
+        event={getViewingEvent() || null}
+        costItems={viewingCostItems}
+        costItemsLoading={viewingCostItemsLoading}
+        budgetCategories={budgetCategories}
+        onEdit={(event) => {
+          setViewingEventId(null);
+          handleEdit(event);
+        }}
+        onDelete={handleDelete}
+      />
     </div>
   );
 }
