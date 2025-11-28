@@ -9,10 +9,22 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, DollarSign, Users, Briefcase, FileText, Camera, Clock, MapPin } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Calendar, DollarSign, Users, Briefcase, FileText, Camera, Clock, MapPin, Tag } from "lucide-react";
 import { useLocation } from "wouter";
-import type { Wedding, Event, BudgetCategory, Contract, Vendor } from "@shared/schema";
+import type { Wedding, Event, BudgetCategory, Contract, Vendor, EventCostItem } from "@shared/schema";
 import { format } from "date-fns";
+
+const CATEGORY_LABELS: Record<string, string> = {
+  catering: "Catering & Food",
+  venue: "Venue & Rentals",
+  entertainment: "Entertainment",
+  photography: "Photography & Video",
+  decoration: "Decoration & Flowers",
+  attire: "Attire & Beauty",
+  transportation: "Transportation",
+  other: "Other Expenses",
+};
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
@@ -44,6 +56,12 @@ export default function Dashboard() {
   const { data: contracts = [] } = useQuery<Contract[]>({
     queryKey: ["/api/contracts", wedding?.id],
     enabled: !!wedding?.id,
+  });
+
+  // Fetch cost items for the selected event
+  const { data: costItems = [], isLoading: costItemsLoading } = useQuery<EventCostItem[]>({
+    queryKey: ["/api/events", selectedEvent?.id, "cost-items"],
+    enabled: !!selectedEvent?.id,
   });
 
   // Redirect to onboarding if no wedding exists
@@ -326,6 +344,50 @@ export default function Dashboard() {
                     </div>
                   )}
                 </div>
+
+                <Collapsible defaultOpen className="border rounded-lg p-4 space-y-4">
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" className="w-full flex items-center justify-between p-0 h-auto hover:bg-transparent">
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="w-5 h-5 text-primary" />
+                        <span className="font-medium">Cost Breakdown</span>
+                        {costItems.length > 0 && (
+                          <Badge variant="secondary" className="ml-2">{costItems.length} items</Badge>
+                        )}
+                      </div>
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-4 pt-4">
+                    {costItemsLoading ? (
+                      <div className="text-center text-muted-foreground py-2">Loading costs...</div>
+                    ) : costItems.length === 0 ? (
+                      <div className="text-center text-muted-foreground py-4">No costs added yet</div>
+                    ) : (
+                      <div className="space-y-2">
+                        {costItems.map((item) => {
+                          const linkedCategory = budgetCategories.find(c => c.id === item.categoryId);
+                          return (
+                            <div key={item.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-medium">{item.name}</span>
+                                <Badge variant="outline" className="text-xs">
+                                  {item.costType === "per_head" ? "Per Guest" : "Fixed"}
+                                </Badge>
+                                {linkedCategory && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    <Tag className="w-3 h-3 mr-1" />
+                                    {CATEGORY_LABELS[linkedCategory.category] || linkedCategory.category}
+                                  </Badge>
+                                )}
+                              </div>
+                              <span className="font-semibold text-primary">${parseFloat(item.amount).toLocaleString()}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </CollapsibleContent>
+                </Collapsible>
 
                 <div className="flex justify-end gap-2">
                   <Button variant="outline" onClick={() => setSelectedEvent(null)}>
