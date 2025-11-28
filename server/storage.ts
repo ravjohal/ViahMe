@@ -5907,14 +5907,18 @@ export class DBStorage implements IStorage {
       // Determine event capacity with priority:
       // 1. Event guest number (if defined)
       // 2. Venue capacity (if event guest number not defined)
-      // 3. Main guest list total (if neither is defined)
+      // 3. Total couple's defined guest list (if neither is defined)
       let eventCapacity: number | null = null;
       if (event.guestCount !== null && event.guestCount !== undefined) {
         eventCapacity = event.guestCount;
       } else if (event.venueCapacity !== null && event.venueCapacity !== undefined) {
         eventCapacity = event.venueCapacity;
-      } else if (confirmedSeats > 0) {
-        eventCapacity = confirmedSeats;
+      } else {
+        // Fall back to couple's total defined guest list (all households)
+        const totalDefinedGuests = allHouseholds.reduce((sum, h) => sum + h.maxCount, 0);
+        if (totalDefinedGuests > 0) {
+          eventCapacity = totalDefinedGuests;
+        }
       }
       
       // Find budget allocation for this event (match by event type/name to budget category)
