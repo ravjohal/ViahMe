@@ -1360,6 +1360,8 @@ export default function Collaborators() {
                             {item.action === "removed" && <XCircle className="w-3 h-3 text-red-500" />}
                             {item.action === "role_created" && <Shield className="w-3 h-3 text-purple-500" />}
                             {item.action === "invite_resent" && <RefreshCw className="w-3 h-3 text-yellow-500" />}
+                            {item.action === "suggestion_approved" && <CheckCircle className="w-3 h-3 text-green-600" />}
+                            {item.action === "guest_restored" && <RefreshCw className="w-3 h-3 text-blue-600" />}
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm">
@@ -1391,7 +1393,25 @@ export default function Collaborators() {
                                   Resent invitation to <span className="font-medium">{(item.details as any)?.email || "collaborator"}</span>
                                 </>
                               )}
-                              {!["invited", "accepted_invite", "removed", "role_created", "invite_resent"].includes(item.action) && item.action}
+                              {item.action === "suggestion_approved" && (
+                                <>
+                                  Approved suggestion for <span className="font-medium">{(item.details as any)?.guestName || "guest"}</span>
+                                  {(item.details as any)?.events && (
+                                    <> at <span className="font-medium">{Array.isArray((item.details as any).events) ? (item.details as any).events.join(", ") : (item.details as any).events}</span></>
+                                  )}
+                                </>
+                              )}
+                              {item.action === "guest_restored" && (
+                                <>
+                                  Restored <span className="font-medium">{(item.details as any)?.guestName || "guest"}</span> to guest list
+                                  {(item.details as any)?.events && (
+                                    <> for <span className="font-medium">{Array.isArray((item.details as any).events) ? (item.details as any).events.join(", ") : (item.details as any).events}</span></>
+                                  )}
+                                </>
+                              )}
+                              {!["invited", "accepted_invite", "removed", "role_created", "invite_resent", "suggestion_approved", "guest_restored"].includes(item.action) && (
+                                <span className="capitalize">{item.action.replace(/_/g, " ")}</span>
+                              )}
                             </p>
                             <p className="text-xs text-muted-foreground mt-1">
                               {new Date(item.performedAt).toLocaleString()}
