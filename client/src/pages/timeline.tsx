@@ -147,6 +147,9 @@ export default function TimelinePage() {
       guestCount: event.guestCount || undefined,
       description: event.description || "",
       order: event.order,
+      costPerHead: event.costPerHead?.toString() || "",
+      venueCapacity: event.venueCapacity || undefined,
+      budgetAllocation: event.budgetAllocation?.toString() || "",
     });
     setDialogOpen(true);
   };
@@ -355,6 +358,70 @@ export default function TimelinePage() {
                     </FormItem>
                   )}
                 />
+
+                <div className="grid grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="costPerHead"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Cost Per Head (Optional)</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value || ""}
+                            type="number"
+                            step="0.01"
+                            placeholder="e.g., 150"
+                            data-testid="input-cost-per-head"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="venueCapacity"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Venue Capacity (Optional)</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value || ""}
+                            type="number"
+                            placeholder="e.g., 250"
+                            data-testid="input-venue-capacity"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="budgetAllocation"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Event Budget (Optional)</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value || ""}
+                            type="number"
+                            step="0.01"
+                            placeholder="e.g., 5000"
+                            data-testid="input-budget-allocation"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <div className="flex justify-end gap-3 pt-4">
                   <Button
