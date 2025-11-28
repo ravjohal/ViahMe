@@ -644,29 +644,6 @@ export default function Collaborators() {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="roles" data-testid="tab-create-roles">
-                <Shield className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">1. Create Roles</span>
-                <span className="sm:hidden">1</span>
-              </TabsTrigger>
-              <TabsTrigger value="invite" data-testid="tab-invite">
-                <UserPlus className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">2. Invite</span>
-                <span className="sm:hidden">2</span>
-              </TabsTrigger>
-              <TabsTrigger value="manage" data-testid="tab-manage">
-                <Users className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">3. Manage</span>
-                <span className="sm:hidden">3</span>
-              </TabsTrigger>
-              <TabsTrigger value="activity" data-testid="tab-activity">
-                <History className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">4. Activity</span>
-                <span className="sm:hidden">4</span>
-              </TabsTrigger>
-            </TabsList>
-
             {/* Tab 1: Create Job Roles */}
             <TabsContent value="roles" className="mt-6">
               <div className="space-y-8">
