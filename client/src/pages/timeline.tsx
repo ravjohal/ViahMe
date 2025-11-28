@@ -258,6 +258,20 @@ export default function TimelinePage() {
     }
   }, [editingEvent]);
 
+  // Auto-open event editor from query parameter
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const eventId = params.get("eventId");
+    if (eventId && events.length > 0 && !editingEvent) {
+      const event = events.find(e => e.id === eventId);
+      if (event) {
+        handleEdit(event);
+        // Clean up the URL
+        window.history.replaceState({}, "", window.location.pathname);
+      }
+    }
+  }, [events]);
+
   const sortedEvents = [...events].sort((a, b) => a.order - b.order);
 
   if (weddingsLoading) {

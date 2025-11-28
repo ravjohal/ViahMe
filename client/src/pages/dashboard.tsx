@@ -390,8 +390,21 @@ export default function Dashboard() {
                 </Collapsible>
 
                 <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => setSelectedEvent(null)}>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setSelectedEvent(null)}
+                    data-testid="button-close-event-modal"
+                  >
                     Close
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      setLocation(`/timeline?eventId=${selectedEvent.id}`);
+                      setSelectedEvent(null);
+                    }}
+                    data-testid="button-edit-event-from-modal"
+                  >
+                    Edit Event
                   </Button>
                 </div>
               </div>
