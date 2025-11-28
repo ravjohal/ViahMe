@@ -117,8 +117,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "Authentication required" });
       }
       
-      const weddings = await storage.getWeddingsByUser(authReq.session.userId);
-      res.json(weddings);
+      const [ownedWeddings, collaboratorWeddings] = await Promise.all([
+        storage.getWeddingsByUser(authReq.session.userId),
+        storage.getWeddingsForCollaborator(authReq.session.userId),
+      ]);
+      
+      // Combine and deduplicate by ID
+      const weddingMap = new Map();
+      [...ownedWeddings, ...collaboratorWeddings].forEach((w) => {
+        weddingMap.set(w.id, w);
+      });
+      
+      res.json(Array.from(weddingMap.values()));
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch weddings" });
     }

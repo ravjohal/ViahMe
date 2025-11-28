@@ -129,6 +129,7 @@ export interface IStorage {
   // Weddings
   getWedding(id: string): Promise<Wedding | undefined>;
   getWeddingsByUser(userId: string): Promise<Wedding[]>;
+  getWeddingsForCollaborator(userId: string): Promise<Wedding[]>;
   createWedding(wedding: InsertWedding): Promise<Wedding>;
   updateWedding(id: string, wedding: Partial<InsertWedding>): Promise<Wedding | undefined>;
 
@@ -751,6 +752,14 @@ export class MemStorage implements IStorage {
 
   async getWeddingsByUser(userId: string): Promise<Wedding[]> {
     return Array.from(this.weddings.values()).filter((w) => w.userId === userId);
+  }
+
+  async getWeddingsForCollaborator(userId: string): Promise<Wedding[]> {
+    const collaborators = Array.from(this.collaborators.values()).filter(
+      (c) => c.userId === userId && c.status === "accepted"
+    );
+    const weddingIds = new Set(collaborators.map((c) => c.weddingId));
+    return Array.from(this.weddings.values()).filter((w) => weddingIds.has(w.id));
   }
 
   async createWedding(insertWedding: InsertWedding): Promise<Wedding> {
@@ -2737,6 +2746,26 @@ export class DBStorage implements IStorage {
 
   async getWeddingsByUser(userId: string): Promise<Wedding[]> {
     return await this.db.select().from(schema.weddings).where(eq(schema.weddings.userId, userId));
+  }
+
+  async getWeddingsForCollaborator(userId: string): Promise<Wedding[]> {
+    const collaborators = await this.db
+      .select({ weddingId: schema.weddingCollaborators.weddingId })
+      .from(schema.weddingCollaborators)
+      .where(
+        and(
+          eq(schema.weddingCollaborators.userId, userId),
+          eq(schema.weddingCollaborators.status, "accepted")
+        )
+      );
+    
+    if (collaborators.length === 0) return [];
+    
+    const weddingIds = collaborators.map((c) => c.weddingId);
+    return await this.db
+      .select()
+      .from(schema.weddings)
+      .where(inArray(schema.weddings.id, weddingIds));
   }
 
   async createWedding(insertWedding: InsertWedding): Promise<Wedding> {
