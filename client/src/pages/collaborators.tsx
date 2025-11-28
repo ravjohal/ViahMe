@@ -229,6 +229,28 @@ export default function Collaborators() {
     },
   });
 
+  const updateRoleMutation = useMutation({
+    mutationFn: async (data: { collaboratorId: string; roleId: string }) => {
+      const res = await apiRequest("PATCH", `/api/collaborators/${data.collaboratorId}`, { roleId: data.roleId });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", weddingId, "collaborators"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", weddingId, "collaborator-activity"] });
+      toast({
+        title: "Role Updated",
+        description: "Team member role has been updated successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const createCustomRoleMutation = useMutation({
     mutationFn: async (data: { name: string; description: string; permissions: Record<PermissionCategory, PermissionLevel> }) => {
       const res = await apiRequest("POST", `/api/weddings/${weddingId}/roles`, data);
@@ -743,78 +765,126 @@ export default function Collaborators() {
                     <div className="space-y-4">
                       {collaborators.map((collab) => (
                         <Card key={collab.id} className="p-4" data-testid={`card-collaborator-${collab.id}`}>
-                          <div className="flex items-center gap-4">
-                            <Avatar className="h-12 w-12">
-                              <AvatarFallback className="bg-gradient-to-br from-orange-100 to-pink-100 text-orange-700">
-                                {getInitials(collab.displayName, collab.email)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <h3 className="font-semibold truncate">
-                                  {collab.displayName || collab.email}
-                                </h3>
-                                {getStatusBadge(collab.status)}
-                              </div>
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <Mail className="w-3 h-3" />
-                                <span className="truncate">{collab.email}</span>
-                              </div>
-                              <div className="flex items-center gap-2 mt-1">
-                                <Badge variant="secondary" className="text-xs">
-                                  {collab.role.displayName}
-                                </Badge>
-                                <span className="text-xs text-muted-foreground">
+                          <div className="space-y-4">
+                            <div className="flex items-start gap-4">
+                              <Avatar className="h-12 w-12">
+                                <AvatarFallback className="bg-gradient-to-br from-orange-100 to-pink-100 text-orange-700">
+                                  {getInitials(collab.displayName, collab.email)}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h3 className="font-semibold truncate">
+                                    {collab.displayName || collab.email}
+                                  </h3>
+                                  {getStatusBadge(collab.status)}
+                                </div>
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <Mail className="w-3 h-3" />
+                                  <span className="truncate">{collab.email}</span>
+                                </div>
+                                <span className="text-xs text-muted-foreground block mt-1">
                                   Invited {new Date(collab.invitedAt).toLocaleDateString()}
                                 </span>
                               </div>
-                            </div>
-                            {canManageCollaborators && (
-                              <div className="flex items-center gap-2">
-                                {collab.status === "pending" && (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => resendInviteMutation.mutate(collab.id)}
-                                    disabled={resendInviteMutation.isPending}
-                                    data-testid={`button-resend-${collab.id}`}
-                                  >
-                                    <RefreshCw className="w-3 h-3 mr-1" />
-                                    Resend
-                                  </Button>
-                                )}
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
+                              {canManageCollaborators && (
+                                <div className="flex items-center gap-2">
+                                  {collab.status === "pending" && (
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      className="text-destructive hover:text-destructive"
-                                      data-testid={`button-remove-${collab.id}`}
+                                      onClick={() => resendInviteMutation.mutate(collab.id)}
+                                      disabled={resendInviteMutation.isPending}
+                                      data-testid={`button-resend-${collab.id}`}
                                     >
-                                      <Trash2 className="w-3 h-3" />
+                                      <RefreshCw className="w-3 h-3 mr-1" />
+                                      Resend
                                     </Button>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>Remove Team Member</AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                        Are you sure you want to remove {collab.displayName || collab.email} from your wedding team?
-                                        They will lose all access to your wedding planning.
-                                      </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                      <AlertDialogAction
-                                        onClick={() => removeCollaboratorMutation.mutate(collab.id)}
-                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  )}
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="text-destructive hover:text-destructive"
+                                        data-testid={`button-remove-${collab.id}`}
                                       >
-                                        Remove
-                                      </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
+                                        <Trash2 className="w-3 h-3" />
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Remove Team Member</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          Are you sure you want to remove {collab.displayName || collab.email} from your wedding team?
+                                          They will lose all access to your wedding planning.
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction
+                                          onClick={() => removeCollaboratorMutation.mutate(collab.id)}
+                                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                        >
+                                          Remove
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Role and Access Section */}
+                            <div className="border-t pt-3 space-y-3">
+                              <div className="flex items-center justify-between">
+                                <label className="text-sm font-medium">Role</label>
+                                {canManageCollaborators ? (
+                                  <Select 
+                                    value={collab.role.id}
+                                    onValueChange={(newRoleId) => updateRoleMutation.mutate({ collaboratorId: collab.id, roleId: newRoleId })}
+                                    disabled={updateRoleMutation.isPending}
+                                  >
+                                    <SelectTrigger className="w-40" data-testid={`select-role-${collab.id}`}>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {assignableRoles.map((role) => (
+                                        <SelectItem key={role.id} value={role.id}>
+                                          {role.displayName}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                ) : (
+                                  <Badge variant="secondary" className="text-xs">
+                                    {collab.role.displayName}
+                                  </Badge>
+                                )}
                               </div>
-                            )}
+
+                              {/* Access Display */}
+                              <div className="bg-muted/50 rounded-lg p-3">
+                                <p className="text-xs font-medium mb-2 text-muted-foreground">Access to:</p>
+                                <div className="space-y-1">
+                                  {collab.permissions && collab.permissions.length > 0 ? (
+                                    <div className="flex flex-wrap gap-2">
+                                      {collab.permissions.map((perm) => {
+                                        const category = PERMISSION_CATEGORIES[perm.category as PermissionCategory];
+                                        const levelColor = perm.level === "manage" ? "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-200" : perm.level === "edit" ? "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-200" : perm.level === "view" ? "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-200" : "hidden";
+                                        return perm.level !== "none" ? (
+                                          <Badge key={perm.id} variant="outline" className={`text-xs py-0.5 ${levelColor}`}>
+                                            {category?.label}
+                                          </Badge>
+                                        ) : null;
+                                      })}
+                                    </div>
+                                  ) : (
+                                    <p className="text-xs text-muted-foreground italic">No permissions configured for this role</p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         </Card>
                       ))}
