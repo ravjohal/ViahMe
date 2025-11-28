@@ -127,10 +127,17 @@ export default function TimelinePage() {
   });
 
   const onSubmit = (data: InsertEvent) => {
+    // Convert numeric fields from strings
+    const processedData = {
+      ...data,
+      venueCapacity: data.venueCapacity ? parseInt(data.venueCapacity as any, 10) : undefined,
+      costPerHead: data.costPerHead ? data.costPerHead.toString() : undefined,
+      guestCount: data.guestCount ? parseInt(data.guestCount as any, 10) : undefined,
+    };
     if (editingEvent) {
-      updateMutation.mutate({ id: editingEvent.id, data });
+      updateMutation.mutate({ id: editingEvent.id, data: processedData });
     } else {
-      createMutation.mutate(data);
+      createMutation.mutate(processedData);
     }
     // Note: Form reset and dialog close happen in onSuccess callbacks
   };
