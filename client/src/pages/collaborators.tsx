@@ -439,15 +439,12 @@ export default function Collaborators() {
                 Invite family members, wedding planners, and helpers to collaborate on your wedding
               </p>
             </div>
-            {canManageCollaborators && (
-              <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
-                <DialogTrigger asChild>
-                  <Button className="bg-gradient-to-r from-orange-600 to-pink-600 hover:from-orange-700 hover:to-pink-700" data-testid="button-invite-collaborator">
-                    <UserPlus className="w-4 h-4 mr-2" />
-                    Invite Collaborator
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
+          </div>
+
+          {/* Invite Dialog moved to Step 2 */}
+          {canManageCollaborators && (
+            <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
+              <DialogContent className="sm:max-w-md">
                   <DialogHeader>
                     <DialogTitle>Invite a Collaborator</DialogTitle>
                     <DialogDescription>
@@ -574,9 +571,8 @@ export default function Collaborators() {
                     </form>
                   )}
                 </DialogContent>
-              </Dialog>
-            )}
-          </div>
+            </Dialog>
+          )}
 
           {/* Getting Started Guide */}
           <Card className="p-6 bg-gradient-to-br from-orange-50 to-pink-50 dark:from-orange-950/30 dark:to-pink-950/30 border-orange-200 dark:border-orange-800">
@@ -948,16 +944,43 @@ export default function Collaborators() {
 
                 <Separator />
 
-                {/* Team Members Section */}
+                {/* Step 2: Invite Collaborator */}
+                {canManageCollaborators && (
+                  <div className="border rounded-lg p-6 bg-card">
+                    <div className="flex items-center justify-between mb-6">
+                      <div>
+                        <h2 className="text-2xl font-bold flex items-center gap-3">
+                          <div className="bg-orange-100 dark:bg-orange-900 p-2 rounded-lg">
+                            <span className="text-2xl">2️⃣</span>
+                          </div>
+                          Invite Collaborators
+                        </h2>
+                        <p className="text-base text-muted-foreground mt-2">
+                          Send invitations to family, friends, and vendors to join your team.
+                        </p>
+                      </div>
+                      <DialogTrigger asChild>
+                        <Button className="bg-gradient-to-r from-orange-600 to-pink-600 hover:from-orange-700 hover:to-pink-700" data-testid="button-invite-collaborator">
+                          <UserPlus className="w-4 h-4 mr-2" />
+                          Invite Collaborator
+                        </Button>
+                      </DialogTrigger>
+                    </div>
+                  </div>
+                )}
+
+                <Separator />
+
+                {/* Step 3: Manage Permissions */}
                 <div className="border rounded-lg p-6 bg-card">
                   <h2 className="text-2xl font-bold mb-2 flex items-center gap-3">
                     <div className="bg-orange-100 dark:bg-orange-900 p-2 rounded-lg">
                       <span className="text-2xl">3️⃣</span>
                     </div>
-                    Manage Your Team
+                    Manage Permissions
                   </h2>
                   <p className="text-base text-muted-foreground mb-6">
-                    Send invitations to family, friends, and vendors. Assign each person a job title. You can see who has accepted and manage their access.
+                    Edit job titles to control what each role can see and do. View accepted invitations and manage your team members.
                   </p>
                   {isLoadingCollaborators ? (
                     <Card className="p-8 text-center">
