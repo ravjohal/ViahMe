@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { TimelineView } from "@/components/timeline-view";
 import { BudgetDashboard } from "@/components/budget-dashboard";
@@ -7,12 +7,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, DollarSign, Users, Briefcase, FileText, Camera } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Calendar, DollarSign, Users, Briefcase, FileText, Camera, Clock, MapPin } from "lucide-react";
 import { useLocation } from "wouter";
 import type { Wedding, Event, BudgetCategory, Contract, Vendor } from "@shared/schema";
+import { format } from "date-fns";
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
   const { data: weddings, isLoading: weddingsLoading } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
@@ -208,7 +212,7 @@ export default function Dashboard() {
                 <Skeleton className="h-64 w-full" />
               </Card>
             ) : (
-              <TimelineView events={events} />
+              <TimelineView events={events} onEditEvent={setSelectedEvent} />
             )}
           </TabsContent>
 
@@ -249,6 +253,90 @@ export default function Dashboard() {
       </main>
 
       <WelcomeTour weddingTradition={wedding.tradition} />
+
+      <Dialog open={!!selectedEvent} onOpenChange={(open) => {
+        if (!open) setSelectedEvent(null);
+      }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          {selectedEvent && (
+            <>
+              <DialogHeader>
+                <DialogTitle>{selectedEvent.name}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-6">
+                {selectedEvent.description && (
+                  <div>
+                    <h3 className="font-semibold text-sm text-muted-foreground mb-2">Description</h3>
+                    <p className="text-foreground">{selectedEvent.description}</p>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {selectedEvent.date && (
+                    <div>
+                      <h3 className="font-semibold text-sm text-muted-foreground mb-2">Date</h3>
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-foreground">{format(new Date(selectedEvent.date), "MMMM dd, yyyy")}</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {selectedEvent.time && (
+                    <div>
+                      <h3 className="font-semibold text-sm text-muted-foreground mb-2">Time</h3>
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-foreground">{selectedEvent.time}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedEvent.location && (
+                    <div>
+                      <h3 className="font-semibold text-sm text-muted-foreground mb-2">Location</h3>
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-foreground">{selectedEvent.location}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedEvent.guestCount && (
+                    <div>
+                      <h3 className="font-semibold text-sm text-muted-foreground mb-2">Guests</h3>
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-foreground">{selectedEvent.guestCount} guests</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedEvent.costPerHead && (
+                    <div>
+                      <h3 className="font-semibold text-sm text-muted-foreground mb-2">Cost Per Head</h3>
+                      <span className="text-foreground font-semibold">${parseFloat(selectedEvent.costPerHead).toLocaleString()}</span>
+                    </div>
+                  )}
+
+                  {selectedEvent.venueCapacity && (
+                    <div>
+                      <h3 className="font-semibold text-sm text-muted-foreground mb-2">Venue Capacity</h3>
+                      <span className="text-foreground">{selectedEvent.venueCapacity} people</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setSelectedEvent(null)}>
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
