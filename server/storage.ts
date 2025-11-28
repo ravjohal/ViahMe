@@ -4713,7 +4713,7 @@ export class DBStorage implements IStorage {
       weddingId,
       name: "wedding_planner",
       displayName: "Wedding Planner",
-      description: "Professional planner with broad access",
+      description: "Access to: Guests, Invitations, Timeline, Tasks, Vendors, Photos, Documents, Concierge, Contracts, Website, Playlists",
       isSystem: true,
       isOwner: false,
     });
@@ -4743,7 +4743,7 @@ export class DBStorage implements IStorage {
       weddingId,
       name: "family_member",
       displayName: "Family Member",
-      description: "Family member with view and limited edit access",
+      description: "Access to: Guest List (view), Timeline (view), Tasks (view), Vendors (view), Photos (edit), Playlists (edit)",
       isSystem: true,
       isOwner: false,
     });
@@ -4763,7 +4763,7 @@ export class DBStorage implements IStorage {
       weddingId,
       name: "guest_coordinator",
       displayName: "Guest Coordinator",
-      description: "Helps manage guest lists and RSVPs",
+      description: "Access to: Guests (manage), Invitations (manage), Timeline (view), Concierge (edit)",
       isSystem: true,
       isOwner: false,
     });
