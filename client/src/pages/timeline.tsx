@@ -149,7 +149,6 @@ export default function TimelinePage() {
       order: event.order,
       costPerHead: event.costPerHead?.toString() || "",
       venueCapacity: event.venueCapacity || undefined,
-      budgetAllocation: event.budgetAllocation?.toString() || "",
     });
     setDialogOpen(true);
   };
@@ -359,7 +358,7 @@ export default function TimelinePage() {
                   )}
                 />
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="costPerHead"
@@ -394,27 +393,6 @@ export default function TimelinePage() {
                             type="number"
                             placeholder="e.g., 250"
                             data-testid="input-venue-capacity"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="budgetAllocation"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Event Budget (Optional)</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            value={field.value || ""}
-                            type="number"
-                            step="0.01"
-                            placeholder="e.g., 5000"
-                            data-testid="input-budget-allocation"
                           />
                         </FormControl>
                         <FormMessage />
