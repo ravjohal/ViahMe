@@ -43,7 +43,6 @@ import OrderConfirmation from "@/pages/order-confirmation";
 import RsvpPortal from "@/pages/rsvp-portal";
 import Shopping from "@/pages/shopping";
 import CulturalInfo from "@/pages/cultural-info";
-import GapConcierge from "@/pages/gap-concierge";
 import RitualControl from "@/pages/ritual-control";
 import GuestLiveFeed from "@/pages/guest-live-feed";
 import Collaborators from "@/pages/collaborators";
@@ -144,11 +143,6 @@ function Router() {
       <Route path="/shopping">
         <ProtectedRoute requiredPermission="shopping">
           <Shopping />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/gap-concierge">
-        <ProtectedRoute requiredPermission="concierge">
-          <GapConcierge />
         </ProtectedRoute>
       </Route>
       <Route path="/ritual-control">
