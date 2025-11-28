@@ -1083,6 +1083,87 @@ export default function Collaborators() {
                       )}
                     </>
                   )}
+
+                  {/* Show Accepted Invitations */}
+                  {isLoadingCollaborators ? null : (
+                    <>
+                      {collaborators.filter(c => c.status === "accepted").length > 0 && (
+                        <div className="space-y-4 mt-8 pt-8 border-t">
+                          <h3 className="font-semibold text-lg flex items-center gap-2">
+                            <CheckCircle className="w-5 h-5 text-green-600" />
+                            Active Team Members ({collaborators.filter(c => c.status === "accepted").length})
+                          </h3>
+                          {collaborators.filter(c => c.status === "accepted").map((collab) => (
+                            <Card key={collab.id} className="p-4" data-testid={`card-accepted-invite-${collab.id}`}>
+                              <div className="space-y-4">
+                                <div className="flex items-start gap-4">
+                                  <Avatar className="h-12 w-12">
+                                    <AvatarFallback className="bg-gradient-to-br from-green-100 to-emerald-100 text-green-700">
+                                      {getInitials(collab.displayName, collab.email)}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <h3 className="font-semibold truncate">
+                                        {collab.displayName || collab.email}
+                                      </h3>
+                                      <Badge variant="outline" className="bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800 text-xs">
+                                        <CheckCircle className="w-3 h-3 mr-1" />
+                                        Active
+                                      </Badge>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                      <Mail className="w-3 h-3" />
+                                      <span className="truncate">{collab.email}</span>
+                                    </div>
+                                    <span className="text-xs text-muted-foreground block mt-1">
+                                      Role: {collab.role?.displayName || "Not Assigned"}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground block">
+                                      Joined {new Date(collab.invitedAt).toLocaleDateString()}
+                                    </span>
+                                  </div>
+                                  {canManageCollaborators && (
+                                    <div className="flex items-center gap-2">
+                                      <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="text-destructive hover:text-destructive"
+                                            data-testid={`button-remove-accepted-${collab.id}`}
+                                          >
+                                            <Trash2 className="w-3 h-3" />
+                                          </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                          <AlertDialogHeader>
+                                            <AlertDialogTitle>Remove Team Member</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                              Are you sure you want to remove {collab.displayName || collab.email} from your wedding team? They will no longer have access.
+                                            </AlertDialogDescription>
+                                          </AlertDialogHeader>
+                                          <AlertDialogFooter>
+                                            <AlertDialogCancel>Keep Member</AlertDialogCancel>
+                                            <AlertDialogAction
+                                              onClick={() => removeCollaboratorMutation.mutate(collab.id)}
+                                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                            >
+                                              Remove
+                                            </AlertDialogAction>
+                                          </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                      </AlertDialog>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </Card>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
 
               </div>
