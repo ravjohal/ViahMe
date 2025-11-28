@@ -5903,7 +5903,19 @@ export class DBStorage implements IStorage {
     
     const eventAnalysis = allEvents.map(event => {
       const costPerHead = event.costPerHead ? parseFloat(event.costPerHead) : defaultCostPerHead;
-      const venueCapacity = event.venueCapacity || null;
+      
+      // Determine event capacity with priority:
+      // 1. Event guest number (if defined)
+      // 2. Venue capacity (if event guest number not defined)
+      // 3. Main guest list total (if neither is defined)
+      let eventCapacity: number | null = null;
+      if (event.guestCount !== null && event.guestCount !== undefined) {
+        eventCapacity = event.guestCount;
+      } else if (event.venueCapacity !== null && event.venueCapacity !== undefined) {
+        eventCapacity = event.venueCapacity;
+      } else if (confirmedSeats > 0) {
+        eventCapacity = confirmedSeats;
+      }
       
       // Find budget allocation for this event (match by event type/name to budget category)
       // Check multiple matching strategies for better accuracy
@@ -5941,8 +5953,8 @@ export class DBStorage implements IStorage {
       
       // Capacity status
       const capacityUsed = confirmedInvited;
-      const capacityRemaining = venueCapacity !== null ? venueCapacity - potentialTotal : null;
-      const isOverCapacity = venueCapacity !== null && potentialTotal > venueCapacity;
+      const capacityRemaining = eventCapacity !== null ? eventCapacity - potentialTotal : null;
+      const isOverCapacity = eventCapacity !== null && potentialTotal > eventCapacity;
       // Only flag as over budget if we have a positive budget allocation to compare against
       const isOverBudget = budgetAllocation !== null && budgetAllocation > 0 && potentialCost > budgetAllocation;
 
@@ -5952,7 +5964,7 @@ export class DBStorage implements IStorage {
         type: event.type,
         date: event.date,
         costPerHead,
-        venueCapacity,
+        venueCapacity: eventCapacity,
         budgetAllocation,
         confirmedInvited,
         potentialTotal,
