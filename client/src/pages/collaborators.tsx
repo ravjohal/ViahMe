@@ -594,33 +594,33 @@ export default function Collaborators() {
               <div className="space-y-8">
                 {/* Roles Section */}
                 <div>
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center justify-between mb-6">
                     <div>
-                      <h2 className="text-xl font-semibold flex items-center gap-2">
-                        <Shield className="w-5 h-5" />
-                        Team Roles & Permissions
+                      <h2 className="text-2xl font-bold flex items-center gap-3">
+                        <Shield className="w-6 h-6 text-orange-600" />
+                        Job Titles for Your Team
                       </h2>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Define what sections each role can access and modify
+                      <p className="text-base text-muted-foreground mt-2">
+                        Choose a job title for each person you invite. Each title controls what they can see and do.
                       </p>
                     </div>
                     {canManageCollaborators && (
                       <Dialog open={isCreateRoleOpen} onOpenChange={setIsCreateRoleOpen}>
                         <DialogTrigger asChild>
                           <Button
-                            className="bg-gradient-to-r from-orange-600 to-pink-600 hover:from-orange-700 hover:to-pink-700"
+                            className="bg-gradient-to-r from-orange-600 to-pink-600 hover:from-orange-700 hover:to-pink-700 text-base"
                             data-testid="button-create-custom-role"
                           >
-                            <Plus className="w-4 h-4 mr-2" />
-                            Create Custom Role
+                            <Plus className="w-5 h-5 mr-2" />
+                            Create a Custom Job Title
                           </Button>
                         </DialogTrigger>
                         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                           <form onSubmit={handleCreateRole}>
                             <DialogHeader>
-                              <DialogTitle>Create Custom Role</DialogTitle>
-                              <DialogDescription>
-                                Define a custom role with specific permissions for each module.
+                              <DialogTitle className="text-2xl">Create a New Job Title</DialogTitle>
+                              <DialogDescription className="text-base">
+                                Give it a name and choose what they can see and do in each section of the app.
                               </DialogDescription>
                             </DialogHeader>
                             <div className="space-y-6 py-4">
@@ -646,9 +646,9 @@ export default function Collaborators() {
                               </div>
                               <Separator />
                               <div className="space-y-4">
-                                <h4 className="font-semibold">Section Permissions</h4>
-                                <p className="text-sm text-muted-foreground">
-                                  Set access level for each section. "None" means no access, "View" allows read-only access, "Edit" allows full modification.
+                                <h4 className="font-bold text-lg">What can they see and do?</h4>
+                                <p className="text-base text-muted-foreground">
+                                  For each section, choose: <strong>Can't see</strong> (blocked), <strong>Can see</strong> (view only), or <strong>Can make changes</strong> (full control).
                                 </p>
                                 <div className="space-y-3">
                                   {Object.entries(PERMISSION_CATEGORIES).map(([key, config]) => {
@@ -674,7 +674,7 @@ export default function Collaborators() {
                                             data-testid={`button-permission-${category}-none`}
                                           >
                                             <Ban className="w-3 h-3 mr-1" />
-                                            None
+                                            Can't See
                                           </Button>
                                           <Button
                                             type="button"
@@ -685,7 +685,7 @@ export default function Collaborators() {
                                             data-testid={`button-permission-${category}-view`}
                                           >
                                             <Eye className="w-3 h-3 mr-1" />
-                                            View
+                                            Can See
                                           </Button>
                                           <Button
                                             type="button"
@@ -696,7 +696,7 @@ export default function Collaborators() {
                                             data-testid={`button-permission-${category}-edit`}
                                           >
                                             <Pencil className="w-3 h-3 mr-1" />
-                                            Edit
+                                            Can Change
                                           </Button>
                                         </div>
                                       </div>
@@ -816,16 +816,16 @@ export default function Collaborators() {
                       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                         <form onSubmit={handleEditRole}>
                           <DialogHeader>
-                            <DialogTitle>Edit Role: {editingRole?.displayName}</DialogTitle>
-                            <DialogDescription>
-                              Update section access permissions for this role.
+                            <DialogTitle className="text-2xl">Edit Job Title: {editingRole?.displayName}</DialogTitle>
+                            <DialogDescription className="text-base">
+                              Change what they can see and do in each section.
                             </DialogDescription>
                           </DialogHeader>
                           <div className="space-y-6 py-4">
                             <div className="space-y-4">
-                              <h4 className="font-semibold">Section Permissions</h4>
-                              <p className="text-sm text-muted-foreground">
-                                Set access level for each section. "None" means no access, "View" allows read-only access, "Edit" allows full modification.
+                              <h4 className="font-bold text-lg">What can they see and do?</h4>
+                              <p className="text-base text-muted-foreground">
+                                For each section, choose: <strong>Can't see</strong> (blocked), <strong>Can see</strong> (view only), or <strong>Can make changes</strong> (full control).
                               </p>
                               <div className="space-y-3">
                                 {Object.entries(PERMISSION_CATEGORIES).map(([key, config]) => {
@@ -846,12 +846,12 @@ export default function Collaborators() {
                                           type="button"
                                           size="sm"
                                           variant={currentLevel === "none" ? "default" : "outline"}
-                                          className={`w-16 ${currentLevel === "none" ? "bg-destructive/80 hover:bg-destructive" : ""}`}
+                                          className={`px-4 ${currentLevel === "none" ? "bg-red-600 hover:bg-red-700" : ""}`}
                                           onClick={() => updateEditPermission(category, "none")}
                                           data-testid={`edit-permission-${category}-none`}
                                         >
-                                          <Ban className="w-3 h-3 mr-1" />
-                                          None
+                                          <Ban className="w-4 h-4 mr-2" />
+                                          Can't See
                                         </Button>
                                         <Button
                                           type="button"
@@ -861,8 +861,8 @@ export default function Collaborators() {
                                           onClick={() => updateEditPermission(category, "view")}
                                           data-testid={`edit-permission-${category}-view`}
                                         >
-                                          <Eye className="w-3 h-3 mr-1" />
-                                          View
+                                          <Eye className="w-4 h-4 mr-2" />
+                                          Can See
                                         </Button>
                                         <Button
                                           type="button"
@@ -872,8 +872,8 @@ export default function Collaborators() {
                                           onClick={() => updateEditPermission(category, "edit")}
                                           data-testid={`edit-permission-${category}-edit`}
                                         >
-                                          <Pencil className="w-3 h-3 mr-1" />
-                                          Edit
+                                          <Pencil className="w-4 h-4 mr-2" />
+                                          Can Change
                                         </Button>
                                       </div>
                                     </div>
@@ -911,10 +911,13 @@ export default function Collaborators() {
 
                 {/* Team Members Section */}
                 <div>
-                  <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                    <Users className="w-5 h-5" />
-                    Team Members
+                  <h2 className="text-2xl font-bold mb-2 flex items-center gap-3">
+                    <Users className="w-6 h-6 text-orange-600" />
+                    Your Team
                   </h2>
+                  <p className="text-base text-muted-foreground mb-6">
+                    Here are the people you've invited to help plan the wedding. Click on a person to change their job title or remove them.
+                  </p>
                   {isLoadingCollaborators ? (
                     <Card className="p-8 text-center">
                       <p className="text-muted-foreground">Loading team members...</p>
