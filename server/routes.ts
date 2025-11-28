@@ -3485,8 +3485,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "You do not have access to this wedding" });
       }
       
-      const roles = await storage.getWeddingRolesByWedding(weddingId);
-      res.json(roles);
+      let roles = await storage.getWeddingRolesByWedding(weddingId);
+      
+      // Ensure system roles have descriptions
+      const roleDescriptions: Record<string, string> = {
+        owner: "Full access to all sections",
+        wedding_planner: "Access to: Guests, Invitations, Timeline, Tasks, Vendors, Photos, Documents, Concierge, Contracts, Website, Playlists",
+        family_member: "Access to: Guest List (view), Timeline (view), Tasks (view), Vendors (view), Photos (edit), Playlists (edit)",
+        guest_coordinator: "Access to: Guests (manage), Invitations (manage), Timeline (view), Concierge (edit)",
+      };
+      
+      roles = roles.map(role => {
+        if (role.isSystem && !role.description && roleDescriptions[role.name as keyof typeof roleDescriptions]) {
+          return {
+            ...role,
+            description: roleDescriptions[role.name as keyof typeof roleDescriptions],
+          };
+        }
+        return role;
+      });
+      
+      // Get permissions for each role
+      const rolesWithPermissions = await Promise.all(
+        roles.map(async (role) => {
+          const permissions = await storage.getRolePermissions(role.id);
+          return { ...role, permissions };
+        })
+      );
+      
+      res.json(rolesWithPermissions);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
