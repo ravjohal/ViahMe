@@ -251,6 +251,13 @@ export default function TimelinePage() {
     return events.find((e) => e.id === viewingEventId);
   };
 
+  // Auto-expand cost items when editing an event
+  useEffect(() => {
+    if (editingEvent) {
+      setCostItemsOpen(true);
+    }
+  }, [editingEvent]);
+
   const sortedEvents = [...events].sort((a, b) => a.order - b.order);
 
   if (weddingsLoading) {
