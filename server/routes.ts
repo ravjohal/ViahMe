@@ -406,6 +406,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get aggregated costs by category for a wedding (funneled up from all events)
+  app.get("/api/weddings/:weddingId/cost-summary", async (req, res) => {
+    try {
+      const weddingId = req.params.weddingId;
+      
+      // Get all events for this wedding
+      const events = await storage.getEventsByWedding(weddingId);
+      
+      // Get all cost items for all events
+      const allCostItems: Array<{ eventId: string; eventName: string; categoryId: string | null; name: string; costType: string; amount: string; guestCount: number | null }> = [];
+      
+      for (const event of events) {
+        const costItems = await storage.getEventCostItemsByEvent(event.id);
+        costItems.forEach(item => {
+          allCostItems.push({
+            eventId: event.id,
+            eventName: event.name,
+            categoryId: item.categoryId,
+            name: item.name,
+            costType: item.costType,
+            amount: item.amount,
+            guestCount: event.guestCount,
+          });
+        });
+      }
+      
+      // Aggregate by category
+      const categoryTotals: Record<string, { fixed: number; perHead: number; total: number; items: typeof allCostItems }> = {};
+      let grandTotalFixed = 0;
+      let grandTotalPerHead = 0;
+      
+      for (const item of allCostItems) {
+        const catId = item.categoryId || 'uncategorized';
+        if (!categoryTotals[catId]) {
+          categoryTotals[catId] = { fixed: 0, perHead: 0, total: 0, items: [] };
+        }
+        
+        const amount = parseFloat(item.amount) || 0;
+        if (item.costType === 'fixed') {
+          categoryTotals[catId].fixed += amount;
+          grandTotalFixed += amount;
+        } else {
+          // Per head costs - multiply by guest count
+          const guestCount = item.guestCount || 0;
+          const totalCost = amount * guestCount;
+          categoryTotals[catId].perHead += totalCost;
+          grandTotalPerHead += totalCost;
+        }
+        categoryTotals[catId].items.push(item);
+      }
+      
+      // Calculate totals
+      Object.keys(categoryTotals).forEach(catId => {
+        categoryTotals[catId].total = categoryTotals[catId].fixed + categoryTotals[catId].perHead;
+      });
+      
+      res.json({
+        categories: categoryTotals,
+        grandTotal: grandTotalFixed + grandTotalPerHead,
+        grandTotalFixed,
+        grandTotalPerHead,
+        eventCount: events.length,
+        itemCount: allCostItems.length,
+      });
+    } catch (error) {
+      console.error("Error fetching cost summary:", error);
+      res.status(500).json({ error: "Failed to fetch cost summary" });
+    }
+  });
+
   // ============================================================================
   // VENDORS
   // ============================================================================
