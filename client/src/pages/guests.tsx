@@ -19,7 +19,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertGuestSchema, insertHouseholdSchema, type Wedding, type Guest, type Event, type Household, type GuestSuggestion, type CutListItem } from "@shared/schema";
+import { insertGuestSchema, insertHouseholdSchema, type Wedding, type Guest, type Event, type Household, type GuestSuggestion, type CutListItem, type EventCostItem } from "@shared/schema";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
@@ -161,6 +163,81 @@ function exportToCSV(households: Household[], guests: Guest[]) {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+}
+
+function EventCostBreakdown({ eventId, guestCount }: { eventId: string; guestCount: number }) {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  const { data: costItems = [], isLoading } = useQuery<EventCostItem[]>({
+    queryKey: ["/api/events", eventId, "cost-items"],
+    enabled: isOpen,
+  });
+
+  if (costItems.length === 0 && !isLoading && !isOpen) {
+    return null;
+  }
+
+  const calculateTotalCost = () => {
+    return costItems.reduce((total, item) => {
+      const amount = parseFloat(item.amount);
+      if (item.costType === "per_head") {
+        return total + (amount * guestCount);
+      }
+      return total + amount;
+    }, 0);
+  };
+
+  return (
+    <Collapsible open={isOpen} onOpenChange={setIsOpen} className="mt-3 pt-3 border-t">
+      <CollapsibleTrigger className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground w-full" data-testid={`button-expand-costs-${eventId}`}>
+        <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+        <span>{isOpen ? "Hide" : "View"} Cost Breakdown</span>
+        {!isOpen && costItems.length > 0 && (
+          <Badge variant="secondary" className="ml-auto">{costItems.length} items</Badge>
+        )}
+      </CollapsibleTrigger>
+      <CollapsibleContent className="pt-3 space-y-2">
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground">Loading costs...</p>
+        ) : costItems.length === 0 ? (
+          <p className="text-sm text-muted-foreground italic">
+            No detailed costs added yet. Edit this event to add cost breakdown.
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {costItems.map((item) => (
+              <div key={item.id} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg text-sm" data-testid={`cost-item-${item.id}`}>
+                <div className="flex items-center gap-2">
+                  <span>{item.name}</span>
+                  <Badge variant="outline" className="text-xs">
+                    {item.costType === "per_head" ? "Per Guest" : "Fixed"}
+                  </Badge>
+                </div>
+                <div className="text-right">
+                  <span className="font-medium">
+                    ${item.costType === "per_head" 
+                      ? (parseFloat(item.amount) * guestCount).toLocaleString()
+                      : parseFloat(item.amount).toLocaleString()
+                    }
+                  </span>
+                  {item.costType === "per_head" && (
+                    <span className="text-xs text-muted-foreground ml-1">
+                      (${parseFloat(item.amount).toLocaleString()} x {guestCount})
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+            <Separator className="my-2" />
+            <div className="flex items-center justify-between font-semibold text-sm">
+              <span>Total from breakdown:</span>
+              <span className="text-primary">${calculateTotalCost().toLocaleString()}</span>
+            </div>
+          </div>
+        )}
+      </CollapsibleContent>
+    </Collapsible>
+  );
 }
 
 export default function Guests() {
@@ -1857,6 +1934,8 @@ export default function Guests() {
                                       </p>
                                     )}
                                   </div>
+
+                                  <EventCostBreakdown eventId={event.id} guestCount={event.potentialTotal} />
                                 </div>
                               </CardContent>
                             </Card>

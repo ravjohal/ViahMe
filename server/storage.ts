@@ -5,6 +5,8 @@ import {
   type InsertWedding,
   type Event,
   type InsertEvent,
+  type EventCostItem,
+  type InsertEventCostItem,
   type Vendor,
   type InsertVendor,
   type Booking,
@@ -139,6 +141,13 @@ export interface IStorage {
   createEvent(event: InsertEvent): Promise<Event>;
   updateEvent(id: string, event: Partial<InsertEvent>): Promise<Event | undefined>;
   deleteEvent(id: string): Promise<boolean>;
+
+  // Event Cost Items
+  getEventCostItem(id: string): Promise<EventCostItem | undefined>;
+  getEventCostItemsByEvent(eventId: string): Promise<EventCostItem[]>;
+  createEventCostItem(costItem: InsertEventCostItem): Promise<EventCostItem>;
+  updateEventCostItem(id: string, costItem: Partial<InsertEventCostItem>): Promise<EventCostItem | undefined>;
+  deleteEventCostItem(id: string): Promise<boolean>;
 
   // Vendors
   getVendor(id: string): Promise<Vendor | undefined>;
@@ -575,6 +584,7 @@ export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private weddings: Map<string, Wedding>;
   private events: Map<string, Event>;
+  private eventCostItems: Map<string, EventCostItem>;
   private vendors: Map<string, Vendor>;
   private bookings: Map<string, Booking>;
   private budgetCategories: Map<string, BudgetCategory>;
@@ -601,6 +611,7 @@ export class MemStorage implements IStorage {
     this.users = new Map();
     this.weddings = new Map();
     this.events = new Map();
+    this.eventCostItems = new Map();
     this.vendors = new Map();
     this.bookings = new Map();
     this.budgetCategories = new Map();
@@ -812,6 +823,34 @@ export class MemStorage implements IStorage {
 
   async deleteEvent(id: string): Promise<boolean> {
     return this.events.delete(id);
+  }
+
+  // Event Cost Items
+  async getEventCostItem(id: string): Promise<EventCostItem | undefined> {
+    return this.eventCostItems.get(id);
+  }
+
+  async getEventCostItemsByEvent(eventId: string): Promise<EventCostItem[]> {
+    return Array.from(this.eventCostItems.values()).filter((item) => item.eventId === eventId);
+  }
+
+  async createEventCostItem(insertCostItem: InsertEventCostItem): Promise<EventCostItem> {
+    const id = randomUUID();
+    const costItem: EventCostItem = { ...insertCostItem, id } as EventCostItem;
+    this.eventCostItems.set(id, costItem);
+    return costItem;
+  }
+
+  async updateEventCostItem(id: string, update: Partial<InsertEventCostItem>): Promise<EventCostItem | undefined> {
+    const costItem = this.eventCostItems.get(id);
+    if (!costItem) return undefined;
+    const updated = { ...costItem, ...update } as EventCostItem;
+    this.eventCostItems.set(id, updated);
+    return updated;
+  }
+
+  async deleteEventCostItem(id: string): Promise<boolean> {
+    return this.eventCostItems.delete(id);
   }
 
   // Vendors
@@ -2800,6 +2839,31 @@ export class DBStorage implements IStorage {
 
   async deleteEvent(id: string): Promise<boolean> {
     await this.db.delete(schema.events).where(eq(schema.events.id, id));
+    return true;
+  }
+
+  // Event Cost Items
+  async getEventCostItem(id: string): Promise<EventCostItem | undefined> {
+    const result = await this.db.select().from(schema.eventCostItems).where(eq(schema.eventCostItems.id, id));
+    return result[0];
+  }
+
+  async getEventCostItemsByEvent(eventId: string): Promise<EventCostItem[]> {
+    return await this.db.select().from(schema.eventCostItems).where(eq(schema.eventCostItems.eventId, eventId));
+  }
+
+  async createEventCostItem(insertCostItem: InsertEventCostItem): Promise<EventCostItem> {
+    const result = await this.db.insert(schema.eventCostItems).values(insertCostItem).returning();
+    return result[0];
+  }
+
+  async updateEventCostItem(id: string, update: Partial<InsertEventCostItem>): Promise<EventCostItem | undefined> {
+    const result = await this.db.update(schema.eventCostItems).set(update).where(eq(schema.eventCostItems.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteEventCostItem(id: string): Promise<boolean> {
+    await this.db.delete(schema.eventCostItems).where(eq(schema.eventCostItems.id, id));
     return true;
   }
 

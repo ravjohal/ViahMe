@@ -8,6 +8,7 @@ import { requireAuth, requireRole, type AuthRequest } from "./auth-middleware";
 import {
   insertWeddingSchema,
   insertEventSchema,
+  insertEventCostItemSchema,
   insertVendorSchema,
   insertBookingSchema,
   insertBudgetCategorySchema,
@@ -343,6 +344,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete event" });
+    }
+  });
+
+  // ============================================================================
+  // EVENT COST ITEMS - Granular cost breakdown per event
+  // ============================================================================
+
+  app.get("/api/events/:eventId/cost-items", async (req, res) => {
+    try {
+      const costItems = await storage.getEventCostItemsByEvent(req.params.eventId);
+      res.json(costItems);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch event cost items" });
+    }
+  });
+
+  app.post("/api/events/:eventId/cost-items", async (req, res) => {
+    try {
+      // Verify event exists
+      const event = await storage.getEvent(req.params.eventId);
+      if (!event) {
+        return res.status(404).json({ error: "Event not found" });
+      }
+      
+      const validatedData = insertEventCostItemSchema.parse({
+        ...req.body,
+        eventId: req.params.eventId,
+      });
+      const costItem = await storage.createEventCostItem(validatedData);
+      res.json(costItem);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      res.status(500).json({ error: "Failed to create event cost item" });
+    }
+  });
+
+  app.patch("/api/event-cost-items/:id", async (req, res) => {
+    try {
+      const costItem = await storage.updateEventCostItem(req.params.id, req.body);
+      if (!costItem) {
+        return res.status(404).json({ error: "Event cost item not found" });
+      }
+      res.json(costItem);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update event cost item" });
+    }
+  });
+
+  app.delete("/api/event-cost-items/:id", async (req, res) => {
+    try {
+      const success = await storage.deleteEventCostItem(req.params.id);
+      if (!success) {
+        return res.status(404).json({ error: "Event cost item not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete event cost item" });
     }
   });
 

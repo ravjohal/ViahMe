@@ -133,6 +133,28 @@ export type InsertEvent = z.infer<typeof insertEventSchema>;
 export type Event = typeof events.$inferSelect;
 
 // ============================================================================
+// EVENT COST ITEMS - Granular cost breakdown per event
+// ============================================================================
+
+export const eventCostItems = pgTable("event_cost_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  eventId: varchar("event_id").notNull(),
+  name: text("name").notNull(), // e.g., "Catering", "Decorations", "DJ", "Venue Rental"
+  costType: text("cost_type").notNull(), // 'per_head' | 'fixed'
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(), // Cost amount
+});
+
+export const insertEventCostItemSchema = createInsertSchema(eventCostItems).omit({
+  id: true,
+}).extend({
+  costType: z.enum(['per_head', 'fixed']),
+  amount: z.string(),
+});
+
+export type InsertEventCostItem = z.infer<typeof insertEventCostItemSchema>;
+export type EventCostItem = typeof eventCostItems.$inferSelect;
+
+// ============================================================================
 // VENDORS - Culturally-specific service providers
 // ============================================================================
 
