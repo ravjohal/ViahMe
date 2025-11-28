@@ -952,9 +952,9 @@ export default function Collaborators() {
                 <div className="border rounded-lg p-6 bg-card">
                   <h2 className="text-2xl font-bold mb-2 flex items-center gap-3">
                     <div className="bg-orange-100 dark:bg-orange-900 p-2 rounded-lg">
-                      <span className="text-2xl">2️⃣</span>
+                      <span className="text-2xl">3️⃣</span>
                     </div>
-                    Invite & Manage Your Team
+                    Manage Your Team
                   </h2>
                   <p className="text-base text-muted-foreground mb-6">
                     Send invitations to family, friends, and vendors. Assign each person a job title. You can see who has accepted and manage their access.
