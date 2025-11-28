@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { TimelineView } from "@/components/timeline-view";
 import { BudgetDashboard } from "@/components/budget-dashboard";
 import { WelcomeTour } from "@/components/welcome-tour";
@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, DollarSign, Users, Briefcase, FileText, Camera } from "lucide-react";
 import { useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Wedding, Event, BudgetCategory, Contract, Vendor, EventCostItem } from "@shared/schema";
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -25,6 +27,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
   const { data: weddings, isLoading: weddingsLoading } = useQuery<Wedding[]>({
@@ -60,6 +63,34 @@ export default function Dashboard() {
     queryKey: ["/api/events", selectedEvent?.id, "cost-items"],
     enabled: !!selectedEvent?.id,
   });
+
+  // Delete event mutation
+  const deleteEventMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiRequest("DELETE", `/api/events/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/events", wedding?.id] });
+      setSelectedEvent(null);
+      toast({
+        title: "Event deleted",
+        description: "The event has been removed from your wedding.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete event.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDeleteEvent = (id: string) => {
+    if (confirm("Are you sure you want to delete this event?")) {
+      deleteEventMutation.mutate(id);
+    }
+  };
 
   // Redirect to onboarding if no wedding exists
   useEffect(() => {
@@ -282,6 +313,7 @@ export default function Dashboard() {
           setLocation(`/timeline?eventId=${selectedEvent?.id}`);
           setSelectedEvent(null);
         }}
+        onDelete={handleDeleteEvent}
       />
     </div>
   );
