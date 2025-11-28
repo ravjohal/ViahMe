@@ -488,14 +488,10 @@ export default function Collaborators() {
           </div>
 
           <Tabs defaultValue="collaborators" className="w-full">
-            <TabsList className="grid w-full max-w-md grid-cols-3">
+            <TabsList className="grid w-full max-w-md grid-cols-2">
               <TabsTrigger value="collaborators" data-testid="tab-collaborators">
                 <Users className="w-4 h-4 mr-2" />
                 Team
-              </TabsTrigger>
-              <TabsTrigger value="roles" data-testid="tab-roles">
-                <Shield className="w-4 h-4 mr-2" />
-                Roles
               </TabsTrigger>
               <TabsTrigger value="activity" data-testid="tab-activity">
                 <History className="w-4 h-4 mr-2" />
@@ -504,138 +500,20 @@ export default function Collaborators() {
             </TabsList>
 
             <TabsContent value="collaborators" className="mt-6">
-              {isLoadingCollaborators ? (
-                <Card className="p-8 text-center">
-                  <p className="text-muted-foreground">Loading collaborators...</p>
-                </Card>
-              ) : collaborators.length === 0 ? (
-                <Card className="p-8 text-center">
-                  <Users className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No Collaborators Yet</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Invite family members, planners, or helpers to join your wedding planning team.
-                  </p>
-                  {canManageCollaborators && (
-                    <Button
-                      onClick={() => setIsInviteOpen(true)}
-                      className="bg-gradient-to-r from-orange-600 to-pink-600 hover:from-orange-700 hover:to-pink-700"
-                      data-testid="button-invite-first"
-                    >
-                      <UserPlus className="w-4 h-4 mr-2" />
-                      Invite Your First Collaborator
-                    </Button>
-                  )}
-                </Card>
-              ) : (
-                <div className="space-y-4">
-                  {collaborators.map((collab) => (
-                    <Card key={collab.id} className="p-4" data-testid={`card-collaborator-${collab.id}`}>
-                      <div className="flex items-center gap-4">
-                        <Avatar className="h-12 w-12">
-                          <AvatarFallback className="bg-gradient-to-br from-orange-100 to-pink-100 text-orange-700">
-                            {getInitials(collab.displayName, collab.email)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-semibold truncate">
-                              {collab.displayName || collab.email}
-                            </h3>
-                            {getStatusBadge(collab.status)}
-                          </div>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Mail className="w-3 h-3" />
-                            <span className="truncate">{collab.email}</span>
-                          </div>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Badge variant="secondary" className="text-xs">
-                              {collab.role.displayName}
-                            </Badge>
-                            <span className="text-xs text-muted-foreground">
-                              Invited {new Date(collab.invitedAt).toLocaleDateString()}
-                            </span>
-                          </div>
-                        </div>
-                        {canManageCollaborators && (
-                          <div className="flex items-center gap-2">
-                            {collab.status === "pending" && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => resendInviteMutation.mutate(collab.id)}
-                                disabled={resendInviteMutation.isPending}
-                                data-testid={`button-resend-${collab.id}`}
-                              >
-                                <RefreshCw className="w-3 h-3 mr-1" />
-                                Resend
-                              </Button>
-                            )}
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="text-destructive hover:text-destructive"
-                                  data-testid={`button-remove-${collab.id}`}
-                                >
-                                  <Trash2 className="w-3 h-3" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Remove Collaborator</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Are you sure you want to remove {collab.displayName || collab.email} from your wedding team?
-                                    They will lose all access to your wedding planning.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => removeCollaboratorMutation.mutate(collab.id)}
-                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                  >
-                                    Remove
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        )}
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="roles" className="mt-6">
-              {isLoadingRoles ? (
-                <Card className="p-8 text-center">
-                  <p className="text-muted-foreground">Loading roles...</p>
-                </Card>
-              ) : roles.length === 0 ? (
-                <Card className="p-8 text-center">
-                  <Shield className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No Roles Configured</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Set up roles to define what collaborators can access and modify.
-                  </p>
-                  {canManageCollaborators && (
-                    <Button
-                      onClick={() => initializeRolesMutation.mutate()}
-                      disabled={initializeRolesMutation.isPending}
-                      className="bg-gradient-to-r from-orange-600 to-pink-600 hover:from-orange-700 hover:to-pink-700"
-                      data-testid="button-initialize-roles"
-                    >
-                      {initializeRolesMutation.isPending ? "Setting Up..." : "Set Up Default Roles"}
-                    </Button>
-                  )}
-                </Card>
-              ) : (
-                <div className="space-y-4">
-                  {canManageCollaborators && (
-                    <div className="flex justify-end">
+              <div className="space-y-8">
+                {/* Roles Section */}
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h2 className="text-xl font-semibold flex items-center gap-2">
+                        <Shield className="w-5 h-5" />
+                        Team Roles & Permissions
+                      </h2>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Define what sections each role can access and modify
+                      </p>
+                    </div>
+                    {canManageCollaborators && (
                       <Dialog open={isCreateRoleOpen} onOpenChange={setIsCreateRoleOpen}>
                         <DialogTrigger asChild>
                           <Button
@@ -677,9 +555,9 @@ export default function Collaborators() {
                               </div>
                               <Separator />
                               <div className="space-y-4">
-                                <h4 className="font-semibold">Module Permissions</h4>
+                                <h4 className="font-semibold">Section Permissions</h4>
                                 <p className="text-sm text-muted-foreground">
-                                  Set access level for each module. "None" means no access, "View" allows read-only access, "Edit" allows full modification.
+                                  Set access level for each section. "None" means no access, "View" allows read-only access, "Edit" allows full modification.
                                 </p>
                                 <div className="space-y-3">
                                   {Object.entries(PERMISSION_CATEGORIES).map(([key, config]) => {
@@ -757,37 +635,195 @@ export default function Collaborators() {
                           </form>
                         </DialogContent>
                       </Dialog>
+                    )}
+                  </div>
+
+                  {isLoadingRoles ? (
+                    <Card className="p-8 text-center">
+                      <p className="text-muted-foreground">Loading roles...</p>
+                    </Card>
+                  ) : roles.length === 0 ? (
+                    <Card className="p-8 text-center">
+                      <Shield className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+                      <h3 className="text-lg font-semibold mb-2">No Roles Configured</h3>
+                      <p className="text-muted-foreground mb-4">
+                        Set up roles to define what team members can access and modify.
+                      </p>
+                      {canManageCollaborators && (
+                        <Button
+                          onClick={() => initializeRolesMutation.mutate()}
+                          disabled={initializeRolesMutation.isPending}
+                          className="bg-gradient-to-r from-orange-600 to-pink-600 hover:from-orange-700 hover:to-pink-700"
+                          data-testid="button-initialize-roles"
+                        >
+                          {initializeRolesMutation.isPending ? "Setting Up..." : "Set Up Default Roles"}
+                        </Button>
+                      )}
+                    </Card>
+                  ) : (
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                      {roles.map((role) => (
+                        <Card key={role.id} className={`p-4 ${role.isOwner ? 'border-primary' : ''}`} data-testid={`card-role-${role.id}`}>
+                          <div className="space-y-3">
+                            <div>
+                              <h3 className="font-semibold flex items-center gap-2 text-sm">
+                                {role.displayName}
+                                {role.isOwner && <Badge className="bg-primary text-xs">Owner</Badge>}
+                                {role.isSystem && !role.isOwner && <Badge variant="secondary" className="text-xs">System</Badge>}
+                                {!role.isSystem && !role.isOwner && <Badge variant="outline" className="text-xs">Custom</Badge>}
+                              </h3>
+                              {role.description && (
+                                <p className="text-xs text-muted-foreground mt-1">{role.description}</p>
+                              )}
+                            </div>
+                            {role.isOwner ? (
+                              <div className="text-xs bg-primary/10 text-primary p-2 rounded">
+                                <p className="font-medium">Full access to all sections</p>
+                              </div>
+                            ) : (
+                              <div className="space-y-2">
+                                <p className="text-xs font-medium text-muted-foreground">Access:</p>
+                                <div className="space-y-1">
+                                  {role.permissions && role.permissions.length > 0 ? (
+                                    role.permissions.map((perm) => {
+                                      const category = PERMISSION_CATEGORIES[perm.category as PermissionCategory];
+                                      const levelColor = perm.level === "edit" ? "text-green-600" : perm.level === "view" ? "text-blue-600" : "text-muted-foreground";
+                                      const levelLabel = perm.level === "edit" ? "Edit" : perm.level === "view" ? "View" : "None";
+                                      return perm.level !== "none" ? (
+                                        <div key={perm.id} className="text-xs">
+                                          <span className="text-muted-foreground">{category?.label}:</span>
+                                          <span className={`font-medium ml-1 ${levelColor}`}>{levelLabel}</span>
+                                        </div>
+                                      ) : null;
+                                    })
+                                  ) : (
+                                    <p className="text-xs text-muted-foreground italic">No permissions configured</p>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </Card>
+                      ))}
                     </div>
                   )}
-                  <div className="grid gap-4 md:grid-cols-2">
-                    {roles.map((role) => (
-                      <Card key={role.id} className={`p-4 ${role.isOwner ? 'border-primary' : ''}`} data-testid={`card-role-${role.id}`}>
-                        <div className="flex items-start justify-between mb-3">
-                          <div>
-                            <h3 className="font-semibold flex items-center gap-2">
-                              {role.displayName}
-                              {role.isOwner && <Badge className="bg-primary">Owner</Badge>}
-                              {role.isSystem && !role.isOwner && <Badge variant="secondary">System</Badge>}
-                              {!role.isSystem && !role.isOwner && <Badge variant="outline">Custom</Badge>}
-                            </h3>
-                            <p className="text-sm text-muted-foreground mt-1">{role.description}</p>
-                          </div>
-                        </div>
-                        {role.isOwner ? (
-                          <div className="text-xs text-muted-foreground">
-                            <p className="font-medium">Full access to all features</p>
-                          </div>
-                        ) : (
-                          <div className="text-xs text-muted-foreground">
-                            <p className="font-medium mb-1">Permissions configured</p>
-                          </div>
-                        )}
-                      </Card>
-                    ))}
-                  </div>
                 </div>
-              )}
+
+                <Separator />
+
+                {/* Team Members Section */}
+                <div>
+                  <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                    <Users className="w-5 h-5" />
+                    Team Members
+                  </h2>
+                  {isLoadingCollaborators ? (
+                    <Card className="p-8 text-center">
+                      <p className="text-muted-foreground">Loading team members...</p>
+                    </Card>
+                  ) : collaborators.length === 0 ? (
+                    <Card className="p-8 text-center">
+                      <Users className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+                      <h3 className="text-lg font-semibold mb-2">No Team Members Yet</h3>
+                      <p className="text-muted-foreground mb-4">
+                        Invite family members, planners, or helpers to join your wedding planning team.
+                      </p>
+                      {canManageCollaborators && (
+                        <Button
+                          onClick={() => setIsInviteOpen(true)}
+                          className="bg-gradient-to-r from-orange-600 to-pink-600 hover:from-orange-700 hover:to-pink-700"
+                          data-testid="button-invite-first"
+                        >
+                          <UserPlus className="w-4 h-4 mr-2" />
+                          Invite Your First Team Member
+                        </Button>
+                      )}
+                    </Card>
+                  ) : (
+                    <div className="space-y-4">
+                      {collaborators.map((collab) => (
+                        <Card key={collab.id} className="p-4" data-testid={`card-collaborator-${collab.id}`}>
+                          <div className="flex items-center gap-4">
+                            <Avatar className="h-12 w-12">
+                              <AvatarFallback className="bg-gradient-to-br from-orange-100 to-pink-100 text-orange-700">
+                                {getInitials(collab.displayName, collab.email)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <h3 className="font-semibold truncate">
+                                  {collab.displayName || collab.email}
+                                </h3>
+                                {getStatusBadge(collab.status)}
+                              </div>
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <Mail className="w-3 h-3" />
+                                <span className="truncate">{collab.email}</span>
+                              </div>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Badge variant="secondary" className="text-xs">
+                                  {collab.role.displayName}
+                                </Badge>
+                                <span className="text-xs text-muted-foreground">
+                                  Invited {new Date(collab.invitedAt).toLocaleDateString()}
+                                </span>
+                              </div>
+                            </div>
+                            {canManageCollaborators && (
+                              <div className="flex items-center gap-2">
+                                {collab.status === "pending" && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => resendInviteMutation.mutate(collab.id)}
+                                    disabled={resendInviteMutation.isPending}
+                                    data-testid={`button-resend-${collab.id}`}
+                                  >
+                                    <RefreshCw className="w-3 h-3 mr-1" />
+                                    Resend
+                                  </Button>
+                                )}
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="text-destructive hover:text-destructive"
+                                      data-testid={`button-remove-${collab.id}`}
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Remove Team Member</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to remove {collab.displayName || collab.email} from your wedding team?
+                                        They will lose all access to your wedding planning.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => removeCollaboratorMutation.mutate(collab.id)}
+                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                      >
+                                        Remove
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </div>
+                            )}
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
             </TabsContent>
+
 
             <TabsContent value="activity" className="mt-6">
               <Card className="p-4">
