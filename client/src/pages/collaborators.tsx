@@ -444,6 +444,7 @@ export default function Collaborators() {
           {/* Invite Dialog moved to Step 2 */}
           {canManageCollaborators && (
             <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
+              <DialogTrigger asChild style={{ display: 'none' }} />
               <DialogContent className="sm:max-w-md">
                   <DialogHeader>
                     <DialogTitle>Invite a Collaborator</DialogTitle>
@@ -945,29 +946,27 @@ export default function Collaborators() {
                 <Separator />
 
                 {/* Step 2: Invite Collaborator */}
-                {canManageCollaborators && (
-                  <div className="border rounded-lg p-6 bg-card">
-                    <div className="flex items-center justify-between mb-6">
-                      <div>
-                        <h2 className="text-2xl font-bold flex items-center gap-3">
-                          <div className="bg-orange-100 dark:bg-orange-900 p-2 rounded-lg">
-                            <span className="text-2xl">2️⃣</span>
-                          </div>
-                          Invite Collaborators
-                        </h2>
-                        <p className="text-base text-muted-foreground mt-2">
-                          Send invitations to family, friends, and vendors to join your team.
-                        </p>
-                      </div>
-                      <DialogTrigger asChild>
-                        <Button className="bg-gradient-to-r from-orange-600 to-pink-600 hover:from-orange-700 hover:to-pink-700" data-testid="button-invite-collaborator">
-                          <UserPlus className="w-4 h-4 mr-2" />
-                          Invite Collaborator
-                        </Button>
-                      </DialogTrigger>
+                <div className="border rounded-lg p-6 bg-card">
+                  <div className="flex items-center justify-between mb-6">
+                    <div>
+                      <h2 className="text-2xl font-bold flex items-center gap-3">
+                        <div className="bg-orange-100 dark:bg-orange-900 p-2 rounded-lg">
+                          <span className="text-2xl">2️⃣</span>
+                        </div>
+                        Invite Collaborators
+                      </h2>
+                      <p className="text-base text-muted-foreground mt-2">
+                        Send invitations to family, friends, and vendors to join your team.
+                      </p>
                     </div>
+                    {canManageCollaborators && (
+                      <Button onClick={() => setIsInviteOpen(true)} className="bg-gradient-to-r from-orange-600 to-pink-600 hover:from-orange-700 hover:to-pink-700" data-testid="button-invite-collaborator">
+                        <UserPlus className="w-4 h-4 mr-2" />
+                        Invite Collaborator
+                      </Button>
+                    )}
                   </div>
-                )}
+                </div>
 
                 <Separator />
 
