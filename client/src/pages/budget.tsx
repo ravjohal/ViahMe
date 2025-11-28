@@ -709,15 +709,11 @@ export default function Budget() {
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
-                      {categories.length === 0 ? (
-                        <SelectItem value="" disabled>No categories yet</SelectItem>
-                      ) : (
-                        categories.map((cat) => (
-                          <SelectItem key={cat.id} value={cat.category}>
-                            {cat.category}
-                          </SelectItem>
-                        ))
-                      )}
+                      {categories.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.category}>
+                          {cat.category}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   {!editingCategory && (

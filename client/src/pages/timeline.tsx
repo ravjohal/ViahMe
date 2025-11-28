@@ -618,7 +618,6 @@ export default function TimelinePage() {
                                   <SelectValue placeholder="Link to Budget Category" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="">No Category</SelectItem>
                                   {budgetCategories.map((cat) => (
                                     <SelectItem key={cat.id} value={cat.id}>
                                       {CATEGORY_LABELS[cat.category] || cat.category}

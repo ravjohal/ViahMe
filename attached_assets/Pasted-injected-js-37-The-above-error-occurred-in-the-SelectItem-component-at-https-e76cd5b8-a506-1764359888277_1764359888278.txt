@@ -1,0 +1,49 @@
+injected.js:37 The above error occurred in the <SelectItem> component:
+
+    at https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=ddeff929:846:7
+    at _c1 (https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/src/components/ui/select.tsx:208:12)
+    at div
+    at https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-D7OHDVF4.js?v=ddeff929:42:13
+    at https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=ddeff929:79:13
+    at https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=ddeff929:56:13
+    at https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TPYHSINA.js?v=ddeff929:39:15
+    at https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=ddeff929:757:13
+    at div
+    at https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=ddeff929:79:13
+    at https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=ddeff929:56:13
+    at https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TPYHSINA.js?v=ddeff929:39:15
+    at Provider (https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=ddeff929:38:15)
+    at https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=ddeff929:300:58
+    at https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=ddeff929:79:13
+    at https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=ddeff929:56:13
+    at https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-D7OHDVF4.js?v=ddeff929:42:13
+    at https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WIR6MCDS.js?v=ddeff929:260:22
+    at SelectPortal
+    at _c7 (https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/src/components/ui/select.tsx:123:12)
+    at Provider (https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=ddeff929:38:15)
+    at Provider (https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=ddeff929:38:15)
+    at CollectionProvider (https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TPYHSINA.js?v=ddeff929:29:13)
+    at Provider (https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=ddeff929:38:15)
+    at Provider (https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=ddeff929:38:15)
+    at Popper (https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UXHOMCQR.js?v=ddeff929:1921:11)
+    at Select (https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=ddeff929:88:5)
+    at div
+    at div
+    at div
+    at https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-D7OHDVF4.js?v=ddeff929:42:13
+    at https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-E7CD57WD.js?v=ddeff929:110:11
+    at Presence (https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-E4UC4BFD.js?v=ddeff929:24:11)
+    at https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-E7CD57WD.js?v=ddeff929:103:13
+    at div
+    at https
+chunk-RPCDYKBN.js?v=ddeff929:9129 Uncaught Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
+    at @radix-ui_react-sele…s?v=ddeff929:873:13
+    at renderWithHooks (chunk-RPCDYKBN.js?v=ddeff929:11548:26)
+    at updateForwardRef (chunk-RPCDYKBN.js?v=ddeff929:14325:28)
+    at beginWork (chunk-RPCDYKBN.js?v=ddeff929:15946:22)
+    at beginWork$1 (chunk-RPCDYKBN.js?v=ddeff929:19753:22)
+    at performUnitOfWork (chunk-RPCDYKBN.js?v=ddeff929:19198:20)
+    at workLoopSync (chunk-RPCDYKBN.js?v=ddeff929:19137:13)
+    at renderRootSync (chunk-RPCDYKBN.js?v=ddeff929:19116:15)
+    at recoverFromConcurrentError (chunk-RPCDYKBN.js?v=ddeff929:18736:28)
+    at performSyncWorkOnRoot (chunk-RPCDYKBN.js?v=ddeff929:18879:28)
