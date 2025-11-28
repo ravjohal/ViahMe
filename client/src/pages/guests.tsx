@@ -1835,22 +1835,28 @@ export default function Guests() {
                                     </div>
                                   </div>
 
-                                  {event.venueCapacity && (
-                                    <div className="w-full mt-2">
-                                      <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                                        <span>Capacity: {event.potentialTotal} / {event.venueCapacity}</span>
-                                        {event.isOverCapacity && (
-                                          <span className="text-red-600 font-medium">
-                                            {Math.abs(event.capacityRemaining || 0)} over
-                                          </span>
-                                        )}
-                                      </div>
-                                      <Progress
-                                        value={Math.min((event.potentialTotal / event.venueCapacity) * 100, 100)}
-                                        className={`h-2 ${event.isOverCapacity ? "[&>div]:bg-red-500" : ""}`}
-                                      />
-                                    </div>
-                                  )}
+                                  <div className="w-full mt-2">
+                                    {event.venueCapacity ? (
+                                      <>
+                                        <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                                          <span>Capacity: {event.potentialTotal} / {event.venueCapacity}</span>
+                                          {event.isOverCapacity && (
+                                            <span className="text-red-600 font-medium">
+                                              {Math.abs(event.capacityRemaining || 0)} over
+                                            </span>
+                                          )}
+                                        </div>
+                                        <Progress
+                                          value={Math.min((event.potentialTotal / event.venueCapacity) * 100, 100)}
+                                          className={`h-2 ${event.isOverCapacity ? "[&>div]:bg-red-500" : ""}`}
+                                        />
+                                      </>
+                                    ) : (
+                                      <p className="text-xs text-muted-foreground italic">
+                                        No venue capacity set for this event. Edit the event to add one.
+                                      </p>
+                                    )}
+                                  </div>
                                 </div>
                               </CardContent>
                             </Card>
