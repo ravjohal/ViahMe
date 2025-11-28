@@ -139,6 +139,7 @@ export type Event = typeof events.$inferSelect;
 export const eventCostItems = pgTable("event_cost_items", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   eventId: varchar("event_id").notNull(),
+  categoryId: varchar("category_id"), // Links to budget_categories table for cost aggregation
   name: text("name").notNull(), // e.g., "Catering", "Decorations", "DJ", "Venue Rental"
   costType: text("cost_type").notNull(), // 'per_head' | 'fixed'
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(), // Cost amount
@@ -149,6 +150,7 @@ export const insertEventCostItemSchema = createInsertSchema(eventCostItems).omit
 }).extend({
   costType: z.enum(['per_head', 'fixed']),
   amount: z.string(),
+  categoryId: z.string().nullable().optional(),
 });
 
 export type InsertEventCostItem = z.infer<typeof insertEventCostItemSchema>;
