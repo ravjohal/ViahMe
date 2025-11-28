@@ -81,6 +81,19 @@ export default function Budget() {
     enabled: !!wedding?.id,
   });
 
+  // Fetch aggregated costs from events (funneled up from Timeline cost items)
+  const { data: costSummary } = useQuery<{
+    categories: Record<string, { fixed: number; perHead: number; total: number; items: any[] }>;
+    grandTotal: number;
+    grandTotalFixed: number;
+    grandTotalPerHead: number;
+    eventCount: number;
+    itemCount: number;
+  }>({
+    queryKey: ["/api/weddings", wedding?.id, "cost-summary"],
+    enabled: !!wedding?.id,
+  });
+
   // Fetch bookings with vendor details for spending breakdown
   const { data: bookingsWithVendors = [] } = useQuery<Array<{ id: string; weddingId: string; vendorId: string; estimatedCost: string | null; status: string; vendor: { id: string; name: string; category: string } }>>({
     queryKey: ["/api/bookings-with-vendors", wedding?.id],
@@ -310,10 +323,25 @@ export default function Budget() {
   };
 
   const total = parseFloat(wedding?.totalBudget || "0");
-  const totalSpent = categories.reduce(
+  
+  // Calculate event costs per category from cost summary
+  const getEventCostForCategory = (categoryId: string): number => {
+    if (!costSummary?.categories) return 0;
+    return costSummary.categories[categoryId]?.total || 0;
+  };
+  
+  // Total from event cost items linked to categories
+  const totalEventCosts = costSummary?.grandTotal || 0;
+  
+  // Manual spending entries
+  const totalManualSpent = categories.reduce(
     (sum, cat) => sum + parseFloat(cat.spentAmount?.toString() || "0"),
     0
   );
+  
+  // Combined total spent (manual entries + event costs)
+  const totalSpent = totalManualSpent + totalEventCosts;
+  
   const totalAllocated = categories.reduce(
     (sum, cat) => sum + parseFloat(cat.allocatedAmount.toString()),
     0
@@ -512,6 +540,18 @@ export default function Budget() {
                     <span>Total Spent:</span>
                     <span className="font-mono font-semibold">${totalSpent.toLocaleString()}</span>
                   </div>
+                  {totalEventCosts > 0 && (
+                    <div className="flex justify-between text-sm text-muted-foreground pl-4">
+                      <span>From Events:</span>
+                      <span className="font-mono">${totalEventCosts.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {totalManualSpent > 0 && (
+                    <div className="flex justify-between text-sm text-muted-foreground pl-4">
+                      <span>Manual Entries:</span>
+                      <span className="font-mono">${totalManualSpent.toLocaleString()}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-sm">
                     <span>Unallocated:</span>
                     <span className="font-mono font-semibold">
@@ -537,9 +577,11 @@ export default function Budget() {
               <div className="space-y-4">
                 {categories.map((category) => {
                   const allocated = parseFloat(category.allocatedAmount.toString());
-                  const spent = parseFloat(category.spentAmount?.toString() || "0");
-                  const percentage = allocated > 0 ? (spent / allocated) * 100 : 0;
-                  const isOverBudget = spent > allocated;
+                  const manualSpent = parseFloat(category.spentAmount?.toString() || "0");
+                  const eventCost = getEventCostForCategory(category.id);
+                  const totalCategorySpent = manualSpent + eventCost;
+                  const percentage = allocated > 0 ? (totalCategorySpent / allocated) * 100 : 0;
+                  const isOverBudget = totalCategorySpent > allocated;
 
                   return (
                     <div
@@ -548,7 +590,7 @@ export default function Budget() {
                       onClick={() => handleEditCategory(category)}
                       data-testid={`card-category-${category.id}`}
                     >
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-medium">
                             {CATEGORY_LABELS[category.category] || category.category}
@@ -560,9 +602,16 @@ export default function Budget() {
                           )}
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className="font-mono text-sm text-muted-foreground">
-                            ${spent.toLocaleString()} / ${allocated.toLocaleString()}
-                          </span>
+                          <div className="text-right">
+                            <span className="font-mono text-sm text-muted-foreground">
+                              ${totalCategorySpent.toLocaleString()} / ${allocated.toLocaleString()}
+                            </span>
+                            {eventCost > 0 && (
+                              <div className="text-xs text-muted-foreground">
+                                (${eventCost.toLocaleString()} from events)
+                              </div>
+                            )}
+                          </div>
                           <span className="font-mono text-sm font-semibold min-w-[50px] text-right">
                             {percentage.toFixed(0)}%
                           </span>

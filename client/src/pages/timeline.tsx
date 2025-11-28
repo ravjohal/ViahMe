@@ -150,6 +150,7 @@ export default function TimelinePage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/events", editingEvent?.id, "cost-items"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "cost-summary"] });
       toast({ title: "Cost item removed", description: "The cost has been removed." });
     },
   });
