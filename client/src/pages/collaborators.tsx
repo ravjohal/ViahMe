@@ -575,6 +575,52 @@ export default function Collaborators() {
             </Dialog>
           )}
 
+          {/* Getting Started Guide */}
+          <Card className="p-6 bg-gradient-to-br from-orange-50 to-pink-50 dark:from-orange-950/30 dark:to-pink-950/30 border-orange-200 dark:border-orange-800">
+            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+              <span className="bg-orange-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">?</span>
+              How to Set Up Your Team
+            </h3>
+            <div className="grid md:grid-cols-4 gap-4">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="bg-orange-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">1</div>
+                  <span className="font-semibold">Create Job Titles</span>
+                </div>
+                <p className="text-sm text-muted-foreground ml-10">
+                  Set up the different roles (Wedding Planner, Coordinator, etc.) with their permissions.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="bg-orange-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">2</div>
+                  <span className="font-semibold">Invite People</span>
+                </div>
+                <p className="text-sm text-muted-foreground ml-10">
+                  Send invitations to family, friends, and vendors. Assign each person a job title.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="bg-orange-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">3</div>
+                  <span className="font-semibold">Manage</span>
+                </div>
+                <p className="text-sm text-muted-foreground ml-10">
+                  Assign roles to team members and control what each role can do.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="bg-orange-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">4</div>
+                  <span className="font-semibold">Track Activity</span>
+                </div>
+                <p className="text-sm text-muted-foreground ml-10">
+                  See all actions and changes made by your team members.
+                </p>
+              </div>
+            </div>
+          </Card>
+
           <Tabs defaultValue="roles" className="w-full">
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="roles" data-testid="tab-create-roles">
@@ -931,6 +977,109 @@ export default function Collaborators() {
                       </Button>
                     )}
                   </div>
+
+                  {/* Show Pending Invitations */}
+                  {isLoadingCollaborators ? (
+                    <Card className="p-8 text-center">
+                      <p className="text-muted-foreground">Loading invitations...</p>
+                    </Card>
+                  ) : (
+                    <>
+                      {collaborators.filter(c => c.status === "pending").length === 0 ? (
+                        <Card className="p-8 text-center">
+                          <Mail className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+                          <h3 className="text-lg font-semibold mb-2">No Pending Invitations</h3>
+                          <p className="text-muted-foreground">
+                            You haven't sent any invitations yet. Click the button above to invite your first team member!
+                          </p>
+                        </Card>
+                      ) : (
+                        <div className="space-y-4">
+                          <h3 className="font-semibold text-lg flex items-center gap-2">
+                            <Clock className="w-5 h-5 text-orange-600" />
+                            Pending Invitations ({collaborators.filter(c => c.status === "pending").length})
+                          </h3>
+                          {collaborators.filter(c => c.status === "pending").map((collab) => (
+                            <Card key={collab.id} className="p-4" data-testid={`card-pending-invite-${collab.id}`}>
+                              <div className="space-y-4">
+                                <div className="flex items-start gap-4">
+                                  <Avatar className="h-12 w-12">
+                                    <AvatarFallback className="bg-gradient-to-br from-orange-100 to-pink-100 text-orange-700">
+                                      {getInitials(collab.displayName, collab.email)}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <h3 className="font-semibold truncate">
+                                        {collab.displayName || collab.email}
+                                      </h3>
+                                      <Badge variant="outline" className="bg-yellow-50 dark:bg-yellow-950 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800 text-xs">
+                                        <Clock className="w-3 h-3 mr-1" />
+                                        Awaiting Response
+                                      </Badge>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                      <Mail className="w-3 h-3" />
+                                      <span className="truncate">{collab.email}</span>
+                                    </div>
+                                    <span className="text-xs text-muted-foreground block mt-1">
+                                      Role: {collab.role?.displayName || "Not Assigned"}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground block">
+                                      Invited {new Date(collab.invitedAt).toLocaleDateString()}
+                                    </span>
+                                  </div>
+                                  {canManageCollaborators && (
+                                    <div className="flex items-center gap-2">
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => resendInviteMutation.mutate(collab.id)}
+                                        disabled={resendInviteMutation.isPending}
+                                        data-testid={`button-resend-pending-${collab.id}`}
+                                      >
+                                        <RefreshCw className="w-3 h-3 mr-1" />
+                                        Resend
+                                      </Button>
+                                      <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="text-destructive hover:text-destructive"
+                                            data-testid={`button-remove-pending-${collab.id}`}
+                                          >
+                                            <Trash2 className="w-3 h-3" />
+                                          </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                          <AlertDialogHeader>
+                                            <AlertDialogTitle>Cancel Invitation</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                              Are you sure you want to cancel the invitation to {collab.displayName || collab.email}?
+                                            </AlertDialogDescription>
+                                          </AlertDialogHeader>
+                                          <AlertDialogFooter>
+                                            <AlertDialogCancel>Keep Invitation</AlertDialogCancel>
+                                            <AlertDialogAction
+                                              onClick={() => removeCollaboratorMutation.mutate(collab.id)}
+                                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                            >
+                                              Cancel Invitation
+                                            </AlertDialogAction>
+                                          </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                      </AlertDialog>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </Card>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
 
               </div>
