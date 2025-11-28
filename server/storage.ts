@@ -4713,7 +4713,7 @@ export class DBStorage implements IStorage {
       weddingId,
       name: "wedding_planner",
       displayName: "Wedding Planner",
-      description: "Access to: Guests, Invitations, Timeline, Tasks, Vendors, Photos, Documents, Concierge, Contracts, Website, Playlists",
+      description: "Access to: Guests, Invitations, Timeline, Tasks, Vendors, Photos, Documents, Concierge, Contracts, Website, Playlists, Messages",
       isSystem: true,
       isOwner: false,
     });
@@ -4730,6 +4730,7 @@ export class DBStorage implements IStorage {
       { category: "photos", level: "manage" },
       { category: "documents", level: "manage" },
       { category: "playlists", level: "edit" },
+      { category: "messages", level: "manage" },
       { category: "concierge", level: "manage" },
       { category: "shopping", level: "view" },
       { category: "settings", level: "view" },

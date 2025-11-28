@@ -1383,6 +1383,11 @@ export const PERMISSION_CATEGORIES = {
     description: "Manage music playlists",
     permissions: ["view", "edit", "manage"] as const,
   },
+  messages: {
+    label: "Messages",
+    description: "Communicate with vendors and team",
+    permissions: ["view", "manage"] as const,
+  },
   // Concierge
   concierge: {
     label: "Guest Concierge",

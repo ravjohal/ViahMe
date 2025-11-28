@@ -3490,7 +3490,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Ensure system roles have descriptions
       const roleDescriptions: Record<string, string> = {
         owner: "Full access to all sections",
-        wedding_planner: "Access to: Guests, Invitations, Timeline, Tasks, Vendors, Photos, Documents, Concierge, Contracts, Website, Playlists",
+        wedding_planner: "Access to: Guests, Invitations, Timeline, Tasks, Vendors, Photos, Documents, Concierge, Contracts, Website, Playlists, Messages",
         family_member: "Access to: Guest List (view), Timeline (view), Tasks (view), Vendors (view), Photos (edit), Playlists (edit)",
         guest_coordinator: "Access to: Guests (manage), Invitations (manage), Timeline (view), Concierge (edit)",
       };
