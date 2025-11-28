@@ -578,6 +578,43 @@ export default function Collaborators() {
             )}
           </div>
 
+          {/* Getting Started Guide */}
+          <Card className="p-6 bg-gradient-to-br from-orange-50 to-pink-50 dark:from-orange-950/30 dark:to-pink-950/30 border-orange-200 dark:border-orange-800">
+            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+              <span className="bg-orange-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">?</span>
+              How to Set Up Your Team
+            </h3>
+            <div className="grid md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="bg-orange-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">1</div>
+                  <span className="font-semibold">Create Job Titles</span>
+                </div>
+                <p className="text-sm text-muted-foreground ml-10">
+                  Start by setting up the different roles (like "Wedding Planner" or "Day-of Coordinator") with their permissions.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="bg-orange-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">2</div>
+                  <span className="font-semibold">Invite People</span>
+                </div>
+                <p className="text-sm text-muted-foreground ml-10">
+                  Send invitations to family, friends, and vendors. Assign each person a job title when you invite them.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="bg-orange-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">3</div>
+                  <span className="font-semibold">Manage Permissions</span>
+                </div>
+                <p className="text-sm text-muted-foreground ml-10">
+                  Control what each role can see and do in different sections of the app (guest list, budget, etc.).
+                </p>
+              </div>
+            </div>
+          </Card>
+
           <Tabs defaultValue="collaborators" className="w-full">
             <TabsList className="grid w-full max-w-md grid-cols-2">
               <TabsTrigger value="collaborators" data-testid="tab-collaborators">
@@ -593,15 +630,17 @@ export default function Collaborators() {
             <TabsContent value="collaborators" className="mt-6">
               <div className="space-y-8">
                 {/* Roles Section */}
-                <div>
+                <div className="border rounded-lg p-6 bg-card">
                   <div className="flex items-center justify-between mb-6">
                     <div>
                       <h2 className="text-2xl font-bold flex items-center gap-3">
-                        <Shield className="w-6 h-6 text-orange-600" />
-                        Job Titles for Your Team
+                        <div className="bg-orange-100 dark:bg-orange-900 p-2 rounded-lg">
+                          <span className="text-2xl">1️⃣</span>
+                        </div>
+                        Create Job Titles
                       </h2>
                       <p className="text-base text-muted-foreground mt-2">
-                        Choose a job title for each person you invite. Each title controls what they can see and do.
+                        Set up job titles (Wedding Planner, Coordinator, etc.) and define what each role can see and do in different sections.
                       </p>
                     </div>
                     {canManageCollaborators && (
@@ -910,13 +949,15 @@ export default function Collaborators() {
                 <Separator />
 
                 {/* Team Members Section */}
-                <div>
+                <div className="border rounded-lg p-6 bg-card">
                   <h2 className="text-2xl font-bold mb-2 flex items-center gap-3">
-                    <Users className="w-6 h-6 text-orange-600" />
-                    Your Team
+                    <div className="bg-orange-100 dark:bg-orange-900 p-2 rounded-lg">
+                      <span className="text-2xl">2️⃣</span>
+                    </div>
+                    Invite & Manage Your Team
                   </h2>
                   <p className="text-base text-muted-foreground mb-6">
-                    Here are the people you've invited to help plan the wedding. Click on a person to change their job title or remove them.
+                    Send invitations to family, friends, and vendors. Assign each person a job title. You can see who has accepted and manage their access.
                   </p>
                   {isLoadingCollaborators ? (
                     <Card className="p-8 text-center">
