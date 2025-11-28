@@ -687,8 +687,8 @@ export default function Collaborators() {
                                   {role.permissions && role.permissions.length > 0 ? (
                                     role.permissions.map((perm) => {
                                       const category = PERMISSION_CATEGORIES[perm.category as PermissionCategory];
-                                      const levelColor = perm.level === "edit" ? "text-green-600" : perm.level === "view" ? "text-blue-600" : "text-muted-foreground";
-                                      const levelLabel = perm.level === "edit" ? "Edit" : perm.level === "view" ? "View" : "None";
+                                      const levelColor = perm.level === "manage" ? "text-orange-600" : perm.level === "edit" ? "text-green-600" : perm.level === "view" ? "text-blue-600" : "text-muted-foreground";
+                                      const levelLabel = perm.level === "manage" ? "Manage" : perm.level === "edit" ? "Edit" : perm.level === "view" ? "View" : "None";
                                       return perm.level !== "none" ? (
                                         <div key={perm.id} className="text-xs">
                                           <span className="text-muted-foreground">{category?.label}:</span>
