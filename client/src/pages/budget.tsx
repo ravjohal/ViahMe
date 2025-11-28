@@ -69,6 +69,8 @@ export default function Budget() {
   const [newTotalBudget, setNewTotalBudget] = useState("");
   const [spendingDetailsOpen, setSpendingDetailsOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [customCategoryInput, setCustomCategoryInput] = useState("");
+  const [useCustomCategory, setUseCustomCategory] = useState(false);
 
   const { data: weddings, isLoading: weddingsLoading } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
@@ -246,6 +248,8 @@ export default function Budget() {
 
   const handleAddCategory = () => {
     setEditingCategory(null);
+    setUseCustomCategory(false);
+    setCustomCategoryInput("");
     form.reset({
       category: "catering",
       allocatedAmount: "0",
@@ -257,6 +261,8 @@ export default function Budget() {
 
   const handleEditCategory = (category: BudgetCategory) => {
     setEditingCategory(category);
+    setUseCustomCategory(false);
+    setCustomCategoryInput("");
     form.reset({
       category: category.category as any,
       allocatedAmount: category.allocatedAmount.toString(),
@@ -267,12 +273,28 @@ export default function Budget() {
   };
 
   const handleSubmit = (data: BudgetFormData) => {
+    // Use custom category name if provided
+    const finalData = {
+      ...data,
+      category: useCustomCategory ? customCategoryInput : data.category,
+    };
+
+    // Validate custom category
+    if (useCustomCategory && !customCategoryInput.trim()) {
+      toast({
+        title: "Invalid Category",
+        description: "Please enter a category name",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Calculate current total allocation (excluding the category being edited)
     const currentAllocated = categories
       .filter(cat => editingCategory ? cat.id !== editingCategory.id : true)
       .reduce((sum, cat) => sum + parseFloat(cat.allocatedAmount.toString()), 0);
     
-    const newAllocation = parseFloat(data.allocatedAmount);
+    const newAllocation = parseFloat(finalData.allocatedAmount);
     const totalAfterChange = currentAllocated + newAllocation;
     const totalBudget = parseFloat(wedding?.totalBudget || "0");
     
@@ -288,9 +310,9 @@ export default function Budget() {
     }
     
     if (editingCategory) {
-      updateMutation.mutate({ id: editingCategory.id, data });
+      updateMutation.mutate({ id: editingCategory.id, data: finalData });
     } else {
-      createMutation.mutate(data);
+      createMutation.mutate(finalData);
     }
   };
 
@@ -659,25 +681,58 @@ export default function Budget() {
               <Label htmlFor="category">
                 Category <span className="text-destructive">*</span>
               </Label>
-              <Select
-                value={form.watch("category")}
-                onValueChange={(value) => form.setValue("category", value as any)}
-                disabled={!!editingCategory}
-              >
-                <SelectTrigger id="category" data-testid="select-category-type">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="catering">Catering & Food</SelectItem>
-                  <SelectItem value="venue">Venue & Rentals</SelectItem>
-                  <SelectItem value="entertainment">Entertainment</SelectItem>
-                  <SelectItem value="photography">Photography & Video</SelectItem>
-                  <SelectItem value="decoration">Decoration & Flowers</SelectItem>
-                  <SelectItem value="attire">Attire & Beauty</SelectItem>
-                  <SelectItem value="transportation">Transportation</SelectItem>
-                  <SelectItem value="other">Other Expenses</SelectItem>
-                </SelectContent>
-              </Select>
+              {useCustomCategory ? (
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Enter custom category name"
+                    value={customCategoryInput}
+                    onChange={(e) => setCustomCategoryInput(e.target.value)}
+                    data-testid="input-custom-category"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setUseCustomCategory(false)}
+                  >
+                    Use Existing
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Select
+                    value={form.watch("category")}
+                    onValueChange={(value) => form.setValue("category", value as any)}
+                    disabled={!!editingCategory}
+                  >
+                    <SelectTrigger id="category" data-testid="select-category-type">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.length === 0 ? (
+                        <SelectItem value="" disabled>No categories yet</SelectItem>
+                      ) : (
+                        categories.map((cat) => (
+                          <SelectItem key={cat.id} value={cat.category}>
+                            {cat.category}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                  {!editingCategory && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => setUseCustomCategory(true)}
+                    >
+                      Create New Category
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
