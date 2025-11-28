@@ -16,7 +16,7 @@ import { insertBudgetCategorySchema, type Wedding, type BudgetCategory } from "@
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
-import { DollarSign, TrendingUp, AlertCircle, Edit2, Trash2, PieChart } from "lucide-react";
+import { DollarSign, TrendingUp, AlertCircle, Edit2, Trash2, PieChart, Plus } from "lucide-react";
 import { PieChart as RechartsPie, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 
 const budgetFormSchema = insertBudgetCategorySchema.extend({
@@ -248,10 +248,10 @@ export default function Budget() {
 
   const handleAddCategory = () => {
     setEditingCategory(null);
-    setUseCustomCategory(false);
+    setUseCustomCategory(true);
     setCustomCategoryInput("");
     form.reset({
-      category: "catering",
+      category: "",
       allocatedAmount: "0",
       spentAmount: "0",
       weddingId: wedding?.id || "",
@@ -399,19 +399,13 @@ export default function Budget() {
     <div className="min-h-screen bg-background">
       <main className="container mx-auto px-6 py-8">
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-5xl font-bold bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 bg-clip-text text-transparent mb-1" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-                Budget Management ✨
-              </h2>
-              <p className="text-lg font-semibold bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-                Track and manage your wedding expenses
-              </p>
-            </div>
-            <Button onClick={handleAddCategory} data-testid="button-add-category" className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-lg">
-              <DollarSign className="w-4 h-4 mr-2" />
-              Add Category
-            </Button>
+          <div>
+            <h2 className="text-5xl font-bold bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 bg-clip-text text-transparent mb-1" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+              Budget Management ✨
+            </h2>
+            <p className="text-lg font-semibold bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+              Track and manage your wedding expenses
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -586,7 +580,13 @@ export default function Budget() {
           </div>
 
           <Card className="p-6">
-            <h3 className="font-semibold text-lg mb-4">Budget Categories</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-lg">Budget Categories</h3>
+              <Button onClick={handleAddCategory} data-testid="button-add-category" size="sm" className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Category
+              </Button>
+            </div>
             {categories.length === 0 ? (
               <div className="text-center py-12">
                 <DollarSign className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
@@ -682,53 +682,17 @@ export default function Budget() {
                 Category <span className="text-destructive">*</span>
               </Label>
               {useCustomCategory ? (
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Enter custom category name"
-                    value={customCategoryInput}
-                    onChange={(e) => setCustomCategoryInput(e.target.value)}
-                    data-testid="input-custom-category"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setUseCustomCategory(false)}
-                  >
-                    Use Existing
-                  </Button>
+                <Input
+                  placeholder="Enter custom category name"
+                  value={customCategoryInput}
+                  onChange={(e) => setCustomCategoryInput(e.target.value)}
+                  data-testid="input-custom-category"
+                />
+              ) : editingCategory ? (
+                <div className="p-2 bg-muted rounded">
+                  <p className="text-sm font-medium">{editingCategory.category}</p>
                 </div>
-              ) : (
-                <div className="space-y-2">
-                  <Select
-                    value={form.watch("category")}
-                    onValueChange={(value) => form.setValue("category", value as any)}
-                    disabled={!!editingCategory}
-                  >
-                    <SelectTrigger id="category" data-testid="select-category-type">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.category}>
-                          {cat.category}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {!editingCategory && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      onClick={() => setUseCustomCategory(true)}
-                    >
-                      Create New Category
-                    </Button>
-                  )}
-                </div>
-              )}
+              ) : null}
             </div>
 
             <div className="space-y-2">
