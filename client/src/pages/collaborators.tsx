@@ -1395,18 +1395,12 @@ export default function Collaborators() {
                               )}
                               {item.action === "suggestion_approved" && (
                                 <>
-                                  Approved suggestion for <span className="font-medium">{(item.details as any)?.guestName || "guest"}</span>
-                                  {(item.details as any)?.events && (
-                                    <> at <span className="font-medium">{Array.isArray((item.details as any).events) ? (item.details as any).events.join(", ") : (item.details as any).events}</span></>
-                                  )}
+                                  Approved suggestion for <span className="font-medium">{(item.details as any)?.householdName || "guest"}</span>
                                 </>
                               )}
                               {item.action === "guest_restored" && (
                                 <>
-                                  Restored <span className="font-medium">{(item.details as any)?.guestName || "guest"}</span> to guest list
-                                  {(item.details as any)?.events && (
-                                    <> for <span className="font-medium">{Array.isArray((item.details as any).events) ? (item.details as any).events.join(", ") : (item.details as any).events}</span></>
-                                  )}
+                                  Restored <span className="font-medium">{(item.details as any)?.householdName || "guest"}</span> to guest list
                                 </>
                               )}
                               {!["invited", "accepted_invite", "removed", "role_created", "invite_resent", "suggestion_approved", "guest_restored"].includes(item.action) && (
