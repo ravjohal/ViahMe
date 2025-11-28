@@ -399,6 +399,7 @@ export default function TimelinePage() {
                             value={field.value || ""}
                             type="number"
                             placeholder="e.g., 250"
+                            onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
                             data-testid="input-venue-capacity"
                           />
                         </FormControl>
