@@ -111,6 +111,11 @@ export default function Collaborators() {
   const [newRoleDescription, setNewRoleDescription] = useState("");
   const [rolePermissions, setRolePermissions] = useState<Record<PermissionCategory, PermissionLevel>>(defaultPermissions());
 
+  // Edit role state
+  const [isEditRoleOpen, setIsEditRoleOpen] = useState(false);
+  const [editingRole, setEditingRole] = useState<(WeddingRole & { permissions?: RolePermission[] }) | null>(null);
+  const [editRolePermissions, setEditRolePermissions] = useState<Record<PermissionCategory, PermissionLevel>>(defaultPermissions());
+
   const { data: weddings = [] } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
     enabled: !!user,
@@ -124,7 +129,9 @@ export default function Collaborators() {
     enabled: !!weddingId,
   });
 
-  const { data: roles = [], isLoading: isLoadingRoles } = useQuery<WeddingRole[]>({
+  type RoleWithPermissions = WeddingRole & { permissions?: RolePermission[] };
+  
+  const { data: roles = [], isLoading: isLoadingRoles } = useQuery<RoleWithPermissions[]>({
     queryKey: ["/api/weddings", weddingId, "roles"],
     enabled: !!weddingId,
   });
@@ -299,6 +306,68 @@ export default function Collaborators() {
       ...prev,
       [category]: level,
     }));
+  };
+
+  // Edit role mutation
+  const editRoleMutation = useMutation({
+    mutationFn: async (data: { roleId: string; permissions: Array<{ category: string; level: string }> }) => {
+      const res = await apiRequest("PATCH", `/api/roles/${data.roleId}`, { permissions: data.permissions });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", weddingId, "roles"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", weddingId, "collaborators"] });
+      setIsEditRoleOpen(false);
+      setEditingRole(null);
+      toast({
+        title: "Role Updated",
+        description: "Role permissions have been updated successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const openEditRole = (role: WeddingRole & { permissions?: RolePermission[] }) => {
+    setEditingRole(role);
+    // Initialize permissions from the role's current permissions
+    const perms = defaultPermissions();
+    if (role.permissions) {
+      role.permissions.forEach((perm) => {
+        if (perm.category in PERMISSION_CATEGORIES) {
+          perms[perm.category as PermissionCategory] = perm.level as PermissionLevel;
+        }
+      });
+    }
+    setEditRolePermissions(perms);
+    setIsEditRoleOpen(true);
+  };
+
+  const updateEditPermission = (category: PermissionCategory, level: PermissionLevel) => {
+    setEditRolePermissions((prev) => ({
+      ...prev,
+      [category]: level,
+    }));
+  };
+
+  const handleEditRole = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingRole) return;
+    
+    // Convert permissions to array format, filtering out "none"
+    const permissionsArray = Object.entries(editRolePermissions)
+      .filter(([_, level]) => level !== "none")
+      .map(([category, level]) => ({ category, level }));
+    
+    editRoleMutation.mutate({
+      roleId: editingRole.id,
+      permissions: permissionsArray,
+    });
   };
 
   const handleInvite = (e: React.FormEvent) => {
@@ -683,19 +752,32 @@ export default function Collaborators() {
                       )}
                     </Card>
                   ) : (
+                    <>
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                       {roles.map((role) => (
                         <Card key={role.id} className={`p-4 ${role.isOwner ? 'border-primary' : ''}`} data-testid={`card-role-${role.id}`}>
                           <div className="space-y-3">
-                            <div>
-                              <h3 className="font-semibold flex items-center gap-2 text-sm">
-                                {role.displayName}
-                                {role.isOwner && <Badge className="bg-primary text-xs">Owner</Badge>}
-                                {role.isSystem && !role.isOwner && <Badge variant="secondary" className="text-xs">System</Badge>}
-                                {!role.isSystem && !role.isOwner && <Badge variant="outline" className="text-xs">Custom</Badge>}
-                              </h3>
-                              {role.description && (
-                                <p className="text-xs text-muted-foreground mt-1">{role.description}</p>
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <h3 className="font-semibold flex items-center gap-2 text-sm">
+                                  {role.displayName}
+                                  {role.isOwner && <Badge className="bg-primary text-xs">Owner</Badge>}
+                                  {role.isSystem && !role.isOwner && <Badge variant="secondary" className="text-xs">System</Badge>}
+                                  {!role.isSystem && !role.isOwner && <Badge variant="outline" className="text-xs">Custom</Badge>}
+                                </h3>
+                                {role.description && (
+                                  <p className="text-xs text-muted-foreground mt-1">{role.description}</p>
+                                )}
+                              </div>
+                              {!role.isOwner && canManageCollaborators && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => openEditRole(role)}
+                                  data-testid={`button-edit-role-${role.id}`}
+                                >
+                                  <Pencil className="w-3 h-3" />
+                                </Button>
                               )}
                             </div>
                             {role.isOwner ? (
@@ -728,6 +810,100 @@ export default function Collaborators() {
                         </Card>
                       ))}
                     </div>
+
+                    {/* Edit Role Dialog */}
+                    <Dialog open={isEditRoleOpen} onOpenChange={setIsEditRoleOpen}>
+                      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                        <form onSubmit={handleEditRole}>
+                          <DialogHeader>
+                            <DialogTitle>Edit Role: {editingRole?.displayName}</DialogTitle>
+                            <DialogDescription>
+                              Update section access permissions for this role.
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="space-y-6 py-4">
+                            <div className="space-y-4">
+                              <h4 className="font-semibold">Section Permissions</h4>
+                              <p className="text-sm text-muted-foreground">
+                                Set access level for each section. "None" means no access, "View" allows read-only access, "Edit" allows full modification.
+                              </p>
+                              <div className="space-y-3">
+                                {Object.entries(PERMISSION_CATEGORIES).map(([key, config]) => {
+                                  const category = key as PermissionCategory;
+                                  const currentLevel = editRolePermissions[category];
+                                  return (
+                                    <div
+                                      key={category}
+                                      className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                                      data-testid={`edit-permission-row-${category}`}
+                                    >
+                                      <div className="flex-1">
+                                        <p className="font-medium text-sm">{config.label}</p>
+                                        <p className="text-xs text-muted-foreground">{config.description}</p>
+                                      </div>
+                                      <div className="flex items-center gap-1">
+                                        <Button
+                                          type="button"
+                                          size="sm"
+                                          variant={currentLevel === "none" ? "default" : "outline"}
+                                          className={`w-16 ${currentLevel === "none" ? "bg-destructive/80 hover:bg-destructive" : ""}`}
+                                          onClick={() => updateEditPermission(category, "none")}
+                                          data-testid={`edit-permission-${category}-none`}
+                                        >
+                                          <Ban className="w-3 h-3 mr-1" />
+                                          None
+                                        </Button>
+                                        <Button
+                                          type="button"
+                                          size="sm"
+                                          variant={currentLevel === "view" ? "default" : "outline"}
+                                          className={currentLevel === "view" ? "bg-blue-600 hover:bg-blue-700" : ""}
+                                          onClick={() => updateEditPermission(category, "view")}
+                                          data-testid={`edit-permission-${category}-view`}
+                                        >
+                                          <Eye className="w-3 h-3 mr-1" />
+                                          View
+                                        </Button>
+                                        <Button
+                                          type="button"
+                                          size="sm"
+                                          variant={currentLevel === "edit" ? "default" : "outline"}
+                                          className={currentLevel === "edit" ? "bg-green-600 hover:bg-green-700" : ""}
+                                          onClick={() => updateEditPermission(category, "edit")}
+                                          data-testid={`edit-permission-${category}-edit`}
+                                        >
+                                          <Pencil className="w-3 h-3 mr-1" />
+                                          Edit
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                          <DialogFooter>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => setIsEditRoleOpen(false)}
+                              data-testid="button-cancel-edit-role"
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              type="submit"
+                              disabled={editRoleMutation.isPending}
+                              className="bg-gradient-to-r from-orange-600 to-pink-600 hover:from-orange-700 hover:to-pink-700"
+                              data-testid="button-save-edit-role"
+                            >
+                              {editRoleMutation.isPending ? "Saving..." : "Save Changes"}
+                            </Button>
+                          </DialogFooter>
+                        </form>
+                      </DialogContent>
+                    </Dialog>
+                    </>
                   )}
                 </div>
 
