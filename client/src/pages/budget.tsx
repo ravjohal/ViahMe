@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,8 +15,7 @@ import { insertBudgetCategorySchema, type Wedding, type BudgetCategory } from "@
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
-import { DollarSign, TrendingUp, AlertCircle, Edit2, Trash2, PieChart, Plus } from "lucide-react";
-import { PieChart as RechartsPie, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import { DollarSign, Edit2, Trash2, Plus, CheckCircle2, AlertCircle, TrendingUp } from "lucide-react";
 
 const budgetFormSchema = insertBudgetCategorySchema.extend({
   allocatedAmount: z.string().transform((val) => val),
@@ -37,18 +35,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   other: "Other Expenses",
 };
 
-const CHART_COLORS = [
-  "hsl(var(--chart-1))",
-  "hsl(var(--chart-2))",
-  "hsl(var(--chart-3))",
-  "hsl(var(--chart-4))",
-  "hsl(var(--chart-5))",
-  "hsl(var(--primary))",
-  "hsl(var(--accent))",
-  "hsl(var(--muted))",
-];
-
-// Mapping budget categories to vendor categories
 const BUDGET_TO_VENDOR_CATEGORIES: Record<string, string[]> = {
   catering: ['caterer', 'halal_caterer', 'mobile_food'],
   venue: ['banquet_hall', 'gurdwara', 'temple', 'tent_service'],
@@ -60,6 +46,38 @@ const BUDGET_TO_VENDOR_CATEGORIES: Record<string, string[]> = {
   other: ['sword_rental', 'pandit', 'astrologer', 'qazi', 'imam', 'quran_reciter'],
 };
 
+interface StepIndicatorProps {
+  steps: { label: string; completed: boolean }[];
+}
+
+function StepIndicator({ steps }: StepIndicatorProps) {
+  return (
+    <div className="flex items-center justify-between mb-8">
+      {steps.map((step, index) => (
+        <div key={index} className="flex items-center flex-1">
+          <div className="flex items-center gap-2 flex-1">
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${
+                step.completed
+                  ? "bg-emerald-500 text-white"
+                  : "bg-muted text-muted-foreground border border-input"
+              }`}
+            >
+              {step.completed ? <CheckCircle2 className="w-4 h-4" /> : index + 1}
+            </div>
+            <span className={`text-sm font-medium ${step.completed ? "text-foreground" : "text-muted-foreground"}`}>
+              {step.label}
+            </span>
+          </div>
+          {index < steps.length - 1 && (
+            <div className={`h-0.5 flex-1 mx-2 ${step.completed ? "bg-emerald-500" : "bg-muted"}`} />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function Budget() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -67,8 +85,6 @@ export default function Budget() {
   const [editingCategory, setEditingCategory] = useState<BudgetCategory | null>(null);
   const [editBudgetDialogOpen, setEditBudgetDialogOpen] = useState(false);
   const [newTotalBudget, setNewTotalBudget] = useState("");
-  const [spendingDetailsOpen, setSpendingDetailsOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [customCategoryInput, setCustomCategoryInput] = useState("");
   const [useCustomCategory, setUseCustomCategory] = useState(false);
 
@@ -83,7 +99,6 @@ export default function Budget() {
     enabled: !!wedding?.id,
   });
 
-  // Fetch aggregated costs from events (funneled up from Timeline cost items)
   const { data: costSummary } = useQuery<{
     categories: Record<string, { fixed: number; perHead: number; total: number; items: any[] }>;
     grandTotal: number;
@@ -93,12 +108,6 @@ export default function Budget() {
     itemCount: number;
   }>({
     queryKey: ["/api/weddings", wedding?.id, "cost-summary"],
-    enabled: !!wedding?.id,
-  });
-
-  // Fetch bookings with vendor details for spending breakdown
-  const { data: bookingsWithVendors = [] } = useQuery<Array<{ id: string; weddingId: string; vendorId: string; estimatedCost: string | null; status: string; vendor: { id: string; name: string; category: string } }>>({
-    queryKey: ["/api/bookings-with-vendors", wedding?.id],
     enabled: !!wedding?.id,
   });
 
@@ -126,7 +135,7 @@ export default function Budget() {
       form.reset();
       toast({
         title: "Budget category added",
-        description: "Budget category has been added successfully",
+        description: "Your category is ready to track expenses",
       });
     },
     onError: () => {
@@ -140,26 +149,21 @@ export default function Budget() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<BudgetFormData> }) => {
-      console.log("[CATEGORY UPDATE] Updating category ID:", id, "with data:", data);
       const payload = {
         ...data,
         allocatedAmount: data.allocatedAmount,
         spentAmount: data.spentAmount,
       };
-      console.log("[CATEGORY UPDATE] Sending PATCH payload:", payload);
-      const result = await apiRequest("PATCH", `/api/budget-categories/${id}`, payload);
-      console.log("[CATEGORY UPDATE] Response received");
-      return result;
+      return await apiRequest("PATCH", `/api/budget-categories/${id}`, payload);
     },
     onSuccess: () => {
-      console.log("[CATEGORY UPDATE] Success! Invalidating queries");
       queryClient.invalidateQueries({ queryKey: ["/api/budget-categories", wedding?.id] });
       setDialogOpen(false);
       setEditingCategory(null);
       form.reset();
       toast({
-        title: "Budget category updated",
-        description: "Budget category has been updated successfully",
+        title: "Category updated",
+        description: "Your changes have been saved",
       });
     },
     onError: () => {
@@ -181,7 +185,7 @@ export default function Budget() {
       setEditingCategory(null);
       form.reset();
       toast({
-        title: "Budget category deleted",
+        title: "Category deleted",
         description: "Budget category has been removed",
       });
     },
@@ -204,7 +208,6 @@ export default function Budget() {
       });
     },
     onSuccess: () => {
-      // Update the wedding data in the cache
       queryClient.setQueryData<Wedding[]>(["/api/weddings"], (oldData) => {
         if (!oldData || !wedding?.id) return oldData;
         return oldData.map(w => 
@@ -213,22 +216,18 @@ export default function Budget() {
             : w
         );
       });
-      
-      // Invalidate weddings query to ensure data persists
       queryClient.invalidateQueries({ queryKey: ["/api/weddings"] });
-      
       setEditBudgetDialogOpen(false);
       setNewTotalBudget("");
-      
       toast({
-        title: "Budget Updated",
-        description: "Your total wedding budget has been updated. Category allocations remain unchanged.",
+        title: "Budget updated",
+        description: "Your total wedding budget has been updated",
       });
     },
     onError: () => {
       toast({
         title: "Error",
-        description: "Failed to update budget. Please try again.",
+        description: "Failed to update budget",
         variant: "destructive",
       });
     },
@@ -273,13 +272,11 @@ export default function Budget() {
   };
 
   const handleSubmit = (data: BudgetFormData) => {
-    // Use custom category name if provided
     const finalData = {
       ...data,
       category: useCustomCategory ? customCategoryInput : data.category,
     };
 
-    // Validate custom category
     if (useCustomCategory && !customCategoryInput.trim()) {
       toast({
         title: "Invalid Category",
@@ -289,7 +286,6 @@ export default function Budget() {
       return;
     }
 
-    // Calculate current total allocation (excluding the category being edited)
     const currentAllocated = categories
       .filter(cat => editingCategory ? cat.id !== editingCategory.id : true)
       .reduce((sum, cat) => sum + parseFloat(cat.allocatedAmount.toString()), 0);
@@ -298,12 +294,11 @@ export default function Budget() {
     const totalAfterChange = currentAllocated + newAllocation;
     const totalBudget = parseFloat(wedding?.totalBudget || "0");
     
-    // Warn if allocation would exceed total budget
     if (totalAfterChange > totalBudget) {
       const excess = totalAfterChange - totalBudget;
       toast({
         title: "Budget Exceeded",
-        description: `This allocation would exceed your total budget by $${excess.toLocaleString()}. Total allocated would be $${totalAfterChange.toLocaleString()} of $${totalBudget.toLocaleString()} budget.`,
+        description: `This would exceed your budget by $${excess.toLocaleString()}`,
         variant: "destructive",
       });
       return;
@@ -323,16 +318,12 @@ export default function Budget() {
   };
 
   const handleEditBudget = () => {
-    console.log("[BUDGET] Edit button clicked, current budget:", wedding?.totalBudget);
     setNewTotalBudget(wedding?.totalBudget?.toString() || "0");
     setEditBudgetDialogOpen(true);
-    console.log("[BUDGET] Dialog opened with value:", wedding?.totalBudget?.toString() || "0");
   };
 
   const handleUpdateBudget = () => {
-    console.log("[BUDGET] Update button clicked, new budget value:", newTotalBudget);
     if (!newTotalBudget || parseFloat(newTotalBudget) < 0) {
-      console.log("[BUDGET] Validation failed - invalid budget:", newTotalBudget);
       toast({
         title: "Invalid Budget",
         description: "Please enter a valid budget amount",
@@ -340,50 +331,43 @@ export default function Budget() {
       });
       return;
     }
-    console.log("[BUDGET] Calling mutation with:", newTotalBudget);
     updateWeddingBudgetMutation.mutate(newTotalBudget);
   };
 
   const total = parseFloat(wedding?.totalBudget || "0");
   
-  // Calculate event costs per category from cost summary
   const getEventCostForCategory = (categoryId: string): number => {
     if (!costSummary?.categories) return 0;
     return costSummary.categories[categoryId]?.total || 0;
   };
   
-  // Total from event cost items linked to categories
   const totalEventCosts = costSummary?.grandTotal || 0;
-  
-  // Manual spending entries
   const totalManualSpent = categories.reduce(
     (sum, cat) => sum + parseFloat(cat.spentAmount?.toString() || "0"),
     0
   );
-  
-  // Combined total spent (manual entries + event costs)
   const totalSpent = totalManualSpent + totalEventCosts;
   
   const totalAllocated = categories.reduce(
     (sum, cat) => sum + parseFloat(cat.allocatedAmount.toString()),
     0
   );
+  
   const remainingBudget = total - totalSpent;
+  const unallocated = Math.max(0, total - totalAllocated);
   const budgetPercentage = total > 0 ? (totalSpent / total) * 100 : 0;
 
-  const chartData = categories.map((cat, index) => ({
-    name: CATEGORY_LABELS[cat.category] || cat.category,
-    value: parseFloat(cat.allocatedAmount.toString()),
-    color: CHART_COLORS[index % CHART_COLORS.length],
-    category: cat.category, // Keep original category ID for filtering
-  }));
+  // Step indicators
+  const steps = [
+    { label: "Set Budget", completed: total > 0 },
+    { label: "Create Categories", completed: categories.length > 0 },
+    { label: "Allocate Amounts", completed: totalAllocated > 0 },
+    { label: "Track Spending", completed: totalSpent > 0 },
+  ];
 
   if (weddingsLoading || categoriesLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="h-16 border-b flex items-center justify-between px-6">
-          <Skeleton className="h-8 w-48" />
-        </div>
         <div className="container mx-auto px-6 py-8">
           <Skeleton className="h-96 w-full" />
         </div>
@@ -398,306 +382,293 @@ export default function Budget() {
   return (
     <div className="min-h-screen bg-background">
       <main className="container mx-auto px-6 py-8">
-        <div className="space-y-6">
+        <div className="space-y-8">
           <div>
-            <h2 className="text-5xl font-bold bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 bg-clip-text text-transparent mb-1" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-              Budget Management ✨
-            </h2>
-            <p className="text-lg font-semibold bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-              Track and manage your wedding expenses
+            <h1 className="text-4xl font-bold mb-2" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+              Wedding Budget
+            </h1>
+            <p className="text-muted-foreground">
+              Plan your wedding finances step by step
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <DollarSign className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Total Budget</p>
-                    <p className="font-mono text-2xl font-bold text-foreground" data-testid="text-total-budget">
-                      ${total.toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleEditBudget}
-                  data-testid="button-edit-budget"
-                  className="h-8 w-8"
-                >
-                  <Edit2 className="w-4 h-4" />
-                </Button>
-              </div>
-            </Card>
+          <StepIndicator steps={steps} />
 
-            <Card className={`p-6 ${totalAllocated > total ? 'border-2 border-red-500 bg-red-50 dark:bg-red-950/20' : ''}`}>
-              <div className="flex items-center gap-3 mb-2">
-                <div className={`p-2 rounded-lg ${totalAllocated > total ? 'bg-red-500/10' : 'bg-blue-500/10'}`}>
-                  <PieChart className={`w-5 h-5 ${totalAllocated > total ? 'text-red-600' : 'text-blue-600'}`} />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Allocated</p>
-                  <p className={`font-mono text-2xl font-bold ${totalAllocated > total ? 'text-red-600' : 'text-foreground'}`} data-testid="text-total-allocated">
-                    ${totalAllocated.toLocaleString()}
-                  </p>
-                  <p className={`text-xs ${totalAllocated > total ? 'text-red-600 font-semibold' : 'text-muted-foreground'}`}>
-                    {total > 0 ? `${((totalAllocated / total) * 100).toFixed(0)}% of budget` : '0%'}
-                    {totalAllocated > total && ' ⚠️ OVER BUDGET'}
-                  </p>
-                </div>
+          {/* STEP 1: SET YOUR TOTAL BUDGET */}
+          <Card className="p-6 border-l-4 border-l-emerald-500">
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <div>
+                <h2 className="text-2xl font-semibold mb-1">Step 1: Set Your Total Budget</h2>
+                <p className="text-sm text-muted-foreground">
+                  What's your overall wedding budget?
+                </p>
               </div>
-            </Card>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleEditBudget}
+                data-testid="button-edit-budget"
+              >
+                <Edit2 className="w-4 h-4 mr-2" />
+                Edit
+              </Button>
+            </div>
+            <div className="bg-muted/50 rounded-lg p-6 text-center">
+              <p className="text-muted-foreground text-sm mb-2">Total Budget</p>
+              <p className="text-5xl font-bold font-mono" data-testid="text-total-budget">
+                ${total.toLocaleString()}
+              </p>
+            </div>
+          </Card>
 
-            <Card className="p-6">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 rounded-lg bg-chart-1/10">
-                  <TrendingUp className="w-5 h-5 text-chart-1" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Spent</p>
-                  <p className="font-mono text-2xl font-bold text-foreground" data-testid="text-total-spent">
-                    ${totalSpent.toLocaleString()}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {totalAllocated > 0 ? `${((totalSpent / totalAllocated) * 100).toFixed(0)}% of allocated` : '0%'}
-                  </p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-6">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 rounded-lg bg-chart-2/10">
-                  <AlertCircle className="w-5 h-5 text-chart-2" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Remaining</p>
-                  <p className="font-mono text-2xl font-bold text-foreground" data-testid="text-remaining-budget">
-                    ${remainingBudget.toLocaleString()}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {total > 0 ? `${((remainingBudget / total) * 100).toFixed(0)}% of budget` : '0%'}
-                  </p>
-                </div>
-              </div>
-            </Card>
-          </div>
-
+          {/* STEP 2 & 3: CREATE CATEGORIES AND ALLOCATE BUDGET */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="p-6">
-              <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
-                <PieChart className="w-5 h-5" />
-                Budget Allocation
-              </h3>
+            {/* Step 2 */}
+            <Card className="p-6 border-l-4 border-l-teal-500">
+              <div className="mb-4">
+                <h2 className="text-2xl font-semibold mb-1">Step 2: Create Categories</h2>
+                <p className="text-sm text-muted-foreground">
+                  Break down your budget by expense type
+                </p>
+              </div>
               {categories.length === 0 ? (
-                <div className="text-center py-12">
-                  <DollarSign className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="font-semibold text-lg mb-2">No Categories Yet</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Start by adding budget categories
-                  </p>
+                <div className="text-center py-8">
+                  <DollarSign className="w-12 h-12 mx-auto mb-3 text-muted-foreground/30" />
+                  <p className="text-muted-foreground mb-4">No categories yet</p>
+                  <Button
+                    onClick={handleAddCategory}
+                    data-testid="button-add-category"
+                    className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add First Category
+                  </Button>
                 </div>
               ) : (
-                <ResponsiveContainer width="100%" height={300}>
-                  <RechartsPie>
-                    <Pie
-                      data={chartData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                      onClick={(data) => {
-                        if (data && data.category) {
-                          setSelectedCategory(data.category);
-                          setSpendingDetailsOpen(true);
-                        }
-                      }}
-                      cursor="pointer"
-                      data-testid="pie-chart"
+                <div className="space-y-2">
+                  {categories.map((cat) => (
+                    <div
+                      key={cat.id}
+                      className="flex items-center justify-between p-3 rounded-md border hover-elevate cursor-pointer transition-all"
+                      onClick={() => handleEditCategory(cat)}
+                      data-testid={`card-category-${cat.id}`}
                     >
-                      {chartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value: number) => `$${value.toLocaleString()}`} />
-                    <Legend />
-                  </RechartsPie>
-                </ResponsiveContainer>
+                      <span className="font-medium">
+                        {CATEGORY_LABELS[cat.category] || cat.category}
+                      </span>
+                      <span className="text-sm font-mono text-muted-foreground">
+                        ${parseFloat(cat.allocatedAmount.toString()).toLocaleString()}
+                      </span>
+                    </div>
+                  ))}
+                  <Button
+                    variant="outline"
+                    onClick={handleAddCategory}
+                    className="w-full mt-2"
+                    data-testid="button-add-another-category"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Another
+                  </Button>
+                </div>
               )}
             </Card>
 
-            <Card className="p-6">
-              <h3 className="font-semibold text-lg mb-4">Overall Budget Usage</h3>
-              <div className="mb-6">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium">Total Spent</span>
-                  <span className="font-mono text-sm font-semibold">
-                    {budgetPercentage.toFixed(1)}%
-                  </span>
-                </div>
-                <Progress value={budgetPercentage} className="h-3" />
+            {/* Step 3 */}
+            <Card className="p-6 border-l-4 border-l-cyan-500">
+              <div className="mb-4">
+                <h2 className="text-2xl font-semibold mb-1">Step 3: Allocation Overview</h2>
+                <p className="text-sm text-muted-foreground">
+                  How your budget is divided
+                </p>
               </div>
-
-              <div className="space-y-3">
-                <h4 className="font-medium text-sm text-muted-foreground">Budget Summary</h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Total Allocated:</span>
-                    <span className="font-mono font-semibold">${totalAllocated.toLocaleString()}</span>
+              <div className="space-y-4">
+                <div className="bg-muted/50 rounded-lg p-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium">Total Budget</span>
+                    <span className="font-mono font-semibold">${total.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Total Spent:</span>
-                    <span className="font-mono font-semibold">${totalSpent.toLocaleString()}</span>
+                  <div className="flex justify-between items-center mb-3 text-sm">
+                    <span className="text-muted-foreground">Allocated</span>
+                    <span className={`font-mono font-semibold ${totalAllocated > total ? 'text-destructive' : 'text-foreground'}`}>
+                      ${totalAllocated.toLocaleString()}
+                    </span>
                   </div>
-                  {totalEventCosts > 0 && (
-                    <div className="flex justify-between text-sm text-muted-foreground pl-4">
-                      <span>From Events:</span>
-                      <span className="font-mono">${totalEventCosts.toLocaleString()}</span>
-                    </div>
-                  )}
-                  {totalManualSpent > 0 && (
-                    <div className="flex justify-between text-sm text-muted-foreground pl-4">
-                      <span>Manual Entries:</span>
-                      <span className="font-mono">${totalManualSpent.toLocaleString()}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between text-sm">
-                    <span>Unallocated:</span>
-                    <span className="font-mono font-semibold">
-                      ${Math.max(0, total - totalAllocated).toLocaleString()}
+                  <Progress value={total > 0 ? (totalAllocated / total) * 100 : 0} className="h-2 mb-2" />
+                  <div className="flex justify-between items-center text-xs text-muted-foreground">
+                    <span>Allocated</span>
+                    <span className={totalAllocated > total ? 'text-destructive font-semibold' : ''}>
+                      {total > 0 ? `${((totalAllocated / total) * 100).toFixed(0)}%` : '0%'}
+                      {totalAllocated > total && ' ⚠️'}
                     </span>
                   </div>
                 </div>
+
+                {unallocated > 0 && (
+                  <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                          Unallocated Budget
+                        </p>
+                        <p className="text-2xl font-mono font-bold text-blue-900 dark:text-blue-100">
+                          ${unallocated.toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </Card>
           </div>
 
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-lg">Budget Categories</h3>
-              <Button onClick={handleAddCategory} data-testid="button-add-category" size="sm" className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Category
-              </Button>
+          {/* STEP 4: TRACK SPENDING */}
+          <Card className="p-6 border-l-4 border-l-orange-500">
+            <div className="mb-6">
+              <h2 className="text-2xl font-semibold mb-1">Step 4: Track Your Spending</h2>
+              <p className="text-sm text-muted-foreground">
+                Monitor actual expenses against your allocation
+              </p>
             </div>
-            {categories.length === 0 ? (
-              <div className="text-center py-12">
-                <DollarSign className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="font-semibold text-lg mb-2">No Budget Categories</h3>
-                <p className="text-muted-foreground mb-4">
-                  Start building your wedding budget
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              {/* Total Spent */}
+              <div className="bg-muted/50 rounded-lg p-4">
+                <p className="text-xs font-medium text-muted-foreground mb-1">Total Spent</p>
+                <p className="text-3xl font-mono font-bold mb-2" data-testid="text-total-spent">
+                  ${totalSpent.toLocaleString()}
+                </p>
+                <Progress value={total > 0 ? (totalSpent / total) * 100 : 0} className="h-2" />
+                <p className="text-xs text-muted-foreground mt-2">
+                  {total > 0 ? `${((totalSpent / total) * 100).toFixed(0)}%` : '0%'} of total budget
                 </p>
               </div>
-            ) : (
-              <div className="space-y-4">
-                {categories.map((category) => {
-                  const allocated = parseFloat(category.allocatedAmount.toString());
-                  const manualSpent = parseFloat(category.spentAmount?.toString() || "0");
-                  const eventCost = getEventCostForCategory(category.id);
-                  const totalCategorySpent = manualSpent + eventCost;
-                  const percentage = allocated > 0 ? (totalCategorySpent / allocated) * 100 : 0;
-                  const isOverBudget = totalCategorySpent > allocated;
 
-                  return (
-                    <div
-                      key={category.id}
-                      className="space-y-2 p-4 rounded-lg border hover-elevate cursor-pointer"
-                      onClick={() => handleEditCategory(category)}
-                      data-testid={`card-category-${category.id}`}
-                    >
-                      <div className="flex items-center justify-between flex-wrap gap-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium">
-                            {CATEGORY_LABELS[category.category] || category.category}
-                          </span>
-                          {isOverBudget && (
-                            <Badge variant="destructive" className="text-xs">
-                              Over Budget
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="text-right">
-                            <span className="font-mono text-sm text-muted-foreground">
-                              ${totalCategorySpent.toLocaleString()} / ${allocated.toLocaleString()}
+              {/* Remaining */}
+              <div className="bg-muted/50 rounded-lg p-4">
+                <p className="text-xs font-medium text-muted-foreground mb-1">Remaining</p>
+                <p className={`text-3xl font-mono font-bold mb-2 ${remainingBudget < 0 ? 'text-destructive' : 'text-foreground'}`} data-testid="text-remaining-budget">
+                  ${remainingBudget.toLocaleString()}
+                </p>
+                {remainingBudget < 0 && (
+                  <Badge variant="destructive" className="text-xs">
+                    Over Budget
+                  </Badge>
+                )}
+              </div>
+
+              {/* From Events */}
+              {totalEventCosts > 0 && (
+                <div className="bg-muted/50 rounded-lg p-4">
+                  <p className="text-xs font-medium text-muted-foreground mb-1">From Events</p>
+                  <p className="text-3xl font-mono font-bold mb-2">
+                    ${totalEventCosts.toLocaleString()}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Linked to timeline
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Spending by Category */}
+            {categories.length > 0 && (
+              <div>
+                <h3 className="font-semibold mb-4 flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5" />
+                  Spending by Category
+                </h3>
+                <div className="space-y-3">
+                  {categories.map((category) => {
+                    const allocated = parseFloat(category.allocatedAmount.toString());
+                    const manualSpent = parseFloat(category.spentAmount?.toString() || "0");
+                    const eventCost = getEventCostForCategory(category.id);
+                    const totalCategorySpent = manualSpent + eventCost;
+                    const percentage = allocated > 0 ? (totalCategorySpent / allocated) * 100 : 0;
+                    const isOverBudget = totalCategorySpent > allocated;
+
+                    return (
+                      <div
+                        key={category.id}
+                        className="p-3 rounded-lg border hover-elevate cursor-pointer transition-all"
+                        onClick={() => handleEditCategory(category)}
+                        data-testid={`category-spending-${category.id}`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2 flex-1">
+                            <span className="font-medium">
+                              {CATEGORY_LABELS[category.category] || category.category}
                             </span>
-                            {eventCost > 0 && (
-                              <div className="text-xs text-muted-foreground">
-                                (${eventCost.toLocaleString()} from events)
-                              </div>
+                            {isOverBudget && (
+                              <Badge variant="destructive" className="text-xs">
+                                Over
+                              </Badge>
                             )}
                           </div>
-                          <span className="font-mono text-sm font-semibold min-w-[50px] text-right">
+                          <span className="font-mono text-sm">
+                            <span className="font-semibold">${totalCategorySpent.toLocaleString()}</span>
+                            <span className="text-muted-foreground"> / ${allocated.toLocaleString()}</span>
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Progress
+                            value={Math.min(percentage, 100)}
+                            className={`flex-1 h-2 ${isOverBudget ? 'bg-destructive/20' : ''}`}
+                          />
+                          <span className={`font-mono text-sm font-semibold min-w-[40px] text-right ${isOverBudget ? 'text-destructive' : ''}`}>
                             {percentage.toFixed(0)}%
                           </span>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditCategory(category);
-                            }}
-                            data-testid={`button-edit-category-${category.id}`}
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </Button>
                         </div>
+                        {eventCost > 0 && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {totalEventCosts > 0 ? `$${eventCost.toLocaleString()} from events` : ''}
+                          </p>
+                        )}
                       </div>
-                      <Progress
-                        value={Math.min(percentage, 100)}
-                        className={`h-2 ${isOverBudget ? "bg-destructive/20" : ""}`}
-                      />
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
             )}
           </Card>
         </div>
       </main>
 
+      {/* Add/Edit Category Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle data-testid="dialog-title-category">
-              {editingCategory ? "Edit Budget Category" : "Add Budget Category"}
+              {editingCategory ? "Edit Category" : "Add Budget Category"}
             </DialogTitle>
             <DialogDescription>
               {editingCategory
-                ? "Update budget allocation and spending"
-                : "Add a new budget category to track expenses"}
+                ? "Update your allocation"
+                : "Add a new spending category"}
             </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="category">
-                Category <span className="text-destructive">*</span>
-              </Label>
+              <Label htmlFor="category">Category</Label>
               {useCustomCategory ? (
                 <Input
-                  placeholder="Enter custom category name"
+                  placeholder="Enter category name"
                   value={customCategoryInput}
                   onChange={(e) => setCustomCategoryInput(e.target.value)}
                   data-testid="input-custom-category"
                 />
               ) : editingCategory ? (
                 <div className="p-2 bg-muted rounded">
-                  <p className="text-sm font-medium">{editingCategory.category}</p>
+                  <p className="text-sm font-medium">{CATEGORY_LABELS[editingCategory.category] || editingCategory.category}</p>
                 </div>
               ) : null}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="allocatedAmount">
-                Allocated Amount <span className="text-destructive">*</span>
+                How much to allocate?
               </Label>
               <Input
                 id="allocatedAmount"
@@ -708,27 +679,9 @@ export default function Budget() {
                 placeholder="0.00"
                 data-testid="input-allocated-amount"
               />
-              {form.formState.errors.allocatedAmount && (
-                <p className="text-sm text-destructive">
-                  {form.formState.errors.allocatedAmount.message}
-                </p>
-              )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="spentAmount">Spent Amount</Label>
-              <Input
-                id="spentAmount"
-                type="number"
-                step="0.01"
-                min="0"
-                {...form.register("spentAmount")}
-                placeholder="0.00"
-                data-testid="input-spent-amount"
-              />
-            </div>
-
-            <div className="flex flex-wrap gap-2 justify-between">
+            <div className="flex gap-2 justify-end">
               {editingCategory && (
                 <Button
                   type="button"
@@ -741,42 +694,39 @@ export default function Budget() {
                   Delete
                 </Button>
               )}
-              <div className="flex gap-2 ml-auto">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setDialogOpen(false)}
-                  data-testid="button-cancel-category"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={createMutation.isPending || updateMutation.isPending}
-                  data-testid="button-save-category"
-                >
-                  {editingCategory ? "Update Category" : "Add Category"}
-                </Button>
-              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setDialogOpen(false)}
+                data-testid="button-cancel-category"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={createMutation.isPending || updateMutation.isPending}
+                data-testid="button-save-category"
+              >
+                {editingCategory ? "Update" : "Add"}
+              </Button>
             </div>
           </form>
         </DialogContent>
       </Dialog>
 
+      {/* Edit Total Budget Dialog */}
       <Dialog open={editBudgetDialogOpen} onOpenChange={setEditBudgetDialogOpen}>
         <DialogContent data-testid="dialog-edit-budget">
           <DialogHeader>
-            <DialogTitle>Edit Total Budget</DialogTitle>
+            <DialogTitle>Set Your Total Budget</DialogTitle>
             <DialogDescription>
-              Update your overall wedding budget. Your category allocations will remain unchanged.
+              What's your overall wedding budget?
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="totalBudget">
-                Total Budget <span className="text-destructive">*</span>
-              </Label>
+              <Label htmlFor="totalBudget">Total Budget</Label>
               <div className="relative">
                 <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
@@ -791,9 +741,6 @@ export default function Budget() {
                   data-testid="input-total-budget"
                 />
               </div>
-              <p className="text-sm text-muted-foreground">
-                Current budget: ${total.toLocaleString()} • Current allocated: ${totalAllocated.toLocaleString()}
-              </p>
             </div>
 
             <div className="flex gap-2 justify-end">
@@ -810,84 +757,9 @@ export default function Budget() {
                 disabled={updateWeddingBudgetMutation.isPending}
                 data-testid="button-save-budget"
               >
-                {updateWeddingBudgetMutation.isPending ? "Updating..." : "Update Budget"}
+                {updateWeddingBudgetMutation.isPending ? "Saving..." : "Save Budget"}
               </Button>
             </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Spending Details Dialog */}
-      <Dialog open={spendingDetailsOpen} onOpenChange={setSpendingDetailsOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto" data-testid="dialog-spending-details">
-          <DialogHeader>
-            <DialogTitle>
-              {selectedCategory && CATEGORY_LABELS[selectedCategory]} Spending Details
-            </DialogTitle>
-            <DialogDescription>
-              All bookings that contribute to this budget category
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            {selectedCategory && (() => {
-              const vendorCategories = BUDGET_TO_VENDOR_CATEGORIES[selectedCategory] || [];
-              // Filter bookings by vendor categories (already filtered to confirmed bookings by API)
-              const categoryBookings = bookingsWithVendors.filter(booking => 
-                vendorCategories.includes(booking.vendor.category)
-              );
-
-              if (categoryBookings.length === 0) {
-                return (
-                  <div className="text-center py-8">
-                    <DollarSign className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                    <p className="text-muted-foreground">
-                      No confirmed bookings found for this category
-                    </p>
-                  </div>
-                );
-              }
-
-              const totalSpending = categoryBookings.reduce((sum, booking) => 
-                sum + parseFloat(booking.estimatedCost || "0"), 0
-              );
-
-              return (
-                <>
-                  <div className="flex items-center justify-between p-4 bg-primary/10 rounded-md">
-                    <span className="font-semibold">Total Spending:</span>
-                    <span className="font-mono text-lg font-bold">${totalSpending.toLocaleString()}</span>
-                  </div>
-
-                  <div className="space-y-3">
-                    {categoryBookings.map((booking) => (
-                      <Card key={booking.id} className="p-4" data-testid={`booking-card-${booking.id}`}>
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-base mb-1" data-testid={`booking-vendor-name-${booking.id}`}>
-                              {booking.vendor.name}
-                            </h4>
-                            <Badge variant="secondary" className="mb-2">
-                              {booking.vendor.category.replace(/_/g, ' ')}
-                            </Badge>
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Badge variant="outline" className="bg-green-500/10 text-green-700 dark:text-green-400">
-                                {booking.status}
-                              </Badge>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-mono text-lg font-bold" data-testid={`booking-cost-${booking.id}`}>
-                              ${parseFloat(booking.estimatedCost || "0").toLocaleString()}
-                            </p>
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                </>
-              );
-            })()}
           </div>
         </DialogContent>
       </Dialog>
