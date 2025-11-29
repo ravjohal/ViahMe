@@ -2958,6 +2958,153 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ============================================================================
+  // VENDOR DEPOSIT PAYMENTS - Stripe integration for booking confirmations
+  // ============================================================================
+
+  // Create payment intent for vendor deposit
+  app.post("/api/bookings/:bookingId/create-deposit-intent", async (req, res) => {
+    try {
+      const { bookingId } = req.params;
+      
+      // Load booking from database
+      const booking = await storage.getBooking(bookingId);
+      if (!booking) {
+        return res.status(404).json({ error: "Booking not found" });
+      }
+      
+      // Load vendor details for description
+      const vendor = await storage.getVendor(booking.vendorId);
+      if (!vendor) {
+        return res.status(404).json({ error: "Vendor not found" });
+      }
+      
+      // Calculate deposit amount (use stored amount or default to 25% of estimated cost)
+      let depositAmount: number;
+      if (booking.depositAmount) {
+        depositAmount = parseFloat(booking.depositAmount);
+      } else if (booking.estimatedCost) {
+        const percentage = booking.depositPercentage || 25;
+        depositAmount = parseFloat(booking.estimatedCost) * (percentage / 100);
+      } else {
+        return res.status(400).json({ 
+          error: "Cannot calculate deposit - booking has no estimated cost or deposit amount set" 
+        });
+      }
+      
+      if (isNaN(depositAmount) || depositAmount <= 0) {
+        return res.status(400).json({ error: "Invalid deposit amount" });
+      }
+      
+      if (!process.env.STRIPE_SECRET_KEY) {
+        throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
+      }
+      
+      const Stripe = (await import('stripe')).default;
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+        apiVersion: "2025-11-17.clover",
+      });
+      
+      const amountInCents = Math.round(depositAmount * 100);
+      
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amountInCents,
+        currency: "usd",
+        metadata: {
+          bookingId: booking.id,
+          vendorId: vendor.id,
+          vendorName: vendor.name,
+          type: 'vendor_deposit',
+        },
+        description: `Deposit for ${vendor.name} - Booking confirmation`,
+      });
+      
+      // Update booking with payment intent ID
+      await storage.updateBooking(bookingId, {
+        depositAmount: depositAmount.toString(),
+        stripePaymentIntentId: paymentIntent.id,
+        stripePaymentStatus: 'pending',
+      });
+      
+      res.json({ 
+        clientSecret: paymentIntent.client_secret,
+        depositAmount,
+        vendorName: vendor.name,
+      });
+    } catch (error: any) {
+      console.error("Error creating deposit payment intent:", error);
+      res.status(500).json({ message: "Error creating payment intent: " + error.message });
+    }
+  });
+
+  // Confirm deposit payment (called after successful Stripe payment)
+  app.post("/api/bookings/:bookingId/confirm-deposit", async (req, res) => {
+    try {
+      const { bookingId } = req.params;
+      const { paymentIntentId, paymentStatus } = req.body;
+      
+      const booking = await storage.getBooking(bookingId);
+      if (!booking) {
+        return res.status(404).json({ error: "Booking not found" });
+      }
+      
+      // Verify payment intent matches
+      if (booking.stripePaymentIntentId && booking.stripePaymentIntentId !== paymentIntentId) {
+        return res.status(400).json({ error: "Payment intent mismatch" });
+      }
+      
+      const updates: any = {
+        stripePaymentStatus: paymentStatus,
+      };
+      
+      if (paymentStatus === 'succeeded') {
+        updates.depositPaid = true;
+        updates.depositPaidDate = new Date();
+        updates.status = 'confirmed'; // Confirm booking after successful payment
+        updates.confirmedDate = new Date();
+      }
+      
+      const updatedBooking = await storage.updateBooking(bookingId, updates);
+      
+      res.json(updatedBooking);
+    } catch (error) {
+      console.error("Error confirming deposit payment:", error);
+      res.status(500).json({ error: "Failed to confirm deposit payment" });
+    }
+  });
+
+  // Get booking with deposit details
+  app.get("/api/bookings/:bookingId/deposit-status", async (req, res) => {
+    try {
+      const { bookingId } = req.params;
+      
+      const booking = await storage.getBooking(bookingId);
+      if (!booking) {
+        return res.status(404).json({ error: "Booking not found" });
+      }
+      
+      // Calculate deposit if not set
+      let depositAmount = booking.depositAmount ? parseFloat(booking.depositAmount) : null;
+      if (!depositAmount && booking.estimatedCost) {
+        const percentage = booking.depositPercentage || 25;
+        depositAmount = parseFloat(booking.estimatedCost) * (percentage / 100);
+      }
+      
+      res.json({
+        bookingId: booking.id,
+        depositAmount,
+        depositPercentage: booking.depositPercentage || 25,
+        depositPaid: booking.depositPaid || false,
+        depositPaidDate: booking.depositPaidDate,
+        stripePaymentStatus: booking.stripePaymentStatus,
+        estimatedCost: booking.estimatedCost ? parseFloat(booking.estimatedCost) : null,
+      });
+    } catch (error) {
+      console.error("Error fetching deposit status:", error);
+      res.status(500).json({ error: "Failed to fetch deposit status" });
+    }
+  });
+
+  // ============================================================================
   // MEASUREMENT PROFILES - Guest clothing measurements for South Asian attire
   // ============================================================================
 
