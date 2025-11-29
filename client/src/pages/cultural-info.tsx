@@ -36,7 +36,7 @@ export default function CulturalInfoPage() {
             <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
             <TabsTrigger value="ceremonies" data-testid="tab-ceremonies">Ceremonies</TabsTrigger>
             <TabsTrigger value="attire" data-testid="tab-attire">Attire</TabsTrigger>
-            <TabsTrigger value="etiquette" data-testid="tab-etiquette">Etiquette</TabsTrigger>
+            <TabsTrigger value="etiquette" data-testid="tab-etiquette">Dos & Don'ts</TabsTrigger>
             <TabsTrigger value="traditions" data-testid="tab-traditions">Traditions</TabsTrigger>
             <TabsTrigger value="glossary" data-testid="tab-glossary">Glossary</TabsTrigger>
           </TabsList>
@@ -204,7 +204,7 @@ export default function CulturalInfoPage() {
             <Card>
               <CardHeader>
                 <CardTitle>What to Wear</CardTitle>
-                <CardDescription>Dressing appropriately for South Asian wedding events</CardDescription>
+                <CardDescription>How to dress for each celebration</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-4">
@@ -247,8 +247,8 @@ export default function CulturalInfoPage() {
           <TabsContent value="etiquette" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Guest Etiquette</CardTitle>
-                <CardDescription>Dos and don'ts to help you navigate the celebrations</CardDescription>
+                <CardTitle>How to Behave at Celebrations</CardTitle>
+                <CardDescription>Simple dos and don'ts to help you fit right in</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -299,8 +299,8 @@ export default function CulturalInfoPage() {
           <TabsContent value="traditions" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Beautiful Traditions</CardTitle>
-                <CardDescription>Meaningful customs you'll witness during the celebrations</CardDescription>
+                <CardTitle>Special Moments to Know About</CardTitle>
+                <CardDescription>Beautiful traditions you'll see during the celebrations</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <Accordion type="single" collapsible>
