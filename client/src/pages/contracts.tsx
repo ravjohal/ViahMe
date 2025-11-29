@@ -483,6 +483,52 @@ export default function ContractsPage() {
         </Button>
       </div>
 
+      {!isLoading && contracts.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Total Contracts</p>
+                  <div className="text-3xl font-bold text-foreground" data-testid="stat-total-contracts">
+                    {contracts.length}
+                  </div>
+                </div>
+                <FileText className="w-8 h-8 text-indigo-500 opacity-40" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Total Contract Value</p>
+                  <div className="text-3xl font-bold text-foreground" data-testid="stat-total-value">
+                    ${contracts.reduce((sum, c) => sum + parseFloat(c.totalAmount), 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                  </div>
+                </div>
+                <DollarSign className="w-8 h-8 text-emerald-500 opacity-40" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Signed Contracts</p>
+                  <div className="text-3xl font-bold text-foreground" data-testid="stat-signed-contracts">
+                    {contracts.filter(c => c.status === "signed" || c.status === "active" || c.status === "completed").length}
+                  </div>
+                </div>
+                <CheckCircle2 className="w-8 h-8 text-green-500 opacity-40" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {isLoading ? (
         <div className="grid gap-4">
           {[1, 2, 3].map((i) => (
