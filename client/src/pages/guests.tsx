@@ -1121,7 +1121,7 @@ export default function Guests() {
                 </TabsTrigger>
                 <TabsTrigger value="allocation" data-testid="tab-allocation">
                   <BarChart3 className="w-4 h-4 mr-2" />
-                  Allocation View
+                  Guest Summary
                 </TabsTrigger>
               </TabsList>
 
@@ -1537,7 +1537,7 @@ export default function Guests() {
                           <>
                             <p className="font-semibold text-green-700 dark:text-green-400">All Caught Up!</p>
                             <p className="text-sm text-muted-foreground mt-1">
-                              No pending suggestions from your team. When team members with "Suggest Guests" permission add suggestions, they'll appear here.
+                              No suggested guests from your team. When team members with "Suggest Guests" permission suggest guests, they'll appear here.
                             </p>
                             <Button 
                               size="sm" 
@@ -1566,13 +1566,13 @@ export default function Guests() {
                     <div>
                       <h2 className="text-lg font-semibold flex items-center gap-2">
                         <UserPlus className="h-5 w-5 text-muted-foreground" />
-                        Pending Suggestions
+                        Suggested Guests
                         {pendingSuggestions.length > 0 && (
                           <Badge variant="destructive">{pendingSuggestions.length}</Badge>
                         )}
                       </h2>
                       <p className="text-sm text-muted-foreground">
-                        Guest suggestions from team members with permission
+                        Guests suggested by team members with permission
                       </p>
                     </div>
                   </div>
@@ -1585,9 +1585,9 @@ export default function Guests() {
                     <Card className="border-dashed">
                       <CardContent className="p-6 text-center">
                         <CheckCircle2 className="h-12 w-12 mx-auto text-green-500 mb-3" />
-                        <p className="font-medium mb-1">No Pending Suggestions</p>
+                        <p className="font-medium mb-1">No Suggested Guests</p>
                         <p className="text-sm text-muted-foreground">
-                          When team members with "Suggest Guests" permission submit suggestions, they'll appear here for your review.
+                          When team members with "Suggest Guests" permission suggest guests, they'll appear here for your review.
                         </p>
                       </CardContent>
                     </Card>
