@@ -2972,6 +2972,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Booking not found" });
       }
       
+      // Prevent creating new payment intents for already paid deposits
+      if (booking.depositPaid) {
+        return res.status(400).json({ error: "Deposit has already been paid for this booking" });
+      }
+      
       // Load vendor details for description
       const vendor = await storage.getVendor(booking.vendorId);
       if (!vendor) {
@@ -3013,6 +3018,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           bookingId: booking.id,
           vendorId: vendor.id,
           vendorName: vendor.name,
+          weddingId: booking.weddingId, // For cross-account verification
           type: 'vendor_deposit',
         },
         description: `Deposit for ${vendor.name} - Booking confirmation`,
@@ -3037,38 +3043,127 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Confirm deposit payment (called after successful Stripe payment)
+  // This endpoint verifies the payment with Stripe before marking as paid
   app.post("/api/bookings/:bookingId/confirm-deposit", async (req, res) => {
     try {
       const { bookingId } = req.params;
-      const { paymentIntentId, paymentStatus } = req.body;
+      const { paymentIntentId } = req.body;
+      
+      if (!paymentIntentId) {
+        return res.status(400).json({ error: "Payment intent ID is required" });
+      }
       
       const booking = await storage.getBooking(bookingId);
       if (!booking) {
         return res.status(404).json({ error: "Booking not found" });
       }
       
-      // Verify payment intent matches
-      if (booking.stripePaymentIntentId && booking.stripePaymentIntentId !== paymentIntentId) {
+      // Prevent double-confirmation
+      if (booking.depositPaid) {
+        return res.status(400).json({ error: "Deposit has already been paid" });
+      }
+      
+      // CRITICAL: Require a stored payment intent ID from create-deposit-intent
+      if (!booking.stripePaymentIntentId) {
+        console.error(`SECURITY ALERT: Booking ${bookingId} has no stored stripePaymentIntentId - create-deposit-intent must be called first`);
+        return res.status(400).json({ error: "No payment intent exists for this booking. Please start the payment process again." });
+      }
+      
+      // CRITICAL: Verify the submitted payment intent matches exactly what we stored
+      if (booking.stripePaymentIntentId !== paymentIntentId) {
+        console.error(`SECURITY ALERT: Payment intent mismatch for booking ${bookingId}: stored ${booking.stripePaymentIntentId}, received ${paymentIntentId}`);
         return res.status(400).json({ error: "Payment intent mismatch" });
       }
       
-      const updates: any = {
-        stripePaymentStatus: paymentStatus,
-      };
-      
-      if (paymentStatus === 'succeeded') {
-        updates.depositPaid = true;
-        updates.depositPaidDate = new Date();
-        updates.status = 'confirmed'; // Confirm booking after successful payment
-        updates.confirmedDate = new Date();
+      // CRITICAL: Require stored deposit amount (set during create-deposit-intent)
+      if (!booking.depositAmount) {
+        console.error(`SECURITY ALERT: Booking ${bookingId} has no stored depositAmount`);
+        return res.status(400).json({ error: "No deposit amount recorded for this booking" });
       }
       
-      const updatedBooking = await storage.updateBooking(bookingId, updates);
+      if (!process.env.STRIPE_SECRET_KEY) {
+        throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
+      }
+      
+      // CRITICAL: Verify payment status with Stripe directly - never trust client-supplied status
+      const Stripe = (await import('stripe')).default;
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+        apiVersion: "2025-11-17.clover",
+      });
+      
+      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+      
+      // Verify the retrieved payment intent ID matches what we stored (belt and suspenders)
+      if (paymentIntent.id !== booking.stripePaymentIntentId) {
+        console.error(`SECURITY ALERT: Retrieved PaymentIntent ID ${paymentIntent.id} does not match stored ${booking.stripePaymentIntentId}`);
+        return res.status(400).json({ error: "Payment intent verification failed" });
+      }
+      
+      // Verify the payment intent metadata matches this booking
+      if (paymentIntent.metadata?.bookingId !== bookingId) {
+        console.error(`SECURITY ALERT: Payment intent ${paymentIntentId} metadata bookingId (${paymentIntent.metadata?.bookingId}) does not match request bookingId (${bookingId})`);
+        return res.status(400).json({ error: "Payment intent does not match this booking" });
+      }
+      
+      // Verify the payment intent was created for this wedding (cross-account protection)
+      if (paymentIntent.metadata?.weddingId !== booking.weddingId) {
+        console.error(`SECURITY ALERT: Payment intent ${paymentIntentId} weddingId (${paymentIntent.metadata?.weddingId}) does not match booking weddingId (${booking.weddingId})`);
+        return res.status(400).json({ error: "Payment intent does not belong to this wedding" });
+      }
+      
+      // Verify currency is USD
+      if (paymentIntent.currency !== 'usd') {
+        console.error(`SECURITY ALERT: Payment intent currency ${paymentIntent.currency} is not USD for booking ${bookingId}`);
+        return res.status(400).json({ error: "Invalid payment currency" });
+      }
+      
+      // Verify the amount matches the canonical stored deposit amount
+      const expectedDepositAmount = parseFloat(booking.depositAmount);
+      const expectedAmountInCents = Math.round(expectedDepositAmount * 100);
+      if (paymentIntent.amount !== expectedAmountInCents) {
+        console.error(`SECURITY ALERT: Payment amount mismatch for booking ${bookingId}: expected ${expectedAmountInCents}, got ${paymentIntent.amount}`);
+        return res.status(400).json({ error: "Payment amount mismatch" });
+      }
+      
+      // Only mark as paid if Stripe confirms the payment succeeded
+      if (paymentIntent.status !== 'succeeded') {
+        return res.status(400).json({ 
+          error: "Payment has not succeeded",
+          paymentStatus: paymentIntent.status 
+        });
+      }
+      
+      // RACE CONDITION PROTECTION: Re-read booking to ensure no concurrent confirmation
+      // This reduces the race window significantly (though full transactional locking would be ideal)
+      const freshBooking = await storage.getBooking(bookingId);
+      if (!freshBooking) {
+        return res.status(404).json({ error: "Booking no longer exists" });
+      }
+      if (freshBooking.depositPaid) {
+        console.log(`Booking ${bookingId} deposit already marked paid by concurrent request`);
+        return res.status(400).json({ error: "Deposit has already been paid" });
+      }
+      if (freshBooking.stripePaymentIntentId !== paymentIntentId) {
+        console.error(`SECURITY ALERT: Booking ${bookingId} stripePaymentIntentId changed during confirmation`);
+        return res.status(400).json({ error: "Payment intent changed during confirmation" });
+      }
+      
+      // Payment verified - update booking and clear the payment intent ID to prevent reuse
+      const updatedBooking = await storage.updateBooking(bookingId, {
+        stripePaymentStatus: 'succeeded',
+        depositPaid: true,
+        depositPaidDate: new Date(),
+        status: 'confirmed',
+        confirmedDate: new Date(),
+        stripePaymentIntentId: null, // Clear to prevent any reuse attempts
+      });
+      
+      console.log(`Booking ${bookingId} deposit confirmed: ${paymentIntent.amount} cents paid via ${paymentIntentId}`);
       
       res.json(updatedBooking);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error confirming deposit payment:", error);
-      res.status(500).json({ error: "Failed to confirm deposit payment" });
+      res.status(500).json({ error: "Failed to confirm deposit payment: " + error.message });
     }
   });
 

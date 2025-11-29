@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, CreditCard, CheckCircle, Building2, Calendar, DollarSign, Shield, Clock } from "lucide-react";
 import type { Booking, Vendor } from "@shared/schema";
@@ -54,8 +54,11 @@ function DepositPaymentForm({ bookingId, depositAmount, vendorName, onSuccess }:
       } else if (paymentIntent && paymentIntent.status === 'succeeded') {
         await apiRequest("POST", `/api/bookings/${bookingId}/confirm-deposit`, {
           paymentIntentId: paymentIntent.id,
-          paymentStatus: 'succeeded',
         });
+        
+        // Invalidate all relevant queries to update the UI across the app
+        queryClient.invalidateQueries({ queryKey: ['/api/bookings'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/contracts'] });
         
         toast({
           title: "Deposit Paid Successfully!",

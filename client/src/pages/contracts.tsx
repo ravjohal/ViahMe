@@ -15,9 +15,10 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Plus, Edit, Trash2, FileSignature } from "lucide-react";
+import { FileText, Plus, Edit, Trash2, FileSignature, CreditCard, CheckCircle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { SignaturePad, type SignaturePadRef } from "@/components/contracts/signature-pad";
+import { useLocation as useWouterLocation } from "wouter";
 
 type ContractFormData = z.infer<typeof insertContractSchema>;
 
@@ -40,6 +41,7 @@ type SignatureFormData = z.infer<typeof signatureFormSchema>;
 export default function ContractsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [, navigate] = useWouterLocation();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
   const [showSignatureDialog, setShowSignatureDialog] = useState(false);
@@ -373,6 +375,30 @@ export default function ContractsPage() {
                         Sign
                       </Button>
                     )}
+                    {contract.status === 'signed' && contract.bookingId && (() => {
+                      const booking = bookings.find(b => b.id === contract.bookingId);
+                      if (booking && !booking.depositPaid) {
+                        return (
+                          <Button
+                            onClick={() => navigate(`/pay-deposit/${contract.bookingId}`)}
+                            className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white"
+                            data-testid={`button-pay-deposit-${contract.id}`}
+                          >
+                            <CreditCard className="w-4 h-4 mr-2" />
+                            Pay Deposit
+                          </Button>
+                        );
+                      }
+                      if (booking?.depositPaid) {
+                        return (
+                          <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
+                            <CheckCircle className="w-3 h-3 mr-1" />
+                            Deposit Paid
+                          </Badge>
+                        );
+                      }
+                      return null;
+                    })()}
                     <Button
                       variant="ghost"
                       size="icon"
