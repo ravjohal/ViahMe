@@ -427,7 +427,7 @@ export default function Budget() {
               <div className="mb-4">
                 <h2 className="text-2xl font-semibold mb-1">Step 2: Create & Allocate</h2>
                 <p className="text-sm text-muted-foreground">
-                  Create expense categories and allocate budget for each one
+                  Create expense categories and set aside budget for each one
                 </p>
               </div>
               {categories.length === 0 ? (
@@ -488,14 +488,14 @@ export default function Budget() {
                     <span className="font-mono font-semibold">${total.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between items-center mb-3 text-sm">
-                    <span className="text-muted-foreground">Allocated</span>
+                    <span className="text-muted-foreground">Set Aside</span>
                     <span className={`font-mono font-semibold ${totalAllocated > total ? 'text-destructive' : 'text-foreground'}`}>
                       ${totalAllocated.toLocaleString()}
                     </span>
                   </div>
                   <Progress value={total > 0 ? (totalAllocated / total) * 100 : 0} className="h-2 mb-2" />
                   <div className="flex justify-between items-center text-xs text-muted-foreground">
-                    <span>Allocated</span>
+                    <span>Set Aside</span>
                     <span className={totalAllocated > total ? 'text-destructive font-semibold' : ''}>
                       {total > 0 ? `${((totalAllocated / total) * 100).toFixed(0)}%` : '0%'}
                       {totalAllocated > total && ' ⚠️'}
@@ -509,7 +509,7 @@ export default function Budget() {
                       <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
                       <div>
                         <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                          Unallocated Budget
+                          Budget Not Yet Assigned
                         </p>
                         <p className="text-2xl font-mono font-bold text-blue-900 dark:text-blue-100">
                           ${unallocated.toLocaleString()}
@@ -525,9 +525,9 @@ export default function Budget() {
           {/* STEP 4: TRACK SPENDING */}
           <Card className="p-6 border-l-4 border-l-orange-500">
             <div className="mb-6">
-              <h2 className="text-2xl font-semibold mb-1">Step 4: Track Your Spending</h2>
+              <h2 className="text-2xl font-semibold mb-1">Step 3: Track Your Spending</h2>
               <p className="text-sm text-muted-foreground">
-                Monitor actual expenses against your allocation
+                Monitor actual expenses vs. what you planned to spend
               </p>
             </div>
 
@@ -643,7 +643,7 @@ export default function Budget() {
             </DialogTitle>
             <DialogDescription>
               {editingCategory
-                ? "Update your allocation"
+                ? "Update your budget"
                 : "Add a new spending category"}
             </DialogDescription>
           </DialogHeader>
@@ -667,7 +667,7 @@ export default function Budget() {
 
             <div className="space-y-2">
               <Label htmlFor="allocatedAmount">
-                How much to allocate?
+                How much to set aside?
               </Label>
               <Input
                 id="allocatedAmount"
