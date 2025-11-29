@@ -360,8 +360,7 @@ export default function Budget() {
   // Step indicators
   const steps = [
     { label: "Set Budget", completed: total > 0 },
-    { label: "Create Categories", completed: categories.length > 0 },
-    { label: "Allocate Amounts", completed: totalAllocated > 0 },
+    { label: "Create & Allocate", completed: categories.length > 0 && totalAllocated > 0 },
     { label: "Track Spending", completed: totalSpent > 0 },
   ];
 
@@ -426,9 +425,9 @@ export default function Budget() {
             {/* Step 2 */}
             <Card className="p-6 border-l-4 border-l-teal-500">
               <div className="mb-4">
-                <h2 className="text-2xl font-semibold mb-1">Step 2: Create Categories</h2>
+                <h2 className="text-2xl font-semibold mb-1">Step 2: Create & Allocate</h2>
                 <p className="text-sm text-muted-foreground">
-                  Break down your budget by expense type
+                  Create expense categories and allocate budget for each one
                 </p>
               </div>
               {categories.length === 0 ? (
@@ -474,12 +473,12 @@ export default function Budget() {
               )}
             </Card>
 
-            {/* Step 3 */}
+            {/* Step 3 Summary */}
             <Card className="p-6 border-l-4 border-l-cyan-500">
               <div className="mb-4">
-                <h2 className="text-2xl font-semibold mb-1">Step 3: Allocation Overview</h2>
+                <h2 className="text-2xl font-semibold mb-1">Allocation Summary</h2>
                 <p className="text-sm text-muted-foreground">
-                  How your budget is divided
+                  How your budget is divided across categories
                 </p>
               </div>
               <div className="space-y-4">
