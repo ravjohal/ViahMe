@@ -461,8 +461,10 @@ export const insertContractSchema = createInsertSchema(contracts).omit({
   id: true,
   createdAt: true,
 }).extend({
+  eventId: z.string().min(1, "Event is required"),
+  vendorId: z.string().min(1, "Vendor is required"),
   status: z.enum(['draft', 'sent', 'signed', 'active', 'completed', 'cancelled']).optional(),
-  totalAmount: z.string(),
+  totalAmount: z.string().min(1, "Contract amount is required"),
   signedDate: z.string().optional().transform(val => val ? new Date(val) : undefined),
   bookingId: z.string().optional().nullable(),
 });

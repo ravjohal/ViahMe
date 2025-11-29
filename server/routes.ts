@@ -1337,6 +1337,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertContractSchema.parse(req.body);
       
+      // Server-side validation: eventId and vendorId are required
+      if (!validatedData.eventId || validatedData.eventId.trim().length === 0) {
+        return res.status(400).json({ 
+          error: "Event is required",
+          message: "Please select an event for this contract." 
+        });
+      }
+      
+      if (!validatedData.vendorId || validatedData.vendorId.trim().length === 0) {
+        return res.status(400).json({ 
+          error: "Vendor is required",
+          message: "Please select a vendor for this contract." 
+        });
+      }
+      
       // Server-side validation: contract terms cannot be empty
       if (!validatedData.contractTerms || validatedData.contractTerms.trim().length === 0) {
         return res.status(400).json({ 

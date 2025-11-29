@@ -307,8 +307,31 @@ export default function ContractsPage() {
 
   // Proceed to review
   const proceedToReview = () => {
+    const eventId = form.getValues("eventId");
+    const vendorId = form.getValues("vendorId");
     const terms = form.getValues("contractTerms");
     const amount = form.getValues("totalAmount");
+    
+    // Validate event and vendor are selected
+    if (!eventId) {
+      toast({
+        title: "Event required",
+        description: "Please select an event for this contract.",
+        variant: "destructive",
+      });
+      setCurrentStep("select-event");
+      return;
+    }
+    
+    if (!vendorId) {
+      toast({
+        title: "Vendor required",
+        description: "Please select a vendor for this contract.",
+        variant: "destructive",
+      });
+      setCurrentStep("select-vendor");
+      return;
+    }
     
     if (!terms || terms.trim().length === 0) {
       toast({
@@ -334,6 +357,35 @@ export default function ContractsPage() {
   // Create the contract
   const handleCreateContract = () => {
     const data = form.getValues();
+    
+    // Final validation before creating
+    if (!data.eventId || !data.vendorId) {
+      toast({
+        title: "Missing required fields",
+        description: "Event and vendor are required to create a contract.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!data.contractTerms || data.contractTerms.trim().length === 0) {
+      toast({
+        title: "Contract terms required",
+        description: "Please add contract terms before creating the contract.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!data.totalAmount || parseFloat(data.totalAmount) <= 0) {
+      toast({
+        title: "Invalid amount",
+        description: "Please enter a valid contract amount.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     createMutation.mutate({
       ...data,
       weddingId: wedding?.id || "",
