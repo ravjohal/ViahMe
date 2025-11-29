@@ -3,7 +3,7 @@ import { useState, useRef, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { insertContractSchema, type Contract, type Vendor, type Booking, type ContractSignature, type ContractTemplate } from "@shared/schema";
+import { insertContractSchema, type Contract, type Vendor, type Event, type ContractSignature, type ContractTemplate } from "@shared/schema";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -15,15 +15,16 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Plus, Edit, Trash2, FileSignature, CreditCard, CheckCircle, FileCheck, ChevronRight, ChevronLeft, Eye, Sparkles, ScrollText, CheckCircle2 } from "lucide-react";
+import { FileText, Plus, Edit, Trash2, FileSignature, CreditCard, CheckCircle, ChevronRight, ChevronLeft, Eye, Sparkles, ScrollText, CheckCircle2, Calendar, MapPin, Users, Building2, ArrowLeft, ArrowRight, FileEdit, DollarSign, Clock } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { SignaturePad, type SignaturePadRef } from "@/components/contracts/signature-pad";
 import { useLocation as useWouterLocation } from "wouter";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { format } from "date-fns";
 
 type ContractFormData = z.infer<typeof insertContractSchema>;
 
-const statusColors = {
+const statusColors: Record<string, string> = {
   draft: "bg-gray-500",
   sent: "bg-blue-500",
   signed: "bg-green-500",
@@ -39,33 +40,43 @@ const signatureFormSchema = z.object({
 
 type SignatureFormData = z.infer<typeof signatureFormSchema>;
 
-type ContractWizardStep = "select-vendor" | "choose-template" | "customize" | "review";
+type WizardStep = "list" | "select-event" | "select-vendor" | "choose-template" | "customize" | "review";
+
+const EVENT_ICONS: Record<string, string> = {
+  paath: "🙏",
+  mehndi: "🎨",
+  maiyan: "✨",
+  sangeet: "🎵",
+  anand_karaj: "🛕",
+  reception: "🎉",
+  custom: "📅",
+};
 
 export default function ContractsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [, navigate] = useWouterLocation();
-  const [dialogOpen, setDialogOpen] = useState(false);
+  
+  // Wizard state
+  const [currentStep, setCurrentStep] = useState<WizardStep>("list");
+  const [selectedEventId, setSelectedEventId] = useState<string>("");
+  const [selectedVendorId, setSelectedVendorId] = useState<string>("");
+  const [selectedTemplate, setSelectedTemplate] = useState<ContractTemplate | null>(null);
+  const [skippedTemplates, setSkippedTemplates] = useState(false);
+  
+  // Edit/View state
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  
+  // Signature state
   const [showSignatureDialog, setShowSignatureDialog] = useState(false);
   const [signingContract, setSigningContract] = useState<Contract | null>(null);
   const signaturePadRef = useRef<SignaturePadRef>(null);
-  
-  // Contract creation wizard state
-  const [wizardStep, setWizardStep] = useState<ContractWizardStep>("select-vendor");
-  const [selectedVendorCategory, setSelectedVendorCategory] = useState<string>("");
-  const [selectedTemplate, setSelectedTemplate] = useState<ContractTemplate | null>(null);
-  const [showTemplatePreview, setShowTemplatePreview] = useState(false);
-  const [previewTemplate, setPreviewTemplate] = useState<ContractTemplate | null>(null);
-  const [skippedTemplates, setSkippedTemplates] = useState(false);
-  const [showChangeTemplateConfirm, setShowChangeTemplateConfirm] = useState(false);
-  const [hasCustomizedContract, setHasCustomizedContract] = useState(false);
 
   // Fetch wedding data
   const { data: weddings } = useQuery({
     queryKey: ["/api/weddings"],
   });
-  // Use the most recently created wedding (last in array)
   const wedding = Array.isArray(weddings) && weddings.length > 0 ? weddings[weddings.length - 1] : undefined;
 
   // Fetch contracts
@@ -74,14 +85,15 @@ export default function ContractsPage() {
     enabled: !!wedding?.id,
   });
 
-  // Fetch vendors and bookings for dropdown
-  const { data: vendors = [] } = useQuery<Vendor[]>({
-    queryKey: ["/api/vendors"],
+  // Fetch events for the wedding
+  const { data: events = [] } = useQuery<Event[]>({
+    queryKey: ["/api/events", wedding?.id],
+    enabled: !!wedding?.id,
   });
 
-  const { data: bookings = [] } = useQuery<Booking[]>({
-    queryKey: ["/api/bookings", wedding?.id],
-    enabled: !!wedding?.id,
+  // Fetch vendors
+  const { data: vendors = [] } = useQuery<Vendor[]>({
+    queryKey: ["/api/vendors"],
   });
 
   // Fetch contract templates
@@ -89,25 +101,24 @@ export default function ContractsPage() {
     queryKey: ["/api/contract-templates"],
   });
 
+  // Get selected event and vendor objects
+  const selectedEvent = events.find(e => e.id === selectedEventId);
+  const selectedVendor = vendors.find(v => v.id === selectedVendorId);
+
   // Filter templates by selected vendor category
   const filteredTemplates = useMemo(() => {
-    if (!selectedVendorCategory) return allTemplates;
-    return allTemplates.filter(t => t.vendorCategory === selectedVendorCategory);
-  }, [allTemplates, selectedVendorCategory]);
-
-  // Get unique vendor categories from vendors
-  const vendorCategories = useMemo(() => {
-    const categories = new Set(vendors.map(v => v.category).filter(Boolean));
-    return Array.from(categories);
-  }, [vendors]);
+    if (!selectedVendor?.category) return allTemplates;
+    return allTemplates.filter(t => t.vendorCategory === selectedVendor.category);
+  }, [allTemplates, selectedVendor?.category]);
 
   // Form setup
   const form = useForm<ContractFormData>({
     resolver: zodResolver(insertContractSchema),
     defaultValues: {
       weddingId: wedding?.id || "",
-      bookingId: "",
+      eventId: "",
       vendorId: "",
+      bookingId: null,
       contractTerms: "",
       totalAmount: "",
       paymentMilestones: [],
@@ -122,17 +133,16 @@ export default function ContractsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/contracts", wedding?.id] });
-      setDialogOpen(false);
-      form.reset();
+      resetWizard();
       toast({
-        title: "Contract created",
-        description: "Contract has been created successfully",
+        title: "Contract created!",
+        description: "Your contract has been created successfully.",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         title: "Error",
-        description: "Failed to create contract",
+        description: error.message || "Failed to create contract",
         variant: "destructive",
       });
     },
@@ -144,9 +154,8 @@ export default function ContractsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/contracts", wedding?.id] });
-      setDialogOpen(false);
+      setShowEditDialog(false);
       setEditingContract(null);
-      form.reset();
       toast({
         title: "Contract updated",
         description: "Contract has been updated successfully",
@@ -167,9 +176,8 @@ export default function ContractsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/contracts", wedding?.id] });
-      setDialogOpen(false);
+      setShowEditDialog(false);
       setEditingContract(null);
-      form.reset();
       toast({
         title: "Contract deleted",
         description: "Contract has been removed",
@@ -212,7 +220,6 @@ export default function ContractsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/contracts", wedding?.id] });
-      queryClient.invalidateQueries({ queryKey: ["/api/contracts"] });
       setShowSignatureDialog(false);
       setSigningContract(null);
       signatureForm.reset();
@@ -230,19 +237,110 @@ export default function ContractsPage() {
     },
   });
 
-  const onSubmit = (data: ContractFormData) => {
-    // For new contracts, validate contract terms aren't empty
-    if (!editingContract && !validateBeforeSubmit()) {
+  // Reset wizard to initial state
+  const resetWizard = () => {
+    setCurrentStep("list");
+    setSelectedEventId("");
+    setSelectedVendorId("");
+    setSelectedTemplate(null);
+    setSkippedTemplates(false);
+    form.reset({
+      weddingId: wedding?.id || "",
+      eventId: "",
+      vendorId: "",
+      bookingId: null,
+      contractTerms: "",
+      totalAmount: "",
+      paymentMilestones: [],
+      status: "draft",
+    });
+  };
+
+  // Start creating a new contract
+  const startNewContract = () => {
+    resetWizard();
+    setCurrentStep("select-event");
+  };
+
+  // Handle event selection and proceed
+  const handleEventSelect = (eventId: string) => {
+    setSelectedEventId(eventId);
+    form.setValue("eventId", eventId);
+    setCurrentStep("select-vendor");
+  };
+
+  // Handle vendor selection and proceed
+  const handleVendorSelect = (vendorId: string) => {
+    setSelectedVendorId(vendorId);
+    form.setValue("vendorId", vendorId);
+    setCurrentStep("choose-template");
+  };
+
+  // Apply template and proceed to customize
+  const applyTemplate = (template: ContractTemplate) => {
+    setSelectedTemplate(template);
+    setSkippedTemplates(false);
+    form.setValue("contractTerms", template.templateContent);
+    
+    if (template.suggestedMilestones && Array.isArray(template.suggestedMilestones)) {
+      const milestones = (template.suggestedMilestones as any[]).map((m: any, idx: number) => ({
+        name: m.name || `Milestone ${idx + 1}`,
+        percentage: m.percentage || 25,
+        description: m.description || "",
+        dueDate: new Date().toISOString().split('T')[0],
+        amount: "0",
+        status: "pending",
+      }));
+      form.setValue("paymentMilestones", milestones);
+    }
+    setCurrentStep("customize");
+  };
+
+  // Skip templates and write from scratch
+  const handleSkipTemplates = () => {
+    setSkippedTemplates(true);
+    setSelectedTemplate(null);
+    form.setValue("contractTerms", "");
+    form.setValue("paymentMilestones", []);
+    setCurrentStep("customize");
+  };
+
+  // Proceed to review
+  const proceedToReview = () => {
+    const terms = form.getValues("contractTerms");
+    const amount = form.getValues("totalAmount");
+    
+    if (!terms || terms.trim().length === 0) {
+      toast({
+        title: "Contract terms required",
+        description: "Please add contract terms before proceeding.",
+        variant: "destructive",
+      });
       return;
     }
     
-    if (editingContract) {
-      updateMutation.mutate({ id: editingContract.id, data });
-    } else {
-      createMutation.mutate({ ...data, weddingId: wedding?.id || "" });
+    if (!amount || parseFloat(amount) <= 0) {
+      toast({
+        title: "Contract amount required",
+        description: "Please enter a valid contract amount.",
+        variant: "destructive",
+      });
+      return;
     }
+    
+    setCurrentStep("review");
   };
 
+  // Create the contract
+  const handleCreateContract = () => {
+    const data = form.getValues();
+    createMutation.mutate({
+      ...data,
+      weddingId: wedding?.id || "",
+    });
+  };
+
+  // Handle signing
   const handleSignContract = async (data: SignatureFormData) => {
     if (!signingContract) return;
     
@@ -281,836 +379,813 @@ export default function ContractsPage() {
     });
   };
 
-  const openAddDialog = () => {
-    setEditingContract(null);
-    setWizardStep("select-vendor");
-    setSelectedVendorCategory("");
-    setSelectedTemplate(null);
-    setSkippedTemplates(false);
-    setHasCustomizedContract(false);
-    form.reset({
-      weddingId: wedding?.id || "",
-      bookingId: "",
-      vendorId: "",
-      contractTerms: "",
-      totalAmount: "",
-      paymentMilestones: [],
-      status: "draft",
-    });
-    setDialogOpen(true);
-  };
-
-  // Apply template to form
-  const applyTemplate = (template: ContractTemplate) => {
-    setSelectedTemplate(template);
-    setSkippedTemplates(false);
-    form.setValue("contractTerms", template.templateContent);
-    
-    // Apply suggested milestones if available
-    if (template.suggestedMilestones && Array.isArray(template.suggestedMilestones)) {
-      const milestones = (template.suggestedMilestones as any[]).map((m: any, idx: number) => ({
-        name: m.name || `Milestone ${idx + 1}`,
-        percentage: m.percentage || 25,
-        description: m.description || "",
-        dueDate: new Date().toISOString().split('T')[0],
-        amount: "0",
-        status: "pending",
-      }));
-      form.setValue("paymentMilestones", milestones);
-    }
-    setWizardStep("customize");
-  };
-
-  // Handle skipping template selection
-  const handleSkipTemplates = () => {
-    setSkippedTemplates(true);
-    setSelectedTemplate(null);
-    form.setValue("contractTerms", "");
-    form.setValue("paymentMilestones", []);
-    setWizardStep("customize");
-  };
-
-  // Handle going back to template selection with confirmation if customized
-  const handleBackToTemplates = () => {
-    if (hasCustomizedContract) {
-      setShowChangeTemplateConfirm(true);
-    } else {
-      setWizardStep("choose-template");
-    }
-  };
-
-  // Confirm template change
-  const confirmTemplateChange = () => {
-    setShowChangeTemplateConfirm(false);
-    setHasCustomizedContract(false);
-    setWizardStep("choose-template");
-  };
-
-  // Validate before submission
-  const validateBeforeSubmit = (): boolean => {
-    const contractTerms = form.getValues("contractTerms");
-    if (!contractTerms || contractTerms.trim().length === 0) {
-      toast({
-        title: "Contract terms required",
-        description: "Please add contract terms before creating the contract.",
-        variant: "destructive",
-      });
-      return false;
-    }
-    return true;
-  };
-
-  // Wizard step helpers
-  const getWizardProgress = () => {
-    const steps = ["select-vendor", "choose-template", "customize", "review"];
-    return ((steps.indexOf(wizardStep) + 1) / steps.length) * 100;
-  };
-
-  const canProceedFromVendor = () => {
-    const vendorId = form.watch("vendorId");
-    return !!vendorId;
-  };
-
-  const handleVendorSelect = (vendorId: string) => {
-    form.setValue("vendorId", vendorId);
-    const vendor = vendors.find(v => v.id === vendorId);
-    if (vendor?.category) {
-      setSelectedVendorCategory(vendor.category);
-    }
-  };
-
   const openEditDialog = (contract: Contract) => {
     setEditingContract(contract);
     form.reset({
       weddingId: contract.weddingId,
-      bookingId: contract.bookingId,
+      eventId: contract.eventId || "",
       vendorId: contract.vendorId,
+      bookingId: contract.bookingId || null,
       contractTerms: contract.contractTerms || "",
       totalAmount: contract.totalAmount,
       paymentMilestones: contract.paymentMilestones as any,
       status: contract.status as any,
     });
-    setDialogOpen(true);
+    setShowEditDialog(true);
   };
 
-  const getVendorName = (vendorId: string) => {
-    const vendor = vendors.find((v) => v.id === vendorId);
-    return vendor?.name || "Unknown Vendor";
+  const handleEditSubmit = (data: ContractFormData) => {
+    if (editingContract) {
+      updateMutation.mutate({ id: editingContract.id, data });
+    }
   };
 
-  if (isLoading) {
-    return <div className="p-6">Loading contracts...</div>;
-  }
+  // Get step number for progress
+  const getStepNumber = (): number => {
+    const steps: WizardStep[] = ["select-event", "select-vendor", "choose-template", "customize", "review"];
+    const idx = steps.indexOf(currentStep);
+    return idx >= 0 ? idx + 1 : 0;
+  };
 
-  return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
+  const totalSteps = 5;
+
+  // Render Contract List View
+  const renderContractList = () => (
+    <div className="container mx-auto px-6 py-8">
+      <div className="mb-8 flex items-start justify-between gap-6 flex-wrap">
         <div>
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2" style={{ fontFamily: 'Cormorant Garamond, serif' }} data-testid="heading-contracts">
-            Contract Management ✨
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+            Vendor Contracts
           </h1>
-          <p className="text-lg font-semibold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-            Manage vendor contracts and payment milestones 🎊
+          <p className="text-muted-foreground">
+            Manage contracts with your wedding vendors
           </p>
         </div>
-        <Button onClick={openAddDialog} data-testid="button-add-contract" className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white shadow-lg">
-          <Plus className="w-4 h-4 mr-2" />
-          Add Contract
+        <Button 
+          onClick={startNewContract}
+          className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
+          data-testid="button-new-contract"
+        >
+          <Plus className="w-5 h-5 mr-2" />
+          New Contract
         </Button>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card className="border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50">
-          <CardHeader className="pb-2">
-            <CardDescription className="text-purple-600 font-semibold">Total Contracts</CardDescription>
-            <CardTitle className="text-2xl text-purple-700" data-testid="text-total-contracts">{contracts.length}</CardTitle>
-          </CardHeader>
+      {isLoading ? (
+        <div className="grid gap-4">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-6">
+                <div className="h-6 bg-muted rounded w-1/3 mb-4" />
+                <div className="h-4 bg-muted rounded w-2/3" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : contracts.length === 0 ? (
+        <Card className="p-12 text-center">
+          <FileText className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+          <h3 className="font-semibold text-xl mb-2">No Contracts Yet</h3>
+          <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+            Create contracts with your vendors to formalize agreements, track payments, and get signatures.
+          </p>
+          <Button 
+            onClick={startNewContract}
+            className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
+            data-testid="button-create-first-contract"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            Create Your First Contract
+          </Button>
         </Card>
-        <Card className="border-2 border-green-200 bg-gradient-to-br from-green-50 to-emerald-50">
-          <CardHeader className="pb-2">
-            <CardDescription className="text-green-600 font-semibold">Active</CardDescription>
-            <CardTitle className="text-2xl text-green-700" data-testid="text-active-contracts">
-              {contracts.filter((c) => c.status === "active").length}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-        <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50">
-          <CardHeader className="pb-2">
-            <CardDescription className="text-blue-600 font-semibold">Signed</CardDescription>
-            <CardTitle className="text-2xl text-blue-700" data-testid="text-signed-contracts">
-              {contracts.filter((c) => c.status === "signed").length}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-        <Card className="border-2 border-yellow-200 bg-gradient-to-br from-yellow-50 to-amber-50">
-          <CardHeader className="pb-2">
-            <CardDescription className="text-yellow-600 font-semibold">Pending</CardDescription>
-            <CardTitle className="text-2xl text-yellow-700" data-testid="text-pending-contracts">
-              {contracts.filter((c) => c.status === "draft" || c.status === "sent").length}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-      </div>
-
-      {/* Contract List */}
-      <div className="space-y-4">
-        {contracts.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <FileText className="w-12 h-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-1">No Contracts Yet</h3>
-              <p className="text-muted-foreground text-sm mb-4">Start by adding vendor contracts</p>
-              <Button onClick={openAddDialog}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add First Contract
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          contracts.map((contract) => (
-            <Card key={contract.id} className="hover-elevate" data-testid={`card-contract-${contract.id}`}>
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <CardTitle className="flex items-center gap-2">
-                      {getVendorName(contract.vendorId)}
-                      <Badge className={statusColors[contract.status as keyof typeof statusColors]}>
-                        {contract.status}
-                      </Badge>
-                    </CardTitle>
-                    <CardDescription>
-                      Contract ID: {contract.id.substring(0, 8)}...
-                    </CardDescription>
+      ) : (
+        <div className="grid gap-4">
+          {contracts.map((contract) => {
+            const vendor = vendors.find(v => v.id === contract.vendorId);
+            const event = events.find(e => e.id === contract.eventId);
+            
+            return (
+              <Card 
+                key={contract.id} 
+                className="hover-elevate cursor-pointer transition-all"
+                onClick={() => openEditDialog(contract)}
+                data-testid={`card-contract-${contract.id}`}
+              >
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between gap-4 flex-wrap">
+                    <div className="flex-1 min-w-[200px]">
+                      <div className="flex items-center gap-3 mb-2">
+                        <FileText className="w-5 h-5 text-indigo-500" />
+                        <h3 className="font-semibold text-lg">
+                          {vendor?.name || "Unknown Vendor"}
+                        </h3>
+                        <Badge className={`${statusColors[contract.status]} text-white`}>
+                          {contract.status}
+                        </Badge>
+                      </div>
+                      
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
+                        {event && (
+                          <span className="flex items-center gap-1">
+                            <Calendar className="w-4 h-4" />
+                            {event.name}
+                          </span>
+                        )}
+                        {vendor?.category && (
+                          <span className="flex items-center gap-1">
+                            <Building2 className="w-4 h-4" />
+                            {vendor.category}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-foreground">
+                        ${parseFloat(contract.totalAmount).toLocaleString()}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Total Contract Value
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    {(contract.status === 'draft' || contract.status === 'sent') && (
-                      <Button
-                        onClick={() => openSignatureDialog(contract)}
-                        className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white"
+                  
+                  <div className="flex items-center gap-2 mt-4 pt-4 border-t">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openEditDialog(contract);
+                      }}
+                      data-testid={`button-edit-contract-${contract.id}`}
+                    >
+                      <Edit className="w-4 h-4 mr-1" />
+                      Edit
+                    </Button>
+                    {contract.status === "draft" && (
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openSignatureDialog(contract);
+                        }}
                         data-testid={`button-sign-contract-${contract.id}`}
                       >
-                        <FileSignature className="w-4 h-4 mr-2" />
+                        <FileSignature className="w-4 h-4 mr-1" />
                         Sign
                       </Button>
                     )}
-                    {contract.status === 'signed' && contract.bookingId && (() => {
-                      const booking = bookings.find(b => b.id === contract.bookingId);
-                      if (booking && !booking.depositPaid) {
-                        return (
-                          <Button
-                            onClick={() => navigate(`/pay-deposit/${contract.bookingId}`)}
-                            className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white"
-                            data-testid={`button-pay-deposit-${contract.id}`}
-                          >
-                            <CreditCard className="w-4 h-4 mr-2" />
-                            Pay Deposit
-                          </Button>
-                        );
-                      }
-                      if (booking?.depositPaid) {
-                        return (
-                          <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
-                            <CheckCircle className="w-3 h-3 mr-1" />
-                            Deposit Paid
-                          </Badge>
-                        );
-                      }
-                      return null;
-                    })()}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => openEditDialog(contract)}
-                      data-testid={`button-edit-contract-${contract.id}`}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
+                    {contract.status === "signed" && (
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/vendor-deposit?contractId=${contract.id}`);
+                        }}
+                        data-testid={`button-pay-contract-${contract.id}`}
+                      >
+                        <CreditCard className="w-4 h-4 mr-1" />
+                        Pay Deposit
+                      </Button>
+                    )}
                   </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Total Amount</p>
-                    <p className="text-lg font-semibold">${parseFloat(contract.totalAmount).toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Signed Date</p>
-                    <p className="text-lg font-semibold">
-                      {contract.signedDate ? new Date(contract.signedDate).toLocaleDateString() : "Not signed"}
-                    </p>
-                  </div>
-                </div>
-                {contract.contractTerms && (
-                  <div className="mb-4">
-                    <p className="text-sm text-muted-foreground mb-1">Contract Terms</p>
-                    <p className="text-sm">{contract.contractTerms}</p>
-                  </div>
-                )}
-                {contract.paymentMilestones && Array.isArray(contract.paymentMilestones) && contract.paymentMilestones.length > 0 ? (
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-2">Payment Milestones</p>
-                    <div className="space-y-2">
-                      {(contract.paymentMilestones as any[]).map((milestone: any, idx: number) => (
-                        <div key={idx} className="flex items-center justify-between p-2 bg-muted rounded">
-                          <div>
-                            <p className="text-sm font-medium">{milestone.name}</p>
-                            <p className="text-xs text-muted-foreground">
-                              Due: {new Date(milestone.dueDate).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-sm font-semibold">${parseFloat(milestone.amount).toLocaleString()}</p>
-                            <Badge variant={milestone.status === "paid" ? "default" : "secondary"} className="text-xs">
-                              {milestone.status}
-                            </Badge>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-              </CardContent>
-            </Card>
-          ))
-        )}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+
+  // Render Step 1: Select Event
+  const renderSelectEvent = () => (
+    <div className="container mx-auto px-6 py-8 max-w-3xl">
+      <Button 
+        variant="ghost" 
+        onClick={resetWizard}
+        className="mb-6"
+        data-testid="button-back-to-list"
+      >
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        Back to Contracts
+      </Button>
+
+      <div className="mb-8">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white flex items-center justify-center text-sm font-bold">
+            1
+          </div>
+          <span className="text-sm text-muted-foreground">Step 1 of {totalSteps}</span>
+        </div>
+        <Progress value={(1 / totalSteps) * 100} className="h-2 mb-4" />
+        <h2 className="text-3xl font-bold text-foreground mb-2">
+          Which event is this contract for?
+        </h2>
+        <p className="text-muted-foreground">
+          Select the event where this vendor will provide their services
+        </p>
       </div>
 
-      {/* Add/Edit Dialog with Wizard */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-          <DialogHeader>
-            <DialogTitle data-testid="dialog-title-contract">
-              {editingContract ? "Edit Contract" : "Create New Contract"}
-            </DialogTitle>
-            <DialogDescription>
-              {editingContract 
-                ? "Update contract details" 
-                : wizardStep === "select-vendor" 
-                  ? "Step 1: Choose the vendor for this contract"
-                  : wizardStep === "choose-template"
-                    ? "Step 2: Pick a professional template to start with"
-                    : wizardStep === "customize"
-                      ? "Step 3: Customize the contract terms"
-                      : "Step 4: Review and save your contract"
-              }
-            </DialogDescription>
-            {!editingContract && (
-              <div className="mt-4">
-                <Progress value={getWizardProgress()} className="h-2" />
-                <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-                  <span className={wizardStep === "select-vendor" ? "font-semibold text-primary" : ""}>1. Vendor</span>
-                  <span className={wizardStep === "choose-template" ? "font-semibold text-primary" : ""}>2. Template</span>
-                  <span className={wizardStep === "customize" ? "font-semibold text-primary" : ""}>3. Customize</span>
-                  <span className={wizardStep === "review" ? "font-semibold text-primary" : ""}>4. Review</span>
+      {events.length === 0 ? (
+        <Card className="p-8 text-center">
+          <Calendar className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+          <h3 className="font-semibold text-lg mb-2">No Events Yet</h3>
+          <p className="text-muted-foreground mb-4">
+            Create events in your timeline first, then come back to create contracts.
+          </p>
+          <Button onClick={() => navigate("/timeline")} data-testid="button-go-to-timeline">
+            Go to Timeline
+          </Button>
+        </Card>
+      ) : (
+        <div className="grid gap-3">
+          {events.sort((a, b) => a.order - b.order).map((event) => (
+            <Card 
+              key={event.id}
+              className={`cursor-pointer transition-all hover-elevate ${
+                selectedEventId === event.id ? "ring-2 ring-indigo-500" : ""
+              }`}
+              onClick={() => handleEventSelect(event.id)}
+              data-testid={`card-select-event-${event.id}`}
+            >
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="text-3xl">
+                    {EVENT_ICONS[event.type] || EVENT_ICONS.custom}
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-lg">{event.name}</h3>
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1 flex-wrap">
+                      {event.date && (
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-4 h-4" />
+                          {format(new Date(event.date), "MMM d, yyyy")}
+                        </span>
+                      )}
+                      {event.location && (
+                        <span className="flex items-center gap-1">
+                          <MapPin className="w-4 h-4" />
+                          {event.location}
+                        </span>
+                      )}
+                      {event.guestCount && (
+                        <span className="flex items-center gap-1">
+                          <Users className="w-4 h-4" />
+                          {event.guestCount} guests
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
                 </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  // Render Step 2: Select Vendor
+  const renderSelectVendor = () => (
+    <div className="container mx-auto px-6 py-8 max-w-3xl">
+      <Button 
+        variant="ghost" 
+        onClick={() => setCurrentStep("select-event")}
+        className="mb-6"
+        data-testid="button-back-to-events"
+      >
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        Back to Events
+      </Button>
+
+      <div className="mb-8">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white flex items-center justify-center text-sm font-bold">
+            2
+          </div>
+          <span className="text-sm text-muted-foreground">Step 2 of {totalSteps}</span>
+        </div>
+        <Progress value={(2 / totalSteps) * 100} className="h-2 mb-4" />
+        <h2 className="text-3xl font-bold text-foreground mb-2">
+          Which vendor is this contract with?
+        </h2>
+        <p className="text-muted-foreground">
+          Select the vendor you're creating a contract with for{" "}
+          <span className="font-medium text-foreground">{selectedEvent?.name}</span>
+        </p>
+      </div>
+
+      {vendors.length === 0 ? (
+        <Card className="p-8 text-center">
+          <Building2 className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+          <h3 className="font-semibold text-lg mb-2">No Vendors Yet</h3>
+          <p className="text-muted-foreground mb-4">
+            Add vendors first, then come back to create contracts.
+          </p>
+          <Button onClick={() => navigate("/vendors")} data-testid="button-go-to-vendors">
+            Go to Vendors
+          </Button>
+        </Card>
+      ) : (
+        <div className="grid gap-3">
+          {vendors.map((vendor) => (
+            <Card 
+              key={vendor.id}
+              className={`cursor-pointer transition-all hover-elevate ${
+                selectedVendorId === vendor.id ? "ring-2 ring-indigo-500" : ""
+              }`}
+              onClick={() => handleVendorSelect(vendor.id)}
+              data-testid={`card-select-vendor-${vendor.id}`}
+            >
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-indigo-900 dark:to-purple-900 flex items-center justify-center">
+                    <Building2 className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-lg">{vendor.name}</h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      {vendor.category && (
+                        <Badge variant="outline">{vendor.category}</Badge>
+                      )}
+                      {vendor.city && (
+                        <span className="text-sm text-muted-foreground flex items-center gap-1">
+                          <MapPin className="w-3 h-3" />
+                          {vendor.city}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  // Render Step 3: Choose Template
+  const renderChooseTemplate = () => (
+    <div className="container mx-auto px-6 py-8 max-w-3xl">
+      <Button 
+        variant="ghost" 
+        onClick={() => setCurrentStep("select-vendor")}
+        className="mb-6"
+        data-testid="button-back-to-vendors"
+      >
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        Back to Vendors
+      </Button>
+
+      <div className="mb-8">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white flex items-center justify-center text-sm font-bold">
+            3
+          </div>
+          <span className="text-sm text-muted-foreground">Step 3 of {totalSteps}</span>
+        </div>
+        <Progress value={(3 / totalSteps) * 100} className="h-2 mb-4" />
+        <h2 className="text-3xl font-bold text-foreground mb-2">
+          Start with a template?
+        </h2>
+        <p className="text-muted-foreground">
+          Choose a professional template for{" "}
+          <span className="font-medium text-foreground">{selectedVendor?.name}</span>{" "}
+          or write your own contract from scratch
+        </p>
+      </div>
+
+      <div className="grid gap-3 mb-6">
+        {filteredTemplates.map((template) => (
+          <Card 
+            key={template.id}
+            className="cursor-pointer transition-all hover-elevate"
+            onClick={() => applyTemplate(template)}
+            data-testid={`card-template-${template.id}`}
+          >
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-indigo-900 dark:to-purple-900 flex items-center justify-center shrink-0">
+                  <ScrollText className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-semibold text-lg">{template.name}</h3>
+                    {template.isDefault && (
+                      <Badge className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white">
+                        <Sparkles className="w-3 h-3 mr-1" />
+                        Recommended
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground line-clamp-2">
+                    {template.description}
+                  </p>
+                  {template.keyTerms && Array.isArray(template.keyTerms) && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {(template.keyTerms as string[]).slice(0, 3).map((term, idx) => (
+                        <Badge key={idx} variant="secondary" className="text-xs">
+                          {term}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
               </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <Card 
+        className="cursor-pointer transition-all hover-elevate border-dashed"
+        onClick={handleSkipTemplates}
+        data-testid="card-write-from-scratch"
+      >
+        <CardContent className="p-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
+              <FileEdit className="w-6 h-6 text-muted-foreground" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-lg">Write from scratch</h3>
+              <p className="text-sm text-muted-foreground">
+                Create your own custom contract terms
+              </p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  // Render Step 4: Customize Contract
+  const renderCustomize = () => (
+    <div className="container mx-auto px-6 py-8 max-w-3xl">
+      <Button 
+        variant="ghost" 
+        onClick={() => setCurrentStep("choose-template")}
+        className="mb-6"
+        data-testid="button-back-to-templates"
+      >
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        Back to Templates
+      </Button>
+
+      <div className="mb-8">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white flex items-center justify-center text-sm font-bold">
+            4
+          </div>
+          <span className="text-sm text-muted-foreground">Step 4 of {totalSteps}</span>
+        </div>
+        <Progress value={(4 / totalSteps) * 100} className="h-2 mb-4" />
+        <h2 className="text-3xl font-bold text-foreground mb-2">
+          Customize your contract
+        </h2>
+        <p className="text-muted-foreground">
+          {selectedTemplate 
+            ? `Customize the ${selectedTemplate.name} template for ${selectedVendor?.name}`
+            : `Write your contract terms for ${selectedVendor?.name}`
+          }
+        </p>
+      </div>
+
+      <Form {...form}>
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="w-5 h-5 text-indigo-500" />
+                Contract Amount
+              </CardTitle>
+              <CardDescription>
+                Enter the total value of this contract
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FormField
+                control={form.control}
+                name="totalAmount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                        <Input
+                          {...field}
+                          type="number"
+                          step="0.01"
+                          placeholder="0.00"
+                          className="pl-8 text-xl font-semibold"
+                          data-testid="input-contract-amount"
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="w-5 h-5 text-indigo-500" />
+                Contract Terms
+              </CardTitle>
+              <CardDescription>
+                {selectedTemplate 
+                  ? "Edit the template below. Replace placeholders like [VENDOR_NAME] with actual values."
+                  : "Write your contract terms, conditions, and agreements."
+                }
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FormField
+                control={form.control}
+                name="contractTerms"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        value={field.value || ""}
+                        placeholder="Enter your contract terms and conditions..."
+                        className="min-h-[300px] font-mono text-sm"
+                        data-testid="textarea-contract-terms"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+
+          <div className="flex justify-end">
+            <Button 
+              onClick={proceedToReview}
+              className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
+              data-testid="button-proceed-to-review"
+            >
+              Continue to Review
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </div>
+        </div>
+      </Form>
+    </div>
+  );
+
+  // Render Step 5: Review
+  const renderReview = () => (
+    <div className="container mx-auto px-6 py-8 max-w-3xl">
+      <Button 
+        variant="ghost" 
+        onClick={() => setCurrentStep("customize")}
+        className="mb-6"
+        data-testid="button-back-to-customize"
+      >
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        Back to Customize
+      </Button>
+
+      <div className="mb-8">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white flex items-center justify-center text-sm font-bold">
+            5
+          </div>
+          <span className="text-sm text-muted-foreground">Step 5 of {totalSteps}</span>
+        </div>
+        <Progress value={(5 / totalSteps) * 100} className="h-2 mb-4" />
+        <h2 className="text-3xl font-bold text-foreground mb-2">
+          Review your contract
+        </h2>
+        <p className="text-muted-foreground">
+          Double-check everything before creating your contract
+        </p>
+      </div>
+
+      <div className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Contract Summary</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Event</p>
+                <p className="font-medium flex items-center gap-2">
+                  <span className="text-lg">{EVENT_ICONS[selectedEvent?.type || "custom"]}</span>
+                  {selectedEvent?.name}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Vendor</p>
+                <p className="font-medium">{selectedVendor?.name}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Contract Value</p>
+                <p className="font-bold text-2xl text-indigo-600">
+                  ${parseFloat(form.getValues("totalAmount") || "0").toLocaleString()}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Template Used</p>
+                <p className="font-medium">
+                  {selectedTemplate?.name || "Written from scratch"}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Contract Terms Preview</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-[200px] rounded-lg border p-4">
+              <pre className="whitespace-pre-wrap text-sm font-mono">
+                {form.getValues("contractTerms")}
+              </pre>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+
+        <div className="flex justify-between pt-4">
+          <Button 
+            variant="outline"
+            onClick={() => setCurrentStep("customize")}
+            data-testid="button-edit-contract"
+          >
+            <Edit className="w-4 h-4 mr-2" />
+            Edit Contract
+          </Button>
+          <Button 
+            onClick={handleCreateContract}
+            disabled={createMutation.isPending}
+            className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
+            data-testid="button-create-contract"
+          >
+            {createMutation.isPending ? (
+              "Creating..."
+            ) : (
+              <>
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+                Create Contract
+              </>
             )}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Main render based on current step
+  const renderContent = () => {
+    switch (currentStep) {
+      case "list":
+        return renderContractList();
+      case "select-event":
+        return renderSelectEvent();
+      case "select-vendor":
+        return renderSelectVendor();
+      case "choose-template":
+        return renderChooseTemplate();
+      case "customize":
+        return renderCustomize();
+      case "review":
+        return renderReview();
+      default:
+        return renderContractList();
+    }
+  };
+
+  return (
+    <>
+      {renderContent()}
+
+      {/* Edit Contract Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Contract</DialogTitle>
+            <DialogDescription>
+              Update contract details for {vendors.find(v => v.id === editingContract?.vendorId)?.name}
+            </DialogDescription>
           </DialogHeader>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
-              <div className="flex-1 overflow-y-auto py-4">
-                {/* Step 1: Select Vendor (for new contracts only) */}
-                {!editingContract && wizardStep === "select-vendor" && (
-                  <div className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="bookingId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Link to Booking (optional)</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger data-testid="select-booking">
-                                <SelectValue placeholder="Select a booking to link" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {bookings.map((booking) => (
-                                <SelectItem key={booking.id} value={booking.id}>
-                                  {getVendorName(booking.vendorId)} - ${booking.estimatedCost}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="vendorId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Select Vendor</FormLabel>
-                          <Select 
-                            onValueChange={(value) => {
-                              field.onChange(value);
-                              handleVendorSelect(value);
-                            }} 
-                            value={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger data-testid="select-vendor">
-                                <SelectValue placeholder="Choose a vendor" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {vendors.map((vendor) => (
-                                <SelectItem key={vendor.id} value={vendor.id}>
-                                  {vendor.name} - {vendor.category}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {selectedVendorCategory && (
-                      <div className="p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border border-indigo-200">
-                        <p className="text-sm text-indigo-700">
-                          <Sparkles className="w-4 h-4 inline mr-2" />
-                          Great choice! We have professional templates for <strong>{selectedVendorCategory}</strong> vendors ready for you.
-                        </p>
+            <form onSubmit={form.handleSubmit(handleEditSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="totalAmount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Contract Amount</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                        <Input
+                          {...field}
+                          type="number"
+                          step="0.01"
+                          className="pl-8"
+                          data-testid="input-edit-amount"
+                        />
                       </div>
-                    )}
-                  </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
+              />
 
-                {/* Step 2: Choose Template */}
-                {!editingContract && wizardStep === "choose-template" && (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold">Professional Templates</h3>
-                      {selectedVendorCategory && (
-                        <Badge variant="outline" className="bg-indigo-50 text-indigo-700">
-                          {selectedVendorCategory}
-                        </Badge>
-                      )}
-                    </div>
-
-                    {filteredTemplates.length === 0 ? (
-                      <div className="text-center py-8">
-                        <ScrollText className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                        <p className="text-muted-foreground">No templates found for this vendor category.</p>
-                        <Button 
-                          type="button" 
-                          variant="outline" 
-                          className="mt-4"
-                          onClick={() => {
-                            form.setValue("contractTerms", "");
-                            setWizardStep("customize");
-                          }}
-                        >
-                          Create from Scratch
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {filteredTemplates.map((template) => (
-                          <Card 
-                            key={template.id} 
-                            className={`cursor-pointer hover-elevate transition-all ${
-                              selectedTemplate?.id === template.id 
-                                ? "ring-2 ring-primary border-primary" 
-                                : ""
-                            }`}
-                            onClick={() => applyTemplate(template)}
-                            data-testid={`card-template-${template.id}`}
-                          >
-                            <CardHeader className="pb-2">
-                              <div className="flex items-start justify-between gap-2">
-                                <div>
-                                  <CardTitle className="text-base">{template.name}</CardTitle>
-                                  <CardDescription className="text-xs mt-1">
-                                    {template.description}
-                                  </CardDescription>
-                                </div>
-                                {template.isDefault && (
-                                  <Badge variant="secondary" className="text-xs shrink-0">
-                                    Recommended
-                                  </Badge>
-                                )}
-                              </div>
-                            </CardHeader>
-                            <CardContent className="pb-2">
-                              {template.keyTerms && Array.isArray(template.keyTerms) && (
-                                <div className="flex flex-wrap gap-1">
-                                  {(template.keyTerms as string[]).slice(0, 3).map((term, idx) => (
-                                    <Badge key={idx} variant="outline" className="text-xs">
-                                      {term}
-                                    </Badge>
-                                  ))}
-                                  {(template.keyTerms as string[]).length > 3 && (
-                                    <Badge variant="outline" className="text-xs">
-                                      +{(template.keyTerms as string[]).length - 3} more
-                                    </Badge>
-                                  )}
-                                </div>
-                              )}
-                            </CardContent>
-                            <CardFooter className="pt-2">
-                              <Button 
-                                type="button" 
-                                variant="ghost" 
-                                size="sm" 
-                                className="ml-auto"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setPreviewTemplate(template);
-                                  setShowTemplatePreview(true);
-                                }}
-                              >
-                                <Eye className="w-4 h-4 mr-1" />
-                                Preview
-                              </Button>
-                            </CardFooter>
-                          </Card>
-                        ))}
-                      </div>
-                    )}
-
-                    <div className="flex justify-center pt-4 border-t">
-                      <Button 
-                        type="button" 
-                        variant="ghost"
-                        onClick={handleSkipTemplates}
-                        data-testid="button-skip-templates"
-                      >
-                        Skip templates and write from scratch
-                      </Button>
-                    </div>
-                  </div>
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger data-testid="select-contract-status">
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="draft">Draft</SelectItem>
+                        <SelectItem value="sent">Sent</SelectItem>
+                        <SelectItem value="signed">Signed</SelectItem>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
                 )}
+              />
 
-                {/* Step 3: Customize Contract */}
-                {(editingContract || wizardStep === "customize") && (
-                  <div className="space-y-4">
-                    {selectedTemplate && !editingContract && (
-                      <div className="p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200 flex items-center gap-2">
-                        <CheckCircle2 className="w-5 h-5 text-green-600" />
-                        <p className="text-sm text-green-700">
-                          Using template: <strong>{selectedTemplate.name}</strong>
-                        </p>
-                        <Button 
-                          type="button" 
-                          variant="ghost" 
-                          size="sm" 
-                          className="ml-auto"
-                          onClick={handleBackToTemplates}
-                          data-testid="button-change-template"
-                        >
-                          Change
-                        </Button>
-                      </div>
-                    )}
-                    {skippedTemplates && !editingContract && (
-                      <div className="p-3 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg border border-amber-200 flex items-center gap-2">
-                        <ScrollText className="w-5 h-5 text-amber-600" />
-                        <p className="text-sm text-amber-700">
-                          Writing contract from scratch
-                        </p>
-                        <Button 
-                          type="button" 
-                          variant="ghost" 
-                          size="sm" 
-                          className="ml-auto"
-                          onClick={handleBackToTemplates}
-                          data-testid="button-use-template"
-                        >
-                          Use a Template Instead
-                        </Button>
-                      </div>
-                    )}
-
-                    <FormField
-                      control={form.control}
-                      name="totalAmount"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Total Contract Amount ($)</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              placeholder="10000.00"
-                              {...field}
-                              data-testid="input-total-amount"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="contractTerms"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Contract Terms & Conditions</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              placeholder="Enter or customize the contract terms..."
-                              className="min-h-[300px] font-mono text-sm"
-                              {...field}
-                              value={field.value || ""}
-                              onChange={(e) => {
-                                field.onChange(e);
-                                if (!hasCustomizedContract && e.target.value !== selectedTemplate?.templateContent) {
-                                  setHasCustomizedContract(true);
-                                }
-                              }}
-                              data-testid="textarea-contract-terms"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                          <p className="text-xs text-muted-foreground">
-                            Tip: Replace placeholders like [VENDOR_NAME] and [WEDDING_DATE] with actual values.
-                          </p>
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="status"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Status</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger data-testid="select-status">
-                                <SelectValue />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="draft">Draft</SelectItem>
-                              <SelectItem value="sent">Sent</SelectItem>
-                              <SelectItem value="signed">Signed</SelectItem>
-                              <SelectItem value="active">Active</SelectItem>
-                              <SelectItem value="completed">Completed</SelectItem>
-                              <SelectItem value="cancelled">Cancelled</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+              <FormField
+                control={form.control}
+                name="contractTerms"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Contract Terms</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        value={field.value || ""}
+                        className="min-h-[200px] font-mono text-sm"
+                        data-testid="textarea-edit-terms"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
+              />
 
-                {/* Edit form for existing contracts - show vendor selection */}
-                {editingContract && (
-                  <div className="space-y-4 mb-4">
-                    <FormField
-                      control={form.control}
-                      name="bookingId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Booking</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger data-testid="select-booking">
-                                <SelectValue placeholder="Select booking" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {bookings.map((booking) => (
-                                <SelectItem key={booking.id} value={booking.id}>
-                                  {getVendorName(booking.vendorId)} - ${booking.estimatedCost}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="vendorId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Vendor</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger data-testid="select-vendor">
-                                <SelectValue placeholder="Select vendor" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {vendors.map((vendor) => (
-                                <SelectItem key={vendor.id} value={vendor.id}>
-                                  {vendor.name} - {vendor.category}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                )}
-              </div>
-
-              <DialogFooter className="border-t pt-4">
-                {/* Navigation for wizard steps */}
-                {!editingContract && wizardStep === "select-vendor" && (
-                  <>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setDialogOpen(false)}
-                      data-testid="button-cancel-contract"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={() => setWizardStep("choose-template")}
-                      disabled={!canProceedFromVendor()}
-                      className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
-                    >
-                      Next: Choose Template
-                      <ChevronRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </>
-                )}
-
-                {!editingContract && wizardStep === "choose-template" && (
-                  <>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setWizardStep("select-vendor")}
-                    >
-                      <ChevronLeft className="w-4 h-4 mr-2" />
-                      Back
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setDialogOpen(false)}
-                      data-testid="button-cancel-contract"
-                    >
-                      Cancel
-                    </Button>
-                  </>
-                )}
-
-                {!editingContract && wizardStep === "customize" && (
-                  <>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setWizardStep("choose-template")}
-                    >
-                      <ChevronLeft className="w-4 h-4 mr-2" />
-                      Back
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setDialogOpen(false)}
-                      data-testid="button-cancel-contract"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="submit"
-                      disabled={createMutation.isPending}
-                      className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
-                      data-testid="button-save-contract"
-                    >
-                      {createMutation.isPending ? "Creating..." : "Create Contract"}
-                    </Button>
-                  </>
-                )}
-
-                {/* Edit mode footer */}
-                {editingContract && (
-                  <>
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      onClick={() => deleteMutation.mutate(editingContract.id)}
-                      disabled={deleteMutation.isPending}
-                      data-testid="button-delete-contract"
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Delete
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setDialogOpen(false)}
-                      data-testid="button-cancel-contract"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="submit"
-                      disabled={updateMutation.isPending}
-                      data-testid="button-save-contract"
-                    >
-                      {updateMutation.isPending ? "Updating..." : "Update Contract"}
-                    </Button>
-                  </>
-                )}
+              <DialogFooter className="gap-2">
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => editingContract && deleteMutation.mutate(editingContract.id)}
+                  disabled={deleteMutation.isPending}
+                  data-testid="button-delete-contract"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowEditDialog(false)}
+                  data-testid="button-cancel-edit"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={updateMutation.isPending}
+                  data-testid="button-save-contract"
+                >
+                  {updateMutation.isPending ? "Saving..." : "Save Changes"}
+                </Button>
               </DialogFooter>
             </form>
           </Form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Template Preview Dialog */}
-      <Dialog open={showTemplatePreview} onOpenChange={setShowTemplatePreview}>
-        <DialogContent className="max-w-3xl max-h-[80vh]">
-          <DialogHeader>
-            <DialogTitle>{previewTemplate?.name}</DialogTitle>
-            <DialogDescription>{previewTemplate?.description}</DialogDescription>
-          </DialogHeader>
-          <ScrollArea className="h-[50vh] border rounded-lg p-4">
-            <pre className="whitespace-pre-wrap text-sm font-mono">
-              {previewTemplate?.templateContent}
-            </pre>
-          </ScrollArea>
-          {previewTemplate?.keyTerms && Array.isArray(previewTemplate.keyTerms) && (
-            <div className="mt-4">
-              <h4 className="text-sm font-semibold mb-2">Key Terms Included:</h4>
-              <div className="flex flex-wrap gap-2">
-                {(previewTemplate.keyTerms as string[]).map((term, idx) => (
-                  <Badge key={idx} variant="outline">
-                    {term}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowTemplatePreview(false)}>
-              Close
-            </Button>
-            <Button 
-              onClick={() => {
-                if (previewTemplate) {
-                  applyTemplate(previewTemplate);
-                  setShowTemplatePreview(false);
-                }
-              }}
-              className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
-            >
-              Use This Template
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -1183,34 +1258,6 @@ export default function ContractsPage() {
           </Form>
         </DialogContent>
       </Dialog>
-
-      {/* Change Template Confirmation Dialog */}
-      <Dialog open={showChangeTemplateConfirm} onOpenChange={setShowChangeTemplateConfirm}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Change Template?</DialogTitle>
-            <DialogDescription>
-              You've made changes to the contract. Switching to a different template will replace your current work. Are you sure you want to continue?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => setShowChangeTemplateConfirm(false)}
-            >
-              Keep My Changes
-            </Button>
-            <Button 
-              type="button" 
-              variant="destructive"
-              onClick={confirmTemplateChange}
-            >
-              Replace with New Template
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+    </>
   );
 }
