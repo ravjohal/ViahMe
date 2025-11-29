@@ -653,7 +653,7 @@ export default function Budget() {
               <Label htmlFor="category">Category</Label>
               {useCustomCategory ? (
                 <Input
-                  placeholder="Enter category name"
+                  placeholder="e.g., Wedding Gifts, Travel, Hair & Makeup"
                   value={customCategoryInput}
                   onChange={(e) => setCustomCategoryInput(e.target.value)}
                   data-testid="input-custom-category"
@@ -675,7 +675,7 @@ export default function Budget() {
                 step="0.01"
                 min="0"
                 {...form.register("allocatedAmount")}
-                placeholder="0.00"
+                placeholder="e.g., 15000"
                 data-testid="input-allocated-amount"
               />
             </div>
@@ -735,7 +735,7 @@ export default function Budget() {
                   min="0"
                   value={newTotalBudget}
                   onChange={(e) => setNewTotalBudget(e.target.value)}
-                  placeholder="0.00"
+                  placeholder="e.g., 100000"
                   className="pl-9"
                   data-testid="input-total-budget"
                 />

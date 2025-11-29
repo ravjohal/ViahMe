@@ -463,7 +463,7 @@ export default function TimelinePage() {
                         <Textarea
                           {...field}
                           value={field.value || ""}
-                          placeholder="Add event details..."
+                          placeholder="e.g., Formal lunch at the temple, limited to 150 guests, traditional dress requested"
                           data-testid="input-event-description"
                         />
                       </FormControl>
@@ -599,14 +599,14 @@ export default function TimelinePage() {
                             </div>
                             <div className="grid grid-cols-2 gap-2">
                               <Input
-                                placeholder="Cost name"
+                                placeholder="e.g., Catering"
                                 value={newCostItem.name}
                                 onChange={(e) => setNewCostItem({ ...newCostItem, name: e.target.value })}
                                 data-testid="input-new-cost-name"
                               />
                               <Input
                                 type="number"
-                                placeholder="Amount ($)"
+                                placeholder="e.g., 5000"
                                 value={newCostItem.amount}
                                 onChange={(e) => setNewCostItem({ ...newCostItem, amount: e.target.value })}
                                 data-testid="input-new-cost-amount"
