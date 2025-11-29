@@ -428,6 +428,24 @@ function DroppableDaySection({
   );
 }
 
+interface WizardData {
+  type: string;
+  name: string;
+  date: string;
+  time: string;
+  location: string;
+  guestCount: number | undefined;
+  description: string;
+}
+
+const WIZARD_STEPS = [
+  { id: 1, title: "Choose Event Type", description: "What kind of event is this?" },
+  { id: 2, title: "Name Your Event", description: "Give your event a memorable name" },
+  { id: 3, title: "Pick a Day", description: "When will this event happen?" },
+  { id: 4, title: "Time & Place", description: "Set the time and location" },
+  { id: 5, title: "Final Details", description: "Add guest count and notes" },
+];
+
 export default function TimelinePage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -440,6 +458,18 @@ export default function TimelinePage() {
   const [activeEventId, setActiveEventId] = useState<string | null>(null);
   const [addDayDialogOpen, setAddDayDialogOpen] = useState(false);
   const [newDayDate, setNewDayDate] = useState("");
+  
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [wizardStep, setWizardStep] = useState(1);
+  const [wizardData, setWizardData] = useState<WizardData>({
+    type: "",
+    name: "",
+    date: "",
+    time: "",
+    location: "",
+    guestCount: undefined,
+    description: "",
+  });
   
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -675,6 +705,83 @@ export default function TimelinePage() {
     toast({ title: "Day added", description: "You can now drag events to this new day." });
   };
 
+  const wizardCreateMutation = useMutation({
+    mutationFn: async (data: InsertEvent) => {
+      return await apiRequest("POST", "/api/events", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/events", wedding?.id] });
+      setWizardOpen(false);
+      resetWizard();
+      toast({
+        title: "Event created!",
+        description: "Your event has been added to the timeline.",
+      });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to create event.", variant: "destructive" });
+    },
+  });
+
+  const resetWizard = () => {
+    setWizardStep(1);
+    setWizardData({
+      type: "",
+      name: "",
+      date: "",
+      time: "",
+      location: "",
+      guestCount: undefined,
+      description: "",
+    });
+  };
+
+  const openWizard = () => {
+    resetWizard();
+    setWizardOpen(true);
+  };
+
+  const handleWizardNext = () => {
+    if (wizardStep < 5) {
+      setWizardStep(wizardStep + 1);
+    }
+  };
+
+  const handleWizardBack = () => {
+    if (wizardStep > 1) {
+      setWizardStep(wizardStep - 1);
+    }
+  };
+
+  const handleWizardSubmit = () => {
+    if (!wedding) return;
+    
+    const eventData = {
+      weddingId: wedding.id,
+      name: wizardData.name.trim() || (EVENT_TYPES.find(t => t.value === wizardData.type)?.label || "New Event"),
+      type: wizardData.type || "custom",
+      date: wizardData.date || undefined,
+      time: wizardData.time || undefined,
+      location: wizardData.location || undefined,
+      guestCount: wizardData.guestCount || undefined,
+      description: wizardData.description || undefined,
+      order: events.length + 1,
+    };
+    
+    wizardCreateMutation.mutate(eventData as unknown as InsertEvent);
+  };
+
+  const canProceedWizard = () => {
+    switch (wizardStep) {
+      case 1: return !!wizardData.type;
+      case 2: return !!wizardData.name.trim();
+      case 3: return true;
+      case 4: return true;
+      case 5: return !!wizardData.name.trim();
+      default: return false;
+    }
+  };
+
   const getNextAvailableDate = (): string => {
     const existingDates = events
       .map(e => toDateKey(e.date))
@@ -819,6 +926,298 @@ export default function TimelinePage() {
             {dayGroups.filter(d => d.date !== "unscheduled").length} days of celebration with {events.length} events
           </p>
         </div>
+        <div className="flex gap-2">
+          <Button 
+            onClick={openWizard}
+            data-testid="button-add-event-wizard" 
+            className="bg-gradient-to-r from-orange-600 to-pink-600 hover:from-orange-700 hover:to-pink-700 whitespace-nowrap"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            Add Event
+          </Button>
+        </div>
+
+        <Dialog open={wizardOpen} onOpenChange={(open) => {
+          setWizardOpen(open);
+          if (!open) resetWizard();
+        }}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <div className="flex items-center gap-4 mb-2">
+                {WIZARD_STEPS.map((step, idx) => (
+                  <div 
+                    key={step.id}
+                    className={`flex items-center ${idx < WIZARD_STEPS.length - 1 ? 'flex-1' : ''}`}
+                  >
+                    <div 
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
+                        step.id < wizardStep 
+                          ? "bg-green-500 text-white" 
+                          : step.id === wizardStep 
+                            ? "bg-gradient-to-r from-orange-500 to-pink-500 text-white" 
+                            : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {step.id < wizardStep ? <CheckCircle2 className="w-4 h-4" /> : step.id}
+                    </div>
+                    {idx < WIZARD_STEPS.length - 1 && (
+                      <div className={`h-0.5 flex-1 mx-2 ${step.id < wizardStep ? "bg-green-500" : "bg-muted"}`} />
+                    )}
+                  </div>
+                ))}
+              </div>
+              <DialogTitle className="text-xl">{WIZARD_STEPS[wizardStep - 1]?.title}</DialogTitle>
+              <p className="text-sm text-muted-foreground">{WIZARD_STEPS[wizardStep - 1]?.description}</p>
+            </DialogHeader>
+
+            <div className="py-4">
+              {wizardStep === 1 && (
+                <div className="grid grid-cols-2 gap-3">
+                  {EVENT_TYPES.map((type) => {
+                    const colors = EVENT_COLORS[type.value] || EVENT_COLORS.custom;
+                    return (
+                      <button
+                        key={type.value}
+                        type="button"
+                        onClick={() => setWizardData(prev => ({ ...prev, type: type.value }))}
+                        className={`p-4 rounded-xl border-2 transition-all text-left hover-elevate ${
+                          wizardData.type === type.value 
+                            ? `${colors.border} ${colors.bg} ring-2 ring-orange-400` 
+                            : "border-muted hover:border-muted-foreground/50"
+                        }`}
+                        data-testid={`wizard-event-type-${type.value}`}
+                      >
+                        <div className="text-3xl mb-2">{type.icon}</div>
+                        <div className="font-medium">{type.label}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {wizardStep === 2 && (
+                <div className="space-y-4">
+                  <Input
+                    value={wizardData.name}
+                    onChange={(e) => setWizardData(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder={`e.g., ${EVENT_TYPES.find(t => t.value === wizardData.type)?.label || "My Event"}`}
+                    className="text-lg py-6"
+                    autoFocus
+                    data-testid="wizard-input-name"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Tip: You can name it something special like "Bride's Sangeet" or "Main Ceremony"
+                  </p>
+                </div>
+              )}
+
+              {wizardStep === 3 && (
+                <div className="space-y-4">
+                  <div className="grid gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setWizardData(prev => ({ ...prev, date: "" }))}
+                      className={`p-4 rounded-xl border-2 transition-all text-left hover-elevate ${
+                        !wizardData.date ? "border-orange-400 bg-orange-50 dark:bg-orange-900/20 ring-2 ring-orange-400" : "border-muted"
+                      }`}
+                      data-testid="wizard-date-later"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Calendar className="w-6 h-6 text-orange-500" />
+                        <div>
+                          <div className="font-medium">Decide Later</div>
+                          <div className="text-sm text-muted-foreground">I'll assign a day later</div>
+                        </div>
+                      </div>
+                    </button>
+                    
+                    {dayGroups.filter(d => d.date !== "unscheduled").map((day) => (
+                      <button
+                        key={day.date}
+                        type="button"
+                        onClick={() => setWizardData(prev => ({ ...prev, date: day.date }))}
+                        className={`p-4 rounded-xl border-2 transition-all text-left hover-elevate ${
+                          wizardData.date === day.date 
+                            ? "border-orange-400 bg-orange-50 dark:bg-orange-900/20 ring-2 ring-orange-400" 
+                            : "border-muted"
+                        }`}
+                        data-testid={`wizard-date-${day.date}`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <Badge className="bg-gradient-to-r from-orange-500 to-pink-500 text-white">
+                              Day {day.dayNumber}
+                            </Badge>
+                            <div>
+                              <div className="font-medium">{day.dayName}</div>
+                              <div className="text-sm text-muted-foreground">
+                                {format(day.dateObj, "EEEE, MMMM d")}
+                              </div>
+                            </div>
+                          </div>
+                          {day.events.length > 0 && (
+                            <Badge variant="secondary">{day.events.length} events</Badge>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                  
+                  <div className="pt-2 border-t">
+                    <label className="text-sm text-muted-foreground">Or pick a specific date:</label>
+                    <Input
+                      type="date"
+                      value={wizardData.date}
+                      onChange={(e) => setWizardData(prev => ({ ...prev, date: e.target.value }))}
+                      className="mt-2"
+                      data-testid="wizard-input-date"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {wizardStep === 4 && (
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground mb-2">
+                    These are optional - you can add them now or fill in later
+                  </p>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">What time? (optional)</label>
+                    <Input
+                      value={wizardData.time}
+                      onChange={(e) => setWizardData(prev => ({ ...prev, time: e.target.value }))}
+                      placeholder="e.g., 6:00 PM"
+                      data-testid="wizard-input-time"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Where will it be? (optional)</label>
+                    <Input
+                      value={wizardData.location}
+                      onChange={(e) => setWizardData(prev => ({ ...prev, location: e.target.value }))}
+                      placeholder="e.g., The Grand Ballroom"
+                      data-testid="wizard-input-location"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {wizardStep === 5 && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">How many guests?</label>
+                    <Input
+                      type="number"
+                      value={wizardData.guestCount || ""}
+                      onChange={(e) => setWizardData(prev => ({ 
+                        ...prev, 
+                        guestCount: e.target.value ? parseInt(e.target.value) : undefined 
+                      }))}
+                      placeholder="e.g., 200"
+                      data-testid="wizard-input-guests"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Any notes? (optional)</label>
+                    <Textarea
+                      value={wizardData.description}
+                      onChange={(e) => setWizardData(prev => ({ ...prev, description: e.target.value }))}
+                      placeholder="e.g., Traditional dress requested, vegetarian menu"
+                      rows={3}
+                      data-testid="wizard-input-description"
+                    />
+                  </div>
+
+                  <Card className="bg-muted/50">
+                    <CardContent className="p-4">
+                      <h4 className="font-medium mb-3" data-testid="wizard-summary-title">Event Summary</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between" data-testid="wizard-summary-type">
+                          <span className="text-muted-foreground">Type:</span>
+                          <span>{EVENT_TYPES.find(t => t.value === wizardData.type)?.icon} {EVENT_TYPES.find(t => t.value === wizardData.type)?.label}</span>
+                        </div>
+                        <div className="flex justify-between" data-testid="wizard-summary-name">
+                          <span className="text-muted-foreground">Name:</span>
+                          <span className="font-medium">{wizardData.name}</span>
+                        </div>
+                        <div className="flex justify-between" data-testid="wizard-summary-date">
+                          <span className="text-muted-foreground">Date:</span>
+                          {wizardData.date ? (
+                            <span>{format(dateKeyToLocalDate(wizardData.date), "MMMM d, yyyy")}</span>
+                          ) : (
+                            <span className="text-orange-600 italic">Not scheduled yet</span>
+                          )}
+                        </div>
+                        <div className="flex justify-between" data-testid="wizard-summary-time">
+                          <span className="text-muted-foreground">Time:</span>
+                          {wizardData.time ? (
+                            <span>{wizardData.time}</span>
+                          ) : (
+                            <span className="text-muted-foreground/60 italic">Not set</span>
+                          )}
+                        </div>
+                        <div className="flex justify-between" data-testid="wizard-summary-location">
+                          <span className="text-muted-foreground">Location:</span>
+                          {wizardData.location ? (
+                            <span>{wizardData.location}</span>
+                          ) : (
+                            <span className="text-muted-foreground/60 italic">Not set</span>
+                          )}
+                        </div>
+                        {wizardData.guestCount && (
+                          <div className="flex justify-between" data-testid="wizard-summary-guests">
+                            <span className="text-muted-foreground">Guests:</span>
+                            <span>{wizardData.guestCount}</span>
+                          </div>
+                        )}
+                      </div>
+                      {!wizardData.date && (
+                        <p className="text-xs text-orange-600 mt-3 flex items-center gap-1" data-testid="wizard-summary-unscheduled-note">
+                          <Calendar className="w-3 h-3" />
+                          This event will appear in "Unscheduled" - you can drag it to a day later
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-between pt-4 border-t">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={wizardStep === 1 ? () => setWizardOpen(false) : handleWizardBack}
+                data-testid="wizard-button-back"
+              >
+                {wizardStep === 1 ? "Cancel" : "Back"}
+              </Button>
+              
+              {wizardStep < 5 ? (
+                <Button
+                  type="button"
+                  onClick={handleWizardNext}
+                  disabled={!canProceedWizard()}
+                  className="bg-gradient-to-r from-orange-600 to-pink-600"
+                  data-testid="wizard-button-next"
+                >
+                  Continue
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  onClick={handleWizardSubmit}
+                  disabled={wizardCreateMutation.isPending}
+                  className="bg-gradient-to-r from-orange-600 to-pink-600"
+                  data-testid="wizard-button-create"
+                >
+                  {wizardCreateMutation.isPending ? "Creating..." : "Create Event"}
+                </Button>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+
         <Dialog open={dialogOpen} onOpenChange={(open) => {
           setDialogOpen(open);
           if (!open) {
@@ -831,15 +1230,6 @@ export default function TimelinePage() {
             });
           }
         }}>
-          <DialogTrigger asChild>
-            <Button 
-              data-testid="button-add-event" 
-              className="bg-gradient-to-r from-orange-600 to-pink-600 hover:from-orange-700 hover:to-pink-700 whitespace-nowrap"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              Add Event
-            </Button>
-          </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingEvent ? "Edit Event" : "Create New Event"}</DialogTitle>
