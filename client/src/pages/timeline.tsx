@@ -1,13 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import type { Event, InsertEvent, EventCostItem, BudgetCategory } from "@shared/schema";
 import { EventDetailModal } from "@/components/event-detail-modal";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Calendar, MapPin, Users, Clock, Pencil, Trash2, DollarSign, X, Tag, HelpCircle } from "lucide-react";
+import { Plus, Calendar, MapPin, Users, Clock, Pencil, Trash2, DollarSign, X, Tag, HelpCircle, ChevronDown, ChevronRight, Sun, Sunset, Moon, Sunrise, CheckCircle2, CircleDot } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { format } from "date-fns";
+import { format, isAfter, isBefore, isToday, startOfDay, parseISO } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -79,15 +79,52 @@ const EVENT_TYPES = [
   { value: "custom", label: "Custom Event", icon: "📅" },
 ];
 
-const EVENT_COLORS: Record<string, string> = {
-  paath: "border-l-chart-4",
-  mehndi: "border-l-chart-2",
-  maiyan: "border-l-chart-3",
-  sangeet: "border-l-chart-1",
-  anand_karaj: "border-l-primary",
-  reception: "border-l-chart-5",
-  custom: "border-l-muted",
+const EVENT_COLORS: Record<string, { bg: string; border: string; icon: string; gradient: string }> = {
+  paath: { bg: "bg-amber-100 dark:bg-amber-900/30", border: "border-amber-400", icon: "text-amber-600 dark:text-amber-400", gradient: "from-amber-500 to-orange-500" },
+  mehndi: { bg: "bg-emerald-100 dark:bg-emerald-900/30", border: "border-emerald-400", icon: "text-emerald-600 dark:text-emerald-400", gradient: "from-emerald-500 to-teal-500" },
+  maiyan: { bg: "bg-yellow-100 dark:bg-yellow-900/30", border: "border-yellow-400", icon: "text-yellow-600 dark:text-yellow-400", gradient: "from-yellow-500 to-amber-500" },
+  sangeet: { bg: "bg-pink-100 dark:bg-pink-900/30", border: "border-pink-400", icon: "text-pink-600 dark:text-pink-400", gradient: "from-pink-500 to-rose-500" },
+  anand_karaj: { bg: "bg-orange-100 dark:bg-orange-900/30", border: "border-orange-400", icon: "text-orange-600 dark:text-orange-400", gradient: "from-orange-500 to-red-500" },
+  reception: { bg: "bg-purple-100 dark:bg-purple-900/30", border: "border-purple-400", icon: "text-purple-600 dark:text-purple-400", gradient: "from-purple-500 to-indigo-500" },
+  custom: { bg: "bg-slate-100 dark:bg-slate-900/30", border: "border-slate-400", icon: "text-slate-600 dark:text-slate-400", gradient: "from-slate-500 to-gray-500" },
 };
+
+type TimeOfDay = "morning" | "afternoon" | "evening" | "night";
+
+const getTimeOfDay = (timeStr: string | null | undefined): TimeOfDay => {
+  if (!timeStr) return "afternoon";
+  const lowerTime = timeStr.toLowerCase();
+  
+  const hourMatch = lowerTime.match(/(\d{1,2})/);
+  if (!hourMatch) return "afternoon";
+  
+  let hour = parseInt(hourMatch[1], 10);
+  const isPM = lowerTime.includes("pm");
+  const isAM = lowerTime.includes("am");
+  
+  if (isPM && hour !== 12) hour += 12;
+  if (isAM && hour === 12) hour = 0;
+  
+  if (hour >= 5 && hour < 12) return "morning";
+  if (hour >= 12 && hour < 17) return "afternoon";
+  if (hour >= 17 && hour < 21) return "evening";
+  return "night";
+};
+
+const TIME_OF_DAY_CONFIG: Record<TimeOfDay, { label: string; icon: typeof Sun; color: string }> = {
+  morning: { label: "Morning", icon: Sunrise, color: "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300" },
+  afternoon: { label: "Afternoon", icon: Sun, color: "bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300" },
+  evening: { label: "Evening", icon: Sunset, color: "bg-pink-100 text-pink-700 dark:bg-pink-900/50 dark:text-pink-300" },
+  night: { label: "Night", icon: Moon, color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300" },
+};
+
+interface DayGroup {
+  date: string;
+  dateObj: Date;
+  dayNumber: number;
+  dayName: string;
+  events: Event[];
+}
 
 export default function TimelinePage() {
   const [, setLocation] = useLocation();
@@ -97,11 +134,11 @@ export default function TimelinePage() {
   const [viewingEventId, setViewingEventId] = useState<string | null>(null);
   const [costItemsOpen, setCostItemsOpen] = useState(false);
   const [newCostItem, setNewCostItem] = useState({ name: "", costType: "fixed" as "per_head" | "fixed", amount: "", categoryId: "" });
+  const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set());
 
   const { data: weddings = [], isLoading: weddingsLoading } = useQuery<any[]>({
     queryKey: ["/api/weddings"],
   });
-  // Use the most recently created wedding (last in array)
   const wedding = weddings[weddings.length - 1];
 
   const { data: events = [], isLoading: eventsLoading } = useQuery<Event[]>({
@@ -109,25 +146,21 @@ export default function TimelinePage() {
     enabled: !!wedding?.id,
   });
 
-  // Fetch budget categories for linking costs
   const { data: budgetCategories = [] } = useQuery<BudgetCategory[]>({
     queryKey: ["/api/budget-categories", wedding?.id],
     enabled: !!wedding?.id,
   });
 
-  // Fetch cost items for the editing event
   const { data: costItems = [], isLoading: costItemsLoading } = useQuery<EventCostItem[]>({
     queryKey: ["/api/events", editingEvent?.id, "cost-items"],
     enabled: !!editingEvent?.id,
   });
 
-  // Fetch cost items for the viewing event
   const { data: viewingCostItems = [], isLoading: viewingCostItemsLoading } = useQuery<EventCostItem[]>({
     queryKey: ["/api/events", viewingEventId, "cost-items"],
     enabled: !!viewingEventId,
   });
 
-  // Cost item mutations
   const createCostItemMutation = useMutation({
     mutationFn: async (data: { name: string; costType: string; amount: string; categoryId?: string }) => {
       return await apiRequest("POST", `/api/events/${editingEvent?.id}/cost-items`, {
@@ -209,8 +242,20 @@ export default function TimelinePage() {
     },
   });
 
+  const toDateKey = (date: Date | string | null | undefined): string | null => {
+    if (!date) return null;
+    if (typeof date === 'string') {
+      return date.split('T')[0];
+    }
+    return date.toISOString().slice(0, 10);
+  };
+
+  const dateKeyToLocalDate = (dateKey: string): Date => {
+    const [year, month, day] = dateKey.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  };
+
   const onSubmit = (data: InsertEvent) => {
-    // Convert numeric fields from strings
     const processedData = {
       ...data,
       venueCapacity: data.venueCapacity ? parseInt(data.venueCapacity as any, 10) : undefined,
@@ -222,7 +267,6 @@ export default function TimelinePage() {
     } else {
       createMutation.mutate(processedData);
     }
-    // Note: Form reset and dialog close happen in onSuccess callbacks
   };
 
   const handleEdit = (event: Event) => {
@@ -231,7 +275,7 @@ export default function TimelinePage() {
       weddingId: event.weddingId,
       name: event.name,
       type: event.type as InsertEvent['type'],
-      date: event.date ? format(new Date(event.date), "yyyy-MM-dd") : "" as any,
+      date: (toDateKey(event.date) || "") as any,
       time: event.time || "",
       location: event.location || "",
       guestCount: event.guestCount || undefined,
@@ -253,14 +297,24 @@ export default function TimelinePage() {
     return events.find((e) => e.id === viewingEventId);
   };
 
-  // Auto-expand cost items when editing an event
+  const toggleDayCollapse = (dateKey: string) => {
+    setCollapsedDays(prev => {
+      const next = new Set(prev);
+      if (next.has(dateKey)) {
+        next.delete(dateKey);
+      } else {
+        next.add(dateKey);
+      }
+      return next;
+    });
+  };
+
   useEffect(() => {
     if (editingEvent) {
       setCostItemsOpen(true);
     }
   }, [editingEvent]);
 
-  // Auto-open event editor from query parameter
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const eventId = params.get("eventId");
@@ -268,13 +322,92 @@ export default function TimelinePage() {
       const event = events.find(e => e.id === eventId);
       if (event) {
         handleEdit(event);
-        // Clean up the URL
         window.history.replaceState({}, "", window.location.pathname);
       }
     }
   }, [events]);
 
-  const sortedEvents = [...events].sort((a, b) => a.order - b.order);
+  const sortedEvents = [...events].sort((a, b) => {
+    const aKey = toDateKey(a.date);
+    const bKey = toDateKey(b.date);
+    if (aKey && bKey) {
+      const dateCompare = aKey.localeCompare(bKey);
+      if (dateCompare !== 0) return dateCompare;
+    }
+    if (aKey && !bKey) return -1;
+    if (!aKey && bKey) return 1;
+    return a.order - b.order;
+  });
+
+  const dayGroups = useMemo((): DayGroup[] => {
+    const groups: Map<string, Event[]> = new Map();
+    const undatedEvents: Event[] = [];
+    
+    sortedEvents.forEach(event => {
+      const dateKey = toDateKey(event.date);
+      if (dateKey) {
+        if (!groups.has(dateKey)) {
+          groups.set(dateKey, []);
+        }
+        groups.get(dateKey)!.push(event);
+      } else {
+        undatedEvents.push(event);
+      }
+    });
+
+    const sortedDates = Array.from(groups.keys()).sort();
+    
+    const result: DayGroup[] = sortedDates.map((dateKey, index) => {
+      const dateObj = dateKeyToLocalDate(dateKey);
+      const dayEvents = groups.get(dateKey)!;
+      const primaryEvent = dayEvents.find(e => ["sangeet", "anand_karaj", "reception", "mehndi"].includes(e.type));
+      
+      return {
+        date: dateKey,
+        dateObj,
+        dayNumber: index + 1,
+        dayName: primaryEvent ? EVENT_TYPES.find(t => t.value === primaryEvent.type)?.label || "Events" : "Events",
+        events: dayEvents,
+      };
+    });
+
+    if (undatedEvents.length > 0) {
+      result.push({
+        date: "unscheduled",
+        dateObj: new Date(),
+        dayNumber: 0,
+        dayName: "To Be Scheduled",
+        events: undatedEvents,
+      });
+    }
+
+    return result;
+  }, [sortedEvents]);
+
+  const getEventStatus = (event: Event): "completed" | "today" | "upcoming" => {
+    const dateKey = toDateKey(event.date);
+    if (!dateKey) return "upcoming";
+    
+    const eventDate = dateKeyToLocalDate(dateKey);
+    const today = startOfDay(new Date());
+    
+    if (isBefore(eventDate, today)) return "completed";
+    if (isToday(eventDate)) return "today";
+    return "upcoming";
+  };
+
+  const getDaySummary = (dayEvents: Event[]) => {
+    const totalGuests = dayEvents.reduce((sum, e) => sum + (e.guestCount || 0), 0);
+    const venues = Array.from(new Set(dayEvents.filter(e => e.location).map(e => e.location)));
+    const estimatedCost = dayEvents.reduce((sum, e) => {
+      if (e.costPerHead && e.guestCount) {
+        return sum + (parseFloat(e.costPerHead) * e.guestCount);
+      }
+      return sum;
+    }, 0);
+    
+    return { totalGuests, venues, estimatedCost };
+  };
 
   if (weddingsLoading) {
     return (
@@ -289,15 +422,234 @@ export default function TimelinePage() {
     return null;
   }
 
+  const renderEventNode = (event: Event, isLast: boolean) => {
+    const eventType = EVENT_TYPES.find((t) => t.value === event.type);
+    const colors = EVENT_COLORS[event.type] || EVENT_COLORS.custom;
+    const timeOfDay = getTimeOfDay(event.time);
+    const todConfig = TIME_OF_DAY_CONFIG[timeOfDay];
+    const TimeIcon = todConfig.icon;
+    const status = getEventStatus(event);
+
+    return (
+      <div key={event.id} className="relative flex gap-4" data-testid={`timeline-event-${event.id}`}>
+        <div className="flex flex-col items-center">
+          <div 
+            className={`relative z-10 w-12 h-12 rounded-full flex items-center justify-center border-2 ${colors.border} ${colors.bg} shadow-md transition-transform hover:scale-110`}
+          >
+            {status === "completed" ? (
+              <CheckCircle2 className={`w-6 h-6 ${colors.icon}`} />
+            ) : status === "today" ? (
+              <CircleDot className={`w-6 h-6 ${colors.icon} animate-pulse`} />
+            ) : (
+              <span className="text-xl">{eventType?.icon || "📅"}</span>
+            )}
+          </div>
+          {!isLast && (
+            <div className="w-0.5 h-full min-h-[80px] bg-gradient-to-b from-muted-foreground/30 to-muted-foreground/10" />
+          )}
+        </div>
+
+        <Card 
+          className={`flex-1 mb-4 cursor-pointer transition-all hover-elevate ${
+            status === "completed" ? "opacity-70" : ""
+          } ${status === "today" ? "ring-2 ring-orange-400 ring-offset-2" : ""}`}
+          onClick={() => setViewingEventId(event.id)}
+          data-testid={`card-event-${event.id}`}
+        >
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <div className="flex-1 min-w-[200px]">
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                  <h3 className="font-display text-xl font-bold text-foreground">
+                    {event.name}
+                  </h3>
+                  <Badge className={`${todConfig.color} gap-1`}>
+                    <TimeIcon className="w-3 h-3" />
+                    {todConfig.label}
+                  </Badge>
+                  {status === "completed" && (
+                    <Badge variant="secondary" className="gap-1">
+                      <CheckCircle2 className="w-3 h-3" />
+                      Completed
+                    </Badge>
+                  )}
+                  {status === "today" && (
+                    <Badge className="bg-gradient-to-r from-orange-500 to-pink-500 text-white gap-1">
+                      <CircleDot className="w-3 h-3" />
+                      Today
+                    </Badge>
+                  )}
+                </div>
+
+                {event.description && (
+                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{event.description}</p>
+                )}
+
+                <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
+                  {event.time && (
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-4 h-4" />
+                      <span>{event.time}</span>
+                    </div>
+                  )}
+                  {event.location && (
+                    <div className="flex items-center gap-1">
+                      <MapPin className="w-4 h-4" />
+                      <span className="truncate max-w-[200px]">{event.location}</span>
+                    </div>
+                  )}
+                  {event.guestCount && (
+                    <div className="flex items-center gap-1">
+                      <Users className="w-4 h-4" />
+                      <span>{event.guestCount} guests</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => handleEdit(event)}
+                  data-testid={`button-edit-event-${event.id}`}
+                >
+                  <Pencil className="w-4 h-4" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => handleDelete(event.id)}
+                  data-testid={`button-delete-event-${event.id}`}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
+
+  const renderDaySection = (day: DayGroup) => {
+    const isCollapsed = collapsedDays.has(day.date);
+    const summary = getDaySummary(day.events);
+    const isUnscheduled = day.date === "unscheduled";
+    const dayStatus = isUnscheduled ? "upcoming" : getEventStatus(day.events[0]);
+    
+    return (
+      <div key={day.date} className="mb-8" data-testid={`day-section-${day.date}`}>
+        <Collapsible open={!isCollapsed} onOpenChange={() => toggleDayCollapse(day.date)}>
+          <div className={`mb-4 rounded-xl p-4 ${
+            isUnscheduled 
+              ? "bg-muted/50 border border-dashed border-muted-foreground/30" 
+              : dayStatus === "completed" 
+                ? "bg-muted/30" 
+                : dayStatus === "today"
+                  ? "bg-gradient-to-r from-orange-100 to-pink-100 dark:from-orange-900/20 dark:to-pink-900/20 border border-orange-200 dark:border-orange-800"
+                  : "bg-gradient-to-r from-orange-50 to-pink-50 dark:from-orange-900/10 dark:to-pink-900/10"
+          }`}>
+            <CollapsibleTrigger asChild>
+              <button className="w-full text-left" data-testid={`button-toggle-day-${day.date}`}>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    {isCollapsed ? (
+                      <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                    )}
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {!isUnscheduled && (
+                          <Badge className="bg-gradient-to-r from-orange-500 to-pink-500 text-white font-bold">
+                            Day {day.dayNumber}
+                          </Badge>
+                        )}
+                        <h2 className="text-xl font-bold text-foreground">
+                          {day.dayName}
+                        </h2>
+                        {dayStatus === "today" && (
+                          <Badge className="bg-gradient-to-r from-orange-500 to-pink-500 text-white animate-pulse">
+                            Today
+                          </Badge>
+                        )}
+                        {dayStatus === "completed" && !isUnscheduled && (
+                          <Badge variant="secondary">
+                            <CheckCircle2 className="w-3 h-3 mr-1" />
+                            Completed
+                          </Badge>
+                        )}
+                      </div>
+                      {!isUnscheduled && (
+                        <p className="text-sm text-muted-foreground mt-0.5">
+                          {format(day.dateObj, "EEEE, MMMM d, yyyy")}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-4 h-4" />
+                      {day.events.length} {day.events.length === 1 ? "event" : "events"}
+                    </span>
+                    {summary.totalGuests > 0 && (
+                      <span className="flex items-center gap-1 hidden sm:flex">
+                        <Users className="w-4 h-4" />
+                        {summary.totalGuests} guests
+                      </span>
+                    )}
+                    {summary.estimatedCost > 0 && (
+                      <span className="flex items-center gap-1 hidden md:flex">
+                        <DollarSign className="w-4 h-4" />
+                        ${summary.estimatedCost.toLocaleString()}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </button>
+            </CollapsibleTrigger>
+            
+            {!isCollapsed && summary.venues.length > 0 && (
+              <div className="mt-3 pt-3 border-t border-muted-foreground/10">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
+                  <MapPin className="w-4 h-4" />
+                  <span className="font-medium">Venues:</span>
+                  {summary.venues.slice(0, 3).map((venue, idx) => (
+                    <Badge key={idx} variant="outline" className="font-normal">
+                      {venue}
+                    </Badge>
+                  ))}
+                  {summary.venues.length > 3 && (
+                    <span className="text-xs">+{summary.venues.length - 3} more</span>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <CollapsibleContent>
+            <div className="pl-2">
+              {day.events.map((event, idx) => 
+                renderEventNode(event, idx === day.events.length - 1)
+              )}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      </div>
+    );
+  };
+
   return (
     <div className="container mx-auto px-6 py-8">
-      <div className="mb-8 flex items-start justify-between gap-6">
+      <div className="mb-8 flex items-start justify-between gap-6 flex-wrap">
         <div>
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-orange-600 via-pink-600 to-purple-600 bg-clip-text text-transparent mb-2" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-            Event Timeline ✨
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-600 via-pink-600 to-purple-600 bg-clip-text text-transparent mb-2" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+            Your Wedding Journey
           </h1>
-          <p className="text-lg font-semibold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-            Manage your complete celebration schedule 🎊
+          <p className="text-muted-foreground">
+            {dayGroups.filter(d => d.date !== "unscheduled").length} days of celebration with {events.length} events
           </p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={(open) => {
@@ -486,7 +838,7 @@ export default function TimelinePage() {
                               <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
                             </TooltipTrigger>
                             <TooltipContent>
-                              This multiplies by guest count. For example, $150 per guest × 200 guests = $30,000
+                              This multiplies by guest count. For example, $150 per guest x 200 guests = $30,000
                             </TooltipContent>
                           </Tooltip>
                         </FormLabel>
@@ -524,10 +876,10 @@ export default function TimelinePage() {
                         <FormControl>
                           <Input
                             {...field}
-                            value={field.value || ""}
                             type="number"
-                            placeholder="e.g., 250"
+                            value={field.value || ""}
                             onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                            placeholder="e.g., 250"
                             data-testid="input-venue-capacity"
                           />
                         </FormControl>
@@ -538,120 +890,111 @@ export default function TimelinePage() {
                 </div>
 
                 {editingEvent && (
-                  <Collapsible open={costItemsOpen} onOpenChange={setCostItemsOpen} className="border rounded-lg p-4 space-y-4">
+                  <Collapsible open={costItemsOpen} onOpenChange={setCostItemsOpen}>
                     <CollapsibleTrigger asChild>
-                      <Button variant="ghost" className="w-full flex items-center justify-between p-0 h-auto hover:bg-transparent" data-testid="button-toggle-cost-items">
-                        <div className="flex items-center gap-2">
-                          <DollarSign className="w-5 h-5 text-primary" />
-                          <span className="font-medium">Cost Breakdown</span>
+                      <Button type="button" variant="outline" className="w-full justify-between">
+                        <span className="flex items-center gap-2">
+                          <DollarSign className="w-4 h-4" />
+                          Event Cost Items
                           {costItems.length > 0 && (
-                            <Badge variant="secondary" className="ml-2">{costItems.length} items</Badge>
+                            <Badge variant="secondary">{costItems.length}</Badge>
                           )}
-                        </div>
-                        <span className="text-sm text-muted-foreground">{costItemsOpen ? "Hide" : "Show"}</span>
+                        </span>
+                        {costItemsOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                       </Button>
                     </CollapsibleTrigger>
-                    <CollapsibleContent className="space-y-4 pt-4">
+                    <CollapsibleContent className="pt-4 space-y-4">
                       {costItemsLoading ? (
-                        <div className="text-center text-muted-foreground py-2">Loading costs...</div>
+                        <Skeleton className="h-20 w-full" />
                       ) : (
                         <>
                           {costItems.length > 0 && (
                             <div className="space-y-2">
-                              {costItems.map((item) => {
-                                const linkedCategory = budgetCategories.find(c => c.id === item.categoryId);
-                                return (
-                                  <div key={item.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg" data-testid={`cost-item-${item.id}`}>
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                      <span className="font-medium">{item.name}</span>
-                                      <Badge variant="outline" className="text-xs">
-                                        {item.costType === "per_head" ? "Per Guest" : "Fixed"}
+                              {costItems.map((item) => (
+                                <div key={item.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                                  <div className="flex items-center gap-3">
+                                    <span className="font-medium">{item.name}</span>
+                                    <Badge variant="outline" className="text-xs">
+                                      {item.costType === "per_head" ? "Per Head" : "Fixed"}
+                                    </Badge>
+                                    {item.categoryId && budgetCategories.find(c => c.id === item.categoryId) && (
+                                      <Badge variant="secondary" className="text-xs">
+                                        <Tag className="w-3 h-3 mr-1" />
+                                        {CATEGORY_LABELS[budgetCategories.find(c => c.id === item.categoryId)?.category || ""] || budgetCategories.find(c => c.id === item.categoryId)?.category}
                                       </Badge>
-                                      {linkedCategory && (
-                                        <Badge variant="secondary" className="text-xs">
-                                          <Tag className="w-3 h-3 mr-1" />
-                                          {CATEGORY_LABELS[linkedCategory.category] || linkedCategory.category}
-                                        </Badge>
-                                      )}
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                      <span className="font-semibold text-primary">${parseFloat(item.amount).toLocaleString()}</span>
-                                      <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => deleteCostItemMutation.mutate(item.id)}
-                                        disabled={deleteCostItemMutation.isPending}
-                                        data-testid={`button-delete-cost-${item.id}`}
-                                      >
-                                        <X className="w-4 h-4 text-muted-foreground hover:text-destructive" />
-                                      </Button>
-                                    </div>
+                                    )}
                                   </div>
-                                );
-                              })}
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-semibold">${parseFloat(item.amount).toLocaleString()}</span>
+                                    <Button
+                                      type="button"
+                                      size="icon"
+                                      variant="ghost"
+                                      onClick={() => deleteCostItemMutation.mutate(item.id)}
+                                    >
+                                      <X className="w-4 h-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))}
                             </div>
                           )}
 
-                          <div className="space-y-3 pt-2 border-t">
-                            <p className="text-sm text-muted-foreground">Add a new cost item:</p>
-                            <div className="flex flex-wrap gap-2">
-                              {COST_PRESETS.filter(p => !costItems.some(ci => ci.name === p.name)).slice(0, 5).map((preset) => {
-                                // Find matching budget category for preset
-                                const matchingCategory = budgetCategories.find(c => c.category === preset.defaultCategory);
-                                return (
-                                  <Button
-                                    key={preset.name}
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setNewCostItem({ 
-                                      ...newCostItem, 
+                          <div className="p-4 rounded-lg border border-dashed space-y-3">
+                            <p className="text-sm text-muted-foreground font-medium">Add New Cost Item</p>
+                            <div className="flex flex-wrap gap-2 mb-3">
+                              {COST_PRESETS.map((preset) => (
+                                <Button
+                                  key={preset.name}
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    const category = budgetCategories.find(c => c.category === preset.defaultCategory);
+                                    setNewCostItem(prev => ({ 
+                                      ...prev, 
                                       name: preset.name, 
                                       costType: preset.type,
-                                      categoryId: matchingCategory?.id || ""
-                                    })}
-                                    data-testid={`button-preset-${preset.name.toLowerCase().replace(/\s/g, '-')}`}
-                                  >
-                                    {preset.name}
-                                  </Button>
-                                );
-                              })}
+                                      categoryId: category?.id || ""
+                                    }));
+                                  }}
+                                >
+                                  {preset.name}
+                                </Button>
+                              ))}
                             </div>
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className="grid grid-cols-2 gap-3">
                               <Input
-                                placeholder="e.g., Catering"
+                                placeholder="Cost name"
                                 value={newCostItem.name}
-                                onChange={(e) => setNewCostItem({ ...newCostItem, name: e.target.value })}
-                                data-testid="input-new-cost-name"
+                                onChange={(e) => setNewCostItem(prev => ({ ...prev, name: e.target.value }))}
                               />
                               <Input
                                 type="number"
-                                placeholder="e.g., 5000"
+                                placeholder="Amount"
                                 value={newCostItem.amount}
-                                onChange={(e) => setNewCostItem({ ...newCostItem, amount: e.target.value })}
-                                data-testid="input-new-cost-amount"
+                                onChange={(e) => setNewCostItem(prev => ({ ...prev, amount: e.target.value }))}
                               />
                             </div>
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className="grid grid-cols-2 gap-3">
                               <Select
                                 value={newCostItem.costType}
-                                onValueChange={(v) => setNewCostItem({ ...newCostItem, costType: v as "per_head" | "fixed" })}
+                                onValueChange={(v) => setNewCostItem(prev => ({ ...prev, costType: v as "per_head" | "fixed" }))}
                               >
-                                <SelectTrigger data-testid="select-cost-type">
-                                  <SelectValue />
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Cost type" />
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="fixed">Fixed Cost</SelectItem>
-                                  <SelectItem value="per_head">Per Guest</SelectItem>
+                                  <SelectItem value="per_head">Per Head</SelectItem>
                                 </SelectContent>
                               </Select>
                               <Select
                                 value={newCostItem.categoryId}
-                                onValueChange={(v) => setNewCostItem({ ...newCostItem, categoryId: v })}
+                                onValueChange={(v) => setNewCostItem(prev => ({ ...prev, categoryId: v }))}
                               >
-                                <SelectTrigger data-testid="select-budget-category">
-                                  <SelectValue placeholder="Link to Budget Category" />
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Budget category (optional)" />
                                 </SelectTrigger>
                                 <SelectContent>
                                   {budgetCategories.map((cat) => (
@@ -664,14 +1007,11 @@ export default function TimelinePage() {
                             </div>
                             <Button
                               type="button"
-                              variant="secondary"
-                              size="sm"
                               className="w-full"
+                              variant="secondary"
                               disabled={!newCostItem.name || !newCostItem.amount || createCostItemMutation.isPending}
                               onClick={() => createCostItemMutation.mutate(newCostItem)}
-                              data-testid="button-add-cost-item"
                             >
-                              <Plus className="w-4 h-4 mr-2" />
                               {createCostItemMutation.isPending ? "Adding..." : "Add Cost Item"}
                             </Button>
                           </div>
@@ -714,7 +1054,7 @@ export default function TimelinePage() {
         </Dialog>
       </div>
 
-      <div className="space-y-4">
+      <div>
         {eventsLoading ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
@@ -734,91 +1074,12 @@ export default function TimelinePage() {
             </Button>
           </Card>
         ) : (
-          sortedEvents.map((event, index) => {
-            const eventType = EVENT_TYPES.find((t) => t.value === event.type);
-
-            return (
-              <Card
-                key={event.id}
-                className={`p-6 border-l-4 ${EVENT_COLORS[event.type] || EVENT_COLORS.custom} hover-elevate transition-all bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 cursor-pointer`}
-                data-testid={`card-event-${event.id}`}
-                onClick={() => setViewingEventId(event.id)}
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-3">
-                      <span className="text-2xl">{eventType?.icon || "📅"}</span>
-                      <div>
-                        <h3 className="font-display text-2xl font-bold text-foreground">
-                          {event.name}
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          Event {index + 1} of {sortedEvents.length}
-                        </p>
-                      </div>
-                    </div>
-
-                    {event.description && (
-                      <p className="text-muted-foreground mb-4">{event.description}</p>
-                    )}
-
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {event.date && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Calendar className="w-4 h-4 text-muted-foreground" />
-                          <span>{format(new Date(event.date), "MMM d, yyyy")}</span>
-                        </div>
-                      )}
-
-                      {event.time && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Clock className="w-4 h-4 text-muted-foreground" />
-                          <span>{event.time}</span>
-                        </div>
-                      )}
-
-                      {event.location && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <MapPin className="w-4 h-4 text-muted-foreground" />
-                          <span>{event.location}</span>
-                        </div>
-                      )}
-
-                      {event.guestCount && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Users className="w-4 h-4 text-muted-foreground" />
-                          <span>{event.guestCount} guests</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      onClick={() => handleEdit(event)}
-                      data-testid={`button-edit-event-${event.id}`}
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      onClick={() => handleDelete(event.id)}
-                      data-testid={`button-delete-event-${event.id}`}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            );
-          })
+          <div>
+            {dayGroups.map(day => renderDaySection(day))}
+          </div>
         )}
       </div>
 
-      {/* Event Details Modal */}
       <EventDetailModal
         open={!!viewingEventId}
         onOpenChange={(open) => {
