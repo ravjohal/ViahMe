@@ -446,8 +446,9 @@ export type Task = typeof tasks.$inferSelect;
 export const contracts = pgTable("contracts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   weddingId: varchar("wedding_id").notNull(),
-  bookingId: varchar("booking_id").notNull(),
+  eventId: varchar("event_id").notNull(), // Which event this contract is for
   vendorId: varchar("vendor_id").notNull(),
+  bookingId: varchar("booking_id"), // Optional - for legacy compatibility
   contractTerms: text("contract_terms"),
   totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
   paymentMilestones: jsonb("payment_milestones"), // Array of {name, amount, dueDate, status, paidDate}
@@ -463,6 +464,7 @@ export const insertContractSchema = createInsertSchema(contracts).omit({
   status: z.enum(['draft', 'sent', 'signed', 'active', 'completed', 'cancelled']).optional(),
   totalAmount: z.string(),
   signedDate: z.string().optional().transform(val => val ? new Date(val) : undefined),
+  bookingId: z.string().optional().nullable(),
 });
 
 export type InsertContract = z.infer<typeof insertContractSchema>;
