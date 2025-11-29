@@ -15,7 +15,8 @@ import { insertBudgetCategorySchema, type Wedding, type BudgetCategory } from "@
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
-import { DollarSign, Edit2, Trash2, Plus, CheckCircle2, AlertCircle, TrendingUp } from "lucide-react";
+import { DollarSign, Edit2, Trash2, Plus, CheckCircle2, AlertCircle, TrendingUp, HelpCircle } from "lucide-react";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 const budgetFormSchema = insertBudgetCategorySchema.extend({
   allocatedAmount: z.string().transform((val) => val),
@@ -666,8 +667,16 @@ export default function Budget() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="allocatedAmount">
+              <Label htmlFor="allocatedAmount" className="flex items-center gap-2">
                 How much to set aside?
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    This is your planned budget for this category. It's separate from what you actually spend.
+                  </TooltipContent>
+                </Tooltip>
               </Label>
               <Input
                 id="allocatedAmount"

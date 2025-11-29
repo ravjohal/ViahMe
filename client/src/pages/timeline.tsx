@@ -5,7 +5,8 @@ import type { Event, InsertEvent, EventCostItem, BudgetCategory } from "@shared/
 import { EventDetailModal } from "@/components/event-detail-modal";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Calendar, MapPin, Users, Clock, Pencil, Trash2, DollarSign, X, Tag } from "lucide-react";
+import { Plus, Calendar, MapPin, Users, Clock, Pencil, Trash2, DollarSign, X, Tag, HelpCircle } from "lucide-react";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -478,7 +479,17 @@ export default function TimelinePage() {
                     name="costPerHead"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Cost Per Head (Optional)</FormLabel>
+                        <FormLabel className="flex items-center gap-2">
+                          Cost Per Head (Optional)
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              This multiplies by guest count. For example, $150 per guest × 200 guests = $30,000
+                            </TooltipContent>
+                          </Tooltip>
+                        </FormLabel>
                         <FormControl>
                           <Input
                             {...field}
@@ -499,7 +510,17 @@ export default function TimelinePage() {
                     name="venueCapacity"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Venue Capacity (Optional)</FormLabel>
+                        <FormLabel className="flex items-center gap-2">
+                          Venue Capacity (Optional)
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              The maximum number of guests the venue can hold. This helps identify if your guest list exceeds space limits.
+                            </TooltipContent>
+                          </Tooltip>
+                        </FormLabel>
                         <FormControl>
                           <Input
                             {...field}
