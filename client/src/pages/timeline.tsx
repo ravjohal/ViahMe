@@ -5,9 +5,10 @@ import type { Event, InsertEvent, EventCostItem, BudgetCategory } from "@shared/
 import { EventDetailModal } from "@/components/event-detail-modal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Calendar, MapPin, Users, Clock, Pencil, Trash2, DollarSign, X, Tag, HelpCircle, ChevronDown, ChevronRight, Sun, Sunset, Moon, Sunrise, CheckCircle2, CircleDot } from "lucide-react";
+import { Plus, Calendar, MapPin, Users, Clock, Pencil, Trash2, DollarSign, X, Tag, HelpCircle, ChevronDown, ChevronRight, Sun, Sunset, Moon, Sunrise, CheckCircle2, CircleDot, GripVertical, CalendarPlus } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { format, isAfter, isBefore, isToday, startOfDay, parseISO } from "date-fns";
+import { format, isAfter, isBefore, isToday, startOfDay, parseISO, addDays } from "date-fns";
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, useDraggable, useDroppable, PointerSensor, useSensor, useSensors, closestCenter } from "@dnd-kit/core";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -126,6 +127,307 @@ interface DayGroup {
   events: Event[];
 }
 
+interface DraggableEventProps {
+  event: Event;
+  isLast: boolean;
+  onView: (id: string) => void;
+  onEdit: (event: Event) => void;
+  onDelete: (id: string) => void;
+  getEventStatus: (event: Event) => "completed" | "today" | "upcoming";
+}
+
+function DraggableEventNode({ event, isLast, onView, onEdit, onDelete, getEventStatus }: DraggableEventProps) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: event.id,
+  });
+  
+  const eventType = EVENT_TYPES.find((t) => t.value === event.type);
+  const colors = EVENT_COLORS[event.type] || EVENT_COLORS.custom;
+  const timeOfDay = getTimeOfDay(event.time);
+  const todConfig = TIME_OF_DAY_CONFIG[timeOfDay];
+  const TimeIcon = todConfig.icon;
+  const status = getEventStatus(event);
+
+  const style = transform ? {
+    transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+  } : undefined;
+
+  return (
+    <div 
+      ref={setNodeRef}
+      style={style}
+      className={`relative flex gap-4 ${isDragging ? "opacity-50 z-50" : ""}`} 
+      data-testid={`timeline-event-${event.id}`}
+    >
+      <div className="flex flex-col items-center">
+        <div 
+          className={`relative z-10 w-12 h-12 rounded-full flex items-center justify-center border-2 ${colors.border} ${colors.bg} shadow-md transition-transform hover:scale-110`}
+        >
+          {status === "completed" ? (
+            <CheckCircle2 className={`w-6 h-6 ${colors.icon}`} />
+          ) : status === "today" ? (
+            <CircleDot className={`w-6 h-6 ${colors.icon} animate-pulse`} />
+          ) : (
+            <span className="text-xl">{eventType?.icon || "📅"}</span>
+          )}
+        </div>
+        {!isLast && (
+          <div className="w-0.5 h-full min-h-[80px] bg-gradient-to-b from-muted-foreground/30 to-muted-foreground/10" />
+        )}
+      </div>
+
+      <Card 
+        className={`flex-1 mb-4 transition-all hover-elevate ${
+          status === "completed" ? "opacity-70" : ""
+        } ${status === "today" ? "ring-2 ring-orange-400 ring-offset-2" : ""}`}
+        data-testid={`card-event-${event.id}`}
+      >
+        <CardContent className="p-5">
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div 
+              {...attributes} 
+              {...listeners}
+              className="cursor-grab active:cursor-grabbing p-1 -m-1 rounded hover:bg-muted/50 transition-colors touch-none"
+              onClick={(e) => e.stopPropagation()}
+              data-testid={`drag-handle-${event.id}`}
+            >
+              <GripVertical className="w-5 h-5 text-muted-foreground" />
+            </div>
+            
+            <div 
+              className="flex-1 min-w-[200px] cursor-pointer"
+              onClick={() => onView(event.id)}
+            >
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                <h3 className="font-display text-xl font-bold text-foreground">
+                  {event.name}
+                </h3>
+                <Badge className={`${todConfig.color} gap-1`}>
+                  <TimeIcon className="w-3 h-3" />
+                  {todConfig.label}
+                </Badge>
+                {status === "completed" && (
+                  <Badge variant="secondary" className="gap-1">
+                    <CheckCircle2 className="w-3 h-3" />
+                    Completed
+                  </Badge>
+                )}
+                {status === "today" && (
+                  <Badge className="bg-gradient-to-r from-orange-500 to-pink-500 text-white gap-1">
+                    <CircleDot className="w-3 h-3" />
+                    Today
+                  </Badge>
+                )}
+              </div>
+
+              {event.description && (
+                <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{event.description}</p>
+              )}
+
+              <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
+                {event.time && (
+                  <div className="flex items-center gap-1">
+                    <Clock className="w-4 h-4" />
+                    <span>{event.time}</span>
+                  </div>
+                )}
+                {event.location && (
+                  <div className="flex items-center gap-1">
+                    <MapPin className="w-4 h-4" />
+                    <span className="truncate max-w-[200px]">{event.location}</span>
+                  </div>
+                )}
+                {event.guestCount && (
+                  <div className="flex items-center gap-1">
+                    <Users className="w-4 h-4" />
+                    <span>{event.guestCount} guests</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => onEdit(event)}
+                data-testid={`button-edit-event-${event.id}`}
+              >
+                <Pencil className="w-4 h-4" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => onDelete(event.id)}
+                data-testid={`button-delete-event-${event.id}`}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+interface DroppableDaySectionProps {
+  day: DayGroup;
+  isCollapsed: boolean;
+  onToggleCollapse: (dateKey: string) => void;
+  getDaySummary: (dayEvents: Event[]) => { totalGuests: number; venues: (string | null)[]; estimatedCost: number };
+  getEventStatus: (event: Event) => "completed" | "today" | "upcoming";
+  onView: (id: string) => void;
+  onEdit: (event: Event) => void;
+  onDelete: (id: string) => void;
+}
+
+function DroppableDaySection({ 
+  day, 
+  isCollapsed, 
+  onToggleCollapse, 
+  getDaySummary, 
+  getEventStatus,
+  onView,
+  onEdit,
+  onDelete
+}: DroppableDaySectionProps) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: day.date,
+  });
+  
+  const summary = getDaySummary(day.events);
+  const isUnscheduled = day.date === "unscheduled";
+  const dayStatus = isUnscheduled || day.events.length === 0 ? "upcoming" : getEventStatus(day.events[0]);
+  const isEmpty = day.events.length === 0;
+  
+  return (
+    <div 
+      ref={setNodeRef}
+      className={`mb-8 transition-all duration-200 ${isOver ? "ring-2 ring-orange-400 ring-offset-4 rounded-xl" : ""}`} 
+      data-testid={`day-section-${day.date}`}
+    >
+      <Collapsible open={!isCollapsed} onOpenChange={() => onToggleCollapse(day.date)}>
+        <div className={`mb-4 rounded-xl p-4 ${
+          isUnscheduled 
+            ? "bg-muted/50 border border-dashed border-muted-foreground/30" 
+            : isEmpty
+              ? "bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 border border-dashed border-blue-200 dark:border-blue-800"
+              : dayStatus === "completed" 
+                ? "bg-muted/30" 
+                : dayStatus === "today"
+                  ? "bg-gradient-to-r from-orange-100 to-pink-100 dark:from-orange-900/20 dark:to-pink-900/20 border border-orange-200 dark:border-orange-800"
+                  : "bg-gradient-to-r from-orange-50 to-pink-50 dark:from-orange-900/10 dark:to-pink-900/10"
+        }`}>
+          <CollapsibleTrigger asChild>
+            <button className="w-full text-left" data-testid={`button-toggle-day-${day.date}`}>
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  {isCollapsed ? (
+                    <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                  )}
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {!isUnscheduled && (
+                        <Badge className={`font-bold ${isEmpty ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white" : "bg-gradient-to-r from-orange-500 to-pink-500 text-white"}`}>
+                          Day {day.dayNumber}
+                        </Badge>
+                      )}
+                      <h2 className="text-xl font-bold text-foreground">
+                        {day.dayName}
+                      </h2>
+                      {dayStatus === "today" && !isEmpty && (
+                        <Badge className="bg-gradient-to-r from-orange-500 to-pink-500 text-white animate-pulse">
+                          Today
+                        </Badge>
+                      )}
+                      {dayStatus === "completed" && !isUnscheduled && !isEmpty && (
+                        <Badge variant="secondary">
+                          <CheckCircle2 className="w-3 h-3 mr-1" />
+                          Completed
+                        </Badge>
+                      )}
+                    </div>
+                    {!isUnscheduled && (
+                      <p className="text-sm text-muted-foreground mt-0.5">
+                        {format(day.dateObj, "EEEE, MMMM d, yyyy")}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Calendar className="w-4 h-4" />
+                    {day.events.length} {day.events.length === 1 ? "event" : "events"}
+                  </span>
+                  {summary.totalGuests > 0 && (
+                    <span className="flex items-center gap-1 hidden sm:flex">
+                      <Users className="w-4 h-4" />
+                      {summary.totalGuests} guests
+                    </span>
+                  )}
+                  {summary.estimatedCost > 0 && (
+                    <span className="flex items-center gap-1 hidden md:flex">
+                      <DollarSign className="w-4 h-4" />
+                      ${summary.estimatedCost.toLocaleString()}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </button>
+          </CollapsibleTrigger>
+          
+          {!isCollapsed && summary.venues.length > 0 && (
+            <div className="mt-3 pt-3 border-t border-muted-foreground/10">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
+                <MapPin className="w-4 h-4" />
+                <span className="font-medium">Venues:</span>
+                {summary.venues.slice(0, 3).map((venue, idx) => (
+                  <Badge key={idx} variant="outline" className="font-normal">
+                    {venue}
+                  </Badge>
+                ))}
+                {summary.venues.length > 3 && (
+                  <span className="text-xs">+{summary.venues.length - 3} more</span>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <CollapsibleContent>
+          <div className="pl-2">
+            {isEmpty ? (
+              <div className={`rounded-lg border-2 border-dashed p-6 text-center transition-colors ${
+                isOver ? "border-orange-400 bg-orange-50 dark:bg-orange-900/20" : "border-muted-foreground/20 bg-muted/20"
+              }`}>
+                <p className="text-muted-foreground">
+                  {isOver ? "Drop event here" : "Drag events here to schedule them for this day"}
+                </p>
+              </div>
+            ) : (
+              day.events.map((event, idx) => 
+                <DraggableEventNode 
+                  key={event.id} 
+                  event={event} 
+                  isLast={idx === day.events.length - 1}
+                  onView={onView}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  getEventStatus={getEventStatus}
+                />
+              )
+            )}
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+    </div>
+  );
+}
+
 export default function TimelinePage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -135,6 +437,17 @@ export default function TimelinePage() {
   const [costItemsOpen, setCostItemsOpen] = useState(false);
   const [newCostItem, setNewCostItem] = useState({ name: "", costType: "fixed" as "per_head" | "fixed", amount: "", categoryId: "" });
   const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set());
+  const [activeEventId, setActiveEventId] = useState<string | null>(null);
+  const [addDayDialogOpen, setAddDayDialogOpen] = useState(false);
+  const [newDayDate, setNewDayDate] = useState("");
+  
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
 
   const { data: weddings = [], isLoading: weddingsLoading } = useQuery<any[]>({
     queryKey: ["/api/weddings"],
@@ -232,6 +545,22 @@ export default function TimelinePage() {
     },
   });
 
+  const moveEventMutation = useMutation({
+    mutationFn: async ({ id, newDate }: { id: string; newDate: string | null }) => {
+      return await apiRequest("PATCH", `/api/events/${id}`, { date: newDate });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/events", wedding?.id] });
+      toast({
+        title: "Event moved",
+        description: "The event has been moved to its new day.",
+      });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to move event.", variant: "destructive" });
+    },
+  });
+
   const form = useForm<InsertEvent>({
     resolver: zodResolver(insertEventSchema),
     defaultValues: {
@@ -309,6 +638,57 @@ export default function TimelinePage() {
     });
   };
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveEventId(event.active.id as string);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    setActiveEventId(null);
+    
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    
+    const eventId = active.id as string;
+    const targetDate = over.id as string;
+    
+    if (targetDate === "unscheduled") {
+      moveEventMutation.mutate({ id: eventId, newDate: null });
+    } else {
+      moveEventMutation.mutate({ id: eventId, newDate: targetDate });
+    }
+  };
+
+  const getActiveEvent = () => {
+    return events.find((e) => e.id === activeEventId);
+  };
+
+  const handleAddDay = () => {
+    if (!newDayDate) {
+      toast({ title: "Select a date", description: "Please choose a date for the new day.", variant: "destructive" });
+      return;
+    }
+    if (!extraDays.includes(newDayDate)) {
+      setExtraDays(prev => [...prev, newDayDate].sort());
+    }
+    setAddDayDialogOpen(false);
+    setNewDayDate("");
+    toast({ title: "Day added", description: "You can now drag events to this new day." });
+  };
+
+  const getNextAvailableDate = (): string => {
+    const existingDates = events
+      .map(e => toDateKey(e.date))
+      .filter((d): d is string => d !== null)
+      .sort();
+    
+    if (existingDates.length === 0) {
+      return format(new Date(), "yyyy-MM-dd");
+    }
+    
+    const lastDate = dateKeyToLocalDate(existingDates[existingDates.length - 1]);
+    return format(addDays(lastDate, 1), "yyyy-MM-dd");
+  };
+
   useEffect(() => {
     if (editingEvent) {
       setCostItemsOpen(true);
@@ -339,6 +719,8 @@ export default function TimelinePage() {
     return a.order - b.order;
   });
 
+  const [extraDays, setExtraDays] = useState<string[]>([]);
+
   const dayGroups = useMemo((): DayGroup[] => {
     const groups: Map<string, Event[]> = new Map();
     const undatedEvents: Event[] = [];
@@ -355,34 +737,38 @@ export default function TimelinePage() {
       }
     });
 
+    extraDays.forEach(dateKey => {
+      if (!groups.has(dateKey)) {
+        groups.set(dateKey, []);
+      }
+    });
+
     const sortedDates = Array.from(groups.keys()).sort();
     
     const result: DayGroup[] = sortedDates.map((dateKey, index) => {
       const dateObj = dateKeyToLocalDate(dateKey);
-      const dayEvents = groups.get(dateKey)!;
+      const dayEvents = groups.get(dateKey) || [];
       const primaryEvent = dayEvents.find(e => ["sangeet", "anand_karaj", "reception", "mehndi"].includes(e.type));
       
       return {
         date: dateKey,
         dateObj,
         dayNumber: index + 1,
-        dayName: primaryEvent ? EVENT_TYPES.find(t => t.value === primaryEvent.type)?.label || "Events" : "Events",
+        dayName: primaryEvent ? EVENT_TYPES.find(t => t.value === primaryEvent.type)?.label || (dayEvents.length > 0 ? "Events" : "New Day") : (dayEvents.length > 0 ? "Events" : "New Day"),
         events: dayEvents,
       };
     });
 
-    if (undatedEvents.length > 0) {
-      result.push({
-        date: "unscheduled",
-        dateObj: new Date(),
-        dayNumber: 0,
-        dayName: "To Be Scheduled",
-        events: undatedEvents,
-      });
-    }
+    result.push({
+      date: "unscheduled",
+      dateObj: new Date(),
+      dayNumber: 0,
+      dayName: "To Be Scheduled",
+      events: undatedEvents,
+    });
 
     return result;
-  }, [sortedEvents]);
+  }, [sortedEvents, extraDays]);
 
   const getEventStatus = (event: Event): "completed" | "today" | "upcoming" => {
     const dateKey = toDateKey(event.date);
@@ -421,225 +807,6 @@ export default function TimelinePage() {
     setLocation("/onboarding");
     return null;
   }
-
-  const renderEventNode = (event: Event, isLast: boolean) => {
-    const eventType = EVENT_TYPES.find((t) => t.value === event.type);
-    const colors = EVENT_COLORS[event.type] || EVENT_COLORS.custom;
-    const timeOfDay = getTimeOfDay(event.time);
-    const todConfig = TIME_OF_DAY_CONFIG[timeOfDay];
-    const TimeIcon = todConfig.icon;
-    const status = getEventStatus(event);
-
-    return (
-      <div key={event.id} className="relative flex gap-4" data-testid={`timeline-event-${event.id}`}>
-        <div className="flex flex-col items-center">
-          <div 
-            className={`relative z-10 w-12 h-12 rounded-full flex items-center justify-center border-2 ${colors.border} ${colors.bg} shadow-md transition-transform hover:scale-110`}
-          >
-            {status === "completed" ? (
-              <CheckCircle2 className={`w-6 h-6 ${colors.icon}`} />
-            ) : status === "today" ? (
-              <CircleDot className={`w-6 h-6 ${colors.icon} animate-pulse`} />
-            ) : (
-              <span className="text-xl">{eventType?.icon || "📅"}</span>
-            )}
-          </div>
-          {!isLast && (
-            <div className="w-0.5 h-full min-h-[80px] bg-gradient-to-b from-muted-foreground/30 to-muted-foreground/10" />
-          )}
-        </div>
-
-        <Card 
-          className={`flex-1 mb-4 cursor-pointer transition-all hover-elevate ${
-            status === "completed" ? "opacity-70" : ""
-          } ${status === "today" ? "ring-2 ring-orange-400 ring-offset-2" : ""}`}
-          onClick={() => setViewingEventId(event.id)}
-          data-testid={`card-event-${event.id}`}
-        >
-          <CardContent className="p-5">
-            <div className="flex items-start justify-between gap-4 flex-wrap">
-              <div className="flex-1 min-w-[200px]">
-                <div className="flex items-center gap-2 mb-2 flex-wrap">
-                  <h3 className="font-display text-xl font-bold text-foreground">
-                    {event.name}
-                  </h3>
-                  <Badge className={`${todConfig.color} gap-1`}>
-                    <TimeIcon className="w-3 h-3" />
-                    {todConfig.label}
-                  </Badge>
-                  {status === "completed" && (
-                    <Badge variant="secondary" className="gap-1">
-                      <CheckCircle2 className="w-3 h-3" />
-                      Completed
-                    </Badge>
-                  )}
-                  {status === "today" && (
-                    <Badge className="bg-gradient-to-r from-orange-500 to-pink-500 text-white gap-1">
-                      <CircleDot className="w-3 h-3" />
-                      Today
-                    </Badge>
-                  )}
-                </div>
-
-                {event.description && (
-                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{event.description}</p>
-                )}
-
-                <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
-                  {event.time && (
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" />
-                      <span>{event.time}</span>
-                    </div>
-                  )}
-                  {event.location && (
-                    <div className="flex items-center gap-1">
-                      <MapPin className="w-4 h-4" />
-                      <span className="truncate max-w-[200px]">{event.location}</span>
-                    </div>
-                  )}
-                  {event.guestCount && (
-                    <div className="flex items-center gap-1">
-                      <Users className="w-4 h-4" />
-                      <span>{event.guestCount} guests</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => handleEdit(event)}
-                  data-testid={`button-edit-event-${event.id}`}
-                >
-                  <Pencil className="w-4 h-4" />
-                </Button>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => handleDelete(event.id)}
-                  data-testid={`button-delete-event-${event.id}`}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  };
-
-  const renderDaySection = (day: DayGroup) => {
-    const isCollapsed = collapsedDays.has(day.date);
-    const summary = getDaySummary(day.events);
-    const isUnscheduled = day.date === "unscheduled";
-    const dayStatus = isUnscheduled ? "upcoming" : getEventStatus(day.events[0]);
-    
-    return (
-      <div key={day.date} className="mb-8" data-testid={`day-section-${day.date}`}>
-        <Collapsible open={!isCollapsed} onOpenChange={() => toggleDayCollapse(day.date)}>
-          <div className={`mb-4 rounded-xl p-4 ${
-            isUnscheduled 
-              ? "bg-muted/50 border border-dashed border-muted-foreground/30" 
-              : dayStatus === "completed" 
-                ? "bg-muted/30" 
-                : dayStatus === "today"
-                  ? "bg-gradient-to-r from-orange-100 to-pink-100 dark:from-orange-900/20 dark:to-pink-900/20 border border-orange-200 dark:border-orange-800"
-                  : "bg-gradient-to-r from-orange-50 to-pink-50 dark:from-orange-900/10 dark:to-pink-900/10"
-          }`}>
-            <CollapsibleTrigger asChild>
-              <button className="w-full text-left" data-testid={`button-toggle-day-${day.date}`}>
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    {isCollapsed ? (
-                      <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                    ) : (
-                      <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                    )}
-                    <div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {!isUnscheduled && (
-                          <Badge className="bg-gradient-to-r from-orange-500 to-pink-500 text-white font-bold">
-                            Day {day.dayNumber}
-                          </Badge>
-                        )}
-                        <h2 className="text-xl font-bold text-foreground">
-                          {day.dayName}
-                        </h2>
-                        {dayStatus === "today" && (
-                          <Badge className="bg-gradient-to-r from-orange-500 to-pink-500 text-white animate-pulse">
-                            Today
-                          </Badge>
-                        )}
-                        {dayStatus === "completed" && !isUnscheduled && (
-                          <Badge variant="secondary">
-                            <CheckCircle2 className="w-3 h-3 mr-1" />
-                            Completed
-                          </Badge>
-                        )}
-                      </div>
-                      {!isUnscheduled && (
-                        <p className="text-sm text-muted-foreground mt-0.5">
-                          {format(day.dateObj, "EEEE, MMMM d, yyyy")}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-4 h-4" />
-                      {day.events.length} {day.events.length === 1 ? "event" : "events"}
-                    </span>
-                    {summary.totalGuests > 0 && (
-                      <span className="flex items-center gap-1 hidden sm:flex">
-                        <Users className="w-4 h-4" />
-                        {summary.totalGuests} guests
-                      </span>
-                    )}
-                    {summary.estimatedCost > 0 && (
-                      <span className="flex items-center gap-1 hidden md:flex">
-                        <DollarSign className="w-4 h-4" />
-                        ${summary.estimatedCost.toLocaleString()}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </button>
-            </CollapsibleTrigger>
-            
-            {!isCollapsed && summary.venues.length > 0 && (
-              <div className="mt-3 pt-3 border-t border-muted-foreground/10">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
-                  <MapPin className="w-4 h-4" />
-                  <span className="font-medium">Venues:</span>
-                  {summary.venues.slice(0, 3).map((venue, idx) => (
-                    <Badge key={idx} variant="outline" className="font-normal">
-                      {venue}
-                    </Badge>
-                  ))}
-                  {summary.venues.length > 3 && (
-                    <span className="text-xs">+{summary.venues.length - 3} more</span>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <CollapsibleContent>
-            <div className="pl-2">
-              {day.events.map((event, idx) => 
-                renderEventNode(event, idx === day.events.length - 1)
-              )}
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
-      </div>
-    );
-  };
 
   return (
     <div className="container mx-auto px-6 py-8">
@@ -1054,31 +1221,112 @@ export default function TimelinePage() {
         </Dialog>
       </div>
 
-      <div>
-        {eventsLoading ? (
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-32 w-full" />
-            ))}
-          </div>
-        ) : sortedEvents.length === 0 ? (
-          <Card className="p-12 text-center">
-            <Calendar className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="font-semibold text-lg mb-2">No Events Yet</h3>
-            <p className="text-muted-foreground mb-4">
-              Start building your celebration timeline
-            </p>
-            <Button onClick={() => setDialogOpen(true)} data-testid="button-add-first-event" className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white shadow-lg">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Your First Event
+      <div className="mb-6 flex items-center gap-3">
+        <Dialog open={addDayDialogOpen} onOpenChange={setAddDayDialogOpen}>
+          <DialogTrigger asChild>
+            <Button 
+              variant="outline" 
+              data-testid="button-add-day"
+              className="gap-2"
+            >
+              <CalendarPlus className="w-4 h-4" />
+              Add Day
             </Button>
-          </Card>
-        ) : (
-          <div>
-            {dayGroups.map(day => renderDaySection(day))}
-          </div>
-        )}
+          </DialogTrigger>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Add a New Day</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <p className="text-sm text-muted-foreground">
+                Add another day to your celebration. You can then drag events to this new day.
+              </p>
+              <div>
+                <label className="block text-sm font-medium mb-2">Select Date</label>
+                <Input
+                  type="date"
+                  value={newDayDate}
+                  onChange={(e) => setNewDayDate(e.target.value)}
+                  data-testid="input-new-day-date"
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setAddDayDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleAddDay}
+                  className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white"
+                  data-testid="button-confirm-add-day"
+                >
+                  Add Day
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+        <p className="text-sm text-muted-foreground">
+          Drag events between days to reschedule them
+        </p>
       </div>
+
+      <DndContext 
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <div>
+          {eventsLoading ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-32 w-full" />
+              ))}
+            </div>
+          ) : sortedEvents.length === 0 && extraDays.length === 0 ? (
+            <Card className="p-12 text-center">
+              <Calendar className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+              <h3 className="font-semibold text-lg mb-2">No Events Yet</h3>
+              <p className="text-muted-foreground mb-4">
+                Start building your celebration timeline
+              </p>
+              <Button onClick={() => setDialogOpen(true)} data-testid="button-add-first-event" className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white shadow-lg">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Your First Event
+              </Button>
+            </Card>
+          ) : (
+            <div>
+              {dayGroups.map(day => (
+                  <DroppableDaySection 
+                    key={day.date} 
+                    day={day}
+                    isCollapsed={collapsedDays.has(day.date)}
+                    onToggleCollapse={toggleDayCollapse}
+                    getDaySummary={getDaySummary}
+                    getEventStatus={getEventStatus}
+                    onView={setViewingEventId}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                  />
+                ))}
+            </div>
+          )}
+        </div>
+
+        <DragOverlay>
+          {activeEventId && getActiveEvent() && (
+            <Card className="w-80 shadow-xl border-2 border-orange-400">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <GripVertical className="w-5 h-5 text-muted-foreground" />
+                  <span className="font-semibold">{getActiveEvent()?.name}</span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </DragOverlay>
+      </DndContext>
 
       <EventDetailModal
         open={!!viewingEventId}
