@@ -47,6 +47,7 @@ import RitualControl from "@/pages/ritual-control";
 import GuestLiveFeed from "@/pages/guest-live-feed";
 import Collaborators from "@/pages/collaborators";
 import VendorCalendar from "@/pages/vendor-calendar";
+import VendorDeposit from "@/pages/vendor-deposit";
 
 function Router() {
   return (
@@ -66,6 +67,7 @@ function Router() {
       <Route path="/cultural-info" component={CulturalInfo} />
       <Route path="/checkout" component={Checkout} />
       <Route path="/order-confirmation" component={OrderConfirmation} />
+      <Route path="/pay-deposit/:bookingId" component={VendorDeposit} />
       
       {/* Dashboard - no specific permission, just authentication */}
       <Route path="/dashboard" component={Dashboard} />
