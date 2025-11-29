@@ -1336,6 +1336,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/contracts", async (req, res) => {
     try {
       const validatedData = insertContractSchema.parse(req.body);
+      
+      // Server-side validation: contract terms cannot be empty
+      if (!validatedData.contractTerms || validatedData.contractTerms.trim().length === 0) {
+        return res.status(400).json({ 
+          error: "Contract terms are required",
+          message: "Please add contract terms before creating the contract." 
+        });
+      }
+      
+      // Server-side validation: total amount must be valid
+      if (!validatedData.totalAmount || parseFloat(validatedData.totalAmount) <= 0) {
+        return res.status(400).json({ 
+          error: "Invalid total amount",
+          message: "Please enter a valid contract amount greater than zero." 
+        });
+      }
+      
       const contract = await storage.createContract(validatedData);
       res.json(contract);
     } catch (error) {
@@ -1348,6 +1365,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/contracts/:id", async (req, res) => {
     try {
+      // Validate contract terms aren't being cleared to empty
+      if (req.body.contractTerms !== undefined && 
+          (req.body.contractTerms === null || req.body.contractTerms.trim().length === 0)) {
+        return res.status(400).json({ 
+          error: "Contract terms cannot be empty",
+          message: "Contract terms are required and cannot be removed." 
+        });
+      }
+      
       const contract = await storage.updateContract(req.params.id, req.body);
       if (!contract) {
         return res.status(404).json({ error: "Contract not found" });
