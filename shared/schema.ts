@@ -263,6 +263,13 @@ export const bookings = pgTable("bookings", {
   notes: text("notes"),
   coupleNotes: text("couple_notes"), // Notes from the couple when requesting
   vendorNotes: text("vendor_notes"), // Notes from vendor when responding
+  // Deposit payment tracking
+  depositAmount: decimal("deposit_amount", { precision: 10, scale: 2 }), // Required deposit to confirm booking
+  depositPercentage: integer("deposit_percentage").default(25), // % of estimated cost
+  depositPaid: boolean("deposit_paid").default(false),
+  depositPaidDate: timestamp("deposit_paid_date"),
+  stripePaymentIntentId: text("stripe_payment_intent_id"),
+  stripePaymentStatus: text("stripe_payment_status"), // 'pending' | 'succeeded' | 'failed'
 });
 
 export const insertBookingSchema = createInsertSchema(bookings).omit({
@@ -270,10 +277,16 @@ export const insertBookingSchema = createInsertSchema(bookings).omit({
   requestDate: true,
   confirmedDate: true,
   declinedDate: true,
+  depositPaidDate: true,
 }).extend({
   status: z.enum(['pending', 'confirmed', 'declined', 'cancelled']).optional(),
   timeSlot: z.enum(['morning', 'afternoon', 'evening', 'full_day']).optional(),
   requestedDate: z.coerce.date().optional(),
+  depositAmount: z.string().optional(),
+  depositPercentage: z.number().optional(),
+  depositPaid: z.boolean().optional(),
+  stripePaymentIntentId: z.string().optional(),
+  stripePaymentStatus: z.enum(['pending', 'succeeded', 'failed']).optional(),
 });
 
 export type InsertBooking = z.infer<typeof insertBookingSchema>;
