@@ -23,6 +23,8 @@ import {
   type InsertTask,
   type Contract,
   type InsertContract,
+  type ContractTemplate,
+  type InsertContractTemplate,
   type Message,
   type InsertMessage,
   type Review,
@@ -218,6 +220,16 @@ export interface IStorage {
   createContract(contract: InsertContract): Promise<Contract>;
   updateContract(id: string, contract: Partial<InsertContract>): Promise<Contract | undefined>;
   deleteContract(id: string): Promise<boolean>;
+
+  // Contract Templates
+  getContractTemplate(id: string): Promise<ContractTemplate | undefined>;
+  getContractTemplatesByCategory(category: string): Promise<ContractTemplate[]>;
+  getAllContractTemplates(): Promise<ContractTemplate[]>;
+  getDefaultContractTemplate(category: string): Promise<ContractTemplate | undefined>;
+  getCustomTemplatesByWedding(weddingId: string): Promise<ContractTemplate[]>;
+  createContractTemplate(template: InsertContractTemplate): Promise<ContractTemplate>;
+  updateContractTemplate(id: string, template: Partial<InsertContractTemplate>): Promise<ContractTemplate | undefined>;
+  deleteContractTemplate(id: string): Promise<boolean>;
 
   // Messages
   getMessage(id: string): Promise<Message | undefined>;
@@ -593,6 +605,7 @@ export class MemStorage implements IStorage {
   private invitations: Map<string, Invitation>;
   private tasks: Map<string, Task>;
   private contracts: Map<string, Contract>;
+  private contractTemplates: Map<string, ContractTemplate>;
   private messages: Map<string, Message>;
   private reviews: Map<string, Review>;
   private budgetBenchmarks: Map<string, BudgetBenchmark>;
@@ -620,6 +633,7 @@ export class MemStorage implements IStorage {
     this.invitations = new Map();
     this.tasks = new Map();
     this.contracts = new Map();
+    this.contractTemplates = new Map();
     this.messages = new Map();
     this.reviews = new Map();
     this.budgetBenchmarks = new Map();
@@ -1282,6 +1296,62 @@ export class MemStorage implements IStorage {
 
   async deleteContract(id: string): Promise<boolean> {
     return this.contracts.delete(id);
+  }
+
+  // Contract Templates
+  async getContractTemplate(id: string): Promise<ContractTemplate | undefined> {
+    return this.contractTemplates.get(id);
+  }
+
+  async getContractTemplatesByCategory(category: string): Promise<ContractTemplate[]> {
+    return Array.from(this.contractTemplates.values()).filter(
+      (t) => t.vendorCategory.toLowerCase() === category.toLowerCase()
+    );
+  }
+
+  async getAllContractTemplates(): Promise<ContractTemplate[]> {
+    return Array.from(this.contractTemplates.values()).filter(t => !t.isCustom);
+  }
+
+  async getDefaultContractTemplate(category: string): Promise<ContractTemplate | undefined> {
+    return Array.from(this.contractTemplates.values()).find(
+      (t) => t.vendorCategory.toLowerCase() === category.toLowerCase() && t.isDefault
+    );
+  }
+
+  async getCustomTemplatesByWedding(weddingId: string): Promise<ContractTemplate[]> {
+    return Array.from(this.contractTemplates.values()).filter(
+      (t) => t.weddingId === weddingId && t.isCustom
+    );
+  }
+
+  async createContractTemplate(insertTemplate: InsertContractTemplate): Promise<ContractTemplate> {
+    const id = randomUUID();
+    const template: ContractTemplate = {
+      ...insertTemplate,
+      id,
+      isDefault: insertTemplate.isDefault || false,
+      isCustom: insertTemplate.isCustom || false,
+      createdAt: new Date(),
+    } as ContractTemplate;
+    this.contractTemplates.set(id, template);
+    return template;
+  }
+
+  async updateContractTemplate(
+    id: string,
+    update: Partial<InsertContractTemplate>
+  ): Promise<ContractTemplate | undefined> {
+    const template = this.contractTemplates.get(id);
+    if (!template) return undefined;
+
+    const updated = { ...template, ...update } as ContractTemplate;
+    this.contractTemplates.set(id, updated);
+    return updated;
+  }
+
+  async deleteContractTemplate(id: string): Promise<boolean> {
+    return this.contractTemplates.delete(id);
   }
 
   // Messages
@@ -3221,6 +3291,58 @@ export class DBStorage implements IStorage {
 
   async deleteContract(id: string): Promise<boolean> {
     await this.db.delete(schema.contracts).where(eq(schema.contracts.id, id));
+    return true;
+  }
+
+  // Contract Templates
+  async getContractTemplate(id: string): Promise<ContractTemplate | undefined> {
+    const result = await this.db.select().from(schema.contractTemplates).where(eq(schema.contractTemplates.id, id));
+    return result[0];
+  }
+
+  async getContractTemplatesByCategory(category: string): Promise<ContractTemplate[]> {
+    return await this.db.select().from(schema.contractTemplates).where(
+      sql`LOWER(${schema.contractTemplates.vendorCategory}) = LOWER(${category})`
+    );
+  }
+
+  async getAllContractTemplates(): Promise<ContractTemplate[]> {
+    return await this.db.select().from(schema.contractTemplates).where(
+      eq(schema.contractTemplates.isCustom, false)
+    );
+  }
+
+  async getDefaultContractTemplate(category: string): Promise<ContractTemplate | undefined> {
+    const result = await this.db.select().from(schema.contractTemplates).where(
+      and(
+        sql`LOWER(${schema.contractTemplates.vendorCategory}) = LOWER(${category})`,
+        eq(schema.contractTemplates.isDefault, true)
+      )
+    );
+    return result[0];
+  }
+
+  async getCustomTemplatesByWedding(weddingId: string): Promise<ContractTemplate[]> {
+    return await this.db.select().from(schema.contractTemplates).where(
+      and(
+        eq(schema.contractTemplates.weddingId, weddingId),
+        eq(schema.contractTemplates.isCustom, true)
+      )
+    );
+  }
+
+  async createContractTemplate(insertTemplate: InsertContractTemplate): Promise<ContractTemplate> {
+    const result = await this.db.insert(schema.contractTemplates).values(insertTemplate).returning();
+    return result[0];
+  }
+
+  async updateContractTemplate(id: string, update: Partial<InsertContractTemplate>): Promise<ContractTemplate | undefined> {
+    const result = await this.db.update(schema.contractTemplates).set(update).where(eq(schema.contractTemplates.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteContractTemplate(id: string): Promise<boolean> {
+    await this.db.delete(schema.contractTemplates).where(eq(schema.contractTemplates.id, id));
     return true;
   }
 

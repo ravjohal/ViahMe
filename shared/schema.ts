@@ -469,6 +469,35 @@ export type InsertContract = z.infer<typeof insertContractSchema>;
 export type Contract = typeof contracts.$inferSelect;
 
 // ============================================================================
+// CONTRACT TEMPLATES - Pre-made contract templates for vendor categories
+// ============================================================================
+
+export const contractTemplates = pgTable("contract_templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  vendorCategory: text("vendor_category").notNull(), // Matches vendor category: 'photographer', 'caterer', 'decorator', etc.
+  description: text("description"),
+  templateContent: text("template_content").notNull(), // The actual contract terms with placeholders
+  keyTerms: jsonb("key_terms"), // Array of key terms/highlights for quick preview
+  suggestedMilestones: jsonb("suggested_milestones"), // Default payment milestones structure
+  isDefault: boolean("is_default").default(false), // Mark as default template for category
+  isCustom: boolean("is_custom").default(false), // User-created templates vs system templates
+  weddingId: varchar("wedding_id"), // Null for system templates, set for custom user templates
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertContractTemplateSchema = createInsertSchema(contractTemplates).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  isDefault: z.boolean().optional(),
+  isCustom: z.boolean().optional(),
+});
+
+export type InsertContractTemplate = z.infer<typeof insertContractTemplateSchema>;
+export type ContractTemplate = typeof contractTemplates.$inferSelect;
+
+// ============================================================================
 // MESSAGES - Couple-Vendor Communication
 // ============================================================================
 

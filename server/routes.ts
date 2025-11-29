@@ -1371,6 +1371,109 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ============================================================================
+  // CONTRACT TEMPLATES - Pre-made contract templates
+  // ============================================================================
+
+  // Get all contract templates (system templates)
+  app.get("/api/contract-templates", async (req, res) => {
+    try {
+      const templates = await storage.getAllContractTemplates();
+      res.json(templates);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch contract templates" });
+    }
+  });
+
+  // Get contract templates by vendor category
+  app.get("/api/contract-templates/category/:category", async (req, res) => {
+    try {
+      const templates = await storage.getContractTemplatesByCategory(req.params.category);
+      res.json(templates);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch contract templates" });
+    }
+  });
+
+  // Get default template for a category
+  app.get("/api/contract-templates/default/:category", async (req, res) => {
+    try {
+      const template = await storage.getDefaultContractTemplate(req.params.category);
+      if (!template) {
+        return res.status(404).json({ error: "No default template found for this category" });
+      }
+      res.json(template);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch default contract template" });
+    }
+  });
+
+  // Get custom templates for a wedding
+  app.get("/api/contract-templates/custom/:weddingId", async (req, res) => {
+    try {
+      const templates = await storage.getCustomTemplatesByWedding(req.params.weddingId);
+      res.json(templates);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch custom contract templates" });
+    }
+  });
+
+  // Get a single template by ID
+  app.get("/api/contract-templates/:id", async (req, res) => {
+    try {
+      const template = await storage.getContractTemplate(req.params.id);
+      if (!template) {
+        return res.status(404).json({ error: "Template not found" });
+      }
+      res.json(template);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch contract template" });
+    }
+  });
+
+  // Create a custom template
+  app.post("/api/contract-templates", async (req, res) => {
+    try {
+      const template = await storage.createContractTemplate({
+        ...req.body,
+        isCustom: true,
+      });
+      res.json(template);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create contract template" });
+    }
+  });
+
+  // Update a template
+  app.patch("/api/contract-templates/:id", async (req, res) => {
+    try {
+      const template = await storage.updateContractTemplate(req.params.id, req.body);
+      if (!template) {
+        return res.status(404).json({ error: "Template not found" });
+      }
+      res.json(template);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update contract template" });
+    }
+  });
+
+  // Delete a template (only custom templates)
+  app.delete("/api/contract-templates/:id", async (req, res) => {
+    try {
+      const template = await storage.getContractTemplate(req.params.id);
+      if (!template) {
+        return res.status(404).json({ error: "Template not found" });
+      }
+      if (!template.isCustom) {
+        return res.status(403).json({ error: "Cannot delete system templates" });
+      }
+      const success = await storage.deleteContractTemplate(req.params.id);
+      res.json({ success });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete contract template" });
+    }
+  });
+
+  // ============================================================================
   // CONTRACT SIGNATURES - E-signature functionality
   // ============================================================================
 
