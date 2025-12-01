@@ -207,6 +207,8 @@ export default function VendorDashboard() {
         category: currentVendor.category,
         description: currentVendor.description || "",
         contact: currentVendor.contact || "",
+        email: currentVendor.email || "",
+        phone: currentVendor.phone || "",
         location: currentVendor.location,
         priceRange: currentVendor.priceRange,
         culturalSpecialties: currentVendor.culturalSpecialties || [],
@@ -219,6 +221,8 @@ export default function VendorDashboard() {
         category: "photographer", // Default category
         description: "",
         contact: "",
+        email: "",
+        phone: "",
         location: "",
         priceRange: "$",
         culturalSpecialties: [],
@@ -246,6 +250,8 @@ export default function VendorDashboard() {
           priceRange: (editFormData.priceRange as any) || "$",
           description: editFormData.description?.trim() || "",
           contact: editFormData.contact?.trim() || "",
+          email: editFormData.email?.trim() || "",
+          phone: editFormData.phone?.trim() || "",
           culturalSpecialties: editFormData.culturalSpecialties || [],
           availability: editFormData.availability || null,
         };
@@ -264,6 +270,8 @@ export default function VendorDashboard() {
           culturalSpecialties: z.array(z.string()).optional(),
           description: z.string().optional(),
           contact: z.string().optional(),
+          email: z.string().email("Invalid email address").optional(),
+          phone: z.string().optional(),
           availability: z.any().optional(),
         }).refine((data) => {
           return Object.values(data).some(v => v !== undefined);
@@ -283,6 +291,8 @@ export default function VendorDashboard() {
         if (editFormData.priceRange !== undefined) updates.priceRange = editFormData.priceRange;
         if (editFormData.description !== undefined) updates.description = editFormData.description?.trim();
         if (editFormData.contact !== undefined) updates.contact = editFormData.contact?.trim();
+        if (editFormData.email !== undefined) updates.email = editFormData.email?.trim();
+        if (editFormData.phone !== undefined) updates.phone = editFormData.phone?.trim();
         if (editFormData.culturalSpecialties !== undefined) updates.culturalSpecialties = editFormData.culturalSpecialties;
         if (editFormData.availability !== undefined) updates.availability = editFormData.availability;
 
@@ -1064,16 +1074,32 @@ export default function VendorDashboard() {
               </div>
 
               <div>
-                <Label htmlFor="contact">Contact</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
-                  id="contact"
-                  value={editFormData.contact || ""}
+                  id="email"
+                  type="email"
+                  placeholder="business@example.com"
+                  value={editFormData.email || ""}
                   onChange={(e) =>
-                    setEditFormData({ ...editFormData, contact: e.target.value })
+                    setEditFormData({ ...editFormData, email: e.target.value })
                   }
-                  data-testid="input-contact"
+                  data-testid="input-email"
                 />
               </div>
+            </div>
+
+            <div>
+              <Label htmlFor="phone">Business Phone</Label>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="(555) 123-4567"
+                value={editFormData.phone || ""}
+                onChange={(e) =>
+                  setEditFormData({ ...editFormData, phone: e.target.value })
+                }
+                data-testid="input-phone"
+              />
             </div>
 
             <div>
