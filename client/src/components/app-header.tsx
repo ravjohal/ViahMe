@@ -78,24 +78,27 @@ export function AppHeader() {
     <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-24 items-center justify-between px-6 gap-4">
         {/* Logo and Brand */}
-        <Link href="/dashboard" className="flex items-center gap-3 hover-elevate active-elevate-2 rounded-md px-3 py-2 -ml-3">
+        <Link href={user?.role === "vendor" ? "/vendor-dashboard" : "/dashboard"} className="flex items-center gap-3 hover-elevate active-elevate-2 rounded-md px-3 py-2 -ml-3">
           <img 
             src={new URL("@assets/viah-logo_1763669612969.png", import.meta.url).href}
             alt="Viah.me"
             className="h-20 w-auto object-contain"
             data-testid="logo-viah"
           />
-          <div className="hidden sm:flex flex-col gap-1">
-            <p className="text-xs text-muted-foreground font-medium">Welcome back</p>
-            <p className="text-sm font-semibold" data-testid="text-couple-greeting">
-              {wedding?.coupleNames || user?.email || "Guest"}
-            </p>
-            {wedding && (
-              <Badge variant="outline" className="text-xs font-mono w-fit" data-testid="badge-tradition">
-                {wedding.tradition.charAt(0).toUpperCase() + wedding.tradition.slice(1)}
-              </Badge>
-            )}
-          </div>
+          {/* Only show couple greeting for couple users */}
+          {user?.role !== "vendor" && (
+            <div className="hidden sm:flex flex-col gap-1">
+              <p className="text-xs text-muted-foreground font-medium">Welcome back</p>
+              <p className="text-sm font-semibold" data-testid="text-couple-greeting">
+                {wedding?.coupleNames || user?.email || "Guest"}
+              </p>
+              {wedding && (
+                <Badge variant="outline" className="text-xs font-mono w-fit" data-testid="badge-tradition">
+                  {wedding.tradition.charAt(0).toUpperCase() + wedding.tradition.slice(1)}
+                </Badge>
+              )}
+            </div>
+          )}
         </Link>
 
         {/* Desktop Navigation */}
