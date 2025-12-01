@@ -524,7 +524,7 @@ export default function VendorDashboard() {
         {currentVendor && (
         <Card className="mb-8" data-testid="card-vendor-profile">
           <CardHeader>
-            <div className="flex items-start justify-between">
+            <div className="flex items-start justify-between gap-4">
               <div>
                 <CardTitle className="text-2xl font-display" data-testid="text-vendor-name">
                   {currentVendor.name}
@@ -533,17 +533,28 @@ export default function VendorDashboard() {
                   {currentVendor.category.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
                 </CardDescription>
               </div>
-              {rating > 0 && (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted">
-                  <Star className="w-5 h-5 fill-primary text-primary" />
-                  <span className="font-mono font-semibold" data-testid="text-vendor-rating">
-                    {rating.toFixed(1)}
-                  </span>
-                  <span className="text-sm text-muted-foreground">
-                    ({currentVendor.reviewCount || 0} reviews)
-                  </span>
-                </div>
-              )}
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={openEditDialog}
+                  data-testid="button-edit-profile"
+                >
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit Profile
+                </Button>
+                {rating > 0 && (
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted ml-2">
+                    <Star className="w-5 h-5 fill-primary text-primary" />
+                    <span className="font-mono font-semibold" data-testid="text-vendor-rating">
+                      {rating.toFixed(1)}
+                    </span>
+                    <span className="text-sm text-muted-foreground">
+                      ({currentVendor.reviewCount || 0} reviews)
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
           </CardHeader>
           <CardContent>
