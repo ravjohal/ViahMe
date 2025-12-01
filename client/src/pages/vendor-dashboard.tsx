@@ -1060,6 +1060,58 @@ export default function VendorDashboard() {
             </div>
 
             <div>
+              <Label htmlFor="category">Service Category</Label>
+              <Select
+                value={editFormData.category || ""}
+                onValueChange={(value) =>
+                  setEditFormData({ ...editFormData, category: value })
+                }
+              >
+                <SelectTrigger id="category" data-testid="select-category">
+                  <SelectValue placeholder="Select your service category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="makeup_artist">Makeup Artist</SelectItem>
+                  <SelectItem value="dj">DJ</SelectItem>
+                  <SelectItem value="dhol_player">Dhol Player</SelectItem>
+                  <SelectItem value="turban_tier">Turban Tier</SelectItem>
+                  <SelectItem value="mehndi_artist">Mehndi Artist</SelectItem>
+                  <SelectItem value="photographer">Photographer</SelectItem>
+                  <SelectItem value="videographer">Videographer</SelectItem>
+                  <SelectItem value="caterer">Caterer</SelectItem>
+                  <SelectItem value="banquet_hall">Banquet Hall</SelectItem>
+                  <SelectItem value="gurdwara">Gurdwara</SelectItem>
+                  <SelectItem value="temple">Temple</SelectItem>
+                  <SelectItem value="decorator">Decorator</SelectItem>
+                  <SelectItem value="florist">Florist</SelectItem>
+                  <SelectItem value="horse_rental">Horse Rental</SelectItem>
+                  <SelectItem value="sword_rental">Sword Rental</SelectItem>
+                  <SelectItem value="tent_service">Tent Service</SelectItem>
+                  <SelectItem value="limo_service">Limo Service</SelectItem>
+                  <SelectItem value="mobile_food">Mobile Food</SelectItem>
+                  <SelectItem value="baraat_band">Baraat Band</SelectItem>
+                  <SelectItem value="pandit">Pandit (Hindu Priest)</SelectItem>
+                  <SelectItem value="mandap_decorator">Mandap Decorator</SelectItem>
+                  <SelectItem value="haldi_supplies">Haldi Supplies</SelectItem>
+                  <SelectItem value="pooja_items">Pooja Items</SelectItem>
+                  <SelectItem value="astrologer">Astrologer</SelectItem>
+                  <SelectItem value="garland_maker">Garland Maker</SelectItem>
+                  <SelectItem value="qazi">Qazi (Islamic Judge)</SelectItem>
+                  <SelectItem value="imam">Imam</SelectItem>
+                  <SelectItem value="nikah_decorator">Nikah Decorator</SelectItem>
+                  <SelectItem value="halal_caterer">Halal Caterer</SelectItem>
+                  <SelectItem value="quran_reciter">Quran Reciter</SelectItem>
+                  <SelectItem value="garba_instructor">Garba Instructor</SelectItem>
+                  <SelectItem value="dandiya_equipment">Dandiya Equipment</SelectItem>
+                  <SelectItem value="rangoli_artist">Rangoli Artist</SelectItem>
+                  <SelectItem value="nadaswaram_player">Nadaswaram Player</SelectItem>
+                  <SelectItem value="silk_saree_rental">Silk Saree Rental</SelectItem>
+                  <SelectItem value="kolam_artist">Kolam Artist</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
               <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
