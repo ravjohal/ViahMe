@@ -166,6 +166,7 @@ export const vendors = pgTable("vendors", {
   name: text("name").notNull(),
   category: text("category").notNull(), // Legacy single category field
   categories: text("categories").array(), // Multiple service categories vendor provides (new)
+  preferredWeddingTraditions: text("preferred_wedding_traditions").array(), // ['sikh', 'hindu', 'muslim', 'gujarati', 'south_indian', 'mixed', 'general']
   location: text("location").notNull(),
   city: text("city").notNull().default('San Francisco Bay Area'), // 'San Francisco Bay Area' | 'New York City' | 'Los Angeles' | 'Chicago' | 'Seattle'
   priceRange: text("price_range").notNull(), // '$' | '$$' | '$$$' | '$$$$'
@@ -234,6 +235,7 @@ export const insertVendorSchema = createInsertSchema(vendors).omit({
   reviewCount: true,
 }).extend({
   categories: z.array(z.enum(VENDOR_CATEGORIES)).min(1, "Select at least one service category"),
+  preferredWeddingTraditions: z.array(z.enum(['sikh', 'hindu', 'muslim', 'gujarati', 'south_indian', 'mixed', 'general'])).optional(),
   priceRange: z.enum(['$', '$$', '$$$', '$$$$']),
 });
 

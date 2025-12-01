@@ -207,6 +207,7 @@ export default function VendorDashboard() {
       setEditFormData({
         name: currentVendor.name,
         categories: currentVendor.categories || [],
+        preferredWeddingTraditions: currentVendor.preferredWeddingTraditions || [],
         description: currentVendor.description || "",
         contact: currentVendor.contact || "",
         email: currentVendor.email || "",
@@ -221,6 +222,7 @@ export default function VendorDashboard() {
       setEditFormData({
         name: "",
         categories: [],
+        preferredWeddingTraditions: [],
         description: "",
         contact: "",
         email: "",
@@ -246,7 +248,9 @@ export default function VendorDashboard() {
         const newVendorData: InsertVendor = {
           userId: user.id,
           name: editFormData.name?.trim() || "",
+          category: (editFormData.categories as any)?.[0] || "photographer",
           categories: (editFormData.categories as any) || ["photographer"],
+          preferredWeddingTraditions: (editFormData.preferredWeddingTraditions as any) || [],
           location: editFormData.location?.trim() || "",
           city: "San Francisco Bay Area", // Default city
           priceRange: (editFormData.priceRange as any) || "$",
@@ -267,6 +271,7 @@ export default function VendorDashboard() {
           name: z.string().min(1, "Business name is required").optional(),
           location: z.string().min(1, "Location is required").optional(),
           categories: z.array(z.string()).min(1, "Select at least one category").optional(),
+          preferredWeddingTraditions: z.array(z.string()).optional(),
           priceRange: z.enum(['$', '$$', '$$$', '$$$$'], {
             errorMap: () => ({ message: "Please select a valid price range" })
           }).optional(),
@@ -1095,6 +1100,39 @@ export default function VendorDashboard() {
                   </div>
                 ))}
               </div>
+            </div>
+
+            <div>
+              <Label>Preferred Wedding Traditions</Label>
+              <div className="grid grid-cols-2 gap-3 mt-2 p-3 border rounded-md bg-muted/30">
+                {(['sikh', 'hindu', 'muslim', 'gujarati', 'south_indian', 'mixed', 'general'] as const).map((tradition) => (
+                  <div key={tradition} className="flex items-center gap-2">
+                    <Checkbox
+                      id={`tradition-${tradition}`}
+                      checked={(editFormData.preferredWeddingTraditions as string[] || []).includes(tradition)}
+                      onCheckedChange={(checked) => {
+                        const current = (editFormData.preferredWeddingTraditions as string[] || []);
+                        if (checked) {
+                          setEditFormData({
+                            ...editFormData,
+                            preferredWeddingTraditions: [...current, tradition]
+                          });
+                        } else {
+                          setEditFormData({
+                            ...editFormData,
+                            preferredWeddingTraditions: current.filter(t => t !== tradition)
+                          });
+                        }
+                      }}
+                      data-testid={`checkbox-tradition-${tradition}`}
+                    />
+                    <Label htmlFor={`tradition-${tradition}`} className="font-normal cursor-pointer">
+                      {tradition === 'south_indian' ? 'South Indian' : tradition.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Leave blank to work with all traditions</p>
             </div>
 
             <div>
