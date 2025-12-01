@@ -53,15 +53,18 @@ export function AppHeader() {
   
   const { data: weddings } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
+    enabled: user?.role !== "vendor",
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
   
   const { data: vendors } = useQuery<any[]>({
     queryKey: ["/api/vendors"],
     enabled: user?.role === "vendor",
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
   
-  const wedding = weddings?.[0];
-  const currentVendor = vendors?.find(v => v.email === user?.email);
+  const wedding = user?.role !== "vendor" ? weddings?.[0] : undefined;
+  const currentVendor = user?.role === "vendor" ? vendors?.find(v => v.email === user?.email) : undefined;
   
   const daysUntilWedding = wedding?.weddingDate
     ? differenceInDays(new Date(wedding.weddingDate), new Date())
