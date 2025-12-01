@@ -130,13 +130,16 @@ export function EventDetailModal({
     mutationFn: async (data: Partial<Event>) => {
       return await apiRequest("PATCH", `/api/events/${event!.id}`, data);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/events", weddingId] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["/api/events", weddingId] });
       toast({
         title: "Event updated",
         description: "Your changes have been saved.",
       });
-      onOpenChange(false);
+      // Close modal after a brief delay to allow toast to display
+      setTimeout(() => {
+        onOpenChange(false);
+      }, 800);
     },
     onError: () => {
       toast({
