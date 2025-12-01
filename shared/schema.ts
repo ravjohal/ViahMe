@@ -164,7 +164,8 @@ export const vendors = pgTable("vendors", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id"), // Link to user account (for vendor-owned profiles)
   name: text("name").notNull(),
-  category: text("category").notNull(), // 'makeup' | 'dj' | 'dhol' | 'turban_tier' | 'mehndi' | etc
+  category: text("category").notNull(), // Legacy single category field
+  categories: text("categories").array(), // Multiple service categories vendor provides (new)
   location: text("location").notNull(),
   city: text("city").notNull().default('San Francisco Bay Area'), // 'San Francisco Bay Area' | 'New York City' | 'Los Angeles' | 'Chicago' | 'Seattle'
   priceRange: text("price_range").notNull(), // '$' | '$$' | '$$$' | '$$$$'
@@ -188,54 +189,51 @@ export const vendors = pgTable("vendors", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const VENDOR_CATEGORIES = [
+  'makeup_artist',
+  'dj',
+  'dhol_player',
+  'turban_tier',
+  'mehndi_artist',
+  'photographer',
+  'videographer',
+  'caterer',
+  'banquet_hall',
+  'gurdwara',
+  'temple',
+  'decorator',
+  'florist',
+  'horse_rental',
+  'sword_rental',
+  'tent_service',
+  'limo_service',
+  'mobile_food',
+  'baraat_band',
+  'pandit',
+  'mandap_decorator',
+  'haldi_supplies',
+  'pooja_items',
+  'astrologer',
+  'garland_maker',
+  'qazi',
+  'imam',
+  'nikah_decorator',
+  'halal_caterer',
+  'quran_reciter',
+  'garba_instructor',
+  'dandiya_equipment',
+  'rangoli_artist',
+  'nadaswaram_player',
+  'silk_saree_rental',
+  'kolam_artist'
+] as const;
+
 export const insertVendorSchema = createInsertSchema(vendors).omit({
   id: true,
   rating: true,
   reviewCount: true,
 }).extend({
-  category: z.enum([
-    // Common vendors
-    'makeup_artist',
-    'dj',
-    'dhol_player',
-    'turban_tier',
-    'mehndi_artist',
-    'photographer',
-    'videographer',
-    'caterer',
-    'banquet_hall',
-    'gurdwara',
-    'temple',
-    'decorator',
-    'florist',
-    'horse_rental',
-    'sword_rental',
-    'tent_service',
-    'limo_service',
-    'mobile_food',
-    'baraat_band',
-    // Hindu-specific vendors
-    'pandit',
-    'mandap_decorator',
-    'haldi_supplies',
-    'pooja_items',
-    'astrologer',
-    'garland_maker',
-    // Muslim-specific vendors
-    'qazi',
-    'imam',
-    'nikah_decorator',
-    'halal_caterer',
-    'quran_reciter',
-    // Gujarati-specific vendors
-    'garba_instructor',
-    'dandiya_equipment',
-    'rangoli_artist',
-    // South Indian-specific vendors
-    'nadaswaram_player',
-    'silk_saree_rental',
-    'kolam_artist'
-  ]),
+  categories: z.array(z.enum(VENDOR_CATEGORIES)).min(1, "Select at least one service category"),
   priceRange: z.enum(['$', '$$', '$$$', '$$$$']),
 });
 

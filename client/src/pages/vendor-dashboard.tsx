@@ -27,8 +27,9 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { Vendor, Booking, Contract, InsertVendor } from "@shared/schema";
-import { insertVendorSchema } from "@shared/schema";
+import { insertVendorSchema, VENDOR_CATEGORIES } from "@shared/schema";
 import { AddressAutocomplete } from "@/components/address-autocomplete";
+import { Checkbox } from "@/components/ui/checkbox";
 import { z } from "zod";
 import { Link, useLocation } from "wouter";
 import {
@@ -205,7 +206,7 @@ export default function VendorDashboard() {
       // Edit existing profile
       setEditFormData({
         name: currentVendor.name,
-        category: currentVendor.category,
+        categories: currentVendor.categories || [],
         description: currentVendor.description || "",
         contact: currentVendor.contact || "",
         email: currentVendor.email || "",
@@ -219,7 +220,7 @@ export default function VendorDashboard() {
       // Create new profile - set defaults
       setEditFormData({
         name: "",
-        category: "photographer", // Default category
+        categories: [],
         description: "",
         contact: "",
         email: "",
@@ -245,7 +246,7 @@ export default function VendorDashboard() {
         const newVendorData: InsertVendor = {
           userId: user.id,
           name: editFormData.name?.trim() || "",
-          category: (editFormData.category as any) || "photographer", // Default to photographer if not selected
+          categories: (editFormData.categories as any) || ["photographer"],
           location: editFormData.location?.trim() || "",
           city: "San Francisco Bay Area", // Default city
           priceRange: (editFormData.priceRange as any) || "$",
@@ -265,6 +266,7 @@ export default function VendorDashboard() {
         const profileUpdateSchema = z.object({
           name: z.string().min(1, "Business name is required").optional(),
           location: z.string().min(1, "Location is required").optional(),
+          categories: z.array(z.string()).min(1, "Select at least one category").optional(),
           priceRange: z.enum(['$', '$$', '$$$', '$$$$'], {
             errorMap: () => ({ message: "Please select a valid price range" })
           }).optional(),
@@ -529,8 +531,12 @@ export default function VendorDashboard() {
                 <CardTitle className="text-2xl font-display" data-testid="text-vendor-name">
                   {currentVendor.name}
                 </CardTitle>
-                <CardDescription className="mt-2 text-base">
-                  {currentVendor.category.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                <CardDescription className="mt-2 text-base flex flex-wrap gap-2">
+                  {currentVendor.categories?.map((cat: string) => (
+                    <Badge key={cat} variant="secondary">
+                      {cat.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                    </Badge>
+                  ))}
                 </CardDescription>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
@@ -1060,55 +1066,35 @@ export default function VendorDashboard() {
             </div>
 
             <div>
-              <Label htmlFor="category">Service Category</Label>
-              <Select
-                value={editFormData.category || ""}
-                onValueChange={(value) =>
-                  setEditFormData({ ...editFormData, category: value })
-                }
-              >
-                <SelectTrigger id="category" data-testid="select-category">
-                  <SelectValue placeholder="Select your service category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="makeup_artist">Makeup Artist</SelectItem>
-                  <SelectItem value="dj">DJ</SelectItem>
-                  <SelectItem value="dhol_player">Dhol Player</SelectItem>
-                  <SelectItem value="turban_tier">Turban Tier</SelectItem>
-                  <SelectItem value="mehndi_artist">Mehndi Artist</SelectItem>
-                  <SelectItem value="photographer">Photographer</SelectItem>
-                  <SelectItem value="videographer">Videographer</SelectItem>
-                  <SelectItem value="caterer">Caterer</SelectItem>
-                  <SelectItem value="banquet_hall">Banquet Hall</SelectItem>
-                  <SelectItem value="gurdwara">Gurdwara</SelectItem>
-                  <SelectItem value="temple">Temple</SelectItem>
-                  <SelectItem value="decorator">Decorator</SelectItem>
-                  <SelectItem value="florist">Florist</SelectItem>
-                  <SelectItem value="horse_rental">Horse Rental</SelectItem>
-                  <SelectItem value="sword_rental">Sword Rental</SelectItem>
-                  <SelectItem value="tent_service">Tent Service</SelectItem>
-                  <SelectItem value="limo_service">Limo Service</SelectItem>
-                  <SelectItem value="mobile_food">Mobile Food</SelectItem>
-                  <SelectItem value="baraat_band">Baraat Band</SelectItem>
-                  <SelectItem value="pandit">Pandit (Hindu Priest)</SelectItem>
-                  <SelectItem value="mandap_decorator">Mandap Decorator</SelectItem>
-                  <SelectItem value="haldi_supplies">Haldi Supplies</SelectItem>
-                  <SelectItem value="pooja_items">Pooja Items</SelectItem>
-                  <SelectItem value="astrologer">Astrologer</SelectItem>
-                  <SelectItem value="garland_maker">Garland Maker</SelectItem>
-                  <SelectItem value="qazi">Qazi (Islamic Judge)</SelectItem>
-                  <SelectItem value="imam">Imam</SelectItem>
-                  <SelectItem value="nikah_decorator">Nikah Decorator</SelectItem>
-                  <SelectItem value="halal_caterer">Halal Caterer</SelectItem>
-                  <SelectItem value="quran_reciter">Quran Reciter</SelectItem>
-                  <SelectItem value="garba_instructor">Garba Instructor</SelectItem>
-                  <SelectItem value="dandiya_equipment">Dandiya Equipment</SelectItem>
-                  <SelectItem value="rangoli_artist">Rangoli Artist</SelectItem>
-                  <SelectItem value="nadaswaram_player">Nadaswaram Player</SelectItem>
-                  <SelectItem value="silk_saree_rental">Silk Saree Rental</SelectItem>
-                  <SelectItem value="kolam_artist">Kolam Artist</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>Service Categories (Select at least one)</Label>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2 p-3 border rounded-md bg-muted/30">
+                {VENDOR_CATEGORIES.map((category) => (
+                  <div key={category} className="flex items-center gap-2">
+                    <Checkbox
+                      id={`category-${category}`}
+                      checked={(editFormData.categories as string[] || []).includes(category)}
+                      onCheckedChange={(checked) => {
+                        const current = (editFormData.categories as string[] || []);
+                        if (checked) {
+                          setEditFormData({
+                            ...editFormData,
+                            categories: [...current, category]
+                          });
+                        } else {
+                          setEditFormData({
+                            ...editFormData,
+                            categories: current.filter(c => c !== category)
+                          });
+                        }
+                      }}
+                      data-testid={`checkbox-category-${category}`}
+                    />
+                    <Label htmlFor={`category-${category}`} className="font-normal cursor-pointer">
+                      {category.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                    </Label>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div>
