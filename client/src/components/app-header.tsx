@@ -61,7 +61,7 @@ export function AppHeader() {
   });
   
   const wedding = weddings?.[0];
-  const currentVendor = vendors?.[0];
+  const currentVendor = vendors?.find(v => v.email === user?.email);
   
   const daysUntilWedding = wedding?.weddingDate
     ? differenceInDays(new Date(wedding.weddingDate), new Date())
