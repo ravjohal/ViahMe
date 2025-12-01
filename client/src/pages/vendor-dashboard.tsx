@@ -30,6 +30,7 @@ import type { Vendor, Booking, Contract, InsertVendor } from "@shared/schema";
 import { insertVendorSchema, VENDOR_CATEGORIES } from "@shared/schema";
 import { AddressAutocomplete } from "@/components/address-autocomplete";
 import { Checkbox } from "@/components/ui/checkbox";
+import { VendorSetupWizard } from "@/components/vendor-setup-wizard";
 import { z } from "zod";
 import { Link, useLocation } from "wouter";
 import {
@@ -65,7 +66,7 @@ export default function VendorDashboard() {
   const { toast } = useToast();
   const { user, isLoading: authLoading, logout } = useAuth();
   const [, setLocation] = useLocation();
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [showWizard, setShowWizard] = useState(false);
   const [editFormData, setEditFormData] = useState<Partial<Vendor>>({});
   
   const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
@@ -201,39 +202,50 @@ export default function VendorDashboard() {
     },
   });
 
-  const openEditDialog = () => {
-    if (currentVendor) {
-      // Edit existing profile
-      setEditFormData({
-        name: currentVendor.name,
-        categories: currentVendor.categories || [],
-        preferredWeddingTraditions: currentVendor.preferredWeddingTraditions || [],
-        description: currentVendor.description || "",
-        contact: currentVendor.contact || "",
-        email: currentVendor.email || "",
-        phone: currentVendor.phone || "",
-        location: currentVendor.location,
-        priceRange: currentVendor.priceRange,
-        culturalSpecialties: currentVendor.culturalSpecialties || [],
-        availability: currentVendor.availability || null,
-      });
-    } else {
-      // Create new profile - set defaults
-      setEditFormData({
-        name: "",
-        categories: [],
-        preferredWeddingTraditions: [],
-        description: "",
-        contact: "",
-        email: "",
-        phone: "",
-        location: "",
-        priceRange: "$",
+  const openWizard = () => {
+    setEditFormData({});
+    setShowWizard(true);
+  };
+
+  const handleWizardComplete = (data: any) => {
+    try {
+      if (!user) return;
+
+      const newVendorData: InsertVendor = {
+        userId: user.id,
+        name: data.name?.trim() || "",
+        category: (data.categories as any)?.[0] || "photographer",
+        categories: (data.categories as any) || ["photographer"],
+        preferredWeddingTraditions: (data.preferredWeddingTraditions as any) || [],
+        location: data.location?.trim() || "",
+        city: "San Francisco Bay Area",
+        priceRange: data.priceRange || "$",
+        description: data.description?.trim() || "",
+        contact: data.contact?.trim() || "",
+        email: data.email?.trim() || "",
+        phone: data.phone?.trim() || "",
         culturalSpecialties: [],
         availability: null,
+      };
+
+      const validatedData = insertVendorSchema.parse(newVendorData);
+
+      if (currentVendor) {
+        // Update existing
+        updateVendorMutation.mutate(validatedData);
+      } else {
+        // Create new
+        createVendorMutation.mutate(validatedData);
+      }
+
+      setShowWizard(false);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to save vendor profile",
+        variant: "destructive",
       });
     }
-    setEditDialogOpen(true);
   };
 
   const handleSaveProfile = () => {
@@ -516,7 +528,7 @@ export default function VendorDashboard() {
             <CardContent>
               <Button
                 variant="default"
-                onClick={openEditDialog}
+                onClick={openWizard}
                 className="rounded-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
                 data-testid="button-setup-profile"
               >
@@ -548,7 +560,7 @@ export default function VendorDashboard() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={openEditDialog}
+                  onClick={openWizard}
                   data-testid="button-edit-profile"
                 >
                   <Edit className="w-4 h-4 mr-2" />
@@ -1049,8 +1061,19 @@ export default function VendorDashboard() {
         </Tabs>
       </main>
 
+      {/* Vendor Setup Wizard */}
+      {showWizard && (
+        <Card className="mx-auto max-w-2xl p-6">
+          <VendorSetupWizard
+            initialData={currentVendor}
+            onComplete={handleWizardComplete}
+            onCancel={() => setShowWizard(false)}
+          />
+        </Card>
+      )}
+
       {/* Edit Profile Dialog */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+      <Dialog open={false} onOpenChange={() => {}}>
         <DialogContent className="max-w-2xl" data-testid="dialog-edit-profile">
           <DialogHeader>
             <DialogTitle data-testid="dialog-title-edit-profile">Edit Vendor Profile</DialogTitle>
