@@ -542,19 +542,19 @@ export default function VendorDashboard() {
         {/* Vendor Profile Card */}
         {currentVendor && (
         <Card className="mb-8" data-testid="card-vendor-profile">
-          <CardHeader>
-            <div className="flex items-start justify-between gap-4">
+          <CardContent className="pt-6">
+            <div className="flex items-start justify-between gap-4 mb-6 pb-6 border-b">
               <div>
-                <CardTitle className="text-2xl font-display" data-testid="text-vendor-name">
+                <h2 className="text-2xl font-bold" data-testid="text-vendor-name">
                   {currentVendor.name}
-                </CardTitle>
-                <CardDescription className="mt-2 text-base flex flex-wrap gap-2">
+                </h2>
+                <div className="mt-2 text-base flex flex-wrap gap-2">
                   {currentVendor.categories?.map((cat: string) => (
                     <Badge key={cat} variant="secondary">
                       {cat.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
                     </Badge>
                   ))}
-                </CardDescription>
+                </div>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 <Button
@@ -579,8 +579,6 @@ export default function VendorDashboard() {
                 )}
               </div>
             </div>
-          </CardHeader>
-          <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="flex items-center gap-3">
                 <MapPin className="w-5 h-5 text-muted-foreground" />
