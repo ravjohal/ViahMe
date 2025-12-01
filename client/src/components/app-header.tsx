@@ -11,6 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { usePermissions } from "@/hooks/use-permissions";
@@ -61,10 +62,15 @@ export function AppHeader() {
     enabled: user?.role === "vendor",
   });
   
-  const wedding = user?.role !== "vendor" ? weddings?.[0] : undefined;
-  const currentVendor = user?.role === "vendor" ? vendors?.find(v => v.email === user?.email) : undefined;
-  console.log("Vendors", vendors)
-  console.log("currentVendor", currentVendor)
+  const wedding = useMemo(() => 
+    user?.role !== "vendor" ? weddings?.[0] : undefined,
+    [user?.role, weddings]
+  );
+  
+  const currentVendor = useMemo(() =>
+    user?.role === "vendor" ? vendors?.find(v => v.email === user?.email) : undefined,
+    [user?.role, user?.email, vendors]
+  );
   
   const daysUntilWedding = wedding?.weddingDate
     ? differenceInDays(new Date(wedding.weddingDate), new Date())
