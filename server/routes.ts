@@ -694,9 +694,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const bookings = await storage.getBookingsByVendor(req.params.vendorId);
-      res.json(bookings);
+      res.json(bookings || []);
     } catch (error) {
-      res.status(500).json({ error: "Failed to fetch vendor bookings" });
+      console.error("Error fetching vendor bookings:", error);
+      res.status(500).json({ error: "Failed to fetch vendor bookings", details: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
