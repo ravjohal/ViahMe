@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import type { Event, InsertEvent, EventCostItem, BudgetCategory } from "@shared/schema";
+import type { Event, InsertEvent, EventCostItem, BudgetCategory, Task } from "@shared/schema";
 import { EventDetailModal } from "@/components/event-detail-modal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -502,6 +502,11 @@ export default function TimelinePage() {
   const { data: viewingCostItems = [], isLoading: viewingCostItemsLoading } = useQuery<EventCostItem[]>({
     queryKey: ["/api/events", viewingEventId, "cost-items"],
     enabled: !!viewingEventId,
+  });
+
+  const { data: viewingEventTasks = [], isLoading: viewingEventTasksLoading } = useQuery<Task[]>({
+    queryKey: ["/api/tasks", wedding?.id],
+    enabled: !!wedding?.id,
   });
 
   const createCostItemMutation = useMutation({
@@ -1727,6 +1732,8 @@ export default function TimelinePage() {
         costItems={viewingCostItems}
         costItemsLoading={viewingCostItemsLoading}
         budgetCategories={budgetCategories}
+        tasks={viewingEventId ? viewingEventTasks.filter(t => t.eventId === viewingEventId) : []}
+        tasksLoading={viewingEventTasksLoading}
         onEdit={(event) => {
           setViewingEventId(null);
           handleEdit(event);
