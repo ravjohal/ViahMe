@@ -136,6 +136,7 @@ export function EventDetailModal({
         title: "Event updated",
         description: "Your changes have been saved.",
       });
+      onOpenChange(false);
     },
     onError: () => {
       toast({
