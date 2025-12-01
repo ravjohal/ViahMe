@@ -28,6 +28,7 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { Vendor, Booking, Contract, InsertVendor } from "@shared/schema";
 import { insertVendorSchema } from "@shared/schema";
+import { AddressAutocomplete } from "@/components/address-autocomplete";
 import { z } from "zod";
 import { Link, useLocation } from "wouter";
 import {
@@ -793,7 +794,7 @@ export default function VendorDashboard() {
                       </div>
                     )}
 
-                    {booking.status === "declined" && booking.alternateSlots && Array.isArray(booking.alternateSlots) && (booking.alternateSlots as AlternateSlot[]).length > 0 && (
+                    {booking.status === "declined" && Array.isArray(booking.alternateSlots) && booking.alternateSlots.length > 0 && (
                       <div className="mt-4 p-3 bg-muted/30 rounded-lg">
                         <p className="text-sm font-medium mb-2">Alternate Dates Suggested</p>
                         <div className="space-y-2">
@@ -1060,19 +1061,22 @@ export default function VendorDashboard() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="location">Location</Label>
-                <Input
-                  id="location"
-                  value={editFormData.location || ""}
-                  onChange={(e) =>
-                    setEditFormData({ ...editFormData, location: e.target.value })
-                  }
-                  data-testid="input-location"
-                />
-              </div>
+            <div>
+              <Label htmlFor="location">Business Address</Label>
+              <AddressAutocomplete
+                value={editFormData.location || ""}
+                onChange={(address) =>
+                  setEditFormData({ ...editFormData, location: address })
+                }
+                placeholder="Enter your business address"
+                testid="input-location"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Start typing to search for your business address
+              </p>
+            </div>
 
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -1086,20 +1090,20 @@ export default function VendorDashboard() {
                   data-testid="input-email"
                 />
               </div>
-            </div>
 
-            <div>
-              <Label htmlFor="phone">Business Phone</Label>
-              <Input
-                id="phone"
-                type="tel"
-                placeholder="(555) 123-4567"
-                value={editFormData.phone || ""}
-                onChange={(e) =>
-                  setEditFormData({ ...editFormData, phone: e.target.value })
-                }
-                data-testid="input-phone"
-              />
+              <div>
+                <Label htmlFor="phone">Business Phone</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="(555) 123-4567"
+                  value={editFormData.phone || ""}
+                  onChange={(e) =>
+                    setEditFormData({ ...editFormData, phone: e.target.value })
+                  }
+                  data-testid="input-phone"
+                />
+              </div>
             </div>
 
             <div>
