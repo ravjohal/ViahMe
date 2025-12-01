@@ -121,12 +121,13 @@ export default function VendorDashboard() {
         title: "Profile Created",
         description: "Your vendor profile has been created successfully.",
       });
+      setShowWizard(false);
       setEditDialogOpen(false);
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         title: "Creation Failed",
-        description: "Failed to create your profile. Please try again.",
+        description: error?.message || "Failed to create your profile. Please try again.",
         variant: "destructive",
       });
     },
@@ -145,12 +146,13 @@ export default function VendorDashboard() {
         title: "Profile Updated",
         description: "Your vendor profile has been updated successfully.",
       });
+      setShowWizard(false);
       setEditDialogOpen(false);
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         title: "Update Failed",
-        description: "Failed to update your profile. Please try again.",
+        description: error?.message || "Failed to update your profile. Please try again.",
         variant: "destructive",
       });
     },
@@ -207,7 +209,7 @@ export default function VendorDashboard() {
     setShowWizard(true);
   };
 
-  const handleWizardComplete = (data: any) => {
+  const handleWizardComplete = async (data: any) => {
     try {
       if (!user) return;
 
@@ -230,15 +232,13 @@ export default function VendorDashboard() {
 
       const validatedData = insertVendorSchema.parse(newVendorData);
 
-      if (currentVendor) {
-        // Update existing
+      if (currentVendor && vendorId) {
+        // Update existing - don't close wizard, let mutation handle success
         updateVendorMutation.mutate(validatedData);
       } else {
-        // Create new
+        // Create new - don't close wizard, let mutation handle success
         createVendorMutation.mutate(validatedData);
       }
-
-      setShowWizard(false);
     } catch (error: any) {
       toast({
         title: "Error",
