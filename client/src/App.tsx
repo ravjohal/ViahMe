@@ -157,11 +157,7 @@ function Router() {
           <Collaborators />
         </ProtectedRoute>
       </Route>
-      <Route path="/settings">
-        <ProtectedRoute requiredPermission="settings">
-          <Settings />
-        </ProtectedRoute>
-      </Route>
+      <Route path="/settings" component={Settings} />
       
       {/* Vendor calendar integration */}
       <Route path="/vendor-calendar" component={VendorCalendar} />
