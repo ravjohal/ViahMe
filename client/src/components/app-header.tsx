@@ -55,7 +55,13 @@ export function AppHeader() {
     queryKey: ["/api/weddings"],
   });
   
+  const { data: vendors } = useQuery<any[]>({
+    queryKey: ["/api/vendors"],
+    enabled: user?.role === "vendor",
+  });
+  
   const wedding = weddings?.[0];
+  const currentVendor = vendors?.[0];
   
   const daysUntilWedding = wedding?.weddingDate
     ? differenceInDays(new Date(wedding.weddingDate), new Date())
@@ -85,14 +91,14 @@ export function AppHeader() {
             className="h-20 w-auto object-contain"
             data-testid="logo-viah"
           />
-          {/* Only show couple greeting for couple users */}
-          {user?.role !== "vendor" && (
+          {/* Show greeting for both couples and vendors */}
+          {(user?.role === "vendor" ? currentVendor : wedding) && (
             <div className="hidden sm:flex flex-col gap-1">
               <p className="text-xs text-muted-foreground font-medium">Welcome back</p>
               <p className="text-sm font-semibold" data-testid="text-couple-greeting">
-                {wedding?.coupleNames || user?.email || "Guest"}
+                {user?.role === "vendor" ? currentVendor?.name : wedding?.coupleNames || user?.email || "Guest"}
               </p>
-              {wedding && (
+              {user?.role !== "vendor" && wedding && (
                 <Badge variant="outline" className="text-xs font-mono w-fit" data-testid="badge-tradition">
                   {wedding.tradition.charAt(0).toUpperCase() + wedding.tradition.slice(1)}
                 </Badge>
