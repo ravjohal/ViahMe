@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import type { RitualStage, RitualStageUpdate, Event, LiveWeddingStatus } from "@shared/schema";
@@ -26,14 +26,17 @@ import {
   Download,
   Copy,
   ExternalLink,
-  Smartphone,
-  FastForward,
-  SkipForward,
   Timer,
-  Volume2,
-  Coffee,
   CheckSquare,
-  ListChecks
+  ArrowRight,
+  ArrowLeft,
+  MessageCircle,
+  Share2,
+  Eye,
+  PartyPopper,
+  Heart,
+  Circle,
+  Phone
 } from "lucide-react";
 import QRCode from 'qrcode';
 import { format, parseISO } from "date-fns";
@@ -45,6 +48,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -93,69 +97,68 @@ const updateFormSchema = insertRitualStageUpdateSchema.omit({
 
 type UpdateFormValues = z.infer<typeof updateFormSchema>;
 
-const broadcastFormSchema = z.object({
-  message: z.string().min(1, "Message is required").max(500, "Message too long"),
-});
-
-type BroadcastFormValues = z.infer<typeof broadcastFormSchema>;
-
 const STAGE_STATUSES = [
-  { value: "upcoming", label: "Upcoming", color: "bg-muted text-muted-foreground" },
-  { value: "active", label: "In Progress", color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200" },
-  { value: "completed", label: "Completed", color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" },
-  { value: "delayed", label: "Delayed", color: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200" },
+  { value: "upcoming", label: "Coming Up", color: "bg-muted text-muted-foreground" },
+  { value: "active", label: "Happening Now", color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200" },
+  { value: "completed", label: "Done", color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" },
+  { value: "delayed", label: "Running Late", color: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200" },
   { value: "skipped", label: "Skipped", color: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200" },
 ] as const;
 
-const BROADCAST_TEMPLATES = [
-  { category: "Timing", templates: [
-    { label: "Starting Soon", message: "The ceremony will begin in 5 minutes. Please find your seats." },
-    { label: "Brief Delay", message: "We're running a few minutes behind schedule. Thank you for your patience!" },
-    { label: "15 Min Break", message: "We're taking a 15-minute break. Feel free to stretch and refresh!" },
-    { label: "Resuming", message: "The ceremony is about to resume. Please return to your seats." },
-  ]},
-  { category: "Ceremony", templates: [
-    { label: "Please Stand", message: "Please rise for the next sacred ritual." },
-    { label: "Please Sit", message: "You may now be seated. Thank you!" },
-    { label: "Silence", message: "Please silence all phones and maintain quiet during this sacred moment." },
-    { label: "Photos OK", message: "Photos and videos are now welcome!" },
-  ]},
-  { category: "Logistics", templates: [
-    { label: "Meal Time", message: "Dinner is now being served. Please proceed to the dining area." },
-    { label: "Bar Open", message: "The bar is now open! Enjoy responsibly." },
-    { label: "Move Venues", message: "Please make your way to the next venue. Transportation is available at the entrance." },
-    { label: "Thank You", message: "Thank you all for being here to celebrate with us! We love you!" },
-  ]},
-] as const;
+const QUICK_MESSAGES = [
+  { 
+    category: "Timing Updates", 
+    icon: Clock,
+    messages: [
+      { label: "Starting Soon", text: "We're about to begin! Please find your seats.", emoji: "chair" },
+      { label: "Quick Break", text: "Taking a short break. Feel free to stretch and refresh!", emoji: "coffee" },
+      { label: "Running a Bit Late", text: "We're running a few minutes behind. Thank you for your patience!", emoji: "clock" },
+      { label: "Resuming Now", text: "We're ready to continue. Please return to your seats.", emoji: "arrow" },
+    ]
+  },
+  { 
+    category: "Guest Guidance", 
+    icon: Users,
+    messages: [
+      { label: "Please Stand", text: "Please rise for this special moment.", emoji: "up" },
+      { label: "Please Be Seated", text: "You may now be seated. Thank you!", emoji: "down" },
+      { label: "Photos Welcome", text: "Feel free to take photos and videos!", emoji: "camera" },
+      { label: "Quiet Please", text: "Please silence phones for this sacred moment.", emoji: "quiet" },
+    ]
+  },
+  { 
+    category: "Celebrations", 
+    icon: PartyPopper,
+    messages: [
+      { label: "Dinner Time", text: "Dinner is ready! Please head to the dining area.", emoji: "food" },
+      { label: "Dance Floor Open", text: "Time to dance! The dance floor is now open.", emoji: "dance" },
+      { label: "Thank You", text: "Thank you for celebrating with us! We love you all!", emoji: "heart" },
+    ]
+  },
+];
 
-const DAY_OF_CHECKLIST = [
-  { id: "test_live", label: "Test your live connection", description: "Go live briefly to ensure everything works", priority: "high" },
-  { id: "share_qr", label: "Share QR codes with guests", description: "Print or display QR codes at the venue", priority: "high" },
-  { id: "assign_helper", label: "Assign a ceremony helper", description: "Designate someone to manage updates if you're busy", priority: "high" },
-  { id: "review_stages", label: "Review ceremony stages", description: "Confirm all stages and timings are correct", priority: "medium" },
-  { id: "prepare_templates", label: "Review broadcast templates", description: "Familiarize yourself with quick message options", priority: "medium" },
-  { id: "check_gaps", label: "Check gap recommendations", description: "Ensure nearby activity suggestions are accurate", priority: "medium" },
-  { id: "phone_charged", label: "Phone fully charged", description: "Keep your device charged for the ceremony", priority: "high" },
-  { id: "wifi_backup", label: "Have wifi/data backup", description: "Ensure you have reliable internet access", priority: "medium" },
-  { id: "notify_vendors", label: "Brief key vendors", description: "Let photographer/DJ know about live updates", priority: "low" },
-  { id: "final_countdown", label: "Send 'starting soon' message", description: "30 minutes before ceremony begins", priority: "high" },
-] as const;
+const PREP_CHECKLIST = [
+  { id: "share_link", label: "Share the guest link", description: "Send the QR code or link to your guests so they can follow along", priority: "high" },
+  { id: "add_helpers", label: "Add family helpers", description: "Invite trusted family members who can send updates if you're busy", priority: "high" },
+  { id: "test_connection", label: "Test it out", description: "Go live briefly to make sure everything works", priority: "high" },
+  { id: "add_ceremony_parts", label: "Add your ceremony parts", description: "List the main moments guests should know about", priority: "medium" },
+  { id: "phone_charged", label: "Charge your phone", description: "Keep your device ready for the big day", priority: "medium" },
+];
 
 type StageStatus = typeof STAGE_STATUSES[number]['value'];
 
 export default function RitualControlPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const [currentStep, setCurrentStep] = useState(1);
   const [stageDialogOpen, setStageDialogOpen] = useState(false);
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
-  const [broadcastDialogOpen, setBroadcastDialogOpen] = useState(false);
+  const [quickMessageDialogOpen, setQuickMessageDialogOpen] = useState(false);
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>("");
-  const [mobileControlsOpen, setMobileControlsOpen] = useState(false);
-  const [checklistOpen, setChecklistOpen] = useState(false);
   const [completedChecklist, setCompletedChecklist] = useState<Set<string>>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('ritual-control-checklist');
+      const saved = localStorage.getItem('wedding-day-checklist');
       return saved ? new Set(JSON.parse(saved)) : new Set();
     }
     return new Set();
@@ -164,7 +167,6 @@ export default function RitualControlPage() {
   const [selectedStageId, setSelectedStageId] = useState<string | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [expandedEvents, setExpandedEvents] = useState<Set<string>>(new Set());
-  const qrCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const { data: weddings = [], isLoading: weddingsLoading } = useQuery<any[]>({
     queryKey: ["/api/weddings"],
@@ -181,12 +183,6 @@ export default function RitualControlPage() {
     enabled: !!wedding?.id,
   });
 
-  const fetchStagesForEvent = async (eventId: string) => {
-    const response = await fetch(`/api/events/${eventId}/stages`);
-    if (!response.ok) return [];
-    return response.json();
-  };
-
   const goLiveMutation = useMutation({
     mutationFn: async () => {
       return await apiRequest("POST", `/api/weddings/${wedding.id}/go-live`, {});
@@ -194,14 +190,14 @@ export default function RitualControlPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "live-status"] });
       toast({
-        title: "You're now live!",
-        description: "Guests can see real-time updates on their devices.",
+        title: "You're live!",
+        description: "Guests can now see your updates.",
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to go live",
+        title: "Couldn't go live",
+        description: error.message || "Please try again",
         variant: "destructive",
       });
     },
@@ -214,13 +210,13 @@ export default function RitualControlPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "live-status"] });
       toast({
-        title: "Broadcast ended",
-        description: "You're now offline. Guests won't receive updates.",
+        title: "You're offline",
+        description: "Guests won't see new updates until you go live again.",
       });
     },
   });
 
-  const broadcastMutation = useMutation({
+  const sendMessageMutation = useMutation({
     mutationFn: async (data: { message: string }) => {
       return await apiRequest("PATCH", `/api/weddings/${wedding.id}/live-status`, {
         lastBroadcastMessage: data.message,
@@ -228,10 +224,10 @@ export default function RitualControlPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "live-status"] });
-      setBroadcastDialogOpen(false);
+      setQuickMessageDialogOpen(false);
       toast({
-        title: "Message broadcast",
-        description: "All guests will see your message.",
+        title: "Message sent!",
+        description: "All your guests will see this message.",
       });
     },
   });
@@ -244,14 +240,14 @@ export default function RitualControlPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/events"] });
       setStageDialogOpen(false);
       toast({
-        title: "Stage created",
-        description: "The ceremony stage has been added.",
+        title: "Added!",
+        description: "Your ceremony part has been added.",
       });
     },
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to create stage",
+        description: error.message || "Couldn't add ceremony part",
         variant: "destructive",
       });
     },
@@ -266,7 +262,7 @@ export default function RitualControlPage() {
       setStageDialogOpen(false);
       setEditingStage(null);
       toast({
-        title: "Stage updated",
+        title: "Updated!",
         description: "Your changes have been saved.",
       });
     },
@@ -279,8 +275,8 @@ export default function RitualControlPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/events"] });
       toast({
-        title: "Stage deleted",
-        description: "The ceremony stage has been removed.",
+        title: "Removed",
+        description: "The ceremony part has been removed.",
       });
     },
   });
@@ -294,14 +290,14 @@ export default function RitualControlPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "live-status"] });
       setUpdateDialogOpen(false);
       toast({
-        title: "Update posted",
-        description: "Guests will see this update in their live feed.",
+        title: "Updated!",
+        description: "Your guests will see this update.",
       });
     },
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to post update",
+        description: error.message || "Couldn't post update",
         variant: "destructive",
       });
     },
@@ -327,13 +323,6 @@ export default function RitualControlPage() {
       status: "active",
       message: "",
       delayMinutes: 0,
-    },
-  });
-
-  const broadcastForm = useForm<BroadcastFormValues>({
-    resolver: zodResolver(broadcastFormSchema),
-    defaultValues: {
-      message: "",
     },
   });
 
@@ -368,11 +357,6 @@ export default function RitualControlPage() {
     updateForm.reset();
   };
 
-  const onBroadcastSubmit = (data: BroadcastFormValues) => {
-    broadcastMutation.mutate({ message: data.message });
-    broadcastForm.reset();
-  };
-
   const guestLiveFeedUrl = wedding?.id 
     ? `${window.location.origin}/guest-live-feed/${wedding.id}`
     : '';
@@ -395,7 +379,7 @@ export default function RitualControlPage() {
   const handleDownloadQR = () => {
     if (!qrCodeDataUrl) return;
     const link = document.createElement('a');
-    link.download = 'guest-live-feed-qr.png';
+    link.download = 'wedding-guest-link-qr.png';
     link.href = qrCodeDataUrl;
     link.click();
   };
@@ -409,7 +393,7 @@ export default function RitualControlPage() {
       });
     } catch {
       toast({
-        title: "Failed to copy",
+        title: "Couldn't copy",
         description: "Please copy the link manually.",
         variant: "destructive",
       });
@@ -425,13 +409,13 @@ export default function RitualControlPage() {
         next.add(itemId);
       }
       if (typeof window !== 'undefined') {
-        localStorage.setItem('ritual-control-checklist', JSON.stringify(Array.from(next)));
+        localStorage.setItem('wedding-day-checklist', JSON.stringify(Array.from(next)));
       }
       return next;
     });
   };
 
-  const checklistProgress = Math.round((completedChecklist.size / DAY_OF_CHECKLIST.length) * 100);
+  const checklistProgress = Math.round((completedChecklist.size / PREP_CHECKLIST.length) * 100);
 
   const handleAddStage = (eventId: string) => {
     setSelectedEventId(eventId);
@@ -510,516 +494,422 @@ export default function RitualControlPage() {
 
   const isLive = liveStatus?.isLive === true;
 
+  const steps = [
+    { number: 1, title: "Get Ready", description: "Prepare for the big day", icon: CheckSquare },
+    { number: 2, title: "Go Live", description: "Start sharing updates", icon: Radio },
+    { number: 3, title: "Keep Guests Updated", description: "Send messages & track progress", icon: MessageCircle },
+  ];
+
   return (
-    <div className="container mx-auto px-6 py-8">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-600 via-pink-600 to-purple-600 bg-clip-text text-transparent mb-2" style={{ fontFamily: 'Playfair Display, serif' }}>
-          Ritual Control Panel
+    <div className="container mx-auto px-6 py-8 max-w-4xl">
+      {/* Header */}
+      <div className="mb-8 text-center">
+        <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-600 via-pink-600 to-purple-600 bg-clip-text text-transparent mb-2" style={{ fontFamily: 'Playfair Display, serif' }}>
+          Wedding Day Live Updates
         </h1>
-        <p className="text-muted-foreground">
-          Manage ceremony stages and broadcast live updates to your guests
+        <p className="text-muted-foreground text-lg">
+          Keep your guests in the loop on your special day
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3 mb-8">
-        <Card className={`${isLive ? 'bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 border-green-300 dark:border-green-700' : ''}`}>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
+      {/* Live Status Banner */}
+      {isLive && (
+        <Card className="mb-6 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 border-green-300 dark:border-green-700">
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center gap-3">
-                {isLive ? (
-                  <div className="p-3 rounded-full bg-green-100 dark:bg-green-900 animate-pulse">
-                    <Radio className="w-6 h-6 text-green-600 dark:text-green-400" />
-                  </div>
-                ) : (
-                  <div className="p-3 rounded-full bg-muted">
-                    <WifiOff className="w-6 h-6 text-muted-foreground" />
-                  </div>
-                )}
+                <div className="p-2 rounded-full bg-green-500 animate-pulse">
+                  <Radio className="w-5 h-5 text-white" />
+                </div>
                 <div>
-                  <h3 className="font-semibold">{isLive ? "You're Live!" : "Currently Offline"}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {isLive ? "Guests can see updates" : "Guests won't see updates"}
-                  </p>
-                  {isLive && (liveStatus as any)?.viewerCount > 0 && (
-                    <div className="flex items-center gap-1 mt-1">
-                      <Users className="w-3 h-3 text-green-600" />
-                      <span className="text-xs text-green-600 font-medium" data-testid="text-viewer-count">
-                        {(liveStatus as any).viewerCount} {(liveStatus as any).viewerCount === 1 ? 'viewer' : 'viewers'} watching
+                  <p className="font-semibold text-green-800 dark:text-green-200">You're Live!</p>
+                  <p className="text-sm text-green-700 dark:text-green-300">
+                    Guests can see your updates
+                    {(liveStatus as any)?.viewerCount > 0 && (
+                      <span className="ml-2">
+                        · {(liveStatus as any).viewerCount} watching
                       </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <Button
-                variant={isLive ? "destructive" : "default"}
-                size="sm"
-                data-testid="button-toggle-live"
-                onClick={() => isLive ? goOfflineMutation.mutate() : goLiveMutation.mutate()}
-                disabled={goLiveMutation.isPending || goOfflineMutation.isPending}
-              >
-                {isLive ? (
-                  <>
-                    <Pause className="w-4 h-4 mr-1" />
-                    Go Offline
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-4 h-4 mr-1" />
-                    Go Live
-                  </>
-                )}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-full bg-orange-100 dark:bg-orange-900">
-                  <Send className="w-6 h-6 text-orange-600 dark:text-orange-400" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">Quick Broadcast</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Send a message to all guests
-                  </p>
-                </div>
-              </div>
-              <Dialog open={broadcastDialogOpen} onOpenChange={setBroadcastDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button size="sm" variant="outline" data-testid="button-broadcast" disabled={!isLive}>
-                    <Send className="w-4 h-4 mr-1" />
-                    Broadcast
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl">
-                  <DialogHeader>
-                    <DialogTitle>Broadcast Message</DialogTitle>
-                  </DialogHeader>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-3">Quick templates - click to use:</p>
-                      <div className="space-y-3">
-                        {BROADCAST_TEMPLATES.map((category) => (
-                          <div key={category.category}>
-                            <p className="text-xs font-medium text-muted-foreground mb-1.5">{category.category}</p>
-                            <div className="flex flex-wrap gap-1.5">
-                              {category.templates.map((template) => (
-                                <Button
-                                  key={template.label}
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  className="text-xs"
-                                  data-testid={`template-${template.label.toLowerCase().replace(/\s+/g, '-')}`}
-                                  onClick={() => broadcastForm.setValue('message', template.message)}
-                                >
-                                  {template.label}
-                                </Button>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <Form {...broadcastForm}>
-                      <form onSubmit={broadcastForm.handleSubmit(onBroadcastSubmit)} className="space-y-4">
-                        <FormField
-                          control={broadcastForm.control}
-                          name="message"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Message</FormLabel>
-                              <FormControl>
-                                <Textarea 
-                                  data-testid="input-broadcast-message"
-                                  placeholder="e.g., The ceremony is starting in 5 minutes!"
-                                  className="min-h-[100px]"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormDescription>This message will appear at the top of guest screens</FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <div className="flex justify-end gap-2">
-                          <Button type="button" variant="outline" onClick={() => setBroadcastDialogOpen(false)}>
-                            Cancel
-                          </Button>
-                          <Button type="submit" data-testid="button-send-broadcast" disabled={broadcastMutation.isPending}>
-                            <Send className="w-4 h-4 mr-1" />
-                            Send to Guests
-                          </Button>
-                        </div>
-                      </form>
-                    </Form>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-full bg-purple-100 dark:bg-purple-900">
-                <Users className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-              </div>
-              <div>
-                <h3 className="font-semibold">Guest Experience</h3>
-                <p className="text-sm text-muted-foreground">
-                  {events.length} events configured
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900">
-                  <QrCode className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">Guest Live Feed QR</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Share with your guests
-                  </p>
-                </div>
-              </div>
-              <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button size="sm" variant="outline" data-testid="button-show-qr">
-                    <QrCode className="w-4 h-4 mr-1" />
-                    Show QR
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Guest Live Feed QR Code</DialogTitle>
-                  </DialogHeader>
-                  <div className="flex flex-col items-center space-y-4 py-4">
-                    {qrCodeDataUrl ? (
-                      <img 
-                        src={qrCodeDataUrl} 
-                        alt="Guest Live Feed QR Code" 
-                        className="w-64 h-64 rounded-lg border p-2 bg-white"
-                        data-testid="img-qr-code"
-                      />
-                    ) : (
-                      <div className="w-64 h-64 flex items-center justify-center bg-muted rounded-lg">
-                        <span className="text-muted-foreground">Generating...</span>
-                      </div>
                     )}
-                    <div className="w-full space-y-2">
-                      <p className="text-sm text-center text-muted-foreground">
-                        Guests can scan this to view live updates on their phones
-                      </p>
-                      <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
-                        <code className="text-xs flex-1 truncate" data-testid="text-live-feed-url">
-                          {guestLiveFeedUrl}
-                        </code>
-                        <Button 
-                          size="icon" 
-                          variant="ghost"
-                          onClick={handleCopyLink}
-                          data-testid="button-copy-link"
-                        >
-                          <Copy className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="flex gap-2 w-full">
-                      <Button 
-                        variant="outline" 
-                        className="flex-1"
-                        onClick={handleDownloadQR}
-                        data-testid="button-download-qr"
-                      >
-                        <Download className="w-4 h-4 mr-1" />
-                        Download QR
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        className="flex-1"
-                        onClick={() => window.open(guestLiveFeedUrl, '_blank')}
-                        data-testid="button-open-live-feed"
-                      >
-                        <ExternalLink className="w-4 h-4 mr-1" />
-                        Preview
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <FamilyMemberControls weddingId={wedding?.id} />
-
-      <Card className="mb-6 md:hidden">
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Smartphone className="w-5 h-5" />
-              Mobile Quick Actions
-            </CardTitle>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => setMobileControlsOpen(!mobileControlsOpen)}
-            >
-              {mobileControlsOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            </Button>
-          </div>
-        </CardHeader>
-        {mobileControlsOpen && (
-          <CardContent className="pt-0">
-            <p className="text-sm text-muted-foreground mb-4">
-              Large buttons optimized for quick taps on wedding day
-            </p>
-            <div className="grid grid-cols-2 gap-3">
-              <Button
-                size="lg"
-                className="h-20 flex flex-col gap-1"
-                variant={isLive ? "destructive" : "default"}
-                onClick={() => isLive ? goOfflineMutation.mutate() : goLiveMutation.mutate()}
-                disabled={goLiveMutation.isPending || goOfflineMutation.isPending}
-                data-testid="mobile-toggle-live"
-              >
-                {isLive ? <WifiOff className="w-6 h-6" /> : <Radio className="w-6 h-6" />}
-                <span className="text-xs">{isLive ? 'Go Offline' : 'Go Live'}</span>
-              </Button>
-              
-              <Button
-                size="lg"
-                className="h-20 flex flex-col gap-1"
-                variant="outline"
-                onClick={() => setBroadcastDialogOpen(true)}
-                disabled={!isLive}
-                data-testid="mobile-broadcast"
-              >
-                <Volume2 className="w-6 h-6" />
-                <span className="text-xs">Broadcast</span>
-              </Button>
-              
-              <Button
-                size="lg"
-                className="h-20 flex flex-col gap-1"
-                variant="outline"
-                onClick={() => {
-                  broadcastForm.setValue('message', 'We\'re taking a short break. Back soon!');
-                  setBroadcastDialogOpen(true);
-                }}
-                disabled={!isLive}
-                data-testid="mobile-break"
-              >
-                <Coffee className="w-6 h-6" />
-                <span className="text-xs">Announce Break</span>
-              </Button>
-              
-              <Button
-                size="lg"
-                className="h-20 flex flex-col gap-1"
-                variant="outline"
-                onClick={() => {
-                  broadcastForm.setValue('message', 'We\'re running a few minutes behind. Thank you for your patience!');
-                  setBroadcastDialogOpen(true);
-                }}
-                disabled={!isLive}
-                data-testid="mobile-delay"
-              >
-                <Timer className="w-6 h-6" />
-                <span className="text-xs">Announce Delay</span>
-              </Button>
-              
-              <Button
-                size="lg"
-                className="h-20 flex flex-col gap-1"
-                variant="outline"
-                onClick={() => {
-                  broadcastForm.setValue('message', 'The ceremony is about to resume. Please return to your seats.');
-                  setBroadcastDialogOpen(true);
-                }}
-                disabled={!isLive}
-                data-testid="mobile-resume"
-              >
-                <FastForward className="w-6 h-6" />
-                <span className="text-xs">Resume</span>
-              </Button>
-              
-              <Button
-                size="lg"
-                className="h-20 flex flex-col gap-1"
-                variant="outline"
-                onClick={() => setQrDialogOpen(true)}
-                data-testid="mobile-qr"
-              >
-                <QrCode className="w-6 h-6" />
-                <span className="text-xs">Show QR</span>
-              </Button>
-            </div>
-          </CardContent>
-        )}
-      </Card>
-
-      <Card className="mb-6">
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-full bg-indigo-100 dark:bg-indigo-900">
-                <ListChecks className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-              </div>
-              <div>
-                <CardTitle className="text-lg">Day-Of Checklist</CardTitle>
-                <CardDescription>
-                  {completedChecklist.size} of {DAY_OF_CHECKLIST.length} tasks completed
-                </CardDescription>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Badge variant={checklistProgress === 100 ? "default" : "outline"} className={checklistProgress === 100 ? "bg-green-500" : ""}>
-                {checklistProgress}%
-              </Badge>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setChecklistOpen(!checklistOpen)}
-              >
-                {checklistOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        {checklistOpen && (
-          <CardContent className="pt-2">
-            <Progress value={checklistProgress} className="h-2 mb-4" />
-            <div className="space-y-3">
-              {DAY_OF_CHECKLIST.map((item) => (
-                <div 
-                  key={item.id}
-                  className={`flex items-start gap-3 p-3 rounded-lg border transition-all ${
-                    completedChecklist.has(item.id) 
-                      ? 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800' 
-                      : 'hover-elevate'
-                  }`}
-                  data-testid={`checklist-item-${item.id}`}
-                >
-                  <Checkbox
-                    id={item.id}
-                    checked={completedChecklist.has(item.id)}
-                    onCheckedChange={() => toggleChecklistItem(item.id)}
-                    data-testid={`checkbox-${item.id}`}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <label 
-                      htmlFor={item.id}
-                      className={`font-medium cursor-pointer ${completedChecklist.has(item.id) ? 'line-through text-muted-foreground' : ''}`}
-                    >
-                      {item.label}
-                    </label>
-                    <p className={`text-sm ${completedChecklist.has(item.id) ? 'text-muted-foreground/60' : 'text-muted-foreground'}`}>
-                      {item.description}
-                    </p>
-                  </div>
-                  <Badge 
-                    variant="outline" 
-                    className={`text-xs shrink-0 ${
-                      item.priority === 'high' ? 'border-red-300 text-red-600 dark:border-red-800 dark:text-red-400' :
-                      item.priority === 'medium' ? 'border-yellow-300 text-yellow-600 dark:border-yellow-800 dark:text-yellow-400' :
-                      'border-muted'
-                    }`}
-                  >
-                    {item.priority}
-                  </Badge>
+                  </p>
                 </div>
-              ))}
-            </div>
-            {checklistProgress === 100 && (
-              <div className="mt-4 p-3 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 text-center">
-                All set! You're ready for your special day!
               </div>
-            )}
-          </CardContent>
-        )}
-      </Card>
-
-      {liveStatus?.lastBroadcastMessage && (
-        <Card className="mb-6 bg-gradient-to-r from-orange-50 to-pink-50 dark:from-orange-950/20 dark:to-pink-950/20 border-orange-200 dark:border-orange-800">
-          <CardContent className="pt-6">
-            <div className="flex items-start gap-3">
-              <Send className="w-5 h-5 text-orange-600 mt-0.5" />
-              <div>
-                <h4 className="font-medium text-sm mb-1">Last Broadcast</h4>
-                <p className="text-foreground">{liveStatus.lastBroadcastMessage}</p>
-              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => goOfflineMutation.mutate()}
+                disabled={goOfflineMutation.isPending}
+                className="border-green-600 text-green-700 hover:bg-green-100"
+                data-testid="button-go-offline"
+              >
+                <Pause className="w-4 h-4 mr-1" />
+                Stop Updates
+              </Button>
             </div>
           </CardContent>
         </Card>
       )}
 
-      <VisualTimeline 
-        events={events}
-        isLive={isLive}
-      />
-
-      <SmartDelayCalculator events={events} />
-
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-4" style={{ fontFamily: 'Playfair Display, serif' }}>
-          Ceremony Stages by Event
-        </h2>
-
-        {events.length === 0 ? (
-          <Card className="p-12 text-center">
-            <div className="flex flex-col items-center gap-4">
-              <div className="p-4 rounded-full bg-muted">
-                <Sparkles className="w-8 h-8 text-muted-foreground" />
-              </div>
-              <div>
-                <h3 className="font-semibold mb-1">No events yet</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Create events in your Timeline first, then add ceremony stages here
-                </p>
-                <Button onClick={() => setLocation("/timeline")}>
-                  Go to Timeline
-                </Button>
-              </div>
+      {/* Step Progress Indicator */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between max-w-2xl mx-auto">
+          {steps.map((step, index) => (
+            <div key={step.number} className="flex items-center">
+              <button
+                onClick={() => setCurrentStep(step.number)}
+                className={`flex flex-col items-center transition-all ${
+                  currentStep === step.number
+                    ? 'scale-105'
+                    : 'opacity-60 hover:opacity-80'
+                }`}
+                data-testid={`step-${step.number}`}
+              >
+                <div
+                  className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 transition-colors ${
+                    currentStep === step.number
+                      ? 'bg-primary text-primary-foreground'
+                      : currentStep > step.number
+                      ? 'bg-green-500 text-white'
+                      : 'bg-muted text-muted-foreground'
+                  }`}
+                >
+                  {currentStep > step.number ? (
+                    <CheckCircle className="w-6 h-6" />
+                  ) : (
+                    <step.icon className="w-6 h-6" />
+                  )}
+                </div>
+                <span className={`text-sm font-medium ${currentStep === step.number ? 'text-foreground' : 'text-muted-foreground'}`}>
+                  {step.title}
+                </span>
+                <span className="text-xs text-muted-foreground hidden md:block">
+                  {step.description}
+                </span>
+              </button>
+              {index < steps.length - 1 && (
+                <div className={`w-12 md:w-24 h-0.5 mx-2 ${
+                  currentStep > step.number ? 'bg-green-500' : 'bg-muted'
+                }`} />
+              )}
             </div>
-          </Card>
-        ) : (
-          <div className="space-y-4">
-            {events.map(event => (
-              <EventStagesCard 
-                key={event.id} 
-                event={event}
-                isExpanded={expandedEvents.has(event.id)}
-                onToggle={() => toggleEventExpanded(event.id)}
-                onAddStage={() => handleAddStage(event.id)}
-                onEditStage={handleEditStage}
-                onDeleteStage={(id) => {
-                  if (confirm("Delete this stage?")) {
-                    deleteStageMutation.mutate(id);
+          ))}
+        </div>
+      </div>
+
+      {/* Step Content */}
+      <div className="space-y-6">
+        {/* Step 1: Get Ready */}
+        {currentStep === 1 && (
+          <div className="space-y-6" data-testid="step-1-content">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Share2 className="w-5 h-5 text-primary" />
+                  Share with Your Guests
+                </CardTitle>
+                <CardDescription>
+                  Give your guests a way to follow along on your wedding day
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="flex-1" data-testid="button-show-qr">
+                        <QrCode className="w-4 h-4 mr-2" />
+                        Show QR Code
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-sm">
+                      <DialogHeader>
+                        <DialogTitle>Guest QR Code</DialogTitle>
+                        <DialogDescription>
+                          Guests can scan this to see live updates on their phones
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="flex flex-col items-center gap-4 py-4">
+                        {qrCodeDataUrl && (
+                          <img 
+                            src={qrCodeDataUrl} 
+                            alt="QR Code for guests" 
+                            className="w-64 h-64 border rounded-lg"
+                            data-testid="img-qr-code"
+                          />
+                        )}
+                        <p className="text-sm text-muted-foreground text-center">
+                          Print this or display it at your venue
+                        </p>
+                        <div className="flex gap-2">
+                          <Button onClick={handleDownloadQR} data-testid="button-download-qr">
+                            <Download className="w-4 h-4 mr-1" />
+                            Download
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+
+                  <Button variant="outline" className="flex-1" onClick={handleCopyLink} data-testid="button-copy-link">
+                    <Copy className="w-4 h-4 mr-2" />
+                    Copy Link
+                  </Button>
+
+                  <Button 
+                    variant="outline" 
+                    className="flex-1" 
+                    onClick={() => window.open(guestLiveFeedUrl, '_blank')}
+                    data-testid="button-preview-guest-view"
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
+                    Preview
+                  </Button>
+                </div>
+
+                <div className="bg-muted/50 rounded-lg p-4">
+                  <p className="text-sm text-muted-foreground">
+                    <strong>Tip:</strong> Include the QR code in your wedding program, or display it on a screen at the venue entrance.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CheckSquare className="w-5 h-5 text-primary" />
+                  Preparation Checklist
+                </CardTitle>
+                <CardDescription>
+                  {completedChecklist.size} of {PREP_CHECKLIST.length} items done
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Progress value={checklistProgress} className="h-2 mb-4" />
+                <div className="space-y-3">
+                  {PREP_CHECKLIST.map((item) => (
+                    <div
+                      key={item.id}
+                      className={`flex items-start gap-3 p-3 rounded-lg border transition-colors hover-elevate cursor-pointer ${
+                        completedChecklist.has(item.id)
+                          ? 'bg-green-50/50 dark:bg-green-950/20 border-green-200 dark:border-green-800'
+                          : ''
+                      }`}
+                      onClick={() => toggleChecklistItem(item.id)}
+                      data-testid={`checklist-item-${item.id}`}
+                    >
+                      <Checkbox 
+                        checked={completedChecklist.has(item.id)} 
+                        className="mt-0.5"
+                        onCheckedChange={() => toggleChecklistItem(item.id)}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className={`font-medium text-sm ${completedChecklist.has(item.id) ? 'line-through text-muted-foreground' : ''}`}>
+                          {item.label}
+                        </p>
+                        <p className="text-xs text-muted-foreground">{item.description}</p>
+                      </div>
+                      {item.priority === 'high' && !completedChecklist.has(item.id) && (
+                        <Badge variant="outline" className="text-xs shrink-0">Important</Badge>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <FamilyHelpersSection weddingId={wedding?.id} />
+
+            <div className="flex justify-end">
+              <Button onClick={() => setCurrentStep(2)} size="lg" data-testid="button-next-step-2">
+                Next: Go Live
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 2: Go Live */}
+        {currentStep === 2 && (
+          <div className="space-y-6" data-testid="step-2-content">
+            <Card className="text-center">
+              <CardContent className="py-12">
+                <div className={`w-24 h-24 rounded-full mx-auto mb-6 flex items-center justify-center ${
+                  isLive 
+                    ? 'bg-green-100 dark:bg-green-900' 
+                    : 'bg-muted'
+                }`}>
+                  {isLive ? (
+                    <Radio className="w-12 h-12 text-green-600 animate-pulse" />
+                  ) : (
+                    <WifiOff className="w-12 h-12 text-muted-foreground" />
+                  )}
+                </div>
+                
+                <h2 className="text-2xl font-bold mb-2">
+                  {isLive ? "You're Live!" : "Ready to Go Live?"}
+                </h2>
+                <p className="text-muted-foreground mb-8 max-w-md mx-auto">
+                  {isLive 
+                    ? "Your guests can now see updates. Head to the next step to start sending messages!"
+                    : "When you're ready to start your ceremony, tap the button below. Your guests will see all updates you send."
                   }
-                }}
-                onPostUpdate={handlePostUpdate}
-                getStatusBadge={getStatusBadge}
-              />
-            ))}
+                </p>
+
+                <Button
+                  size="lg"
+                  variant={isLive ? "outline" : "default"}
+                  className={`text-lg px-8 py-6 h-auto ${!isLive ? 'bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600' : ''}`}
+                  onClick={() => isLive ? goOfflineMutation.mutate() : goLiveMutation.mutate()}
+                  disabled={goLiveMutation.isPending || goOfflineMutation.isPending}
+                  data-testid="button-toggle-live-main"
+                >
+                  {isLive ? (
+                    <>
+                      <Pause className="w-6 h-6 mr-2" />
+                      Stop Live Updates
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-6 h-6 mr-2" />
+                      Start Live Updates
+                    </>
+                  )}
+                </Button>
+
+                {isLive && (liveStatus as any)?.viewerCount > 0 && (
+                  <div className="mt-4 flex items-center justify-center gap-2 text-green-600">
+                    <Users className="w-4 h-4" />
+                    <span>{(liveStatus as any).viewerCount} guests watching</span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <div className="flex justify-between">
+              <Button variant="outline" onClick={() => setCurrentStep(1)} data-testid="button-back-step-1">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back
+              </Button>
+              <Button onClick={() => setCurrentStep(3)} size="lg" data-testid="button-next-step-3">
+                Next: Send Updates
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Keep Guests Updated */}
+        {currentStep === 3 && (
+          <div className="space-y-6" data-testid="step-3-content">
+            {/* Quick Message Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageCircle className="w-5 h-5 text-primary" />
+                  Send a Quick Message
+                </CardTitle>
+                <CardDescription>
+                  Tap any message below to send it to all your guests instantly
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {!isLive && (
+                  <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-4">
+                    <p className="text-sm text-amber-800 dark:text-amber-200">
+                      <strong>Note:</strong> You need to go live first before guests can see your messages.
+                      <Button 
+                        variant="link" 
+                        className="px-1 h-auto text-amber-800 dark:text-amber-200 underline"
+                        onClick={() => setCurrentStep(2)}
+                      >
+                        Go back to Step 2
+                      </Button>
+                    </p>
+                  </div>
+                )}
+
+                <div className="space-y-6">
+                  {QUICK_MESSAGES.map((category) => (
+                    <div key={category.category}>
+                      <div className="flex items-center gap-2 mb-3">
+                        <category.icon className="w-4 h-4 text-muted-foreground" />
+                        <h4 className="font-medium text-sm text-muted-foreground">{category.category}</h4>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {category.messages.map((msg) => (
+                          <Button
+                            key={msg.label}
+                            variant="outline"
+                            className="h-auto py-3 px-4 justify-start text-left hover-elevate"
+                            disabled={!isLive || sendMessageMutation.isPending}
+                            onClick={() => sendMessageMutation.mutate({ message: msg.text })}
+                            data-testid={`quick-message-${msg.label.toLowerCase().replace(/\s+/g, '-')}`}
+                          >
+                            <div>
+                              <p className="font-medium text-sm">{msg.label}</p>
+                              <p className="text-xs text-muted-foreground line-clamp-1">{msg.text}</p>
+                            </div>
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-6 pt-4 border-t">
+                  <Dialog open={quickMessageDialogOpen} onOpenChange={setQuickMessageDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="w-full" disabled={!isLive} data-testid="button-custom-message">
+                        <Pencil className="w-4 h-4 mr-2" />
+                        Write Your Own Message
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Send a Custom Message</DialogTitle>
+                        <DialogDescription>
+                          Write a message that all your guests will see
+                        </DialogDescription>
+                      </DialogHeader>
+                      <CustomMessageForm 
+                        onSend={(message) => {
+                          sendMessageMutation.mutate({ message });
+                        }}
+                        isPending={sendMessageMutation.isPending}
+                      />
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Ceremony Progress Section */}
+            <CeremonyProgressSection 
+              events={events}
+              isLive={isLive}
+              onAddPart={handleAddStage}
+              onEditPart={handleEditStage}
+              onDeletePart={(id) => {
+                if (confirm("Remove this ceremony part?")) {
+                  deleteStageMutation.mutate(id);
+                }
+              }}
+              onUpdateStatus={handlePostUpdate}
+              getStatusBadge={getStatusBadge}
+              expandedEvents={expandedEvents}
+              toggleEventExpanded={toggleEventExpanded}
+            />
+
+            <div className="flex justify-start">
+              <Button variant="outline" onClick={() => setCurrentStep(2)} data-testid="button-back-step-2">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back
+              </Button>
+            </div>
           </div>
         )}
       </div>
 
+      {/* Stage Dialog */}
       <Dialog open={stageDialogOpen} onOpenChange={(open) => {
         setStageDialogOpen(open);
         if (!open) {
@@ -1028,20 +918,26 @@ export default function RitualControlPage() {
       }}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingStage ? "Edit Stage" : "Add Ceremony Stage"}</DialogTitle>
+            <DialogTitle>{editingStage ? "Edit Ceremony Part" : "Add Ceremony Part"}</DialogTitle>
+            <DialogDescription>
+              {editingStage 
+                ? "Update the details for this part of the ceremony"
+                : "Add a new part to your ceremony that guests can follow along with"
+              }
+            </DialogDescription>
           </DialogHeader>
           <Form {...stageForm}>
             <form onSubmit={stageForm.handleSubmit(onStageSubmit)} className="space-y-4">
               <FormField
                 control={stageForm.control}
-                name="stageKey"
+                name="displayName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Stage Name (Internal)</FormLabel>
+                    <FormLabel>What is this part called?</FormLabel>
                     <FormControl>
-                      <Input data-testid="input-stage-name" placeholder="e.g., pheras" {...field} />
+                      <Input data-testid="input-display-name" placeholder="e.g., Welcome & Prayers, First Dance, Cake Cutting" {...field} />
                     </FormControl>
-                    <FormDescription>Used internally for tracking</FormDescription>
+                    <FormDescription>This is what your guests will see</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -1049,14 +945,13 @@ export default function RitualControlPage() {
 
               <FormField
                 control={stageForm.control}
-                name="displayName"
+                name="stageKey"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Display Name</FormLabel>
+                    <FormLabel>Short name (for your reference)</FormLabel>
                     <FormControl>
-                      <Input data-testid="input-display-name" placeholder="e.g., Pheras (Sacred Vows)" {...field} />
+                      <Input data-testid="input-stage-name" placeholder="e.g., welcome, dance, cake" {...field} />
                     </FormControl>
-                    <FormDescription>What guests will see</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -1067,11 +962,11 @@ export default function RitualControlPage() {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel>Brief description (optional)</FormLabel>
                     <FormControl>
                       <Textarea 
                         data-testid="input-stage-description"
-                        placeholder="Brief description of what happens during this stage"
+                        placeholder="What happens during this part?"
                         {...field}
                         value={field.value ?? ""}
                       />
@@ -1087,7 +982,7 @@ export default function RitualControlPage() {
                   name="plannedDuration"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Duration (minutes)</FormLabel>
+                      <FormLabel>How long? (minutes)</FormLabel>
                       <FormControl>
                         <Input data-testid="input-duration" type="number" {...field} />
                       </FormControl>
@@ -1121,16 +1016,15 @@ export default function RitualControlPage() {
                 name="guestInstructions"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Guest Instructions</FormLabel>
+                    <FormLabel>Instructions for guests (optional)</FormLabel>
                     <FormControl>
                       <Textarea 
                         data-testid="input-guest-instructions"
-                        placeholder="e.g., Please remain seated during this sacred ritual"
+                        placeholder="e.g., Please remain seated, Feel free to take photos"
                         {...field}
                         value={field.value ?? ""}
                       />
                     </FormControl>
-                    <FormDescription>Instructions guests will see during this stage</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -1145,7 +1039,7 @@ export default function RitualControlPage() {
                   data-testid="button-save-stage"
                   disabled={createStageMutation.isPending || updateStageMutation.isPending}
                 >
-                  {editingStage ? "Save Changes" : "Add Stage"}
+                  {editingStage ? "Save Changes" : "Add"}
                 </Button>
               </div>
             </form>
@@ -1153,10 +1047,14 @@ export default function RitualControlPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Update Dialog */}
       <Dialog open={updateDialogOpen} onOpenChange={setUpdateDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Post Stage Update</DialogTitle>
+            <DialogTitle>Update Status</DialogTitle>
+            <DialogDescription>
+              Let your guests know what's happening with this part of the ceremony
+            </DialogDescription>
           </DialogHeader>
           <Form {...updateForm}>
             <form onSubmit={updateForm.handleSubmit(onUpdateSubmit)} className="space-y-4">
@@ -1165,7 +1063,7 @@ export default function RitualControlPage() {
                 name="status"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Status</FormLabel>
+                    <FormLabel>What's happening?</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger data-testid="select-status">
@@ -1190,11 +1088,11 @@ export default function RitualControlPage() {
                 name="message"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Message (Optional)</FormLabel>
+                    <FormLabel>Add a note (optional)</FormLabel>
                     <FormControl>
                       <Textarea 
                         data-testid="input-update-message"
-                        placeholder="e.g., The Pheras are beginning! Please find your seats."
+                        placeholder="e.g., We're starting the ceremony now!"
                         {...field}
                       />
                     </FormControl>
@@ -1208,11 +1106,11 @@ export default function RitualControlPage() {
                 name="delayMinutes"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Delay (minutes)</FormLabel>
+                    <FormLabel>Running late? How many minutes?</FormLabel>
                     <FormControl>
                       <Input data-testid="input-delay" type="number" {...field} />
                     </FormControl>
-                    <FormDescription>If the stage is delayed, enter minutes</FormDescription>
+                    <FormDescription>Leave as 0 if on schedule</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -1227,7 +1125,7 @@ export default function RitualControlPage() {
                   data-testid="button-post-update"
                   disabled={postUpdateMutation.isPending}
                 >
-                  Post Update
+                  Update
                 </Button>
               </div>
             </form>
@@ -1238,11 +1136,42 @@ export default function RitualControlPage() {
   );
 }
 
-interface FamilyMemberControlsProps {
+function CustomMessageForm({ onSend, isPending }: { onSend: (message: string) => void; isPending: boolean }) {
+  const [message, setMessage] = useState("");
+
+  return (
+    <div className="space-y-4">
+      <Textarea
+        placeholder="Type your message here..."
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        className="min-h-[100px]"
+        data-testid="input-custom-message"
+      />
+      <div className="flex justify-end gap-2">
+        <Button 
+          onClick={() => {
+            if (message.trim()) {
+              onSend(message);
+              setMessage("");
+            }
+          }}
+          disabled={!message.trim() || isPending}
+          data-testid="button-send-custom-message"
+        >
+          <Send className="w-4 h-4 mr-2" />
+          Send to All Guests
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+interface FamilyHelpersSectionProps {
   weddingId?: string;
 }
 
-function FamilyMemberControls({ weddingId }: FamilyMemberControlsProps) {
+function FamilyHelpersSection({ weddingId }: FamilyHelpersSectionProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const { toast } = useToast();
@@ -1277,13 +1206,13 @@ function FamilyMemberControls({ weddingId }: FamilyMemberControlsProps) {
       inviteForm.reset();
       toast({
         title: "Invite sent!",
-        description: "Your family member will receive an email invitation.",
+        description: "They'll receive an email with instructions.",
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to send invite",
+        title: "Couldn't send invite",
+        description: error.message || "Please try again",
         variant: "destructive",
       });
     },
@@ -1296,8 +1225,8 @@ function FamilyMemberControls({ weddingId }: FamilyMemberControlsProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/weddings", weddingId, "collaborators"] });
       toast({
-        title: "Access revoked",
-        description: "The collaborator's access has been removed.",
+        title: "Access removed",
+        description: "They can no longer send updates.",
       });
     },
   });
@@ -1307,7 +1236,7 @@ function FamilyMemberControls({ weddingId }: FamilyMemberControlsProps) {
   const familyRole = roles.find((r: any) => r.name === 'family_member');
 
   return (
-    <Card className="mb-6">
+    <Card>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -1315,10 +1244,9 @@ function FamilyMemberControls({ weddingId }: FamilyMemberControlsProps) {
               <Users className="w-5 h-5 text-pink-600 dark:text-pink-400" />
             </div>
             <div>
-              <CardTitle className="text-lg">Family Day-Of Helpers</CardTitle>
+              <CardTitle className="text-lg">Family Helpers</CardTitle>
               <CardDescription>
-                {activeHelpers.length} helper{activeHelpers.length !== 1 ? 's' : ''} with access
-                {pendingInvites.length > 0 && ` (${pendingInvites.length} pending)`}
+                People who can send updates on your behalf
               </CardDescription>
             </div>
           </div>
@@ -1332,40 +1260,35 @@ function FamilyMemberControls({ weddingId }: FamilyMemberControlsProps) {
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Invite Family Helper</DialogTitle>
+                  <DialogTitle>Invite a Family Helper</DialogTitle>
+                  <DialogDescription>
+                    They'll be able to send updates to your guests if you're busy during the ceremony
+                  </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={inviteForm.handleSubmit((data) => inviteMutation.mutate(data))} className="space-y-4">
                   <div>
-                    <FormLabel>Email Address</FormLabel>
+                    <FormLabel>Their Email Address</FormLabel>
                     <Input 
                       type="email"
-                      placeholder="family.member@email.com"
+                      placeholder="email@example.com"
                       data-testid="input-helper-email"
                       {...inviteForm.register('email', { required: true })}
                     />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      They'll receive an email invitation to help manage your wedding day.
-                    </p>
                   </div>
                   {roles.length > 0 && (
                     <div>
-                      <FormLabel>Role</FormLabel>
+                      <FormLabel>What can they do?</FormLabel>
                       <Select 
                         value={inviteForm.watch('roleId') || familyRole?.id || roles[0]?.id}
                         onValueChange={(value) => inviteForm.setValue('roleId', value)}
                       >
                         <SelectTrigger data-testid="select-helper-role">
-                          <SelectValue placeholder="Select a role" />
+                          <SelectValue placeholder="Select permissions" />
                         </SelectTrigger>
                         <SelectContent>
                           {roles.map((role: any) => (
                             <SelectItem key={role.id} value={role.id}>
                               {role.displayName}
-                              {role.description && (
-                                <span className="text-xs text-muted-foreground ml-2">
-                                  - {role.description}
-                                </span>
-                              )}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -1401,7 +1324,7 @@ function FamilyMemberControls({ weddingId }: FamilyMemberControlsProps) {
                 No helpers added yet
               </p>
               <p className="text-xs text-muted-foreground">
-                Invite trusted family members to help manage broadcasts and stage updates on your wedding day.
+                Invite trusted family members who can send updates during your wedding if you're busy.
               </p>
             </div>
           ) : (
@@ -1414,7 +1337,7 @@ function FamilyMemberControls({ weddingId }: FamilyMemberControlsProps) {
                     </div>
                     <div>
                       <p className="font-medium text-sm">{helper.email}</p>
-                      <p className="text-xs text-muted-foreground">Active - {helper.roleName || 'Helper'}</p>
+                      <p className="text-xs text-muted-foreground">Can send updates</p>
                     </div>
                   </div>
                   <Button
@@ -1436,7 +1359,7 @@ function FamilyMemberControls({ weddingId }: FamilyMemberControlsProps) {
                     </div>
                     <div>
                       <p className="font-medium text-sm">{invite.email}</p>
-                      <p className="text-xs text-muted-foreground">Pending invitation</p>
+                      <p className="text-xs text-muted-foreground">Waiting for them to accept</p>
                     </div>
                   </div>
                   <Button
@@ -1452,384 +1375,105 @@ function FamilyMemberControls({ weddingId }: FamilyMemberControlsProps) {
               ))}
             </div>
           )}
-          <div className="mt-4 p-3 rounded-lg bg-muted/50 text-xs text-muted-foreground">
-            <p className="font-medium mb-1">What can helpers do?</p>
-            <ul className="list-disc list-inside space-y-0.5">
-              <li>Send broadcast messages to guests</li>
-              <li>Update ceremony stage statuses</li>
-              <li>View guest live feed and viewer count</li>
-            </ul>
-          </div>
         </CardContent>
       )}
     </Card>
   );
 }
 
-interface VisualTimelineProps {
+interface CeremonyProgressSectionProps {
   events: Event[];
   isLive: boolean;
+  onAddPart: (eventId: string) => void;
+  onEditPart: (stage: RitualStage) => void;
+  onDeletePart: (id: string) => void;
+  onUpdateStatus: (stageId: string) => void;
+  getStatusBadge: (status: string) => React.ReactNode;
+  expandedEvents: Set<string>;
+  toggleEventExpanded: (eventId: string) => void;
 }
 
-function VisualTimeline({ events, isLive }: VisualTimelineProps) {
-  const allStagesQueries = events.map((event) => ({
-    event,
-    query: useQuery<{ stage: RitualStage; latestUpdate: RitualStageUpdate | null }[]>({
-      queryKey: ["/api/events", event.id, "stages"],
-    }),
-  }));
-
-  const allStages = allStagesQueries.flatMap(({ event, query }) =>
-    (query.data || []).map((s) => ({ ...s, eventName: event.name, eventId: event.id }))
-  ).sort((a, b) => a.stage.displayOrder - b.stage.displayOrder);
-
-  if (allStages.length === 0) {
-    return null;
-  }
-
-  const completedCount = allStages.filter(s => s.latestUpdate?.status === 'completed').length;
-  const activeStage = allStages.find(s => s.latestUpdate?.status === 'active');
-  const overallProgress = allStages.length > 0 ? (completedCount / allStages.length) * 100 : 0;
-
-  const getStageColor = (status: string | undefined) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-green-500';
-      case 'active':
-        return 'bg-yellow-500 animate-pulse';
-      case 'delayed':
-        return 'bg-red-500';
-      case 'skipped':
-        return 'bg-gray-400';
-      default:
-        return 'bg-muted';
-    }
-  };
-
-  const getStageRing = (status: string | undefined) => {
-    switch (status) {
-      case 'completed':
-        return 'ring-2 ring-green-500 ring-offset-2';
-      case 'active':
-        return 'ring-2 ring-yellow-500 ring-offset-2 shadow-lg';
-      case 'delayed':
-        return 'ring-2 ring-red-500 ring-offset-2';
-      default:
-        return '';
-    }
-  };
+function CeremonyProgressSection({
+  events,
+  isLive,
+  onAddPart,
+  onEditPart,
+  onDeletePart,
+  onUpdateStatus,
+  getStatusBadge,
+  expandedEvents,
+  toggleEventExpanded,
+}: CeremonyProgressSectionProps) {
+  const [, setLocation] = useLocation();
 
   return (
-    <Card className="mb-6">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Clock className="w-5 h-5" />
-              Ceremony Progress
-            </CardTitle>
-            <CardDescription>
-              {completedCount} of {allStages.length} stages completed
-              {activeStage && (
-                <span className="ml-2 text-yellow-600 dark:text-yellow-400">
-                  | Currently: {activeStage.stage.displayName}
-                </span>
-              )}
-            </CardDescription>
-          </div>
-          <Badge variant={isLive ? "default" : "outline"} className={isLive ? "bg-green-500" : ""}>
-            {isLive ? "LIVE" : "OFFLINE"}
-          </Badge>
-        </div>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Timer className="w-5 h-5 text-primary" />
+          Track Your Ceremony
+        </CardTitle>
+        <CardDescription>
+          Mark each part of your ceremony as it happens so guests can follow along
+        </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="mb-4">
-          <Progress value={overallProgress} className="h-2" />
-          <p className="text-xs text-muted-foreground mt-1 text-right">
-            {Math.round(overallProgress)}% complete
-          </p>
-        </div>
-        
-        <div className="relative" data-testid="visual-timeline">
-          <div className="absolute top-4 left-4 right-4 h-0.5 bg-muted" />
-          
-          <div className="flex justify-between items-start overflow-x-auto pb-2" style={{ minWidth: Math.max(allStages.length * 80, 300) }}>
-            {allStages.map((stageData, index) => {
-              const status = stageData.latestUpdate?.status;
-              return (
-                <div 
-                  key={stageData.stage.id} 
-                  className="flex flex-col items-center relative min-w-[70px]"
-                  data-testid={`timeline-stage-${stageData.stage.id}`}
-                >
-                  <div 
-                    className={`w-8 h-8 rounded-full flex items-center justify-center z-10 transition-all ${getStageColor(status)} ${getStageRing(status)}`}
-                  >
-                    {status === 'completed' ? (
-                      <CheckCircle className="w-4 h-4 text-white" />
-                    ) : status === 'active' ? (
-                      <Play className="w-4 h-4 text-white" />
-                    ) : status === 'delayed' ? (
-                      <AlertCircle className="w-4 h-4 text-white" />
-                    ) : (
-                      <span className="text-xs font-medium text-muted-foreground">{index + 1}</span>
-                    )}
-                  </div>
-                  <div className="mt-2 text-center max-w-[70px]">
-                    <p className={`text-xs font-medium truncate ${status === 'active' ? 'text-yellow-600 dark:text-yellow-400' : ''}`}>
-                      {stageData.stage.displayName}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground truncate">
-                      {stageData.eventName}
-                    </p>
-                    {stageData.stage.plannedDuration && (
-                      <p className="text-[10px] text-muted-foreground">
-                        {stageData.stage.plannedDuration} min
-                      </p>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+        {events.length === 0 ? (
+          <div className="text-center py-8">
+            <div className="p-4 rounded-full bg-muted w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+              <Sparkles className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <h3 className="font-semibold mb-2">No events yet</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              First, add your wedding events in the Timeline section
+            </p>
+            <Button onClick={() => setLocation("/timeline")} data-testid="button-go-to-timeline">
+              Go to Timeline
+            </Button>
           </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-interface SmartDelayCalculatorProps {
-  events: Event[];
-  baseTime?: Date;
-}
-
-function SmartDelayCalculator({ events, baseTime }: SmartDelayCalculatorProps) {
-  const allStagesQueries = events.map((event) => ({
-    event,
-    query: useQuery<{ stage: RitualStage; latestUpdate: RitualStageUpdate | null }[]>({
-      queryKey: ["/api/events", event.id, "stages"],
-    }),
-  }));
-
-  const allStages = allStagesQueries.flatMap(({ event, query }) =>
-    (query.data || []).map((s) => ({ ...s, eventName: event.name, eventId: event.id }))
-  ).sort((a, b) => a.stage.displayOrder - b.stage.displayOrder);
-
-  if (allStages.length === 0) {
-    return null;
-  }
-
-  const totalDelay = allStages.reduce((acc, s) => acc + (s.latestUpdate?.delayMinutes || 0), 0);
-  
-  const now = baseTime || new Date();
-  const currentActiveIndex = allStages.findIndex(s => s.latestUpdate?.status === 'active');
-  const currentIndex = currentActiveIndex >= 0 ? currentActiveIndex : 0;
-  
-  let projectedTime = now;
-  const stageProjections = allStages.map((stageData, index) => {
-    const isCompleted = stageData.latestUpdate?.status === 'completed';
-    const isActive = stageData.latestUpdate?.status === 'active';
-    const delay = stageData.latestUpdate?.delayMinutes || 0;
-    const duration = stageData.stage.plannedDuration || 15;
-    
-    const projectedStart = new Date(projectedTime);
-    
-    if (!isCompleted) {
-      projectedTime = new Date(projectedTime.getTime() + (duration + delay) * 60 * 1000);
-    }
-    
-    const projectedEnd = new Date(projectedTime);
-    
-    return {
-      ...stageData,
-      projectedStart,
-      projectedEnd,
-      delay,
-      isCompleted,
-      isActive,
-      isPending: !isCompleted && !isActive && index > currentIndex,
-    };
-  });
-
-  const remainingStages = stageProjections.filter(s => !s.isCompleted);
-  const hasDelays = totalDelay > 0;
-  const lastStage = stageProjections[stageProjections.length - 1];
-  const originalEndTime = new Date(now.getTime() + allStages.reduce((acc, s) => acc + (s.stage.plannedDuration || 15), 0) * 60 * 1000);
-
-  if (totalDelay === 0) {
-    return null;
-  }
-
-  return (
-    <Card className="mb-6 border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/20">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Timer className="w-5 h-5 text-amber-600" />
-              Smart Delay Calculator
-            </CardTitle>
-            <CardDescription>
-              Showing projected times based on current delays
-            </CardDescription>
-          </div>
-          <Badge variant="outline" className="border-amber-500 text-amber-700 dark:text-amber-300">
-            +{totalDelay} min total delay
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-3">
-            <h4 className="font-medium text-sm flex items-center gap-2">
-              <Clock className="w-4 h-4" />
-              Remaining Stages
-            </h4>
-            {remainingStages.slice(0, 5).map((stage, index) => (
-              <div 
-                key={stage.stage.id}
-                className={`flex items-center justify-between p-2 rounded-lg border ${
-                  stage.isActive 
-                    ? 'bg-yellow-100 dark:bg-yellow-900/30 border-yellow-300 dark:border-yellow-700' 
-                    : 'bg-background'
-                }`}
-                data-testid={`delay-projection-${stage.stage.id}`}
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  {stage.isActive && <Play className="w-3 h-3 text-yellow-600 shrink-0" />}
-                  <span className="text-sm truncate">{stage.stage.displayName}</span>
-                  {stage.delay > 0 && (
-                    <Badge variant="outline" className="text-xs border-red-300 text-red-600 shrink-0">
-                      +{stage.delay}m
-                    </Badge>
-                  )}
-                </div>
-                <div className="text-xs text-muted-foreground text-right shrink-0 ml-2">
-                  <div>~{format(stage.projectedEnd, "h:mm a")}</div>
-                </div>
-              </div>
-            ))}
-            {remainingStages.length > 5 && (
-              <p className="text-xs text-muted-foreground text-center">
-                +{remainingStages.length - 5} more stages
-              </p>
-            )}
-          </div>
-          
+        ) : (
           <div className="space-y-4">
-            <div className="p-4 rounded-lg bg-background border">
-              <h4 className="font-medium text-sm mb-3">Impact Summary</h4>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Total delay accumulated:</span>
-                  <span className="font-medium text-amber-600">+{totalDelay} minutes</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Stages remaining:</span>
-                  <span className="font-medium">{remainingStages.length}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Projected finish:</span>
-                  <span className="font-medium">{format(lastStage.projectedEnd, "h:mm a")}</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="p-3 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-sm">
-              <p className="text-amber-800 dark:text-amber-200">
-                <strong>Tip:</strong> Consider skipping optional stages or shortening remaining durations to get back on schedule.
-              </p>
-            </div>
+            {events.map(event => (
+              <EventCeremonyCard 
+                key={event.id} 
+                event={event}
+                isExpanded={expandedEvents.has(event.id)}
+                onToggle={() => toggleEventExpanded(event.id)}
+                onAddPart={() => onAddPart(event.id)}
+                onEditPart={onEditPart}
+                onDeletePart={onDeletePart}
+                onUpdateStatus={onUpdateStatus}
+                getStatusBadge={getStatusBadge}
+              />
+            ))}
           </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   );
 }
 
-interface DurationTrackerProps {
-  stageId: string;
-  plannedDuration: number;
-  status?: string;
-}
-
-function DurationTracker({ stageId, plannedDuration, status }: DurationTrackerProps) {
-  const { data: history = [] } = useQuery<RitualStageUpdate[]>({
-    queryKey: ["/api/stages", stageId, "updates"],
-  });
-
-  const startedAt = history.find(u => u.status === 'active')?.createdAt;
-  const completedAt = history.find(u => u.status === 'completed')?.createdAt;
-  
-  let actualMinutes: number | null = null;
-  let runningMinutes: number | null = null;
-  
-  if (startedAt && completedAt) {
-    const start = new Date(startedAt);
-    const end = new Date(completedAt);
-    actualMinutes = Math.round((end.getTime() - start.getTime()) / (1000 * 60));
-  } else if (startedAt && status === 'active') {
-    const start = new Date(startedAt);
-    runningMinutes = Math.round((Date.now() - start.getTime()) / (1000 * 60));
-  }
-
-  const getVariance = () => {
-    if (actualMinutes === null) return null;
-    const diff = actualMinutes - plannedDuration;
-    if (diff > 0) return { label: `+${diff}m over`, color: 'text-amber-600' };
-    if (diff < 0) return { label: `${Math.abs(diff)}m under`, color: 'text-green-600' };
-    return { label: 'on time', color: 'text-green-600' };
-  };
-
-  const variance = getVariance();
-
-  if (status === 'active' && runningMinutes !== null) {
-    return (
-      <div className="text-xs text-muted-foreground flex items-center gap-1" data-testid={`duration-tracker-${stageId}`}>
-        <Timer className="w-3 h-3" />
-        <span className="font-medium text-yellow-600">{runningMinutes}m</span>
-        <span>/ {plannedDuration}m planned</span>
-        {runningMinutes > plannedDuration && (
-          <Badge variant="outline" className="text-[10px] px-1 py-0 border-amber-400 text-amber-600">
-            running over
-          </Badge>
-        )}
-      </div>
-    );
-  }
-
-  if (status === 'completed' && actualMinutes !== null) {
-    return (
-      <div className="text-xs text-muted-foreground flex items-center gap-1" data-testid={`duration-tracker-${stageId}`}>
-        <Clock className="w-3 h-3" />
-        <span>Actual: {actualMinutes}m</span>
-        <span className="text-muted-foreground/60">/ {plannedDuration}m planned</span>
-        {variance && (
-          <span className={`font-medium ${variance.color}`}>({variance.label})</span>
-        )}
-      </div>
-    );
-  }
-
-  return (
-    <p className="text-xs text-muted-foreground">
-      Duration: ~{plannedDuration} min
-    </p>
-  );
-}
-
-interface EventStagesCardProps {
+interface EventCeremonyCardProps {
   event: Event;
   isExpanded: boolean;
   onToggle: () => void;
-  onAddStage: () => void;
-  onEditStage: (stage: RitualStage) => void;
-  onDeleteStage: (id: string) => void;
-  onPostUpdate: (stageId: string) => void;
+  onAddPart: () => void;
+  onEditPart: (stage: RitualStage) => void;
+  onDeletePart: (id: string) => void;
+  onUpdateStatus: (stageId: string) => void;
   getStatusBadge: (status: string) => React.ReactNode;
 }
 
-function EventStagesCard({ event, isExpanded, onToggle, onAddStage, onEditStage, onDeleteStage, onPostUpdate, getStatusBadge }: EventStagesCardProps) {
+function EventCeremonyCard({ 
+  event, 
+  isExpanded, 
+  onToggle, 
+  onAddPart, 
+  onEditPart, 
+  onDeletePart, 
+  onUpdateStatus, 
+  getStatusBadge 
+}: EventCeremonyCardProps) {
   const { data: stagesData = [], isLoading } = useQuery<{ stage: RitualStage; latestUpdate: RitualStageUpdate | null }[]>({
     queryKey: ["/api/events", event.id, "stages"],
     enabled: isExpanded,
@@ -1840,148 +1484,146 @@ function EventStagesCard({ event, isExpanded, onToggle, onAddStage, onEditStage,
   const progressPercent = totalStages > 0 ? (completedStages / totalStages) * 100 : 0;
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1 flex-wrap">
-              <CardTitle className="text-lg">{event.name}</CardTitle>
-              {event.type && (
-                <Badge variant="outline">{event.type}</Badge>
-              )}
-            </div>
-            <CardDescription className="flex items-center gap-4 flex-wrap">
-              {event.date && (
-                <span className="flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  {format(new Date(event.date), "MMM d, yyyy")}
-                </span>
-              )}
-              {event.time && <span>{event.time}</span>}
-              {event.location && <span>{event.location}</span>}
-            </CardDescription>
+    <div className="border rounded-lg">
+      <div 
+        className="flex items-center justify-between p-4 cursor-pointer hover-elevate"
+        onClick={onToggle}
+      >
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h4 className="font-semibold">{event.name}</h4>
+            {event.type && (
+              <Badge variant="outline" className="text-xs">{event.type}</Badge>
+            )}
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              data-testid={`button-add-stage-${event.id}`}
-              onClick={onAddStage}
-            >
-              <Plus className="w-3 h-3 mr-1" />
-              Add Stage
-            </Button>
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={onToggle}
-            >
-              {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            </Button>
+          <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1 flex-wrap">
+            {event.date && (
+              <span>{format(new Date(event.date), "MMM d")}</span>
+            )}
+            {event.time && <span>{event.time}</span>}
+            {totalStages > 0 && (
+              <span className="flex items-center gap-1">
+                <Circle className="w-2 h-2 fill-current" />
+                {completedStages}/{totalStages} done
+              </span>
+            )}
           </div>
         </div>
-      </CardHeader>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddPart();
+            }}
+            data-testid={`button-add-part-${event.id}`}
+          >
+            <Plus className="w-3 h-3 mr-1" />
+            Add Part
+          </Button>
+          <ChevronDown className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+        </div>
+      </div>
 
       {isExpanded && (
-        <CardContent className="pt-4 border-t">
+        <div className="px-4 pb-4 border-t pt-4">
           {isLoading ? (
             <Skeleton className="h-20" />
           ) : stagesData.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
-              No ceremony stages configured for this event.
+              No ceremony parts added yet for this event
             </p>
           ) : (
             <>
               <div className="mb-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-muted-foreground">Progress</span>
-                  <span className="text-sm font-medium">{completedStages}/{totalStages} completed</span>
-                </div>
                 <Progress value={progressPercent} className="h-2" />
+                <p className="text-xs text-muted-foreground mt-1 text-right">
+                  {Math.round(progressPercent)}% complete
+                </p>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {stagesData.sort((a, b) => a.stage.displayOrder - b.stage.displayOrder).map(({ stage, latestUpdate }) => (
-                  <Card key={stage.id} className="p-3">
-                    <div className="flex items-start justify-between gap-2 flex-wrap">
-                      <div className="flex items-start gap-3 min-w-0">
-                        <div className={`p-2 rounded-full flex-shrink-0 ${
-                          latestUpdate?.status === 'completed' ? 'bg-green-100 dark:bg-green-900' :
-                          latestUpdate?.status === 'active' ? 'bg-yellow-100 dark:bg-yellow-900' :
-                          latestUpdate?.status === 'delayed' ? 'bg-red-100 dark:bg-red-900' :
-                          'bg-muted'
-                        }`}>
-                          {latestUpdate?.status === 'completed' ? (
-                            <CheckCircle className="w-4 h-4 text-green-600" />
-                          ) : latestUpdate?.status === 'active' ? (
-                            <Play className="w-4 h-4 text-yellow-600" />
-                          ) : latestUpdate?.status === 'delayed' ? (
-                            <AlertCircle className="w-4 h-4 text-red-600" />
-                          ) : (
-                            <Clock className="w-4 h-4 text-muted-foreground" />
-                          )}
-                        </div>
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h5 className="font-medium text-sm">{stage.displayName}</h5>
-                            {getStatusBadge(latestUpdate?.status || 'pending')}
-                            {latestUpdate?.delayMinutes && latestUpdate.delayMinutes > 0 && (
-                              <Badge variant="destructive" className="text-xs">
-                                +{latestUpdate.delayMinutes} min
-                              </Badge>
-                            )}
-                          </div>
-                          {stage.description && (
-                            <p className="text-xs text-muted-foreground mt-1">{stage.description}</p>
-                          )}
-                          {stage.plannedDuration && (
-                            <DurationTracker 
-                              stageId={stage.id}
-                              plannedDuration={stage.plannedDuration}
-                              status={latestUpdate?.status}
-                            />
-                          )}
-                          {latestUpdate?.message && (
-                            <p className="text-xs mt-1 italic">"{latestUpdate.message}"</p>
-                          )}
-                        </div>
+                  <div 
+                    key={stage.id} 
+                    className={`flex items-center justify-between p-3 rounded-lg border ${
+                      latestUpdate?.status === 'completed' 
+                        ? 'bg-green-50/50 dark:bg-green-950/20 border-green-200 dark:border-green-800' 
+                        : latestUpdate?.status === 'active'
+                        ? 'bg-yellow-50/50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-800'
+                        : ''
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`p-2 rounded-full shrink-0 ${
+                        latestUpdate?.status === 'completed' ? 'bg-green-100 dark:bg-green-900' :
+                        latestUpdate?.status === 'active' ? 'bg-yellow-100 dark:bg-yellow-900' :
+                        latestUpdate?.status === 'delayed' ? 'bg-red-100 dark:bg-red-900' :
+                        'bg-muted'
+                      }`}>
+                        {latestUpdate?.status === 'completed' ? (
+                          <CheckCircle className="w-4 h-4 text-green-600" />
+                        ) : latestUpdate?.status === 'active' ? (
+                          <Play className="w-4 h-4 text-yellow-600" />
+                        ) : latestUpdate?.status === 'delayed' ? (
+                          <AlertCircle className="w-4 h-4 text-red-600" />
+                        ) : (
+                          <Circle className="w-4 h-4 text-muted-foreground" />
+                        )}
                       </div>
-                      <div className="flex items-center gap-1 flex-shrink-0">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          data-testid={`button-update-stage-${stage.id}`}
-                          onClick={() => onPostUpdate(stage.id)}
-                        >
-                          Update
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8"
-                          data-testid={`button-edit-stage-${stage.id}`}
-                          onClick={() => onEditStage(stage)}
-                        >
-                          <Pencil className="w-3 h-3" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8"
-                          data-testid={`button-delete-stage-${stage.id}`}
-                          onClick={() => onDeleteStage(stage.id)}
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium text-sm">{stage.displayName}</span>
+                          {getStatusBadge(latestUpdate?.status || 'upcoming')}
+                          {latestUpdate?.delayMinutes && latestUpdate.delayMinutes > 0 && (
+                            <Badge variant="destructive" className="text-xs">
+                              +{latestUpdate.delayMinutes} min late
+                            </Badge>
+                          )}
+                        </div>
+                        {stage.plannedDuration && (
+                          <p className="text-xs text-muted-foreground">
+                            ~{stage.plannedDuration} minutes
+                          </p>
+                        )}
                       </div>
                     </div>
-                  </Card>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Button
+                        size="sm"
+                        variant={latestUpdate?.status === 'active' ? 'default' : 'outline'}
+                        onClick={() => onUpdateStatus(stage.id)}
+                        data-testid={`button-update-${stage.id}`}
+                      >
+                        Update
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8"
+                        onClick={() => onEditPart(stage)}
+                        data-testid={`button-edit-${stage.id}`}
+                      >
+                        <Pencil className="w-3 h-3" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8"
+                        onClick={() => onDeletePart(stage.id)}
+                        data-testid={`button-delete-${stage.id}`}
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </div>
                 ))}
               </div>
             </>
           )}
-        </CardContent>
+        </div>
       )}
-    </Card>
+    </div>
   );
 }
