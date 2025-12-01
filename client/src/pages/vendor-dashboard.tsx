@@ -432,54 +432,6 @@ export default function VendorDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50">
-      {/* Header */}
-      <header className="bg-white/90 backdrop-blur-sm border-b border-purple-200 sticky top-0 z-50 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <img src={viahLogo} alt="Viah.me" className="h-12 object-contain" />
-              <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-orange-500 bg-clip-text text-transparent" data-testid="heading-vendor-dashboard">
-                  Vendor Portal
-                </h1>
-                <p className="text-sm text-muted-foreground">
-                  Welcome back, {currentVendor?.name || user.email}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Badge
-                variant={user.emailVerified ? "default" : "destructive"}
-                className="rounded-full"
-                data-testid="badge-email-verified"
-              >
-                {user.emailVerified ? (
-                  <>
-                    <CheckCircle className="w-3 h-3 mr-1" />
-                    Verified
-                  </>
-                ) : (
-                  <>
-                    <Clock className="w-3 h-3 mr-1" />
-                    Unverified
-                  </>
-                )}
-              </Badge>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={logout}
-                className="rounded-full"
-                data-testid="button-logout"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Logout
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
-
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {!user.emailVerified && (
