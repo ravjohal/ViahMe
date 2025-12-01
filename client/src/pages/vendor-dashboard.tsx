@@ -432,18 +432,6 @@ export default function VendorDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50">
-      {/* Vendor Header - Welcome Message */}
-      {currentVendor && (
-        <div className="bg-white/50 backdrop-blur-sm border-b border-purple-100 sticky top-24 z-40">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-            <p className="text-sm text-muted-foreground">Welcome back</p>
-            <h2 className="text-2xl font-bold text-foreground" data-testid="text-vendor-welcome">
-              {currentVendor.name}
-            </h2>
-          </div>
-        </div>
-      )}
-
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {!user.emailVerified && (
