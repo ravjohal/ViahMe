@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Select,
@@ -13,11 +14,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar, Clock, MapPin, Users, DollarSign, Tag, CheckCircle2, Plus } from "lucide-react";
+import { Calendar, Clock, MapPin, Users, DollarSign, Tag, CheckCircle2, Plus, Save } from "lucide-react";
 import { format } from "date-fns";
 import type { Event, BudgetCategory, EventCostItem, Task, InsertTask } from "@shared/schema";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 const CATEGORY_LABELS: Record<string, string> = {
   catering: "Catering & Food",
@@ -79,11 +81,70 @@ export function EventDetailModal({
   onEdit,
   onDelete,
 }: EventDetailModalProps) {
+  const { toast } = useToast();
+  
+  // Event form state
+  const [eventName, setEventName] = useState("");
+  const [eventDescription, setEventDescription] = useState("");
+  const [eventDate, setEventDate] = useState("");
+  const [eventTime, setEventTime] = useState("");
+  const [eventLocation, setEventLocation] = useState("");
+  const [eventGuestCount, setEventGuestCount] = useState("");
+  const [eventCostPerHead, setEventCostPerHead] = useState("");
+  const [eventVenueCapacity, setEventVenueCapacity] = useState("");
+  const [eventType, setEventType] = useState("custom");
+  
+  // Task form state
   const [showNewTaskForm, setShowNewTaskForm] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskDescription, setNewTaskDescription] = useState("");
   const [newTaskPriority, setNewTaskPriority] = useState("medium");
   const [newTaskDueDate, setNewTaskDueDate] = useState("");
+
+  // Initialize form when event changes
+  useEffect(() => {
+    if (event) {
+      setEventName(event.name || "");
+      setEventDescription(event.description || "");
+      // Handle date - could be Date object or string from API
+      if (event.date) {
+        try {
+          const dateObj = new Date(event.date as unknown as string | Date);
+          setEventDate(format(dateObj, "yyyy-MM-dd"));
+        } catch {
+          setEventDate("");
+        }
+      } else {
+        setEventDate("");
+      }
+      setEventTime(event.time || "");
+      setEventLocation(event.location || "");
+      setEventGuestCount(event.guestCount?.toString() || "");
+      setEventCostPerHead(event.costPerHead || "");
+      setEventVenueCapacity(event.venueCapacity?.toString() || "");
+      setEventType(event.type || "custom");
+    }
+  }, [event]);
+
+  const updateEventMutation = useMutation({
+    mutationFn: async (data: Partial<Event>) => {
+      return await apiRequest("PATCH", `/api/events/${event!.id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/events", weddingId] });
+      toast({
+        title: "Event updated",
+        description: "Your changes have been saved.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update event. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const updateTaskMutation = useMutation({
     mutationFn: async ({ id, completed }: { id: string; completed: boolean }) => {
@@ -121,84 +182,168 @@ export function EventDetailModal({
     } as InsertTask);
   };
 
+  const handleSaveEvent = () => {
+    if (!event) return;
+
+    updateEventMutation.mutate({
+      name: eventName,
+      description: eventDescription || undefined,
+      date: eventDate || null,
+      time: eventTime || undefined,
+      location: eventLocation || undefined,
+      guestCount: eventGuestCount ? parseInt(eventGuestCount) : undefined,
+      costPerHead: eventCostPerHead || undefined,
+      venueCapacity: eventVenueCapacity ? parseInt(eventVenueCapacity) : undefined,
+      type: eventType,
+    } as Partial<Event>);
+  };
+
   if (!event) return null;
 
-  const eventType = EVENT_TYPES[event.type as keyof typeof EVENT_TYPES];
+  const currentEventType = EVENT_TYPES[eventType as keyof typeof EVENT_TYPES] || EVENT_TYPES.custom;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl flex items-center gap-2">
-            <span>{eventType?.icon || "📅"}</span>
-            {event.name}
+            <span>{currentEventType?.icon || "📅"}</span>
+            Edit Event
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Event Details */}
+          {/* Editable Event Details */}
           <div className="space-y-4">
-            {event.description && (
+            <div className="grid grid-cols-1 gap-4">
               <div>
-                <h3 className="font-semibold text-sm text-muted-foreground mb-2">Description</h3>
-                <p className="text-foreground">{event.description}</p>
+                <Label htmlFor="event-name" className="text-sm font-medium text-muted-foreground">Event Name</Label>
+                <Input
+                  id="event-name"
+                  value={eventName}
+                  onChange={(e) => setEventName(e.target.value)}
+                  placeholder="Enter event name"
+                  className="mt-1"
+                  data-testid="input-event-name"
+                />
               </div>
-            )}
+
+              <div>
+                <Label htmlFor="event-type" className="text-sm font-medium text-muted-foreground">Event Type</Label>
+                <Select value={eventType} onValueChange={setEventType}>
+                  <SelectTrigger className="mt-1" data-testid="select-event-type">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(EVENT_TYPES).map(([key, { icon, label }]) => (
+                      <SelectItem key={key} value={key}>
+                        {icon} {label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="event-description" className="text-sm font-medium text-muted-foreground">Description</Label>
+                <Textarea
+                  id="event-description"
+                  value={eventDescription}
+                  onChange={(e) => setEventDescription(e.target.value)}
+                  placeholder="Event description (optional)"
+                  className="mt-1 resize-none"
+                  rows={2}
+                  data-testid="input-event-description"
+                />
+              </div>
+            </div>
 
             <div className="grid grid-cols-2 gap-4">
-              {event.date && (
-                <div>
-                  <h3 className="font-semibold text-sm text-muted-foreground mb-2">Date</h3>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-foreground">{format(new Date(event.date), "MMMM dd, yyyy")}</span>
-                  </div>
-                </div>
-              )}
+              <div>
+                <Label htmlFor="event-date" className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                  <Calendar className="w-3 h-3" /> Date
+                </Label>
+                <Input
+                  id="event-date"
+                  type="date"
+                  value={eventDate}
+                  onChange={(e) => setEventDate(e.target.value)}
+                  className="mt-1"
+                  data-testid="input-event-date"
+                />
+              </div>
 
-              {event.time && (
-                <div>
-                  <h3 className="font-semibold text-sm text-muted-foreground mb-2">Time</h3>
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-foreground">{event.time}</span>
-                  </div>
-                </div>
-              )}
+              <div>
+                <Label htmlFor="event-time" className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                  <Clock className="w-3 h-3" /> Time
+                </Label>
+                <Input
+                  id="event-time"
+                  type="time"
+                  value={eventTime}
+                  onChange={(e) => setEventTime(e.target.value)}
+                  className="mt-1"
+                  data-testid="input-event-time"
+                />
+              </div>
 
-              {event.location && (
-                <div>
-                  <h3 className="font-semibold text-sm text-muted-foreground mb-2">Location</h3>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-foreground">{event.location}</span>
-                  </div>
-                </div>
-              )}
+              <div className="col-span-2">
+                <Label htmlFor="event-location" className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                  <MapPin className="w-3 h-3" /> Location
+                </Label>
+                <Input
+                  id="event-location"
+                  value={eventLocation}
+                  onChange={(e) => setEventLocation(e.target.value)}
+                  placeholder="Venue name or address"
+                  className="mt-1"
+                  data-testid="input-event-location"
+                />
+              </div>
 
-              {event.guestCount && (
-                <div>
-                  <h3 className="font-semibold text-sm text-muted-foreground mb-2">Guests</h3>
-                  <div className="flex items-center gap-2">
-                    <Users className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-foreground">{event.guestCount} guests</span>
-                  </div>
-                </div>
-              )}
+              <div>
+                <Label htmlFor="event-guest-count" className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                  <Users className="w-3 h-3" /> Expected Guests
+                </Label>
+                <Input
+                  id="event-guest-count"
+                  type="number"
+                  value={eventGuestCount}
+                  onChange={(e) => setEventGuestCount(e.target.value)}
+                  placeholder="Number of guests"
+                  className="mt-1"
+                  data-testid="input-event-guest-count"
+                />
+              </div>
 
-              {event.costPerHead && (
-                <div>
-                  <h3 className="font-semibold text-sm text-muted-foreground mb-2">Cost Per Head</h3>
-                  <span className="text-foreground font-semibold">${parseFloat(event.costPerHead).toLocaleString()}</span>
-                </div>
-              )}
+              <div>
+                <Label htmlFor="event-venue-capacity" className="text-sm font-medium text-muted-foreground">Venue Capacity</Label>
+                <Input
+                  id="event-venue-capacity"
+                  type="number"
+                  value={eventVenueCapacity}
+                  onChange={(e) => setEventVenueCapacity(e.target.value)}
+                  placeholder="Max capacity"
+                  className="mt-1"
+                  data-testid="input-event-venue-capacity"
+                />
+              </div>
 
-              {event.venueCapacity && (
-                <div>
-                  <h3 className="font-semibold text-sm text-muted-foreground mb-2">Venue Capacity</h3>
-                  <span className="text-foreground">{event.venueCapacity} people</span>
-                </div>
-              )}
+              <div className="col-span-2">
+                <Label htmlFor="event-cost-per-head" className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                  <DollarSign className="w-3 h-3" /> Cost Per Head
+                </Label>
+                <Input
+                  id="event-cost-per-head"
+                  type="number"
+                  step="0.01"
+                  value={eventCostPerHead}
+                  onChange={(e) => setEventCostPerHead(e.target.value)}
+                  placeholder="Cost per guest"
+                  className="mt-1"
+                  data-testid="input-event-cost-per-head"
+                />
+              </div>
             </div>
           </div>
 
@@ -372,25 +517,7 @@ export function EventDetailModal({
           </Collapsible>
 
           {/* Action Buttons */}
-          <div className="flex justify-end gap-2">
-            <Button 
-              variant="outline" 
-              onClick={() => onOpenChange(false)}
-              data-testid="button-close-event-modal"
-            >
-              Close
-            </Button>
-            {onEdit && (
-              <Button 
-                onClick={() => {
-                  onEdit(event);
-                  onOpenChange(false);
-                }}
-                data-testid="button-edit-event-from-modal"
-              >
-                Edit Event
-              </Button>
-            )}
+          <div className="flex justify-between gap-2">
             {onDelete && (
               <Button 
                 variant="destructive"
@@ -405,6 +532,23 @@ export function EventDetailModal({
                 Delete
               </Button>
             )}
+            <div className="flex gap-2 ml-auto">
+              <Button 
+                variant="outline" 
+                onClick={() => onOpenChange(false)}
+                data-testid="button-close-event-modal"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSaveEvent}
+                disabled={updateEventMutation.isPending || !eventName.trim()}
+                data-testid="button-save-event"
+              >
+                <Save className="w-4 h-4 mr-2" />
+                {updateEventMutation.isPending ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>
