@@ -85,11 +85,17 @@ export function AppHeader() {
             className="h-20 w-auto object-contain"
             data-testid="logo-viah"
           />
-          {wedding && (
-            <Badge variant="outline" className="text-xs font-mono hidden sm:inline-flex" data-testid="badge-tradition">
-              {wedding.tradition.charAt(0).toUpperCase() + wedding.tradition.slice(1)}
-            </Badge>
-          )}
+          <div className="hidden sm:flex flex-col gap-1">
+            <p className="text-xs text-muted-foreground font-medium">Welcome back</p>
+            <p className="text-sm font-semibold" data-testid="text-couple-greeting">
+              {wedding?.coupleNames || user?.email || "Guest"}
+            </p>
+            {wedding && (
+              <Badge variant="outline" className="text-xs font-mono w-fit" data-testid="badge-tradition">
+                {wedding.tradition.charAt(0).toUpperCase() + wedding.tradition.slice(1)}
+              </Badge>
+            )}
+          </div>
         </Link>
 
         {/* Desktop Navigation */}
