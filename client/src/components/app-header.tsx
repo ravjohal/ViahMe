@@ -28,13 +28,13 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { path: "/dashboard", label: "Dashboard", icon: Home },
+  { path: "/budget", label: "Budget", icon: DollarSign, permission: "budget" },
   { path: "/timeline", label: "Timeline", icon: Clock, permission: "timeline" },
-  { path: "/ritual-control", label: "Live Control", icon: Radio, permission: "concierge" },
   { path: "/vendors", label: "Vendors", icon: UserCircle, permission: "vendors" },
   { path: "/guests", label: "Guests", icon: Users, permission: "guests" },
   { path: "/collaborators", label: "Team", icon: UsersRound, permission: "collaborators" },
   { path: "/tasks", label: "Tasks", icon: CheckSquare, permission: "tasks" },
-  { path: "/budget", label: "Budget", icon: DollarSign, permission: "budget" },
+  { path: "/ritual-control", label: "Live Control", icon: Radio, permission: "concierge" },
   { path: "/website-builder", label: "Website", icon: Globe, permission: "website" },
   { path: "/shopping", label: "Shopping", icon: Package, permission: "shopping" },
   { path: "/cultural-info", label: "Cultural Info", icon: BookOpen },
