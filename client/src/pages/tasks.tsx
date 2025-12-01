@@ -56,6 +56,7 @@ export default function TasksPage() {
   const { toast } = useToast();
   const [filterPriority, setFilterPriority] = useState<string>("all");
   const [filterCompleted, setFilterCompleted] = useState<string>("all");
+  const [filterEvent, setFilterEvent] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
@@ -176,7 +177,11 @@ export default function TasksPage() {
       filterCompleted === "all" ||
       (filterCompleted === "completed" && task.completed) ||
       (filterCompleted === "pending" && !task.completed);
-    return matchesPriority && matchesCompleted;
+    const matchesEvent = 
+      filterEvent === "all" ||
+      (filterEvent === "no-event" && !task.eventId) ||
+      task.eventId === filterEvent;
+    return matchesPriority && matchesCompleted && matchesEvent;
   });
 
   const stats = {
@@ -271,7 +276,7 @@ export default function TasksPage() {
         </Card>
       </div>
 
-      <div className="flex items-center gap-4 mb-6">
+      <div className="flex items-center gap-4 mb-6 flex-wrap">
         <div className="flex items-center gap-2">
           <Filter className="w-4 h-4 text-muted-foreground" />
           <Select value={filterPriority} onValueChange={setFilterPriority}>
@@ -295,6 +300,21 @@ export default function TasksPage() {
             <SelectItem value="all">All Tasks</SelectItem>
             <SelectItem value="pending">Pending</SelectItem>
             <SelectItem value="completed">Completed</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={filterEvent} onValueChange={setFilterEvent}>
+          <SelectTrigger className="w-48" data-testid="filter-event">
+            <SelectValue placeholder="All Events" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Events</SelectItem>
+            <SelectItem value="no-event">No Specific Event</SelectItem>
+            {events.map((event) => (
+              <SelectItem key={event.id} value={event.id}>
+                {event.name}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
 
