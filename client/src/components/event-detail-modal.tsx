@@ -85,10 +85,6 @@ export function EventDetailModal({
   const [newTaskPriority, setNewTaskPriority] = useState("medium");
   const [newTaskDueDate, setNewTaskDueDate] = useState("");
 
-  if (!event) return null;
-
-  const eventType = EVENT_TYPES[event.type as keyof typeof EVENT_TYPES];
-
   const updateTaskMutation = useMutation({
     mutationFn: async ({ id, completed }: { id: string; completed: boolean }) => {
       return await apiRequest("PATCH", `/api/tasks/${id}`, { completed });
@@ -117,13 +113,17 @@ export function EventDetailModal({
 
     createTaskMutation.mutate({
       weddingId,
-      eventId: event.id,
+      eventId: event!.id,
       title: newTaskTitle,
       description: newTaskDescription || undefined,
       priority: (newTaskPriority as "high" | "medium" | "low") || "medium",
       dueDate: newTaskDueDate || undefined,
     } as InsertTask);
   };
+
+  if (!event) return null;
+
+  const eventType = EVENT_TYPES[event.type as keyof typeof EVENT_TYPES];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

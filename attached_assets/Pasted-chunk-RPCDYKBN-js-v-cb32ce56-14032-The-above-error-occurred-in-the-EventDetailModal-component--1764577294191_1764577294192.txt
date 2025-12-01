@@ -1,0 +1,22 @@
+chunk-RPCDYKBN.js?v=cb32ce56:14032 The above error occurred in the <EventDetailModal> component:
+
+    at EventDetailModal (https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/src/components/event-detail-modal.tsx:67:3)
+    at div
+    at TimelinePage (https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/src/pages/timeline.tsx:680:27)
+    at ProtectedRoute (https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/src/components/ProtectedRoute.tsx:97:3)
+    at Route (https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.…/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cb32ce56:265:16)
+    at Switch (https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.…/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cb32ce56:321:17)
+    at Router
+    at div
+    at AppLayout (https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/src/App.tsx?v=XEEVGNWyg47jKErmiHXPa:410:35)
+    at Provider (https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.…unner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=cb32ce56:38:15)
+    at TooltipProvider (https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.…rkspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=cb32ce56:64:5)
+    at PermissionsProvider (https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/src/hooks/use-permissions.tsx:22:39)
+    at AuthProvider (https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/src/hooks/use-auth.tsx:23:32)
+    at QueryClientProvider (https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.…rkspace/node_modules/.vite/deps/@tanstack_react-query.js?v=cb32ce56:2805:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+chunk-RPCDYKBN.js?v=cb32ce56:9129 Uncaught Error: Rendered more hooks than during the previous render.
+    at EventDetailModal (event-detail-modal.tsx:92:30)
