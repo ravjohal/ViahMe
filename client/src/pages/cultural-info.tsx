@@ -25,6 +25,8 @@ export default function CulturalInfoPage() {
     { id: "muslim", name: "Muslim", description: "Nikah ceremony" },
     { id: "gujarati", name: "Gujarati", description: "Gujarati Hindu traditions" },
     { id: "south-indian", name: "South Indian", description: "Tamil, Telugu, Malayalam, Kannada" },
+    { id: "mixed-fusion", name: "Mixed/Fusion", description: "Blending multiple traditions" },
+    { id: "general", name: "General", description: "Secular & modern ceremonies" },
   ];
 
   return (
@@ -102,7 +104,7 @@ export default function CulturalInfoPage() {
                 {/* Tradition Selector */}
                 <div className="mt-8">
                   <h3 className="text-lg font-semibold mb-4">Explore by Tradition</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
                     {traditions.map((t) => (
                       <Button
                         key={t.id}
@@ -138,6 +140,8 @@ export default function CulturalInfoPage() {
                       <TabsTrigger value="muslim">Muslim</TabsTrigger>
                       <TabsTrigger value="gujarati">Gujarati</TabsTrigger>
                       <TabsTrigger value="south-indian">South Indian</TabsTrigger>
+                      <TabsTrigger value="mixed-fusion">Mixed/Fusion</TabsTrigger>
+                      <TabsTrigger value="general">General</TabsTrigger>
                     </TabsList>
                     <ScrollBar orientation="horizontal" />
                   </ScrollArea>
@@ -906,6 +910,213 @@ export default function CulturalInfoPage() {
                       </div>
                     </div>
                   </TabsContent>
+
+                  {/* Mixed/Fusion Ceremonies */}
+                  <TabsContent value="mixed-fusion">
+                    <div className="mb-4 p-4 bg-primary/5 rounded-lg">
+                      <h4 className="font-semibold">About Mixed/Fusion Weddings</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Mixed or fusion weddings beautifully blend traditions from two different cultures or religions. 
+                        These celebrations honor both families' backgrounds while creating new, personalized traditions.
+                      </p>
+                    </div>
+                    <Accordion type="single" collapsible className="w-full">
+                      <AccordionItem value="fusion-planning">
+                        <AccordionTrigger>
+                          <span className="flex items-center gap-2">
+                            <Badge>Planning</Badge>
+                            Creating Your Fusion Ceremony
+                          </span>
+                        </AccordionTrigger>
+                        <AccordionContent className="space-y-2">
+                          <p><strong>The approach:</strong> Select meaningful rituals from each tradition that resonate with you as a couple.</p>
+                          <p><strong>Timeline options:</strong> You can have separate ceremonies on different days, combine elements into one ceremony, or create a blended ceremony with alternating traditions.</p>
+                          <p><strong>Working with officiants:</strong> Many couples have two officiants (one from each tradition) who collaborate on the ceremony.</p>
+                        </AccordionContent>
+                      </AccordionItem>
+
+                      <AccordionItem value="fusion-hindu-christian">
+                        <AccordionTrigger>
+                          <span className="flex items-center gap-2">
+                            <Badge>Example</Badge>
+                            Hindu + Christian Fusion
+                          </span>
+                        </AccordionTrigger>
+                        <AccordionContent className="space-y-2">
+                          <p><strong>Common blend:</strong> Traditional church vows combined with the Saptapadi (7 steps), exchange of rings followed by Mangalsutra tying.</p>
+                          <p><strong>Setting:</strong> Often held at a neutral venue like a garden, hotel, or banquet hall.</p>
+                          <p><strong>Attire:</strong> Bride may change from a white gown to a red lehenga, or wear a fusion outfit combining both styles.</p>
+                        </AccordionContent>
+                      </AccordionItem>
+
+                      <AccordionItem value="fusion-hindu-jewish">
+                        <AccordionTrigger>
+                          <span className="flex items-center gap-2">
+                            <Badge>Example</Badge>
+                            Hindu + Jewish Fusion
+                          </span>
+                        </AccordionTrigger>
+                        <AccordionContent className="space-y-2">
+                          <p><strong>Common blend:</strong> Ceremony under both a chuppah and a mandap, combining the breaking of glass with the Saptapadi.</p>
+                          <p><strong>Unique touch:</strong> The ketubah (Jewish marriage contract) displayed alongside a Hindu blessing.</p>
+                          <p><strong>Food:</strong> Often vegetarian to accommodate both traditions, with fusion cuisine.</p>
+                        </AccordionContent>
+                      </AccordionItem>
+
+                      <AccordionItem value="fusion-sikh-western">
+                        <AccordionTrigger>
+                          <span className="flex items-center gap-2">
+                            <Badge>Example</Badge>
+                            Sikh + Western Fusion
+                          </span>
+                        </AccordionTrigger>
+                        <AccordionContent className="space-y-2">
+                          <p><strong>Two ceremonies:</strong> Often a traditional Anand Karaj at a Gurdwara followed by a Western-style reception.</p>
+                          <p><strong>Compromise:</strong> The Sikh ceremony remains traditional, while the reception incorporates Western customs like first dance, cake cutting, and speeches.</p>
+                          <p><strong>Attire:</strong> Traditional Punjabi attire for the ceremony, Western formal wear for the reception.</p>
+                        </AccordionContent>
+                      </AccordionItem>
+
+                      <AccordionItem value="fusion-muslim-hindu">
+                        <AccordionTrigger>
+                          <span className="flex items-center gap-2">
+                            <Badge>Example</Badge>
+                            Muslim + Hindu Fusion
+                          </span>
+                        </AccordionTrigger>
+                        <AccordionContent className="space-y-2">
+                          <p><strong>Approach:</strong> Families often choose a secular ceremony with cultural elements from both traditions.</p>
+                          <p><strong>Pre-wedding:</strong> Mehndi and Sangeet are common to both cultures and serve as wonderful shared celebrations.</p>
+                          <p><strong>Ceremony elements:</strong> May include the exchange of garlands, signing of a marriage contract, and blessings from both families.</p>
+                        </AccordionContent>
+                      </AccordionItem>
+
+                      <AccordionItem value="fusion-tips">
+                        <AccordionTrigger>
+                          <span className="flex items-center gap-2">
+                            <Badge>Tips</Badge>
+                            Making It Work
+                          </span>
+                        </AccordionTrigger>
+                        <AccordionContent className="space-y-2">
+                          <p><strong>Communication:</strong> Have open conversations with both families early in the planning process.</p>
+                          <p><strong>Respect:</strong> Ensure all chosen rituals are performed with proper reverence and understanding.</p>
+                          <p><strong>Explanation:</strong> Provide guests with a program explaining each ritual and its significance.</p>
+                          <p><strong>Flexibility:</strong> Be prepared to compromise and find creative solutions.</p>
+                          <p><strong>Professionals:</strong> Hire a wedding planner experienced in multicultural weddings.</p>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
+                  </TabsContent>
+
+                  {/* General/Secular Ceremonies */}
+                  <TabsContent value="general">
+                    <div className="mb-4 p-4 bg-primary/5 rounded-lg">
+                      <h4 className="font-semibold">About General/Secular Weddings</h4>
+                      <p className="text-sm text-muted-foreground">
+                        General or secular weddings focus on the couple's personal values and relationship rather than 
+                        religious traditions. These celebrations can still incorporate South Asian cultural elements 
+                        while maintaining a non-religious ceremony.
+                      </p>
+                    </div>
+                    <Accordion type="single" collapsible className="w-full">
+                      <AccordionItem value="general-ceremony">
+                        <AccordionTrigger>
+                          <span className="flex items-center gap-2">
+                            <Badge variant="default">Wedding Day</Badge>
+                            The Ceremony
+                          </span>
+                        </AccordionTrigger>
+                        <AccordionContent className="space-y-2">
+                          <p><strong>Officiant:</strong> A civil celebrant, judge, or a friend who is ordained online.</p>
+                          <p><strong>Structure:</strong> Welcome, readings, vows, ring exchange, pronouncement, and first kiss.</p>
+                          <p><strong>Personal touch:</strong> Write your own vows, include poetry or songs that are meaningful to you.</p>
+                          <p><strong>Duration:</strong> Typically 20-30 minutes</p>
+                        </AccordionContent>
+                      </AccordionItem>
+
+                      <AccordionItem value="general-cultural-elements">
+                        <AccordionTrigger>
+                          <span className="flex items-center gap-2">
+                            <Badge>Cultural</Badge>
+                            Adding South Asian Touches
+                          </span>
+                        </AccordionTrigger>
+                        <AccordionContent className="space-y-2">
+                          <p><strong>Attire:</strong> Traditional South Asian wedding attire (lehenga, sherwani) without religious ceremony.</p>
+                          <p><strong>Decor:</strong> Marigold flowers, colorful fabrics, mandap-style structure for aesthetic purposes.</p>
+                          <p><strong>Food:</strong> South Asian cuisine for the reception.</p>
+                          <p><strong>Music:</strong> Bollywood or traditional music for entertainment.</p>
+                          <p><strong>Mehndi:</strong> Henna application as a cultural (not religious) celebration.</p>
+                        </AccordionContent>
+                      </AccordionItem>
+
+                      <AccordionItem value="general-pre-wedding">
+                        <AccordionTrigger>
+                          <span className="flex items-center gap-2">
+                            <Badge>Pre-Wedding</Badge>
+                            Pre-Wedding Celebrations
+                          </span>
+                        </AccordionTrigger>
+                        <AccordionContent className="space-y-2">
+                          <p><strong>Engagement party:</strong> Ring ceremony with family and close friends.</p>
+                          <p><strong>Sangeet:</strong> Music and dance night celebrating the upcoming wedding.</p>
+                          <p><strong>Mehndi party:</strong> Henna application with friends and family.</p>
+                          <p><strong>Bachelor/Bachelorette:</strong> Traditional Western-style parties.</p>
+                          <p><strong>Rehearsal dinner:</strong> Gathering the night before with the wedding party and family.</p>
+                        </AccordionContent>
+                      </AccordionItem>
+
+                      <AccordionItem value="general-reception">
+                        <AccordionTrigger>
+                          <span className="flex items-center gap-2">
+                            <Badge>Post-Ceremony</Badge>
+                            Reception Traditions
+                          </span>
+                        </AccordionTrigger>
+                        <AccordionContent className="space-y-2">
+                          <p><strong>Grand entrance:</strong> Couple enters to music with the wedding party.</p>
+                          <p><strong>First dance:</strong> Couple's first dance as a married pair.</p>
+                          <p><strong>Speeches:</strong> Toasts from the best man, maid of honor, and family.</p>
+                          <p><strong>Cake cutting:</strong> Ceremonial cutting and feeding each other cake.</p>
+                          <p><strong>Bouquet/Garter toss:</strong> Optional fun traditions.</p>
+                          <p><strong>Dancing:</strong> Mix of Western music and Bollywood for inclusive celebration.</p>
+                        </AccordionContent>
+                      </AccordionItem>
+
+                      <AccordionItem value="general-symbolic">
+                        <AccordionTrigger>
+                          <span className="flex items-center gap-2">
+                            <Badge>Symbolic</Badge>
+                            Meaningful Symbolic Rituals
+                          </span>
+                        </AccordionTrigger>
+                        <AccordionContent className="space-y-2">
+                          <p><strong>Unity candle:</strong> Lighting a single candle together to symbolize joining of lives.</p>
+                          <p><strong>Sand ceremony:</strong> Pouring different colored sands into one vessel.</p>
+                          <p><strong>Handfasting:</strong> Tying hands together with a ribbon or cord.</p>
+                          <p><strong>Wine ceremony:</strong> Sharing a drink from the same cup.</p>
+                          <p><strong>Tree planting:</strong> Planting a tree together to grow with your marriage.</p>
+                          <p><strong>Time capsule:</strong> Sealing letters or items to open on a future anniversary.</p>
+                        </AccordionContent>
+                      </AccordionItem>
+
+                      <AccordionItem value="general-legal">
+                        <AccordionTrigger>
+                          <span className="flex items-center gap-2">
+                            <Badge>Legal</Badge>
+                            Legal Requirements
+                          </span>
+                        </AccordionTrigger>
+                        <AccordionContent className="space-y-2">
+                          <p><strong>Marriage license:</strong> Obtain from your local county clerk's office before the wedding.</p>
+                          <p><strong>Officiant:</strong> Must be legally authorized to perform marriages in your state.</p>
+                          <p><strong>Witnesses:</strong> Most states require 1-2 witnesses to sign the marriage certificate.</p>
+                          <p><strong>Timing:</strong> Licenses typically valid for 30-90 days, check your local requirements.</p>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
+                  </TabsContent>
                 </Tabs>
               </CardContent>
             </Card>
@@ -1147,6 +1358,7 @@ export default function CulturalInfoPage() {
                       <TabsTrigger value="muslim-terms">Muslim</TabsTrigger>
                       <TabsTrigger value="gujarati-terms">Gujarati</TabsTrigger>
                       <TabsTrigger value="south-indian-terms">South Indian</TabsTrigger>
+                      <TabsTrigger value="mixed-fusion-terms">Mixed/Fusion</TabsTrigger>
                     </TabsList>
                     <ScrollBar orientation="horizontal" />
                   </ScrollArea>
@@ -1272,6 +1484,28 @@ export default function CulturalInfoPage() {
                       <div><h4 className="font-semibold">Sadhya</h4><p className="text-sm text-muted-foreground">Traditional Kerala feast on banana leaves</p></div>
                       <div><h4 className="font-semibold">Kasavu</h4><p className="text-sm text-muted-foreground">White Kerala saree with gold border</p></div>
                       <div><h4 className="font-semibold">Okhli</h4><p className="text-sm text-muted-foreground">Ring game in Kannada weddings</p></div>
+                    </div>
+                  </TabsContent>
+
+                  {/* Mixed/Fusion Terms */}
+                  <TabsContent value="mixed-fusion-terms">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                      <div><h4 className="font-semibold">Fusion Ceremony</h4><p className="text-sm text-muted-foreground">A ceremony blending rituals from multiple traditions</p></div>
+                      <div><h4 className="font-semibold">Interfaith Wedding</h4><p className="text-sm text-muted-foreground">Marriage between partners of different religions</p></div>
+                      <div><h4 className="font-semibold">Intercultural Wedding</h4><p className="text-sm text-muted-foreground">Marriage blending different cultural backgrounds</p></div>
+                      <div><h4 className="font-semibold">Co-Officiants</h4><p className="text-sm text-muted-foreground">Two officiants from different traditions conducting together</p></div>
+                      <div><h4 className="font-semibold">Blended Ritual</h4><p className="text-sm text-muted-foreground">A combined ritual drawing from multiple traditions</p></div>
+                      <div><h4 className="font-semibold">Unity Ceremony</h4><p className="text-sm text-muted-foreground">Symbolic ritual representing joining of two lives</p></div>
+                      <div><h4 className="font-semibold">Chuppah-Mandap</h4><p className="text-sm text-muted-foreground">Combined Jewish-Hindu wedding canopy structure</p></div>
+                      <div><h4 className="font-semibold">Fusion Attire</h4><p className="text-sm text-muted-foreground">Outfit combining elements from different cultures</p></div>
+                      <div><h4 className="font-semibold">Multicultural Reception</h4><p className="text-sm text-muted-foreground">Celebration featuring traditions from both families</p></div>
+                      <div><h4 className="font-semibold">Program Guide</h4><p className="text-sm text-muted-foreground">Written explanation of ceremonies for guests</p></div>
+                      <div><h4 className="font-semibold">Secular Ceremony</h4><p className="text-sm text-muted-foreground">Non-religious wedding focusing on personal vows</p></div>
+                      <div><h4 className="font-semibold">Civil Celebrant</h4><p className="text-sm text-muted-foreground">Non-religious officiant for secular ceremonies</p></div>
+                      <div><h4 className="font-semibold">Handfasting</h4><p className="text-sm text-muted-foreground">Binding hands with cord, popular in fusion ceremonies</p></div>
+                      <div><h4 className="font-semibold">Sand Ceremony</h4><p className="text-sm text-muted-foreground">Pouring colored sand together to symbolize unity</p></div>
+                      <div><h4 className="font-semibold">Wine Box Ceremony</h4><p className="text-sm text-muted-foreground">Sealing wine and letters to open on anniversary</p></div>
+                      <div><h4 className="font-semibold">First Look</h4><p className="text-sm text-muted-foreground">Western tradition of seeing each other before ceremony</p></div>
                     </div>
                   </TabsContent>
                 </Tabs>
