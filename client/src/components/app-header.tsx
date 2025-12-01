@@ -54,13 +54,11 @@ export function AppHeader() {
   const { data: weddings } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
     enabled: user?.role !== "vendor",
-    staleTime: 5 * 60 * 1000, // 5 minutes
   });
   
   const { data: vendors } = useQuery<any[]>({
     queryKey: ["/api/vendors"],
     enabled: user?.role === "vendor",
-    staleTime: 5 * 60 * 1000, // 5 minutes
   });
   
   const wedding = user?.role !== "vendor" ? weddings?.[0] : undefined;
