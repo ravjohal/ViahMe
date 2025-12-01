@@ -1061,16 +1061,22 @@ export default function VendorDashboard() {
         </Tabs>
       </main>
 
-      {/* Vendor Setup Wizard */}
-      {showWizard && (
-        <Card className="mx-auto max-w-2xl p-6">
+      {/* Vendor Setup Wizard Modal */}
+      <Dialog open={showWizard} onOpenChange={setShowWizard}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="dialog-vendor-setup-wizard">
+          <DialogHeader>
+            <DialogTitle>Set Up Your Vendor Profile</DialogTitle>
+            <DialogDescription>
+              Complete these steps to showcase your business to couples
+            </DialogDescription>
+          </DialogHeader>
           <VendorSetupWizard
             initialData={currentVendor}
             onComplete={handleWizardComplete}
             onCancel={() => setShowWizard(false)}
           />
-        </Card>
-      )}
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Profile Dialog */}
       <Dialog open={false} onOpenChange={() => {}}>
