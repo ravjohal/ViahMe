@@ -1729,6 +1729,7 @@ export default function TimelinePage() {
           if (!open) setViewingEventId(null);
         }}
         event={getViewingEvent() || null}
+        weddingId={wedding?.id}
         costItems={viewingCostItems}
         costItemsLoading={viewingCostItemsLoading}
         budgetCategories={budgetCategories}

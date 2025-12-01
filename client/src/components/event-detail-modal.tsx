@@ -1,11 +1,21 @@
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Calendar, Clock, MapPin, Users, DollarSign, Tag, CheckCircle2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Calendar, Clock, MapPin, Users, DollarSign, Tag, CheckCircle2, Plus } from "lucide-react";
 import { format } from "date-fns";
-import type { Event, BudgetCategory, EventCostItem, Task } from "@shared/schema";
+import type { Event, BudgetCategory, EventCostItem, Task, InsertTask } from "@shared/schema";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
@@ -46,6 +56,7 @@ interface EventDetailModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   event: Event | null;
+  weddingId?: string;
   costItems?: EventCostItem[];
   costItemsLoading?: boolean;
   budgetCategories?: BudgetCategory[];
@@ -59,6 +70,7 @@ export function EventDetailModal({
   open,
   onOpenChange,
   event,
+  weddingId,
   costItems = [],
   costItemsLoading = false,
   budgetCategories = [],
@@ -67,6 +79,12 @@ export function EventDetailModal({
   onEdit,
   onDelete,
 }: EventDetailModalProps) {
+  const [showNewTaskForm, setShowNewTaskForm] = useState(false);
+  const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [newTaskDescription, setNewTaskDescription] = useState("");
+  const [newTaskPriority, setNewTaskPriority] = useState("medium");
+  const [newTaskDueDate, setNewTaskDueDate] = useState("");
+
   if (!event) return null;
 
   const eventType = EVENT_TYPES[event.type as keyof typeof EVENT_TYPES];
@@ -76,9 +94,36 @@ export function EventDetailModal({
       return await apiRequest("PATCH", `/api/tasks/${id}`, { completed });
     },
     onSuccess: () => {
-      // Tasks query will auto-refetch
+      queryClient.invalidateQueries({ queryKey: ["/api/tasks", weddingId] });
     },
   });
+
+  const createTaskMutation = useMutation({
+    mutationFn: async (data: InsertTask) => {
+      return await apiRequest("POST", "/api/tasks", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tasks", weddingId] });
+      setNewTaskTitle("");
+      setNewTaskDescription("");
+      setNewTaskPriority("medium");
+      setNewTaskDueDate("");
+      setShowNewTaskForm(false);
+    },
+  });
+
+  const handleCreateTask = () => {
+    if (!newTaskTitle.trim() || !weddingId) return;
+
+    createTaskMutation.mutate({
+      weddingId,
+      eventId: event.id,
+      title: newTaskTitle,
+      description: newTaskDescription || undefined,
+      priority: (newTaskPriority as "high" | "medium" | "low") || "medium",
+      dueDate: newTaskDueDate || undefined,
+    } as InsertTask);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -205,58 +250,126 @@ export function EventDetailModal({
           )}
 
           {/* Event Tasks */}
-          {(tasks.length > 0 || tasksLoading) && (
-            <Collapsible defaultOpen className="border rounded-lg p-4 space-y-4">
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" className="w-full flex items-center justify-between p-0 h-auto hover:bg-transparent">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-primary" />
-                    <span className="font-medium">Tasks To Do</span>
-                    {tasks.length > 0 && (
-                      <Badge variant="secondary" className="ml-2">{tasks.filter(t => !t.completed).length}/{tasks.length}</Badge>
-                    )}
-                  </div>
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="space-y-4 pt-4">
-                {tasksLoading ? (
-                  <div className="text-center text-muted-foreground py-2">Loading tasks...</div>
-                ) : tasks.length === 0 ? (
-                  <div className="text-center text-muted-foreground py-4">No tasks for this event</div>
-                ) : (
-                  <div className="space-y-3">
-                    {tasks.map((task) => (
-                      <div key={task.id} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg hover-elevate transition-all cursor-pointer" onClick={() => updateTaskMutation.mutate({ id: task.id, completed: !task.completed })}>
-                        <Checkbox
-                          checked={task.completed || false}
-                          onCheckedChange={() => updateTaskMutation.mutate({ id: task.id, completed: !task.completed })}
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className={`font-medium text-sm ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}>
-                            {task.title}
-                          </div>
-                          {task.description && (
-                            <p className="text-xs text-muted-foreground mt-1">{task.description}</p>
-                          )}
-                          <div className="flex items-center gap-2 mt-2 flex-wrap">
-                            <Badge variant="outline" className={`text-xs ${PRIORITY_COLORS[task.priority as keyof typeof PRIORITY_COLORS] || PRIORITY_COLORS.medium}`}>
-                              {PRIORITY_LABELS[task.priority as keyof typeof PRIORITY_LABELS] || "Medium"}
+          <Collapsible defaultOpen className="border rounded-lg p-4 space-y-4">
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" className="w-full flex items-center justify-between p-0 h-auto hover:bg-transparent">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-primary" />
+                  <span className="font-medium">Tasks To Do</span>
+                  {tasks.length > 0 && (
+                    <Badge variant="secondary" className="ml-2">{tasks.filter(t => !t.completed).length}/{tasks.length}</Badge>
+                  )}
+                </div>
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-4 pt-4">
+              {tasksLoading ? (
+                <div className="text-center text-muted-foreground py-2">Loading tasks...</div>
+              ) : tasks.length === 0 && !showNewTaskForm ? (
+                <div className="text-center text-muted-foreground py-4">No tasks for this event</div>
+              ) : (
+                <div className="space-y-3">
+                  {tasks.map((task) => (
+                    <div key={task.id} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg hover-elevate transition-all cursor-pointer" onClick={() => updateTaskMutation.mutate({ id: task.id, completed: !task.completed })} data-testid={`task-item-modal-${task.id}`}>
+                      <Checkbox
+                        checked={task.completed || false}
+                        onCheckedChange={() => updateTaskMutation.mutate({ id: task.id, completed: !task.completed })}
+                        onClick={(e) => e.stopPropagation()}
+                        data-testid={`checkbox-task-modal-${task.id}`}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className={`font-medium text-sm ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                          {task.title}
+                        </div>
+                        {task.description && (
+                          <p className="text-xs text-muted-foreground mt-1">{task.description}</p>
+                        )}
+                        <div className="flex items-center gap-2 mt-2 flex-wrap">
+                          <Badge variant="outline" className={`text-xs ${PRIORITY_COLORS[task.priority as keyof typeof PRIORITY_COLORS] || PRIORITY_COLORS.medium}`}>
+                            {PRIORITY_LABELS[task.priority as keyof typeof PRIORITY_LABELS] || "Medium"}
+                          </Badge>
+                          {task.dueDate && (
+                            <Badge variant="outline" className="text-xs">
+                              {format(new Date(task.dueDate), "MMM d")}
                             </Badge>
-                            {task.dueDate && (
-                              <Badge variant="outline" className="text-xs">
-                                {format(new Date(task.dueDate), "MMM d")}
-                              </Badge>
-                            )}
-                          </div>
+                          )}
                         </div>
                       </div>
-                    ))}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Add New Task Form */}
+              <div className="border-t pt-4 mt-4">
+                {!showNewTaskForm ? (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setShowNewTaskForm(true)}
+                    className="w-full"
+                    data-testid="button-add-task-for-event"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Task
+                  </Button>
+                ) : (
+                  <div className="space-y-3">
+                    <Input
+                      placeholder="Task title"
+                      value={newTaskTitle}
+                      onChange={(e) => setNewTaskTitle(e.target.value)}
+                      data-testid="input-new-task-title"
+                    />
+                    <Textarea
+                      placeholder="Description (optional)"
+                      value={newTaskDescription}
+                      onChange={(e) => setNewTaskDescription(e.target.value)}
+                      className="resize-none"
+                      data-testid="input-new-task-description"
+                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      <Select value={newTaskPriority} onValueChange={setNewTaskPriority}>
+                        <SelectTrigger data-testid="select-new-task-priority">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="high">High</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="low">Low</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        type="date"
+                        value={newTaskDueDate}
+                        onChange={(e) => setNewTaskDueDate(e.target.value)}
+                        data-testid="input-new-task-due-date"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        size="sm"
+                        onClick={handleCreateTask}
+                        disabled={!newTaskTitle.trim() || createTaskMutation.isPending}
+                        className="flex-1"
+                        data-testid="button-create-task"
+                      >
+                        {createTaskMutation.isPending ? "Saving..." : "Create"}
+                      </Button>
+                      <Button 
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setShowNewTaskForm(false)}
+                        data-testid="button-cancel-new-task"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
                   </div>
                 )}
-              </CollapsibleContent>
-            </Collapsible>
-          )}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
 
           {/* Action Buttons */}
           <div className="flex justify-end gap-2">
