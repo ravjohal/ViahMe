@@ -972,7 +972,7 @@ export default function VendorDashboard() {
                   </p>
                   <Button 
                     variant="default"
-                    onClick={openEditDialog}
+                    onClick={openWizard}
                     className="rounded-full"
                   >
                     <Settings className="w-4 h-4 mr-2" />
@@ -990,7 +990,7 @@ export default function VendorDashboard() {
                     </p>
                     <Button 
                       variant="outline" 
-                      onClick={openEditDialog}
+                      onClick={openWizard}
                       data-testid="button-update-availability"
                     >
                       <Calendar className="w-4 h-4 mr-2" />
