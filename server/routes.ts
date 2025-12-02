@@ -19,6 +19,8 @@ import {
   insertTaskSchema,
   insertContractSchema,
   insertMessageSchema,
+  insertQuickReplyTemplateSchema,
+  insertFollowUpReminderSchema,
   insertReviewSchema,
   insertBudgetBenchmarkSchema,
   insertPlaylistSchema,
@@ -1829,6 +1831,292 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ count });
     } catch (error) {
       res.status(500).json({ error: "Failed to get unread count" });
+    }
+  });
+
+  // ============================================================================
+  // LEAD INBOX - Vendor inquiry management with quick replies and reminders
+  // ============================================================================
+
+  // Get lead inbox data for a vendor (conversations with unread counts and wedding details)
+  app.get("/api/lead-inbox/:vendorId", async (req, res) => {
+    try {
+      const conversationIds = await storage.getConversationsByVendor(req.params.vendorId);
+      
+      const leads = await Promise.all(
+        conversationIds.map(async (convId) => {
+          const parsed = parseConversationId(convId);
+          if (!parsed) return null;
+          
+          const messages = await storage.getConversationMessages(convId);
+          const wedding = await storage.getWedding(parsed.weddingId);
+          const unreadCount = await storage.getUnreadCount(convId, 'vendor');
+          
+          const lastMessage = messages[messages.length - 1];
+          const firstMessage = messages[0];
+          
+          return {
+            conversationId: convId,
+            weddingId: parsed.weddingId,
+            vendorId: parsed.vendorId,
+            coupleName: wedding?.coupleName1 && wedding?.coupleName2 
+              ? `${wedding.coupleName1} & ${wedding.coupleName2}`
+              : wedding?.coupleName1 || 'Unknown',
+            weddingDate: wedding?.date,
+            city: wedding?.city,
+            tradition: wedding?.tradition,
+            unreadCount,
+            lastMessage: lastMessage ? {
+              content: lastMessage.content,
+              senderType: lastMessage.senderType,
+              createdAt: lastMessage.createdAt,
+            } : null,
+            firstInquiryDate: firstMessage?.createdAt,
+            totalMessages: messages.length,
+          };
+        })
+      );
+      
+      // Sort by unread count first, then by last message date
+      const sortedLeads = leads
+        .filter(Boolean)
+        .sort((a, b) => {
+          if (b!.unreadCount !== a!.unreadCount) return b!.unreadCount - a!.unreadCount;
+          const aDate = a!.lastMessage?.createdAt || new Date(0);
+          const bDate = b!.lastMessage?.createdAt || new Date(0);
+          return new Date(bDate).getTime() - new Date(aDate).getTime();
+        });
+      
+      res.json(sortedLeads);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch lead inbox" });
+    }
+  });
+
+  // ============================================================================
+  // QUICK REPLY TEMPLATES
+  // ============================================================================
+
+  // Get all templates for a vendor
+  app.get("/api/quick-reply-templates/vendor/:vendorId", async (req, res) => {
+    try {
+      const templates = await storage.getQuickReplyTemplatesByVendor(req.params.vendorId);
+      res.json(templates);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch templates" });
+    }
+  });
+
+  // Create a new template
+  app.post("/api/quick-reply-templates", await requireAuth(storage, false), async (req: AuthRequest, res) => {
+    try {
+      const validatedData = insertQuickReplyTemplateSchema.parse(req.body);
+      
+      // Verify vendor ownership
+      const vendors = await storage.getAllVendors();
+      const userVendor = vendors.find(v => v.userId === req.user?.id);
+      
+      if (!userVendor || userVendor.id !== validatedData.vendorId) {
+        return res.status(403).json({ error: "You can only create templates for your own vendor profile" });
+      }
+      
+      const template = await storage.createQuickReplyTemplate(validatedData);
+      res.json(template);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      res.status(500).json({ error: "Failed to create template" });
+    }
+  });
+
+  // Update a template
+  app.patch("/api/quick-reply-templates/:id", await requireAuth(storage, false), async (req: AuthRequest, res) => {
+    try {
+      const validatedData = insertQuickReplyTemplateSchema.partial().parse(req.body);
+      
+      const existing = await storage.getQuickReplyTemplate(req.params.id);
+      if (!existing) {
+        return res.status(404).json({ error: "Template not found" });
+      }
+      
+      // Verify vendor ownership
+      const vendors = await storage.getAllVendors();
+      const userVendor = vendors.find(v => v.userId === req.user?.id);
+      
+      if (!userVendor || userVendor.id !== existing.vendorId) {
+        return res.status(403).json({ error: "You can only update your own templates" });
+      }
+      
+      const template = await storage.updateQuickReplyTemplate(req.params.id, validatedData);
+      res.json(template);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      res.status(500).json({ error: "Failed to update template" });
+    }
+  });
+
+  // Delete a template
+  app.delete("/api/quick-reply-templates/:id", await requireAuth(storage, false), async (req: AuthRequest, res) => {
+    try {
+      const existing = await storage.getQuickReplyTemplate(req.params.id);
+      if (!existing) {
+        return res.status(404).json({ error: "Template not found" });
+      }
+      
+      // Verify vendor ownership
+      const vendors = await storage.getAllVendors();
+      const userVendor = vendors.find(v => v.userId === req.user?.id);
+      
+      if (!userVendor || userVendor.id !== existing.vendorId) {
+        return res.status(403).json({ error: "You can only delete your own templates" });
+      }
+      
+      await storage.deleteQuickReplyTemplate(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete template" });
+    }
+  });
+
+  // Increment template usage count
+  app.post("/api/quick-reply-templates/:id/use", async (req, res) => {
+    try {
+      const template = await storage.incrementTemplateUsage(req.params.id);
+      if (!template) {
+        return res.status(404).json({ error: "Template not found" });
+      }
+      res.json(template);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to track template usage" });
+    }
+  });
+
+  // ============================================================================
+  // FOLLOW-UP REMINDERS
+  // ============================================================================
+
+  // Get all reminders for a vendor
+  app.get("/api/follow-up-reminders/vendor/:vendorId", async (req, res) => {
+    try {
+      const reminders = await storage.getFollowUpRemindersByVendor(req.params.vendorId);
+      
+      // Enrich with wedding details
+      const enrichedReminders = await Promise.all(
+        reminders.map(async (reminder) => {
+          const wedding = await storage.getWedding(reminder.weddingId);
+          return {
+            ...reminder,
+            coupleName: wedding?.coupleName1 && wedding?.coupleName2 
+              ? `${wedding.coupleName1} & ${wedding.coupleName2}`
+              : wedding?.coupleName1 || 'Unknown',
+          };
+        })
+      );
+      
+      res.json(enrichedReminders);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch reminders" });
+    }
+  });
+
+  // Get pending reminders for a vendor
+  app.get("/api/follow-up-reminders/vendor/:vendorId/pending", async (req, res) => {
+    try {
+      const reminders = await storage.getPendingRemindersForVendor(req.params.vendorId);
+      
+      // Enrich with wedding details
+      const enrichedReminders = await Promise.all(
+        reminders.map(async (reminder) => {
+          const wedding = await storage.getWedding(reminder.weddingId);
+          return {
+            ...reminder,
+            coupleName: wedding?.coupleName1 && wedding?.coupleName2 
+              ? `${wedding.coupleName1} & ${wedding.coupleName2}`
+              : wedding?.coupleName1 || 'Unknown',
+          };
+        })
+      );
+      
+      res.json(enrichedReminders);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch pending reminders" });
+    }
+  });
+
+  // Create a new reminder
+  app.post("/api/follow-up-reminders", await requireAuth(storage, false), async (req: AuthRequest, res) => {
+    try {
+      const validatedData = insertFollowUpReminderSchema.parse(req.body);
+      
+      // Verify vendor ownership
+      const vendors = await storage.getAllVendors();
+      const userVendor = vendors.find(v => v.userId === req.user?.id);
+      
+      if (!userVendor || userVendor.id !== validatedData.vendorId) {
+        return res.status(403).json({ error: "You can only create reminders for your own vendor profile" });
+      }
+      
+      const reminder = await storage.createFollowUpReminder(validatedData);
+      res.json(reminder);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      res.status(500).json({ error: "Failed to create reminder" });
+    }
+  });
+
+  // Update a reminder (mark as completed/dismissed)
+  app.patch("/api/follow-up-reminders/:id", await requireAuth(storage, false), async (req: AuthRequest, res) => {
+    try {
+      const validatedData = insertFollowUpReminderSchema.partial().parse(req.body);
+      
+      const existing = await storage.getFollowUpReminder(req.params.id);
+      if (!existing) {
+        return res.status(404).json({ error: "Reminder not found" });
+      }
+      
+      // Verify vendor ownership
+      const vendors = await storage.getAllVendors();
+      const userVendor = vendors.find(v => v.userId === req.user?.id);
+      
+      if (!userVendor || userVendor.id !== existing.vendorId) {
+        return res.status(403).json({ error: "You can only update your own reminders" });
+      }
+      
+      const reminder = await storage.updateFollowUpReminder(req.params.id, validatedData);
+      res.json(reminder);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      res.status(500).json({ error: "Failed to update reminder" });
+    }
+  });
+
+  // Delete a reminder
+  app.delete("/api/follow-up-reminders/:id", await requireAuth(storage, false), async (req: AuthRequest, res) => {
+    try {
+      const existing = await storage.getFollowUpReminder(req.params.id);
+      if (!existing) {
+        return res.status(404).json({ error: "Reminder not found" });
+      }
+      
+      // Verify vendor ownership
+      const vendors = await storage.getAllVendors();
+      const userVendor = vendors.find(v => v.userId === req.user?.id);
+      
+      if (!userVendor || userVendor.id !== existing.vendorId) {
+        return res.status(403).json({ error: "You can only delete your own reminders" });
+      }
+      
+      await storage.deleteFollowUpReminder(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete reminder" });
     }
   });
 
