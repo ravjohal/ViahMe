@@ -93,11 +93,8 @@ function Router() {
           <Invitations />
         </ProtectedRoute>
       </Route>
-      <Route path="/vendors">
-        <ProtectedRoute requiredPermission="vendors">
-          <Vendors />
-        </ProtectedRoute>
-      </Route>
+      {/* Vendor marketplace is publicly accessible */}
+      <Route path="/vendors" component={Vendors} />
       <Route path="/vendor-availability">
         <ProtectedRoute requiredPermission="vendors">
           <VendorAvailabilityCalendar />
@@ -198,10 +195,9 @@ function AppLayout() {
     "/reset-password"
   ];
   
-  // Hide header on auth pages, guest websites, and vendors page when not authenticated
+  // Hide header on auth pages and guest websites (vendors page always shows header)
   const hideHeader = authPages.includes(location) || 
-                     location.startsWith("/wedding/") ||
-                     (location === "/vendors" && !user);
+                     location.startsWith("/wedding/");
   
   return (
     <div className="min-h-screen bg-background">
