@@ -511,9 +511,282 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!vendor) {
         return res.status(404).json({ error: "Vendor not found" });
       }
+      
+      // Track view count for all vendors
+      await storage.incrementVendorViewCount(req.params.id);
+      
+      // For unclaimed ghost profiles, check if we should send a claim notification
+      if (!vendor.claimed && vendor.phone && !vendor.optedOutOfNotifications) {
+        const now = new Date();
+        const cooldownUntil = vendor.notifyCooldownUntil ? new Date(vendor.notifyCooldownUntil) : null;
+        
+        // Only send notification if cooldown has passed (72 hours between notifications)
+        if (!cooldownUntil || now > cooldownUntil) {
+          // Queue claim notification (non-blocking)
+          storage.queueClaimNotification(req.params.id).catch(err => {
+            console.error("Failed to queue claim notification:", err);
+          });
+        }
+      }
+      
       res.json(vendor);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch vendor" });
+    }
+  });
+
+  // ============================================================================
+  // GHOST PROFILE / CLAIM YOUR PROFILE
+  // ============================================================================
+
+  // Seed vendors from Google Places API (admin only)
+  app.post("/api/admin/seed-google-places", async (req, res) => {
+    try {
+      const { region, category, apiKey } = req.body;
+      
+      if (!apiKey) {
+        return res.status(400).json({ error: "Google Places API key is required" });
+      }
+      
+      if (!region || !category) {
+        return res.status(400).json({ error: "Region and category are required" });
+      }
+      
+      // Build search query for Indian wedding vendors
+      const searchQueries = [
+        `Indian ${category} ${region}`,
+        `South Asian ${category} ${region}`,
+        `Desi ${category} ${region}`,
+      ];
+      
+      const results: any[] = [];
+      
+      for (const query of searchQueries) {
+        try {
+          const response = await fetch(
+            `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${apiKey}`
+          );
+          const data = await response.json();
+          
+          if (data.results) {
+            results.push(...data.results);
+          }
+        } catch (err) {
+          console.error(`Failed to search: ${query}`, err);
+        }
+      }
+      
+      // Deduplicate by place_id
+      const uniquePlaces = new Map();
+      for (const place of results) {
+        if (!uniquePlaces.has(place.place_id)) {
+          uniquePlaces.set(place.place_id, place);
+        }
+      }
+      
+      // Create ghost profiles
+      const created: any[] = [];
+      const skipped: any[] = [];
+      
+      for (const place of uniquePlaces.values()) {
+        // Check if vendor with this placeId already exists
+        const existing = await storage.getVendorByGooglePlaceId(place.place_id);
+        if (existing) {
+          skipped.push({ name: place.name, reason: "Already exists" });
+          continue;
+        }
+        
+        // Get place details for phone number
+        let phone = null;
+        let website = null;
+        try {
+          const detailsResponse = await fetch(
+            `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=formatted_phone_number,website&key=${apiKey}`
+          );
+          const detailsData = await detailsResponse.json();
+          phone = detailsData.result?.formatted_phone_number || null;
+          website = detailsData.result?.website || null;
+        } catch (err) {
+          console.error(`Failed to get details for ${place.name}`, err);
+        }
+        
+        // Map category to our vendor categories
+        const categoryMapping: Record<string, string> = {
+          'dj': 'DJ & Music',
+          'photographer': 'Photography',
+          'videographer': 'Photography',
+          'caterer': 'Catering',
+          'decorator': 'Decor & Rentals',
+          'florist': 'Florist',
+          'makeup': 'Makeup Artist',
+          'mehndi': 'Mehndi Artist',
+          'venue': 'Venues',
+          'planner': 'Event Planning',
+        };
+        
+        const mappedCategory = categoryMapping[category.toLowerCase()] || category;
+        
+        // Create ghost profile
+        const vendor = await storage.createVendor({
+          name: place.name,
+          category: mappedCategory,
+          categories: [category.toLowerCase() as any],
+          location: place.formatted_address || region,
+          city: region,
+          priceRange: '$$',
+          phone: phone,
+          website: website,
+          googlePlaceId: place.place_id,
+          rating: place.rating?.toString() || null,
+          claimed: false,
+          source: 'google_places',
+          isPublished: true,
+          description: `${place.name} - Indian wedding ${category} serving ${region}. Contact us to learn more about our services.`,
+        });
+        
+        created.push({ name: place.name, id: vendor.id });
+      }
+      
+      res.json({
+        message: `Seeded ${created.length} vendors, skipped ${skipped.length}`,
+        created,
+        skipped,
+      });
+    } catch (error) {
+      console.error("Error seeding from Google Places:", error);
+      res.status(500).json({ error: "Failed to seed vendors from Google Places" });
+    }
+  });
+
+  // Request to claim a vendor profile (sends notification to vendor)
+  app.post("/api/vendors/:id/request-claim", async (req, res) => {
+    try {
+      const vendor = await storage.getVendor(req.params.id);
+      if (!vendor) {
+        return res.status(404).json({ error: "Vendor not found" });
+      }
+      
+      if (vendor.claimed) {
+        return res.status(400).json({ error: "This profile has already been claimed" });
+      }
+      
+      if (!vendor.phone && !vendor.email) {
+        return res.status(400).json({ error: "No contact information available for this vendor" });
+      }
+      
+      // Generate claim token
+      const claimToken = crypto.randomUUID();
+      const claimTokenExpires = new Date(Date.now() + 48 * 60 * 60 * 1000); // 48 hours
+      
+      await storage.updateVendor(req.params.id, {
+        claimToken,
+        claimTokenExpires,
+      } as any);
+      
+      // Send claim email/SMS (this would use Resend for email)
+      // For now, just return the claim link for testing
+      const claimLink = `${req.protocol}://${req.get('host')}/claim-profile?token=${claimToken}`;
+      
+      // In production, send email via Resend
+      if (vendor.email) {
+        try {
+          // Queue email notification
+          await storage.sendClaimEmail(vendor.id, vendor.email, vendor.name, claimLink);
+        } catch (err) {
+          console.error("Failed to send claim email:", err);
+        }
+      }
+      
+      res.json({
+        message: "Claim request sent. Check your email or phone for verification instructions.",
+        // Only include claimLink in development for testing
+        ...(process.env.NODE_ENV === 'development' && { claimLink }),
+      });
+    } catch (error) {
+      console.error("Error requesting claim:", error);
+      res.status(500).json({ error: "Failed to request profile claim" });
+    }
+  });
+
+  // Verify claim token and complete profile claim
+  app.post("/api/vendors/claim/verify", async (req, res) => {
+    try {
+      const { token, email, password } = req.body;
+      
+      if (!token) {
+        return res.status(400).json({ error: "Claim token is required" });
+      }
+      
+      // Find vendor by claim token
+      const vendor = await storage.getVendorByClaimToken(token);
+      if (!vendor) {
+        return res.status(404).json({ error: "Invalid or expired claim token" });
+      }
+      
+      // Check if token has expired
+      if (vendor.claimTokenExpires && new Date() > new Date(vendor.claimTokenExpires)) {
+        return res.status(400).json({ error: "Claim token has expired. Please request a new one." });
+      }
+      
+      // Create vendor user account if email and password provided
+      let userId = vendor.userId;
+      if (email && password) {
+        // Check if email already exists
+        const existingUser = await storage.getUserByEmail(email);
+        if (existingUser) {
+          return res.status(400).json({ error: "Email already in use. Please login instead." });
+        }
+        
+        // Create new user account
+        const bcrypt = await import('bcrypt');
+        const passwordHash = await bcrypt.hash(password, 10);
+        const newUser = await storage.createUser({
+          email,
+          passwordHash,
+          role: 'vendor',
+          emailVerified: true, // Auto-verify since they're claiming via token
+        });
+        userId = newUser.id;
+      }
+      
+      // Mark profile as claimed
+      await storage.updateVendor(vendor.id, {
+        claimed: true,
+        userId: userId,
+        claimToken: null,
+        claimTokenExpires: null,
+        email: email || vendor.email,
+      } as any);
+      
+      res.json({
+        message: "Profile claimed successfully! You can now login to manage your profile.",
+        vendorId: vendor.id,
+      });
+    } catch (error) {
+      console.error("Error verifying claim:", error);
+      res.status(500).json({ error: "Failed to verify claim" });
+    }
+  });
+
+  // Opt out of claim notifications
+  app.post("/api/vendors/:id/opt-out", async (req, res) => {
+    try {
+      const { token } = req.body;
+      
+      const vendor = await storage.getVendor(req.params.id);
+      if (!vendor) {
+        return res.status(404).json({ error: "Vendor not found" });
+      }
+      
+      // Verify opt-out is legitimate (token from email or direct request)
+      await storage.updateVendor(req.params.id, {
+        optedOutOfNotifications: true,
+      } as any);
+      
+      res.json({ message: "You have been opted out of future notifications." });
+    } catch (error) {
+      console.error("Error opting out:", error);
+      res.status(500).json({ error: "Failed to opt out" });
     }
   });
 

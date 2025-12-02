@@ -164,6 +164,12 @@ export interface IStorage {
   getVendorsByLocation(location: string): Promise<Vendor[]>;
   createVendor(vendor: InsertVendor): Promise<Vendor>;
   updateVendor(id: string, vendor: Partial<InsertVendor>): Promise<Vendor | undefined>;
+  // Ghost Profile / Claim methods
+  getVendorByGooglePlaceId(placeId: string): Promise<Vendor | undefined>;
+  getVendorByClaimToken(token: string): Promise<Vendor | undefined>;
+  incrementVendorViewCount(id: string): Promise<void>;
+  queueClaimNotification(vendorId: string): Promise<void>;
+  sendClaimEmail(vendorId: string, email: string, vendorName: string, claimLink: string): Promise<void>;
 
   // Service Packages
   getServicePackage(id: string): Promise<ServicePackage | undefined>;
@@ -943,6 +949,42 @@ export class MemStorage implements IStorage {
     };
     this.vendors.set(id, updated);
     return updated;
+  }
+
+  // Ghost Profile / Claim methods
+  async getVendorByGooglePlaceId(placeId: string): Promise<Vendor | undefined> {
+    return Array.from(this.vendors.values()).find(v => v.googlePlaceId === placeId);
+  }
+
+  async getVendorByClaimToken(token: string): Promise<Vendor | undefined> {
+    return Array.from(this.vendors.values()).find(v => v.claimToken === token);
+  }
+
+  async incrementVendorViewCount(id: string): Promise<void> {
+    const vendor = this.vendors.get(id);
+    if (vendor) {
+      vendor.viewCount = (vendor.viewCount || 0) + 1;
+      this.vendors.set(id, vendor);
+    }
+  }
+
+  async queueClaimNotification(vendorId: string): Promise<void> {
+    const vendor = this.vendors.get(vendorId);
+    if (!vendor) return;
+    
+    // Set cooldown for 72 hours
+    const cooldownUntil = new Date(Date.now() + 72 * 60 * 60 * 1000);
+    vendor.notifyCooldownUntil = cooldownUntil;
+    vendor.lastViewNotifiedAt = new Date();
+    this.vendors.set(vendorId, vendor);
+    
+    // In production, this would send an email/SMS
+    console.log(`[ClaimNotification] Would notify vendor ${vendor.name} at ${vendor.phone || vendor.email}`);
+  }
+
+  async sendClaimEmail(vendorId: string, email: string, vendorName: string, claimLink: string): Promise<void> {
+    // In MemStorage, just log the email that would be sent
+    console.log(`[ClaimEmail] Would send to ${email}: Claim your profile at ${claimLink}`);
   }
 
   // Service Packages
@@ -3145,6 +3187,87 @@ export class DBStorage implements IStorage {
       .where(eq(schema.vendors.id, id))
       .returning();
     return result[0];
+  }
+
+  // Ghost Profile / Claim methods
+  async getVendorByGooglePlaceId(placeId: string): Promise<Vendor | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.vendors)
+      .where(eq(schema.vendors.googlePlaceId, placeId));
+    return result[0];
+  }
+
+  async getVendorByClaimToken(token: string): Promise<Vendor | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.vendors)
+      .where(eq(schema.vendors.claimToken, token));
+    return result[0];
+  }
+
+  async incrementVendorViewCount(id: string): Promise<void> {
+    await this.db
+      .update(schema.vendors)
+      .set({ viewCount: sql`COALESCE(view_count, 0) + 1` })
+      .where(eq(schema.vendors.id, id));
+  }
+
+  async queueClaimNotification(vendorId: string): Promise<void> {
+    const vendor = await this.getVendor(vendorId);
+    if (!vendor) return;
+    
+    // Set cooldown for 72 hours
+    const cooldownUntil = new Date(Date.now() + 72 * 60 * 60 * 1000);
+    await this.db
+      .update(schema.vendors)
+      .set({
+        notifyCooldownUntil: cooldownUntil,
+        lastViewNotifiedAt: new Date(),
+      })
+      .where(eq(schema.vendors.id, vendorId));
+    
+    // In production, this would send an email/SMS via Resend
+    console.log(`[ClaimNotification] Would notify vendor ${vendor.name} at ${vendor.phone || vendor.email}`);
+  }
+
+  async sendClaimEmail(vendorId: string, email: string, vendorName: string, claimLink: string): Promise<void> {
+    // Use Resend to send the claim email
+    try {
+      const { Resend } = await import('resend');
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      
+      await resend.emails.send({
+        from: 'Viah.me <noreply@viah.me>',
+        to: email,
+        subject: `Claim Your Business Profile on Viah.me - ${vendorName}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h1 style="color: #C2410C;">Claim Your Profile on Viah.me</h1>
+            <p>Hello,</p>
+            <p>A couple is viewing your business profile <strong>${vendorName}</strong> on Viah.me, the premier South Asian wedding planning platform.</p>
+            <p>Claim your free profile to:</p>
+            <ul>
+              <li>Update your photos and portfolio</li>
+              <li>Respond directly to inquiries</li>
+              <li>Showcase your services to engaged couples</li>
+            </ul>
+            <p style="margin: 30px 0;">
+              <a href="${claimLink}" style="background-color: #C2410C; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
+                Claim Your Profile
+              </a>
+            </p>
+            <p style="color: #666; font-size: 14px;">This link expires in 48 hours.</p>
+            <p style="color: #666; font-size: 12px;">
+              If you don't want to receive these emails, <a href="${claimLink.replace('/claim-profile', '/opt-out')}">click here to opt out</a>.
+            </p>
+          </div>
+        `,
+      });
+      console.log(`[ClaimEmail] Sent to ${email}`);
+    } catch (err) {
+      console.error(`[ClaimEmail] Failed to send to ${email}:`, err);
+    }
   }
 
   // Service Packages
