@@ -576,6 +576,60 @@ export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type Message = typeof messages.$inferSelect;
 
 // ============================================================================
+// QUICK REPLY TEMPLATES - Vendor response templates for common inquiries
+// ============================================================================
+
+export const quickReplyTemplates = pgTable("quick_reply_templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  vendorId: varchar("vendor_id").notNull(),
+  name: text("name").notNull(),
+  content: text("content").notNull(),
+  category: text("category"), // e.g., 'greeting', 'pricing', 'availability', 'follow-up'
+  isDefault: boolean("is_default").default(false),
+  usageCount: integer("usage_count").default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertQuickReplyTemplateSchema = createInsertSchema(quickReplyTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  usageCount: true,
+}).extend({
+  name: z.string().min(1, "Template name is required"),
+  content: z.string().min(1, "Template content is required"),
+});
+
+export type InsertQuickReplyTemplate = z.infer<typeof insertQuickReplyTemplateSchema>;
+export type QuickReplyTemplate = typeof quickReplyTemplates.$inferSelect;
+
+// ============================================================================
+// FOLLOW-UP REMINDERS - Vendor reminders for lead follow-ups
+// ============================================================================
+
+export const followUpReminders = pgTable("follow_up_reminders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  vendorId: varchar("vendor_id").notNull(),
+  conversationId: varchar("conversation_id").notNull(),
+  weddingId: varchar("wedding_id").notNull(),
+  reminderDate: timestamp("reminder_date").notNull(),
+  note: text("note"),
+  status: text("status").notNull().default('pending'), // 'pending', 'completed', 'dismissed'
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertFollowUpReminderSchema = createInsertSchema(followUpReminders).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  status: z.enum(['pending', 'completed', 'dismissed']).optional(),
+});
+
+export type InsertFollowUpReminder = z.infer<typeof insertFollowUpReminderSchema>;
+export type FollowUpReminder = typeof followUpReminders.$inferSelect;
+
+// ============================================================================
 // REVIEWS - Vendor rating and feedback system
 // ============================================================================
 
