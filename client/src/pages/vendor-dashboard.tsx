@@ -52,7 +52,12 @@ import {
   Trash2,
   MessageSquare,
   CalendarDays,
+  TrendingUp,
+  Eye,
+  Users,
+  BarChart3,
 } from "lucide-react";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { format } from "date-fns";
 import viahLogo from "@assets/viah-logo_1763669612969.png";
 
@@ -108,6 +113,81 @@ export default function VendorDashboard() {
     },
     enabled: !!vendorId,
   });
+
+  // Analytics data
+  interface AnalyticsSummary {
+    totalBookings: number;
+    confirmedBookings: number;
+    totalRevenue: string;
+    averageBookingValue: string;
+    averageRating: string;
+    totalReviews: number;
+    conversionRate: string;
+  }
+
+  interface BookingTrend {
+    date: string;
+    bookings: number;
+    confirmed: number;
+  }
+
+  interface RevenueTrend {
+    date: string;
+    revenue: string;
+  }
+
+  const defaultAnalytics: AnalyticsSummary = {
+    totalBookings: 0,
+    confirmedBookings: 0,
+    totalRevenue: "0",
+    averageBookingValue: "0",
+    averageRating: "0",
+    totalReviews: 0,
+    conversionRate: "0",
+  };
+
+  const { data: analyticsSummaryData, isLoading: analyticsLoading } = useQuery<AnalyticsSummary>({
+    queryKey: ["/api/analytics/vendor", vendorId, "summary"],
+    queryFn: async () => {
+      const response = await fetch(`/api/analytics/vendor/${vendorId}/summary`);
+      if (!response.ok) throw new Error("Failed to fetch analytics");
+      return response.json();
+    },
+    enabled: !!vendorId,
+  });
+  
+  const analyticsSummary = analyticsSummaryData || defaultAnalytics;
+
+  const { data: bookingTrends = [] } = useQuery<BookingTrend[]>({
+    queryKey: ["/api/analytics/vendor", vendorId, "booking-trends"],
+    queryFn: async () => {
+      const response = await fetch(`/api/analytics/vendor/${vendorId}/booking-trends`);
+      if (!response.ok) throw new Error("Failed to fetch booking trends");
+      return response.json();
+    },
+    enabled: !!vendorId,
+  });
+
+  const { data: revenueTrends = [] } = useQuery<RevenueTrend[]>({
+    queryKey: ["/api/analytics/vendor", vendorId, "revenue-trends"],
+    queryFn: async () => {
+      const response = await fetch(`/api/analytics/vendor/${vendorId}/revenue-trends`);
+      if (!response.ok) throw new Error("Failed to fetch revenue trends");
+      return response.json();
+    },
+    enabled: !!vendorId,
+  });
+  
+  // Helper to safely parse currency values
+  const formatCurrency = (value: string | number): string => {
+    const num = typeof value === 'string' ? parseFloat(value.replace(/[^0-9.-]/g, '')) : value;
+    return isNaN(num) ? "$0" : `$${num.toLocaleString()}`;
+  };
+  
+  const formatPercent = (value: string | number): string => {
+    const num = typeof value === 'string' ? parseFloat(value) : value;
+    return isNaN(num) ? "0%" : `${num.toFixed(1)}%`;
+  };
 
   const createVendorMutation = useMutation({
     mutationFn: async (data: InsertVendor) => {
@@ -641,12 +721,12 @@ export default function VendorDashboard() {
         </div>
         )}
 
-        {/* Tabs for Bookings, Contracts, and Availability */}
+        {/* Tabs for Bookings, Contracts, Availability, and Analytics */}
         <Tabs defaultValue="bookings" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-grid">
+          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
             <TabsTrigger value="bookings" data-testid="tab-bookings">
               <Calendar className="w-4 h-4 mr-2" />
-              Booking Requests
+              Bookings
             </TabsTrigger>
             <TabsTrigger value="contracts" data-testid="tab-contracts">
               <FileText className="w-4 h-4 mr-2" />
@@ -655,6 +735,10 @@ export default function VendorDashboard() {
             <TabsTrigger value="availability" data-testid="tab-availability">
               <Clock className="w-4 h-4 mr-2" />
               Availability
+            </TabsTrigger>
+            <TabsTrigger value="analytics" data-testid="tab-analytics">
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Analytics
             </TabsTrigger>
           </TabsList>
 
@@ -1007,6 +1091,266 @@ export default function VendorDashboard() {
               </div>
               )}
             </Card>
+          </TabsContent>
+
+          {/* Analytics Tab */}
+          <TabsContent value="analytics" className="space-y-6">
+            {analyticsLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <Card key={i} className="p-6">
+                    <Skeleton className="h-20 w-full" />
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <>
+                {/* Analytics Summary Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <Card className="p-6">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 rounded-xl bg-blue-500/10">
+                        <Users className="w-6 h-6 text-blue-500" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Total Inquiries</p>
+                        <p className="font-mono text-2xl font-bold" data-testid="stat-total-inquiries">
+                          {analyticsSummary.totalBookings}
+                        </p>
+                      </div>
+                    </div>
+                  </Card>
+
+                  <Card className="p-6">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 rounded-xl bg-green-500/10">
+                        <CheckCircle className="w-6 h-6 text-green-500" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Confirmed Bookings</p>
+                        <p className="font-mono text-2xl font-bold" data-testid="stat-confirmed-bookings">
+                          {analyticsSummary.confirmedBookings}
+                        </p>
+                      </div>
+                    </div>
+                  </Card>
+
+                  <Card className="p-6">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 rounded-xl bg-primary/10">
+                        <TrendingUp className="w-6 h-6 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Conversion Rate</p>
+                        <p className="font-mono text-2xl font-bold" data-testid="stat-conversion-rate">
+                          {formatPercent(analyticsSummary.conversionRate)}
+                        </p>
+                      </div>
+                    </div>
+                  </Card>
+
+                  <Card className="p-6">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 rounded-xl bg-amber-500/10">
+                        <DollarSign className="w-6 h-6 text-amber-500" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Total Revenue</p>
+                        <p className="font-mono text-2xl font-bold" data-testid="stat-total-revenue">
+                          {formatCurrency(analyticsSummary.totalRevenue)}
+                        </p>
+                      </div>
+                    </div>
+                  </Card>
+                </div>
+
+                {/* Additional Stats Row */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Card className="p-6">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 rounded-xl bg-purple-500/10">
+                        <DollarSign className="w-6 h-6 text-purple-500" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Avg. Booking Value</p>
+                        <p className="font-mono text-2xl font-bold" data-testid="stat-avg-booking">
+                          {formatCurrency(analyticsSummary.averageBookingValue)}
+                        </p>
+                      </div>
+                    </div>
+                  </Card>
+
+                  <Card className="p-6">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 rounded-xl bg-yellow-500/10">
+                        <Star className="w-6 h-6 text-yellow-500" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Average Rating</p>
+                        <p className="font-mono text-2xl font-bold" data-testid="stat-avg-rating">
+                          {analyticsSummary.averageRating} / 5
+                        </p>
+                      </div>
+                    </div>
+                  </Card>
+
+                  <Card className="p-6">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 rounded-xl bg-pink-500/10">
+                        <MessageSquare className="w-6 h-6 text-pink-500" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Total Reviews</p>
+                        <p className="font-mono text-2xl font-bold" data-testid="stat-total-reviews">
+                          {analyticsSummary.totalReviews}
+                        </p>
+                      </div>
+                    </div>
+                  </Card>
+                </div>
+
+                {/* Charts Row */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Booking Trends Chart */}
+                  <Card className="p-6">
+                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                      <Calendar className="w-5 h-5" />
+                      Booking Trends
+                    </h3>
+                    {bookingTrends.length > 0 ? (
+                      <div className="h-64">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={bookingTrends}>
+                            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                            <XAxis 
+                              dataKey="date" 
+                              tickFormatter={(value) => format(new Date(value), 'MMM d')}
+                              className="text-xs"
+                            />
+                            <YAxis className="text-xs" />
+                            <Tooltip 
+                              labelFormatter={(value) => format(new Date(value), 'MMMM d, yyyy')}
+                              contentStyle={{ 
+                                backgroundColor: 'hsl(var(--card))', 
+                                border: '1px solid hsl(var(--border))',
+                                borderRadius: '8px'
+                              }}
+                            />
+                            <Bar dataKey="bookings" name="Total Inquiries" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="confirmed" name="Confirmed" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    ) : (
+                      <div className="h-64 flex items-center justify-center">
+                        <div className="text-center">
+                          <BarChart3 className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                          <p className="text-muted-foreground">No booking data yet</p>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Charts will appear as you receive bookings
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </Card>
+
+                  {/* Revenue Trends Chart */}
+                  <Card className="p-6">
+                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                      <TrendingUp className="w-5 h-5" />
+                      Revenue Trends
+                    </h3>
+                    {revenueTrends.length > 0 ? (
+                      <div className="h-64">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={revenueTrends.map(r => ({ ...r, revenue: parseFloat(r.revenue) }))}>
+                            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                            <XAxis 
+                              dataKey="date" 
+                              tickFormatter={(value) => format(new Date(value), 'MMM d')}
+                              className="text-xs"
+                            />
+                            <YAxis 
+                              tickFormatter={(value) => `$${value.toLocaleString()}`}
+                              className="text-xs" 
+                            />
+                            <Tooltip 
+                              labelFormatter={(value) => format(new Date(value), 'MMMM d, yyyy')}
+                              formatter={(value: number) => [`$${value.toLocaleString()}`, 'Revenue']}
+                              contentStyle={{ 
+                                backgroundColor: 'hsl(var(--card))', 
+                                border: '1px solid hsl(var(--border))',
+                                borderRadius: '8px'
+                              }}
+                            />
+                            <Area 
+                              type="monotone" 
+                              dataKey="revenue" 
+                              stroke="hsl(var(--primary))" 
+                              fill="hsl(var(--primary) / 0.2)" 
+                              strokeWidth={2}
+                            />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </div>
+                    ) : (
+                      <div className="h-64 flex items-center justify-center">
+                        <div className="text-center">
+                          <TrendingUp className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                          <p className="text-muted-foreground">No revenue data yet</p>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Revenue tracking begins when bookings are confirmed
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </Card>
+                </div>
+
+                {/* Performance Tips */}
+                <Card className="p-6 bg-primary/5 border-primary/20">
+                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-primary" />
+                    Tips to Improve Your Performance
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <span className="text-sm font-bold text-primary">1</span>
+                      </div>
+                      <div>
+                        <p className="font-medium">Complete Your Profile</p>
+                        <p className="text-sm text-muted-foreground">
+                          Add photos, detailed descriptions, and cultural specialties
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <span className="text-sm font-bold text-primary">2</span>
+                      </div>
+                      <div>
+                        <p className="font-medium">Respond Quickly</p>
+                        <p className="text-sm text-muted-foreground">
+                          Couples prefer vendors who respond within 24 hours
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <span className="text-sm font-bold text-primary">3</span>
+                      </div>
+                      <div>
+                        <p className="font-medium">Ask for Reviews</p>
+                        <p className="text-sm text-muted-foreground">
+                          After each event, encourage couples to leave reviews
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              </>
+            )}
           </TabsContent>
         </Tabs>
       </main>
