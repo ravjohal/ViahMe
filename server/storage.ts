@@ -29,6 +29,10 @@ import {
   type InsertContractTemplate,
   type Message,
   type InsertMessage,
+  type QuickReplyTemplate,
+  type InsertQuickReplyTemplate,
+  type FollowUpReminder,
+  type InsertFollowUpReminder,
   type Review,
   type InsertReview,
   type BudgetBenchmark,
@@ -248,6 +252,22 @@ export interface IStorage {
   createMessage(message: InsertMessage): Promise<Message>;
   markMessageAsRead(id: string): Promise<Message | undefined>;
   getUnreadCount(conversationId: string, recipientType: 'couple' | 'vendor'): Promise<number>;
+
+  // Quick Reply Templates
+  getQuickReplyTemplate(id: string): Promise<QuickReplyTemplate | undefined>;
+  getQuickReplyTemplatesByVendor(vendorId: string): Promise<QuickReplyTemplate[]>;
+  createQuickReplyTemplate(template: InsertQuickReplyTemplate): Promise<QuickReplyTemplate>;
+  updateQuickReplyTemplate(id: string, template: Partial<InsertQuickReplyTemplate>): Promise<QuickReplyTemplate | undefined>;
+  deleteQuickReplyTemplate(id: string): Promise<boolean>;
+  incrementTemplateUsage(id: string): Promise<QuickReplyTemplate | undefined>;
+
+  // Follow-Up Reminders
+  getFollowUpReminder(id: string): Promise<FollowUpReminder | undefined>;
+  getFollowUpRemindersByVendor(vendorId: string): Promise<FollowUpReminder[]>;
+  getPendingRemindersForVendor(vendorId: string): Promise<FollowUpReminder[]>;
+  createFollowUpReminder(reminder: InsertFollowUpReminder): Promise<FollowUpReminder>;
+  updateFollowUpReminder(id: string, reminder: Partial<InsertFollowUpReminder>): Promise<FollowUpReminder | undefined>;
+  deleteFollowUpReminder(id: string): Promise<boolean>;
 
   // Reviews
   getReview(id: string): Promise<Review | undefined>;
@@ -617,6 +637,8 @@ export class MemStorage implements IStorage {
   private contracts: Map<string, Contract>;
   private contractTemplates: Map<string, ContractTemplate>;
   private messages: Map<string, Message>;
+  private quickReplyTemplates: Map<string, QuickReplyTemplate>;
+  private followUpReminders: Map<string, FollowUpReminder>;
   private reviews: Map<string, Review>;
   private budgetBenchmarks: Map<string, BudgetBenchmark>;
   private playlists: Map<string, Playlist>;
@@ -646,6 +668,8 @@ export class MemStorage implements IStorage {
     this.contracts = new Map();
     this.contractTemplates = new Map();
     this.messages = new Map();
+    this.quickReplyTemplates = new Map();
+    this.followUpReminders = new Map();
     this.reviews = new Map();
     this.budgetBenchmarks = new Map();
     this.playlists = new Map();
@@ -1464,6 +1488,108 @@ export class MemStorage implements IStorage {
         !m.isRead && 
         m.senderType !== recipientType
       ).length;
+  }
+
+  // Quick Reply Templates
+  async getQuickReplyTemplate(id: string): Promise<QuickReplyTemplate | undefined> {
+    return this.quickReplyTemplates.get(id);
+  }
+
+  async getQuickReplyTemplatesByVendor(vendorId: string): Promise<QuickReplyTemplate[]> {
+    return Array.from(this.quickReplyTemplates.values())
+      .filter(t => t.vendorId === vendorId)
+      .sort((a, b) => b.usageCount! - a.usageCount!);
+  }
+
+  async createQuickReplyTemplate(insertTemplate: InsertQuickReplyTemplate): Promise<QuickReplyTemplate> {
+    const id = randomUUID();
+    const template: QuickReplyTemplate = {
+      ...insertTemplate,
+      id,
+      category: insertTemplate.category ?? null,
+      isDefault: insertTemplate.isDefault ?? false,
+      usageCount: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.quickReplyTemplates.set(id, template);
+    return template;
+  }
+
+  async updateQuickReplyTemplate(id: string, updates: Partial<InsertQuickReplyTemplate>): Promise<QuickReplyTemplate | undefined> {
+    const existing = this.quickReplyTemplates.get(id);
+    if (!existing) return undefined;
+    
+    const updated: QuickReplyTemplate = {
+      ...existing,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.quickReplyTemplates.set(id, updated);
+    return updated;
+  }
+
+  async deleteQuickReplyTemplate(id: string): Promise<boolean> {
+    return this.quickReplyTemplates.delete(id);
+  }
+
+  async incrementTemplateUsage(id: string): Promise<QuickReplyTemplate | undefined> {
+    const template = this.quickReplyTemplates.get(id);
+    if (!template) return undefined;
+    
+    const updated: QuickReplyTemplate = {
+      ...template,
+      usageCount: (template.usageCount || 0) + 1,
+      updatedAt: new Date(),
+    };
+    this.quickReplyTemplates.set(id, updated);
+    return updated;
+  }
+
+  // Follow-Up Reminders
+  async getFollowUpReminder(id: string): Promise<FollowUpReminder | undefined> {
+    return this.followUpReminders.get(id);
+  }
+
+  async getFollowUpRemindersByVendor(vendorId: string): Promise<FollowUpReminder[]> {
+    return Array.from(this.followUpReminders.values())
+      .filter(r => r.vendorId === vendorId)
+      .sort((a, b) => a.reminderDate.getTime() - b.reminderDate.getTime());
+  }
+
+  async getPendingRemindersForVendor(vendorId: string): Promise<FollowUpReminder[]> {
+    return Array.from(this.followUpReminders.values())
+      .filter(r => r.vendorId === vendorId && r.status === 'pending')
+      .sort((a, b) => a.reminderDate.getTime() - b.reminderDate.getTime());
+  }
+
+  async createFollowUpReminder(insertReminder: InsertFollowUpReminder): Promise<FollowUpReminder> {
+    const id = randomUUID();
+    const reminder: FollowUpReminder = {
+      ...insertReminder,
+      id,
+      note: insertReminder.note ?? null,
+      status: insertReminder.status ?? 'pending',
+      createdAt: new Date(),
+    };
+    this.followUpReminders.set(id, reminder);
+    return reminder;
+  }
+
+  async updateFollowUpReminder(id: string, updates: Partial<InsertFollowUpReminder>): Promise<FollowUpReminder | undefined> {
+    const existing = this.followUpReminders.get(id);
+    if (!existing) return undefined;
+    
+    const updated: FollowUpReminder = {
+      ...existing,
+      ...updates,
+    };
+    this.followUpReminders.set(id, updated);
+    return updated;
+  }
+
+  async deleteFollowUpReminder(id: string): Promise<boolean> {
+    return this.followUpReminders.delete(id);
   }
 
   // Reviews
@@ -3487,6 +3613,98 @@ export class DBStorage implements IStorage {
       .where(eq(schema.messages.conversationId, conversationId));
     
     return result.filter(m => !m.isRead && m.senderType !== recipientType).length;
+  }
+
+  // Quick Reply Templates
+  async getQuickReplyTemplate(id: string): Promise<QuickReplyTemplate | undefined> {
+    const result = await this.db.select().from(schema.quickReplyTemplates).where(eq(schema.quickReplyTemplates.id, id));
+    return result[0];
+  }
+
+  async getQuickReplyTemplatesByVendor(vendorId: string): Promise<QuickReplyTemplate[]> {
+    return await this.db
+      .select()
+      .from(schema.quickReplyTemplates)
+      .where(eq(schema.quickReplyTemplates.vendorId, vendorId))
+      .orderBy(schema.quickReplyTemplates.usageCount);
+  }
+
+  async createQuickReplyTemplate(insertTemplate: InsertQuickReplyTemplate): Promise<QuickReplyTemplate> {
+    const result = await this.db.insert(schema.quickReplyTemplates).values(insertTemplate).returning();
+    return result[0];
+  }
+
+  async updateQuickReplyTemplate(id: string, update: Partial<InsertQuickReplyTemplate>): Promise<QuickReplyTemplate | undefined> {
+    const result = await this.db
+      .update(schema.quickReplyTemplates)
+      .set({ ...update, updatedAt: new Date() })
+      .where(eq(schema.quickReplyTemplates.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteQuickReplyTemplate(id: string): Promise<boolean> {
+    await this.db.delete(schema.quickReplyTemplates).where(eq(schema.quickReplyTemplates.id, id));
+    return true;
+  }
+
+  async incrementTemplateUsage(id: string): Promise<QuickReplyTemplate | undefined> {
+    const template = await this.getQuickReplyTemplate(id);
+    if (!template) return undefined;
+    
+    const result = await this.db
+      .update(schema.quickReplyTemplates)
+      .set({ 
+        usageCount: (template.usageCount || 0) + 1,
+        updatedAt: new Date()
+      })
+      .where(eq(schema.quickReplyTemplates.id, id))
+      .returning();
+    return result[0];
+  }
+
+  // Follow-Up Reminders
+  async getFollowUpReminder(id: string): Promise<FollowUpReminder | undefined> {
+    const result = await this.db.select().from(schema.followUpReminders).where(eq(schema.followUpReminders.id, id));
+    return result[0];
+  }
+
+  async getFollowUpRemindersByVendor(vendorId: string): Promise<FollowUpReminder[]> {
+    return await this.db
+      .select()
+      .from(schema.followUpReminders)
+      .where(eq(schema.followUpReminders.vendorId, vendorId))
+      .orderBy(schema.followUpReminders.reminderDate);
+  }
+
+  async getPendingRemindersForVendor(vendorId: string): Promise<FollowUpReminder[]> {
+    return await this.db
+      .select()
+      .from(schema.followUpReminders)
+      .where(and(
+        eq(schema.followUpReminders.vendorId, vendorId),
+        eq(schema.followUpReminders.status, 'pending')
+      ))
+      .orderBy(schema.followUpReminders.reminderDate);
+  }
+
+  async createFollowUpReminder(insertReminder: InsertFollowUpReminder): Promise<FollowUpReminder> {
+    const result = await this.db.insert(schema.followUpReminders).values(insertReminder).returning();
+    return result[0];
+  }
+
+  async updateFollowUpReminder(id: string, update: Partial<InsertFollowUpReminder>): Promise<FollowUpReminder | undefined> {
+    const result = await this.db
+      .update(schema.followUpReminders)
+      .set(update)
+      .where(eq(schema.followUpReminders.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteFollowUpReminder(id: string): Promise<boolean> {
+    await this.db.delete(schema.followUpReminders).where(eq(schema.followUpReminders.id, id));
+    return true;
   }
 
   // Reviews
