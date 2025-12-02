@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Bell, Calendar, Home, Users, CheckSquare, Clock, DollarSign, FileText, MessageSquare, Music, Image, CalendarClock, UserCircle, Menu, LogOut, Settings, ShoppingBag, Package, BookOpen, Radio, UsersRound, Globe } from "lucide-react";
+import { Bell, Calendar, Home, Users, CheckSquare, Clock, DollarSign, FileText, MessageSquare, Music, Image, CalendarClock, UserCircle, Menu, LogOut, Settings, ShoppingBag, Package, BookOpen, Radio, UsersRound, Globe, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -27,7 +27,7 @@ interface NavItem {
   permission?: PermissionCategory;
 }
 
-const NAV_ITEMS: NavItem[] = [
+const COUPLE_NAV_ITEMS: NavItem[] = [
   { path: "/dashboard", label: "Dashboard", icon: Home },
   { path: "/budget", label: "Budget", icon: DollarSign, permission: "budget" },
   { path: "/timeline", label: "Timeline", icon: Clock, permission: "timeline" },
@@ -45,6 +45,13 @@ const NAV_ITEMS: NavItem[] = [
   { path: "/playlists", label: "Playlists", icon: Music, permission: "playlists" },
   { path: "/photo-gallery", label: "Photos", icon: Image, permission: "photos" },
   { path: "/documents", label: "Documents", icon: FileText, permission: "documents" },
+];
+
+const VENDOR_NAV_ITEMS: NavItem[] = [
+  { path: "/vendor-dashboard", label: "Dashboard", icon: Home },
+  { path: "/vendor-bookings", label: "Bookings", icon: CalendarDays },
+  { path: "/vendor-contracts", label: "Contracts", icon: FileText },
+  { path: "/messages", label: "Messages", icon: MessageSquare },
 ];
 
 export function AppHeader() {
@@ -87,7 +94,8 @@ export function AppHeader() {
     return canView(item.permission);
   };
 
-  const visibleNavItems = NAV_ITEMS.filter(hasAccess);
+  const navItems = user?.role === "vendor" ? VENDOR_NAV_ITEMS : COUPLE_NAV_ITEMS;
+  const visibleNavItems = navItems.filter(hasAccess);
 
   return (
     <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
