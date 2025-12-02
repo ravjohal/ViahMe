@@ -1019,12 +1019,12 @@ export default function VendorDashboard() {
                     <h4 className="font-medium mb-2">Current Availability Status</h4>
                     <p className="text-sm text-muted-foreground mb-3">
                       {currentVendor?.availability 
-                        ? "You have availability information set. You can update it in your profile settings."
+                        ? "You have availability information set. Use the calendar to manage your available dates."
                         : "No availability information set yet. Add your availability to help couples book you."}
                     </p>
                     <Button 
                       variant="outline" 
-                      onClick={openWizard}
+                      onClick={() => setLocation("/vendor-calendar")}
                       data-testid="button-update-availability"
                     >
                       <Calendar className="w-4 h-4 mr-2" />
