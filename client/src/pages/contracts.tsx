@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Plus, Edit, Trash2, FileSignature, CreditCard, CheckCircle, ChevronRight, ChevronLeft, Eye, Sparkles, ScrollText, CheckCircle2, Calendar, MapPin, Users, Building2, ArrowLeft, ArrowRight, FileEdit, DollarSign, Clock } from "lucide-react";
+import { FileText, Plus, Edit, Trash2, FileSignature, CreditCard, CheckCircle, ChevronRight, ChevronLeft, Eye, Sparkles, ScrollText, CheckCircle2, Calendar, MapPin, Users, Building2, ArrowLeft, ArrowRight, FileEdit, DollarSign, Clock, Wand2, MessageSquare, Lightbulb, AlertCircle, Loader2, Bot, Copy, RefreshCw } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { SignaturePad, type SignaturePadRef } from "@/components/contracts/signature-pad";
 import { useLocation as useWouterLocation } from "wouter";
@@ -72,6 +72,15 @@ export default function ContractsPage() {
   const [showSignatureDialog, setShowSignatureDialog] = useState(false);
   const [signingContract, setSigningContract] = useState<Contract | null>(null);
   const signaturePadRef = useRef<SignaturePadRef>(null);
+  
+  // AI Assistant state
+  const [showAiDraftDialog, setShowAiDraftDialog] = useState(false);
+  const [showAiReviewDialog, setShowAiReviewDialog] = useState(false);
+  const [aiDraftResult, setAiDraftResult] = useState<string>("");
+  const [aiReviewResult, setAiReviewResult] = useState<string>("");
+  const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
+  const [servicesDescription, setServicesDescription] = useState("");
+  const [specialRequirements, setSpecialRequirements] = useState("");
 
   // Fetch wedding data
   const { data: weddings } = useQuery({
@@ -236,6 +245,165 @@ export default function ContractsPage() {
       });
     },
   });
+
+  // AI Draft Contract Mutation
+  const aiDraftMutation = useMutation({
+    mutationFn: async (data: {
+      vendorName: string;
+      vendorCategory: string;
+      eventName: string;
+      eventDate?: string;
+      eventLocation?: string;
+      totalAmount: number;
+      servicesDescription: string;
+      specialRequirements?: string;
+      tradition?: string;
+    }) => {
+      const response = await apiRequest("POST", "/api/ai/contract/draft", data);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setAiDraftResult(data.contract || "");
+      toast({
+        title: "Contract drafted",
+        description: "AI has generated a contract draft for you to review",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to draft contract",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // AI Review Contract Mutation
+  const aiReviewMutation = useMutation({
+    mutationFn: async (data: {
+      contractText: string;
+      vendorCategory?: string;
+      tradition?: string;
+    }) => {
+      const response = await apiRequest("POST", "/api/ai/contract/review", data);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setAiReviewResult(data.review || "");
+      setShowAiReviewDialog(true);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to review contract",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // AI Suggestions Mutation
+  const aiSuggestionsMutation = useMutation({
+    mutationFn: async (data: {
+      currentTerms: string;
+      vendorCategory: string;
+    }) => {
+      const response = await apiRequest("POST", "/api/ai/contract/suggestions", data);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setAiSuggestions(data.suggestions || []);
+    },
+    onError: () => {
+      setAiSuggestions([]);
+    },
+  });
+
+  // Handle AI draft request
+  const handleAiDraft = () => {
+    if (!selectedVendor || !selectedEvent) {
+      toast({
+        title: "Missing information",
+        description: "Please select an event and vendor first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const amount = parseFloat(form.getValues("totalAmount") || "0");
+    if (amount <= 0) {
+      toast({
+        title: "Amount required",
+        description: "Please enter a contract amount first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!servicesDescription.trim()) {
+      toast({
+        title: "Services required",
+        description: "Please describe the services to include in the contract",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    aiDraftMutation.mutate({
+      vendorName: selectedVendor.name,
+      vendorCategory: selectedVendor.category || "General",
+      eventName: selectedEvent.name,
+      eventDate: selectedEvent.date ? new Date(selectedEvent.date).toLocaleDateString() : undefined,
+      eventLocation: selectedEvent.location || undefined,
+      totalAmount: amount,
+      servicesDescription,
+      specialRequirements: specialRequirements.trim() || undefined,
+      tradition: wedding?.tradition || undefined,
+    });
+  };
+
+  // Handle applying AI draft to form
+  const applyAiDraft = () => {
+    form.setValue("contractTerms", aiDraftResult);
+    setShowAiDraftDialog(false);
+    setAiDraftResult("");
+    setServicesDescription("");
+    setSpecialRequirements("");
+    toast({
+      title: "Draft applied",
+      description: "The AI-generated contract has been added. Review and customize as needed.",
+    });
+  };
+
+  // Handle AI review request
+  const handleAiReview = () => {
+    const terms = form.getValues("contractTerms");
+    if (!terms || terms.trim().length === 0) {
+      toast({
+        title: "No contract to review",
+        description: "Please add contract terms first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    aiReviewMutation.mutate({
+      contractText: terms,
+      vendorCategory: selectedVendor?.category || undefined,
+      tradition: wedding?.tradition || undefined,
+    });
+  };
+
+  // Get improvement suggestions
+  const getSuggestions = () => {
+    const terms = form.getValues("contractTerms");
+    if (!terms || terms.trim().length < 50) {
+      return;
+    }
+    aiSuggestionsMutation.mutate({
+      currentTerms: terms,
+      vendorCategory: selectedVendor?.category || "General",
+    });
+  };
 
   // Reset wizard to initial state
   const resetWizard = () => {
@@ -998,18 +1166,49 @@ export default function ContractsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-indigo-500" />
-                Contract Terms
-              </CardTitle>
-              <CardDescription>
-                {selectedTemplate 
-                  ? "Edit the template below. Replace placeholders like [VENDOR_NAME] with actual values."
-                  : "Write your contract terms, conditions, and agreements."
-                }
-              </CardDescription>
+              <div className="flex items-start justify-between gap-4 flex-wrap">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-indigo-500" />
+                    Contract Terms
+                  </CardTitle>
+                  <CardDescription>
+                    {selectedTemplate 
+                      ? "Edit the template below. Replace placeholders like [VENDOR_NAME] with actual values."
+                      : "Write your contract terms, conditions, and agreements."
+                    }
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Button 
+                    type="button"
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setShowAiDraftDialog(true)}
+                    data-testid="button-ai-draft"
+                  >
+                    <Wand2 className="w-4 h-4 mr-1" />
+                    AI Draft
+                  </Button>
+                  <Button 
+                    type="button"
+                    variant="outline" 
+                    size="sm"
+                    onClick={handleAiReview}
+                    disabled={aiReviewMutation.isPending || !form.getValues("contractTerms")}
+                    data-testid="button-ai-review"
+                  >
+                    {aiReviewMutation.isPending ? (
+                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                    ) : (
+                      <MessageSquare className="w-4 h-4 mr-1" />
+                    )}
+                    AI Review
+                  </Button>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <FormField
                 control={form.control}
                 name="contractTerms"
@@ -1022,16 +1221,34 @@ export default function ContractsPage() {
                         placeholder="Enter your contract terms and conditions..."
                         className="min-h-[300px] font-mono text-sm"
                         data-testid="textarea-contract-terms"
+                        onBlur={() => getSuggestions()}
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+              
+              {aiSuggestions.length > 0 && (
+                <div className="rounded-lg border bg-muted/50 p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Lightbulb className="w-4 h-4 text-amber-500" />
+                    <span className="font-medium text-sm">AI Suggestions</span>
+                  </div>
+                  <ul className="space-y-2">
+                    {aiSuggestions.map((suggestion, idx) => (
+                      <li key={idx} className="flex items-start gap-2 text-sm text-muted-foreground">
+                        <span className="text-primary mt-0.5">•</span>
+                        <span>{suggestion}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </CardContent>
           </Card>
 
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
             <Button 
               onClick={proceedToReview}
               className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
@@ -1354,6 +1571,203 @@ export default function ContractsPage() {
               </DialogFooter>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* AI Draft Contract Dialog */}
+      <Dialog open={showAiDraftDialog} onOpenChange={setShowAiDraftDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Bot className="w-5 h-5 text-indigo-500" />
+              AI Contract Draft Assistant
+            </DialogTitle>
+            <DialogDescription>
+              Describe what services the vendor will provide and our AI will draft a professional contract for you.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4 p-4 rounded-lg bg-muted/50">
+              <div>
+                <p className="text-sm text-muted-foreground">Vendor</p>
+                <p className="font-medium">{selectedVendor?.name}</p>
+                <p className="text-xs text-muted-foreground">{selectedVendor?.category}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Event</p>
+                <p className="font-medium">{selectedEvent?.name}</p>
+                {selectedEvent?.date && (
+                  <p className="text-xs text-muted-foreground">
+                    {format(new Date(selectedEvent.date), "MMM d, yyyy")}
+                  </p>
+                )}
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Contract Amount</p>
+                <p className="font-medium text-indigo-600">
+                  ${parseFloat(form.getValues("totalAmount") || "0").toLocaleString()}
+                </p>
+              </div>
+              {wedding?.tradition && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Tradition</p>
+                  <p className="font-medium capitalize">{wedding.tradition}</p>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Services Description <span className="text-red-500">*</span>
+              </label>
+              <Textarea
+                value={servicesDescription}
+                onChange={(e) => setServicesDescription(e.target.value)}
+                placeholder="Describe the services the vendor will provide...&#10;&#10;Example: Photography coverage for 8 hours including ceremony and reception, one lead photographer and one assistant, 500+ edited digital images, online gallery, 30-minute engagement session..."
+                className="min-h-[120px]"
+                data-testid="textarea-services-description"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Special Requirements (Optional)
+              </label>
+              <Textarea
+                value={specialRequirements}
+                onChange={(e) => setSpecialRequirements(e.target.value)}
+                placeholder="Any special requirements or cultural considerations...&#10;&#10;Example: Must be comfortable photographing Sikh ceremony at Gurdwara, need to cover multiple events over 3 days..."
+                className="min-h-[80px]"
+                data-testid="textarea-special-requirements"
+              />
+            </div>
+
+            {aiDraftResult && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="block text-sm font-medium">Generated Contract Draft</label>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        navigator.clipboard.writeText(aiDraftResult);
+                        toast({ title: "Copied to clipboard" });
+                      }}
+                      data-testid="button-copy-draft"
+                    >
+                      <Copy className="w-4 h-4 mr-1" />
+                      Copy
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleAiDraft}
+                      disabled={aiDraftMutation.isPending}
+                      data-testid="button-regenerate-draft"
+                    >
+                      <RefreshCw className="w-4 h-4 mr-1" />
+                      Regenerate
+                    </Button>
+                  </div>
+                </div>
+                <ScrollArea className="h-[300px] rounded-lg border p-4 bg-background">
+                  <pre className="whitespace-pre-wrap text-sm font-mono">{aiDraftResult}</pre>
+                </ScrollArea>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setShowAiDraftDialog(false);
+                setAiDraftResult("");
+              }}
+              data-testid="button-cancel-ai-draft"
+            >
+              Cancel
+            </Button>
+            {aiDraftResult ? (
+              <Button
+                type="button"
+                onClick={applyAiDraft}
+                className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
+                data-testid="button-apply-draft"
+              >
+                <CheckCircle className="w-4 h-4 mr-2" />
+                Use This Draft
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                onClick={handleAiDraft}
+                disabled={aiDraftMutation.isPending || !servicesDescription.trim()}
+                className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
+                data-testid="button-generate-draft"
+              >
+                {aiDraftMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Drafting...
+                  </>
+                ) : (
+                  <>
+                    <Wand2 className="w-4 h-4 mr-2" />
+                    Generate Draft
+                  </>
+                )}
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* AI Review Contract Dialog */}
+      <Dialog open={showAiReviewDialog} onOpenChange={setShowAiReviewDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageSquare className="w-5 h-5 text-indigo-500" />
+              AI Contract Review
+            </DialogTitle>
+            <DialogDescription>
+              Our AI has analyzed your contract and identified potential issues and improvements.
+            </DialogDescription>
+          </DialogHeader>
+
+          <ScrollArea className="h-[400px] rounded-lg border p-4">
+            <div className="prose prose-sm dark:prose-invert max-w-none">
+              <pre className="whitespace-pre-wrap font-sans">{aiReviewResult}</pre>
+            </div>
+          </ScrollArea>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowAiReviewDialog(false)}
+              data-testid="button-close-review"
+            >
+              Close
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                navigator.clipboard.writeText(aiReviewResult);
+                toast({ title: "Review copied to clipboard" });
+              }}
+              data-testid="button-copy-review"
+            >
+              <Copy className="w-4 h-4 mr-2" />
+              Copy Review
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>

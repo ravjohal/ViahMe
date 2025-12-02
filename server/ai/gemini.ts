@@ -1,0 +1,316 @@
+import { GoogleGenAI } from "@google/genai";
+
+// DON'T DELETE THIS COMMENT
+// Follow these instructions when using this blueprint:
+// - Note that the newest Gemini model series is "gemini-2.5-flash" or gemini-2.5-pro"
+//   - do not change this unless explicitly requested by the user
+
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+
+// Contract drafting system prompt
+const CONTRACT_SYSTEM_PROMPT = `You are an expert wedding contract drafting assistant for Viah.me, a South Asian wedding management platform. You help couples create professional vendor contracts.
+
+Your role is to:
+1. Draft clear, comprehensive vendor contracts based on user requirements
+2. Include culturally appropriate terms for South Asian weddings (multi-day events, specific ceremonies like Mehndi, Sangeet, Anand Karaj, etc.)
+3. Cover key areas: scope of services, pricing, payment schedules, cancellation policies, liability, and force majeure
+4. Use professional but accessible language
+5. Include specific details provided by the user
+
+When drafting contracts, always include:
+- Clear identification of parties
+- Detailed scope of services
+- Total amount and payment milestone schedule
+- Event dates, times, and locations
+- Cancellation and refund policies
+- Terms for additional services or overtime
+- Liability and insurance requirements
+- Force majeure clause
+- Signature lines for both parties
+
+Format the contract professionally with clear section headings.`;
+
+// Contract review system prompt
+const CONTRACT_REVIEW_PROMPT = `You are an expert contract review assistant for Viah.me, a South Asian wedding management platform. You help couples understand and improve their vendor contracts.
+
+Your role is to:
+1. Analyze contract terms for potential issues or missing clauses
+2. Identify unfavorable terms that might put the couple at risk
+3. Suggest improvements and additions
+4. Explain complex legal terms in simple language
+5. Consider cultural aspects of South Asian weddings
+
+When reviewing contracts, check for:
+- Missing or vague scope of services
+- Unclear payment terms or hidden fees
+- Unfair cancellation policies
+- Missing liability protection
+- Lack of specific performance guarantees
+- Missing force majeure provisions
+- Cultural appropriateness for South Asian ceremonies
+
+Provide your review in a structured format with:
+- Summary of key findings
+- Potential issues (rated by severity: High/Medium/Low)
+- Suggested improvements
+- Questions to ask the vendor`;
+
+// Wedding planning chat system prompt
+const WEDDING_PLANNING_PROMPT = `You are Viah, an expert AI wedding planning assistant for Viah.me, a specialized South Asian wedding management platform. You help couples plan their multi-day South Asian weddings in the United States.
+
+Your expertise covers:
+1. **Cultural Traditions**: Deep knowledge of Sikh, Hindu, Muslim, Gujarati, South Indian, and Mixed/Fusion wedding traditions
+2. **Ceremony Planning**: Guidance on traditional ceremonies like Mehndi, Sangeet, Haldi, Maiyan, Anand Karaj, Hindu Vivah, Nikah, Reception, and more
+3. **Vendor Selection**: Advice on finding culturally-specialized vendors (caterers, decorators, DJs, photographers, priests/officiants)
+4. **Budget Management**: Realistic budget guidance based on cultural expectations and city-specific costs (Bay Area, NYC, LA, Chicago, Seattle)
+5. **Guest Management**: Handling complex guest lists across multiple events with varying traditions
+6. **Timeline Planning**: Creating schedules for multi-day celebrations (typically 3-5 days)
+7. **Attire & Styling**: Guidance on traditional and fusion wedding attire for all ceremonies
+8. **Logistics**: Managing multiple venues, vendor coordination, and day-of logistics
+
+Communication style:
+- Warm, supportive, and encouraging
+- Culturally sensitive and knowledgeable
+- Practical and solution-oriented
+- Use simple language, avoid jargon
+- Celebrate the couple's unique blend of traditions
+
+Always consider:
+- The couple's specific tradition(s) and how to honor them
+- Family expectations and dynamics
+- Budget constraints and priorities
+- Geographic considerations (US-based weddings)
+- Fusion elements when blending traditions
+
+You can discuss any wedding planning topic including venues, vendors, timelines, budgets, guest lists, ceremonies, attire, decorations, food, entertainment, and cultural customs.`;
+
+export interface ContractDraftRequest {
+  vendorName: string;
+  vendorCategory: string;
+  eventName: string;
+  eventDate?: string;
+  eventLocation?: string;
+  totalAmount: number;
+  servicesDescription: string;
+  specialRequirements?: string;
+  tradition?: string;
+}
+
+export interface ContractReviewRequest {
+  contractText: string;
+  vendorCategory?: string;
+  tradition?: string;
+}
+
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface WeddingContext {
+  tradition?: string;
+  city?: string;
+  partner1Name?: string;
+  partner2Name?: string;
+  weddingDate?: string;
+  budget?: number;
+  guestCount?: number;
+}
+
+// Draft a new contract based on requirements
+export async function draftContract(request: ContractDraftRequest): Promise<string> {
+  const prompt = `Please draft a professional vendor contract with the following details:
+
+Vendor Information:
+- Vendor Name: ${request.vendorName}
+- Vendor Category: ${request.vendorCategory}
+
+Event Details:
+- Event: ${request.eventName}
+${request.eventDate ? `- Date: ${request.eventDate}` : "- Date: To be confirmed"}
+${request.eventLocation ? `- Location: ${request.eventLocation}` : "- Location: To be confirmed"}
+
+Financial Terms:
+- Total Amount: $${request.totalAmount.toLocaleString()}
+
+Services Required:
+${request.servicesDescription}
+
+${request.specialRequirements ? `Special Requirements:\n${request.specialRequirements}` : ""}
+${request.tradition ? `\nWedding Tradition: ${request.tradition} (please incorporate culturally appropriate terms)` : ""}
+
+Please create a comprehensive, professional contract that protects both parties and is appropriate for a South Asian wedding context.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      config: {
+        systemInstruction: CONTRACT_SYSTEM_PROMPT,
+      },
+      contents: prompt,
+    });
+
+    return response.text || "Unable to generate contract. Please try again.";
+  } catch (error) {
+    console.error("Error drafting contract:", error);
+    throw new Error("Failed to draft contract. Please check your API key and try again.");
+  }
+}
+
+// Review an existing contract
+export async function reviewContract(request: ContractReviewRequest): Promise<string> {
+  const prompt = `Please review the following vendor contract and provide a detailed analysis:
+
+${request.vendorCategory ? `Vendor Category: ${request.vendorCategory}` : ""}
+${request.tradition ? `Wedding Tradition: ${request.tradition}` : ""}
+
+CONTRACT TEXT:
+---
+${request.contractText}
+---
+
+Please provide:
+1. A summary of the key terms
+2. Any potential issues or concerns (rated by severity)
+3. Missing clauses that should be added
+4. Suggested improvements
+5. Questions the couple should ask the vendor before signing`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      config: {
+        systemInstruction: CONTRACT_REVIEW_PROMPT,
+      },
+      contents: prompt,
+    });
+
+    return response.text || "Unable to review contract. Please try again.";
+  } catch (error) {
+    console.error("Error reviewing contract:", error);
+    throw new Error("Failed to review contract. Please check your API key and try again.");
+  }
+}
+
+// Wedding planning chat
+export async function chatWithPlanner(
+  message: string,
+  conversationHistory: ChatMessage[],
+  weddingContext?: WeddingContext
+): Promise<string> {
+  // Build context message
+  let contextInfo = "";
+  if (weddingContext) {
+    const parts = [];
+    if (weddingContext.partner1Name && weddingContext.partner2Name) {
+      parts.push(`Couple: ${weddingContext.partner1Name} & ${weddingContext.partner2Name}`);
+    }
+    if (weddingContext.tradition) parts.push(`Tradition: ${weddingContext.tradition}`);
+    if (weddingContext.city) parts.push(`City: ${weddingContext.city}`);
+    if (weddingContext.weddingDate) parts.push(`Wedding Date: ${weddingContext.weddingDate}`);
+    if (weddingContext.budget) parts.push(`Budget: $${weddingContext.budget.toLocaleString()}`);
+    if (weddingContext.guestCount) parts.push(`Expected Guests: ${weddingContext.guestCount}`);
+    
+    if (parts.length > 0) {
+      contextInfo = `\n\n[Wedding Context: ${parts.join(" | ")}]`;
+    }
+  }
+
+  // Build conversation for the model
+  const contents: Array<{ role: string; parts: Array<{ text: string }> }> = [];
+  
+  // Add conversation history
+  for (const msg of conversationHistory) {
+    contents.push({
+      role: msg.role === "user" ? "user" : "model",
+      parts: [{ text: msg.content }],
+    });
+  }
+  
+  // Add current message with context
+  contents.push({
+    role: "user",
+    parts: [{ text: message + contextInfo }],
+  });
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      config: {
+        systemInstruction: WEDDING_PLANNING_PROMPT,
+      },
+      contents: contents,
+    });
+
+    return response.text || "I apologize, but I couldn't generate a response. Please try again.";
+  } catch (error) {
+    console.error("Error in wedding planner chat:", error);
+    throw new Error("Failed to get a response. Please try again.");
+  }
+}
+
+// Generate contract clauses for specific scenarios
+export async function generateContractClause(
+  clauseType: string,
+  context: {
+    vendorCategory?: string;
+    tradition?: string;
+    specificDetails?: string;
+  }
+): Promise<string> {
+  const prompt = `Generate a professional contract clause for the following:
+
+Clause Type: ${clauseType}
+${context.vendorCategory ? `Vendor Category: ${context.vendorCategory}` : ""}
+${context.tradition ? `Wedding Tradition: ${context.tradition}` : ""}
+${context.specificDetails ? `Specific Details: ${context.specificDetails}` : ""}
+
+Please provide a well-written, legally appropriate clause that can be added to a vendor contract for a South Asian wedding.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      config: {
+        systemInstruction: CONTRACT_SYSTEM_PROMPT,
+      },
+      contents: prompt,
+    });
+
+    return response.text || "Unable to generate clause. Please try again.";
+  } catch (error) {
+    console.error("Error generating clause:", error);
+    throw new Error("Failed to generate clause. Please try again.");
+  }
+}
+
+// Quick suggestions for contract improvement
+export async function suggestContractImprovements(
+  currentTerms: string,
+  vendorCategory: string
+): Promise<string[]> {
+  const prompt = `Analyze the following contract terms and provide 3-5 specific improvement suggestions as a JSON array of strings:
+
+Vendor Category: ${vendorCategory}
+
+Current Terms:
+${currentTerms}
+
+Respond with a JSON array of improvement suggestions, each as a concise actionable item.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      config: {
+        systemInstruction: "You are a contract improvement assistant. Respond only with a valid JSON array of strings.",
+        responseMimeType: "application/json",
+      },
+      contents: prompt,
+    });
+
+    const text = response.text || "[]";
+    return JSON.parse(text);
+  } catch (error) {
+    console.error("Error suggesting improvements:", error);
+    return [];
+  }
+}

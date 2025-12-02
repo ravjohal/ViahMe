@@ -54,6 +54,17 @@ import {
   sendRsvpConfirmationEmail,
   sendInvitationEmail,
 } from "./email";
+import {
+  draftContract,
+  reviewContract,
+  chatWithPlanner,
+  generateContractClause,
+  suggestContractImprovements,
+  type ContractDraftRequest,
+  type ContractReviewRequest,
+  type ChatMessage,
+  type WeddingContext,
+} from "./ai/gemini";
 
 // Seed vendors only if database is empty
 (async () => {
@@ -1988,6 +1999,165 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete contract template" });
+    }
+  });
+
+  // ============================================================================
+  // AI ASSISTANT - Contract drafting and wedding planning chat
+  // ============================================================================
+
+  // Draft a contract using AI
+  app.post("/api/ai/contract/draft", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      if (!authReq.session.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const request: ContractDraftRequest = req.body;
+      
+      // Validate required fields
+      if (!request.vendorName || !request.vendorCategory || !request.eventName || !request.servicesDescription) {
+        return res.status(400).json({ 
+          error: "Missing required fields",
+          message: "Vendor name, category, event name, and services description are required" 
+        });
+      }
+
+      if (typeof request.totalAmount !== 'number' || request.totalAmount <= 0) {
+        return res.status(400).json({ 
+          error: "Invalid amount",
+          message: "Total amount must be a positive number" 
+        });
+      }
+
+      const contractText = await draftContract(request);
+      res.json({ contract: contractText });
+    } catch (error) {
+      console.error("Error drafting contract:", error);
+      res.status(500).json({ 
+        error: "Failed to draft contract",
+        message: error instanceof Error ? error.message : "Please try again later"
+      });
+    }
+  });
+
+  // Review an existing contract using AI
+  app.post("/api/ai/contract/review", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      if (!authReq.session.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const request: ContractReviewRequest = req.body;
+      
+      if (!request.contractText || request.contractText.trim().length === 0) {
+        return res.status(400).json({ 
+          error: "Contract text required",
+          message: "Please provide the contract text to review" 
+        });
+      }
+
+      const review = await reviewContract(request);
+      res.json({ review });
+    } catch (error) {
+      console.error("Error reviewing contract:", error);
+      res.status(500).json({ 
+        error: "Failed to review contract",
+        message: error instanceof Error ? error.message : "Please try again later"
+      });
+    }
+  });
+
+  // Generate a specific contract clause
+  app.post("/api/ai/contract/clause", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      if (!authReq.session.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const { clauseType, vendorCategory, tradition, specificDetails } = req.body;
+      
+      if (!clauseType || clauseType.trim().length === 0) {
+        return res.status(400).json({ 
+          error: "Clause type required",
+          message: "Please specify the type of clause to generate" 
+        });
+      }
+
+      const clause = await generateContractClause(clauseType, {
+        vendorCategory,
+        tradition,
+        specificDetails,
+      });
+      res.json({ clause });
+    } catch (error) {
+      console.error("Error generating clause:", error);
+      res.status(500).json({ 
+        error: "Failed to generate clause",
+        message: error instanceof Error ? error.message : "Please try again later"
+      });
+    }
+  });
+
+  // Get contract improvement suggestions
+  app.post("/api/ai/contract/suggestions", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      if (!authReq.session.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const { currentTerms, vendorCategory } = req.body;
+      
+      if (!currentTerms || currentTerms.trim().length === 0) {
+        return res.status(400).json({ 
+          error: "Contract terms required",
+          message: "Please provide the current contract terms" 
+        });
+      }
+
+      const suggestions = await suggestContractImprovements(currentTerms, vendorCategory || "General");
+      res.json({ suggestions });
+    } catch (error) {
+      console.error("Error getting suggestions:", error);
+      res.status(500).json({ 
+        error: "Failed to get suggestions",
+        message: error instanceof Error ? error.message : "Please try again later"
+      });
+    }
+  });
+
+  // Wedding planning chat
+  app.post("/api/ai/chat", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      if (!authReq.session.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const { message, conversationHistory, weddingContext } = req.body;
+      
+      if (!message || message.trim().length === 0) {
+        return res.status(400).json({ 
+          error: "Message required",
+          message: "Please provide a message" 
+        });
+      }
+
+      const history: ChatMessage[] = Array.isArray(conversationHistory) ? conversationHistory : [];
+      const context: WeddingContext | undefined = weddingContext;
+
+      const response = await chatWithPlanner(message, history, context);
+      res.json({ response });
+    } catch (error) {
+      console.error("Error in chat:", error);
+      res.status(500).json({ 
+        error: "Failed to get response",
+        message: error instanceof Error ? error.message : "Please try again later"
+      });
     }
   });
 
