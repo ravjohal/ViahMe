@@ -71,6 +71,9 @@ export function AppHeader() {
     user?.role === "vendor" ? vendors?.find(v => v.email === user?.email) : undefined,
     [user?.role, user?.email, vendors]
   );
+  console.log("currentVendor", currentVendor);
+  console.log("vendors", vendors);
+  console.log("user", user, "user?.role", user?.role);
   
   const daysUntilWedding = wedding?.weddingDate
     ? differenceInDays(new Date(wedding.weddingDate), new Date())
