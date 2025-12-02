@@ -10,6 +10,7 @@ import {
   insertEventSchema,
   insertEventCostItemSchema,
   insertVendorSchema,
+  insertServicePackageSchema,
   insertBookingSchema,
   insertBudgetCategorySchema,
   insertHouseholdSchema,
@@ -540,6 +541,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Validation failed", details: error });
       }
       res.status(500).json({ error: "Failed to update vendor" });
+    }
+  });
+
+  // ============================================================================
+  // SERVICE PACKAGES
+  // ============================================================================
+
+  app.get("/api/service-packages/vendor/:vendorId", async (req, res) => {
+    try {
+      const packages = await storage.getServicePackagesByVendor(req.params.vendorId);
+      res.json(packages);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch service packages" });
+    }
+  });
+
+  app.get("/api/service-packages/:id", async (req, res) => {
+    try {
+      const pkg = await storage.getServicePackage(req.params.id);
+      if (!pkg) {
+        return res.status(404).json({ error: "Service package not found" });
+      }
+      res.json(pkg);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch service package" });
+    }
+  });
+
+  app.post("/api/service-packages", async (req, res) => {
+    try {
+      const validatedData = insertServicePackageSchema.parse(req.body);
+      const pkg = await storage.createServicePackage(validatedData);
+      res.json(pkg);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      res.status(500).json({ error: "Failed to create service package" });
+    }
+  });
+
+  app.patch("/api/service-packages/:id", async (req, res) => {
+    try {
+      const validatedData = insertServicePackageSchema.partial().parse(req.body);
+      const pkg = await storage.updateServicePackage(req.params.id, validatedData);
+      if (!pkg) {
+        return res.status(404).json({ error: "Service package not found" });
+      }
+      res.json(pkg);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      res.status(500).json({ error: "Failed to update service package" });
+    }
+  });
+
+  app.delete("/api/service-packages/:id", async (req, res) => {
+    try {
+      const success = await storage.deleteServicePackage(req.params.id);
+      if (!success) {
+        return res.status(404).json({ error: "Service package not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete service package" });
     }
   });
 

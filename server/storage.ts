@@ -9,6 +9,8 @@ import {
   type InsertEventCostItem,
   type Vendor,
   type InsertVendor,
+  type ServicePackage,
+  type InsertServicePackage,
   type Booking,
   type InsertBooking,
   type BudgetCategory,
@@ -158,6 +160,13 @@ export interface IStorage {
   getVendorsByLocation(location: string): Promise<Vendor[]>;
   createVendor(vendor: InsertVendor): Promise<Vendor>;
   updateVendor(id: string, vendor: Partial<InsertVendor>): Promise<Vendor | undefined>;
+
+  // Service Packages
+  getServicePackage(id: string): Promise<ServicePackage | undefined>;
+  getServicePackagesByVendor(vendorId: string): Promise<ServicePackage[]>;
+  createServicePackage(pkg: InsertServicePackage): Promise<ServicePackage>;
+  updateServicePackage(id: string, pkg: Partial<InsertServicePackage>): Promise<ServicePackage | undefined>;
+  deleteServicePackage(id: string): Promise<boolean>;
 
   // Bookings
   getBooking(id: string): Promise<Booking | undefined>;
@@ -598,6 +607,7 @@ export class MemStorage implements IStorage {
   private events: Map<string, Event>;
   private eventCostItems: Map<string, EventCostItem>;
   private vendors: Map<string, Vendor>;
+  private servicePackages: Map<string, ServicePackage>;
   private bookings: Map<string, Booking>;
   private budgetCategories: Map<string, BudgetCategory>;
   private households: Map<string, Household>;
@@ -626,6 +636,7 @@ export class MemStorage implements IStorage {
     this.events = new Map();
     this.eventCostItems = new Map();
     this.vendors = new Map();
+    this.servicePackages = new Map();
     this.bookings = new Map();
     this.budgetCategories = new Map();
     this.households = new Map();
@@ -908,6 +919,46 @@ export class MemStorage implements IStorage {
     };
     this.vendors.set(id, updated);
     return updated;
+  }
+
+  // Service Packages
+  async getServicePackage(id: string): Promise<ServicePackage | undefined> {
+    return this.servicePackages.get(id);
+  }
+
+  async getServicePackagesByVendor(vendorId: string): Promise<ServicePackage[]> {
+    return Array.from(this.servicePackages.values())
+      .filter((pkg) => pkg.vendorId === vendorId)
+      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+  }
+
+  async createServicePackage(insertPkg: InsertServicePackage): Promise<ServicePackage> {
+    const id = randomUUID();
+    const pkg: ServicePackage = {
+      ...insertPkg,
+      id,
+      isActive: insertPkg.isActive ?? true,
+      sortOrder: insertPkg.sortOrder ?? 0,
+      createdAt: new Date(),
+    } as ServicePackage;
+    this.servicePackages.set(id, pkg);
+    return pkg;
+  }
+
+  async updateServicePackage(id: string, updates: Partial<InsertServicePackage>): Promise<ServicePackage | undefined> {
+    const existing = this.servicePackages.get(id);
+    if (!existing) return undefined;
+    
+    const updated: ServicePackage = {
+      ...existing,
+      ...updates,
+    };
+    this.servicePackages.set(id, updated);
+    return updated;
+  }
+
+  async deleteServicePackage(id: string): Promise<boolean> {
+    return this.servicePackages.delete(id);
   }
 
   // Bookings
@@ -2968,6 +3019,39 @@ export class DBStorage implements IStorage {
       .where(eq(schema.vendors.id, id))
       .returning();
     return result[0];
+  }
+
+  // Service Packages
+  async getServicePackage(id: string): Promise<ServicePackage | undefined> {
+    const result = await this.db.select().from(schema.servicePackages).where(eq(schema.servicePackages.id, id));
+    return result[0];
+  }
+
+  async getServicePackagesByVendor(vendorId: string): Promise<ServicePackage[]> {
+    return await this.db
+      .select()
+      .from(schema.servicePackages)
+      .where(eq(schema.servicePackages.vendorId, vendorId))
+      .orderBy(schema.servicePackages.sortOrder);
+  }
+
+  async createServicePackage(insertPkg: InsertServicePackage): Promise<ServicePackage> {
+    const result = await this.db.insert(schema.servicePackages).values(insertPkg).returning();
+    return result[0];
+  }
+
+  async updateServicePackage(id: string, updates: Partial<InsertServicePackage>): Promise<ServicePackage | undefined> {
+    const result = await this.db
+      .update(schema.servicePackages)
+      .set(updates)
+      .where(eq(schema.servicePackages.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteServicePackage(id: string): Promise<boolean> {
+    await this.db.delete(schema.servicePackages).where(eq(schema.servicePackages.id, id));
+    return true;
   }
 
   // Bookings
