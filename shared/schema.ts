@@ -243,6 +243,40 @@ export type InsertVendor = z.infer<typeof insertVendorSchema>;
 export type Vendor = typeof vendors.$inferSelect;
 
 // ============================================================================
+// SERVICE PACKAGES - Vendor service packages with cultural specialization
+// ============================================================================
+
+export const servicePackages = pgTable("service_packages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  vendorId: varchar("vendor_id").notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  tradition: text("tradition"), // 'sikh' | 'hindu' | 'muslim' | 'gujarati' | 'south_indian' | 'mixed' | 'general' | null for all
+  category: text("category"), // Which service category this package is for
+  features: text("features").array(), // List of what's included
+  duration: text("duration"), // e.g., "Full Day", "4 Hours", "Multi-Day"
+  isActive: boolean("is_active").default(true),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertServicePackageSchema = createInsertSchema(servicePackages).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  name: z.string().min(1, "Package name is required"),
+  price: z.string().min(1, "Price is required"),
+  tradition: z.enum(['sikh', 'hindu', 'muslim', 'gujarati', 'south_indian', 'mixed', 'general']).nullable().optional(),
+  features: z.array(z.string()).optional(),
+  isActive: z.boolean().optional(),
+  sortOrder: z.number().optional(),
+});
+
+export type InsertServicePackage = z.infer<typeof insertServicePackageSchema>;
+export type ServicePackage = typeof servicePackages.$inferSelect;
+
+// ============================================================================
 // BOOKINGS - Vendor assignment to events
 // ============================================================================
 
