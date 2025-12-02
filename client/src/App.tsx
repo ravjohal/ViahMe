@@ -49,6 +49,7 @@ import Collaborators from "@/pages/collaborators";
 import VendorCalendar from "@/pages/vendor-calendar";
 import VendorDeposit from "@/pages/vendor-deposit";
 import LeadInbox from "@/pages/lead-inbox";
+import ClaimProfile from "@/pages/claim-profile";
 import { VendorRoute } from "@/components/VendorRoute";
 
 function Router() {
@@ -63,6 +64,7 @@ function Router() {
       <Route path="/vendor-login" component={VendorLogin} />
       <Route path="/vendor-register" component={VendorRegister} />
       <Route path="/verify-email" component={VerifyEmail} />
+      <Route path="/claim-profile/:token" component={ClaimProfile} />
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/reset-password" component={ResetPassword} />
       <Route path="/wedding/:slug" component={GuestWebsite} />

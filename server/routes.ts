@@ -708,7 +708,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Verify claim token and complete profile claim
+  // GET: Verify claim token and return vendor info (for claim page)
+  app.get("/api/vendors/claim/verify", async (req, res) => {
+    try {
+      const token = req.query.token as string;
+      
+      if (!token) {
+        return res.status(400).json({ error: "Claim token is required", valid: false });
+      }
+      
+      // Find vendor by claim token
+      const vendor = await storage.getVendorByClaimToken(token);
+      if (!vendor) {
+        return res.status(404).json({ error: "Invalid or expired claim token", valid: false });
+      }
+      
+      // Check if token has expired
+      if (vendor.claimTokenExpires && new Date() > new Date(vendor.claimTokenExpires)) {
+        return res.status(400).json({ error: "Claim token has expired", valid: false, expired: true });
+      }
+      
+      // Return vendor info for the claim form
+      res.json({
+        valid: true,
+        vendor: {
+          id: vendor.id,
+          name: vendor.name,
+          category: vendor.category,
+          location: vendor.location,
+          phone: vendor.phone,
+          website: vendor.website,
+          description: vendor.description,
+          priceRange: vendor.priceRange,
+        },
+      });
+    } catch (error) {
+      console.error("Error verifying claim token:", error);
+      res.status(500).json({ error: "Failed to verify claim token", valid: false });
+    }
+  });
+
+  // POST: Complete profile claim with account creation
+  app.post("/api/vendors/claim/complete", async (req, res) => {
+    try {
+      const { token, email, password, phone, description, website, priceRange } = req.body;
+      
+      if (!token || !email || !password) {
+        return res.status(400).json({ error: "Token, email, and password are required" });
+      }
+      
+      // Find vendor by claim token
+      const vendor = await storage.getVendorByClaimToken(token);
+      if (!vendor) {
+        return res.status(404).json({ error: "Invalid or expired claim token" });
+      }
+      
+      // Check if token has expired
+      if (vendor.claimTokenExpires && new Date() > new Date(vendor.claimTokenExpires)) {
+        return res.status(400).json({ error: "Claim token has expired. Please request a new one." });
+      }
+      
+      // Check if email already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ error: "Email already in use. Please login instead." });
+      }
+      
+      // Create new user account
+      const bcrypt = await import('bcrypt');
+      const passwordHash = await bcrypt.hash(password, 10);
+      const newUser = await storage.createUser({
+        email,
+        passwordHash,
+        role: 'vendor',
+        emailVerified: true, // Auto-verify since they're claiming via token
+      });
+      
+      // Mark profile as claimed and update info
+      await storage.updateVendor(vendor.id, {
+        claimed: true,
+        userId: newUser.id,
+        claimToken: null,
+        claimTokenExpires: null,
+        email: email,
+        phone: phone || vendor.phone,
+        description: description || vendor.description,
+        website: website || vendor.website,
+        priceRange: priceRange || vendor.priceRange,
+      } as any);
+      
+      res.json({
+        message: "Profile claimed successfully! You can now login to manage your profile.",
+        vendorId: vendor.id,
+      });
+    } catch (error) {
+      console.error("Error completing claim:", error);
+      res.status(500).json({ error: "Failed to complete claim" });
+    }
+  });
+
+  // Legacy: Verify claim token and complete profile claim (deprecated, use /claim/complete)
   app.post("/api/vendors/claim/verify", async (req, res) => {
     try {
       const { token, email, password } = req.body;

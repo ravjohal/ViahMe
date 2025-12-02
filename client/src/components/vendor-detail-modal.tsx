@@ -36,7 +36,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { Star, MapPin, DollarSign, Phone, Mail, Send, StarIcon, AlertCircle, ExternalLink, Calendar, CheckCircle2, XCircle } from "lucide-react";
+import { Star, MapPin, DollarSign, Phone, Mail, Send, StarIcon, AlertCircle, ExternalLink, Calendar, CheckCircle2, XCircle, Building2, ShieldCheck } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format, startOfMonth, endOfMonth } from "date-fns";
@@ -360,14 +360,70 @@ export function VendorDetailModal({
     });
   };
 
+  // Check if this is an unclaimed ghost profile
+  const isGhostProfile = vendor.claimed === false && vendor.source === 'google_places';
+
+  // Claim profile mutation
+  const claimRequestMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('POST', `/api/vendors/${vendor.id}/request-claim`, {});
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Claim request sent",
+        description: "The business owner will receive a notification to claim this profile.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Request failed",
+        description: error.message || "Unable to send claim request. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" data-testid="dialog-vendor-detail">
         <DialogHeader>
-          <DialogTitle className="font-display text-2xl">
+          <DialogTitle className="font-display text-2xl flex items-center gap-2">
             {vendor.name}
+            {vendor.claimed && (
+              <Badge variant="outline" className="ml-2 text-xs bg-green-50 border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400">
+                <ShieldCheck className="w-3 h-3 mr-1" />
+                Verified
+              </Badge>
+            )}
           </DialogTitle>
         </DialogHeader>
+
+        {isGhostProfile && (
+          <Alert className="border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-900/20">
+            <Building2 className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+            <AlertDescription className="text-orange-800 dark:text-orange-200">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="font-medium">Unclaimed Business Profile</p>
+                  <p className="text-sm mt-1 text-orange-700 dark:text-orange-300">
+                    This profile was created from public business listings. The owner can claim it to update their information and respond to inquiries.
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="shrink-0 border-orange-300 text-orange-700 hover:bg-orange-100 dark:border-orange-700 dark:text-orange-300 dark:hover:bg-orange-900/40"
+                  onClick={() => claimRequestMutation.mutate()}
+                  disabled={claimRequestMutation.isPending}
+                  data-testid="button-claim-profile"
+                >
+                  {claimRequestMutation.isPending ? "Notifying..." : "Is this your business?"}
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
 
         <div className="space-y-6 mt-4">
           <div className="flex items-start justify-between gap-4">
@@ -763,7 +819,20 @@ export function VendorDetailModal({
             </TabsContent>
 
             <TabsContent value="availability" className="mt-6 space-y-4">
-              {vendor.calendarShared ? (
+              {isGhostProfile ? (
+                <Alert className="border-muted">
+                  <Building2 className="h-4 w-4" />
+                  <AlertDescription>
+                    <p className="font-medium">Booking Not Available</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      This business profile hasn't been claimed yet. Once the owner claims this profile, they'll be able to share their availability and accept bookings through Viah.me.
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      In the meantime, you can contact them directly using the contact information above.
+                    </p>
+                  </AlertDescription>
+                </Alert>
+              ) : vendor.calendarShared ? (
                 <div className="space-y-4">
                   <div>
                     <h3 className="font-semibold text-lg mb-2">Check Availability</h3>
