@@ -48,6 +48,8 @@ import GuestLiveFeed from "@/pages/guest-live-feed";
 import Collaborators from "@/pages/collaborators";
 import VendorCalendar from "@/pages/vendor-calendar";
 import VendorDeposit from "@/pages/vendor-deposit";
+import LeadInbox from "@/pages/lead-inbox";
+import { VendorRoute } from "@/components/VendorRoute";
 
 function Router() {
   return (
@@ -72,6 +74,11 @@ function Router() {
       {/* Dashboard - no specific permission, just authentication */}
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/vendor-dashboard" component={VendorDashboard} />
+      <Route path="/lead-inbox">
+        <VendorRoute>
+          <LeadInbox />
+        </VendorRoute>
+      </Route>
       <Route path="/couple-analytics" component={CoupleAnalytics} />
       <Route path="/vendor-analytics" component={VendorAnalytics} />
       
