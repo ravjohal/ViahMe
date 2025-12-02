@@ -187,6 +187,15 @@ export const vendors = pgTable("vendors", {
   externalCalendarId: text("external_calendar_id"), // The ID of the external calendar (Google/Outlook) to sync with
   yelpBusinessId: text("yelp_business_id"), // Yelp business ID for fetching external reviews
   googlePlaceId: text("google_place_id"), // Google Place ID for fetching external reviews
+  // Ghost Profile / Claim Your Profile fields
+  claimed: boolean("claimed").notNull().default(true), // false = ghost profile from Google Places, true = vendor-owned
+  source: text("source").notNull().default('manual'), // 'manual' | 'google_places' - how the profile was created
+  claimToken: text("claim_token"), // Token sent to vendor to claim their profile
+  claimTokenExpires: timestamp("claim_token_expires"), // When the claim token expires
+  notifyCooldownUntil: timestamp("notify_cooldown_until"), // Don't send another notification until this time
+  lastViewNotifiedAt: timestamp("last_view_notified_at"), // Last time we notified vendor about a profile view
+  viewCount: integer("view_count").notNull().default(0), // Number of profile views
+  optedOutOfNotifications: boolean("opted_out_of_notifications").default(false), // Vendor opted out of claim notifications
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -243,10 +252,18 @@ export const insertVendorSchema = createInsertSchema(vendors).omit({
   id: true,
   rating: true,
   reviewCount: true,
+  claimToken: true,
+  claimTokenExpires: true,
+  notifyCooldownUntil: true,
+  lastViewNotifiedAt: true,
+  viewCount: true,
 }).extend({
   categories: z.array(z.enum(VENDOR_CATEGORIES)).min(1, "Select at least one service category"),
   preferredWeddingTraditions: z.array(z.enum(['sikh', 'hindu', 'muslim', 'gujarati', 'south_indian', 'mixed', 'general'])).optional(),
   priceRange: z.enum(['$', '$$', '$$$', '$$$$']),
+  claimed: z.boolean().optional(),
+  source: z.enum(['manual', 'google_places']).optional(),
+  optedOutOfNotifications: z.boolean().optional(),
 });
 
 export type InsertVendor = z.infer<typeof insertVendorSchema>;
