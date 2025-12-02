@@ -569,9 +569,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/service-packages", async (req, res) => {
+  app.post("/api/service-packages", await requireAuth(storage, false), async (req: AuthRequest, res) => {
     try {
       const validatedData = insertServicePackageSchema.parse(req.body);
+      
+      // Verify the user owns the vendor they're creating a package for
+      const vendors = await storage.getAllVendors();
+      const userVendor = vendors.find(v => v.userId === req.user?.id);
+      
+      if (!userVendor || userVendor.id !== validatedData.vendorId) {
+        return res.status(403).json({ error: "You can only create packages for your own vendor profile" });
+      }
+      
       const pkg = await storage.createServicePackage(validatedData);
       res.json(pkg);
     } catch (error) {
@@ -582,13 +591,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/service-packages/:id", async (req, res) => {
+  app.patch("/api/service-packages/:id", await requireAuth(storage, false), async (req: AuthRequest, res) => {
     try {
       const validatedData = insertServicePackageSchema.partial().parse(req.body);
-      const pkg = await storage.updateServicePackage(req.params.id, validatedData);
-      if (!pkg) {
+      
+      // Get the package to verify ownership
+      const existingPkg = await storage.getServicePackage(req.params.id);
+      if (!existingPkg) {
         return res.status(404).json({ error: "Service package not found" });
       }
+      
+      // Verify the user owns the vendor
+      const vendors = await storage.getAllVendors();
+      const userVendor = vendors.find(v => v.userId === req.user?.id);
+      
+      if (!userVendor || userVendor.id !== existingPkg.vendorId) {
+        return res.status(403).json({ error: "You can only update your own packages" });
+      }
+      
+      const pkg = await storage.updateServicePackage(req.params.id, validatedData);
       res.json(pkg);
     } catch (error) {
       if (error instanceof Error && "issues" in error) {
@@ -598,8 +619,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/service-packages/:id", async (req, res) => {
+  app.delete("/api/service-packages/:id", await requireAuth(storage, false), async (req: AuthRequest, res) => {
     try {
+      // Get the package to verify ownership
+      const existingPkg = await storage.getServicePackage(req.params.id);
+      if (!existingPkg) {
+        return res.status(404).json({ error: "Service package not found" });
+      }
+      
+      // Verify the user owns the vendor
+      const vendors = await storage.getAllVendors();
+      const userVendor = vendors.find(v => v.userId === req.user?.id);
+      
+      if (!userVendor || userVendor.id !== existingPkg.vendorId) {
+        return res.status(403).json({ error: "You can only delete your own packages" });
+      }
+      
       const success = await storage.deleteServicePackage(req.params.id);
       if (!success) {
         return res.status(404).json({ error: "Service package not found" });

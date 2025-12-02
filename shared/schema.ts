@@ -229,6 +229,16 @@ export const VENDOR_CATEGORIES = [
   'kolam_artist'
 ] as const;
 
+export const WEDDING_TRADITIONS = [
+  'Sikh',
+  'Hindu', 
+  'Muslim',
+  'Gujarati',
+  'South Indian',
+  'Mixed/Fusion',
+  'General'
+] as const;
+
 export const insertVendorSchema = createInsertSchema(vendors).omit({
   id: true,
   rating: true,
@@ -252,9 +262,9 @@ export const servicePackages = pgTable("service_packages", {
   name: text("name").notNull(),
   description: text("description"),
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
-  tradition: text("tradition"), // 'sikh' | 'hindu' | 'muslim' | 'gujarati' | 'south_indian' | 'mixed' | 'general' | null for all
-  category: text("category"), // Which service category this package is for
-  features: text("features").array(), // List of what's included
+  traditions: text("traditions").array(), // Multiple traditions this package applies to
+  categories: text("categories").array(), // Multiple service categories this package covers
+  features: jsonb("features"), // List of what's included (stored as JSON array)
   duration: text("duration"), // e.g., "Full Day", "4 Hours", "Multi-Day"
   isActive: boolean("is_active").default(true),
   sortOrder: integer("sort_order").default(0),
@@ -267,7 +277,8 @@ export const insertServicePackageSchema = createInsertSchema(servicePackages).om
 }).extend({
   name: z.string().min(1, "Package name is required"),
   price: z.string().min(1, "Price is required"),
-  tradition: z.enum(['sikh', 'hindu', 'muslim', 'gujarati', 'south_indian', 'mixed', 'general']).nullable().optional(),
+  traditions: z.array(z.string()).min(1, "Select at least one tradition"),
+  categories: z.array(z.string()).min(1, "Select at least one service category"),
   features: z.array(z.string()).optional(),
   isActive: z.boolean().optional(),
   sortOrder: z.number().optional(),

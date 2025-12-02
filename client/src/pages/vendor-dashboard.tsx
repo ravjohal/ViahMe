@@ -26,8 +26,8 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import type { Vendor, Booking, Contract, InsertVendor } from "@shared/schema";
-import { insertVendorSchema, VENDOR_CATEGORIES } from "@shared/schema";
+import type { Vendor, Booking, Contract, InsertVendor, ServicePackage, InsertServicePackage } from "@shared/schema";
+import { insertVendorSchema, insertServicePackageSchema, VENDOR_CATEGORIES, WEDDING_TRADITIONS } from "@shared/schema";
 import { AddressAutocomplete } from "@/components/address-autocomplete";
 import { Checkbox } from "@/components/ui/checkbox";
 import { VendorSetupWizard } from "@/components/vendor-setup-wizard";
@@ -56,6 +56,7 @@ import {
   Eye,
   Users,
   BarChart3,
+  Package,
 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { format } from "date-fns";
@@ -81,6 +82,20 @@ export default function VendorDashboard() {
   const [newSlotDate, setNewSlotDate] = useState("");
   const [newSlotTime, setNewSlotTime] = useState("morning");
   const [newSlotNotes, setNewSlotNotes] = useState("");
+  
+  // Service Packages state
+  const [packageDialogOpen, setPackageDialogOpen] = useState(false);
+  const [editingPackage, setEditingPackage] = useState<ServicePackage | null>(null);
+  const [packageFormData, setPackageFormData] = useState<Partial<InsertServicePackage>>({
+    name: "",
+    description: "",
+    price: "0",
+    traditions: [],
+    categories: [],
+    features: [],
+    isActive: true,
+  });
+  const [newFeature, setNewFeature] = useState("");
 
   // Fetch vendor profile for authenticated user
   const { data: vendors, isLoading: vendorsLoading } = useQuery<Vendor[]>({
@@ -177,6 +192,213 @@ export default function VendorDashboard() {
     },
     enabled: !!vendorId,
   });
+
+  // Service Packages query - uses default fetcher
+  const { data: servicePackages = [], isLoading: packagesLoading } = useQuery<ServicePackage[]>({
+    queryKey: [`/api/service-packages/vendor/${vendorId}`],
+    enabled: !!vendorId,
+  });
+
+  const createPackageMutation = useMutation({
+    mutationFn: async (data: InsertServicePackage) => {
+      // Validate with schema before sending
+      const validated = insertServicePackageSchema.parse(data);
+      const response = await apiRequest("POST", "/api/service-packages", validated);
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/service-packages/vendor/${vendorId}`] });
+      toast({
+        title: "Package Created",
+        description: "Your service package has been created successfully.",
+      });
+      setPackageDialogOpen(false);
+      resetPackageForm();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Creation Failed",
+        description: error?.message || "Failed to create service package. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updatePackageMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<InsertServicePackage> }) => {
+      // Validate with partial schema before sending
+      const validated = insertServicePackageSchema.partial().parse(data);
+      const response = await apiRequest("PATCH", `/api/service-packages/${id}`, validated);
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/service-packages/vendor/${vendorId}`] });
+      toast({
+        title: "Package Updated",
+        description: "Your service package has been updated successfully.",
+      });
+      setPackageDialogOpen(false);
+      resetPackageForm();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Update Failed",
+        description: error?.message || "Failed to update service package. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deletePackageMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await apiRequest("DELETE", `/api/service-packages/${id}`);
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/service-packages/vendor/${vendorId}`] });
+      toast({
+        title: "Package Deleted",
+        description: "Your service package has been deleted.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Delete Failed",
+        description: error?.message || "Failed to delete service package. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Validation errors state for package form
+  const [packageFormErrors, setPackageFormErrors] = useState<Record<string, string>>({});
+
+  const validatePackageForm = (): boolean => {
+    const errors: Record<string, string> = {};
+    
+    if (!packageFormData.name?.trim()) {
+      errors.name = "Package name is required";
+    }
+    
+    if (!packageFormData.price || parseFloat(packageFormData.price) <= 0) {
+      errors.price = "Price must be greater than 0";
+    }
+    
+    if (!packageFormData.traditions?.length) {
+      errors.traditions = "Select at least one wedding tradition";
+    }
+    
+    if (!packageFormData.categories?.length) {
+      errors.categories = "Select at least one service category";
+    }
+    
+    setPackageFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const resetPackageForm = () => {
+    setEditingPackage(null);
+    setPackageFormData({
+      name: "",
+      description: "",
+      price: "",
+      traditions: [],
+      categories: [],
+      features: [],
+      isActive: true,
+    });
+    setNewFeature("");
+    setPackageFormErrors({});
+  };
+
+  const openPackageDialog = (pkg?: ServicePackage) => {
+    if (pkg) {
+      setEditingPackage(pkg);
+      setPackageFormData({
+        name: pkg.name,
+        description: pkg.description || "",
+        price: pkg.price,
+        traditions: pkg.traditions || [],
+        categories: pkg.categories || [],
+        features: (pkg.features as string[]) || [],
+        isActive: pkg.isActive ?? true,
+      });
+    } else {
+      resetPackageForm();
+    }
+    setPackageDialogOpen(true);
+  };
+
+  const handleSavePackage = () => {
+    if (!vendorId) return;
+    
+    // Validate form before submitting
+    if (!validatePackageForm()) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const packageData: InsertServicePackage = {
+      vendorId,
+      name: packageFormData.name?.trim() || "",
+      description: packageFormData.description?.trim() || "",
+      price: packageFormData.price || "0",
+      traditions: packageFormData.traditions || [],
+      categories: packageFormData.categories || [],
+      features: packageFormData.features || [],
+      isActive: packageFormData.isActive ?? true,
+      sortOrder: editingPackage?.sortOrder || servicePackages.length,
+    };
+
+    if (editingPackage) {
+      updatePackageMutation.mutate({ id: editingPackage.id, data: packageData });
+    } else {
+      createPackageMutation.mutate(packageData);
+    }
+  };
+
+  const addFeature = () => {
+    if (newFeature.trim()) {
+      setPackageFormData(prev => ({
+        ...prev,
+        features: [...(prev.features || []), newFeature.trim()],
+      }));
+      setNewFeature("");
+    }
+  };
+
+  const removeFeature = (index: number) => {
+    setPackageFormData(prev => ({
+      ...prev,
+      features: (prev.features || []).filter((_, i) => i !== index),
+    }));
+  };
+
+  const toggleTradition = (tradition: string) => {
+    setPackageFormData(prev => {
+      const traditions = prev.traditions || [];
+      if (traditions.includes(tradition)) {
+        return { ...prev, traditions: traditions.filter(t => t !== tradition) };
+      } else {
+        return { ...prev, traditions: [...traditions, tradition] };
+      }
+    });
+  };
+
+  const toggleCategory = (category: string) => {
+    setPackageFormData(prev => {
+      const categories = prev.categories || [];
+      if (categories.includes(category)) {
+        return { ...prev, categories: categories.filter(c => c !== category) };
+      } else {
+        return { ...prev, categories: [...categories, category] };
+      }
+    });
+  };
   
   // Helper to safely parse currency values
   const formatCurrency = (value: string | number): string => {
@@ -721,9 +943,9 @@ export default function VendorDashboard() {
         </div>
         )}
 
-        {/* Tabs for Bookings, Contracts, Availability, and Analytics */}
+        {/* Tabs for Bookings, Contracts, Packages, Availability, and Analytics */}
         <Tabs defaultValue="bookings" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
+          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
             <TabsTrigger value="bookings" data-testid="tab-bookings">
               <Calendar className="w-4 h-4 mr-2" />
               Bookings
@@ -731,6 +953,10 @@ export default function VendorDashboard() {
             <TabsTrigger value="contracts" data-testid="tab-contracts">
               <FileText className="w-4 h-4 mr-2" />
               Contracts
+            </TabsTrigger>
+            <TabsTrigger value="packages" data-testid="tab-packages">
+              <Package className="w-4 h-4 mr-2" />
+              Packages
             </TabsTrigger>
             <TabsTrigger value="availability" data-testid="tab-availability">
               <Clock className="w-4 h-4 mr-2" />
@@ -990,6 +1216,139 @@ export default function VendorDashboard() {
                 ))}
               </div>
             )}
+          </TabsContent>
+
+          {/* Service Packages Tab */}
+          <TabsContent value="packages" className="space-y-4">
+            <Card className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-lg font-semibold">Service Packages</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Create bundled service offerings for different wedding traditions
+                  </p>
+                </div>
+                <Button 
+                  onClick={() => openPackageDialog()}
+                  disabled={!hasProfile}
+                  data-testid="button-create-package"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Package
+                </Button>
+              </div>
+
+              {!hasProfile ? (
+                <div className="p-8 text-center">
+                  <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground mb-4">
+                    Create your vendor profile first to add service packages.
+                  </p>
+                  <Button 
+                    variant="default"
+                    onClick={openWizard}
+                    className="rounded-full"
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    Set Up Profile
+                  </Button>
+                </div>
+              ) : packagesLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Skeleton className="h-48" />
+                  <Skeleton className="h-48" />
+                </div>
+              ) : servicePackages.length === 0 ? (
+                <div className="p-12 text-center border-2 border-dashed rounded-lg">
+                  <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No Service Packages Yet</h3>
+                  <p className="text-muted-foreground mb-4 max-w-md mx-auto">
+                    Create bundled service packages to offer couples complete wedding solutions tailored to their cultural traditions.
+                  </p>
+                  <Button onClick={() => openPackageDialog()} data-testid="button-create-first-package">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Your First Package
+                  </Button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {servicePackages.map((pkg) => (
+                    <Card key={pkg.id} className="p-6" data-testid={`card-package-${pkg.id}`}>
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-semibold text-lg" data-testid={`text-package-name-${pkg.id}`}>{pkg.name}</h4>
+                            {!pkg.isActive && (
+                              <Badge variant="secondary" className="text-xs">Inactive</Badge>
+                            )}
+                          </div>
+                          <p className="font-mono text-2xl font-bold text-primary mt-1" data-testid={`text-package-price-${pkg.id}`}>
+                            ${parseFloat(pkg.price).toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="flex gap-1">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => openPackageDialog(pkg)}
+                            data-testid={`button-edit-package-${pkg.id}`}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => deletePackageMutation.mutate(pkg.id)}
+                            disabled={deletePackageMutation.isPending}
+                            data-testid={`button-delete-package-${pkg.id}`}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      {pkg.description && (
+                        <p className="text-sm text-muted-foreground mb-3" data-testid={`text-package-desc-${pkg.id}`}>
+                          {pkg.description}
+                        </p>
+                      )}
+
+                      {pkg.traditions && pkg.traditions.length > 0 && (
+                        <div className="mb-3">
+                          <p className="text-xs text-muted-foreground mb-1">Traditions:</p>
+                          <div className="flex flex-wrap gap-1">
+                            {pkg.traditions.map((tradition) => (
+                              <Badge key={tradition} variant="outline" className="text-xs">
+                                {tradition}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {pkg.features && Array.isArray(pkg.features) && pkg.features.length > 0 && (
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Includes:</p>
+                          <ul className="text-sm space-y-1">
+                            {(pkg.features as string[]).slice(0, 4).map((feature, idx) => (
+                              <li key={idx} className="flex items-center gap-2">
+                                <CheckCircle className="w-3 h-3 text-chart-2" />
+                                <span>{feature}</span>
+                              </li>
+                            ))}
+                            {(pkg.features as string[]).length > 4 && (
+                              <li className="text-muted-foreground text-xs">
+                                +{(pkg.features as string[]).length - 4} more
+                              </li>
+                            )}
+                          </ul>
+                        </div>
+                      )}
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </Card>
           </TabsContent>
 
           <TabsContent value="availability" className="space-y-4">
@@ -1729,6 +2088,220 @@ export default function VendorDashboard() {
               data-testid="button-confirm-decline"
             >
               {updateBookingMutation.isPending ? "Declining..." : "Decline Booking"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Service Package Create/Edit Dialog */}
+      <Dialog open={packageDialogOpen} onOpenChange={(open) => {
+        if (!open) {
+          setPackageDialogOpen(false);
+          resetPackageForm();
+        }
+      }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle data-testid="dialog-package-title">
+              {editingPackage ? "Edit Service Package" : "Create Service Package"}
+            </DialogTitle>
+            <DialogDescription>
+              {editingPackage 
+                ? "Update your service package details and offerings."
+                : "Create a bundled service package to offer couples complete wedding solutions."}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6 py-4">
+            {/* Package Name */}
+            <div className="space-y-2">
+              <Label htmlFor="package-name">Package Name <span className="text-destructive">*</span></Label>
+              <Input
+                id="package-name"
+                placeholder="e.g., Sikh Wedding Photography Package"
+                value={packageFormData.name || ""}
+                onChange={(e) => {
+                  setPackageFormData(prev => ({ ...prev, name: e.target.value }));
+                  if (packageFormErrors.name) setPackageFormErrors(prev => ({ ...prev, name: "" }));
+                }}
+                className={packageFormErrors.name ? "border-destructive" : ""}
+                data-testid="input-package-name"
+              />
+              {packageFormErrors.name && (
+                <p className="text-sm text-destructive">{packageFormErrors.name}</p>
+              )}
+            </div>
+
+            {/* Description */}
+            <div className="space-y-2">
+              <Label htmlFor="package-description">Description</Label>
+              <Textarea
+                id="package-description"
+                placeholder="Describe what's included in this package..."
+                value={packageFormData.description || ""}
+                onChange={(e) => setPackageFormData(prev => ({ ...prev, description: e.target.value }))}
+                rows={3}
+                data-testid="input-package-description"
+              />
+            </div>
+
+            {/* Price */}
+            <div className="space-y-2">
+              <Label htmlFor="package-price">Price ($) <span className="text-destructive">*</span></Label>
+              <Input
+                id="package-price"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="5000"
+                value={packageFormData.price || ""}
+                onChange={(e) => {
+                  setPackageFormData(prev => ({ ...prev, price: e.target.value }));
+                  if (packageFormErrors.price) setPackageFormErrors(prev => ({ ...prev, price: "" }));
+                }}
+                className={packageFormErrors.price ? "border-destructive" : ""}
+                data-testid="input-package-price"
+              />
+              {packageFormErrors.price && (
+                <p className="text-sm text-destructive">{packageFormErrors.price}</p>
+              )}
+            </div>
+
+            {/* Traditions */}
+            <div className="space-y-2">
+              <Label>Wedding Traditions <span className="text-destructive">*</span></Label>
+              <p className="text-xs text-muted-foreground">Select which wedding traditions this package is designed for</p>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                {WEDDING_TRADITIONS.map((tradition) => (
+                  <div key={tradition} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`tradition-${tradition}`}
+                      checked={(packageFormData.traditions || []).includes(tradition)}
+                      onCheckedChange={() => {
+                        toggleTradition(tradition);
+                        if (packageFormErrors.traditions) setPackageFormErrors(prev => ({ ...prev, traditions: "" }));
+                      }}
+                      data-testid={`checkbox-tradition-${tradition}`}
+                    />
+                    <Label htmlFor={`tradition-${tradition}`} className="text-sm cursor-pointer">
+                      {tradition}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+              {packageFormErrors.traditions && (
+                <p className="text-sm text-destructive">{packageFormErrors.traditions}</p>
+              )}
+            </div>
+
+            {/* Service Categories */}
+            <div className="space-y-2">
+              <Label>Service Categories <span className="text-destructive">*</span></Label>
+              <p className="text-xs text-muted-foreground">Select what services are included in this package</p>
+              <div className="grid grid-cols-2 gap-2 mt-2 max-h-48 overflow-y-auto p-1">
+                {VENDOR_CATEGORIES.map((category) => (
+                  <div key={category} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`category-${category}`}
+                      checked={(packageFormData.categories || []).includes(category)}
+                      onCheckedChange={() => {
+                        toggleCategory(category);
+                        if (packageFormErrors.categories) setPackageFormErrors(prev => ({ ...prev, categories: "" }));
+                      }}
+                      data-testid={`checkbox-category-${category}`}
+                    />
+                    <Label htmlFor={`category-${category}`} className="text-sm cursor-pointer">
+                      {category.replace(/_/g, ' ')}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+              {packageFormErrors.categories && (
+                <p className="text-sm text-destructive">{packageFormErrors.categories}</p>
+              )}
+            </div>
+
+            {/* Features */}
+            <div className="space-y-2">
+              <Label>What's Included</Label>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="e.g., 8 hours of coverage"
+                  value={newFeature}
+                  onChange={(e) => setNewFeature(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addFeature();
+                    }
+                  }}
+                  data-testid="input-new-feature"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={addFeature}
+                  disabled={!newFeature.trim()}
+                  data-testid="button-add-feature"
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
+              {(packageFormData.features || []).length > 0 && (
+                <ul className="space-y-2 mt-3">
+                  {(packageFormData.features || []).map((feature, idx) => (
+                    <li key={idx} className="flex items-center justify-between p-2 bg-muted rounded-md">
+                      <span className="text-sm">{feature}</span>
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => removeFeature(idx)}
+                        data-testid={`button-remove-feature-${idx}`}
+                      >
+                        <XCircle className="w-4 h-4 text-destructive" />
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {/* Active Status */}
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="package-active"
+                checked={packageFormData.isActive ?? true}
+                onCheckedChange={(checked) => setPackageFormData(prev => ({ ...prev, isActive: !!checked }))}
+                data-testid="checkbox-package-active"
+              />
+              <Label htmlFor="package-active" className="cursor-pointer">
+                Active (visible to couples)
+              </Label>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setPackageDialogOpen(false);
+                resetPackageForm();
+              }}
+              data-testid="button-cancel-package"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSavePackage}
+              disabled={createPackageMutation.isPending || updatePackageMutation.isPending}
+              data-testid="button-save-package"
+            >
+              {(createPackageMutation.isPending || updatePackageMutation.isPending) 
+                ? "Saving..." 
+                : editingPackage 
+                  ? "Update Package" 
+                  : "Create Package"}
             </Button>
           </DialogFooter>
         </DialogContent>
