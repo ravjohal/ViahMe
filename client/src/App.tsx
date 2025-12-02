@@ -52,6 +52,7 @@ import LeadInbox from "@/pages/lead-inbox";
 import ClaimProfile from "@/pages/claim-profile";
 import AiPlanner from "@/pages/ai-planner";
 import { VendorRoute } from "@/components/VendorRoute";
+import { CoupleRoute } from "@/components/CoupleRoute";
 
 function Router() {
   return (
@@ -165,9 +166,9 @@ function Router() {
         </ProtectedRoute>
       </Route>
       <Route path="/ai-planner">
-        <ProtectedRoute>
+        <CoupleRoute>
           <AiPlanner />
-        </ProtectedRoute>
+        </CoupleRoute>
       </Route>
       <Route path="/settings" component={Settings} />
       
