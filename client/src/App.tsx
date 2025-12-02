@@ -50,6 +50,7 @@ import VendorCalendar from "@/pages/vendor-calendar";
 import VendorDeposit from "@/pages/vendor-deposit";
 import LeadInbox from "@/pages/lead-inbox";
 import ClaimProfile from "@/pages/claim-profile";
+import AiPlanner from "@/pages/ai-planner";
 import { VendorRoute } from "@/components/VendorRoute";
 
 function Router() {
@@ -161,6 +162,11 @@ function Router() {
       <Route path="/collaborators">
         <ProtectedRoute requiredPermission="collaborators">
           <Collaborators />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/ai-planner">
+        <ProtectedRoute>
+          <AiPlanner />
         </ProtectedRoute>
       </Route>
       <Route path="/settings" component={Settings} />
