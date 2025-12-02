@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -61,6 +62,7 @@ type CalendarSource = 'local' | 'google' | 'outlook';
 
 export default function VendorCalendar() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [selectedCalendar, setSelectedCalendar] = useState<string>("primary");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [syncStartDate, setSyncStartDate] = useState<Date>(startOfMonth(new Date()));
@@ -72,7 +74,7 @@ export default function VendorCalendar() {
     queryKey: ["/api/vendors"],
   });
 
-  const myVendor = vendors.find(v => v.userId);
+  const myVendor = vendors.find(v => v.userId === user?.id);
   const currentCalendarSource = (myVendor?.calendarSource || 'local') as CalendarSource;
 
   const { data: localAvailability = [] } = useQuery<VendorAvailability[]>({

@@ -68,12 +68,9 @@ export function AppHeader() {
   );
   
   const currentVendor = useMemo(() =>
-    user?.role === "vendor" ? vendors?.find(v => v.email === user?.email) : undefined,
-    [user?.role, user?.email, vendors]
+    user?.role === "vendor" ? vendors?.find(v => v.userId === user?.id) : undefined,
+    [user?.role, user?.id, vendors]
   );
-  console.log("currentVendor", currentVendor);
-  console.log("vendors", vendors);
-  console.log("user", user, "user?.role", user?.role);
   
   const daysUntilWedding = wedding?.weddingDate
     ? differenceInDays(new Date(wedding.weddingDate), new Date())
