@@ -3655,6 +3655,206 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ============================================================================
+  // VENDOR CALENDAR ACCOUNTS & CALENDARS ROUTES
+  // ============================================================================
+
+  // Get all calendar accounts for a vendor
+  app.get("/api/vendor-calendar-accounts/vendor/:vendorId", async (req, res) => {
+    try {
+      const accounts = await storage.getCalendarAccountsByVendor(req.params.vendorId);
+      res.json(accounts);
+    } catch (error) {
+      console.error("Error fetching calendar accounts:", error);
+      res.status(500).json({ error: "Failed to fetch calendar accounts" });
+    }
+  });
+
+  // Get single calendar account
+  app.get("/api/vendor-calendar-accounts/:id", async (req, res) => {
+    try {
+      const account = await storage.getVendorCalendarAccount(req.params.id);
+      if (!account) {
+        return res.status(404).json({ error: "Calendar account not found" });
+      }
+      res.json(account);
+    } catch (error) {
+      console.error("Error fetching calendar account:", error);
+      res.status(500).json({ error: "Failed to fetch calendar account" });
+    }
+  });
+
+  // Create new calendar account connection
+  app.post("/api/vendor-calendar-accounts", async (req, res) => {
+    try {
+      const { vendorId, provider, email, label } = req.body;
+      if (!vendorId || !provider || !email) {
+        return res.status(400).json({ error: "vendorId, provider, and email are required" });
+      }
+      
+      // Check if account with same email already exists for this vendor
+      const existing = await storage.getCalendarAccountByEmail(vendorId, email);
+      if (existing) {
+        return res.status(409).json({ error: "A calendar account with this email already exists" });
+      }
+      
+      const account = await storage.createVendorCalendarAccount({
+        vendorId,
+        provider,
+        email,
+        label: label || null,
+        status: 'pending',
+      });
+      res.json(account);
+    } catch (error) {
+      console.error("Error creating calendar account:", error);
+      res.status(500).json({ error: "Failed to create calendar account" });
+    }
+  });
+
+  // Update calendar account
+  app.patch("/api/vendor-calendar-accounts/:id", async (req, res) => {
+    try {
+      const account = await storage.updateVendorCalendarAccount(req.params.id, req.body);
+      if (!account) {
+        return res.status(404).json({ error: "Calendar account not found" });
+      }
+      res.json(account);
+    } catch (error) {
+      console.error("Error updating calendar account:", error);
+      res.status(500).json({ error: "Failed to update calendar account" });
+    }
+  });
+
+  // Delete calendar account and all its calendars
+  app.delete("/api/vendor-calendar-accounts/:id", async (req, res) => {
+    try {
+      // First delete all calendars associated with this account
+      await storage.deleteCalendarsByAccount(req.params.id);
+      
+      // Then delete the account itself
+      const success = await storage.deleteVendorCalendarAccount(req.params.id);
+      if (!success) {
+        return res.status(404).json({ error: "Calendar account not found" });
+      }
+      res.json({ message: "Calendar account deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting calendar account:", error);
+      res.status(500).json({ error: "Failed to delete calendar account" });
+    }
+  });
+
+  // Get all calendars for a vendor
+  app.get("/api/vendor-calendars/vendor/:vendorId", async (req, res) => {
+    try {
+      const calendars = await storage.getCalendarsByVendor(req.params.vendorId);
+      res.json(calendars);
+    } catch (error) {
+      console.error("Error fetching vendor calendars:", error);
+      res.status(500).json({ error: "Failed to fetch vendor calendars" });
+    }
+  });
+
+  // Get calendars by account
+  app.get("/api/vendor-calendars/account/:accountId", async (req, res) => {
+    try {
+      const calendars = await storage.getCalendarsByAccount(req.params.accountId);
+      res.json(calendars);
+    } catch (error) {
+      console.error("Error fetching account calendars:", error);
+      res.status(500).json({ error: "Failed to fetch account calendars" });
+    }
+  });
+
+  // Get selected calendars for availability aggregation
+  app.get("/api/vendor-calendars/vendor/:vendorId/selected", async (req, res) => {
+    try {
+      const calendars = await storage.getSelectedCalendarsByVendor(req.params.vendorId);
+      res.json(calendars);
+    } catch (error) {
+      console.error("Error fetching selected calendars:", error);
+      res.status(500).json({ error: "Failed to fetch selected calendars" });
+    }
+  });
+
+  // Get write target calendar for creating bookings
+  app.get("/api/vendor-calendars/vendor/:vendorId/write-target", async (req, res) => {
+    try {
+      const calendar = await storage.getWriteTargetCalendar(req.params.vendorId);
+      res.json(calendar || null);
+    } catch (error) {
+      console.error("Error fetching write target calendar:", error);
+      res.status(500).json({ error: "Failed to fetch write target calendar" });
+    }
+  });
+
+  // Create vendor calendar
+  app.post("/api/vendor-calendars", async (req, res) => {
+    try {
+      const { accountId, vendorId, providerCalendarId, displayName, color, isPrimary } = req.body;
+      if (!accountId || !vendorId || !providerCalendarId || !displayName) {
+        return res.status(400).json({ error: "accountId, vendorId, providerCalendarId, and displayName are required" });
+      }
+      
+      const calendar = await storage.createVendorCalendar({
+        accountId,
+        vendorId,
+        providerCalendarId,
+        displayName,
+        color: color || null,
+        isPrimary: isPrimary || false,
+        isSelected: true,
+        isWriteTarget: false,
+        syncDirection: 'read',
+      });
+      res.json(calendar);
+    } catch (error) {
+      console.error("Error creating vendor calendar:", error);
+      res.status(500).json({ error: "Failed to create vendor calendar" });
+    }
+  });
+
+  // Update vendor calendar (toggle selection, set as write target, etc.)
+  app.patch("/api/vendor-calendars/:id", async (req, res) => {
+    try {
+      const { isSelected, isWriteTarget, syncDirection } = req.body;
+      
+      // If setting as write target, unset any existing write target for this vendor
+      if (isWriteTarget === true) {
+        const calendar = await storage.getVendorCalendar(req.params.id);
+        if (calendar) {
+          const currentWriteTarget = await storage.getWriteTargetCalendar(calendar.vendorId);
+          if (currentWriteTarget && currentWriteTarget.id !== req.params.id) {
+            await storage.updateVendorCalendar(currentWriteTarget.id, { isWriteTarget: false });
+          }
+        }
+      }
+      
+      const calendar = await storage.updateVendorCalendar(req.params.id, req.body);
+      if (!calendar) {
+        return res.status(404).json({ error: "Calendar not found" });
+      }
+      res.json(calendar);
+    } catch (error) {
+      console.error("Error updating vendor calendar:", error);
+      res.status(500).json({ error: "Failed to update vendor calendar" });
+    }
+  });
+
+  // Delete vendor calendar
+  app.delete("/api/vendor-calendars/:id", async (req, res) => {
+    try {
+      const success = await storage.deleteVendorCalendar(req.params.id);
+      if (!success) {
+        return res.status(404).json({ error: "Calendar not found" });
+      }
+      res.json({ message: "Calendar deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting vendor calendar:", error);
+      res.status(500).json({ error: "Failed to delete vendor calendar" });
+    }
+  });
+
+  // ============================================================================
   // ANALYTICS ROUTES
   // ============================================================================
 
