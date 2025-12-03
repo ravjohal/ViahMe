@@ -53,6 +53,10 @@ import {
   type InsertPhoto,
   type VendorAvailability,
   type InsertVendorAvailability,
+  type VendorCalendarAccount,
+  type InsertVendorCalendarAccount,
+  type VendorCalendar,
+  type InsertVendorCalendar,
   type ContractSignature,
   type InsertContractSignature,
   type InvitationCard,
@@ -356,6 +360,25 @@ export interface IStorage {
   updateVendorAvailability(id: string, availability: Partial<InsertVendorAvailability>): Promise<VendorAvailability | undefined>;
   deleteVendorAvailability(id: string): Promise<boolean>;
 
+  // Vendor Calendar Accounts (Multi-calendar support)
+  getVendorCalendarAccount(id: string): Promise<VendorCalendarAccount | undefined>;
+  getCalendarAccountsByVendor(vendorId: string): Promise<VendorCalendarAccount[]>;
+  getCalendarAccountByEmail(vendorId: string, email: string): Promise<VendorCalendarAccount | undefined>;
+  createVendorCalendarAccount(account: InsertVendorCalendarAccount): Promise<VendorCalendarAccount>;
+  updateVendorCalendarAccount(id: string, account: Partial<InsertVendorCalendarAccount>): Promise<VendorCalendarAccount | undefined>;
+  deleteVendorCalendarAccount(id: string): Promise<boolean>;
+
+  // Vendor Calendars (Individual calendars within accounts)
+  getVendorCalendar(id: string): Promise<VendorCalendar | undefined>;
+  getCalendarsByAccount(accountId: string): Promise<VendorCalendar[]>;
+  getCalendarsByVendor(vendorId: string): Promise<VendorCalendar[]>;
+  getSelectedCalendarsByVendor(vendorId: string): Promise<VendorCalendar[]>;
+  getWriteTargetCalendar(vendorId: string): Promise<VendorCalendar | undefined>;
+  createVendorCalendar(calendar: InsertVendorCalendar): Promise<VendorCalendar>;
+  updateVendorCalendar(id: string, calendar: Partial<InsertVendorCalendar>): Promise<VendorCalendar | undefined>;
+  deleteVendorCalendar(id: string): Promise<boolean>;
+  deleteCalendarsByAccount(accountId: string): Promise<boolean>;
+
   // Contract Signatures
   getContractSignature(id: string): Promise<ContractSignature | undefined>;
   getSignaturesByContract(contractId: string): Promise<ContractSignature[]>;
@@ -655,6 +678,8 @@ export class MemStorage implements IStorage {
   private photoGalleries: Map<string, PhotoGallery>;
   private photos: Map<string, Photo>;
   private vendorAvailability: Map<string, VendorAvailability>;
+  private vendorCalendarAccounts: Map<string, VendorCalendarAccount>;
+  private vendorCalendars: Map<string, VendorCalendar>;
   private measurementProfiles: Map<string, MeasurementProfile>;
   private shoppingOrderItems: Map<string, ShoppingOrderItem>;
 
@@ -686,6 +711,8 @@ export class MemStorage implements IStorage {
     this.photoGalleries = new Map();
     this.photos = new Map();
     this.vendorAvailability = new Map();
+    this.vendorCalendarAccounts = new Map();
+    this.vendorCalendars = new Map();
     this.measurementProfiles = new Map();
     this.shoppingOrderItems = new Map();
   }
@@ -2162,6 +2189,116 @@ export class MemStorage implements IStorage {
 
   async deleteVendorAvailability(id: string): Promise<boolean> {
     return this.vendorAvailability.delete(id);
+  }
+
+  // Vendor Calendar Accounts
+  async getVendorCalendarAccount(id: string): Promise<VendorCalendarAccount | undefined> {
+    return this.vendorCalendarAccounts.get(id);
+  }
+
+  async getCalendarAccountsByVendor(vendorId: string): Promise<VendorCalendarAccount[]> {
+    return Array.from(this.vendorCalendarAccounts.values())
+      .filter(a => a.vendorId === vendorId);
+  }
+
+  async getCalendarAccountByEmail(vendorId: string, email: string): Promise<VendorCalendarAccount | undefined> {
+    return Array.from(this.vendorCalendarAccounts.values())
+      .find(a => a.vendorId === vendorId && a.email === email);
+  }
+
+  async createVendorCalendarAccount(account: InsertVendorCalendarAccount): Promise<VendorCalendarAccount> {
+    const newAccount: VendorCalendarAccount = {
+      id: randomUUID(),
+      ...account,
+      label: account.label ?? null,
+      status: account.status ?? 'pending',
+      lastSyncedAt: null,
+      errorMessage: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.vendorCalendarAccounts.set(newAccount.id, newAccount);
+    return newAccount;
+  }
+
+  async updateVendorCalendarAccount(id: string, account: Partial<InsertVendorCalendarAccount>): Promise<VendorCalendarAccount | undefined> {
+    const existing = this.vendorCalendarAccounts.get(id);
+    if (!existing) return undefined;
+    const updated: VendorCalendarAccount = {
+      ...existing,
+      ...account,
+      updatedAt: new Date(),
+    };
+    this.vendorCalendarAccounts.set(id, updated);
+    return updated;
+  }
+
+  async deleteVendorCalendarAccount(id: string): Promise<boolean> {
+    return this.vendorCalendarAccounts.delete(id);
+  }
+
+  // Vendor Calendars
+  async getVendorCalendar(id: string): Promise<VendorCalendar | undefined> {
+    return this.vendorCalendars.get(id);
+  }
+
+  async getCalendarsByAccount(accountId: string): Promise<VendorCalendar[]> {
+    return Array.from(this.vendorCalendars.values())
+      .filter(c => c.accountId === accountId);
+  }
+
+  async getCalendarsByVendor(vendorId: string): Promise<VendorCalendar[]> {
+    return Array.from(this.vendorCalendars.values())
+      .filter(c => c.vendorId === vendorId);
+  }
+
+  async getSelectedCalendarsByVendor(vendorId: string): Promise<VendorCalendar[]> {
+    return Array.from(this.vendorCalendars.values())
+      .filter(c => c.vendorId === vendorId && c.isSelected);
+  }
+
+  async getWriteTargetCalendar(vendorId: string): Promise<VendorCalendar | undefined> {
+    return Array.from(this.vendorCalendars.values())
+      .find(c => c.vendorId === vendorId && c.isWriteTarget);
+  }
+
+  async createVendorCalendar(calendar: InsertVendorCalendar): Promise<VendorCalendar> {
+    const newCalendar: VendorCalendar = {
+      id: randomUUID(),
+      ...calendar,
+      color: calendar.color ?? null,
+      isPrimary: calendar.isPrimary ?? false,
+      isSelected: calendar.isSelected ?? true,
+      isWriteTarget: calendar.isWriteTarget ?? false,
+      syncDirection: calendar.syncDirection ?? 'read',
+      lastSyncedAt: null,
+      createdAt: new Date(),
+    };
+    this.vendorCalendars.set(newCalendar.id, newCalendar);
+    return newCalendar;
+  }
+
+  async updateVendorCalendar(id: string, calendar: Partial<InsertVendorCalendar>): Promise<VendorCalendar | undefined> {
+    const existing = this.vendorCalendars.get(id);
+    if (!existing) return undefined;
+    const updated: VendorCalendar = {
+      ...existing,
+      ...calendar,
+    };
+    this.vendorCalendars.set(id, updated);
+    return updated;
+  }
+
+  async deleteVendorCalendar(id: string): Promise<boolean> {
+    return this.vendorCalendars.delete(id);
+  }
+
+  async deleteCalendarsByAccount(accountId: string): Promise<boolean> {
+    const calendars = await this.getCalendarsByAccount(accountId);
+    for (const cal of calendars) {
+      this.vendorCalendars.delete(cal.id);
+    }
+    return true;
   }
 
   // Contract Signatures
@@ -4359,6 +4496,154 @@ export class DBStorage implements IStorage {
       .where(eq(schema.vendorAvailability.id, id))
       .returning();
     return result.length > 0;
+  }
+
+  // ============================================================================
+  // Vendor Calendar Accounts
+  // ============================================================================
+
+  async getVendorCalendarAccount(id: string): Promise<VendorCalendarAccount | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.vendorCalendarAccounts)
+      .where(eq(schema.vendorCalendarAccounts.id, id))
+      .limit(1);
+    return result[0];
+  }
+
+  async getCalendarAccountsByVendor(vendorId: string): Promise<VendorCalendarAccount[]> {
+    return await this.db
+      .select()
+      .from(schema.vendorCalendarAccounts)
+      .where(eq(schema.vendorCalendarAccounts.vendorId, vendorId))
+      .orderBy(schema.vendorCalendarAccounts.createdAt);
+  }
+
+  async getCalendarAccountByEmail(vendorId: string, email: string): Promise<VendorCalendarAccount | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.vendorCalendarAccounts)
+      .where(
+        and(
+          eq(schema.vendorCalendarAccounts.vendorId, vendorId),
+          eq(schema.vendorCalendarAccounts.email, email)
+        )
+      )
+      .limit(1);
+    return result[0];
+  }
+
+  async createVendorCalendarAccount(account: InsertVendorCalendarAccount): Promise<VendorCalendarAccount> {
+    const result = await this.db
+      .insert(schema.vendorCalendarAccounts)
+      .values(account)
+      .returning();
+    return result[0];
+  }
+
+  async updateVendorCalendarAccount(id: string, account: Partial<InsertVendorCalendarAccount>): Promise<VendorCalendarAccount | undefined> {
+    const result = await this.db
+      .update(schema.vendorCalendarAccounts)
+      .set({
+        ...account,
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.vendorCalendarAccounts.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteVendorCalendarAccount(id: string): Promise<boolean> {
+    const result = await this.db
+      .delete(schema.vendorCalendarAccounts)
+      .where(eq(schema.vendorCalendarAccounts.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  // ============================================================================
+  // Vendor Calendars
+  // ============================================================================
+
+  async getVendorCalendar(id: string): Promise<VendorCalendar | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.vendorCalendars)
+      .where(eq(schema.vendorCalendars.id, id))
+      .limit(1);
+    return result[0];
+  }
+
+  async getCalendarsByAccount(accountId: string): Promise<VendorCalendar[]> {
+    return await this.db
+      .select()
+      .from(schema.vendorCalendars)
+      .where(eq(schema.vendorCalendars.accountId, accountId));
+  }
+
+  async getCalendarsByVendor(vendorId: string): Promise<VendorCalendar[]> {
+    return await this.db
+      .select()
+      .from(schema.vendorCalendars)
+      .where(eq(schema.vendorCalendars.vendorId, vendorId));
+  }
+
+  async getSelectedCalendarsByVendor(vendorId: string): Promise<VendorCalendar[]> {
+    return await this.db
+      .select()
+      .from(schema.vendorCalendars)
+      .where(
+        and(
+          eq(schema.vendorCalendars.vendorId, vendorId),
+          eq(schema.vendorCalendars.isSelected, true)
+        )
+      );
+  }
+
+  async getWriteTargetCalendar(vendorId: string): Promise<VendorCalendar | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.vendorCalendars)
+      .where(
+        and(
+          eq(schema.vendorCalendars.vendorId, vendorId),
+          eq(schema.vendorCalendars.isWriteTarget, true)
+        )
+      )
+      .limit(1);
+    return result[0];
+  }
+
+  async createVendorCalendar(calendar: InsertVendorCalendar): Promise<VendorCalendar> {
+    const result = await this.db
+      .insert(schema.vendorCalendars)
+      .values(calendar)
+      .returning();
+    return result[0];
+  }
+
+  async updateVendorCalendar(id: string, calendar: Partial<InsertVendorCalendar>): Promise<VendorCalendar | undefined> {
+    const result = await this.db
+      .update(schema.vendorCalendars)
+      .set(calendar)
+      .where(eq(schema.vendorCalendars.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteVendorCalendar(id: string): Promise<boolean> {
+    const result = await this.db
+      .delete(schema.vendorCalendars)
+      .where(eq(schema.vendorCalendars.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  async deleteCalendarsByAccount(accountId: string): Promise<boolean> {
+    await this.db
+      .delete(schema.vendorCalendars)
+      .where(eq(schema.vendorCalendars.accountId, accountId));
+    return true;
   }
 
   // ============================================================================
