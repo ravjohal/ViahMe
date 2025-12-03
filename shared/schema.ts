@@ -1586,6 +1586,12 @@ export const PERMISSION_CATEGORIES = {
     description: "Track shopping and measurements",
     permissions: ["view", "edit", "manage"] as const,
   },
+  // AI Features
+  ai_planner: {
+    label: "AI Wedding Planner",
+    description: "Access AI-powered wedding planning assistant",
+    permissions: ["view"] as const,
+  },
   // Admin
   settings: {
     label: "Wedding Settings",

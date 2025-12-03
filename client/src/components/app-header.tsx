@@ -29,7 +29,7 @@ interface NavItem {
 
 const COUPLE_NAV_ITEMS: NavItem[] = [
   { path: "/dashboard", label: "Dashboard", icon: Home },
-  { path: "/ai-planner", label: "AI Planner", icon: Bot },
+  { path: "/ai-planner", label: "AI Planner", icon: Bot, permission: "ai_planner" },
   { path: "/budget", label: "Budget", icon: DollarSign, permission: "budget" },
   { path: "/timeline", label: "Timeline", icon: Clock, permission: "timeline" },
   { path: "/vendors", label: "Vendors", icon: UserCircle, permission: "vendors" },
