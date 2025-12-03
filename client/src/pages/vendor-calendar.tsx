@@ -247,17 +247,25 @@ export default function VendorCalendar() {
     enabled: currentCalendarSource === 'outlook' && !!outlookCalendars && outlookCalendars.length > 0,
   });
 
+  // Get write target calendar ID from aggregated availability or fall back to selected calendar
+  const writeTargetCalendarId = aggregatedAvailability?.writeTarget?.providerCalendarId || selectedCalendar;
+  const writeTargetProvider = googleAccounts.length > 0 ? 'google' : outlookAccounts.length > 0 ? 'outlook' : null;
+
   const syncMutation = useMutation({
     mutationFn: async () => {
       if (!myVendor) throw new Error("No vendor profile found");
+      // Use write target calendar from multi-calendar system if available
+      const calendarToSync = writeTargetCalendarId;
       return apiRequest("POST", `/api/vendors/${myVendor.id}/sync-calendar`, {
-        calendarId: selectedCalendar,
+        calendarId: calendarToSync,
         startDate: syncStartDate.toISOString(),
         endDate: syncEndDate.toISOString(),
       });
     },
     onSuccess: (data: any) => {
+      // Invalidate both legacy and aggregated availability
       queryClient.invalidateQueries({ queryKey: ["/api/vendor-availability"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/vendor-calendars/vendor', myVendor?.id, 'aggregated-availability'] });
       toast({
         title: "Calendar synced",
         description: data.message || "Your calendar has been synced successfully",
@@ -275,14 +283,18 @@ export default function VendorCalendar() {
   const syncOutlookMutation = useMutation({
     mutationFn: async () => {
       if (!myVendor) throw new Error("No vendor profile found");
+      // Use write target calendar from multi-calendar system if available
+      const calendarToSync = aggregatedAvailability?.writeTarget?.providerCalendarId || selectedOutlookCalendar;
       return apiRequest("POST", `/api/vendors/${myVendor.id}/sync-outlook-calendar`, {
-        calendarId: selectedOutlookCalendar,
+        calendarId: calendarToSync,
         startDate: syncStartDate.toISOString(),
         endDate: syncEndDate.toISOString(),
       });
     },
     onSuccess: (data: any) => {
+      // Invalidate both legacy and aggregated availability
       queryClient.invalidateQueries({ queryKey: ["/api/vendor-availability"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/vendor-calendars/vendor', myVendor?.id, 'aggregated-availability'] });
       toast({
         title: "Outlook Calendar synced",
         description: data.message || "Your Outlook calendar has been synced successfully",
