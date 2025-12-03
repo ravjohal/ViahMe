@@ -30,7 +30,7 @@ import {
   Mail
 } from "lucide-react";
 import { format, addMonths, startOfMonth, endOfMonth, addDays } from "date-fns";
-import type { Vendor, VendorAvailability } from "@shared/schema";
+import type { Vendor, VendorAvailability, VendorCalendarAccount, VendorCalendar as VendorCalendarType } from "@shared/schema";
 import { CalendarConnectionsManager } from "@/components/calendar-connections-manager";
 
 interface CalendarInfo {
@@ -89,6 +89,25 @@ export default function VendorCalendar() {
     queryKey: ['/api/vendor-availability/vendor', myVendor?.id],
     enabled: !!myVendor?.id && currentCalendarSource === 'local',
   });
+
+  // Fetch vendor calendar accounts (multi-account support)
+  const { data: calendarAccounts = [], isLoading: calendarAccountsLoading } = useQuery<VendorCalendarAccount[]>({
+    queryKey: ['/api/vendor-calendar-accounts/vendor', myVendor?.id],
+    enabled: !!myVendor?.id && (currentCalendarSource === 'google' || currentCalendarSource === 'outlook'),
+  });
+
+  // Fetch all calendars for this vendor (from all accounts)
+  const { data: vendorCalendars = [], isLoading: vendorCalendarsLoading } = useQuery<VendorCalendarType[]>({
+    queryKey: ['/api/vendor-calendars/vendor', myVendor?.id],
+    enabled: !!myVendor?.id && (currentCalendarSource === 'google' || currentCalendarSource === 'outlook'),
+  });
+
+  // Derive selected calendars and write target from the vendor_calendars data
+  const selectedCalendarsFromDb = vendorCalendars.filter(cal => cal.isSelected);
+  const writeTargetCalendar = vendorCalendars.find(cal => cal.isWriteTarget);
+  const hasConnectedCalendarAccounts = calendarAccounts.length > 0;
+  const googleAccounts = calendarAccounts.filter(acc => acc.provider === 'google');
+  const outlookAccounts = calendarAccounts.filter(acc => acc.provider === 'outlook');
 
   const updateCalendarSourceMutation = useMutation({
     mutationFn: async ({ calendarSource, externalCalendarId }: { calendarSource: CalendarSource; externalCalendarId?: string }) => {
@@ -645,6 +664,8 @@ export default function VendorCalendar() {
                 <CalendarConnectionsManager
                   vendorId={myVendor.id}
                   onConnectionsChange={() => {
+                    queryClient.invalidateQueries({ queryKey: ['/api/vendor-calendar-accounts/vendor', myVendor.id] });
+                    queryClient.invalidateQueries({ queryKey: ['/api/vendor-calendars/vendor', myVendor.id] });
                     queryClient.invalidateQueries({ queryKey: ["/api/calendar/list"] });
                   }}
                 />
@@ -933,6 +954,8 @@ export default function VendorCalendar() {
                 <CalendarConnectionsManager
                   vendorId={myVendor.id}
                   onConnectionsChange={() => {
+                    queryClient.invalidateQueries({ queryKey: ['/api/vendor-calendar-accounts/vendor', myVendor.id] });
+                    queryClient.invalidateQueries({ queryKey: ['/api/vendor-calendars/vendor', myVendor.id] });
                     queryClient.invalidateQueries({ queryKey: ["/api/outlook-calendar/list"] });
                   }}
                 />
