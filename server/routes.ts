@@ -6752,11 +6752,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         : wedding.partner1Name || wedding.partner2Name || 'The Couple';
       const weddingTitle = wedding.title || 'Your Wedding';
 
-      // Send emails in background (don't block response)
-      Promise.all(
-        result.taggedVendors
-          .filter(v => v.email)
-          .map(async (vendor) => {
+      // Send notifications in background (don't block response)
+      const notificationPromises: Promise<void>[] = [];
+
+      // Send email notifications
+      result.taggedVendors
+        .filter(v => v.email)
+        .forEach((vendor) => {
+          notificationPromises.push((async () => {
             try {
               const { sendTimelineChangeEmail } = await import('./email');
               const baseUrl = process.env.REPL_SLUG 
@@ -6779,8 +6782,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
             } catch (emailError) {
               console.error(`Failed to send email to ${vendor.email}:`, emailError);
             }
-          })
-      ).then(() => {
+          })());
+        });
+
+      // Send SMS notifications (if vendor has phone number)
+      result.taggedVendors
+        .filter(v => v.phone)
+        .forEach((vendor) => {
+          notificationPromises.push((async () => {
+            try {
+              const { sendTimelineChangeSMS } = await import('./twilio');
+              await sendTimelineChangeSMS({
+                vendorPhone: vendor.phone!,
+                vendorName: vendor.name,
+                eventName: result.event.name,
+                oldTime: result.change.oldValue || '',
+                newTime: result.change.newValue,
+                weddingTitle,
+                coupleName,
+                note: note || undefined,
+              });
+              console.log(`Sent timeline change SMS to ${vendor.phone}`);
+            } catch (smsError) {
+              console.error(`Failed to send SMS to ${vendor.phone}:`, smsError);
+            }
+          })());
+        });
+
+      Promise.all(notificationPromises).then(() => {
         // Mark notifications as sent
         storage.markNotificationsSent(result.change.id);
       });
