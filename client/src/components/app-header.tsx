@@ -112,7 +112,11 @@ export function AppHeader() {
             <div className="hidden sm:flex flex-col gap-1">
               <p className="text-xs text-muted-foreground font-medium">Welcome back</p>
               <p className="text-sm font-semibold" data-testid="text-couple-greeting">
-                {user?.role === "vendor" ? currentVendor?.name : wedding?.coupleNames || user?.email || "Guest"}
+                {user?.role === "vendor" 
+                  ? currentVendor?.name 
+                  : (wedding?.partner1Name && wedding?.partner2Name 
+                      ? `${wedding.partner1Name} & ${wedding.partner2Name}` 
+                      : wedding?.partner1Name || wedding?.partner2Name || user?.email || "Guest")}
               </p>
               {user?.role !== "vendor" && wedding && (
                 <Badge variant="outline" className="text-xs font-mono w-fit" data-testid="badge-tradition">

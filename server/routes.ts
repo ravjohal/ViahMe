@@ -5486,6 +5486,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get current user's role for a wedding (for collaborator dashboard)
+  app.get("/api/weddings/:weddingId/my-role", async (req, res) => {
+    const { weddingId } = req.params;
+    const userId = req.session?.userId;
+    
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      // Check if user is the wedding owner
+      const wedding = await storage.getWedding(weddingId);
+      if (!wedding) {
+        return res.status(404).json({ error: "Wedding not found" });
+      }
+      
+      if (wedding.userId === userId) {
+        return res.json({ role: null, isOwner: true });
+      }
+      
+      // Find collaborator record for this user
+      const collaborators = await storage.getWeddingCollaboratorsByWedding(weddingId);
+      const collaborator = collaborators.find(c => c.userId === userId && c.status === 'accepted');
+      
+      if (!collaborator) {
+        return res.json({ role: null, isOwner: false });
+      }
+      
+      // Get the role details
+      const role = await storage.getWeddingRole(collaborator.roleId);
+      
+      res.json({ role: role || null, isOwner: false });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Initialize default roles for a wedding (called during wedding creation or on-demand)
   app.post("/api/weddings/:weddingId/initialize-roles", async (req, res) => {
     const { weddingId } = req.params;

@@ -9,11 +9,14 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Calendar, DollarSign, Users, Briefcase, FileText, Camera, CheckCircle2, ArrowRight, Sparkles, UserPlus } from "lucide-react";
+import { Calendar, DollarSign, Users, Briefcase, FileText, Camera, CheckCircle2, ArrowRight, Sparkles, UserPlus, Heart, Clock, Bot, CheckSquare, Globe, Package, Music, Image, MessageSquare, Radio, ShoppingBag } from "lucide-react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Wedding, Event, BudgetCategory, Contract, Vendor, EventCostItem, Guest } from "@shared/schema";
+import { usePermissions } from "@/hooks/use-permissions";
+import { useAuth } from "@/hooks/use-auth";
+import { PERMISSION_CATEGORIES, type PermissionCategory } from "@shared/schema";
+import type { Wedding, Event, BudgetCategory, Contract, Vendor, EventCostItem, Guest, WeddingRole } from "@shared/schema";
 
 const CATEGORY_LABELS: Record<string, string> = {
   catering: "Catering & Food",
@@ -26,10 +29,189 @@ const CATEGORY_LABELS: Record<string, string> = {
   other: "Other Expenses",
 };
 
+interface FeatureCard {
+  permission: PermissionCategory;
+  label: string;
+  description: string;
+  icon: any;
+  path: string;
+  color: string;
+}
+
+const COLLABORATOR_FEATURES: FeatureCard[] = [
+  { permission: "guests", label: "Guest Management", description: "View and manage the guest list", icon: Users, path: "/guests", color: "pink" },
+  { permission: "guest_suggestions", label: "Suggest Guests", description: "Suggest guests for the couple to approve", icon: UserPlus, path: "/guests", color: "rose" },
+  { permission: "timeline", label: "Timeline & Events", description: "View and manage wedding events", icon: Clock, path: "/timeline", color: "orange" },
+  { permission: "budget", label: "Budget & Payments", description: "View and track the wedding budget", icon: DollarSign, path: "/budget", color: "emerald" },
+  { permission: "vendors", label: "Vendors", description: "Browse and manage vendor relationships", icon: Briefcase, path: "/vendors", color: "blue" },
+  { permission: "tasks", label: "Tasks", description: "View and manage wedding tasks", icon: CheckSquare, path: "/tasks", color: "purple" },
+  { permission: "contracts", label: "Contracts", description: "View and sign vendor contracts", icon: FileText, path: "/contracts", color: "indigo" },
+  { permission: "website", label: "Wedding Website", description: "Manage the public wedding website", icon: Globe, path: "/website-builder", color: "cyan" },
+  { permission: "photos", label: "Photos & Media", description: "Upload and manage photos", icon: Image, path: "/photo-gallery", color: "amber" },
+  { permission: "documents", label: "Documents", description: "Access wedding documents", icon: FileText, path: "/documents", color: "gray" },
+  { permission: "playlists", label: "Music & Playlists", description: "Manage music selections", icon: Music, path: "/playlists", color: "violet" },
+  { permission: "messages", label: "Messages", description: "Communicate with vendors and team", icon: MessageSquare, path: "/messages", color: "sky" },
+  { permission: "shopping", label: "Shopping & Measurements", description: "Track shopping and measurements", icon: Package, path: "/shopping", color: "fuchsia" },
+  { permission: "invitations", label: "Invitations", description: "Manage wedding invitations", icon: ShoppingBag, path: "/invitations", color: "lime" },
+  { permission: "concierge", label: "Guest Concierge", description: "Manage live updates and rituals", icon: Radio, path: "/ritual-control", color: "red" },
+  { permission: "ai_planner", label: "AI Wedding Planner", description: "Get AI-powered planning assistance", icon: Bot, path: "/ai-planner", color: "gradient" },
+];
+
+function CollaboratorDashboard({ wedding, roleName }: { wedding: Wedding; roleName?: string }) {
+  const [, setLocation] = useLocation();
+  const { canView, canEdit, canManage, permissions } = usePermissions();
+  const { user } = useAuth();
+
+  const getColorClasses = (color: string) => {
+    const colors: Record<string, { bg: string; icon: string; border: string }> = {
+      pink: { bg: "bg-pink-100 dark:bg-pink-900/30", icon: "text-pink-600", border: "border-pink-200 dark:border-pink-800" },
+      rose: { bg: "bg-rose-100 dark:bg-rose-900/30", icon: "text-rose-600", border: "border-rose-200 dark:border-rose-800" },
+      orange: { bg: "bg-orange-100 dark:bg-orange-900/30", icon: "text-orange-600", border: "border-orange-200 dark:border-orange-800" },
+      emerald: { bg: "bg-emerald-100 dark:bg-emerald-900/30", icon: "text-emerald-600", border: "border-emerald-200 dark:border-emerald-800" },
+      blue: { bg: "bg-blue-100 dark:bg-blue-900/30", icon: "text-blue-600", border: "border-blue-200 dark:border-blue-800" },
+      purple: { bg: "bg-purple-100 dark:bg-purple-900/30", icon: "text-purple-600", border: "border-purple-200 dark:border-purple-800" },
+      indigo: { bg: "bg-indigo-100 dark:bg-indigo-900/30", icon: "text-indigo-600", border: "border-indigo-200 dark:border-indigo-800" },
+      cyan: { bg: "bg-cyan-100 dark:bg-cyan-900/30", icon: "text-cyan-600", border: "border-cyan-200 dark:border-cyan-800" },
+      amber: { bg: "bg-amber-100 dark:bg-amber-900/30", icon: "text-amber-600", border: "border-amber-200 dark:border-amber-800" },
+      gray: { bg: "bg-gray-100 dark:bg-gray-900/30", icon: "text-gray-600", border: "border-gray-200 dark:border-gray-800" },
+      violet: { bg: "bg-violet-100 dark:bg-violet-900/30", icon: "text-violet-600", border: "border-violet-200 dark:border-violet-800" },
+      sky: { bg: "bg-sky-100 dark:bg-sky-900/30", icon: "text-sky-600", border: "border-sky-200 dark:border-sky-800" },
+      fuchsia: { bg: "bg-fuchsia-100 dark:bg-fuchsia-900/30", icon: "text-fuchsia-600", border: "border-fuchsia-200 dark:border-fuchsia-800" },
+      lime: { bg: "bg-lime-100 dark:bg-lime-900/30", icon: "text-lime-600", border: "border-lime-200 dark:border-lime-800" },
+      red: { bg: "bg-red-100 dark:bg-red-900/30", icon: "text-red-600", border: "border-red-200 dark:border-red-800" },
+      gradient: { bg: "bg-gradient-to-br from-orange-100 to-pink-100 dark:from-orange-900/30 dark:to-pink-900/30", icon: "text-orange-600", border: "border-orange-200 dark:border-orange-800" },
+    };
+    return colors[color] || colors.gray;
+  };
+
+  const getPermissionLevel = (permission: PermissionCategory): string => {
+    if (canManage(permission)) return "Full Access";
+    if (canEdit(permission)) return "Can Edit";
+    if (canView(permission)) return "View Only";
+    return "No Access";
+  };
+
+  const accessibleFeatures = COLLABORATOR_FEATURES.filter(f => canView(f.permission));
+
+  return (
+    <div className="min-h-screen bg-background">
+      <main className="container mx-auto px-6 py-8 max-w-5xl">
+        <Card className="p-8 mb-8 bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-orange-950/30 dark:via-pink-950/30 dark:to-purple-950/30 border-orange-200 dark:border-orange-800" data-testid="collaborator-welcome-card">
+          <div className="flex items-start gap-6">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+              <Heart className="w-8 h-8 text-white" />
+            </div>
+            <div className="space-y-3">
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 via-pink-600 to-purple-600 bg-clip-text text-transparent" style={{ fontFamily: 'Cormorant Garamond, serif' }} data-testid="collaborator-welcome-title">
+                  Welcome, {user?.email?.split('@')[0] || 'Guest'}!
+                </h1>
+                <p className="text-lg text-muted-foreground mt-1">
+                  You've been invited to help plan {wedding.partner1Name && wedding.partner2Name 
+                    ? `${wedding.partner1Name} & ${wedding.partner2Name}` 
+                    : wedding.partner1Name || wedding.partner2Name || 'the couple'}'s wedding
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="secondary" className="text-sm" data-testid="badge-wedding-tradition">
+                  {wedding.tradition.charAt(0).toUpperCase() + wedding.tradition.slice(1)} Wedding
+                </Badge>
+                {roleName && (
+                  <Badge variant="outline" className="text-sm" data-testid="badge-collaborator-role">
+                    {roleName}
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-2">What You Can Do</h2>
+          <p className="text-muted-foreground mb-6">
+            Based on your role, you have access to the following areas of wedding planning:
+          </p>
+          
+          {accessibleFeatures.length === 0 ? (
+            <Card className="p-8 text-center" data-testid="no-permissions-card">
+              <div className="max-w-md mx-auto space-y-4">
+                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto">
+                  <Users className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <h3 className="text-lg font-semibold">No Permissions Yet</h3>
+                <p className="text-muted-foreground">
+                  The couple hasn't assigned any specific permissions to your role yet. 
+                  Please check back later or contact them for access.
+                </p>
+              </div>
+            </Card>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {accessibleFeatures.map((feature) => {
+                const colors = getColorClasses(feature.color);
+                const Icon = feature.icon;
+                const level = getPermissionLevel(feature.permission);
+                
+                return (
+                  <Card 
+                    key={feature.permission}
+                    className={`p-5 hover-elevate cursor-pointer transition-all ${colors.border}`}
+                    onClick={() => setLocation(feature.path)}
+                    data-testid={`feature-card-${feature.permission}`}
+                  >
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className={`p-2.5 rounded-lg ${colors.bg}`}>
+                          <Icon className={`w-5 h-5 ${colors.icon}`} />
+                        </div>
+                        <Badge 
+                          variant={level === "Full Access" ? "default" : level === "Can Edit" ? "secondary" : "outline"}
+                          className="text-xs"
+                        >
+                          {level}
+                        </Badge>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">{feature.label}</h3>
+                        <p className="text-sm text-muted-foreground">{feature.description}</p>
+                      </div>
+                      <Button variant="ghost" size="sm" className="w-full justify-between">
+                        Open
+                        <ArrowRight className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <Card className="p-6 bg-muted/30" data-testid="collaborator-info-card">
+          <div className="flex items-start gap-4">
+            <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+              <Sparkles className="w-5 h-5 text-blue-600" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="font-semibold">Your Role in the Wedding</h3>
+              <p className="text-sm text-muted-foreground">
+                As a team member, you're helping make this wedding special. The couple has given you specific 
+                permissions to assist with planning. If you need access to additional features, please contact 
+                the couple directly.
+              </p>
+            </div>
+          </div>
+        </Card>
+      </main>
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const { isOwner, isLoading: permissionsLoading, weddingId } = usePermissions();
 
   const { data: weddings, isLoading: weddingsLoading } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
@@ -38,6 +220,11 @@ export default function Dashboard() {
   const wedding = weddings?.sort((a, b) => 
     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   )[0];
+
+  const { data: myRole } = useQuery<{ role: WeddingRole | null }>({
+    queryKey: ["/api/weddings", wedding?.id, "my-role"],
+    enabled: !!wedding?.id && !isOwner,
+  });
 
   const { data: events = [], isLoading: eventsLoading } = useQuery<Event[]>({
     queryKey: ["/api/events", wedding?.id],
@@ -120,6 +307,21 @@ export default function Dashboard() {
 
   if (!wedding) {
     return null;
+  }
+
+  if (permissionsLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-6 py-8">
+          <Skeleton className="h-40 w-full mb-6" />
+          <Skeleton className="h-64 w-full" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!isOwner) {
+    return <CollaboratorDashboard wedding={wedding} roleName={myRole?.role?.displayName} />;
   }
 
   // Calculate step completion status
