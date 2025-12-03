@@ -76,6 +76,8 @@ export default function VendorCalendar() {
   });
 
   const myVendor = vendors.find(v => v.userId === user?.id);
+  // Note: Google/Outlook sync UI is temporarily hidden until Nylas integration
+  // The code still supports these sources for when they're re-enabled
   const currentCalendarSource = (myVendor?.calendarSource || 'local') as CalendarSource;
 
   // Initialize selectedCalendar from vendor's saved externalCalendarId
@@ -449,11 +451,11 @@ export default function VendorCalendar() {
         <CardHeader>
           <CardTitle className="text-lg">Calendar Source</CardTitle>
           <CardDescription>
-            Select where your availability data comes from. You can keep everything in Viah.me or sync with your existing calendar.
+            Manage your availability directly in Viah.me
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-1 max-w-md">
             <CalendarSourceCard
               source="local"
               icon={Home}
@@ -461,20 +463,7 @@ export default function VendorCalendar() {
               description="Manage availability directly in the app"
               connected={true}
             />
-            <CalendarSourceCard
-              source="google"
-              icon={SiGoogle}
-              title="Google Calendar"
-              description="Sync with your Google account"
-              connected={!!calendars && calendars.length > 0}
-            />
-            <CalendarSourceCard
-              source="outlook"
-              icon={Mail}
-              title="Outlook Calendar"
-              description="Sync with Microsoft 365"
-              connected={false}
-            />
+            {/* Google and Outlook calendar sync temporarily hidden - will be enabled with Nylas integration */}
           </div>
         </CardContent>
       </Card>
@@ -1249,7 +1238,7 @@ export default function VendorCalendar() {
                 </CardHeader>
                 <CardContent>
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {outlookCalendars.map((cal) => (
+                    {outlookCalendars?.map((cal) => (
                       <div
                         key={cal.id}
                         className={`p-4 rounded-lg border cursor-pointer transition-colors hover-elevate ${
