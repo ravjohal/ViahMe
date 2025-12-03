@@ -109,6 +109,15 @@ import {
   type GuestSuggestionWithSource,
   type ScenarioWithStats,
   type CutListItemWithHousehold,
+  type VendorEventTag,
+  type InsertVendorEventTag,
+  type TimelineChange,
+  type InsertTimelineChange,
+  type VendorAcknowledgment,
+  type InsertVendorAcknowledgment,
+  type VendorEventTagWithVendor,
+  type TimelineChangeWithAcks,
+  type VendorAcknowledgmentWithDetails,
 } from "@shared/schema";
 import { randomUUID, randomBytes } from "crypto";
 import bcrypt from "bcrypt";
@@ -590,6 +599,42 @@ export interface IStorage {
 
   // Guest Planning Snapshot (comprehensive view for planning)
   getGuestPlanningSnapshot(weddingId: string): Promise<GuestPlanningSnapshot>;
+
+  // ============================================================================
+  // REAL-TIME MASTER TIMELINE
+  // ============================================================================
+
+  // Vendor Event Tags
+  getVendorEventTag(id: string): Promise<VendorEventTag | undefined>;
+  getVendorEventTagsByEvent(eventId: string): Promise<VendorEventTagWithVendor[]>;
+  getVendorEventTagsByWedding(weddingId: string): Promise<VendorEventTagWithVendor[]>;
+  getVendorEventTagsByVendor(vendorId: string): Promise<VendorEventTag[]>;
+  createVendorEventTag(tag: InsertVendorEventTag): Promise<VendorEventTag>;
+  deleteVendorEventTag(id: string): Promise<boolean>;
+  deleteVendorEventTagsByEvent(eventId: string): Promise<boolean>;
+  tagVendorsToEvent(eventId: string, weddingId: string, vendorIds: string[], notifyVia?: string): Promise<VendorEventTag[]>;
+
+  // Timeline Changes
+  getTimelineChange(id: string): Promise<TimelineChange | undefined>;
+  getTimelineChangesByEvent(eventId: string): Promise<TimelineChange[]>;
+  getTimelineChangesByWedding(weddingId: string): Promise<TimelineChangeWithAcks[]>;
+  getRecentTimelineChanges(weddingId: string, limit?: number): Promise<TimelineChangeWithAcks[]>;
+  createTimelineChange(change: InsertTimelineChange): Promise<TimelineChange>;
+  markNotificationsSent(changeId: string): Promise<TimelineChange | undefined>;
+
+  // Vendor Acknowledgments
+  getVendorAcknowledgment(id: string): Promise<VendorAcknowledgment | undefined>;
+  getAcknowledgmentsByChange(changeId: string): Promise<VendorAcknowledgmentWithDetails[]>;
+  getAcknowledgmentsByVendor(vendorId: string): Promise<VendorAcknowledgment[]>;
+  getPendingAcknowledgmentsForVendor(vendorId: string): Promise<VendorAcknowledgmentWithDetails[]>;
+  createVendorAcknowledgment(ack: InsertVendorAcknowledgment): Promise<VendorAcknowledgment>;
+  acknowledgeChange(changeId: string, vendorId: string, status: 'acknowledged' | 'declined', message?: string): Promise<VendorAcknowledgment>;
+  getAcknowledgmentSummaryForEvent(eventId: string): Promise<{ pending: number; acknowledged: number; declined: number }>;
+
+  // Timeline utilities
+  reorderEvents(weddingId: string, orderedEventIds: string[], changedByUserId: string): Promise<Event[]>;
+  updateEventTime(eventId: string, newTime: string, changedByUserId: string, note?: string): Promise<{ event: Event; change: TimelineChange; taggedVendors: Vendor[] }>;
+  getTimelineWithAcknowledgments(weddingId: string): Promise<Array<Event & { tags: VendorEventTagWithVendor[]; pendingAcks: number; acknowledgedAcks: number }>>;
 }
 
 // Guest Planning Snapshot - comprehensive view of all guests and per-event costs
@@ -3026,6 +3071,90 @@ export class MemStorage implements IStorage {
 
   async getGuestPlanningSnapshot(weddingId: string): Promise<GuestPlanningSnapshot> {
     throw new Error("MemStorage does not support Guest Planning Snapshot. Use DBStorage.");
+  }
+
+  // ============================================================================
+  // REAL-TIME MASTER TIMELINE - MemStorage stubs
+  // ============================================================================
+
+  // Vendor Event Tags
+  async getVendorEventTag(id: string): Promise<VendorEventTag | undefined> {
+    return undefined;
+  }
+  async getVendorEventTagsByEvent(eventId: string): Promise<VendorEventTagWithVendor[]> {
+    return [];
+  }
+  async getVendorEventTagsByWedding(weddingId: string): Promise<VendorEventTagWithVendor[]> {
+    return [];
+  }
+  async getVendorEventTagsByVendor(vendorId: string): Promise<VendorEventTag[]> {
+    return [];
+  }
+  async createVendorEventTag(tag: InsertVendorEventTag): Promise<VendorEventTag> {
+    throw new Error("MemStorage does not support Vendor Event Tags. Use DBStorage.");
+  }
+  async deleteVendorEventTag(id: string): Promise<boolean> {
+    return false;
+  }
+  async deleteVendorEventTagsByEvent(eventId: string): Promise<boolean> {
+    return false;
+  }
+  async tagVendorsToEvent(eventId: string, weddingId: string, vendorIds: string[], notifyVia?: string): Promise<VendorEventTag[]> {
+    throw new Error("MemStorage does not support Vendor Event Tags. Use DBStorage.");
+  }
+
+  // Timeline Changes
+  async getTimelineChange(id: string): Promise<TimelineChange | undefined> {
+    return undefined;
+  }
+  async getTimelineChangesByEvent(eventId: string): Promise<TimelineChange[]> {
+    return [];
+  }
+  async getTimelineChangesByWedding(weddingId: string): Promise<TimelineChangeWithAcks[]> {
+    return [];
+  }
+  async getRecentTimelineChanges(weddingId: string, limit?: number): Promise<TimelineChangeWithAcks[]> {
+    return [];
+  }
+  async createTimelineChange(change: InsertTimelineChange): Promise<TimelineChange> {
+    throw new Error("MemStorage does not support Timeline Changes. Use DBStorage.");
+  }
+  async markNotificationsSent(changeId: string): Promise<TimelineChange | undefined> {
+    throw new Error("MemStorage does not support Timeline Changes. Use DBStorage.");
+  }
+
+  // Vendor Acknowledgments
+  async getVendorAcknowledgment(id: string): Promise<VendorAcknowledgment | undefined> {
+    return undefined;
+  }
+  async getAcknowledgmentsByChange(changeId: string): Promise<VendorAcknowledgmentWithDetails[]> {
+    return [];
+  }
+  async getAcknowledgmentsByVendor(vendorId: string): Promise<VendorAcknowledgment[]> {
+    return [];
+  }
+  async getPendingAcknowledgmentsForVendor(vendorId: string): Promise<VendorAcknowledgmentWithDetails[]> {
+    return [];
+  }
+  async createVendorAcknowledgment(ack: InsertVendorAcknowledgment): Promise<VendorAcknowledgment> {
+    throw new Error("MemStorage does not support Vendor Acknowledgments. Use DBStorage.");
+  }
+  async acknowledgeChange(changeId: string, vendorId: string, status: 'acknowledged' | 'declined', message?: string): Promise<VendorAcknowledgment> {
+    throw new Error("MemStorage does not support Vendor Acknowledgments. Use DBStorage.");
+  }
+  async getAcknowledgmentSummaryForEvent(eventId: string): Promise<{ pending: number; acknowledged: number; declined: number }> {
+    return { pending: 0, acknowledged: 0, declined: 0 };
+  }
+
+  // Timeline utilities
+  async reorderEvents(weddingId: string, orderedEventIds: string[], changedByUserId: string): Promise<Event[]> {
+    throw new Error("MemStorage does not support Timeline reordering. Use DBStorage.");
+  }
+  async updateEventTime(eventId: string, newTime: string, changedByUserId: string, note?: string): Promise<{ event: Event; change: TimelineChange; taggedVendors: Vendor[] }> {
+    throw new Error("MemStorage does not support Timeline updates. Use DBStorage.");
+  }
+  async getTimelineWithAcknowledgments(weddingId: string): Promise<Array<Event & { tags: VendorEventTagWithVendor[]; pendingAcks: number; acknowledgedAcks: number }>> {
+    return [];
   }
 }
 
@@ -6845,6 +6974,329 @@ export class DBStorage implements IStorage {
         isOverBudget,
       },
     };
+  }
+
+  // ============================================================================
+  // REAL-TIME MASTER TIMELINE
+  // ============================================================================
+
+  // Vendor Event Tags
+  async getVendorEventTag(id: string): Promise<VendorEventTag | undefined> {
+    const result = await this.db.select().from(schema.vendorEventTags).where(eq(schema.vendorEventTags.id, id));
+    return result[0];
+  }
+
+  async getVendorEventTagsByEvent(eventId: string): Promise<VendorEventTagWithVendor[]> {
+    const tags = await this.db.select().from(schema.vendorEventTags)
+      .where(eq(schema.vendorEventTags.eventId, eventId));
+    
+    const result: VendorEventTagWithVendor[] = [];
+    for (const tag of tags) {
+      const vendor = await this.getVendor(tag.vendorId);
+      if (vendor) {
+        result.push({ ...tag, vendor });
+      }
+    }
+    return result;
+  }
+
+  async getVendorEventTagsByWedding(weddingId: string): Promise<VendorEventTagWithVendor[]> {
+    const tags = await this.db.select().from(schema.vendorEventTags)
+      .where(eq(schema.vendorEventTags.weddingId, weddingId));
+    
+    const result: VendorEventTagWithVendor[] = [];
+    for (const tag of tags) {
+      const vendor = await this.getVendor(tag.vendorId);
+      if (vendor) {
+        result.push({ ...tag, vendor });
+      }
+    }
+    return result;
+  }
+
+  async getVendorEventTagsByVendor(vendorId: string): Promise<VendorEventTag[]> {
+    return this.db.select().from(schema.vendorEventTags)
+      .where(eq(schema.vendorEventTags.vendorId, vendorId));
+  }
+
+  async createVendorEventTag(tag: InsertVendorEventTag): Promise<VendorEventTag> {
+    const result = await this.db.insert(schema.vendorEventTags).values(tag).returning();
+    return result[0];
+  }
+
+  async deleteVendorEventTag(id: string): Promise<boolean> {
+    await this.db.delete(schema.vendorEventTags).where(eq(schema.vendorEventTags.id, id));
+    return true;
+  }
+
+  async deleteVendorEventTagsByEvent(eventId: string): Promise<boolean> {
+    await this.db.delete(schema.vendorEventTags).where(eq(schema.vendorEventTags.eventId, eventId));
+    return true;
+  }
+
+  async tagVendorsToEvent(eventId: string, weddingId: string, vendorIds: string[], notifyVia: string = 'email'): Promise<VendorEventTag[]> {
+    // Delete existing tags for this event
+    await this.deleteVendorEventTagsByEvent(eventId);
+    
+    // Create new tags
+    const tags: VendorEventTag[] = [];
+    for (const vendorId of vendorIds) {
+      const tag = await this.createVendorEventTag({
+        eventId,
+        weddingId,
+        vendorId,
+        notifyVia: notifyVia as 'email' | 'sms' | 'both',
+      });
+      tags.push(tag);
+    }
+    return tags;
+  }
+
+  // Timeline Changes
+  async getTimelineChange(id: string): Promise<TimelineChange | undefined> {
+    const result = await this.db.select().from(schema.timelineChanges).where(eq(schema.timelineChanges.id, id));
+    return result[0];
+  }
+
+  async getTimelineChangesByEvent(eventId: string): Promise<TimelineChange[]> {
+    return this.db.select().from(schema.timelineChanges)
+      .where(eq(schema.timelineChanges.eventId, eventId))
+      .orderBy(sql`${schema.timelineChanges.createdAt} DESC`);
+  }
+
+  async getTimelineChangesByWedding(weddingId: string): Promise<TimelineChangeWithAcks[]> {
+    const changes = await this.db.select().from(schema.timelineChanges)
+      .where(eq(schema.timelineChanges.weddingId, weddingId))
+      .orderBy(sql`${schema.timelineChanges.createdAt} DESC`);
+    
+    const result: TimelineChangeWithAcks[] = [];
+    for (const change of changes) {
+      const acks = await this.db.select().from(schema.vendorAcknowledgments)
+        .where(eq(schema.vendorAcknowledgments.changeId, change.id));
+      const event = await this.getEvent(change.eventId);
+      result.push({ ...change, acknowledgments: acks, event });
+    }
+    return result;
+  }
+
+  async getRecentTimelineChanges(weddingId: string, limit: number = 10): Promise<TimelineChangeWithAcks[]> {
+    const changes = await this.db.select().from(schema.timelineChanges)
+      .where(eq(schema.timelineChanges.weddingId, weddingId))
+      .orderBy(sql`${schema.timelineChanges.createdAt} DESC`)
+      .limit(limit);
+    
+    const result: TimelineChangeWithAcks[] = [];
+    for (const change of changes) {
+      const acks = await this.db.select().from(schema.vendorAcknowledgments)
+        .where(eq(schema.vendorAcknowledgments.changeId, change.id));
+      const event = await this.getEvent(change.eventId);
+      result.push({ ...change, acknowledgments: acks, event });
+    }
+    return result;
+  }
+
+  async createTimelineChange(change: InsertTimelineChange): Promise<TimelineChange> {
+    const result = await this.db.insert(schema.timelineChanges).values(change).returning();
+    return result[0];
+  }
+
+  async markNotificationsSent(changeId: string): Promise<TimelineChange | undefined> {
+    const result = await this.db.update(schema.timelineChanges)
+      .set({ notificationsSent: true })
+      .where(eq(schema.timelineChanges.id, changeId))
+      .returning();
+    return result[0];
+  }
+
+  // Vendor Acknowledgments
+  async getVendorAcknowledgment(id: string): Promise<VendorAcknowledgment | undefined> {
+    const result = await this.db.select().from(schema.vendorAcknowledgments).where(eq(schema.vendorAcknowledgments.id, id));
+    return result[0];
+  }
+
+  async getAcknowledgmentsByChange(changeId: string): Promise<VendorAcknowledgmentWithDetails[]> {
+    const acks = await this.db.select().from(schema.vendorAcknowledgments)
+      .where(eq(schema.vendorAcknowledgments.changeId, changeId));
+    
+    const result: VendorAcknowledgmentWithDetails[] = [];
+    for (const ack of acks) {
+      const vendor = await this.getVendor(ack.vendorId);
+      const change = await this.getTimelineChange(ack.changeId);
+      if (vendor && change) {
+        result.push({ ...ack, vendor, change });
+      }
+    }
+    return result;
+  }
+
+  async getAcknowledgmentsByVendor(vendorId: string): Promise<VendorAcknowledgment[]> {
+    return this.db.select().from(schema.vendorAcknowledgments)
+      .where(eq(schema.vendorAcknowledgments.vendorId, vendorId));
+  }
+
+  async getPendingAcknowledgmentsForVendor(vendorId: string): Promise<VendorAcknowledgmentWithDetails[]> {
+    const acks = await this.db.select().from(schema.vendorAcknowledgments)
+      .where(and(
+        eq(schema.vendorAcknowledgments.vendorId, vendorId),
+        eq(schema.vendorAcknowledgments.status, 'pending')
+      ));
+    
+    const result: VendorAcknowledgmentWithDetails[] = [];
+    for (const ack of acks) {
+      const vendor = await this.getVendor(ack.vendorId);
+      const change = await this.getTimelineChange(ack.changeId);
+      if (vendor && change) {
+        result.push({ ...ack, vendor, change });
+      }
+    }
+    return result;
+  }
+
+  async createVendorAcknowledgment(ack: InsertVendorAcknowledgment): Promise<VendorAcknowledgment> {
+    const result = await this.db.insert(schema.vendorAcknowledgments).values(ack).returning();
+    return result[0];
+  }
+
+  async acknowledgeChange(changeId: string, vendorId: string, status: 'acknowledged' | 'declined', message?: string): Promise<VendorAcknowledgment> {
+    // Find existing acknowledgment
+    const existing = await this.db.select().from(schema.vendorAcknowledgments)
+      .where(and(
+        eq(schema.vendorAcknowledgments.changeId, changeId),
+        eq(schema.vendorAcknowledgments.vendorId, vendorId)
+      ));
+    
+    if (existing.length > 0) {
+      // Update existing
+      const result = await this.db.update(schema.vendorAcknowledgments)
+        .set({ status, message, acknowledgedAt: new Date() })
+        .where(eq(schema.vendorAcknowledgments.id, existing[0].id))
+        .returning();
+      return result[0];
+    } else {
+      // Get change details to create new ack
+      const change = await this.getTimelineChange(changeId);
+      if (!change) {
+        throw new Error("Change not found");
+      }
+      
+      return this.createVendorAcknowledgment({
+        weddingId: change.weddingId,
+        eventId: change.eventId,
+        vendorId,
+        changeId,
+        status,
+        message,
+      });
+    }
+  }
+
+  async getAcknowledgmentSummaryForEvent(eventId: string): Promise<{ pending: number; acknowledged: number; declined: number }> {
+    const acks = await this.db.select().from(schema.vendorAcknowledgments)
+      .where(eq(schema.vendorAcknowledgments.eventId, eventId));
+    
+    return {
+      pending: acks.filter(a => a.status === 'pending').length,
+      acknowledged: acks.filter(a => a.status === 'acknowledged').length,
+      declined: acks.filter(a => a.status === 'declined').length,
+    };
+  }
+
+  // Timeline utilities
+  async reorderEvents(weddingId: string, orderedEventIds: string[], changedByUserId: string): Promise<Event[]> {
+    const updatedEvents: Event[] = [];
+    
+    for (let i = 0; i < orderedEventIds.length; i++) {
+      const eventId = orderedEventIds[i];
+      const event = await this.getEvent(eventId);
+      if (event && event.weddingId === weddingId) {
+        const oldOrder = event.order;
+        const newOrder = i + 1;
+        
+        if (oldOrder !== newOrder) {
+          // Update the event order
+          const updated = await this.updateEvent(eventId, { order: newOrder });
+          if (updated) {
+            updatedEvents.push(updated);
+            
+            // Create a change log entry
+            await this.createTimelineChange({
+              weddingId,
+              eventId,
+              changeType: 'order',
+              oldValue: String(oldOrder),
+              newValue: String(newOrder),
+              changedByUserId,
+            });
+          }
+        } else if (event) {
+          updatedEvents.push(event);
+        }
+      }
+    }
+    
+    return updatedEvents;
+  }
+
+  async updateEventTime(eventId: string, newTime: string, changedByUserId: string, note?: string): Promise<{ event: Event; change: TimelineChange; taggedVendors: Vendor[] }> {
+    const event = await this.getEvent(eventId);
+    if (!event) {
+      throw new Error("Event not found");
+    }
+    
+    const oldTime = event.time || '';
+    
+    // Update the event
+    const updated = await this.updateEvent(eventId, { time: newTime });
+    if (!updated) {
+      throw new Error("Failed to update event");
+    }
+    
+    // Create timeline change record
+    const change = await this.createTimelineChange({
+      weddingId: event.weddingId,
+      eventId,
+      changeType: 'time',
+      oldValue: oldTime,
+      newValue: newTime,
+      changedByUserId,
+      note,
+    });
+    
+    // Get tagged vendors for this event
+    const tags = await this.getVendorEventTagsByEvent(eventId);
+    const taggedVendors = tags.map(t => t.vendor);
+    
+    // Create pending acknowledgment records for each tagged vendor
+    for (const tag of tags) {
+      await this.createVendorAcknowledgment({
+        weddingId: event.weddingId,
+        eventId,
+        vendorId: tag.vendorId,
+        changeId: change.id,
+        status: 'pending',
+      });
+    }
+    
+    return { event: updated, change, taggedVendors };
+  }
+
+  async getTimelineWithAcknowledgments(weddingId: string): Promise<Array<Event & { tags: VendorEventTagWithVendor[]; pendingAcks: number; acknowledgedAcks: number }>> {
+    const events = await this.getEventsByWedding(weddingId);
+    
+    const result = [];
+    for (const event of events) {
+      const tags = await this.getVendorEventTagsByEvent(event.id);
+      const ackSummary = await this.getAcknowledgmentSummaryForEvent(event.id);
+      
+      result.push({
+        ...event,
+        tags,
+        pendingAcks: ackSummary.pending,
+        acknowledgedAcks: ackSummary.acknowledged,
+      });
+    }
+    
+    return result.sort((a, b) => a.order - b.order);
   }
 }
 

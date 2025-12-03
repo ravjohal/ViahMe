@@ -1961,3 +1961,91 @@ export type HouseholdWithPriority = Household & {
 export type CutListItemWithHousehold = CutListItem & {
   household: Household;
 };
+
+// ============================================================================
+// REAL-TIME MASTER TIMELINE - Day-of coordination
+// ============================================================================
+
+// Vendor Event Tags - Which vendors are tagged for notifications on which events
+export const vendorEventTags = pgTable("vendor_event_tags", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  eventId: varchar("event_id").notNull(),
+  vendorId: varchar("vendor_id").notNull(),
+  weddingId: varchar("wedding_id").notNull(),
+  notifyVia: text("notify_via").notNull().default('email'), // 'email' | 'sms' | 'both'
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertVendorEventTagSchema = createInsertSchema(vendorEventTags).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  notifyVia: z.enum(['email', 'sms', 'both']).default('email'),
+});
+
+export type InsertVendorEventTag = z.infer<typeof insertVendorEventTagSchema>;
+export type VendorEventTag = typeof vendorEventTags.$inferSelect;
+
+// Timeline Changes - Audit log of all timeline modifications
+export const timelineChanges = pgTable("timeline_changes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  eventId: varchar("event_id").notNull(),
+  changeType: text("change_type").notNull(), // 'time' | 'date' | 'location' | 'order' | 'name'
+  oldValue: text("old_value"),
+  newValue: text("new_value"),
+  changedByUserId: varchar("changed_by_user_id").notNull(),
+  note: text("note"), // Optional note about the change
+  notificationsSent: boolean("notifications_sent").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertTimelineChangeSchema = createInsertSchema(timelineChanges).omit({
+  id: true,
+  notificationsSent: true,
+  createdAt: true,
+}).extend({
+  changeType: z.enum(['time', 'date', 'location', 'order', 'name']),
+});
+
+export type InsertTimelineChange = z.infer<typeof insertTimelineChangeSchema>;
+export type TimelineChange = typeof timelineChanges.$inferSelect;
+
+// Vendor Acknowledgments - Track vendor responses to timeline changes
+export const vendorAcknowledgments = pgTable("vendor_acknowledgments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  eventId: varchar("event_id").notNull(),
+  vendorId: varchar("vendor_id").notNull(),
+  changeId: varchar("change_id").notNull(), // FK to timeline_changes
+  status: text("status").notNull().default('pending'), // 'pending' | 'acknowledged' | 'declined'
+  message: text("message"), // Optional response message from vendor
+  acknowledgedAt: timestamp("acknowledged_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertVendorAcknowledgmentSchema = createInsertSchema(vendorAcknowledgments).omit({
+  id: true,
+  acknowledgedAt: true,
+  createdAt: true,
+}).extend({
+  status: z.enum(['pending', 'acknowledged', 'declined']).default('pending'),
+});
+
+export type InsertVendorAcknowledgment = z.infer<typeof insertVendorAcknowledgmentSchema>;
+export type VendorAcknowledgment = typeof vendorAcknowledgments.$inferSelect;
+
+// Extended types for timeline management
+export type VendorEventTagWithVendor = VendorEventTag & {
+  vendor: Vendor;
+};
+
+export type TimelineChangeWithAcks = TimelineChange & {
+  acknowledgments: VendorAcknowledgment[];
+  event?: Event;
+};
+
+export type VendorAcknowledgmentWithDetails = VendorAcknowledgment & {
+  vendor: Vendor;
+  change: TimelineChange;
+};

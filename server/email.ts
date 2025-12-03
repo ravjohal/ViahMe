@@ -983,3 +983,207 @@ export async function sendEmail(params: {
     throw error;
   }
 }
+
+export async function sendTimelineChangeEmail(params: {
+  to: string;
+  vendorName: string;
+  eventName: string;
+  eventDate?: string;
+  oldTime: string;
+  newTime: string;
+  weddingTitle: string;
+  coupleName: string;
+  note?: string;
+  acknowledgeUrl: string;
+}) {
+  const { client, fromEmail } = await getUncachableResendClient();
+  
+  const { to, vendorName, eventName, eventDate, oldTime, newTime, weddingTitle, coupleName, note, acknowledgeUrl } = params;
+  
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+          }
+          .header {
+            background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
+            color: white;
+            padding: 30px 20px;
+            border-radius: 8px 8px 0 0;
+            text-align: center;
+          }
+          .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+          }
+          .content {
+            background: white;
+            padding: 30px;
+            border: 1px solid #e5e7eb;
+            border-top: none;
+          }
+          .alert-box {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+          }
+          .change-details {
+            background: #f3f4f6;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+          }
+          .time-change {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 18px;
+            margin: 15px 0;
+          }
+          .old-time {
+            text-decoration: line-through;
+            color: #9ca3af;
+          }
+          .arrow {
+            color: #f97316;
+            font-weight: bold;
+          }
+          .new-time {
+            color: #16a34a;
+            font-weight: bold;
+          }
+          .button-container {
+            text-align: center;
+            margin: 25px 0;
+          }
+          .button {
+            display: inline-block;
+            background: #16a34a;
+            color: white;
+            padding: 14px 35px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 16px;
+          }
+          .button:hover {
+            background: #15803d;
+          }
+          .footer {
+            text-align: center;
+            padding: 20px;
+            color: #6b7280;
+            font-size: 14px;
+            border-top: 1px solid #e5e7eb;
+          }
+          .note-box {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 12px 16px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>Timeline Change Alert</h1>
+        </div>
+        <div class="content">
+          <p>Hello ${vendorName},</p>
+          
+          <div class="alert-box">
+            <strong>Important:</strong> The wedding timeline has been updated and requires your attention.
+          </div>
+          
+          <div class="change-details">
+            <p style="margin: 0 0 10px 0; font-weight: 600;">Event Details:</p>
+            <p style="margin: 5px 0;"><strong>Wedding:</strong> ${weddingTitle}</p>
+            <p style="margin: 5px 0;"><strong>Couple:</strong> ${coupleName}</p>
+            <p style="margin: 5px 0;"><strong>Event:</strong> ${eventName}</p>
+            ${eventDate ? `<p style="margin: 5px 0;"><strong>Date:</strong> ${eventDate}</p>` : ''}
+            
+            <div class="time-change">
+              <span class="old-time">${oldTime || 'Not set'}</span>
+              <span class="arrow">→</span>
+              <span class="new-time">${newTime}</span>
+            </div>
+          </div>
+          
+          ${note ? `
+            <div class="note-box">
+              <strong>Note from the couple:</strong><br>
+              ${note}
+            </div>
+          ` : ''}
+          
+          <p>Please acknowledge this change to confirm you've received and noted the updated schedule.</p>
+          
+          <div class="button-container">
+            <a href="${acknowledgeUrl}" class="button">Acknowledge Change</a>
+          </div>
+          
+          <p style="color: #6b7280; font-size: 14px;">
+            If you have any questions or concerns about this change, please contact the couple directly through the Viah.me messaging system.
+          </p>
+        </div>
+        <div class="footer">
+          <p>This notification was sent via Viah.me</p>
+          <p>Your South Asian Wedding Planning Platform</p>
+        </div>
+      </body>
+    </html>
+  `;
+
+  const plaintext = `
+TIMELINE CHANGE ALERT
+
+Hello ${vendorName},
+
+The wedding timeline has been updated and requires your attention.
+
+Wedding: ${weddingTitle}
+Couple: ${coupleName}
+Event: ${eventName}
+${eventDate ? `Date: ${eventDate}` : ''}
+
+TIME CHANGE: ${oldTime || 'Not set'} → ${newTime}
+
+${note ? `Note from couple: ${note}` : ''}
+
+Please acknowledge this change by visiting:
+${acknowledgeUrl}
+
+If you have any questions, please contact the couple through the Viah.me messaging system.
+
+---
+This notification was sent via Viah.me
+Your South Asian Wedding Planning Platform
+  `.trim();
+
+  try {
+    const result = await client.emails.send({
+      from: fromEmail,
+      to,
+      subject: `Timeline Change: ${eventName} - ${weddingTitle}`,
+      html,
+      text: plaintext,
+    });
+    return result;
+  } catch (error) {
+    console.error('Failed to send timeline change email:', error);
+    throw error;
+  }
+}

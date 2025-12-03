@@ -51,6 +51,7 @@ import VendorDeposit from "@/pages/vendor-deposit";
 import LeadInbox from "@/pages/lead-inbox";
 import ClaimProfile from "@/pages/claim-profile";
 import AiPlanner from "@/pages/ai-planner";
+import LiveTimeline from "@/pages/live-timeline";
 import { VendorRoute } from "@/components/VendorRoute";
 import { CoupleRoute } from "@/components/CoupleRoute";
 
@@ -112,6 +113,11 @@ function Router() {
       <Route path="/timeline">
         <ProtectedRoute requiredPermission="timeline">
           <Timeline />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/live-timeline">
+        <ProtectedRoute requiredPermission="timeline">
+          <LiveTimeline />
         </ProtectedRoute>
       </Route>
       <Route path="/budget">

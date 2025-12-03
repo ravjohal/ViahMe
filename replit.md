@@ -30,6 +30,13 @@ Key architectural decisions and features include:
   - Note: "Source" concept removed - suggestions now come directly from team members via the permission-based collaboration system
 - **Communication & Collaboration**: Messaging system for couple-vendor communication, review system, document storage, and team collaboration with granular role-based access control and activity logging.
 - **Live Wedding Experience**: Real-Time Guest Concierge system including a Gap Concierge Designer and Ritual Control Panel for couples, feeding into a public-facing Guest Live Feed.
+- **Real-Time Master Timeline**: Day-of coordination system for couples and vendors:
+  - **Drag-and-drop event reordering** using dnd-kit with WebSocket broadcast for real-time sync
+  - **Vendor tagging** to associate vendors with specific timeline events
+  - **Time change notifications** via email (Resend) when event times are modified
+  - **Vendor acknowledgment system** allowing vendors to confirm/decline timeline changes from their dashboard
+  - **WebSocket-based live updates** broadcasting changes to all connected clients
+  - Note: SMS integration (Twilio) is postponed; currently using email-only notifications via Resend
 - **Vendor Tools**: Real-Time Vendor Availability Calendar, Vendor Comparison Tools, Google Calendar Integration for syncing vendor availability.
 - **E-commerce & Shopping**: Invitation Card Shop with Stripe payment processing and Shopping & Measurements Tracking for attire and accessories with dual currency support.
 - **Cultural Information**: Guest-facing educational section with ceremony explanations, attire guides, etiquette, traditions, and a terminology glossary.

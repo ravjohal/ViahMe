@@ -220,6 +220,49 @@ export default function VendorDashboard() {
     enabled: !!vendorId,
   });
 
+  // Pending timeline change acknowledgments
+  interface PendingAcknowledgment {
+    id: string;
+    changeId: string;
+    weddingId: string;
+    eventId: string;
+    status: 'pending' | 'acknowledged' | 'declined';
+    change: {
+      id: string;
+      changeType: string;
+      oldValue: string | null;
+      newValue: string;
+      note: string | null;
+      createdAt: string;
+    };
+  }
+
+  const { data: pendingAcks = [], refetch: refetchAcks } = useQuery<PendingAcknowledgment[]>({
+    queryKey: ["/api/vendor/pending-acknowledgments"],
+    enabled: !!vendorId,
+  });
+
+  const acknowledgeMutation = useMutation({
+    mutationFn: async ({ changeId, status, message }: { changeId: string; status: 'acknowledged' | 'declined'; message?: string }) => {
+      return await apiRequest("POST", `/api/timeline-changes/${changeId}/acknowledge`, { status, message });
+    },
+    onSuccess: () => {
+      refetchAcks();
+      queryClient.invalidateQueries({ queryKey: ["/api/vendor/pending-acknowledgments"] });
+      toast({
+        title: "Response submitted",
+        description: "Your acknowledgment has been recorded",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to submit acknowledgment",
+        variant: "destructive",
+      });
+    },
+  });
+
   const createPackageMutation = useMutation({
     mutationFn: async (data: InsertServicePackage) => {
       // Validate with schema before sending
@@ -886,6 +929,66 @@ export default function VendorDashboard() {
             </div>
           </Card>
         </div>
+        )}
+
+        {/* Pending Timeline Acknowledgments Alert */}
+        {pendingAcks.length > 0 && (
+          <Card className="mb-6 border-orange-200 dark:border-orange-800 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg flex items-center gap-2 text-orange-700 dark:text-orange-400">
+                <AlertCircle className="w-5 h-5" />
+                Timeline Changes Require Your Attention
+              </CardTitle>
+              <CardDescription className="text-orange-600/80 dark:text-orange-400/80">
+                Please acknowledge the following schedule changes
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {pendingAcks.map((ack) => (
+                <div key={ack.id} className="flex items-center justify-between p-4 rounded-lg bg-white/70 dark:bg-black/20 border border-orange-200 dark:border-orange-800/50" data-testid={`pending-ack-${ack.id}`}>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Badge className="bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-400">
+                        Time Change
+                      </Badge>
+                      <span className="text-sm text-muted-foreground">
+                        {ack.change.createdAt && format(new Date(ack.change.createdAt), "MMM d, h:mm a")}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="line-through text-muted-foreground">{ack.change.oldValue || 'Not set'}</span>
+                      <span className="text-orange-600 dark:text-orange-400">→</span>
+                      <span className="font-semibold text-green-600 dark:text-green-400">{ack.change.newValue}</span>
+                    </div>
+                    {ack.change.note && (
+                      <p className="text-sm text-muted-foreground mt-1 italic">"{ack.change.note}"</p>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => acknowledgeMutation.mutate({ changeId: ack.changeId, status: 'declined' })}
+                      disabled={acknowledgeMutation.isPending}
+                      data-testid={`button-decline-ack-${ack.id}`}
+                    >
+                      <XCircle className="w-4 h-4 mr-1" />
+                      Decline
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => acknowledgeMutation.mutate({ changeId: ack.changeId, status: 'acknowledged' })}
+                      disabled={acknowledgeMutation.isPending}
+                      data-testid={`button-confirm-ack-${ack.id}`}
+                    >
+                      <CheckCircle className="w-4 h-4 mr-1" />
+                      Confirm
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
         )}
 
         {/* Tabs for Bookings, Contracts, Packages, Availability, and Analytics */}
