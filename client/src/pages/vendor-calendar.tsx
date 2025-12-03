@@ -77,6 +77,13 @@ export default function VendorCalendar() {
   const myVendor = vendors.find(v => v.userId === user?.id);
   const currentCalendarSource = (myVendor?.calendarSource || 'local') as CalendarSource;
 
+  // Initialize selectedCalendar from vendor's saved externalCalendarId
+  useEffect(() => {
+    if (myVendor?.externalCalendarId) {
+      setSelectedCalendar(myVendor.externalCalendarId);
+    }
+  }, [myVendor?.externalCalendarId]);
+
   const { data: localAvailability = [] } = useQuery<VendorAvailability[]>({
     queryKey: ['/api/vendor-availability/vendor', myVendor?.id],
     enabled: !!myVendor?.id && currentCalendarSource === 'local',
@@ -641,7 +648,17 @@ export default function VendorCalendar() {
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="calendar-select">Active Calendar</Label>
-                      <Select value={selectedCalendar} onValueChange={setSelectedCalendar}>
+                      <Select 
+                        value={selectedCalendar} 
+                        onValueChange={(value) => {
+                          setSelectedCalendar(value);
+                          // Save the selected calendar to vendor profile
+                          updateCalendarSourceMutation.mutate({ 
+                            calendarSource: 'google', 
+                            externalCalendarId: value 
+                          });
+                        }}
+                      >
                         <SelectTrigger id="calendar-select" data-testid="select-calendar">
                           <SelectValue placeholder="Select a calendar" />
                         </SelectTrigger>
@@ -664,6 +681,9 @@ export default function VendorCalendar() {
                           ))}
                         </SelectContent>
                       </Select>
+                      <p className="text-xs text-muted-foreground">
+                        Your selection will be saved automatically
+                      </p>
                     </div>
 
                     <div className="pt-4 border-t">
