@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { SiGoogle, SiMicrosoftoutlook } from "react-icons/si";
+import { SiGoogle } from "react-icons/si";
 import {
   Calendar,
   Plus,
@@ -24,6 +24,7 @@ import {
   CheckCircle2,
   XCircle,
   Edit2,
+  Mail,
 } from "lucide-react";
 import {
   Dialog,
@@ -198,7 +199,7 @@ export function CalendarConnectionsManager({
       case 'google':
         return <SiGoogle className="h-4 w-4" />;
       case 'outlook':
-        return <SiMicrosoftoutlook className="h-4 w-4" />;
+        return <Mail className="h-4 w-4 text-blue-500" />;
       default:
         return <Calendar className="h-4 w-4" />;
     }
@@ -573,7 +574,7 @@ function ConnectAccountButton({ vendorId, onSuccess }: ConnectAccountButtonProps
             {isConnecting && selectedProvider === 'outlook' ? (
               <Loader2 className="h-5 w-5 animate-spin" />
             ) : (
-              <SiMicrosoftoutlook className="h-5 w-5 text-blue-500" />
+              <Mail className="h-5 w-5 text-blue-500" />
             )}
             <div className="text-left">
               <p className="font-medium">Outlook Calendar</p>

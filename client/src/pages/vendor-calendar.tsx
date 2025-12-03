@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { format, addMonths, startOfMonth, endOfMonth, addDays } from "date-fns";
 import type { Vendor, VendorAvailability } from "@shared/schema";
+import { CalendarConnectionsManager } from "@/components/calendar-connections-manager";
 
 interface CalendarInfo {
   id: string;
@@ -639,6 +640,16 @@ export default function VendorCalendar() {
                 </Badge>
               </div>
 
+              {/* Multi-Calendar Connections Manager */}
+              {myVendor && (
+                <CalendarConnectionsManager
+                  vendorId={myVendor.id}
+                  onConnectionsChange={() => {
+                    queryClient.invalidateQueries({ queryKey: ["/api/calendar/list"] });
+                  }}
+                />
+              )}
+
               <div className="grid gap-6 lg:grid-cols-3">
                 <Card className="lg:col-span-1">
                   <CardHeader>
@@ -916,6 +927,16 @@ export default function VendorCalendar() {
                   Outlook Calendar Connected
                 </Badge>
               </div>
+
+              {/* Multi-Calendar Connections Manager for Outlook */}
+              {myVendor && (
+                <CalendarConnectionsManager
+                  vendorId={myVendor.id}
+                  onConnectionsChange={() => {
+                    queryClient.invalidateQueries({ queryKey: ["/api/outlook-calendar/list"] });
+                  }}
+                />
+              )}
 
               <div className="grid gap-6 lg:grid-cols-3">
                 <Card className="lg:col-span-1">
