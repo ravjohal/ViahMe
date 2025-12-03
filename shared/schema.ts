@@ -1040,6 +1040,67 @@ export type InsertVendorAvailability = z.infer<typeof insertVendorAvailabilitySc
 export type VendorAvailability = typeof vendorAvailability.$inferSelect;
 
 // ============================================================================
+// VENDOR CALENDAR ACCOUNTS - Multiple Google/Outlook calendar connections
+// ============================================================================
+
+export const vendorCalendarAccounts = pgTable("vendor_calendar_accounts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  vendorId: varchar("vendor_id").notNull(),
+  provider: text("provider").notNull(), // 'google' | 'outlook'
+  email: text("email").notNull(), // The email address for this calendar account
+  label: text("label"), // Optional friendly name for the account
+  status: text("status").notNull().default('pending'), // 'pending' | 'connected' | 'error' | 'disconnected'
+  lastSyncedAt: timestamp("last_synced_at"),
+  errorMessage: text("error_message"), // Last error if status is 'error'
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertVendorCalendarAccountSchema = createInsertSchema(vendorCalendarAccounts).omit({
+  id: true,
+  lastSyncedAt: true,
+  errorMessage: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  provider: z.enum(['google', 'outlook']),
+  status: z.enum(['pending', 'connected', 'error', 'disconnected']).optional(),
+});
+
+export type InsertVendorCalendarAccount = z.infer<typeof insertVendorCalendarAccountSchema>;
+export type VendorCalendarAccount = typeof vendorCalendarAccounts.$inferSelect;
+
+// ============================================================================
+// VENDOR CALENDARS - Individual calendars within connected accounts
+// ============================================================================
+
+export const vendorCalendars = pgTable("vendor_calendars", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  accountId: varchar("account_id").notNull(), // FK to vendor_calendar_accounts
+  vendorId: varchar("vendor_id").notNull(), // Denormalized for easier queries
+  providerCalendarId: text("provider_calendar_id").notNull(), // Google/Outlook calendar ID
+  displayName: text("display_name").notNull(),
+  color: text("color"), // Calendar color from provider
+  isPrimary: boolean("is_primary").notNull().default(false), // Is this the primary calendar in that account
+  isSelected: boolean("is_selected").notNull().default(true), // Should we sync this calendar's availability
+  isWriteTarget: boolean("is_write_target").notNull().default(false), // Create bookings on this calendar
+  syncDirection: text("sync_direction").notNull().default('read'), // 'read' | 'write' | 'two_way'
+  lastSyncedAt: timestamp("last_synced_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertVendorCalendarSchema = createInsertSchema(vendorCalendars).omit({
+  id: true,
+  lastSyncedAt: true,
+  createdAt: true,
+}).extend({
+  syncDirection: z.enum(['read', 'write', 'two_way']).optional(),
+});
+
+export type InsertVendorCalendar = z.infer<typeof insertVendorCalendarSchema>;
+export type VendorCalendar = typeof vendorCalendars.$inferSelect;
+
+// ============================================================================
 // CONTRACT SIGNATURES - E-signature tracking and vault
 // ============================================================================
 
