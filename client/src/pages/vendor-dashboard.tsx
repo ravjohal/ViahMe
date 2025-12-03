@@ -81,10 +81,20 @@ interface AlternateSlot {
 export default function VendorDashboard() {
   const { toast } = useToast();
   const { user, isLoading: authLoading, logout } = useAuth();
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const [showWizard, setShowWizard] = useState(false);
   const [editFormData, setEditFormData] = useState<Partial<Vendor>>({});
   const [profilePanelOpen, setProfilePanelOpen] = useState(false);
+  
+  // Check for ?edit=profile query parameter to auto-open profile panel
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('edit') === 'profile') {
+      setProfilePanelOpen(true);
+      // Clear the query parameter from URL without triggering navigation
+      window.history.replaceState({}, '', '/vendor-dashboard');
+    }
+  }, [location]);
   
   const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
   const [selectedBookingForDecline, setSelectedBookingForDecline] = useState<Booking | null>(null);
@@ -800,43 +810,6 @@ export default function VendorDashboard() {
               </Button>
             </CardContent>
           </Card>
-        )}
-
-        {/* Compact Vendor Header Bar */}
-        {currentVendor && (
-          <div className="flex items-center justify-between gap-4 mb-6 p-4 rounded-lg bg-card border" data-testid="vendor-header-bar">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-primary/10">
-                <Building2 className="w-6 h-6 text-primary" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold" data-testid="text-vendor-name">
-                  {currentVendor.name}
-                </h1>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <MapPin className="w-3.5 h-3.5" />
-                  <span>{currentVendor.location}</span>
-                  <span className="mx-1">•</span>
-                  <span>{currentVendor.priceRange}</span>
-                  {rating > 0 && (
-                    <>
-                      <span className="mx-1">•</span>
-                      <Star className="w-3.5 h-3.5 fill-primary text-primary" />
-                      <span className="font-medium text-foreground">{rating.toFixed(1)}</span>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-            <Button
-              variant="outline"
-              onClick={() => setProfilePanelOpen(true)}
-              data-testid="button-manage-profile"
-            >
-              <User className="w-4 h-4 mr-2" />
-              Manage Profile
-            </Button>
-          </div>
         )}
 
         {/* Stats Cards */}

@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Bell, Calendar, Home, Users, CheckSquare, Clock, DollarSign, FileText, MessageSquare, Music, Image, CalendarClock, UserCircle, Menu, LogOut, Settings, ShoppingBag, Package, BookOpen, Radio, UsersRound, Globe, Bot } from "lucide-react";
+import { Bell, Calendar, Home, Users, CheckSquare, Clock, DollarSign, FileText, MessageSquare, Music, Image, CalendarClock, UserCircle, Menu, LogOut, Settings, ShoppingBag, Package, BookOpen, Radio, UsersRound, Globe, Bot, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -273,6 +273,14 @@ export function AppHeader() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                {user.role === "vendor" && (
+                  <Link href="/vendor-dashboard?edit=profile">
+                    <DropdownMenuItem className="gap-2 cursor-pointer" data-testid="menu-item-edit-profile">
+                      <User className="w-4 h-4" />
+                      Edit Profile
+                    </DropdownMenuItem>
+                  </Link>
+                )}
                 <Link href="/settings">
                   <DropdownMenuItem className="gap-2 cursor-pointer" data-testid="menu-item-settings">
                     <Settings className="w-4 h-4" />
