@@ -193,11 +193,13 @@ function CollaboratorDashboard({ wedding, roleName }: { wedding: Wedding; roleNa
               <Sparkles className="w-5 h-5 text-blue-600" />
             </div>
             <div className="space-y-1">
-              <h3 className="font-semibold">Your Role in the Wedding</h3>
+              <h3 className="font-semibold">Your Role{roleName ? `: ${roleName}` : ' in the Wedding'}</h3>
               <p className="text-sm text-muted-foreground">
-                As a team member, you're helping make this wedding special. The couple has given you specific 
-                permissions to assist with planning. If you need access to additional features, please contact 
-                the couple directly.
+                {roleName 
+                  ? `You're helping make this wedding special as "${roleName}". The couple has given you specific permissions to assist with planning.`
+                  : "As a team member, you're helping make this wedding special. The couple has given you specific permissions to assist with planning."
+                }
+                {' '}If you need access to additional features, please contact the couple directly.
               </p>
             </div>
           </div>
