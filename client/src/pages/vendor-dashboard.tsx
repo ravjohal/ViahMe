@@ -14,6 +14,13 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -57,6 +64,9 @@ import {
   Users,
   BarChart3,
   Package,
+  User,
+  Building2,
+  AlertCircle,
 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { format } from "date-fns";
@@ -74,6 +84,7 @@ export default function VendorDashboard() {
   const [, setLocation] = useLocation();
   const [showWizard, setShowWizard] = useState(false);
   const [editFormData, setEditFormData] = useState<Partial<Vendor>>({});
+  const [profilePanelOpen, setProfilePanelOpen] = useState(false);
   
   const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
   const [selectedBookingForDecline, setSelectedBookingForDecline] = useState<Booking | null>(null);
@@ -424,7 +435,6 @@ export default function VendorDashboard() {
         description: "Your vendor profile has been created successfully.",
       });
       setShowWizard(false);
-      setEditDialogOpen(false);
     },
     onError: (error: any) => {
       toast({
@@ -449,7 +459,6 @@ export default function VendorDashboard() {
         description: "Your vendor profile has been updated successfully.",
       });
       setShowWizard(false);
-      setEditDialogOpen(false);
     },
     onError: (error: any) => {
       toast({
@@ -793,93 +802,41 @@ export default function VendorDashboard() {
           </Card>
         )}
 
-        {/* Vendor Profile Card */}
+        {/* Compact Vendor Header Bar */}
         {currentVendor && (
-        <Card className="mb-8" data-testid="card-vendor-profile">
-          <CardContent className="pt-6">
-            <div className="flex items-start justify-between gap-4 mb-6 pb-6 border-b">
+          <div className="flex items-center justify-between gap-4 mb-6 p-4 rounded-lg bg-card border" data-testid="vendor-header-bar">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-full bg-primary/10">
+                <Building2 className="w-6 h-6 text-primary" />
+              </div>
               <div>
-                <h2 className="text-2xl font-bold" data-testid="text-vendor-name">
+                <h1 className="text-xl font-bold" data-testid="text-vendor-name">
                   {currentVendor.name}
-                </h2>
-                <div className="mt-2 text-base flex flex-wrap gap-2">
-                  {currentVendor.categories?.map((cat: string) => (
-                    <Badge key={cat} variant="secondary">
-                      {cat.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={openWizard}
-                  data-testid="button-edit-profile"
-                >
-                  <Edit className="w-4 h-4 mr-2" />
-                  Edit Profile
-                </Button>
-                {rating > 0 && (
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted ml-2">
-                    <Star className="w-5 h-5 fill-primary text-primary" />
-                    <span className="font-mono font-semibold" data-testid="text-vendor-rating">
-                      {rating.toFixed(1)}
-                    </span>
-                    <span className="text-sm text-muted-foreground">
-                      ({currentVendor.reviewCount || 0} reviews)
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="flex items-center gap-3">
-                <MapPin className="w-5 h-5 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Location</p>
-                  <p className="font-medium" data-testid="text-vendor-location">{currentVendor.location}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <DollarSign className="w-5 h-5 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Price Range</p>
-                  <p className="font-medium" data-testid="text-vendor-price">{currentVendor.priceRange}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <Mail className="w-5 h-5 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Contact</p>
-                  <p className="font-medium" data-testid="text-vendor-contact">
-                    {currentVendor.contact || "Not provided"}
-                  </p>
+                </h1>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <MapPin className="w-3.5 h-3.5" />
+                  <span>{currentVendor.location}</span>
+                  <span className="mx-1">•</span>
+                  <span>{currentVendor.priceRange}</span>
+                  {rating > 0 && (
+                    <>
+                      <span className="mx-1">•</span>
+                      <Star className="w-3.5 h-3.5 fill-primary text-primary" />
+                      <span className="font-medium text-foreground">{rating.toFixed(1)}</span>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
-            {currentVendor.description && (
-              <div className="mt-6">
-                <p className="text-sm text-muted-foreground mb-2">Description</p>
-                <p className="text-foreground" data-testid="text-vendor-description">
-                  {currentVendor.description}
-                </p>
-              </div>
-            )}
-            {currentVendor.culturalSpecialties && currentVendor.culturalSpecialties.length > 0 && (
-              <div className="mt-4">
-                <p className="text-sm text-muted-foreground mb-2">Cultural Specialties</p>
-                <div className="flex flex-wrap gap-2">
-                  {currentVendor.culturalSpecialties.map((specialty, idx) => (
-                    <Badge key={idx} variant="outline" data-testid={`badge-specialty-${idx}`}>
-                      {specialty}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+            <Button
+              variant="outline"
+              onClick={() => setProfilePanelOpen(true)}
+              data-testid="button-manage-profile"
+            >
+              <User className="w-4 h-4 mr-2" />
+              Manage Profile
+            </Button>
+          </div>
         )}
 
         {/* Stats Cards */}
@@ -1944,7 +1901,7 @@ export default function VendorDashboard() {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setEditDialogOpen(false)}
+              onClick={() => {}}
               data-testid="button-cancel-edit"
             >
               Cancel
@@ -2321,6 +2278,144 @@ export default function VendorDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Profile Slide-out Panel */}
+      <Sheet open={profilePanelOpen} onOpenChange={setProfilePanelOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+          <SheetHeader className="mb-6">
+            <SheetTitle className="flex items-center gap-2">
+              <Building2 className="w-5 h-5" />
+              Business Profile
+            </SheetTitle>
+            <SheetDescription>
+              View and manage your business information
+            </SheetDescription>
+          </SheetHeader>
+
+          {currentVendor && (
+            <div className="space-y-6">
+              {/* Business Name & Categories */}
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold" data-testid="sheet-vendor-name">
+                  {currentVendor.name}
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {currentVendor.categories?.map((cat: string) => (
+                    <Badge key={cat} variant="secondary" className="text-xs">
+                      {cat.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              {/* Rating */}
+              {rating > 0 && (
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-muted">
+                  <Star className="w-5 h-5 fill-primary text-primary" />
+                  <span className="font-mono font-semibold text-lg">{rating.toFixed(1)}</span>
+                  <span className="text-sm text-muted-foreground">
+                    ({currentVendor.reviewCount || 0} reviews)
+                  </span>
+                </div>
+              )}
+
+              {/* Contact Details */}
+              <div className="space-y-3">
+                <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                  Contact Information
+                </h4>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <MapPin className="w-4 h-4 text-muted-foreground" />
+                    <span data-testid="sheet-vendor-location">{currentVendor.location}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <DollarSign className="w-4 h-4 text-muted-foreground" />
+                    <span data-testid="sheet-vendor-price">Price Range: {currentVendor.priceRange}</span>
+                  </div>
+                  {currentVendor.email && (
+                    <div className="flex items-center gap-3">
+                      <Mail className="w-4 h-4 text-muted-foreground" />
+                      <span>{currentVendor.email}</span>
+                    </div>
+                  )}
+                  {currentVendor.phone && (
+                    <div className="flex items-center gap-3">
+                      <Phone className="w-4 h-4 text-muted-foreground" />
+                      <span>{currentVendor.phone}</span>
+                    </div>
+                  )}
+                  {currentVendor.contact && (
+                    <div className="flex items-center gap-3">
+                      <User className="w-4 h-4 text-muted-foreground" />
+                      <span>{currentVendor.contact}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Description */}
+              {currentVendor.description && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                    About
+                  </h4>
+                  <p className="text-sm leading-relaxed" data-testid="sheet-vendor-description">
+                    {currentVendor.description}
+                  </p>
+                </div>
+              )}
+
+              {/* Cultural Specialties */}
+              {currentVendor.culturalSpecialties && currentVendor.culturalSpecialties.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                    Cultural Specialties
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {currentVendor.culturalSpecialties.map((specialty, idx) => (
+                      <Badge key={idx} variant="outline" data-testid={`sheet-badge-specialty-${idx}`}>
+                        {specialty}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Preferred Traditions */}
+              {currentVendor.preferredWeddingTraditions && currentVendor.preferredWeddingTraditions.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                    Wedding Traditions
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {currentVendor.preferredWeddingTraditions.map((tradition, idx) => (
+                      <Badge key={idx} variant="secondary">
+                        {tradition}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Edit Profile Button */}
+              <div className="pt-4 border-t">
+                <Button
+                  onClick={() => {
+                    setProfilePanelOpen(false);
+                    openWizard();
+                  }}
+                  className="w-full"
+                  data-testid="button-edit-profile-sheet"
+                >
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit Profile
+                </Button>
+              </div>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
