@@ -170,11 +170,53 @@ export default function VendorCalendar() {
 
   const [selectedOutlookCalendar, setSelectedOutlookCalendar] = useState<string>("primary");
 
-  const googleNeedsAuth = (calendarsError as any)?.needsAuth || (!calendarsLoading && !calendars && currentCalendarSource === 'google');
-  const outlookNeedsAuth = (outlookCalendarsError as any)?.needsAuth || (!outlookCalendarsLoading && !outlookCalendars && currentCalendarSource === 'outlook');
+  // Determine connection status based on new multi-calendar data
+  const googleNeedsAuth = !calendarAccountsLoading && googleAccounts.length === 0 && currentCalendarSource === 'google';
+  const outlookNeedsAuth = !calendarAccountsLoading && outlookAccounts.length === 0 && currentCalendarSource === 'outlook';
+  const hasGoogleConnection = googleAccounts.length > 0;
+  const hasOutlookConnection = outlookAccounts.length > 0;
 
   const startDate = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
   const endDate = format(addMonths(new Date(startDate), 1), 'yyyy-MM-dd');
+
+  // Fetch aggregated availability from all selected calendars
+  interface AggregatedAvailabilityResponse {
+    selectedCalendars: Array<{
+      id: string;
+      providerCalendarId: string;
+      displayName: string;
+      color: string | null;
+      accountId: string;
+      isWriteTarget: boolean;
+    }>;
+    writeTarget: {
+      id: string;
+      providerCalendarId: string;
+      displayName: string;
+      accountId: string;
+    } | null;
+    aggregatedBusySlots: Array<{
+      start: string;
+      end: string;
+      sources: string[];
+    }>;
+    totalSelectedCalendars: number;
+    hasWriteTarget: boolean;
+  }
+
+  const { data: aggregatedAvailability, isLoading: aggregatedLoading } = useQuery<AggregatedAvailabilityResponse>({
+    queryKey: ['/api/vendor-calendars/vendor', myVendor?.id, 'aggregated-availability', startDate, endDate],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        startDate: startDate,
+        endDate: endDate,
+      });
+      const res = await fetch(`/api/vendor-calendars/vendor/${myVendor?.id}/aggregated-availability?${params}`);
+      if (!res.ok) throw new Error("Failed to fetch aggregated availability");
+      return res.json();
+    },
+    enabled: !!myVendor?.id && (currentCalendarSource === 'google' || currentCalendarSource === 'outlook') && hasConnectedCalendarAccounts,
+  });
 
   const { data: availability, isLoading: availabilityLoading } = useQuery<AvailabilityWindow[]>({
     queryKey: ["/api/calendar/availability", selectedCalendar, startDate, endDate],
@@ -650,13 +692,27 @@ export default function VendorCalendar() {
             </Card>
           )}
 
-          {calendars && calendars.length > 0 && (
+          {(hasGoogleConnection || (calendars && calendars.length > 0)) && (
             <>
               <div className="flex items-center gap-2 mb-4">
                 <Badge variant="outline" className="flex items-center gap-2">
                   <div className="h-2 w-2 bg-green-500 rounded-full" />
-                  Google Calendar Connected
+                  Google Calendar Connected ({googleAccounts.length} account{googleAccounts.length !== 1 ? 's' : ''})
                 </Badge>
+                {selectedCalendarsFromDb.filter(c => {
+                  const acc = calendarAccounts.find(a => a.id === c.accountId);
+                  return acc?.provider === 'google';
+                }).length > 0 && (
+                  <Badge variant="secondary">
+                    {selectedCalendarsFromDb.filter(c => {
+                      const acc = calendarAccounts.find(a => a.id === c.accountId);
+                      return acc?.provider === 'google';
+                    }).length} calendar{selectedCalendarsFromDb.filter(c => {
+                      const acc = calendarAccounts.find(a => a.id === c.accountId);
+                      return acc?.provider === 'google';
+                    }).length !== 1 ? 's' : ''} selected
+                  </Badge>
+                )}
               </div>
 
               {/* Multi-Calendar Connections Manager */}
@@ -787,44 +843,92 @@ export default function VendorCalendar() {
                           </span>
                         </div>
 
-                        {availabilityLoading ? (
+                        {(availabilityLoading || aggregatedLoading) ? (
                           <div className="flex items-center justify-center py-8">
                             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                           </div>
-                        ) : selectedDayAvailability ? (
-                          <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                            {selectedDayAvailability.slots.map((slot, index) => {
-                              const startTime = new Date(slot.start);
-                              const endTime = new Date(slot.end);
-                              return (
-                                <div
-                                  key={index}
-                                  className={`flex items-center justify-between p-3 rounded-lg border ${
-                                    slot.available 
-                                      ? 'bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-800' 
-                                      : 'bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800'
-                                  }`}
-                                  data-testid={`slot-${index}`}
-                                >
-                                  <span className="font-medium">
-                                    {format(startTime, 'h:mm a')} - {format(endTime, 'h:mm a')}
-                                  </span>
-                                  <Badge variant={slot.available ? "default" : "secondary"}>
-                                    {slot.available ? (
-                                      <><Check className="h-3 w-3 mr-1" /> Available</>
-                                    ) : (
-                                      <><X className="h-3 w-3 mr-1" /> Busy</>
-                                    )}
-                                  </Badge>
-                                </div>
-                              );
-                            })}
-                          </div>
                         ) : (
-                          <div className="text-center py-8 text-muted-foreground">
-                            <CalendarIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                            <p>Select a date to view availability</p>
-                          </div>
+                          <>
+                            {/* Show aggregated busy slots from all selected calendars */}
+                            {aggregatedAvailability && aggregatedAvailability.aggregatedBusySlots.length > 0 && selectedDate && (
+                              <div className="space-y-2 mb-4">
+                                <div className="text-sm font-medium text-muted-foreground">
+                                  Busy times across {aggregatedAvailability.totalSelectedCalendars} selected calendar{aggregatedAvailability.totalSelectedCalendars !== 1 ? 's' : ''}:
+                                </div>
+                                <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                                  {aggregatedAvailability.aggregatedBusySlots
+                                    .filter(slot => {
+                                      const slotDate = new Date(slot.start).toDateString();
+                                      return slotDate === selectedDate.toDateString();
+                                    })
+                                    .map((slot, index) => (
+                                      <div
+                                        key={index}
+                                        className="flex items-center justify-between p-3 rounded-lg border bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800"
+                                        data-testid={`aggregated-slot-${index}`}
+                                      >
+                                        <div className="flex flex-col">
+                                          <span className="font-medium">
+                                            {format(new Date(slot.start), 'h:mm a')} - {format(new Date(slot.end), 'h:mm a')}
+                                          </span>
+                                          <span className="text-xs text-muted-foreground">
+                                            Source: {slot.sources.join(', ')}
+                                          </span>
+                                        </div>
+                                        <Badge variant="secondary">
+                                          <X className="h-3 w-3 mr-1" /> Busy
+                                        </Badge>
+                                      </div>
+                                    ))}
+                                </div>
+                              </div>
+                            )}
+                            {/* Write target indicator */}
+                            {aggregatedAvailability?.writeTarget && (
+                              <div className="p-2 rounded-lg bg-primary/10 border border-primary/20 mb-4">
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Check className="h-4 w-4 text-primary" />
+                                  <span>New bookings will be added to: <strong>{aggregatedAvailability.writeTarget.displayName}</strong></span>
+                                </div>
+                              </div>
+                            )}
+                            {/* Legacy availability slots */}
+                            {selectedDayAvailability ? (
+                              <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                                {selectedDayAvailability.slots.map((slot, index) => {
+                                  const startTime = new Date(slot.start);
+                                  const endTime = new Date(slot.end);
+                                  return (
+                                    <div
+                                      key={index}
+                                      className={`flex items-center justify-between p-3 rounded-lg border ${
+                                        slot.available 
+                                          ? 'bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-800' 
+                                          : 'bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800'
+                                      }`}
+                                      data-testid={`slot-${index}`}
+                                    >
+                                      <span className="font-medium">
+                                        {format(startTime, 'h:mm a')} - {format(endTime, 'h:mm a')}
+                                      </span>
+                                      <Badge variant={slot.available ? "default" : "secondary"}>
+                                        {slot.available ? (
+                                          <><Check className="h-3 w-3 mr-1" /> Available</>
+                                        ) : (
+                                          <><X className="h-3 w-3 mr-1" /> Busy</>
+                                        )}
+                                      </Badge>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            ) : !aggregatedAvailability?.aggregatedBusySlots.length ? (
+                              <div className="text-center py-8 text-muted-foreground">
+                                <CalendarIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                                <p>Select a date to view availability</p>
+                              </div>
+                            ) : null}
+                          </>
                         )}
                       </div>
                     </div>
@@ -940,13 +1044,27 @@ export default function VendorCalendar() {
             </Card>
           )}
 
-          {outlookCalendars && outlookCalendars.length > 0 && (
+          {(hasOutlookConnection || (outlookCalendars && outlookCalendars.length > 0)) && (
             <>
               <div className="flex items-center gap-2 mb-4">
-                <Badge variant="outline" className="flex items-center gap-2">
+                <Badge variant="outline" className="flex items-center gap-2 border-blue-500 text-blue-600">
                   <div className="h-2 w-2 bg-blue-500 rounded-full" />
-                  Outlook Calendar Connected
+                  Outlook Calendar Connected ({outlookAccounts.length} account{outlookAccounts.length !== 1 ? 's' : ''})
                 </Badge>
+                {selectedCalendarsFromDb.filter(c => {
+                  const acc = calendarAccounts.find(a => a.id === c.accountId);
+                  return acc?.provider === 'outlook';
+                }).length > 0 && (
+                  <Badge variant="secondary">
+                    {selectedCalendarsFromDb.filter(c => {
+                      const acc = calendarAccounts.find(a => a.id === c.accountId);
+                      return acc?.provider === 'outlook';
+                    }).length} calendar{selectedCalendarsFromDb.filter(c => {
+                      const acc = calendarAccounts.find(a => a.id === c.accountId);
+                      return acc?.provider === 'outlook';
+                    }).length !== 1 ? 's' : ''} selected
+                  </Badge>
+                )}
               </div>
 
               {/* Multi-Calendar Connections Manager for Outlook */}

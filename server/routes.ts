@@ -3787,6 +3787,149 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get aggregated availability across all selected calendars for a vendor
+  // Fetches busy slots from each selected calendar and merges them
+  app.get("/api/vendor-calendars/vendor/:vendorId/aggregated-availability", async (req, res) => {
+    try {
+      const { vendorId } = req.params;
+      const { startDate, endDate } = req.query;
+      
+      if (!startDate || !endDate) {
+        return res.status(400).json({ error: "startDate and endDate query parameters are required" });
+      }
+
+      // Get all selected calendars with their account info
+      const selectedCalendars = await storage.getSelectedCalendarsByVendor(vendorId);
+      const writeTarget = await storage.getWriteTargetCalendar(vendorId);
+      
+      // Get account info for each calendar
+      const accounts = await storage.getCalendarAccountsByVendor(vendorId);
+      const accountsMap = new Map(accounts.map(acc => [acc.id, acc]));
+
+      // Aggregate busy slots from all selected calendars
+      const allBusySlots: Array<{ start: Date; end: Date; calendarId: string; calendarName: string }> = [];
+      const start = new Date(startDate as string);
+      const end = new Date(endDate as string);
+
+      // Fetch busy slots from each selected calendar based on provider
+      for (const cal of selectedCalendars) {
+        const account = accountsMap.get(cal.accountId);
+        if (!account) continue;
+
+        try {
+          if (account.provider === 'google') {
+            // Use the Google Calendar getFreeBusy function
+            const { getFreeBusy } = await import("./googleCalendar");
+            const busySlots = await getFreeBusy(cal.providerCalendarId, start, end);
+            busySlots.forEach(slot => {
+              allBusySlots.push({
+                ...slot,
+                calendarId: cal.id,
+                calendarName: cal.displayName,
+              });
+            });
+          } else if (account.provider === 'outlook') {
+            // Use Outlook Calendar getAvailability
+            const { getAvailability } = await import("./outlookCalendar");
+            const availability = await getAvailability(start, end);
+            // Extract busy slots from availability windows
+            availability.forEach(window => {
+              window.slots.forEach(slot => {
+                if (!slot.available) {
+                  allBusySlots.push({
+                    start: new Date(slot.start),
+                    end: new Date(slot.end),
+                    calendarId: cal.id,
+                    calendarName: cal.displayName,
+                  });
+                }
+              });
+            });
+          }
+        } catch (calendarError) {
+          console.log(`Could not fetch from calendar ${cal.displayName}:`, calendarError);
+          // Continue with other calendars even if one fails
+        }
+      }
+
+      // Merge overlapping busy slots
+      const sortedSlots = allBusySlots.sort((a, b) => a.start.getTime() - b.start.getTime());
+      const mergedBusySlots: Array<{ start: string; end: string; sources: string[] }> = [];
+      
+      for (const slot of sortedSlots) {
+        const lastMerged = mergedBusySlots[mergedBusySlots.length - 1];
+        if (lastMerged && new Date(lastMerged.end) >= slot.start) {
+          // Overlapping or adjacent - extend the slot
+          lastMerged.end = new Date(Math.max(new Date(lastMerged.end).getTime(), slot.end.getTime())).toISOString();
+          if (!lastMerged.sources.includes(slot.calendarName)) {
+            lastMerged.sources.push(slot.calendarName);
+          }
+        } else {
+          // New slot
+          mergedBusySlots.push({
+            start: slot.start.toISOString(),
+            end: slot.end.toISOString(),
+            sources: [slot.calendarName],
+          });
+        }
+      }
+
+      // Group calendars by account for the response
+      const calendarsByAccount = selectedCalendars.reduce((acc, cal) => {
+        const account = accountsMap.get(cal.accountId);
+        if (!account) return acc;
+        
+        if (!acc[account.id]) {
+          acc[account.id] = {
+            account: {
+              id: account.id,
+              email: account.email,
+              provider: account.provider,
+              status: account.status,
+              label: account.label,
+            },
+            calendars: [],
+          };
+        }
+        
+        acc[account.id].calendars.push({
+          id: cal.id,
+          providerCalendarId: cal.providerCalendarId,
+          displayName: cal.displayName,
+          color: cal.color,
+          isPrimary: cal.isPrimary,
+          isWriteTarget: cal.isWriteTarget,
+        });
+        
+        return acc;
+      }, {} as Record<string, any>);
+
+      res.json({
+        selectedCalendars: selectedCalendars.map(cal => ({
+          id: cal.id,
+          providerCalendarId: cal.providerCalendarId,
+          displayName: cal.displayName,
+          color: cal.color,
+          accountId: cal.accountId,
+          isWriteTarget: cal.isWriteTarget,
+        })),
+        writeTarget: writeTarget ? {
+          id: writeTarget.id,
+          providerCalendarId: writeTarget.providerCalendarId,
+          displayName: writeTarget.displayName,
+          accountId: writeTarget.accountId,
+        } : null,
+        accounts: Object.values(calendarsByAccount),
+        aggregatedBusySlots: mergedBusySlots,
+        totalSelectedCalendars: selectedCalendars.length,
+        hasWriteTarget: !!writeTarget,
+      });
+    } catch (error) {
+      console.error("Error fetching aggregated availability:", error);
+      res.status(500).json({ error: "Failed to fetch aggregated availability" });
+    }
+  });
+
   // Create vendor calendar
   app.post("/api/vendor-calendars", async (req, res) => {
     try {
