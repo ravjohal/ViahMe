@@ -628,8 +628,8 @@ export default function VendorCalendar() {
         </div>
       )}
 
-      {/* Google Calendar Integration */}
-      {currentCalendarSource === 'google' && (
+      {/* Google Calendar Integration - temporarily hidden until Nylas integration */}
+      {false && currentCalendarSource === 'google' && (
         <>
           {calendarsLoading && (
             <div className="flex items-center justify-center py-12">
@@ -980,8 +980,8 @@ export default function VendorCalendar() {
         </>
       )}
 
-      {/* Outlook Calendar Integration */}
-      {currentCalendarSource === 'outlook' && (
+      {/* Outlook Calendar Integration - temporarily hidden until Nylas integration */}
+      {false && currentCalendarSource === 'outlook' && (
         <>
           {outlookCalendarsLoading && (
             <div className="flex items-center justify-center py-12">
