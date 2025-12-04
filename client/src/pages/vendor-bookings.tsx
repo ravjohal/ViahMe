@@ -1,0 +1,488 @@
+import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/use-auth";
+import { VendorHeader } from "@/components/vendor-header";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import type { Vendor, Booking } from "@shared/schema";
+import { useLocation } from "wouter";
+import {
+  Calendar,
+  CalendarDays,
+  Clock,
+  DollarSign,
+  CheckCircle,
+  XCircle,
+  MessageSquare,
+  Plus,
+  Trash2,
+} from "lucide-react";
+import { format } from "date-fns";
+
+interface AlternateSlot {
+  date: string;
+  timeSlot: string;
+  notes?: string;
+}
+
+export default function VendorBookings() {
+  const { toast } = useToast();
+  const { user, isLoading: authLoading } = useAuth();
+  const [, setLocation] = useLocation();
+
+  const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
+  const [selectedBookingForDecline, setSelectedBookingForDecline] = useState<Booking | null>(null);
+  const [declineReason, setDeclineReason] = useState("");
+  const [alternateSlots, setAlternateSlots] = useState<AlternateSlot[]>([]);
+  const [newSlotDate, setNewSlotDate] = useState("");
+  const [newSlotTime, setNewSlotTime] = useState("morning");
+  const [newSlotNotes, setNewSlotNotes] = useState("");
+
+  const { data: vendors, isLoading: vendorsLoading } = useQuery<Vendor[]>({
+    queryKey: ["/api/vendors"],
+    enabled: !!user && user.role === "vendor",
+  });
+
+  const currentVendor = vendors?.find(v => v.userId === user?.id);
+  const vendorId = currentVendor?.id;
+
+  const { data: bookings = [], isLoading: bookingsLoading } = useQuery<Booking[]>({
+    queryKey: ["/api/bookings/vendor", vendorId],
+    queryFn: async () => {
+      if (!vendorId) return [];
+      const response = await fetch(`/api/bookings/vendor/${vendorId}`);
+      if (!response.ok) throw new Error("Failed to fetch bookings");
+      return response.json();
+    },
+    enabled: !!vendorId,
+  });
+
+  const updateBookingMutation = useMutation({
+    mutationFn: async ({ 
+      bookingId, 
+      status, 
+      declineReason, 
+      alternateSlots 
+    }: { 
+      bookingId: string; 
+      status: string; 
+      declineReason?: string;
+      alternateSlots?: AlternateSlot[];
+    }) => {
+      const response = await apiRequest("PATCH", `/api/bookings/${bookingId}`, { 
+        status, 
+        declineReason, 
+        alternateSlots 
+      });
+      return await response.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/bookings/vendor", vendorId] });
+      const isDecline = variables.status === "declined";
+      toast({
+        title: isDecline ? "Booking Declined" : "Booking Updated",
+        description: isDecline 
+          ? (variables.alternateSlots?.length 
+              ? "Booking declined with alternate dates suggested." 
+              : "Booking has been declined.")
+          : "Booking status has been updated successfully.",
+      });
+      if (isDecline) {
+        setDeclineDialogOpen(false);
+        setSelectedBookingForDecline(null);
+        setDeclineReason("");
+        setAlternateSlots([]);
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Update Failed",
+        description: error?.message || "Failed to update booking status. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const formatTimeSlot = (slot: string) => {
+    switch (slot) {
+      case "morning": return "Morning (6am - 12pm)";
+      case "afternoon": return "Afternoon (12pm - 5pm)";
+      case "evening": return "Evening (5pm - 11pm)";
+      case "full_day": return "Full Day";
+      default: return slot;
+    }
+  };
+
+  const handleUpdateBooking = (bookingId: string, status: string) => {
+    updateBookingMutation.mutate({ bookingId, status });
+  };
+
+  const openDeclineDialog = (booking: Booking) => {
+    setSelectedBookingForDecline(booking);
+    setDeclineReason("");
+    setAlternateSlots([]);
+    setDeclineDialogOpen(true);
+  };
+
+  const addAlternateSlot = () => {
+    if (newSlotDate) {
+      setAlternateSlots([...alternateSlots, {
+        date: newSlotDate,
+        timeSlot: newSlotTime,
+        notes: newSlotNotes,
+      }]);
+      setNewSlotDate("");
+      setNewSlotTime("morning");
+      setNewSlotNotes("");
+    }
+  };
+
+  const removeAlternateSlot = (index: number) => {
+    setAlternateSlots(alternateSlots.filter((_, i) => i !== index));
+  };
+
+  const handleDeclineWithAlternates = () => {
+    if (selectedBookingForDecline) {
+      updateBookingMutation.mutate({
+        bookingId: selectedBookingForDecline.id,
+        status: "declined",
+        declineReason,
+        alternateSlots: alternateSlots.length > 0 ? alternateSlots : undefined,
+      });
+    }
+  };
+
+  if (authLoading || !user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-background dark:to-background flex items-center justify-center">
+        <Skeleton className="h-64 w-96" />
+      </div>
+    );
+  }
+
+  if (user.role !== "vendor") {
+    setLocation("/dashboard");
+    return null;
+  }
+
+  const pendingBookings = bookings.filter((b: Booking) => b.status === "pending");
+  const confirmedBookings = bookings.filter((b: Booking) => b.status === "confirmed");
+  const declinedBookings = bookings.filter((b: Booking) => b.status === "declined");
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-background dark:to-background">
+      <VendorHeader />
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold">Booking Requests</h1>
+          <p className="text-muted-foreground mt-1">Manage your incoming booking requests from couples</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <Card className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-yellow-500/10">
+                <Clock className="w-5 h-5 text-yellow-600" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Pending</p>
+                <p className="text-2xl font-bold" data-testid="stat-pending">{pendingBookings.length}</p>
+              </div>
+            </div>
+          </Card>
+          <Card className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-green-500/10">
+                <CheckCircle className="w-5 h-5 text-green-600" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Confirmed</p>
+                <p className="text-2xl font-bold" data-testid="stat-confirmed">{confirmedBookings.length}</p>
+              </div>
+            </div>
+          </Card>
+          <Card className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-red-500/10">
+                <XCircle className="w-5 h-5 text-red-600" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Declined</p>
+                <p className="text-2xl font-bold" data-testid="stat-declined">{declinedBookings.length}</p>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {bookingsLoading || vendorsLoading ? (
+          <Card className="p-6">
+            <Skeleton className="h-32 w-full" />
+          </Card>
+        ) : bookings.length === 0 ? (
+          <Card className="p-12 text-center">
+            <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No Booking Requests</h3>
+            <p className="text-muted-foreground">
+              You haven't received any booking requests yet.
+            </p>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {bookings.map((booking) => (
+              <Card key={booking.id} className="p-6" data-testid={`card-booking-${booking.id}`}>
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h3 className="font-semibold text-lg" data-testid={`text-booking-event-${booking.id}`}>
+                      Booking Request
+                    </h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Wedding #{booking.weddingId?.slice(0, 8)}
+                      {booking.eventId && ` - Event #${booking.eventId.slice(0, 8)}`}
+                    </p>
+                  </div>
+                  <Badge
+                    variant={
+                      booking.status === "confirmed"
+                        ? "default"
+                        : booking.status === "pending"
+                        ? "outline"
+                        : "secondary"
+                    }
+                    data-testid={`badge-booking-status-${booking.id}`}
+                  >
+                    {booking.status}
+                  </Badge>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  {booking.requestedDate && (
+                    <div className="flex items-center gap-2">
+                      <CalendarDays className="w-4 h-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-xs text-muted-foreground">Requested Date</p>
+                        <p className="font-medium" data-testid={`text-booking-date-${booking.id}`}>
+                          {format(new Date(booking.requestedDate), 'MMMM d, yyyy')}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {booking.timeSlot && (
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-xs text-muted-foreground">Time Slot</p>
+                        <p className="font-medium">{formatTimeSlot(booking.timeSlot)}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {booking.estimatedCost && (
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="w-4 h-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-xs text-muted-foreground">Estimated Cost</p>
+                        <p className="font-mono font-semibold" data-testid={`text-booking-cost-${booking.id}`}>
+                          ${parseFloat(booking.estimatedCost).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {(booking.coupleNotes || booking.notes) && (
+                  <div className="mb-4 p-3 bg-muted/30 rounded-lg">
+                    <div className="flex items-center gap-2 mb-1">
+                      <MessageSquare className="w-4 h-4 text-muted-foreground" />
+                      <p className="text-sm font-medium">Message from Couple</p>
+                    </div>
+                    <p className="text-sm text-muted-foreground" data-testid={`text-booking-notes-${booking.id}`}>
+                      {booking.coupleNotes || booking.notes}
+                    </p>
+                  </div>
+                )}
+
+                {booking.status === "pending" && (
+                  <div className="flex gap-2 mt-4 pt-4 border-t">
+                    <Button
+                      size="sm"
+                      onClick={() => handleUpdateBooking(booking.id, "confirmed")}
+                      disabled={updateBookingMutation.isPending}
+                      data-testid={`button-confirm-booking-${booking.id}`}
+                    >
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Accept Booking
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => openDeclineDialog(booking)}
+                      disabled={updateBookingMutation.isPending}
+                      data-testid={`button-decline-booking-${booking.id}`}
+                    >
+                      <XCircle className="w-4 h-4 mr-2" />
+                      Decline / Suggest Dates
+                    </Button>
+                  </div>
+                )}
+
+                {booking.status === "declined" && booking.declineReason && (
+                  <div className="mt-4 p-3 bg-destructive/10 rounded-lg">
+                    <p className="text-sm font-medium text-destructive mb-1">Decline Reason</p>
+                    <p className="text-sm">{booking.declineReason}</p>
+                  </div>
+                )}
+
+                {booking.status === "declined" && Array.isArray(booking.alternateSlots) && booking.alternateSlots.length > 0 && (
+                  <div className="mt-4 p-3 bg-muted/30 rounded-lg">
+                    <p className="text-sm font-medium mb-2">Alternate Dates Suggested</p>
+                    <div className="space-y-2">
+                      {(booking.alternateSlots as AlternateSlot[]).map((slot: AlternateSlot, idx: number) => (
+                        <div key={idx} className="flex items-center gap-2 text-sm">
+                          <CalendarDays className="w-4 h-4 text-muted-foreground" />
+                          <span>{format(new Date(slot.date), 'MMMM d, yyyy')}</span>
+                          <span className="text-muted-foreground">-</span>
+                          <span>{formatTimeSlot(slot.timeSlot)}</span>
+                          {slot.notes && (
+                            <>
+                              <span className="text-muted-foreground">-</span>
+                              <span className="text-muted-foreground">{slot.notes}</span>
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </Card>
+            ))}
+          </div>
+        )}
+      </main>
+
+      <Dialog open={declineDialogOpen} onOpenChange={setDeclineDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Decline Booking</DialogTitle>
+            <DialogDescription>
+              Provide a reason for declining and optionally suggest alternate dates.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="decline-reason">Reason for Declining</Label>
+              <Textarea
+                id="decline-reason"
+                placeholder="e.g., Already booked for this date..."
+                value={declineReason}
+                onChange={(e) => setDeclineReason(e.target.value)}
+                className="mt-1"
+                data-testid="input-decline-reason"
+              />
+            </div>
+
+            <div>
+              <Label className="mb-2 block">Suggest Alternate Dates (Optional)</Label>
+              <div className="space-y-3">
+                <div className="flex gap-2">
+                  <Input
+                    type="date"
+                    value={newSlotDate}
+                    onChange={(e) => setNewSlotDate(e.target.value)}
+                    className="flex-1"
+                    data-testid="input-alternate-date"
+                  />
+                  <Select value={newSlotTime} onValueChange={setNewSlotTime}>
+                    <SelectTrigger className="w-32" data-testid="select-alternate-time">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="morning">Morning</SelectItem>
+                      <SelectItem value="afternoon">Afternoon</SelectItem>
+                      <SelectItem value="evening">Evening</SelectItem>
+                      <SelectItem value="full_day">Full Day</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="outline"
+                    onClick={addAlternateSlot}
+                    data-testid="button-add-alternate"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+                <Input
+                  placeholder="Optional notes for this slot"
+                  value={newSlotNotes}
+                  onChange={(e) => setNewSlotNotes(e.target.value)}
+                  data-testid="input-alternate-notes"
+                />
+
+                {alternateSlots.length > 0 && (
+                  <div className="space-y-2 p-3 bg-muted rounded-lg">
+                    {alternateSlots.map((slot, idx) => (
+                      <div key={idx} className="flex items-center justify-between">
+                        <span className="text-sm">
+                          {format(new Date(slot.date), 'MMM d, yyyy')} - {formatTimeSlot(slot.timeSlot)}
+                          {slot.notes && ` (${slot.notes})`}
+                        </span>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => removeAlternateSlot(idx)}
+                          data-testid={`button-remove-alternate-${idx}`}
+                        >
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeclineDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeclineWithAlternates}
+              disabled={updateBookingMutation.isPending}
+              data-testid="button-confirm-decline"
+            >
+              Decline Booking
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
