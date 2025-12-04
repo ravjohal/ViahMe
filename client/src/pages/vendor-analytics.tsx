@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TrendingUp, DollarSign, Star, CheckCircle, Calendar, BarChart3 } from "lucide-react";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { VendorHeader } from "@/components/vendor-header";
 
 export default function VendorAnalytics() {
   const { user } = useAuth();
@@ -47,11 +48,13 @@ export default function VendorAnalytics() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Analytics Dashboard</h1>
-        <p className="text-muted-foreground mt-1">Track your performance and growth</p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-background dark:to-background">
+      <VendorHeader />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">Analytics Dashboard</h1>
+          <p className="text-muted-foreground mt-1">Track your performance and growth</p>
+        </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList>
@@ -238,6 +241,7 @@ export default function VendorAnalytics() {
           </Card>
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 }

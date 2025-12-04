@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { SiGoogle } from "react-icons/si";
+import { VendorHeader } from "@/components/vendor-header";
 import { 
   Calendar as CalendarIcon, 
   RefreshCw, 
@@ -436,11 +437,13 @@ export default function VendorCalendar() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Calendar Management</h1>
-          <p className="text-muted-foreground">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-background dark:to-background">
+      <VendorHeader />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Calendar Management</h1>
+            <p className="text-muted-foreground">
             Choose how to manage your availability - use our built-in calendar or sync with an external service
           </p>
         </div>
@@ -1272,6 +1275,7 @@ export default function VendorCalendar() {
           )}
         </>
       )}
+      </div>
     </div>
   );
 }
