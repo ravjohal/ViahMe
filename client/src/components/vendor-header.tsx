@@ -1,0 +1,131 @@
+import { Link, useLocation } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
+import { Button } from "@/components/ui/button";
+import { 
+  LayoutDashboard, 
+  Calendar, 
+  FileText, 
+  Package, 
+  Clock, 
+  BarChart3,
+  LogOut,
+  User,
+  Menu,
+  X
+} from "lucide-react";
+import { useState } from "react";
+import viahLogo from "@assets/viah-logo_1763669612969.png";
+
+const navItems = [
+  { href: "/vendor-dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/vendor-bookings", label: "Bookings", icon: Calendar },
+  { href: "/vendor-contracts", label: "Contracts", icon: FileText },
+  { href: "/vendor-packages", label: "Packages", icon: Package },
+  { href: "/vendor-calendar", label: "Availability", icon: Clock },
+  { href: "/vendor-analytics", label: "Analytics", icon: BarChart3 },
+];
+
+export function VendorHeader() {
+  const [location] = useLocation();
+  const { user, logout } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  return (
+    <header className="sticky top-0 z-50 bg-white/80 dark:bg-background/80 backdrop-blur-md border-b">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          <div className="flex items-center gap-8">
+            <Link href="/vendor-dashboard" className="flex items-center gap-2">
+              <img src={viahLogo} alt="Viah.me" className="h-8 w-auto" />
+            </Link>
+
+            <nav className="hidden lg:flex items-center gap-1">
+              {navItems.map((item) => {
+                const isActive = location === item.href;
+                const Icon = item.icon;
+                return (
+                  <Link key={item.href} href={item.href}>
+                    <Button
+                      variant={isActive ? "secondary" : "ghost"}
+                      size="sm"
+                      className={isActive ? "bg-primary/10 text-primary" : ""}
+                      data-testid={`nav-${item.label.toLowerCase()}`}
+                    >
+                      <Icon className="w-4 h-4 mr-2" />
+                      {item.label}
+                    </Button>
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
+
+          <div className="hidden lg:flex items-center gap-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <User className="w-4 h-4" />
+              <span data-testid="text-vendor-email">{user?.email}</span>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => logout()}
+              data-testid="button-logout"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Logout
+            </Button>
+          </div>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className="lg:hidden"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            data-testid="button-mobile-menu"
+          >
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </Button>
+        </div>
+
+        {mobileMenuOpen && (
+          <div className="lg:hidden py-4 border-t">
+            <nav className="flex flex-col gap-1">
+              {navItems.map((item) => {
+                const isActive = location === item.href;
+                const Icon = item.icon;
+                return (
+                  <Link key={item.href} href={item.href}>
+                    <Button
+                      variant={isActive ? "secondary" : "ghost"}
+                      className={`w-full justify-start ${isActive ? "bg-primary/10 text-primary" : ""}`}
+                      onClick={() => setMobileMenuOpen(false)}
+                      data-testid={`nav-mobile-${item.label.toLowerCase()}`}
+                    >
+                      <Icon className="w-4 h-4 mr-2" />
+                      {item.label}
+                    </Button>
+                  </Link>
+                );
+              })}
+            </nav>
+            <div className="mt-4 pt-4 border-t flex flex-col gap-2">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground px-4">
+                <User className="w-4 h-4" />
+                <span>{user?.email}</span>
+              </div>
+              <Button
+                variant="ghost"
+                className="justify-start"
+                onClick={() => logout()}
+                data-testid="button-mobile-logout"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+    </header>
+  );
+}
