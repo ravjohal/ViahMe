@@ -11,7 +11,8 @@ import {
   LogOut,
   User,
   Menu,
-  X
+  X,
+  Users
 } from "lucide-react";
 import { useState } from "react";
 import viahLogo from "@assets/viah-logo_1763669612969.png";
@@ -22,6 +23,7 @@ const navItems = [
   { href: "/vendor-contracts", label: "Contracts", icon: FileText },
   { href: "/vendor-packages", label: "Packages", icon: Package },
   { href: "/vendor-calendar", label: "Availability", icon: Clock },
+  { href: "/vendor-team", label: "Team", icon: Users },
   { href: "/vendor-analytics", label: "Analytics", icon: BarChart3 },
 ];
 

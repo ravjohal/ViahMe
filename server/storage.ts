@@ -118,6 +118,11 @@ import {
   type VendorEventTagWithVendor,
   type TimelineChangeWithAcks,
   type VendorAcknowledgmentWithDetails,
+  type VendorTeammate,
+  type InsertVendorTeammate,
+  type VendorTeammateInvitation,
+  type InsertVendorTeammateInvitation,
+  type VendorTeammateWithUser,
 } from "@shared/schema";
 import { randomUUID, randomBytes } from "crypto";
 import bcrypt from "bcrypt";
@@ -635,6 +640,30 @@ export interface IStorage {
   reorderEvents(weddingId: string, orderedEventIds: string[], changedByUserId: string): Promise<Event[]>;
   updateEventTime(eventId: string, newTime: string, changedByUserId: string, note?: string): Promise<{ event: Event; change: TimelineChange; taggedVendors: Vendor[] }>;
   getTimelineWithAcknowledgments(weddingId: string): Promise<Array<Event & { tags: VendorEventTagWithVendor[]; pendingAcks: number; acknowledgedAcks: number }>>;
+
+  // ============================================================================
+  // VENDOR TEAMMATE MANAGEMENT
+  // ============================================================================
+
+  // Vendor Teammates
+  getVendorTeammate(id: string): Promise<VendorTeammate | undefined>;
+  getVendorTeammatesByVendor(vendorId: string): Promise<VendorTeammateWithUser[]>;
+  getVendorTeammateByUserAndVendor(userId: string, vendorId: string): Promise<VendorTeammate | undefined>;
+  getVendorsByTeammate(userId: string): Promise<Vendor[]>;
+  createVendorTeammate(teammate: InsertVendorTeammate): Promise<VendorTeammate>;
+  updateVendorTeammate(id: string, teammate: Partial<InsertVendorTeammate>): Promise<VendorTeammate | undefined>;
+  revokeVendorTeammate(id: string, revokedBy: string): Promise<VendorTeammate | undefined>;
+
+  // Vendor Teammate Invitations
+  getVendorTeammateInvitation(id: string): Promise<VendorTeammateInvitation | undefined>;
+  getVendorTeammateInvitationByToken(token: string): Promise<VendorTeammateInvitation | undefined>;
+  getVendorTeammateInvitationsByVendor(vendorId: string): Promise<VendorTeammateInvitation[]>;
+  createVendorTeammateInvitation(invitation: InsertVendorTeammateInvitation & { inviteToken: string; inviteTokenExpires: Date }): Promise<VendorTeammateInvitation>;
+  acceptVendorTeammateInvitation(token: string, userId: string): Promise<{ teammate: VendorTeammate; invitation: VendorTeammateInvitation }>;
+  revokeVendorTeammateInvitation(id: string): Promise<VendorTeammateInvitation | undefined>;
+
+  // Vendor teammate authorization helper
+  hasVendorTeammateAccess(userId: string, vendorId: string, requiredPermission?: string): Promise<boolean>;
 }
 
 // Guest Planning Snapshot - comprehensive view of all guests and per-event costs
@@ -3155,6 +3184,53 @@ export class MemStorage implements IStorage {
   }
   async getTimelineWithAcknowledgments(weddingId: string): Promise<Array<Event & { tags: VendorEventTagWithVendor[]; pendingAcks: number; acknowledgedAcks: number }>> {
     return [];
+  }
+
+  // ============================================================================
+  // VENDOR TEAMMATE MANAGEMENT - MemStorage stubs
+  // ============================================================================
+
+  async getVendorTeammate(id: string): Promise<VendorTeammate | undefined> {
+    return undefined;
+  }
+  async getVendorTeammatesByVendor(vendorId: string): Promise<VendorTeammateWithUser[]> {
+    return [];
+  }
+  async getVendorTeammateByUserAndVendor(userId: string, vendorId: string): Promise<VendorTeammate | undefined> {
+    return undefined;
+  }
+  async getVendorsByTeammate(userId: string): Promise<Vendor[]> {
+    return [];
+  }
+  async createVendorTeammate(teammate: InsertVendorTeammate): Promise<VendorTeammate> {
+    throw new Error("MemStorage does not support Vendor Teammates. Use DBStorage.");
+  }
+  async updateVendorTeammate(id: string, teammate: Partial<InsertVendorTeammate>): Promise<VendorTeammate | undefined> {
+    throw new Error("MemStorage does not support Vendor Teammates. Use DBStorage.");
+  }
+  async revokeVendorTeammate(id: string, revokedBy: string): Promise<VendorTeammate | undefined> {
+    throw new Error("MemStorage does not support Vendor Teammates. Use DBStorage.");
+  }
+  async getVendorTeammateInvitation(id: string): Promise<VendorTeammateInvitation | undefined> {
+    return undefined;
+  }
+  async getVendorTeammateInvitationByToken(token: string): Promise<VendorTeammateInvitation | undefined> {
+    return undefined;
+  }
+  async getVendorTeammateInvitationsByVendor(vendorId: string): Promise<VendorTeammateInvitation[]> {
+    return [];
+  }
+  async createVendorTeammateInvitation(invitation: InsertVendorTeammateInvitation & { inviteToken: string; inviteTokenExpires: Date }): Promise<VendorTeammateInvitation> {
+    throw new Error("MemStorage does not support Vendor Teammate Invitations. Use DBStorage.");
+  }
+  async acceptVendorTeammateInvitation(token: string, userId: string): Promise<{ teammate: VendorTeammate; invitation: VendorTeammateInvitation }> {
+    throw new Error("MemStorage does not support Vendor Teammate Invitations. Use DBStorage.");
+  }
+  async revokeVendorTeammateInvitation(id: string): Promise<VendorTeammateInvitation | undefined> {
+    throw new Error("MemStorage does not support Vendor Teammate Invitations. Use DBStorage.");
+  }
+  async hasVendorTeammateAccess(userId: string, vendorId: string, requiredPermission?: string): Promise<boolean> {
+    return false;
   }
 }
 
@@ -7297,6 +7373,178 @@ export class DBStorage implements IStorage {
     }
     
     return result.sort((a, b) => a.order - b.order);
+  }
+
+  // ============================================================================
+  // VENDOR TEAMMATE MANAGEMENT
+  // ============================================================================
+
+  async getVendorTeammate(id: string): Promise<VendorTeammate | undefined> {
+    const result = await this.db.select().from(schema.vendorTeammates)
+      .where(eq(schema.vendorTeammates.id, id));
+    return result[0];
+  }
+
+  async getVendorTeammatesByVendor(vendorId: string): Promise<VendorTeammateWithUser[]> {
+    const teammates = await this.db.select().from(schema.vendorTeammates)
+      .where(and(
+        eq(schema.vendorTeammates.vendorId, vendorId),
+        eq(schema.vendorTeammates.status, 'active')
+      ));
+    
+    const result: VendorTeammateWithUser[] = [];
+    for (const teammate of teammates) {
+      const user = await this.getUser(teammate.userId);
+      result.push({
+        ...teammate,
+        user: user ? { email: user.email } : undefined,
+      });
+    }
+    return result;
+  }
+
+  async getVendorTeammateByUserAndVendor(userId: string, vendorId: string): Promise<VendorTeammate | undefined> {
+    const result = await this.db.select().from(schema.vendorTeammates)
+      .where(and(
+        eq(schema.vendorTeammates.userId, userId),
+        eq(schema.vendorTeammates.vendorId, vendorId),
+        eq(schema.vendorTeammates.status, 'active')
+      ));
+    return result[0];
+  }
+
+  async getVendorsByTeammate(userId: string): Promise<Vendor[]> {
+    const teammates = await this.db.select().from(schema.vendorTeammates)
+      .where(and(
+        eq(schema.vendorTeammates.userId, userId),
+        eq(schema.vendorTeammates.status, 'active')
+      ));
+    
+    const vendors: Vendor[] = [];
+    for (const teammate of teammates) {
+      const vendor = await this.getVendor(teammate.vendorId);
+      if (vendor) {
+        vendors.push(vendor);
+      }
+    }
+    return vendors;
+  }
+
+  async createVendorTeammate(teammate: InsertVendorTeammate): Promise<VendorTeammate> {
+    const result = await this.db.insert(schema.vendorTeammates).values(teammate).returning();
+    return result[0];
+  }
+
+  async updateVendorTeammate(id: string, teammate: Partial<InsertVendorTeammate>): Promise<VendorTeammate | undefined> {
+    const result = await this.db.update(schema.vendorTeammates)
+      .set(teammate)
+      .where(eq(schema.vendorTeammates.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async revokeVendorTeammate(id: string, revokedBy: string): Promise<VendorTeammate | undefined> {
+    const result = await this.db.update(schema.vendorTeammates)
+      .set({ status: 'revoked', revokedAt: new Date(), revokedBy })
+      .where(eq(schema.vendorTeammates.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async getVendorTeammateInvitation(id: string): Promise<VendorTeammateInvitation | undefined> {
+    const result = await this.db.select().from(schema.vendorTeammateInvitations)
+      .where(eq(schema.vendorTeammateInvitations.id, id));
+    return result[0];
+  }
+
+  async getVendorTeammateInvitationByToken(token: string): Promise<VendorTeammateInvitation | undefined> {
+    const result = await this.db.select().from(schema.vendorTeammateInvitations)
+      .where(eq(schema.vendorTeammateInvitations.inviteToken, token));
+    return result[0];
+  }
+
+  async getVendorTeammateInvitationsByVendor(vendorId: string): Promise<VendorTeammateInvitation[]> {
+    return this.db.select().from(schema.vendorTeammateInvitations)
+      .where(eq(schema.vendorTeammateInvitations.vendorId, vendorId));
+  }
+
+  async createVendorTeammateInvitation(invitation: InsertVendorTeammateInvitation & { inviteToken: string; inviteTokenExpires: Date }): Promise<VendorTeammateInvitation> {
+    const result = await this.db.insert(schema.vendorTeammateInvitations).values(invitation).returning();
+    return result[0];
+  }
+
+  async acceptVendorTeammateInvitation(token: string, userId: string): Promise<{ teammate: VendorTeammate; invitation: VendorTeammateInvitation }> {
+    const invitation = await this.getVendorTeammateInvitationByToken(token);
+    
+    if (!invitation) {
+      throw new Error("Invitation not found");
+    }
+    
+    if (invitation.status !== 'pending') {
+      throw new Error("Invitation is no longer valid");
+    }
+    
+    if (new Date() > invitation.inviteTokenExpires) {
+      await this.db.update(schema.vendorTeammateInvitations)
+        .set({ status: 'expired' })
+        .where(eq(schema.vendorTeammateInvitations.id, invitation.id));
+      throw new Error("Invitation has expired");
+    }
+    
+    // Get the user to get their email
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+    
+    // Create the teammate record
+    const teammate = await this.createVendorTeammate({
+      vendorId: invitation.vendorId,
+      userId,
+      email: user.email,
+      displayName: invitation.displayName || user.email,
+      permissions: invitation.permissions as any,
+      status: 'active',
+      invitedBy: invitation.invitedBy,
+    });
+    
+    // Update the invitation status
+    const updatedInvitation = await this.db.update(schema.vendorTeammateInvitations)
+      .set({ status: 'accepted', acceptedAt: new Date() })
+      .where(eq(schema.vendorTeammateInvitations.id, invitation.id))
+      .returning();
+    
+    return { teammate, invitation: updatedInvitation[0] };
+  }
+
+  async revokeVendorTeammateInvitation(id: string): Promise<VendorTeammateInvitation | undefined> {
+    const result = await this.db.update(schema.vendorTeammateInvitations)
+      .set({ status: 'revoked' })
+      .where(eq(schema.vendorTeammateInvitations.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async hasVendorTeammateAccess(userId: string, vendorId: string, requiredPermission?: string): Promise<boolean> {
+    // Check if user is the vendor owner
+    const vendor = await this.getVendor(vendorId);
+    if (vendor && vendor.userId === userId) {
+      return true; // Owner has full access
+    }
+    
+    // Check if user is a teammate
+    const teammate = await this.getVendorTeammateByUserAndVendor(userId, vendorId);
+    if (!teammate) {
+      return false;
+    }
+    
+    // If no specific permission required, just being a teammate is enough
+    if (!requiredPermission) {
+      return true;
+    }
+    
+    // Check if teammate has the required permission
+    return teammate.permissions.includes(requiredPermission);
   }
 }
 

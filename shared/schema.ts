@@ -2049,3 +2049,82 @@ export type VendorAcknowledgmentWithDetails = VendorAcknowledgment & {
   vendor: Vendor;
   change: TimelineChange;
 };
+
+// ============ Vendor Teammate Management ============
+
+export const VENDOR_TEAMMATE_PERMISSIONS = [
+  'bookings',      // View and manage bookings
+  'contracts',     // View and manage contracts
+  'packages',      // View and manage service packages
+  'calendar',      // View and manage availability calendar
+  'analytics',     // View analytics and reports
+  'messages',      // View and send messages
+  'profile',       // Edit vendor profile information
+  'team_manage',   // Invite/remove teammates and manage permissions
+] as const;
+
+export type VendorTeammatePermission = typeof VENDOR_TEAMMATE_PERMISSIONS[number];
+
+// Vendor Teammates - Active team members with access to vendor account
+export const vendorTeammates = pgTable("vendor_teammates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  vendorId: varchar("vendor_id").notNull(),
+  userId: varchar("user_id").notNull(), // Linked user account
+  email: text("email").notNull(),
+  displayName: text("display_name"),
+  permissions: text("permissions").array().notNull(), // Array of permission keys
+  status: text("status").notNull().default("active"), // 'active' | 'revoked'
+  invitedBy: varchar("invited_by").notNull(), // User who sent the invite
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  revokedAt: timestamp("revoked_at"),
+  revokedBy: varchar("revoked_by"),
+});
+
+export const insertVendorTeammateSchema = createInsertSchema(vendorTeammates).omit({
+  id: true,
+  createdAt: true,
+  revokedAt: true,
+  revokedBy: true,
+}).extend({
+  email: z.string().email(),
+  permissions: z.array(z.enum(VENDOR_TEAMMATE_PERMISSIONS)),
+  status: z.enum(["active", "revoked"]).optional(),
+});
+
+export type InsertVendorTeammate = z.infer<typeof insertVendorTeammateSchema>;
+export type VendorTeammate = typeof vendorTeammates.$inferSelect;
+
+// Vendor Teammate Invitations - Pending invitations
+export const vendorTeammateInvitations = pgTable("vendor_teammate_invitations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  vendorId: varchar("vendor_id").notNull(),
+  email: text("email").notNull(),
+  permissions: text("permissions").array().notNull(), // Permissions to grant on acceptance
+  inviteToken: text("invite_token").notNull(), // Token for accepting invitation
+  inviteTokenExpires: timestamp("invite_token_expires").notNull(),
+  status: text("status").notNull().default("pending"), // 'pending' | 'accepted' | 'expired' | 'revoked'
+  invitedBy: varchar("invited_by").notNull(), // User who sent the invite
+  invitedAt: timestamp("invited_at").notNull().defaultNow(),
+  acceptedAt: timestamp("accepted_at"),
+  displayName: text("display_name"), // Optional name for the invitee
+});
+
+export const insertVendorTeammateInvitationSchema = createInsertSchema(vendorTeammateInvitations).omit({
+  id: true,
+  inviteToken: true,
+  inviteTokenExpires: true,
+  invitedAt: true,
+  acceptedAt: true,
+}).extend({
+  email: z.string().email(),
+  permissions: z.array(z.enum(VENDOR_TEAMMATE_PERMISSIONS)),
+  status: z.enum(["pending", "accepted", "expired", "revoked"]).optional(),
+});
+
+export type InsertVendorTeammateInvitation = z.infer<typeof insertVendorTeammateInvitationSchema>;
+export type VendorTeammateInvitation = typeof vendorTeammateInvitations.$inferSelect;
+
+// Extended type for teammate with user info
+export type VendorTeammateWithUser = VendorTeammate & {
+  user?: { email: string };
+};

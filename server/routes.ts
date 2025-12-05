@@ -46,6 +46,8 @@ import {
   insertGuestListScenarioSchema,
   insertGuestBudgetSettingsSchema,
   insertCutListItemSchema,
+  insertVendorTeammateInvitationSchema,
+  VENDOR_TEAMMATE_PERMISSIONS,
 } from "@shared/schema";
 import { seedVendors, seedBudgetBenchmarks } from "./seed-data";
 import {
@@ -7536,6 +7538,333 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.status(500).json({ error: "Failed to sync Outlook vendor calendar" });
     }
+  });
+
+  // ============================================================================
+  // VENDOR TEAMMATE MANAGEMENT
+  // ============================================================================
+
+  // Get teammates for a vendor
+  app.get("/api/vendor-teammates", async (req, res) => {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    try {
+      const { vendorId } = req.query;
+      if (!vendorId) {
+        return res.status(400).json({ error: "vendorId is required" });
+      }
+
+      // Verify user has access to this vendor
+      const hasAccess = await storage.hasVendorTeammateAccess(userId, vendorId as string, 'team_manage');
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const teammates = await storage.getVendorTeammatesByVendor(vendorId as string);
+      res.json(teammates);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get pending invitations for a vendor
+  app.get("/api/vendor-teammates/invitations", async (req, res) => {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    try {
+      const { vendorId } = req.query;
+      if (!vendorId) {
+        return res.status(400).json({ error: "vendorId is required" });
+      }
+
+      // Verify user has access to this vendor
+      const hasAccess = await storage.hasVendorTeammateAccess(userId, vendorId as string, 'team_manage');
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const invitations = await storage.getVendorTeammateInvitationsByVendor(vendorId as string);
+      // Filter to only pending invitations
+      const pendingInvitations = invitations.filter(inv => inv.status === 'pending');
+      res.json(pendingInvitations);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Create a new teammate invitation
+  app.post("/api/vendor-teammates/invitations", async (req, res) => {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    try {
+      const { vendorId, email, permissions, displayName } = req.body;
+      
+      if (!vendorId || !email || !permissions || !Array.isArray(permissions)) {
+        return res.status(400).json({ error: "vendorId, email, and permissions are required" });
+      }
+
+      // Validate permissions
+      const validPermissions = permissions.filter(p => VENDOR_TEAMMATE_PERMISSIONS.includes(p));
+      if (validPermissions.length === 0) {
+        return res.status(400).json({ error: "At least one valid permission is required" });
+      }
+
+      // Verify user has access to manage teammates for this vendor
+      const hasAccess = await storage.hasVendorTeammateAccess(userId, vendorId, 'team_manage');
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied. You need team_manage permission." });
+      }
+
+      // Check if invitation already exists for this email and vendor
+      const existingInvitations = await storage.getVendorTeammateInvitationsByVendor(vendorId);
+      const pendingInvite = existingInvitations.find(
+        inv => inv.email.toLowerCase() === email.toLowerCase() && inv.status === 'pending'
+      );
+      if (pendingInvite) {
+        return res.status(400).json({ error: "An invitation is already pending for this email" });
+      }
+
+      // Check if user is already a teammate
+      const existingTeammates = await storage.getVendorTeammatesByVendor(vendorId);
+      const existingTeammate = existingTeammates.find(t => t.email.toLowerCase() === email.toLowerCase());
+      if (existingTeammate) {
+        return res.status(400).json({ error: "This email is already a teammate" });
+      }
+
+      // Generate invite token
+      const crypto = await import("crypto");
+      const inviteToken = crypto.randomBytes(32).toString('hex');
+      const inviteTokenExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+      const invitation = await storage.createVendorTeammateInvitation({
+        vendorId,
+        email,
+        permissions: validPermissions,
+        displayName,
+        invitedBy: userId,
+        inviteToken,
+        inviteTokenExpires,
+      });
+
+      // Send invitation email
+      try {
+        const vendor = await storage.getVendor(vendorId);
+        const inviteUrl = `${process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : ''}/vendor-invite?token=${inviteToken}`;
+        
+        const { Resend } = await import("resend");
+        const resend = new Resend(process.env.RESEND_API_KEY);
+        
+        await resend.emails.send({
+          from: "Viah.me <noreply@viah.me>",
+          to: email,
+          subject: `You've been invited to join ${vendor?.name || 'a vendor'} on Viah.me`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2>You're Invited!</h2>
+              <p>You've been invited to join <strong>${vendor?.name || 'a vendor team'}</strong> on Viah.me, the South Asian wedding management platform.</p>
+              <p>Click the button below to accept this invitation and create your account:</p>
+              <p style="text-align: center; margin: 30px 0;">
+                <a href="${inviteUrl}" style="background-color: #f97316; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Accept Invitation</a>
+              </p>
+              <p style="color: #666;">This invitation will expire in 7 days.</p>
+              <p style="color: #666; font-size: 12px;">If you didn't expect this invitation, you can safely ignore this email.</p>
+            </div>
+          `,
+        });
+      } catch (emailError) {
+        console.error("Failed to send invitation email:", emailError);
+        // Don't fail the request if email fails - invitation is still created
+      }
+
+      res.json(invitation);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Accept a teammate invitation
+  app.post("/api/vendor-teammates/accept", async (req, res) => {
+    try {
+      const { token, email, password, name } = req.body;
+      
+      if (!token) {
+        return res.status(400).json({ error: "Invitation token is required" });
+      }
+
+      // Get the invitation
+      const invitation = await storage.getVendorTeammateInvitationByToken(token);
+      if (!invitation) {
+        return res.status(404).json({ error: "Invalid or expired invitation" });
+      }
+
+      if (invitation.status !== 'pending') {
+        return res.status(400).json({ error: "This invitation has already been used or revoked" });
+      }
+
+      if (new Date() > invitation.inviteTokenExpires) {
+        return res.status(400).json({ error: "This invitation has expired" });
+      }
+
+      // Check if user already exists with this email
+      let user = await storage.getUserByEmail(invitation.email);
+      
+      if (!user) {
+        // Need to create a new user - require password
+        if (!password) {
+          return res.status(400).json({ 
+            error: "Password required for new account",
+            needsPassword: true,
+            email: invitation.email 
+          });
+        }
+
+        const bcrypt = await import("bcrypt");
+        const passwordHash = await bcrypt.hash(password, 10);
+        
+        user = await storage.createUser({
+          email: invitation.email,
+          username: invitation.email,
+          password: passwordHash,
+          role: 'vendor', // Teammates get vendor role
+          emailVerified: true, // Auto-verify since they got the email
+        });
+      }
+
+      // Accept the invitation and create teammate record
+      const result = await storage.acceptVendorTeammateInvitation(token, user.id);
+
+      // Update display name if provided
+      if (name && result.teammate) {
+        await storage.updateVendorTeammate(result.teammate.id, { displayName: name });
+      }
+
+      // Set up session for the user
+      if (req.session) {
+        req.session.userId = user.id;
+      }
+
+      res.json({ 
+        success: true, 
+        teammate: result.teammate,
+        user: { id: user.id, email: user.email, role: user.role }
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Update teammate permissions
+  app.patch("/api/vendor-teammates/:id", async (req, res) => {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    try {
+      const { id } = req.params;
+      const { permissions } = req.body;
+
+      const teammate = await storage.getVendorTeammate(id);
+      if (!teammate) {
+        return res.status(404).json({ error: "Teammate not found" });
+      }
+
+      // Verify user has access to manage teammates for this vendor
+      const hasAccess = await storage.hasVendorTeammateAccess(userId, teammate.vendorId, 'team_manage');
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      // Validate permissions
+      if (permissions && Array.isArray(permissions)) {
+        const validPermissions = permissions.filter(p => VENDOR_TEAMMATE_PERMISSIONS.includes(p));
+        if (validPermissions.length === 0) {
+          return res.status(400).json({ error: "At least one valid permission is required" });
+        }
+
+        const updated = await storage.updateVendorTeammate(id, { permissions: validPermissions });
+        res.json(updated);
+      } else {
+        res.status(400).json({ error: "permissions array is required" });
+      }
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Revoke a teammate
+  app.delete("/api/vendor-teammates/:id", async (req, res) => {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    try {
+      const { id } = req.params;
+
+      const teammate = await storage.getVendorTeammate(id);
+      if (!teammate) {
+        return res.status(404).json({ error: "Teammate not found" });
+      }
+
+      // Verify user has access to manage teammates for this vendor
+      const hasAccess = await storage.hasVendorTeammateAccess(userId, teammate.vendorId, 'team_manage');
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      // Don't allow revoking yourself
+      if (teammate.userId === userId) {
+        return res.status(400).json({ error: "You cannot remove yourself from the team" });
+      }
+
+      const revoked = await storage.revokeVendorTeammate(id, userId);
+      res.json(revoked);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Revoke a pending invitation
+  app.delete("/api/vendor-teammates/invitations/:id", async (req, res) => {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    try {
+      const { id } = req.params;
+
+      const invitation = await storage.getVendorTeammateInvitation(id);
+      if (!invitation) {
+        return res.status(404).json({ error: "Invitation not found" });
+      }
+
+      // Verify user has access to manage teammates for this vendor
+      const hasAccess = await storage.hasVendorTeammateAccess(userId, invitation.vendorId, 'team_manage');
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const revoked = await storage.revokeVendorTeammateInvitation(id);
+      res.json(revoked);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get available permissions list (for UI)
+  app.get("/api/vendor-teammates/permissions", async (req, res) => {
+    res.json(VENDOR_TEAMMATE_PERMISSIONS);
   });
   
   return httpServer;

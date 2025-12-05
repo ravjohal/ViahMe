@@ -55,6 +55,8 @@ import LeadInbox from "@/pages/lead-inbox";
 import ClaimProfile from "@/pages/claim-profile";
 import AiPlanner from "@/pages/ai-planner";
 import LiveTimeline from "@/pages/live-timeline";
+import VendorTeam from "@/pages/vendor-team";
+import VendorInviteAccept from "@/pages/vendor-invite-accept";
 import { VendorRoute } from "@/components/VendorRoute";
 import { CoupleRoute } from "@/components/CoupleRoute";
 
@@ -210,6 +212,12 @@ function Router() {
           <VendorPackages />
         </VendorRoute>
       </Route>
+      <Route path="/vendor-team">
+        <VendorRoute>
+          <VendorTeam />
+        </VendorRoute>
+      </Route>
+      <Route path="/vendor-invite" component={VendorInviteAccept} />
       
       <Route component={NotFound} />
     </Switch>
