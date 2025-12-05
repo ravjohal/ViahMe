@@ -240,9 +240,11 @@ function AppLayout() {
     "/reset-password"
   ];
   
-  // Hide header on auth pages and guest websites (vendors page always shows header)
+  // Hide header on auth pages, guest websites, and vendor pages (vendors have their own header)
+  const isVendorPage = location.startsWith("/vendor-");
   const hideHeader = authPages.includes(location) || 
-                     location.startsWith("/wedding/");
+                     location.startsWith("/wedding/") ||
+                     isVendorPage;
   
   return (
     <div className="min-h-screen bg-background">
