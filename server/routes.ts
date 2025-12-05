@@ -1789,6 +1789,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Task Progress Stats
+  app.get("/api/tasks/progress/:weddingId", async (req, res) => {
+    try {
+      const tasks = await storage.getTasksByWedding(req.params.weddingId);
+      const total = tasks.length;
+      const completed = tasks.filter(t => t.completed).length;
+      const highPriority = tasks.filter(t => t.priority === 'high' && !t.completed).length;
+      const overdue = tasks.filter(t => {
+        if (!t.dueDate || t.completed) return false;
+        return new Date(t.dueDate) < new Date();
+      }).length;
+      const withReminders = tasks.filter(t => t.reminderEnabled).length;
+
+      const progress = total > 0 ? (completed / total) * 100 : 0;
+
+      res.json({
+        total,
+        completed,
+        highPriority,
+        overdue,
+        withReminders,
+        progress: Math.round(progress * 100) / 100,
+        remaining: total - completed,
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch task progress" });
+    }
+  });
+
+  // Task Reminders - Get reminders for a wedding
+  app.get("/api/task-reminders/:weddingId", async (req, res) => {
+    try {
+      const reminders = await storage.getRemindersByWedding(req.params.weddingId);
+      res.json(reminders);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch task reminders" });
+    }
+  });
+
+  // Task Reminders - Get reminders for a specific task
+  app.get("/api/tasks/:taskId/reminders", async (req, res) => {
+    try {
+      const reminders = await storage.getRemindersByTask(req.params.taskId);
+      res.json(reminders);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch task reminders" });
+    }
+  });
+
+  // Toggle task reminder
+  app.patch("/api/tasks/:id/reminder", async (req, res) => {
+    try {
+      const { reminderEnabled, reminderDaysBefore, reminderMethod } = req.body;
+      
+      const updates: any = {};
+      if (reminderEnabled !== undefined) updates.reminderEnabled = reminderEnabled;
+      if (reminderDaysBefore !== undefined) {
+        const days = parseInt(reminderDaysBefore);
+        if (days >= 1 && days <= 30) {
+          updates.reminderDaysBefore = days;
+        }
+      }
+      if (reminderMethod !== undefined) {
+        const validMethods = ['email', 'sms', 'both'];
+        if (validMethods.includes(reminderMethod)) {
+          updates.reminderMethod = reminderMethod;
+        }
+      }
+
+      const task = await storage.updateTask(req.params.id, updates);
+      if (!task) {
+        return res.status(404).json({ error: "Task not found" });
+      }
+      res.json(task);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update task reminder" });
+    }
+  });
+
   // ============================================================================
   // CONTRACTS
   // ============================================================================
