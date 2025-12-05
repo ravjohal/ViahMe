@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import type { Task, Event } from "@shared/schema";
+import type { Task, Event, WeddingRoleAssignment } from "@shared/schema";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Calendar, CheckCircle2, Circle, AlertCircle, Trash2, Filter, Bell, BellOff, Mail, MessageSquare } from "lucide-react";
+import { Plus, Calendar, CheckCircle2, Circle, AlertCircle, Trash2, Filter, Bell, BellOff, Mail, MessageSquare, User, Send } from "lucide-react";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProgressRing } from "@/components/progress-ring";
@@ -53,12 +53,23 @@ const PRIORITY_LABELS = {
   low: "Low Priority",
 };
 
+interface Collaborator {
+  id: string;
+  userId: string;
+  userName?: string;
+  userEmail?: string;
+  roleId: string;
+  roleName?: string;
+  status: string;
+}
+
 export default function TasksPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [filterPriority, setFilterPriority] = useState<string>("all");
   const [filterCompleted, setFilterCompleted] = useState<string>("all");
   const [filterEvent, setFilterEvent] = useState<string>("all");
+  const [filterAssignee, setFilterAssignee] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
@@ -75,6 +86,12 @@ export default function TasksPage() {
 
   const { data: events = [] } = useQuery<Event[]>({
     queryKey: ["/api/events", wedding?.id],
+    enabled: !!wedding?.id,
+  });
+
+  // Fetch team members (collaborators) for assignment
+  const { data: collaborators = [] } = useQuery<Collaborator[]>({
+    queryKey: ["/api/weddings", wedding?.id, "collaborators"],
     enabled: !!wedding?.id,
   });
 
@@ -143,6 +160,28 @@ export default function TasksPage() {
     },
   });
 
+  // Send on-demand reminder to assigned team member
+  const sendReminderMutation = useMutation({
+    mutationFn: async (taskId: string) => {
+      const response = await apiRequest("POST", `/api/tasks/${taskId}/send-reminder`, {});
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: data.success ? "Reminder sent" : "Could not send reminder",
+        description: data.message,
+        variant: data.success ? "default" : "destructive",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send reminder. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const form = useForm<InsertTask>({
     resolver: zodResolver(insertTaskSchema),
     defaultValues: {
@@ -188,6 +227,8 @@ export default function TasksPage() {
       dueDate: task.dueDate ? format(new Date(task.dueDate), "yyyy-MM-dd") : "",
       category: task.category || undefined,
       completed: task.completed || false,
+      assignedToId: task.assignedToId || undefined,
+      assignedToName: task.assignedToName || undefined,
     });
     setDialogOpen(true);
   };
@@ -208,7 +249,12 @@ export default function TasksPage() {
       filterEvent === "all" ||
       (filterEvent === "no-event" && !task.eventId) ||
       task.eventId === filterEvent;
-    return matchesPriority && matchesCompleted && matchesEvent;
+    const matchesAssignee =
+      filterAssignee === "all" ||
+      (filterAssignee === "unassigned" && !task.assignedToId) ||
+      (filterAssignee === "assigned" && !!task.assignedToId) ||
+      task.assignedToId === filterAssignee;
+    return matchesPriority && matchesCompleted && matchesEvent && matchesAssignee;
   });
 
   const stats = {
@@ -353,6 +399,24 @@ export default function TasksPage() {
           </SelectContent>
         </Select>
 
+        {collaborators.length > 0 && (
+          <Select value={filterAssignee} onValueChange={setFilterAssignee}>
+            <SelectTrigger className="w-48" data-testid="filter-assignee">
+              <SelectValue placeholder="All Assignees" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Assignees</SelectItem>
+              <SelectItem value="unassigned">Unassigned</SelectItem>
+              <SelectItem value="assigned">Assigned</SelectItem>
+              {collaborators.filter(c => c.status === 'active').map((collab) => (
+                <SelectItem key={collab.userId} value={collab.userId}>
+                  {collab.userName || collab.userEmail || "Team Member"}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+
         <div className="ml-auto">
           <Dialog open={dialogOpen} onOpenChange={(open) => {
             setDialogOpen(open);
@@ -464,34 +528,75 @@ export default function TasksPage() {
                     />
                   </div>
 
-                  <FormField
-                    control={form.control}
-                    name="eventId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Related Event (Optional)</FormLabel>
-                        <Select
-                          value={field.value || "none"}
-                          onValueChange={(value) => field.onChange(value === "none" ? undefined : value)}
-                        >
-                          <FormControl>
-                            <SelectTrigger data-testid="select-event">
-                              <SelectValue placeholder="Select event" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="none">No specific event</SelectItem>
-                            {events.map((event) => (
-                              <SelectItem key={event.id} value={event.id}>
-                                {event.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="eventId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Related Event (Optional)</FormLabel>
+                          <Select
+                            value={field.value || "none"}
+                            onValueChange={(value) => field.onChange(value === "none" ? undefined : value)}
+                          >
+                            <FormControl>
+                              <SelectTrigger data-testid="select-event">
+                                <SelectValue placeholder="Select event" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="none">No specific event</SelectItem>
+                              {events.map((event) => (
+                                <SelectItem key={event.id} value={event.id}>
+                                  {event.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="assignedToId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Assign To (Optional)</FormLabel>
+                          <Select
+                            value={field.value || "none"}
+                            onValueChange={(value) => {
+                              field.onChange(value === "none" ? undefined : value);
+                              // Also set the name for display
+                              if (value && value !== "none") {
+                                const collab = collaborators.find(c => c.userId === value);
+                                form.setValue("assignedToName", collab?.userName || collab?.userEmail || "Team Member");
+                              } else {
+                                form.setValue("assignedToName", undefined);
+                              }
+                            }}
+                          >
+                            <FormControl>
+                              <SelectTrigger data-testid="select-assignee">
+                                <SelectValue placeholder="Select team member" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="none">Unassigned</SelectItem>
+                              {collaborators.filter(c => c.status === 'active').map((collab) => (
+                                <SelectItem key={collab.userId} value={collab.userId}>
+                                  {collab.userName || collab.userEmail || "Team Member"}
+                                  {collab.roleName && <span className="text-muted-foreground ml-1">({collab.roleName})</span>}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
                   <div className="flex justify-end gap-3 pt-4">
                     <Button
@@ -629,6 +734,33 @@ export default function TasksPage() {
                           <Badge variant="outline">
                             {relatedEvent.name}
                           </Badge>
+                        )}
+
+                        {task.assignedToName && (
+                          <Badge variant="outline" className="bg-chart-2/10 text-chart-2 border-chart-2/20">
+                            <User className="w-3 h-3 mr-1" />
+                            {task.assignedToName}
+                          </Badge>
+                        )}
+
+                        {task.assignedToId && !task.completed && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 gap-1 text-xs"
+                            disabled={sendReminderMutation.isPending}
+                            onClick={() => sendReminderMutation.mutate(task.id)}
+                            data-testid={`button-send-reminder-${task.id}`}
+                          >
+                            {sendReminderMutation.isPending ? (
+                              <span className="animate-pulse">Sending...</span>
+                            ) : (
+                              <>
+                                <Send className="w-3 h-3" />
+                                Send Reminder
+                              </>
+                            )}
+                          </Button>
                         )}
 
                         {task.dueDate && !task.completed && (
