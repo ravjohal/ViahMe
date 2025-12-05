@@ -489,17 +489,48 @@ export const tasks = pgTable("tasks", {
   completed: boolean("completed").default(false),
   priority: text("priority").default('medium'), // 'high' | 'medium' | 'low'
   category: text("category"),
+  reminderEnabled: boolean("reminder_enabled").default(false),
+  reminderDaysBefore: integer("reminder_days_before").default(1), // Days before due date to send reminder
+  reminderMethod: text("reminder_method").default('email'), // 'email' | 'sms' | 'both'
+  completedAt: timestamp("completed_at"), // When task was completed
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const insertTaskSchema = createInsertSchema(tasks).omit({
   id: true,
+  completedAt: true,
+  createdAt: true,
 }).extend({
   priority: z.enum(['high', 'medium', 'low']).optional(),
   dueDate: z.string().optional().transform(val => val ? new Date(val) : undefined),
+  reminderMethod: z.enum(['email', 'sms', 'both']).optional(),
 });
 
 export type InsertTask = z.infer<typeof insertTaskSchema>;
 export type Task = typeof tasks.$inferSelect;
+
+// ============================================================================
+// TASK REMINDERS - Track sent reminders
+// ============================================================================
+
+export const taskReminders = pgTable("task_reminders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  taskId: varchar("task_id").notNull().references(() => tasks.id, { onDelete: 'cascade' }),
+  weddingId: varchar("wedding_id").notNull(),
+  reminderType: text("reminder_type").notNull(), // 'email' | 'sms'
+  sentAt: timestamp("sent_at").notNull().defaultNow(),
+  sentTo: text("sent_to").notNull(), // Email address or phone number
+  status: text("status").notNull().default('sent'), // 'sent' | 'failed' | 'delivered'
+  errorMessage: text("error_message"),
+});
+
+export const insertTaskReminderSchema = createInsertSchema(taskReminders).omit({
+  id: true,
+  sentAt: true,
+});
+
+export type InsertTaskReminder = z.infer<typeof insertTaskReminderSchema>;
+export type TaskReminder = typeof taskReminders.$inferSelect;
 
 // ============================================================================
 // CONTRACTS - Vendor contract management

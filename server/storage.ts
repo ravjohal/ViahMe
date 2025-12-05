@@ -23,6 +23,8 @@ import {
   type InsertInvitation,
   type Task,
   type InsertTask,
+  type TaskReminder,
+  type InsertTaskReminder,
   type Contract,
   type InsertContract,
   type ContractTemplate,
@@ -249,9 +251,18 @@ export interface IStorage {
   // Tasks
   getTask(id: string): Promise<Task | undefined>;
   getTasksByWedding(weddingId: string): Promise<Task[]>;
+  getTasksWithRemindersForDate(targetDate: Date): Promise<Task[]>; // For scheduler
   createTask(task: InsertTask): Promise<Task>;
   updateTask(id: string, task: Partial<InsertTask>): Promise<Task | undefined>;
   deleteTask(id: string): Promise<boolean>;
+
+  // Task Reminders
+  getTaskReminder(id: string): Promise<TaskReminder | undefined>;
+  getRemindersByTask(taskId: string): Promise<TaskReminder[]>;
+  getRemindersByWedding(weddingId: string): Promise<TaskReminder[]>;
+  hasReminderBeenSent(taskId: string, reminderType: string, today: Date): Promise<boolean>;
+  createTaskReminder(reminder: InsertTaskReminder): Promise<TaskReminder>;
+  updateTaskReminder(id: string, updates: Partial<InsertTaskReminder>): Promise<TaskReminder | undefined>;
 
   // Contracts
   getContract(id: string): Promise<Contract | undefined>;
@@ -756,6 +767,7 @@ export class MemStorage implements IStorage {
   private guests: Map<string, Guest>;
   private invitations: Map<string, Invitation>;
   private tasks: Map<string, Task>;
+  private taskReminders: Map<string, TaskReminder>;
   private contracts: Map<string, Contract>;
   private contractTemplates: Map<string, ContractTemplate>;
   private messages: Map<string, Message>;
@@ -789,6 +801,7 @@ export class MemStorage implements IStorage {
     this.guests = new Map();
     this.invitations = new Map();
     this.tasks = new Map();
+    this.taskReminders = new Map();
     this.contracts = new Map();
     this.contractTemplates = new Map();
     this.messages = new Map();
@@ -1488,6 +1501,58 @@ export class MemStorage implements IStorage {
 
   async deleteTask(id: string): Promise<boolean> {
     return this.tasks.delete(id);
+  }
+
+  async getTasksWithRemindersForDate(targetDate: Date): Promise<Task[]> {
+    const tasks = Array.from(this.tasks.values()).filter(t => {
+      if (!t.reminderEnabled || t.completed || !t.dueDate) return false;
+      const dueDate = new Date(t.dueDate);
+      const reminderDate = new Date(dueDate);
+      reminderDate.setDate(reminderDate.getDate() - (t.reminderDaysBefore || 1));
+      return reminderDate.toDateString() === targetDate.toDateString();
+    });
+    return tasks;
+  }
+
+  // Task Reminders
+  async getTaskReminder(id: string): Promise<TaskReminder | undefined> {
+    return this.taskReminders.get(id);
+  }
+
+  async getRemindersByTask(taskId: string): Promise<TaskReminder[]> {
+    return Array.from(this.taskReminders.values()).filter(r => r.taskId === taskId);
+  }
+
+  async getRemindersByWedding(weddingId: string): Promise<TaskReminder[]> {
+    return Array.from(this.taskReminders.values()).filter(r => r.weddingId === weddingId);
+  }
+
+  async hasReminderBeenSent(taskId: string, reminderType: string, today: Date): Promise<boolean> {
+    const reminders = await this.getRemindersByTask(taskId);
+    return reminders.some(r => {
+      const sentDate = new Date(r.sentAt).toDateString();
+      return r.reminderType === reminderType && sentDate === today.toDateString();
+    });
+  }
+
+  async createTaskReminder(reminder: InsertTaskReminder): Promise<TaskReminder> {
+    const id = randomUUID();
+    const newReminder: TaskReminder = {
+      ...reminder,
+      id,
+      sentAt: new Date(),
+      status: reminder.status || 'sent',
+    };
+    this.taskReminders.set(id, newReminder);
+    return newReminder;
+  }
+
+  async updateTaskReminder(id: string, updates: Partial<InsertTaskReminder>): Promise<TaskReminder | undefined> {
+    const reminder = this.taskReminders.get(id);
+    if (!reminder) return undefined;
+    const updated = { ...reminder, ...updates };
+    this.taskReminders.set(id, updated);
+    return updated;
   }
 
   // Contracts
@@ -3989,6 +4054,65 @@ export class DBStorage implements IStorage {
   async deleteTask(id: string): Promise<boolean> {
     await this.db.delete(schema.tasks).where(eq(schema.tasks.id, id));
     return true;
+  }
+
+  async getTasksWithRemindersForDate(targetDate: Date): Promise<Task[]> {
+    const allTasks = await this.db.select().from(schema.tasks).where(
+      and(
+        eq(schema.tasks.reminderEnabled, true),
+        eq(schema.tasks.completed, false),
+        sql`${schema.tasks.dueDate} IS NOT NULL`
+      )
+    );
+    
+    return allTasks.filter(task => {
+      if (!task.dueDate) return false;
+      const dueDate = new Date(task.dueDate);
+      const reminderDate = new Date(dueDate);
+      reminderDate.setDate(reminderDate.getDate() - (task.reminderDaysBefore || 1));
+      return reminderDate.toDateString() === targetDate.toDateString();
+    });
+  }
+
+  // Task Reminders
+  async getTaskReminder(id: string): Promise<TaskReminder | undefined> {
+    const result = await this.db.select().from(schema.taskReminders).where(eq(schema.taskReminders.id, id));
+    return result[0];
+  }
+
+  async getRemindersByTask(taskId: string): Promise<TaskReminder[]> {
+    return await this.db.select().from(schema.taskReminders).where(eq(schema.taskReminders.taskId, taskId));
+  }
+
+  async getRemindersByWedding(weddingId: string): Promise<TaskReminder[]> {
+    return await this.db.select().from(schema.taskReminders).where(eq(schema.taskReminders.weddingId, weddingId));
+  }
+
+  async hasReminderBeenSent(taskId: string, reminderType: string, today: Date): Promise<boolean> {
+    const startOfDay = new Date(today);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(today);
+    endOfDay.setHours(23, 59, 59, 999);
+    
+    const result = await this.db.select().from(schema.taskReminders).where(
+      and(
+        eq(schema.taskReminders.taskId, taskId),
+        eq(schema.taskReminders.reminderType, reminderType),
+        sql`${schema.taskReminders.sentAt} >= ${startOfDay}`,
+        sql`${schema.taskReminders.sentAt} <= ${endOfDay}`
+      )
+    );
+    return result.length > 0;
+  }
+
+  async createTaskReminder(reminder: InsertTaskReminder): Promise<TaskReminder> {
+    const result = await this.db.insert(schema.taskReminders).values(reminder).returning();
+    return result[0];
+  }
+
+  async updateTaskReminder(id: string, updates: Partial<InsertTaskReminder>): Promise<TaskReminder | undefined> {
+    const result = await this.db.update(schema.taskReminders).set(updates).where(eq(schema.taskReminders.id, id)).returning();
+    return result[0];
   }
 
   // Contracts
