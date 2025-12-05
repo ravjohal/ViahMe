@@ -420,18 +420,21 @@ export default function VendorCalendar() {
 
   if (!myVendor) {
     return (
-      <div className="container mx-auto p-6">
-        <Card className="max-w-2xl mx-auto">
-          <CardHeader className="text-center">
-            <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-              <CalendarIcon className="h-8 w-8 text-primary" />
-            </div>
-            <CardTitle className="text-2xl">Calendar Management</CardTitle>
-            <CardDescription className="text-base">
-              Create a vendor profile first to manage your availability calendar.
-            </CardDescription>
-          </CardHeader>
-        </Card>
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-background dark:to-background">
+        <VendorHeader />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Card className="max-w-2xl mx-auto">
+            <CardHeader className="text-center">
+              <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                <CalendarIcon className="h-8 w-8 text-primary" />
+              </div>
+              <CardTitle className="text-2xl">Calendar Management</CardTitle>
+              <CardDescription className="text-base">
+                Create a vendor profile first to manage your availability calendar.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </div>
       </div>
     );
   }

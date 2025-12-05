@@ -47,6 +47,9 @@ import RitualControl from "@/pages/ritual-control";
 import GuestLiveFeed from "@/pages/guest-live-feed";
 import Collaborators from "@/pages/collaborators";
 import VendorCalendar from "@/pages/vendor-calendar";
+import VendorBookings from "@/pages/vendor-bookings";
+import VendorContracts from "@/pages/vendor-contracts";
+import VendorPackages from "@/pages/vendor-packages";
 import VendorDeposit from "@/pages/vendor-deposit";
 import LeadInbox from "@/pages/lead-inbox";
 import ClaimProfile from "@/pages/claim-profile";
@@ -78,14 +81,22 @@ function Router() {
       
       {/* Dashboard - no specific permission, just authentication */}
       <Route path="/dashboard" component={Dashboard} />
-      <Route path="/vendor-dashboard" component={VendorDashboard} />
+      <Route path="/vendor-dashboard">
+        <VendorRoute>
+          <VendorDashboard />
+        </VendorRoute>
+      </Route>
       <Route path="/lead-inbox">
         <VendorRoute>
           <LeadInbox />
         </VendorRoute>
       </Route>
       <Route path="/couple-analytics" component={CoupleAnalytics} />
-      <Route path="/vendor-analytics" component={VendorAnalytics} />
+      <Route path="/vendor-analytics">
+        <VendorRoute>
+          <VendorAnalytics />
+        </VendorRoute>
+      </Route>
       
       {/* Protected routes with permission checks */}
       <Route path="/guests">
@@ -178,8 +189,27 @@ function Router() {
       </Route>
       <Route path="/settings" component={Settings} />
       
-      {/* Vendor calendar integration */}
-      <Route path="/vendor-calendar" component={VendorCalendar} />
+      {/* Vendor pages */}
+      <Route path="/vendor-calendar">
+        <VendorRoute>
+          <VendorCalendar />
+        </VendorRoute>
+      </Route>
+      <Route path="/vendor-bookings">
+        <VendorRoute>
+          <VendorBookings />
+        </VendorRoute>
+      </Route>
+      <Route path="/vendor-contracts">
+        <VendorRoute>
+          <VendorContracts />
+        </VendorRoute>
+      </Route>
+      <Route path="/vendor-packages">
+        <VendorRoute>
+          <VendorPackages />
+        </VendorRoute>
+      </Route>
       
       <Route component={NotFound} />
     </Switch>

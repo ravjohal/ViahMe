@@ -37,12 +37,15 @@ export default function VendorAnalytics() {
 
   if (!vendor) {
     return (
-      <div className="container mx-auto p-6">
-        <Card>
-          <CardContent className="flex items-center justify-center py-12">
-            <p className="text-muted-foreground">Create your vendor profile to view analytics</p>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-background dark:to-background">
+        <VendorHeader />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Card>
+            <CardContent className="flex items-center justify-center py-12">
+              <p className="text-muted-foreground">Create your vendor profile to view analytics</p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
