@@ -123,6 +123,10 @@ import {
   type VendorTeammateInvitation,
   type InsertVendorTeammateInvitation,
   type VendorTeammateWithUser,
+  type ContractDocument,
+  type InsertContractDocument,
+  type ContractPayment,
+  type InsertContractPayment,
 } from "@shared/schema";
 import { randomUUID, randomBytes } from "crypto";
 import bcrypt from "bcrypt";
@@ -398,6 +402,21 @@ export interface IStorage {
   getSignaturesByContract(contractId: string): Promise<ContractSignature[]>;
   createContractSignature(signature: InsertContractSignature): Promise<ContractSignature>;
   hasContractBeenSigned(contractId: string, signerId: string): Promise<boolean>;
+
+  // Contract Documents
+  getContractDocument(id: string): Promise<ContractDocument | undefined>;
+  getDocumentsByContract(contractId: string): Promise<ContractDocument[]>;
+  createContractDocument(document: InsertContractDocument): Promise<ContractDocument>;
+  updateContractDocument(id: string, document: Partial<InsertContractDocument>): Promise<ContractDocument | undefined>;
+  deleteContractDocument(id: string): Promise<boolean>;
+
+  // Contract Payments
+  getContractPayment(id: string): Promise<ContractPayment | undefined>;
+  getPaymentsByContract(contractId: string): Promise<ContractPayment[]>;
+  createContractPayment(payment: InsertContractPayment): Promise<ContractPayment>;
+  updateContractPayment(id: string, payment: Partial<InsertContractPayment>): Promise<ContractPayment | undefined>;
+  deleteContractPayment(id: string): Promise<boolean>;
+  getTotalPaidForContract(contractId: string): Promise<number>;
 
   // Vendor Analytics
   getVendorAnalyticsSummary(vendorId: string): Promise<{
@@ -2394,6 +2413,43 @@ export class MemStorage implements IStorage {
   async hasContractBeenSigned(contractId: string, signerId: string): Promise<boolean> {
     // Not implemented for MemStorage - would need a Map
     return false;
+  }
+
+  // Contract Documents - Not implemented for MemStorage
+  async getContractDocument(id: string): Promise<ContractDocument | undefined> {
+    return undefined;
+  }
+  async getDocumentsByContract(contractId: string): Promise<ContractDocument[]> {
+    return [];
+  }
+  async createContractDocument(document: InsertContractDocument): Promise<ContractDocument> {
+    throw new Error("Contract documents not supported in MemStorage");
+  }
+  async updateContractDocument(id: string, document: Partial<InsertContractDocument>): Promise<ContractDocument | undefined> {
+    return undefined;
+  }
+  async deleteContractDocument(id: string): Promise<boolean> {
+    return false;
+  }
+
+  // Contract Payments - Not implemented for MemStorage
+  async getContractPayment(id: string): Promise<ContractPayment | undefined> {
+    return undefined;
+  }
+  async getPaymentsByContract(contractId: string): Promise<ContractPayment[]> {
+    return [];
+  }
+  async createContractPayment(payment: InsertContractPayment): Promise<ContractPayment> {
+    throw new Error("Contract payments not supported in MemStorage");
+  }
+  async updateContractPayment(id: string, payment: Partial<InsertContractPayment>): Promise<ContractPayment | undefined> {
+    return undefined;
+  }
+  async deleteContractPayment(id: string): Promise<boolean> {
+    return false;
+  }
+  async getTotalPaidForContract(contractId: string): Promise<number> {
+    return 0;
   }
 
   // Vendor Analytics
@@ -4892,6 +4948,111 @@ export class DBStorage implements IStorage {
       )
       .limit(1);
     return result.length > 0;
+  }
+
+  // ============================================================================
+  // Contract Documents
+  // ============================================================================
+
+  async getContractDocument(id: string): Promise<ContractDocument | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.contractDocuments)
+      .where(eq(schema.contractDocuments.id, id))
+      .limit(1);
+    return result[0];
+  }
+
+  async getDocumentsByContract(contractId: string): Promise<ContractDocument[]> {
+    return await this.db
+      .select()
+      .from(schema.contractDocuments)
+      .where(eq(schema.contractDocuments.contractId, contractId))
+      .orderBy(schema.contractDocuments.createdAt);
+  }
+
+  async createContractDocument(document: InsertContractDocument): Promise<ContractDocument> {
+    const result = await this.db
+      .insert(schema.contractDocuments)
+      .values(document)
+      .returning();
+    return result[0];
+  }
+
+  async updateContractDocument(id: string, document: Partial<InsertContractDocument>): Promise<ContractDocument | undefined> {
+    const result = await this.db
+      .update(schema.contractDocuments)
+      .set(document)
+      .where(eq(schema.contractDocuments.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteContractDocument(id: string): Promise<boolean> {
+    const result = await this.db
+      .delete(schema.contractDocuments)
+      .where(eq(schema.contractDocuments.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  // ============================================================================
+  // Contract Payments
+  // ============================================================================
+
+  async getContractPayment(id: string): Promise<ContractPayment | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.contractPayments)
+      .where(eq(schema.contractPayments.id, id))
+      .limit(1);
+    return result[0];
+  }
+
+  async getPaymentsByContract(contractId: string): Promise<ContractPayment[]> {
+    return await this.db
+      .select()
+      .from(schema.contractPayments)
+      .where(eq(schema.contractPayments.contractId, contractId))
+      .orderBy(schema.contractPayments.createdAt);
+  }
+
+  async createContractPayment(payment: InsertContractPayment): Promise<ContractPayment> {
+    const result = await this.db
+      .insert(schema.contractPayments)
+      .values(payment)
+      .returning();
+    return result[0];
+  }
+
+  async updateContractPayment(id: string, payment: Partial<InsertContractPayment>): Promise<ContractPayment | undefined> {
+    const result = await this.db
+      .update(schema.contractPayments)
+      .set(payment)
+      .where(eq(schema.contractPayments.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteContractPayment(id: string): Promise<boolean> {
+    const result = await this.db
+      .delete(schema.contractPayments)
+      .where(eq(schema.contractPayments.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  async getTotalPaidForContract(contractId: string): Promise<number> {
+    const payments = await this.db
+      .select()
+      .from(schema.contractPayments)
+      .where(
+        and(
+          eq(schema.contractPayments.contractId, contractId),
+          eq(schema.contractPayments.status, 'completed')
+        )
+      );
+    return payments.reduce((sum, p) => sum + parseFloat(p.amount), 0);
   }
 
   // ============================================================================

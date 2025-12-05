@@ -1129,6 +1129,69 @@ export type InsertContractSignature = z.infer<typeof insertContractSignatureSche
 export type ContractSignature = typeof contractSignatures.$inferSelect;
 
 // ============================================================================
+// CONTRACT DOCUMENTS - File attachments for contracts
+// ============================================================================
+
+export const contractDocuments = pgTable("contract_documents", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  contractId: varchar("contract_id").notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  fileUrl: text("file_url").notNull(),
+  fileType: text("file_type").notNull(), // 'pdf' | 'image' | 'doc' | 'other'
+  fileSize: integer("file_size"), // Size in bytes
+  uploadedBy: varchar("uploaded_by").notNull(), // User ID
+  uploaderRole: text("uploader_role").notNull(), // 'couple' | 'vendor'
+  category: text("category"), // 'contract' | 'amendment' | 'receipt' | 'insurance' | 'license' | 'other'
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertContractDocumentSchema = createInsertSchema(contractDocuments).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  uploaderRole: z.enum(['couple', 'vendor']),
+  fileType: z.enum(['pdf', 'image', 'doc', 'other']),
+  category: z.enum(['contract', 'amendment', 'receipt', 'insurance', 'license', 'other']).optional(),
+});
+
+export type InsertContractDocument = z.infer<typeof insertContractDocumentSchema>;
+export type ContractDocument = typeof contractDocuments.$inferSelect;
+
+// ============================================================================
+// CONTRACT PAYMENTS - Track actual payments against milestones
+// ============================================================================
+
+export const contractPayments = pgTable("contract_payments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  contractId: varchar("contract_id").notNull(),
+  milestoneIndex: integer("milestone_index"), // Which milestone this payment is for (null for ad-hoc)
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  paymentMethod: text("payment_method"), // 'card' | 'bank_transfer' | 'check' | 'cash' | 'venmo' | 'other'
+  transactionId: text("transaction_id"), // External payment reference (Stripe, etc.)
+  status: text("status").notNull().default('pending'), // 'pending' | 'completed' | 'failed' | 'refunded'
+  notes: text("notes"),
+  receiptUrl: text("receipt_url"), // Link to receipt document
+  recordedBy: varchar("recorded_by").notNull(), // User ID who recorded this
+  recorderRole: text("recorder_role").notNull(), // 'couple' | 'vendor'
+  paidAt: timestamp("paid_at"), // When payment was actually made
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertContractPaymentSchema = createInsertSchema(contractPayments).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  recorderRole: z.enum(['couple', 'vendor']),
+  status: z.enum(['pending', 'completed', 'failed', 'refunded']).optional(),
+  paymentMethod: z.enum(['card', 'bank_transfer', 'check', 'cash', 'venmo', 'other']).optional(),
+  paidAt: z.string().optional().transform(val => val ? new Date(val) : undefined),
+});
+
+export type InsertContractPayment = z.infer<typeof insertContractPaymentSchema>;
+export type ContractPayment = typeof contractPayments.$inferSelect;
+
+// ============================================================================
 // VENDOR ANALYTICS - Performance tracking and ROI metrics
 // ============================================================================
 
