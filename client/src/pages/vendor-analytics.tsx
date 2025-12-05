@@ -6,34 +6,74 @@ import { TrendingUp, DollarSign, Star, CheckCircle, Calendar, BarChart3 } from "
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { VendorHeader } from "@/components/vendor-header";
+import type { Vendor } from "@shared/schema";
+
+interface AnalyticsSummary {
+  totalBookings: number;
+  confirmedBookings: number;
+  totalRevenue: string;
+  averageBookingValue: string;
+  averageRating: string;
+  totalReviews: number;
+  conversionRate: string;
+}
+
+interface BookingTrend {
+  date: string;
+  bookings: number;
+  confirmed: number;
+}
+
+interface RevenueTrend {
+  date: string;
+  revenue: string;
+}
 
 export default function VendorAnalytics() {
   const { user } = useAuth();
 
-  // Fetch vendor profile to get vendor ID
-  const { data: vendor } = useQuery({
-    queryKey: ['/api/vendors/profile'],
+  // Fetch vendor profile using same pattern as dashboard
+  const { data: vendors, isLoading: vendorsLoading } = useQuery<Vendor[]>({
+    queryKey: ["/api/vendors"],
+    enabled: !!user && user.role === "vendor",
   });
 
+  // Find vendor by user ID
+  const vendor = vendors?.find(v => v.userId === user?.id);
   const vendorId = vendor?.id;
 
   // Fetch analytics summary
-  const { data: summary, isLoading: summaryLoading } = useQuery({
+  const { data: summary, isLoading: summaryLoading } = useQuery<AnalyticsSummary>({
     queryKey: ['/api/analytics/vendor', vendorId, 'summary'],
     enabled: !!vendorId,
   });
 
   // Fetch booking trends
-  const { data: bookingTrends, isLoading: trendsLoading } = useQuery({
+  const { data: bookingTrends = [], isLoading: trendsLoading } = useQuery<BookingTrend[]>({
     queryKey: ['/api/analytics/vendor', vendorId, 'booking-trends'],
     enabled: !!vendorId,
   });
 
   // Fetch revenue trends
-  const { data: revenueTrends, isLoading: revenueLoading } = useQuery({
+  const { data: revenueTrends = [], isLoading: revenueLoading } = useQuery<RevenueTrend[]>({
     queryKey: ['/api/analytics/vendor', vendorId, 'revenue-trends'],
     enabled: !!vendorId,
   });
+
+  if (vendorsLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-background dark:to-background">
+        <VendorHeader />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Card>
+            <CardContent className="flex items-center justify-center py-12">
+              <Skeleton className="h-8 w-48" />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   if (!vendor) {
     return (

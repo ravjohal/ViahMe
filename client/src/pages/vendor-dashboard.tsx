@@ -934,6 +934,136 @@ export default function VendorDashboard() {
         </div>
         )}
 
+        {/* Analytics Overview Section */}
+        {currentVendor && (
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-xl font-semibold flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5 text-primary" />
+                  Analytics Overview
+                </h2>
+                <p className="text-sm text-muted-foreground">Your business performance at a glance</p>
+              </div>
+              <Link href="/vendor-analytics">
+                <Button variant="outline" size="sm" data-testid="button-view-full-analytics">
+                  View Full Analytics
+                  <TrendingUp className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <Card className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Revenue</p>
+                    {analyticsLoading ? (
+                      <Skeleton className="h-7 w-24 mt-1" />
+                    ) : (
+                      <p className="text-2xl font-bold text-green-600" data-testid="dashboard-metric-revenue">
+                        {formatCurrency(analyticsSummary.totalRevenue)}
+                      </p>
+                    )}
+                  </div>
+                  <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
+                    <DollarSign className="w-5 h-5 text-green-600" />
+                  </div>
+                </div>
+              </Card>
+              
+              <Card className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Average Rating</p>
+                    {analyticsLoading ? (
+                      <Skeleton className="h-7 w-16 mt-1" />
+                    ) : (
+                      <p className="text-2xl font-bold text-yellow-600" data-testid="dashboard-metric-rating">
+                        {analyticsSummary.averageRating || '0.0'}
+                        <span className="text-sm font-normal text-muted-foreground ml-1">
+                          ({analyticsSummary.totalReviews} reviews)
+                        </span>
+                      </p>
+                    )}
+                  </div>
+                  <div className="p-2 rounded-lg bg-yellow-100 dark:bg-yellow-900/30">
+                    <Star className="w-5 h-5 text-yellow-600" />
+                  </div>
+                </div>
+              </Card>
+              
+              <Card className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Avg Booking Value</p>
+                    {analyticsLoading ? (
+                      <Skeleton className="h-7 w-20 mt-1" />
+                    ) : (
+                      <p className="text-2xl font-bold" data-testid="dashboard-metric-avg-value">
+                        {formatCurrency(analyticsSummary.averageBookingValue)}
+                      </p>
+                    )}
+                  </div>
+                  <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                    <TrendingUp className="w-5 h-5 text-blue-600" />
+                  </div>
+                </div>
+              </Card>
+              
+              <Card className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Conversion Rate</p>
+                    {analyticsLoading ? (
+                      <Skeleton className="h-7 w-16 mt-1" />
+                    ) : (
+                      <p className="text-2xl font-bold text-purple-600" data-testid="dashboard-metric-conversion">
+                        {formatPercent(analyticsSummary.conversionRate)}
+                      </p>
+                    )}
+                  </div>
+                  <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30">
+                    <CheckCircle className="w-5 h-5 text-purple-600" />
+                  </div>
+                </div>
+              </Card>
+            </div>
+
+            {/* Revenue Trend Chart */}
+            {revenueTrends.length > 0 && (
+              <Card className="p-4">
+                <h3 className="font-medium mb-4 flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4" />
+                  Revenue Trend
+                </h3>
+                <ResponsiveContainer width="100%" height={200}>
+                  <AreaChart data={revenueTrends}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis dataKey="date" className="text-xs" />
+                    <YAxis className="text-xs" tickFormatter={(value) => `$${value}`} />
+                    <Tooltip 
+                      formatter={(value: any) => [`$${parseFloat(value).toLocaleString()}`, 'Revenue']}
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--card))', 
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="revenue" 
+                      stroke="hsl(var(--primary))" 
+                      fill="hsl(var(--primary) / 0.2)"
+                      strokeWidth={2}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </Card>
+            )}
+          </div>
+        )}
+
         {/* Pending Timeline Acknowledgments Alert */}
         {pendingAcks.length > 0 && (
           <Card className="mb-6 border-orange-200 dark:border-orange-800 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30">
