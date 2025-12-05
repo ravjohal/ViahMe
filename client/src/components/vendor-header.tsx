@@ -31,101 +31,107 @@ export function VendorHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 bg-white/80 dark:bg-background/80 backdrop-blur-md border-b">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center gap-8">
-            <Link href="/vendor-dashboard" className="flex items-center gap-2">
-              <img src={viahLogo} alt="Viah.me" className="h-8 w-auto" />
-            </Link>
+    <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="flex h-24 items-center justify-between px-6 gap-4">
+        {/* Logo - matches AppHeader */}
+        <Link href="/vendor-dashboard" className="flex items-center gap-3 hover-elevate active-elevate-2 rounded-md px-3 py-2 -ml-3">
+          <img 
+            src={viahLogo} 
+            alt="Viah.me" 
+            className="h-20 w-auto object-contain"
+            data-testid="logo-viah"
+          />
+        </Link>
 
-            <nav className="hidden lg:flex items-center gap-1">
-              {navItems.map((item) => {
-                const isActive = location === item.href;
-                const Icon = item.icon;
-                return (
-                  <Link key={item.href} href={item.href}>
-                    <Button
-                      variant={isActive ? "secondary" : "ghost"}
-                      size="sm"
-                      className={isActive ? "bg-primary/10 text-primary" : ""}
-                      data-testid={`nav-${item.label.toLowerCase()}`}
-                    >
-                      <Icon className="w-4 h-4 mr-2" />
-                      {item.label}
-                    </Button>
-                  </Link>
-                );
-              })}
-            </nav>
+        {/* Navigation - centered */}
+        <nav className="hidden lg:flex items-center gap-1 flex-1 justify-center">
+          {navItems.map((item) => {
+            const isActive = location === item.href;
+            const Icon = item.icon;
+            return (
+              <Link key={item.href} href={item.href}>
+                <Button
+                  variant={isActive ? "secondary" : "ghost"}
+                  size="sm"
+                  className={isActive ? "bg-primary/10 text-primary" : ""}
+                  data-testid={`nav-${item.label.toLowerCase()}`}
+                >
+                  <Icon className="w-4 h-4 mr-2" />
+                  {item.label}
+                </Button>
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* User section */}
+        <div className="hidden lg:flex items-center gap-4">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <User className="w-4 h-4" />
+            <span data-testid="text-vendor-email">{user?.email}</span>
           </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => logout()}
+            data-testid="button-logout"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Logout
+          </Button>
+        </div>
 
-          <div className="hidden lg:flex items-center gap-4">
+        {/* Mobile menu button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="lg:hidden"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          data-testid="button-mobile-menu"
+        >
+          {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </Button>
+      </div>
+
+      {/* Mobile menu */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden py-4 border-t px-6">
+          <nav className="flex flex-col gap-1">
+            {navItems.map((item) => {
+              const isActive = location === item.href;
+              const Icon = item.icon;
+              return (
+                <Link key={item.href} href={item.href}>
+                  <Button
+                    variant={isActive ? "secondary" : "ghost"}
+                    className={`w-full justify-start ${isActive ? "bg-primary/10 text-primary" : ""}`}
+                    onClick={() => setMobileMenuOpen(false)}
+                    data-testid={`nav-mobile-${item.label.toLowerCase()}`}
+                  >
+                    <Icon className="w-4 h-4 mr-2" />
+                    {item.label}
+                  </Button>
+                </Link>
+              );
+            })}
+          </nav>
+          <div className="mt-4 pt-4 border-t flex flex-col gap-2">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <User className="w-4 h-4" />
-              <span data-testid="text-vendor-email">{user?.email}</span>
+              <span>{user?.email}</span>
             </div>
             <Button
               variant="ghost"
-              size="sm"
+              className="justify-start"
               onClick={() => logout()}
-              data-testid="button-logout"
+              data-testid="button-mobile-logout"
             >
               <LogOut className="w-4 h-4 mr-2" />
               Logout
             </Button>
           </div>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            className="lg:hidden"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            data-testid="button-mobile-menu"
-          >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </Button>
         </div>
-
-        {mobileMenuOpen && (
-          <div className="lg:hidden py-4 border-t">
-            <nav className="flex flex-col gap-1">
-              {navItems.map((item) => {
-                const isActive = location === item.href;
-                const Icon = item.icon;
-                return (
-                  <Link key={item.href} href={item.href}>
-                    <Button
-                      variant={isActive ? "secondary" : "ghost"}
-                      className={`w-full justify-start ${isActive ? "bg-primary/10 text-primary" : ""}`}
-                      onClick={() => setMobileMenuOpen(false)}
-                      data-testid={`nav-mobile-${item.label.toLowerCase()}`}
-                    >
-                      <Icon className="w-4 h-4 mr-2" />
-                      {item.label}
-                    </Button>
-                  </Link>
-                );
-              })}
-            </nav>
-            <div className="mt-4 pt-4 border-t flex flex-col gap-2">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground px-4">
-                <User className="w-4 h-4" />
-                <span>{user?.email}</span>
-              </div>
-              <Button
-                variant="ghost"
-                className="justify-start"
-                onClick={() => logout()}
-                data-testid="button-mobile-logout"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Logout
-              </Button>
-            </div>
-          </div>
-        )}
-      </div>
+      )}
     </header>
   );
 }
