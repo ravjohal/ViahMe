@@ -1838,32 +1838,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Toggle task reminder
-  app.patch("/api/tasks/:id/reminder", async (req, res) => {
+  // Toggle task reminder (with authentication and ownership verification)
+  app.patch("/api/tasks/:id/reminder", await requireAuth(storage, false), async (req: AuthRequest, res) => {
     try {
-      const { reminderEnabled, reminderDaysBefore, reminderMethod } = req.body;
+      const taskId = req.params.id;
+      const sessionUserId = req.userId;
       
-      const updates: any = {};
-      if (reminderEnabled !== undefined) updates.reminderEnabled = reminderEnabled;
-      if (reminderDaysBefore !== undefined) {
-        const days = parseInt(reminderDaysBefore);
-        if (days >= 1 && days <= 30) {
-          updates.reminderDaysBefore = days;
-        }
+      if (!sessionUserId) {
+        return res.status(401).json({ error: "Authentication required" });
       }
-      if (reminderMethod !== undefined) {
-        const validMethods = ['email', 'sms', 'both'];
-        if (validMethods.includes(reminderMethod)) {
-          updates.reminderMethod = reminderMethod;
+      
+      // Validate task exists and get it
+      const existingTask = await storage.getTask(taskId);
+      if (!existingTask) {
+        return res.status(404).json({ error: "Task not found" });
+      }
+
+      // Verify wedding ownership
+      const wedding = await storage.getWedding(existingTask.weddingId);
+      if (!wedding) {
+        return res.status(404).json({ error: "Wedding not found" });
+      }
+      
+      // Check if user owns the wedding or is a team member with appropriate permissions
+      if (wedding.userId !== sessionUserId) {
+        const teamMember = await storage.getTeamMemberByUserAndWedding(sessionUserId, existingTask.weddingId);
+        if (!teamMember) {
+          return res.status(403).json({ error: "Not authorized to modify this task" });
+        }
+        // Check for tasks permission
+        const permissions = teamMember.permissions || [];
+        if (!permissions.includes('tasks') && !permissions.includes('full_access')) {
+          return res.status(403).json({ error: "You do not have permission to modify tasks" });
         }
       }
 
-      const task = await storage.updateTask(req.params.id, updates);
-      if (!task) {
-        return res.status(404).json({ error: "Task not found" });
+      const { reminderEnabled, reminderDaysBefore, reminderMethod } = req.body;
+      
+      // Validate input
+      if (typeof reminderEnabled !== 'undefined' && typeof reminderEnabled !== 'boolean') {
+        if (reminderEnabled !== 'true' && reminderEnabled !== 'false' && reminderEnabled !== true && reminderEnabled !== false) {
+          return res.status(400).json({ error: "Invalid reminderEnabled value" });
+        }
       }
+      
+      const updates: any = {};
+      if (reminderEnabled !== undefined) updates.reminderEnabled = Boolean(reminderEnabled);
+      if (reminderDaysBefore !== undefined) {
+        const days = parseInt(reminderDaysBefore);
+        if (isNaN(days) || days < 1 || days > 30) {
+          return res.status(400).json({ error: "reminderDaysBefore must be a number between 1 and 30" });
+        }
+        updates.reminderDaysBefore = days;
+      }
+      if (reminderMethod !== undefined) {
+        const validMethods = ['email', 'sms', 'both'];
+        if (!validMethods.includes(reminderMethod)) {
+          return res.status(400).json({ error: "reminderMethod must be 'email', 'sms', or 'both'" });
+        }
+        updates.reminderMethod = reminderMethod;
+      }
+
+      const task = await storage.updateTask(taskId, updates);
       res.json(task);
     } catch (error) {
+      console.error("Failed to update task reminder:", error);
       res.status(500).json({ error: "Failed to update task reminder" });
     }
   });

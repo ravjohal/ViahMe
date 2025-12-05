@@ -6,9 +6,11 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Calendar, CheckCircle2, Circle, AlertCircle, Trash2, Filter } from "lucide-react";
+import { Plus, Calendar, CheckCircle2, Circle, AlertCircle, Trash2, Filter, Bell, BellOff, Mail, MessageSquare } from "lucide-react";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ProgressRing } from "@/components/progress-ring";
+import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -116,6 +118,19 @@ export default function TasksPage() {
     },
   });
 
+  const reminderMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: { reminderEnabled?: boolean; reminderDaysBefore?: number; reminderMethod?: string } }) => {
+      return await apiRequest("PATCH", `/api/tasks/${id}/reminder`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tasks", wedding?.id] });
+      toast({
+        title: "Reminder updated",
+        description: "Task reminder settings have been saved.",
+      });
+    },
+  });
+
   const form = useForm<InsertTask>({
     resolver: zodResolver(insertTaskSchema),
     defaultValues: {
@@ -218,7 +233,15 @@ export default function TasksPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8">
+        <Card className="p-6 lg:col-span-1 flex items-center justify-center">
+          <ProgressRing 
+            progress={stats.total > 0 ? (stats.completed / stats.total) * 100 : 0} 
+            size={100} 
+            strokeWidth={8}
+          />
+        </Card>
+        
         <Card className="p-6">
           <div className="flex items-center gap-4">
             <div className="p-3 rounded-xl bg-chart-1/10">
@@ -594,6 +617,65 @@ export default function TasksPage() {
                           <Badge variant="outline">
                             {relatedEvent.name}
                           </Badge>
+                        )}
+
+                        {task.dueDate && !task.completed && (
+                          <div className="flex items-center gap-2 ml-auto">
+                            <Button
+                              size="sm"
+                              variant={task.reminderEnabled ? "default" : "outline"}
+                              className="h-7 gap-1 text-xs"
+                              disabled={reminderMutation.isPending}
+                              onClick={() => reminderMutation.mutate({
+                                id: task.id,
+                                data: { reminderEnabled: !task.reminderEnabled }
+                              })}
+                              data-testid={`button-toggle-reminder-${task.id}`}
+                            >
+                              {reminderMutation.isPending ? (
+                                <span className="animate-pulse">...</span>
+                              ) : task.reminderEnabled ? (
+                                <>
+                                  <Bell className="w-3 h-3" />
+                                  {task.reminderDaysBefore || 1}d before
+                                </>
+                              ) : (
+                                <>
+                                  <BellOff className="w-3 h-3" />
+                                  No reminder
+                                </>
+                              )}
+                            </Button>
+                            {task.reminderEnabled && (
+                              <Select
+                                value={task.reminderMethod || "email"}
+                                disabled={reminderMutation.isPending}
+                                onValueChange={(value) => reminderMutation.mutate({
+                                  id: task.id,
+                                  data: { reminderMethod: value }
+                                })}
+                              >
+                                <SelectTrigger className="h-7 w-24 text-xs" data-testid={`select-reminder-method-${task.id}`}>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="email">
+                                    <div className="flex items-center gap-1">
+                                      <Mail className="w-3 h-3" />
+                                      Email
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="sms">
+                                    <div className="flex items-center gap-1">
+                                      <MessageSquare className="w-3 h-3" />
+                                      SMS
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="both">Both</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            )}
+                          </div>
                         )}
                       </div>
                     </div>

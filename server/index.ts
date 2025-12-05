@@ -3,6 +3,8 @@ import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { TaskReminderScheduler } from "./services/task-reminder-scheduler";
+import { storage } from "./storage";
 
 const app = express();
 
@@ -91,6 +93,11 @@ app.use((req, res, next) => {
   } else {
     serveStatic(app);
   }
+
+  // Initialize task reminder scheduler (checks every hour)
+  const taskReminderScheduler = new TaskReminderScheduler(storage);
+  taskReminderScheduler.start(60 * 60 * 1000);
+  log('Task reminder scheduler started');
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
   // Other ports are firewalled. Default to 5000 if not specified.
