@@ -1874,6 +1874,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Send on-demand reminder to assigned team member
+  app.post("/api/tasks/:id/send-reminder", async (req, res) => {
+    try {
+      const taskId = req.params.id;
+      const userId = req.session?.userId;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const task = await storage.getTask(taskId);
+      if (!task) {
+        return res.status(404).json({ error: "Task not found" });
+      }
+
+      if (!task.assignedToId) {
+        return res.status(400).json({ error: "Task is not assigned to anyone" });
+      }
+
+      // Import and use the scheduler to send on-demand reminder
+      const { TaskReminderScheduler } = await import('./services/task-reminder-scheduler');
+      const scheduler = new TaskReminderScheduler(storage);
+      
+      const result = await scheduler.sendOnDemandReminder(taskId, userId);
+      
+      res.json({
+        success: result.email || result.sms,
+        message: result.message,
+        emailSent: result.email,
+        smsSent: result.sms
+      });
+    } catch (error: any) {
+      console.error("Failed to send on-demand reminder:", error);
+      res.status(500).json({ error: error.message || "Failed to send reminder" });
+    }
+  });
+
+  // Get tasks assigned to the current user (for team members)
+  app.get("/api/tasks/assigned/:weddingId", async (req, res) => {
+    try {
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      const tasks = await storage.getTasksByAssignedUser(req.params.weddingId, userId);
+      res.json(tasks);
+    } catch (error) {
+      console.error("Failed to fetch assigned tasks:", error);
+      res.status(500).json({ error: "Failed to fetch assigned tasks" });
+    }
+  });
+
   // ============================================================================
   // CONTRACTS
   // ============================================================================

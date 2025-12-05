@@ -297,4 +297,133 @@ export class TaskReminderScheduler {
 
     return results;
   }
+
+  // Send on-demand reminder to assigned team member for a specific task
+  async sendOnDemandReminder(taskId: string, senderUserId: string): Promise<{ email: boolean; sms: boolean; message: string }> {
+    const task = await this.storage.getTask(taskId);
+    if (!task) {
+      throw new Error('Task not found');
+    }
+
+    if (!task.assignedToId) {
+      throw new Error('Task is not assigned to anyone');
+    }
+
+    const assignedUser = await this.storage.getUser(task.assignedToId);
+    if (!assignedUser) {
+      throw new Error('Assigned user not found');
+    }
+
+    const wedding = await this.storage.getWedding(task.weddingId);
+    if (!wedding) {
+      throw new Error('Wedding not found');
+    }
+
+    const senderUser = await this.storage.getUser(senderUserId);
+    const senderName = senderUser?.name || 'The couple';
+
+    const results = { email: false, sms: false, message: '' };
+    const dueDate = task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'soon';
+
+    // Send email reminder
+    const resendCreds = await getResendCredentials();
+    if (resendCreds && assignedUser.email) {
+      try {
+        const resend = new Resend(resendCreds.apiKey);
+        await resend.emails.send({
+          from: resendCreds.fromEmail,
+          to: assignedUser.email,
+          subject: `Task Reminder from ${senderName}: ${task.title}`,
+          html: `
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #E07A5F;">Task Reminder</h2>
+              <p>Hi ${assignedUser.name || 'there'},</p>
+              <p><strong>${senderName}</strong> is sending you a reminder about your assigned wedding task:</p>
+              <div style="background: #f8f8f8; padding: 16px; border-radius: 8px; margin: 16px 0;">
+                <h3 style="margin: 0 0 8px 0;">${task.title}</h3>
+                ${task.description ? `<p style="color: #666; margin: 0 0 8px 0;">${task.description}</p>` : ''}
+                <p style="font-weight: bold; color: #E07A5F;">Due: ${dueDate}</p>
+                ${task.category ? `<p style="color: #888; margin: 8px 0 0 0;">Category: ${task.category}</p>` : ''}
+              </div>
+              <p>Please complete this task at your earliest convenience for the ${wedding.tradition || ''} wedding celebration!</p>
+              <p style="color: #888; font-size: 12px;">— The Viah.me Team</p>
+            </div>
+          `,
+        });
+
+        await this.storage.createTaskReminder({
+          taskId: task.id,
+          weddingId: task.weddingId,
+          reminderType: 'email',
+          sentTo: assignedUser.email,
+          status: 'sent',
+        });
+
+        results.email = true;
+        console.log(`On-demand email reminder sent for task ${task.id} to ${assignedUser.email}`);
+      } catch (error: any) {
+        console.error(`Failed to send on-demand email reminder for task ${task.id}:`, error);
+        await this.storage.createTaskReminder({
+          taskId: task.id,
+          weddingId: task.weddingId,
+          reminderType: 'email',
+          sentTo: assignedUser.email,
+          status: 'failed',
+          errorMessage: error.message,
+        });
+      }
+    }
+
+    // Send SMS reminder
+    const twilioCreds = await getTwilioCredentials();
+    if (twilioCreds && assignedUser.phone) {
+      try {
+        const twilioClient = twilio(twilioCreds.apiKey, twilioCreds.apiKeySecret, {
+          accountSid: twilioCreds.accountSid
+        });
+        await twilioClient.messages.create({
+          body: `Viah.me: ${senderName} reminds you about task "${task.title}" due ${dueDate}. Please complete soon!`,
+          from: twilioCreds.phoneNumber,
+          to: assignedUser.phone,
+        });
+
+        await this.storage.createTaskReminder({
+          taskId: task.id,
+          weddingId: task.weddingId,
+          reminderType: 'sms',
+          sentTo: assignedUser.phone,
+          status: 'sent',
+        });
+
+        results.sms = true;
+        console.log(`On-demand SMS reminder sent for task ${task.id} to ${assignedUser.phone}`);
+      } catch (error: any) {
+        console.error(`Failed to send on-demand SMS reminder for task ${task.id}:`, error);
+        await this.storage.createTaskReminder({
+          taskId: task.id,
+          weddingId: task.weddingId,
+          reminderType: 'sms',
+          sentTo: assignedUser.phone,
+          status: 'failed',
+          errorMessage: error.message,
+        });
+      }
+    }
+
+    // Update last reminder sent time
+    await this.storage.updateTask(taskId, { lastReminderSentAt: new Date() } as any);
+
+    // Build result message
+    if (results.email && results.sms) {
+      results.message = `Reminder sent to ${assignedUser.name || 'team member'} via email and SMS`;
+    } else if (results.email) {
+      results.message = `Reminder sent to ${assignedUser.name || 'team member'} via email`;
+    } else if (results.sms) {
+      results.message = `Reminder sent to ${assignedUser.name || 'team member'} via SMS`;
+    } else {
+      results.message = 'No contact information available for reminder';
+    }
+
+    return results;
+  }
 }
