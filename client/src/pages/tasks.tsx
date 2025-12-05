@@ -120,13 +120,25 @@ export default function TasksPage() {
 
   const reminderMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: { reminderEnabled?: boolean; reminderDaysBefore?: number; reminderMethod?: string } }) => {
-      return await apiRequest("PATCH", `/api/tasks/${id}/reminder`, data);
+      const response = await apiRequest("PATCH", `/api/tasks/${id}/reminder`, data);
+      return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/tasks", wedding?.id] });
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/tasks", wedding?.id],
+        refetchType: 'all'
+      });
+      const status = data?.reminderEnabled ? "enabled" : "disabled";
       toast({
         title: "Reminder updated",
-        description: "Task reminder settings have been saved.",
+        description: `Task reminder has been ${status}.`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update reminder settings. Please try again.",
+        variant: "destructive",
       });
     },
   });
