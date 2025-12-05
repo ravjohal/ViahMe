@@ -2270,10 +2270,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // CONTRACT DOCUMENTS - Document storage for contracts
   // ============================================================================
 
+  // Helper function to check contract access authorization
+  async function checkContractAccess(storage: IStorage, contractId: string, userId: string): Promise<{ authorized: boolean; contract?: Contract; reason?: string }> {
+    const contract = await storage.getContract(contractId);
+    if (!contract) {
+      return { authorized: false, reason: "Contract not found" };
+    }
+
+    // Check if user is the vendor for this contract
+    const vendor = await storage.getVendor(contract.vendorId);
+    if (vendor && vendor.userId === userId) {
+      return { authorized: true, contract };
+    }
+
+    // Check if user owns the wedding
+    const wedding = await storage.getWedding(contract.weddingId);
+    if (wedding && wedding.userId === userId) {
+      return { authorized: true, contract };
+    }
+
+    // Check if user is a team member of the wedding
+    const teamMembers = await storage.getTeamMembersByWedding(contract.weddingId);
+    const isMember = teamMembers.some(m => m.userId === userId && m.status === 'active');
+    if (isMember) {
+      return { authorized: true, contract };
+    }
+
+    return { authorized: false, reason: "Not authorized to access this contract" };
+  }
+
   // Get all documents for a contract
-  app.get("/api/contracts/:contractId/documents", async (req, res) => {
+  app.get("/api/contracts/:contractId/documents", await requireAuth(storage, false), async (req, res) => {
     try {
-      const documents = await storage.getDocumentsByContract(req.params.contractId);
+      const authReq = req as AuthRequest;
+      if (!authReq.session.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const { contractId } = req.params;
+      const access = await checkContractAccess(storage, contractId, authReq.session.userId);
+      if (!access.authorized) {
+        return res.status(access.reason === "Contract not found" ? 404 : 403).json({ error: access.reason });
+      }
+
+      const documents = await storage.getDocumentsByContract(contractId);
       res.json(documents);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch contract documents" });
@@ -2291,23 +2331,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { contractId } = req.params;
       const { fileName, fileUrl, fileType, fileSize, documentType, description } = req.body;
 
+      // Validate required fields
       if (!fileName || !fileUrl || !documentType) {
         return res.status(400).json({ error: "Missing required fields: fileName, fileUrl, documentType" });
       }
 
-      const contract = await storage.getContract(contractId);
-      if (!contract) {
-        return res.status(404).json({ error: "Contract not found" });
+      // Validate file name (prevent path traversal)
+      if (fileName.includes('..') || fileName.includes('/') || fileName.includes('\\')) {
+        return res.status(400).json({ error: "Invalid file name" });
+      }
+
+      // Validate URL format
+      try {
+        new URL(fileUrl);
+      } catch {
+        return res.status(400).json({ error: "Invalid file URL" });
+      }
+
+      // Validate document type
+      const validDocTypes = ['contract', 'amendment', 'invoice', 'receipt', 'proposal', 'other'];
+      if (!validDocTypes.includes(documentType)) {
+        return res.status(400).json({ error: "Invalid document type" });
+      }
+
+      // Check authorization
+      const access = await checkContractAccess(storage, contractId, authReq.session.userId);
+      if (!access.authorized) {
+        return res.status(access.reason === "Contract not found" ? 404 : 403).json({ error: access.reason });
       }
 
       const document = await storage.createContractDocument({
         contractId,
-        fileName,
+        fileName: fileName.substring(0, 255), // Limit filename length
         fileUrl,
         fileType: fileType || 'application/octet-stream',
-        fileSize: fileSize || 0,
+        fileSize: Math.max(0, parseInt(fileSize) || 0),
         documentType,
-        description: description || null,
+        description: description ? description.substring(0, 1000) : null,
         uploadedBy: authReq.session.userId,
       });
 
@@ -2326,15 +2386,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "Authentication required" });
       }
 
-      const { documentId } = req.params;
-      const document = await storage.getContractDocument(documentId);
+      const { contractId, documentId } = req.params;
       
+      // Check contract access
+      const access = await checkContractAccess(storage, contractId, authReq.session.userId);
+      if (!access.authorized) {
+        return res.status(access.reason === "Contract not found" ? 404 : 403).json({ error: access.reason });
+      }
+
+      const document = await storage.getContractDocument(documentId);
       if (!document) {
         return res.status(404).json({ error: "Document not found" });
       }
 
+      // Only the uploader or vendor/wedding owner can delete
       if (document.uploadedBy !== authReq.session.userId) {
-        return res.status(403).json({ error: "Not authorized to delete this document" });
+        const vendor = await storage.getVendor(access.contract!.vendorId);
+        const wedding = await storage.getWedding(access.contract!.weddingId);
+        const isOwner = (vendor && vendor.userId === authReq.session.userId) || 
+                       (wedding && wedding.userId === authReq.session.userId);
+        if (!isOwner) {
+          return res.status(403).json({ error: "Not authorized to delete this document" });
+        }
       }
 
       await storage.deleteContractDocument(documentId);
@@ -2349,9 +2422,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================================================
 
   // Get all payments for a contract
-  app.get("/api/contracts/:contractId/payments", async (req, res) => {
+  app.get("/api/contracts/:contractId/payments", await requireAuth(storage, false), async (req, res) => {
     try {
-      const payments = await storage.getPaymentsByContract(req.params.contractId);
+      const authReq = req as AuthRequest;
+      if (!authReq.session.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const { contractId } = req.params;
+      const access = await checkContractAccess(storage, contractId, authReq.session.userId);
+      if (!access.authorized) {
+        return res.status(access.reason === "Contract not found" ? 404 : 403).json({ error: access.reason });
+      }
+
+      const payments = await storage.getPaymentsByContract(contractId);
       res.json(payments);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch contract payments" });
@@ -2359,17 +2443,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get payment summary for a contract
-  app.get("/api/contracts/:contractId/payment-summary", async (req, res) => {
+  app.get("/api/contracts/:contractId/payment-summary", await requireAuth(storage, false), async (req, res) => {
     try {
+      const authReq = req as AuthRequest;
+      if (!authReq.session.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
       const { contractId } = req.params;
-      const contract = await storage.getContract(contractId);
-      if (!contract) {
-        return res.status(404).json({ error: "Contract not found" });
+      const access = await checkContractAccess(storage, contractId, authReq.session.userId);
+      if (!access.authorized) {
+        return res.status(access.reason === "Contract not found" ? 404 : 403).json({ error: access.reason });
       }
 
       const payments = await storage.getPaymentsByContract(contractId);
       const totalPaid = await storage.getTotalPaidForContract(contractId);
-      const totalAmount = parseFloat(contract.totalAmount || '0');
+      const totalAmount = parseFloat(access.contract!.totalAmount || '0');
       const remaining = Math.max(0, totalAmount - totalPaid);
 
       res.json({
@@ -2396,23 +2485,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { contractId } = req.params;
       const { amount, paymentMethod, paymentType, dueDate, notes, milestoneId } = req.body;
 
+      // Validate required fields
       if (!amount || !paymentMethod || !paymentType) {
         return res.status(400).json({ error: "Missing required fields: amount, paymentMethod, paymentType" });
       }
 
-      const contract = await storage.getContract(contractId);
-      if (!contract) {
-        return res.status(404).json({ error: "Contract not found" });
+      // Validate amount
+      const parsedAmount = parseFloat(amount);
+      if (isNaN(parsedAmount) || parsedAmount <= 0) {
+        return res.status(400).json({ error: "Amount must be a positive number" });
+      }
+
+      // Validate payment method
+      const validMethods = ['credit_card', 'bank_transfer', 'check', 'cash', 'venmo', 'zelle', 'other'];
+      if (!validMethods.includes(paymentMethod)) {
+        return res.status(400).json({ error: "Invalid payment method" });
+      }
+
+      // Validate payment type
+      const validTypes = ['deposit', 'milestone', 'final', 'partial', 'refund'];
+      if (!validTypes.includes(paymentType)) {
+        return res.status(400).json({ error: "Invalid payment type" });
+      }
+
+      // Check authorization
+      const access = await checkContractAccess(storage, contractId, authReq.session.userId);
+      if (!access.authorized) {
+        return res.status(access.reason === "Contract not found" ? 404 : 403).json({ error: access.reason });
       }
 
       const payment = await storage.createContractPayment({
         contractId,
-        amount: String(amount),
+        amount: parsedAmount.toFixed(2),
         paymentMethod,
         paymentType,
         status: 'pending',
         dueDate: dueDate ? new Date(dueDate) : null,
-        notes: notes || null,
+        notes: notes ? notes.substring(0, 1000) : null,
         milestoneId: milestoneId || null,
         recordedBy: authReq.session.userId,
       });
@@ -2432,19 +2541,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "Authentication required" });
       }
 
-      const { paymentId } = req.params;
+      const { contractId, paymentId } = req.params;
       const { status, paidDate, transactionId, notes } = req.body;
+
+      // Check contract access
+      const access = await checkContractAccess(storage, contractId, authReq.session.userId);
+      if (!access.authorized) {
+        return res.status(access.reason === "Contract not found" ? 404 : 403).json({ error: access.reason });
+      }
 
       const payment = await storage.getContractPayment(paymentId);
       if (!payment) {
         return res.status(404).json({ error: "Payment not found" });
       }
 
+      // Verify payment belongs to this contract
+      if (payment.contractId !== contractId) {
+        return res.status(403).json({ error: "Payment does not belong to this contract" });
+      }
+
+      // Validate status if provided
+      if (status) {
+        const validStatuses = ['pending', 'completed', 'cancelled', 'refunded'];
+        if (!validStatuses.includes(status)) {
+          return res.status(400).json({ error: "Invalid payment status" });
+        }
+      }
+
       const updateData: any = {};
       if (status) updateData.status = status;
       if (paidDate) updateData.paidDate = new Date(paidDate);
-      if (transactionId !== undefined) updateData.transactionId = transactionId;
-      if (notes !== undefined) updateData.notes = notes;
+      if (transactionId !== undefined) updateData.transactionId = transactionId ? transactionId.substring(0, 255) : null;
+      if (notes !== undefined) updateData.notes = notes ? notes.substring(0, 1000) : null;
 
       const updated = await storage.updateContractPayment(paymentId, updateData);
       res.json(updated);
@@ -2461,15 +2589,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "Authentication required" });
       }
 
-      const { paymentId } = req.params;
-      const payment = await storage.getContractPayment(paymentId);
+      const { contractId, paymentId } = req.params;
       
+      // Check contract access
+      const access = await checkContractAccess(storage, contractId, authReq.session.userId);
+      if (!access.authorized) {
+        return res.status(access.reason === "Contract not found" ? 404 : 403).json({ error: access.reason });
+      }
+
+      const payment = await storage.getContractPayment(paymentId);
       if (!payment) {
         return res.status(404).json({ error: "Payment not found" });
       }
 
+      // Verify payment belongs to this contract
+      if (payment.contractId !== contractId) {
+        return res.status(403).json({ error: "Payment does not belong to this contract" });
+      }
+
+      // Only the recorder or vendor/wedding owner can delete
       if (payment.recordedBy !== authReq.session.userId) {
-        return res.status(403).json({ error: "Not authorized to delete this payment" });
+        const vendor = await storage.getVendor(access.contract!.vendorId);
+        const wedding = await storage.getWedding(access.contract!.weddingId);
+        const isOwner = (vendor && vendor.userId === authReq.session.userId) || 
+                       (wedding && wedding.userId === authReq.session.userId);
+        if (!isOwner) {
+          return res.status(403).json({ error: "Not authorized to delete this payment" });
+        }
       }
 
       await storage.deleteContractPayment(paymentId);
