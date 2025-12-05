@@ -45,6 +45,12 @@ Key architectural decisions and features include:
 - **UI/UX**: Features a warm orange/gold primary color palette, elegant typography, Shadcn UI components, hover elevate interactions, and responsive design.
 - **Contract E-Signatures**: Legally-binding digital contract signing system using `react-signature-canvas`.
 - **Photo Gallery & Portfolio System**: Comprehensive visual content management with Inspiration Boards, Vendor Portfolios, and Event Photos.
+- **Interactive Task Checklist**: Comprehensive task management with:
+  - **Circular Progress Visualization**: ProgressRing component showing completion percentage
+  - **Automated Reminders**: Email (Resend) and SMS (Twilio) reminders with configurable days-before settings
+  - **Task Assignment**: Assign tasks to team members/collaborators from the wedding planning team
+  - **On-Demand Reminders**: Couples can send immediate reminders to assigned team members
+  - **Filtered Views**: Filter tasks by priority, status, event, and assignee
 
 ## External Dependencies
 - **PostgreSQL (Neon)**: Relational database.
