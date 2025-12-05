@@ -2267,6 +2267,219 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ============================================================================
+  // CONTRACT DOCUMENTS - Document storage for contracts
+  // ============================================================================
+
+  // Get all documents for a contract
+  app.get("/api/contracts/:contractId/documents", async (req, res) => {
+    try {
+      const documents = await storage.getDocumentsByContract(req.params.contractId);
+      res.json(documents);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch contract documents" });
+    }
+  });
+
+  // Upload a document to a contract
+  app.post("/api/contracts/:contractId/documents", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      if (!authReq.session.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const { contractId } = req.params;
+      const { fileName, fileUrl, fileType, fileSize, documentType, description } = req.body;
+
+      if (!fileName || !fileUrl || !documentType) {
+        return res.status(400).json({ error: "Missing required fields: fileName, fileUrl, documentType" });
+      }
+
+      const contract = await storage.getContract(contractId);
+      if (!contract) {
+        return res.status(404).json({ error: "Contract not found" });
+      }
+
+      const document = await storage.createContractDocument({
+        contractId,
+        fileName,
+        fileUrl,
+        fileType: fileType || 'application/octet-stream',
+        fileSize: fileSize || 0,
+        documentType,
+        description: description || null,
+        uploadedBy: authReq.session.userId,
+      });
+
+      res.json(document);
+    } catch (error) {
+      console.error('Error uploading document:', error);
+      res.status(500).json({ error: "Failed to upload document" });
+    }
+  });
+
+  // Delete a contract document
+  app.delete("/api/contracts/:contractId/documents/:documentId", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      if (!authReq.session.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const { documentId } = req.params;
+      const document = await storage.getContractDocument(documentId);
+      
+      if (!document) {
+        return res.status(404).json({ error: "Document not found" });
+      }
+
+      if (document.uploadedBy !== authReq.session.userId) {
+        return res.status(403).json({ error: "Not authorized to delete this document" });
+      }
+
+      await storage.deleteContractDocument(documentId);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete document" });
+    }
+  });
+
+  // ============================================================================
+  // CONTRACT PAYMENTS - Payment tracking for contracts
+  // ============================================================================
+
+  // Get all payments for a contract
+  app.get("/api/contracts/:contractId/payments", async (req, res) => {
+    try {
+      const payments = await storage.getPaymentsByContract(req.params.contractId);
+      res.json(payments);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch contract payments" });
+    }
+  });
+
+  // Get payment summary for a contract
+  app.get("/api/contracts/:contractId/payment-summary", async (req, res) => {
+    try {
+      const { contractId } = req.params;
+      const contract = await storage.getContract(contractId);
+      if (!contract) {
+        return res.status(404).json({ error: "Contract not found" });
+      }
+
+      const payments = await storage.getPaymentsByContract(contractId);
+      const totalPaid = await storage.getTotalPaidForContract(contractId);
+      const totalAmount = parseFloat(contract.totalAmount || '0');
+      const remaining = Math.max(0, totalAmount - totalPaid);
+
+      res.json({
+        totalAmount,
+        totalPaid,
+        remaining,
+        paymentCount: payments.length,
+        completedPayments: payments.filter(p => p.status === 'completed').length,
+        pendingPayments: payments.filter(p => p.status === 'pending').length,
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch payment summary" });
+    }
+  });
+
+  // Record a new payment
+  app.post("/api/contracts/:contractId/payments", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      if (!authReq.session.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const { contractId } = req.params;
+      const { amount, paymentMethod, paymentType, dueDate, notes, milestoneId } = req.body;
+
+      if (!amount || !paymentMethod || !paymentType) {
+        return res.status(400).json({ error: "Missing required fields: amount, paymentMethod, paymentType" });
+      }
+
+      const contract = await storage.getContract(contractId);
+      if (!contract) {
+        return res.status(404).json({ error: "Contract not found" });
+      }
+
+      const payment = await storage.createContractPayment({
+        contractId,
+        amount: String(amount),
+        paymentMethod,
+        paymentType,
+        status: 'pending',
+        dueDate: dueDate ? new Date(dueDate) : null,
+        notes: notes || null,
+        milestoneId: milestoneId || null,
+        recordedBy: authReq.session.userId,
+      });
+
+      res.json(payment);
+    } catch (error) {
+      console.error('Error recording payment:', error);
+      res.status(500).json({ error: "Failed to record payment" });
+    }
+  });
+
+  // Update payment status
+  app.patch("/api/contracts/:contractId/payments/:paymentId", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      if (!authReq.session.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const { paymentId } = req.params;
+      const { status, paidDate, transactionId, notes } = req.body;
+
+      const payment = await storage.getContractPayment(paymentId);
+      if (!payment) {
+        return res.status(404).json({ error: "Payment not found" });
+      }
+
+      const updateData: any = {};
+      if (status) updateData.status = status;
+      if (paidDate) updateData.paidDate = new Date(paidDate);
+      if (transactionId !== undefined) updateData.transactionId = transactionId;
+      if (notes !== undefined) updateData.notes = notes;
+
+      const updated = await storage.updateContractPayment(paymentId, updateData);
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update payment" });
+    }
+  });
+
+  // Delete a payment record
+  app.delete("/api/contracts/:contractId/payments/:paymentId", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      if (!authReq.session.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const { paymentId } = req.params;
+      const payment = await storage.getContractPayment(paymentId);
+      
+      if (!payment) {
+        return res.status(404).json({ error: "Payment not found" });
+      }
+
+      if (payment.recordedBy !== authReq.session.userId) {
+        return res.status(403).json({ error: "Not authorized to delete this payment" });
+      }
+
+      await storage.deleteContractPayment(paymentId);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete payment" });
+    }
+  });
+
+  // ============================================================================
   // MESSAGES - Couple-Vendor Communication
   // ============================================================================
 
