@@ -489,9 +489,12 @@ export const tasks = pgTable("tasks", {
   completed: boolean("completed").default(false),
   priority: text("priority").default('medium'), // 'high' | 'medium' | 'low'
   category: text("category"),
+  assignedToId: varchar("assigned_to_id"), // Team member user ID
+  assignedToName: text("assigned_to_name"), // Cached name for display
   reminderEnabled: boolean("reminder_enabled").default(false),
   reminderDaysBefore: integer("reminder_days_before").default(1), // Days before due date to send reminder
   reminderMethod: text("reminder_method").default('email'), // 'email' | 'sms' | 'both'
+  lastReminderSentAt: timestamp("last_reminder_sent_at"), // Track on-demand reminders
   completedAt: timestamp("completed_at"), // When task was completed
   createdAt: timestamp("created_at").defaultNow(),
 });

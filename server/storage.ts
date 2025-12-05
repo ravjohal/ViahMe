@@ -251,6 +251,7 @@ export interface IStorage {
   // Tasks
   getTask(id: string): Promise<Task | undefined>;
   getTasksByWedding(weddingId: string): Promise<Task[]>;
+  getTasksByAssignedUser(weddingId: string, userId: string): Promise<Task[]>; // Get tasks assigned to a specific user
   getTasksWithRemindersForDate(targetDate: Date): Promise<Task[]>; // For scheduler
   createTask(task: InsertTask): Promise<Task>;
   updateTask(id: string, task: Partial<InsertTask>): Promise<Task | undefined>;
@@ -1476,6 +1477,12 @@ export class MemStorage implements IStorage {
 
   async getTasksByWedding(weddingId: string): Promise<Task[]> {
     return Array.from(this.tasks.values()).filter((t) => t.weddingId === weddingId);
+  }
+
+  async getTasksByAssignedUser(weddingId: string, userId: string): Promise<Task[]> {
+    return Array.from(this.tasks.values()).filter(
+      (t) => t.weddingId === weddingId && t.assignedToId === userId
+    );
   }
 
   async createTask(insertTask: InsertTask): Promise<Task> {
@@ -4039,6 +4046,15 @@ export class DBStorage implements IStorage {
 
   async getTasksByWedding(weddingId: string): Promise<Task[]> {
     return await this.db.select().from(schema.tasks).where(eq(schema.tasks.weddingId, weddingId));
+  }
+
+  async getTasksByAssignedUser(weddingId: string, userId: string): Promise<Task[]> {
+    return await this.db.select().from(schema.tasks).where(
+      and(
+        eq(schema.tasks.weddingId, weddingId),
+        eq(schema.tasks.assignedToId, userId)
+      )
+    );
   }
 
   async createTask(insertTask: InsertTask): Promise<Task> {
