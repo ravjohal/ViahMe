@@ -84,6 +84,12 @@ export function VendorDetailModal({
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<'morning' | 'afternoon' | 'evening' | 'full_day'>('full_day');
   const [selectedEventForBooking, setSelectedEventForBooking] = useState<string>('');
   const [calendarBookingNotes, setCalendarBookingNotes] = useState<string>('');
+  
+  // Quote request state
+  const [quoteDialogOpen, setQuoteDialogOpen] = useState(false);
+  const [quoteEventId, setQuoteEventId] = useState<string>('');
+  const [quoteBudgetRange, setQuoteBudgetRange] = useState<string>('');
+  const [quoteNotes, setQuoteNotes] = useState<string>('');
 
   const reviewForm = useForm<ReviewFormValues>({
     resolver: zodResolver(reviewFormSchema),
@@ -278,6 +284,50 @@ export function VendorDetailModal({
     },
   });
 
+  // Quote request mutation - MUST be called before any early returns
+  const quoteRequestMutation = useMutation({
+    mutationFn: async (data: {
+      vendorId: string;
+      eventId: string;
+      eventName: string;
+      eventDate?: string;
+      eventLocation?: string;
+      guestCount?: number;
+      budgetRange?: string;
+      additionalNotes?: string;
+    }) => {
+      if (!weddingId) throw new Error("Wedding ID is required");
+      const response = await apiRequest('POST', `/api/vendors/${data.vendorId}/quote-request`, {
+        weddingId,
+        eventId: data.eventId,
+        eventName: data.eventName,
+        eventDate: data.eventDate,
+        eventLocation: data.eventLocation,
+        guestCount: data.guestCount,
+        budgetRange: data.budgetRange,
+        additionalNotes: data.additionalNotes,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      setQuoteDialogOpen(false);
+      setQuoteEventId('');
+      setQuoteBudgetRange('');
+      setQuoteNotes('');
+      toast({
+        title: "Quote request sent!",
+        description: "The vendor will receive your request and contact you with pricing details.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Request failed",
+        description: error.message || "Unable to send quote request. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Early return AFTER all hooks are called
   if (!vendor) return null;
 
@@ -303,6 +353,26 @@ export function VendorDetailModal({
         : [...prev, eventId]
     );
   };
+
+  // Quote request handler
+  const handleQuoteRequest = () => {
+    const selectedEvent = events.find(e => e.id === quoteEventId);
+    if (!selectedEvent || !vendor) return;
+
+    quoteRequestMutation.mutate({
+      vendorId: vendor.id,
+      eventId: selectedEvent.id,
+      eventName: selectedEvent.name,
+      eventDate: selectedEvent.date ? format(new Date(selectedEvent.date), 'MMMM d, yyyy') : undefined,
+      eventLocation: selectedEvent.location || undefined,
+      guestCount: selectedEvent.guestCount || undefined,
+      budgetRange: quoteBudgetRange || undefined,
+      additionalNotes: quoteNotes || undefined,
+    });
+  };
+
+  // Get selected event for quote display
+  const selectedQuoteEvent = events.find(e => e.id === quoteEventId);
 
   // Availability calendar helper functions
   const getAvailabilityStatus = (date: Date): 'available' | 'partial' | 'booked' | null => {
@@ -490,6 +560,18 @@ export function VendorDetailModal({
                 )}
               </div>
             </div>
+          )}
+
+          {/* Request Quote Button */}
+          {weddingId && events.length > 0 && vendor.email && (
+            <Button 
+              className="w-full"
+              onClick={() => setQuoteDialogOpen(true)}
+              data-testid="button-request-quote"
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              Request a Quote
+            </Button>
           )}
 
           <Separator />
@@ -1088,6 +1170,118 @@ export function VendorDetailModal({
               >
                 <Send className="w-4 h-4 mr-2" />
                 {createBookingMutation.isPending ? 'Sending...' : 'Send Booking Request'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Quote Request Dialog */}
+        <Dialog open={quoteDialogOpen} onOpenChange={setQuoteDialogOpen}>
+          <DialogContent className="max-w-md" data-testid="dialog-quote-request">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <FileText className="w-5 h-5 text-primary" />
+                Request a Quote
+              </DialogTitle>
+              <DialogDescription>
+                Send your event details to {vendor.name} to receive a custom quote.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-4">
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Select Event *</Label>
+                <Select value={quoteEventId} onValueChange={setQuoteEventId}>
+                  <SelectTrigger data-testid="select-quote-event">
+                    <SelectValue placeholder="Choose an event" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {events.map((event) => (
+                      <SelectItem key={event.id} value={event.id}>
+                        {event.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {selectedQuoteEvent && (
+                <div className="p-4 rounded-lg bg-muted/50 border space-y-2">
+                  <h4 className="font-medium text-sm">Event Details</h4>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    {selectedQuoteEvent.date && (
+                      <div>
+                        <span className="text-muted-foreground">Date:</span>
+                        <p className="font-medium">{format(new Date(selectedQuoteEvent.date), 'MMM d, yyyy')}</p>
+                      </div>
+                    )}
+                    {selectedQuoteEvent.location && (
+                      <div>
+                        <span className="text-muted-foreground">Location:</span>
+                        <p className="font-medium">{selectedQuoteEvent.location}</p>
+                      </div>
+                    )}
+                    {selectedQuoteEvent.guestCount && (
+                      <div>
+                        <span className="text-muted-foreground">Guests:</span>
+                        <p className="font-medium">{selectedQuoteEvent.guestCount}</p>
+                      </div>
+                    )}
+                    {selectedQuoteEvent.time && (
+                      <div>
+                        <span className="text-muted-foreground">Time:</span>
+                        <p className="font-medium">{selectedQuoteEvent.time}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Budget Range (Optional)</Label>
+                <Input
+                  placeholder="e.g., $2,000 - $5,000"
+                  value={quoteBudgetRange}
+                  onChange={(e) => setQuoteBudgetRange(e.target.value)}
+                  data-testid="input-quote-budget"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Share your budget to help the vendor tailor their quote.
+                </p>
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Additional Notes (Optional)</Label>
+                <Textarea
+                  placeholder="Any specific requirements, questions, or details you'd like to share..."
+                  value={quoteNotes}
+                  onChange={(e) => setQuoteNotes(e.target.value)}
+                  rows={3}
+                  data-testid="textarea-quote-notes"
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setQuoteDialogOpen(false);
+                  setQuoteEventId('');
+                  setQuoteBudgetRange('');
+                  setQuoteNotes('');
+                }}
+                data-testid="button-cancel-quote"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleQuoteRequest}
+                disabled={!quoteEventId || quoteRequestMutation.isPending}
+                data-testid="button-send-quote-request"
+              >
+                <Send className="w-4 h-4 mr-2" />
+                {quoteRequestMutation.isPending ? 'Sending...' : 'Send Quote Request'}
               </Button>
             </DialogFooter>
           </DialogContent>
