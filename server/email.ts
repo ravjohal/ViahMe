@@ -1187,3 +1187,221 @@ Your South Asian Wedding Planning Platform
     throw error;
   }
 }
+
+export async function sendQuoteRequestEmail(params: {
+  to: string;
+  vendorName: string;
+  senderName: string;
+  senderEmail: string;
+  eventName: string;
+  eventDate?: string;
+  eventLocation?: string;
+  guestCount?: number;
+  budgetRange?: string;
+  additionalNotes?: string;
+  weddingTitle?: string;
+}) {
+  const { client, fromEmail } = await getUncachableResendClient();
+  
+  const {
+    to,
+    vendorName,
+    senderName,
+    senderEmail,
+    eventName,
+    eventDate,
+    eventLocation,
+    guestCount,
+    budgetRange,
+    additionalNotes,
+    weddingTitle,
+  } = params;
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8fafc;
+          }
+          .header {
+            background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+            color: white;
+            padding: 30px 20px;
+            border-radius: 8px 8px 0 0;
+            text-align: center;
+          }
+          .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+          }
+          .header p {
+            margin: 10px 0 0;
+            opacity: 0.9;
+          }
+          .content {
+            background: white;
+            padding: 30px;
+            border: 1px solid #e5e7eb;
+            border-top: none;
+          }
+          .details-card {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+          }
+          .detail-row {
+            display: flex;
+            margin: 10px 0;
+          }
+          .detail-label {
+            font-weight: 600;
+            color: #92400e;
+            width: 140px;
+            flex-shrink: 0;
+          }
+          .detail-value {
+            color: #78350f;
+          }
+          .notes-box {
+            background: #f3f4f6;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin: 20px 0;
+          }
+          .notes-label {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 10px;
+          }
+          .button {
+            display: inline-block;
+            background: #f97316;
+            color: white;
+            padding: 14px 35px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 16px;
+          }
+          .button:hover {
+            background: #ea580c;
+          }
+          .footer {
+            text-align: center;
+            padding: 20px;
+            color: #6b7280;
+            font-size: 14px;
+            border-top: 1px solid #e5e7eb;
+            background: white;
+            border-radius: 0 0 8px 8px;
+          }
+          .contact-info {
+            background: #eff6ff;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin: 20px 0;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>New Quote Request</h1>
+          <p>A couple is interested in your services!</p>
+        </div>
+        <div class="content">
+          <p>Hello ${vendorName},</p>
+          
+          <p>You have received a new quote request through Viah.me. Here are the details:</p>
+          
+          <div class="details-card">
+            ${weddingTitle ? `<div class="detail-row"><span class="detail-label">Wedding:</span><span class="detail-value">${weddingTitle}</span></div>` : ''}
+            <div class="detail-row">
+              <span class="detail-label">Event:</span>
+              <span class="detail-value">${eventName}</span>
+            </div>
+            ${eventDate ? `<div class="detail-row"><span class="detail-label">Date:</span><span class="detail-value">${eventDate}</span></div>` : ''}
+            ${eventLocation ? `<div class="detail-row"><span class="detail-label">Location:</span><span class="detail-value">${eventLocation}</span></div>` : ''}
+            ${guestCount ? `<div class="detail-row"><span class="detail-label">Guest Count:</span><span class="detail-value">${guestCount} guests</span></div>` : ''}
+            ${budgetRange ? `<div class="detail-row"><span class="detail-label">Budget Range:</span><span class="detail-value">${budgetRange}</span></div>` : ''}
+          </div>
+          
+          ${additionalNotes ? `
+            <div class="notes-box">
+              <div class="notes-label">Additional Notes from the Couple:</div>
+              <p style="margin: 0; color: #4b5563;">${additionalNotes}</p>
+            </div>
+          ` : ''}
+          
+          <div class="contact-info">
+            <p style="margin: 0 0 8px 0; font-weight: 600; color: #1e40af;">Contact Information</p>
+            <p style="margin: 0; color: #3b82f6;">
+              <strong>Name:</strong> ${senderName}<br>
+              <strong>Email:</strong> <a href="mailto:${senderEmail}" style="color: #3b82f6;">${senderEmail}</a>
+            </p>
+          </div>
+          
+          <p>Please reply directly to the couple at <a href="mailto:${senderEmail}" style="color: #f97316;">${senderEmail}</a> to provide your quote and discuss their requirements.</p>
+        </div>
+        <div class="footer">
+          <p>This quote request was sent via Viah.me</p>
+          <p>Your South Asian Wedding Planning Platform</p>
+        </div>
+      </body>
+    </html>
+  `;
+
+  const plaintext = `
+NEW QUOTE REQUEST
+
+Hello ${vendorName},
+
+You have received a new quote request through Viah.me.
+
+DETAILS:
+${weddingTitle ? `Wedding: ${weddingTitle}` : ''}
+Event: ${eventName}
+${eventDate ? `Date: ${eventDate}` : ''}
+${eventLocation ? `Location: ${eventLocation}` : ''}
+${guestCount ? `Guest Count: ${guestCount} guests` : ''}
+${budgetRange ? `Budget Range: ${budgetRange}` : ''}
+
+${additionalNotes ? `ADDITIONAL NOTES:\n${additionalNotes}` : ''}
+
+CONTACT INFORMATION:
+Name: ${senderName}
+Email: ${senderEmail}
+
+Please reply directly to the couple at ${senderEmail} to provide your quote and discuss their requirements.
+
+---
+This quote request was sent via Viah.me
+Your South Asian Wedding Planning Platform
+  `.trim();
+
+  try {
+    const result = await client.emails.send({
+      from: fromEmail,
+      to,
+      replyTo: senderEmail,
+      subject: `Quote Request: ${eventName}${weddingTitle ? ` - ${weddingTitle}` : ''}`,
+      html,
+      text: plaintext,
+    });
+    return result;
+  } catch (error) {
+    console.error('Failed to send quote request email:', error);
+    throw error;
+  }
+}

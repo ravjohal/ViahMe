@@ -938,6 +938,102 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   });
 
   // ============================================================================
+  // QUOTE REQUESTS
+  // ============================================================================
+
+  app.post("/api/vendors/:vendorId/quote-request", await requireAuth(storage, false), async (req: AuthRequest, res) => {
+    try {
+      const { vendorId } = req.params;
+      const { 
+        weddingId,
+        eventId,
+        eventName,
+        eventDate,
+        eventLocation,
+        guestCount,
+        budgetRange,
+        additionalNotes,
+      } = req.body;
+
+      if (!weddingId || !eventId || !eventName) {
+        return res.status(400).json({ error: "Wedding ID, event ID, and event name are required" });
+      }
+
+      const vendor = await storage.getVendor(vendorId);
+      if (!vendor) {
+        return res.status(404).json({ error: "Vendor not found" });
+      }
+
+      if (!vendor.email) {
+        return res.status(400).json({ error: "Vendor does not have an email address configured" });
+      }
+
+      const wedding = await storage.getWedding(weddingId);
+      if (!wedding) {
+        return res.status(404).json({ error: "Wedding not found" });
+      }
+
+      const user = req.user;
+      if (!user?.email) {
+        return res.status(400).json({ error: "User email is required to send quote request" });
+      }
+
+      const senderName = user.email.split('@')[0];
+      const weddingTitle = wedding.title || `${wedding.partner1Name} & ${wedding.partner2Name || 'Partner'}'s Wedding`;
+
+      const quoteRequest = await storage.createQuoteRequest({
+        weddingId,
+        vendorId,
+        eventId,
+        senderEmail: user.email,
+        senderName,
+        eventName,
+        eventDate: eventDate || null,
+        eventLocation: eventLocation || null,
+        guestCount: guestCount || null,
+        budgetRange: budgetRange || null,
+        additionalNotes: additionalNotes || null,
+      });
+
+      try {
+        const { sendQuoteRequestEmail } = await import('./email');
+        await sendQuoteRequestEmail({
+          to: vendor.email,
+          vendorName: vendor.name,
+          senderName,
+          senderEmail: user.email,
+          eventName,
+          eventDate,
+          eventLocation,
+          guestCount,
+          budgetRange,
+          additionalNotes,
+          weddingTitle,
+        });
+      } catch (emailError) {
+        console.error('Failed to send quote request email:', emailError);
+      }
+
+      res.json({ 
+        message: "Quote request sent successfully",
+        quoteRequest 
+      });
+    } catch (error) {
+      console.error("Error sending quote request:", error);
+      res.status(500).json({ error: "Failed to send quote request" });
+    }
+  });
+
+  app.get("/api/quote-requests/wedding/:weddingId", await requireAuth(storage, false), async (req: AuthRequest, res) => {
+    try {
+      const quoteRequests = await storage.getQuoteRequestsByWedding(req.params.weddingId);
+      res.json(quoteRequests);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch quote requests" });
+    }
+  });
+
+  // ============================================================================
   // SERVICE PACKAGES
   // ============================================================================
 
