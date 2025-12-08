@@ -16,7 +16,7 @@ import { insertBudgetCategorySchema, type Wedding, type BudgetCategory } from "@
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
-import { DollarSign, Edit2, Trash2, Plus, CheckCircle2, AlertCircle, TrendingUp, HelpCircle, PiggyBank, FolderPlus, PieChart, BarChart3 } from "lucide-react";
+import { DollarSign, Edit2, Trash2, Plus, CheckCircle2, AlertCircle, TrendingUp, HelpCircle, PiggyBank, FolderPlus, PieChart, BarChart3, Check, X } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 const budgetFormSchema = insertBudgetCategorySchema.extend({
@@ -56,6 +56,8 @@ export default function Budget() {
   const [newTotalBudget, setNewTotalBudget] = useState("");
   const [customCategoryInput, setCustomCategoryInput] = useState("");
   const [useCustomCategory, setUseCustomCategory] = useState(false);
+  const [quickEditId, setQuickEditId] = useState<string | null>(null);
+  const [quickEditValue, setQuickEditValue] = useState("");
 
   const { data: weddings, isLoading: weddingsLoading } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
@@ -162,6 +164,28 @@ export default function Budget() {
       toast({
         title: "Error",
         description: "Failed to delete budget category",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const quickUpdateSpentMutation = useMutation({
+    mutationFn: async ({ id, spentAmount }: { id: string; spentAmount: string }) => {
+      return await apiRequest("PATCH", `/api/budget-categories/${id}`, { spentAmount });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/budget-categories", wedding?.id] });
+      setQuickEditId(null);
+      setQuickEditValue("");
+      toast({
+        title: "Spent amount updated",
+        description: "Your actual spending has been recorded",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update spent amount",
         variant: "destructive",
       });
     },
@@ -700,7 +724,7 @@ export default function Budget() {
                       <TrendingUp className="w-5 h-5" />
                       Spending by Category
                     </h3>
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       {categories.map((category) => {
                         const allocated = parseFloat(category.allocatedAmount.toString());
                         const manualSpent = parseFloat(category.spentAmount?.toString() || "0");
@@ -708,28 +732,117 @@ export default function Budget() {
                         const totalCategorySpent = manualSpent + eventCost;
                         const percentage = allocated > 0 ? (totalCategorySpent / allocated) * 100 : 0;
                         const isOverBudget = totalCategorySpent > allocated;
+                        const isQuickEditing = quickEditId === category.id;
 
                         return (
                           <div
                             key={category.id}
-                            className="p-4 rounded-lg border hover-elevate cursor-pointer transition-all"
-                            onClick={() => handleEditCategory(category)}
+                            className="p-5 rounded-lg border transition-all"
                             data-testid={`category-spending-${category.id}`}
                           >
-                            <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center justify-between mb-3">
                               <div className="flex items-center gap-2 flex-1">
-                                <span className="font-medium text-lg">
+                                <span className="font-semibold text-lg">
                                   {CATEGORY_LABELS[category.category] || category.category}
                                 </span>
                                 {isOverBudget && (
-                                  <Badge variant="destructive" className="text-xs">Over</Badge>
+                                  <Badge variant="destructive" className="text-xs">Over Budget</Badge>
                                 )}
                               </div>
-                              <span className="font-mono">
-                                <span className="font-semibold">${totalCategorySpent.toLocaleString()}</span>
-                                <span className="text-muted-foreground"> / ${allocated.toLocaleString()}</span>
-                              </span>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleEditCategory(category)}
+                                data-testid={`button-edit-category-${category.id}`}
+                              >
+                                <Edit2 className="w-4 h-4 mr-1" />
+                                Edit All
+                              </Button>
                             </div>
+
+                            {/* Prominent Spent Amount Section */}
+                            <div className="bg-muted/50 rounded-lg p-4 mb-3">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="text-xs font-medium text-muted-foreground mb-1">Actual Spent</p>
+                                  {isQuickEditing ? (
+                                    <div className="flex items-center gap-2">
+                                      <div className="relative">
+                                        <DollarSign className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                        <Input
+                                          type="number"
+                                          step="0.01"
+                                          min="0"
+                                          value={quickEditValue}
+                                          onChange={(e) => setQuickEditValue(e.target.value)}
+                                          className="w-32 pl-7 h-9"
+                                          autoFocus
+                                          data-testid={`input-quick-spent-${category.id}`}
+                                          onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                              e.preventDefault();
+                                              quickUpdateSpentMutation.mutate({ id: category.id, spentAmount: quickEditValue });
+                                            } else if (e.key === 'Escape') {
+                                              setQuickEditId(null);
+                                              setQuickEditValue("");
+                                            }
+                                          }}
+                                        />
+                                      </div>
+                                      <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        className="h-9 w-9 text-emerald-600"
+                                        onClick={() => quickUpdateSpentMutation.mutate({ id: category.id, spentAmount: quickEditValue })}
+                                        disabled={quickUpdateSpentMutation.isPending}
+                                        data-testid={`button-save-quick-spent-${category.id}`}
+                                      >
+                                        <Check className="w-4 h-4" />
+                                      </Button>
+                                      <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        className="h-9 w-9 text-muted-foreground"
+                                        onClick={() => {
+                                          setQuickEditId(null);
+                                          setQuickEditValue("");
+                                        }}
+                                        data-testid={`button-cancel-quick-spent-${category.id}`}
+                                      >
+                                        <X className="w-4 h-4" />
+                                      </Button>
+                                    </div>
+                                  ) : (
+                                    <p className={`text-2xl font-bold font-mono ${isOverBudget ? 'text-destructive' : 'text-foreground'}`}>
+                                      ${totalCategorySpent.toLocaleString()}
+                                    </p>
+                                  )}
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-xs font-medium text-muted-foreground mb-1">Budget</p>
+                                  <p className="text-lg font-mono text-muted-foreground">
+                                    ${allocated.toLocaleString()}
+                                  </p>
+                                </div>
+                              </div>
+                              {!isQuickEditing && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="mt-3 w-full"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setQuickEditId(category.id);
+                                    setQuickEditValue(manualSpent.toString());
+                                  }}
+                                  data-testid={`button-update-spent-${category.id}`}
+                                >
+                                  <DollarSign className="w-4 h-4 mr-1" />
+                                  Update Spent Amount
+                                </Button>
+                              )}
+                            </div>
+
                             <div className="flex items-center gap-3">
                               <Progress
                                 value={Math.min(percentage, 100)}
@@ -741,7 +854,7 @@ export default function Budget() {
                             </div>
                             {eventCost > 0 && (
                               <p className="text-xs text-muted-foreground mt-2">
-                                ${eventCost.toLocaleString()} from event costs
+                                Includes ${eventCost.toLocaleString()} from linked event costs
                               </p>
                             )}
                           </div>
