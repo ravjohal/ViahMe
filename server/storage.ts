@@ -133,6 +133,8 @@ import {
   type InsertExpense,
   type ExpenseSplit,
   type InsertExpenseSplit,
+  type QuoteRequest,
+  type InsertQuoteRequest,
 } from "@shared/schema";
 import { randomUUID, randomBytes } from "crypto";
 import bcrypt from "bcrypt";
@@ -714,6 +716,14 @@ export interface IStorage {
 
   // Vendor teammate authorization helper
   hasVendorTeammateAccess(userId: string, vendorId: string, requiredPermission?: string): Promise<boolean>;
+
+  // ============================================================================
+  // QUOTE REQUESTS
+  // ============================================================================
+  createQuoteRequest(quoteRequest: InsertQuoteRequest): Promise<QuoteRequest>;
+  getQuoteRequestsByVendor(vendorId: string): Promise<QuoteRequest[]>;
+  getQuoteRequestsByWedding(weddingId: string): Promise<QuoteRequest[]>;
+  updateQuoteRequestStatus(id: string, status: string): Promise<QuoteRequest | undefined>;
 }
 
 // Guest Planning Snapshot - comprehensive view of all guests and per-event costs
@@ -3461,6 +3471,20 @@ export class MemStorage implements IStorage {
   }
   async hasVendorTeammateAccess(userId: string, vendorId: string, requiredPermission?: string): Promise<boolean> {
     return false;
+  }
+
+  // Quote Requests (stubs)
+  async createQuoteRequest(quoteRequest: InsertQuoteRequest): Promise<QuoteRequest> {
+    throw new Error("MemStorage does not support Quote Requests. Use DBStorage.");
+  }
+  async getQuoteRequestsByVendor(vendorId: string): Promise<QuoteRequest[]> {
+    return [];
+  }
+  async getQuoteRequestsByWedding(weddingId: string): Promise<QuoteRequest[]> {
+    return [];
+  }
+  async updateQuoteRequestStatus(id: string, status: string): Promise<QuoteRequest | undefined> {
+    throw new Error("MemStorage does not support Quote Requests. Use DBStorage.");
   }
 }
 
@@ -8003,6 +8027,28 @@ export class DBStorage implements IStorage {
     
     // Check if teammate has the required permission
     return teammate.permissions.includes(requiredPermission);
+  }
+
+  // ============================================================================
+  // QUOTE REQUESTS
+  // ============================================================================
+
+  async createQuoteRequest(quoteRequest: InsertQuoteRequest): Promise<QuoteRequest> {
+    const result = await this.db.insert(schema.quoteRequests).values(quoteRequest).returning();
+    return result[0];
+  }
+
+  async getQuoteRequestsByVendor(vendorId: string): Promise<QuoteRequest[]> {
+    return await this.db.select().from(schema.quoteRequests).where(eq(schema.quoteRequests.vendorId, vendorId));
+  }
+
+  async getQuoteRequestsByWedding(weddingId: string): Promise<QuoteRequest[]> {
+    return await this.db.select().from(schema.quoteRequests).where(eq(schema.quoteRequests.weddingId, weddingId));
+  }
+
+  async updateQuoteRequestStatus(id: string, status: string): Promise<QuoteRequest | undefined> {
+    const result = await this.db.update(schema.quoteRequests).set({ status }).where(eq(schema.quoteRequests.id, id)).returning();
+    return result[0];
   }
 }
 

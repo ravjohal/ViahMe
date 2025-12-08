@@ -2285,3 +2285,34 @@ export type VendorTeammateInvitation = typeof vendorTeammateInvitations.$inferSe
 export type VendorTeammateWithUser = VendorTeammate & {
   user?: { email: string };
 };
+
+// ============================================================================
+// QUOTE REQUESTS - Vendor quote requests from couples
+// ============================================================================
+
+export const quoteRequests = pgTable("quote_requests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  vendorId: varchar("vendor_id").notNull(),
+  eventId: varchar("event_id").notNull(),
+  senderEmail: text("sender_email").notNull(),
+  senderName: text("sender_name").notNull(),
+  eventName: text("event_name").notNull(),
+  eventDate: text("event_date"),
+  eventLocation: text("event_location"),
+  guestCount: integer("guest_count"),
+  budgetRange: text("budget_range"),
+  additionalNotes: text("additional_notes"),
+  status: text("status").notNull().default("sent"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertQuoteRequestSchema = createInsertSchema(quoteRequests).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  status: z.enum(["sent", "viewed", "responded", "declined"]).optional(),
+});
+
+export type InsertQuoteRequest = z.infer<typeof insertQuoteRequestSchema>;
+export type QuoteRequest = typeof quoteRequests.$inferSelect;
