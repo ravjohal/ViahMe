@@ -47,6 +47,7 @@ import {
   insertGuestBudgetSettingsSchema,
   insertCutListItemSchema,
   insertVendorTeammateInvitationSchema,
+  insertExpenseSchema,
   VENDOR_TEAMMATE_PERMISSIONS,
 } from "@shared/schema";
 import { seedVendors, seedBudgetBenchmarks } from "./seed-data";
@@ -1234,6 +1235,155 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete budget category" });
+    }
+  });
+
+  // ============================================================================
+  // EXPENSES - Shared expense tracking for couples
+  // ============================================================================
+
+  app.get("/api/expenses/:weddingId", async (req, res) => {
+    try {
+      const expenses = await storage.getExpensesByWedding(req.params.weddingId);
+      // Get splits for each expense
+      const expensesWithSplits = await Promise.all(
+        expenses.map(async (expense) => {
+          const splits = await storage.getExpenseSplitsByExpense(expense.id);
+          return { ...expense, splits };
+        })
+      );
+      res.json(expensesWithSplits);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch expenses" });
+    }
+  });
+
+  app.get("/api/expenses/by-id/:id", async (req, res) => {
+    try {
+      const expense = await storage.getExpense(req.params.id);
+      if (!expense) {
+        return res.status(404).json({ error: "Expense not found" });
+      }
+      const splits = await storage.getExpenseSplitsByExpense(expense.id);
+      res.json({ ...expense, splits });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch expense" });
+    }
+  });
+
+  app.post("/api/expenses", async (req, res) => {
+    try {
+      const { splits, ...expenseData } = req.body;
+      const validatedData = insertExpenseSchema.parse(expenseData);
+      const expense = await storage.createExpense(validatedData);
+      
+      // Create splits if provided
+      if (splits && Array.isArray(splits)) {
+        for (const split of splits) {
+          await storage.createExpenseSplit({
+            ...split,
+            expenseId: expense.id,
+          });
+        }
+      }
+      
+      const createdSplits = await storage.getExpenseSplitsByExpense(expense.id);
+      res.json({ ...expense, splits: createdSplits });
+    } catch (error) {
+      console.error("Error creating expense:", error);
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      res.status(500).json({ error: "Failed to create expense" });
+    }
+  });
+
+  app.patch("/api/expenses/:id", async (req, res) => {
+    try {
+      const { splits, ...expenseData } = req.body;
+      const expense = await storage.updateExpense(req.params.id, expenseData);
+      if (!expense) {
+        return res.status(404).json({ error: "Expense not found" });
+      }
+      
+      // Update splits if provided - delete existing and recreate
+      if (splits && Array.isArray(splits)) {
+        await storage.deleteExpenseSplitsByExpense(expense.id);
+        for (const split of splits) {
+          await storage.createExpenseSplit({
+            ...split,
+            expenseId: expense.id,
+          });
+        }
+      }
+      
+      const updatedSplits = await storage.getExpenseSplitsByExpense(expense.id);
+      res.json({ ...expense, splits: updatedSplits });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update expense" });
+    }
+  });
+
+  app.delete("/api/expenses/:id", async (req, res) => {
+    try {
+      // Delete splits first
+      await storage.deleteExpenseSplitsByExpense(req.params.id);
+      await storage.deleteExpense(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete expense" });
+    }
+  });
+
+  // Mark a split as paid/unpaid
+  app.patch("/api/expense-splits/:id", async (req, res) => {
+    try {
+      const split = await storage.updateExpenseSplit(req.params.id, req.body);
+      if (!split) {
+        return res.status(404).json({ error: "Expense split not found" });
+      }
+      res.json(split);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update expense split" });
+    }
+  });
+
+  // Get settlement summary - who owes whom
+  app.get("/api/expenses/:weddingId/settlement", async (req, res) => {
+    try {
+      const expenses = await storage.getExpensesByWedding(req.params.weddingId);
+      
+      // Calculate balances: what each person paid vs what they owe
+      const balances: Record<string, { name: string; paid: number; owes: number; balance: number }> = {};
+      
+      for (const expense of expenses) {
+        const splits = await storage.getExpenseSplitsByExpense(expense.id);
+        
+        // Track what the payer paid
+        if (!balances[expense.paidById]) {
+          balances[expense.paidById] = { name: expense.paidByName, paid: 0, owes: 0, balance: 0 };
+        }
+        balances[expense.paidById].paid += parseFloat(expense.amount);
+        
+        // Track what each person owes from their splits
+        for (const split of splits) {
+          if (!balances[split.userId]) {
+            balances[split.userId] = { name: split.userName, paid: 0, owes: 0, balance: 0 };
+          }
+          if (!split.isPaid) {
+            balances[split.userId].owes += parseFloat(split.shareAmount);
+          }
+        }
+      }
+      
+      // Calculate net balance for each person (positive = they are owed money, negative = they owe money)
+      for (const userId in balances) {
+        balances[userId].balance = balances[userId].paid - balances[userId].owes;
+      }
+      
+      res.json(balances);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to calculate settlement" });
     }
   });
 
