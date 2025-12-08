@@ -57,6 +57,7 @@ import AiPlanner from "@/pages/ai-planner";
 import LiveTimeline from "@/pages/live-timeline";
 import VendorTeam from "@/pages/vendor-team";
 import VendorInviteAccept from "@/pages/vendor-invite-accept";
+import Expenses from "@/pages/expenses";
 import { VendorRoute } from "@/components/VendorRoute";
 import { CoupleRoute } from "@/components/CoupleRoute";
 
@@ -141,6 +142,11 @@ function Router() {
       <Route path="/budget-intelligence">
         <ProtectedRoute requiredPermission="budget">
           <BudgetIntelligence />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/expenses">
+        <ProtectedRoute requiredPermission="budget">
+          <Expenses />
         </ProtectedRoute>
       </Route>
       <Route path="/contracts">

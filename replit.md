@@ -51,6 +51,12 @@ Key architectural decisions and features include:
   - **Task Assignment**: Assign tasks to team members/collaborators from the wedding planning team
   - **On-Demand Reminders**: Couples can send immediate reminders to assigned team members
   - **Filtered Views**: Filter tasks by priority, status, event, and assignee
+- **Expense Splitting**: Shared cost management for couples with:
+  - **Expense Tracking**: Track all wedding-related expenses with description, amount, and date
+  - **Split Types**: Equal split, custom amounts, or single-payer options
+  - **Event Association**: Link expenses to specific wedding events
+  - **Settlement Summary**: Real-time calculation of who owes whom based on payments and shares
+  - **Payment Tracking**: Mark individual splits as paid/unpaid for settlement tracking
 
 ## External Dependencies
 - **PostgreSQL (Neon)**: Relational database.
