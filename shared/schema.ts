@@ -378,6 +378,65 @@ export type InsertBudgetCategory = z.infer<typeof insertBudgetCategorySchema>;
 export type BudgetCategory = typeof budgetCategories.$inferSelect;
 
 // ============================================================================
+// EXPENSES - Shared expense tracking for couples
+// ============================================================================
+
+export const expenses = pgTable("expenses", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  eventId: varchar("event_id"), // Optional - link to specific event
+  categoryId: varchar("category_id"), // Optional - link to budget category
+  description: text("description").notNull(),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  paidById: varchar("paid_by_id").notNull(), // User ID who paid
+  paidByName: text("paid_by_name").notNull(), // Cached name for display
+  splitType: text("split_type").notNull().default('equal'), // 'equal' | 'percentage' | 'custom' | 'full'
+  receiptUrl: text("receipt_url"), // Optional receipt image/document
+  notes: text("notes"),
+  expenseDate: timestamp("expense_date").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertExpenseSchema = createInsertSchema(expenses).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  amount: z.string().regex(/^\d+(\.\d{1,2})?$/, "Amount must be a valid decimal"),
+  splitType: z.enum(['equal', 'percentage', 'custom', 'full']),
+  expenseDate: z.string().optional().transform(val => val ? new Date(val) : new Date()),
+});
+
+export type InsertExpense = z.infer<typeof insertExpenseSchema>;
+export type Expense = typeof expenses.$inferSelect;
+
+// ============================================================================
+// EXPENSE SPLITS - How each expense is divided between parties
+// ============================================================================
+
+export const expenseSplits = pgTable("expense_splits", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  expenseId: varchar("expense_id").notNull(),
+  userId: varchar("user_id").notNull(), // User who owes this portion
+  userName: text("user_name").notNull(), // Cached name for display
+  shareAmount: decimal("share_amount", { precision: 10, scale: 2 }).notNull(), // Amount this user owes
+  sharePercentage: integer("share_percentage"), // Optional percentage (for percentage splits)
+  isPaid: boolean("is_paid").notNull().default(false), // Has this person settled their share?
+  paidAt: timestamp("paid_at"),
+});
+
+export const insertExpenseSplitSchema = createInsertSchema(expenseSplits).omit({
+  id: true,
+}).extend({
+  shareAmount: z.string().regex(/^\d+(\.\d{1,2})?$/, "Share amount must be a valid decimal"),
+  sharePercentage: z.number().optional(),
+  isPaid: z.boolean().optional(),
+  paidAt: z.string().optional().transform(val => val ? new Date(val) : undefined),
+});
+
+export type InsertExpenseSplit = z.infer<typeof insertExpenseSplitSchema>;
+export type ExpenseSplit = typeof expenseSplits.$inferSelect;
+
+// ============================================================================
 // HOUSEHOLDS - Family/group management for unified RSVPs
 // ============================================================================
 
