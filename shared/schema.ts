@@ -495,6 +495,7 @@ export const insertGuestSchema = createInsertSchema(guests).omit({
   magicLinkTokenHash: true,
   magicLinkExpires: true,
 }).extend({
+  name: z.string().min(1, { message: "Guest name is required" }),
   side: z.enum(['bride', 'groom', 'mutual']).optional(),
   relationshipTier: z.enum(['immediate_family', 'extended_family', 'friend', 'parents_friend']).optional(),
   rsvpStatus: z.enum(['pending', 'confirmed', 'declined']).optional(),

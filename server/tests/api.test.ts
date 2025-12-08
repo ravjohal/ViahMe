@@ -375,9 +375,10 @@ describe('Viah.me API Tests', () => {
         .send({
           weddingId: testWedding.id,
           description: 'Venue Deposit',
-          amount: '5000',
-          date: new Date().toISOString(),
-          paidBy: testUser.id,
+          amount: '5000.00',
+          expenseDate: new Date().toISOString(),
+          paidById: testUser.id,
+          paidByName: 'Partner One',
           splitType: 'equal',
           splits: [
             { userId: testUser.id, amount: '2500', isPaid: true },
@@ -389,6 +390,18 @@ describe('Viah.me API Tests', () => {
       expect(res.body.description).toBe('Venue Deposit');
       expect(res.body.splits).toBeDefined();
       expect(res.body.splits.length).toBe(2);
+    });
+
+    it('POST /api/expenses - should reject missing paidById/paidByName', async () => {
+      await request(app)
+        .post('/api/expenses')
+        .send({
+          weddingId: testWedding.id,
+          description: 'Missing Payer Info',
+          amount: '1000.00',
+          splitType: 'equal',
+        })
+        .expect(400);
     });
   });
 
