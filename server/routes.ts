@@ -981,6 +981,19 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
       const senderName = user.email.split('@')[0];
       const weddingTitle = wedding.title || `${wedding.partner1Name} & ${wedding.partner2Name || 'Partner'}'s Wedding`;
 
+      // Log the quote request details being sent
+      console.log('=== QUOTE REQUEST DETAILS ===');
+      console.log('To Vendor:', vendor.name, `(${vendor.email})`);
+      console.log('From:', senderName, `(${user.email})`);
+      console.log('Wedding:', weddingTitle);
+      console.log('Event:', eventName);
+      console.log('Event Date:', eventDate || 'Not specified');
+      console.log('Event Location:', eventLocation || 'Not specified');
+      console.log('Guest Count:', guestCount || 'Not specified');
+      console.log('Budget Range:', budgetRange || 'Not specified');
+      console.log('Additional Notes:', additionalNotes || 'None');
+      console.log('=============================');
+
       const quoteRequest = await storage.createQuoteRequest({
         weddingId,
         vendorId,
