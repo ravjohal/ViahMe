@@ -43,7 +43,7 @@ export default function ShoppingPage() {
     itemName: "",
     storeName: "",
     status: "ordered" as "ordered" | "in_alterations" | "picked_up",
-    costINR: "",
+    cost: "",
     weightKg: "",
     notes: "",
   });
@@ -110,7 +110,7 @@ export default function ShoppingPage() {
   });
 
   const resetShoppingForm = () => {
-    setShoppingForm({ itemName: "", storeName: "", status: "ordered", costINR: "", weightKg: "", notes: "" });
+    setShoppingForm({ itemName: "", storeName: "", status: "ordered", cost: "", weightKg: "", notes: "" });
     setEditingItem(null);
   };
 
@@ -124,7 +124,7 @@ export default function ShoppingPage() {
       itemName: item.itemName,
       storeName: item.storeName || "",
       status: item.status as any,
-      costINR: item.costINR || "",
+      cost: item.costUSD || "",
       weightKg: item.weightKg || "",
       notes: item.notes || "",
     });
@@ -145,7 +145,7 @@ export default function ShoppingPage() {
       status: shoppingForm.status,
       notes: shoppingForm.notes || null,
     };
-    if (shoppingForm.costINR) data.costINR = shoppingForm.costINR;
+    if (shoppingForm.cost) data.costUSD = shoppingForm.cost;
     if (shoppingForm.weightKg) data.weightKg = shoppingForm.weightKg;
     createShoppingItemMutation.mutate(data);
   };
@@ -189,12 +189,6 @@ export default function ShoppingPage() {
       picked_up: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
     };
     return <Badge className={styles[status as keyof typeof styles]}>{status.replace('_', ' ')}</Badge>;
-  };
-
-  const calculateUSD = (inr: string) => {
-    if (!inr) return "";
-    const amount = parseFloat(inr);
-    return (amount * 0.012).toFixed(2);
   };
 
   if (!wedding) {
@@ -263,10 +257,10 @@ export default function ShoppingPage() {
                             )}
                             <div className="flex gap-2 mt-2 flex-wrap">
                               {getStatusBadge(item.status)}
-                              {item.costINR && (
+                              {item.costUSD && (
                                 <Badge variant="outline" className="gap-1">
                                   <DollarSign className="w-3 h-3" />
-                                  ₹{parseFloat(item.costINR).toLocaleString()} (${parseFloat(item.costUSD || '0').toFixed(2)})
+                                  ${parseFloat(item.costUSD).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </Badge>
                               )}
                               {item.weightKg && (
@@ -403,19 +397,16 @@ export default function ShoppingPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="costINR">Cost (INR)</Label>
+                    <Label htmlFor="cost">Cost (USD)</Label>
                     <Input
-                      id="costINR"
+                      id="cost"
                       type="number"
                       step="0.01"
-                      value={shoppingForm.costINR}
-                      onChange={(e) => setShoppingForm({ ...shoppingForm, costINR: e.target.value })}
-                      placeholder="₹"
-                      data-testid="input-cost-inr"
+                      value={shoppingForm.cost}
+                      onChange={(e) => setShoppingForm({ ...shoppingForm, cost: e.target.value })}
+                      placeholder="$"
+                      data-testid="input-cost-usd"
                     />
-                    {shoppingForm.costINR && (
-                      <p className="text-xs text-muted-foreground mt-1">≈ ${calculateUSD(shoppingForm.costINR)} USD</p>
-                    )}
                   </div>
                   <div>
                     <Label htmlFor="weightKg">Weight (kg)</Label>
