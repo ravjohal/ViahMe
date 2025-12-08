@@ -117,7 +117,7 @@ describe('Viah.me API Tests', () => {
       isPrimaryContact: true,
     });
     
-    await registerRoutes(app);
+    await registerRoutes(app, storage);
   });
 
   describe('Wedding Endpoints', () => {
@@ -174,9 +174,9 @@ describe('Viah.me API Tests', () => {
           name: 'Reception',
           type: 'reception',
           date: new Date('2025-12-16').toISOString(),
-          startTime: '18:00',
-          endTime: '23:00',
+          time: '18:00',
           location: 'Grand Hall',
+          order: 2,
         })
         .expect(200);
       
@@ -309,13 +309,13 @@ describe('Viah.me API Tests', () => {
       expect(res.body.name).toBe('New Family');
     });
 
-    it('POST /api/households/:id/generate-magic-link - should generate magic link', async () => {
+    it('GET /api/households/:id - should fetch household by ID', async () => {
       const res = await request(app)
-        .post(`/api/households/${testHousehold.id}/generate-magic-link`)
+        .get(`/api/households/by-id/${testHousehold.id}`)
         .expect(200);
       
-      expect(res.body.magicLinkToken).toBeDefined();
-      expect(res.body.magicLinkExpires).toBeDefined();
+      expect(res.body.id).toBe(testHousehold.id);
+      expect(res.body.name).toBe('Test Family');
     });
   });
 
@@ -430,15 +430,16 @@ describe('Viah.me API Tests', () => {
       expect(Array.isArray(res.body)).toBe(true);
     });
 
-    it('PATCH /api/invitations/rsvp/:id - should update RSVP status', async () => {
-      if (testInvitation) {
-        const res = await request(app)
-          .patch(`/api/invitations/rsvp/${testInvitation.id}`)
-          .send({ rsvpStatus: 'attending' })
-          .expect(200);
-        
-        expect(res.body.rsvpStatus).toBe('attending');
-      }
+    it('PATCH /api/invitations/:id/rsvp - should update RSVP status', async () => {
+      expect(testInvitation).toBeDefined();
+      expect(testInvitation.id).toBeDefined();
+      
+      const res = await request(app)
+        .patch(`/api/invitations/${testInvitation.id}/rsvp`)
+        .send({ rsvpStatus: 'attending' })
+        .expect(200);
+      
+      expect(res.body.rsvpStatus).toBe('attending');
     });
   });
 

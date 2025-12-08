@@ -4112,8 +4112,8 @@ export class DBStorage implements IStorage {
   }
 
   async deleteGuest(id: string): Promise<boolean> {
-    await this.db.delete(schema.guests).where(eq(schema.guests.id, id));
-    return true;
+    const result = await this.db.delete(schema.guests).where(eq(schema.guests.id, id)).returning();
+    return result.length > 0;
   }
 
   async generateMagicLinkToken(guestId: string, expiresInDays: number = 30): Promise<string> {

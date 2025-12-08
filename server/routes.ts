@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { z } from "zod";
-import { storage, parseConversationId } from "./storage";
+import { storage as defaultStorage, parseConversationId, type IStorage } from "./storage";
 import { registerAuthRoutes } from "./auth-routes";
 import { requireAuth, requireRole, type AuthRequest } from "./auth-middleware";
 import {
@@ -69,19 +69,8 @@ import {
   type WeddingContext,
 } from "./ai/gemini";
 
-// Seed vendors only if database is empty
-(async () => {
-  const existingVendors = await storage.getAllVendors();
-  if (existingVendors.length === 0) {
-    await seedVendors(storage);
-  }
-  
-  // Seed budget benchmarks only if database is empty
-  const existingBenchmarks = await storage.getAllBudgetBenchmarks();
-  if (existingBenchmarks.length === 0) {
-    await seedBudgetBenchmarks(storage);
-  }
-})();
+// Flag to track if seeding has been done for default storage
+let defaultStorageSeeded = false;
 
 // ============================================================================
 // LIVE VIEWER TRACKING - In-memory tracking of active guests viewing live feed
@@ -118,7 +107,23 @@ function getViewerCount(weddingId: string): number {
 // Cleanup stale viewers every 30 seconds
 setInterval(cleanupStaleViewers, 30000);
 
-export async function registerRoutes(app: Express): Promise<Server> {
+export async function registerRoutes(app: Express, injectedStorage?: IStorage): Promise<Server> {
+  const storage = injectedStorage || defaultStorage;
+  
+  // Seed vendors and budget benchmarks if using default storage and not already seeded
+  if (!injectedStorage && !defaultStorageSeeded) {
+    const existingVendors = await storage.getAllVendors();
+    if (existingVendors.length === 0) {
+      await seedVendors(storage);
+    }
+    
+    const existingBenchmarks = await storage.getAllBudgetBenchmarks();
+    if (existingBenchmarks.length === 0) {
+      await seedBudgetBenchmarks(storage);
+    }
+    defaultStorageSeeded = true;
+  }
+  
   // ============================================================================
   // AUTHENTICATION
   // ============================================================================
