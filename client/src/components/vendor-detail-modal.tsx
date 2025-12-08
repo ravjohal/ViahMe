@@ -244,13 +244,34 @@ export function VendorDetailModal({
       setCalendarBookingNotes('');
       toast({
         title: "Booking request sent!",
-        description: `Your booking request for ${selectedDate ? format(selectedDate, 'MMMM d, yyyy') : 'the selected date'} has been sent to ${vendor?.name}. They will confirm or suggest alternative dates.`,
+        description: `Your booking request for ${selectedDate ? format(selectedDate, 'MMMM d, yyyy') : 'the selected date'} has been sent to the vendor. They will confirm or suggest alternative dates.`,
       });
     },
     onError: (error: any) => {
       toast({
         title: "Request failed",
         description: error.message || "Failed to send booking request. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Claim profile mutation - MUST be called before any early returns
+  const claimRequestMutation = useMutation({
+    mutationFn: async (vendorId: string) => {
+      const response = await apiRequest('POST', `/api/vendors/${vendorId}/request-claim`, {});
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Claim request sent",
+        description: "The business owner will receive a notification to claim this profile.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Request failed",
+        description: error.message || "Unable to send claim request. Please try again.",
         variant: "destructive",
       });
     },
@@ -363,27 +384,6 @@ export function VendorDetailModal({
   // Check if this is an unclaimed ghost profile
   const isGhostProfile = vendor.claimed === false && vendor.source === 'google_places';
 
-  // Claim profile mutation
-  const claimRequestMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest('POST', `/api/vendors/${vendor.id}/request-claim`, {});
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Claim request sent",
-        description: "The business owner will receive a notification to claim this profile.",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Request failed",
-        description: error.message || "Unable to send claim request. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
-
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" data-testid="dialog-vendor-detail">
@@ -414,7 +414,7 @@ export function VendorDetailModal({
                   size="sm"
                   variant="outline"
                   className="shrink-0 border-orange-300 text-orange-700 hover:bg-orange-100 dark:border-orange-700 dark:text-orange-300 dark:hover:bg-orange-900/40"
-                  onClick={() => claimRequestMutation.mutate()}
+                  onClick={() => claimRequestMutation.mutate(vendor.id)}
                   disabled={claimRequestMutation.isPending}
                   data-testid="button-claim-profile"
                 >
