@@ -129,6 +129,10 @@ import {
   type InsertContractDocument,
   type ContractPayment,
   type InsertContractPayment,
+  type Expense,
+  type InsertExpense,
+  type ExpenseSplit,
+  type InsertExpenseSplit,
 } from "@shared/schema";
 import { randomUUID, randomBytes } from "crypto";
 import bcrypt from "bcrypt";
@@ -216,6 +220,21 @@ export interface IStorage {
   createBudgetCategory(category: InsertBudgetCategory): Promise<BudgetCategory>;
   updateBudgetCategory(id: string, category: Partial<InsertBudgetCategory>): Promise<BudgetCategory | undefined>;
   deleteBudgetCategory(id: string): Promise<boolean>;
+
+  // Expenses
+  getExpense(id: string): Promise<Expense | undefined>;
+  getExpensesByWedding(weddingId: string): Promise<Expense[]>;
+  createExpense(expense: InsertExpense): Promise<Expense>;
+  updateExpense(id: string, expense: Partial<InsertExpense>): Promise<Expense | undefined>;
+  deleteExpense(id: string): Promise<boolean>;
+
+  // Expense Splits
+  getExpenseSplit(id: string): Promise<ExpenseSplit | undefined>;
+  getExpenseSplitsByExpense(expenseId: string): Promise<ExpenseSplit[]>;
+  createExpenseSplit(split: InsertExpenseSplit): Promise<ExpenseSplit>;
+  updateExpenseSplit(id: string, split: Partial<InsertExpenseSplit>): Promise<ExpenseSplit | undefined>;
+  deleteExpenseSplit(id: string): Promise<boolean>;
+  deleteExpenseSplitsByExpense(expenseId: string): Promise<boolean>;
 
   // Households
   getHousehold(id: string): Promise<Household | undefined>;
@@ -788,6 +807,8 @@ export class MemStorage implements IStorage {
   private vendorCalendars: Map<string, VendorCalendar>;
   private measurementProfiles: Map<string, MeasurementProfile>;
   private shoppingOrderItems: Map<string, ShoppingOrderItem>;
+  private expenses: Map<string, Expense>;
+  private expenseSplits: Map<string, ExpenseSplit>;
 
   constructor() {
     this.users = new Map();
@@ -822,6 +843,8 @@ export class MemStorage implements IStorage {
     this.vendorCalendars = new Map();
     this.measurementProfiles = new Map();
     this.shoppingOrderItems = new Map();
+    this.expenses = new Map();
+    this.expenseSplits = new Map();
   }
 
   // Users
@@ -1243,6 +1266,85 @@ export class MemStorage implements IStorage {
 
   async deleteBudgetCategory(id: string): Promise<boolean> {
     return this.budgetCategories.delete(id);
+  }
+
+  // Expenses
+  async getExpense(id: string): Promise<Expense | undefined> {
+    return this.expenses.get(id);
+  }
+
+  async getExpensesByWedding(weddingId: string): Promise<Expense[]> {
+    return Array.from(this.expenses.values()).filter((e) => e.weddingId === weddingId);
+  }
+
+  async createExpense(insertExpense: InsertExpense): Promise<Expense> {
+    const id = randomUUID();
+    const expense: Expense = {
+      ...insertExpense,
+      id,
+      eventId: insertExpense.eventId ?? null,
+      categoryId: insertExpense.categoryId ?? null,
+      receiptUrl: insertExpense.receiptUrl ?? null,
+      notes: insertExpense.notes ?? null,
+      expenseDate: insertExpense.expenseDate ?? new Date(),
+      createdAt: new Date(),
+    } as Expense;
+    this.expenses.set(id, expense);
+    return expense;
+  }
+
+  async updateExpense(id: string, update: Partial<InsertExpense>): Promise<Expense | undefined> {
+    const expense = this.expenses.get(id);
+    if (!expense) return undefined;
+    const updated = { ...expense, ...update } as Expense;
+    this.expenses.set(id, updated);
+    return updated;
+  }
+
+  async deleteExpense(id: string): Promise<boolean> {
+    return this.expenses.delete(id);
+  }
+
+  // Expense Splits
+  async getExpenseSplit(id: string): Promise<ExpenseSplit | undefined> {
+    return this.expenseSplits.get(id);
+  }
+
+  async getExpenseSplitsByExpense(expenseId: string): Promise<ExpenseSplit[]> {
+    return Array.from(this.expenseSplits.values()).filter((s) => s.expenseId === expenseId);
+  }
+
+  async createExpenseSplit(insertSplit: InsertExpenseSplit): Promise<ExpenseSplit> {
+    const id = randomUUID();
+    const split: ExpenseSplit = {
+      ...insertSplit,
+      id,
+      sharePercentage: insertSplit.sharePercentage ?? null,
+      isPaid: insertSplit.isPaid ?? false,
+      paidAt: insertSplit.paidAt ?? null,
+    } as ExpenseSplit;
+    this.expenseSplits.set(id, split);
+    return split;
+  }
+
+  async updateExpenseSplit(id: string, update: Partial<InsertExpenseSplit>): Promise<ExpenseSplit | undefined> {
+    const split = this.expenseSplits.get(id);
+    if (!split) return undefined;
+    const updated = { ...split, ...update } as ExpenseSplit;
+    this.expenseSplits.set(id, updated);
+    return updated;
+  }
+
+  async deleteExpenseSplit(id: string): Promise<boolean> {
+    return this.expenseSplits.delete(id);
+  }
+
+  async deleteExpenseSplitsByExpense(expenseId: string): Promise<boolean> {
+    const toDelete = Array.from(this.expenseSplits.entries())
+      .filter(([_, split]) => split.expenseId === expenseId)
+      .map(([id]) => id);
+    toDelete.forEach((id) => this.expenseSplits.delete(id));
+    return true;
   }
 
   // Households
@@ -3839,6 +3941,61 @@ export class DBStorage implements IStorage {
 
   async deleteBudgetCategory(id: string): Promise<boolean> {
     await this.db.delete(schema.budgetCategories).where(eq(schema.budgetCategories.id, id));
+    return true;
+  }
+
+  // Expenses
+  async getExpense(id: string): Promise<Expense | undefined> {
+    const result = await this.db.select().from(schema.expenses).where(eq(schema.expenses.id, id));
+    return result[0];
+  }
+
+  async getExpensesByWedding(weddingId: string): Promise<Expense[]> {
+    return await this.db.select().from(schema.expenses).where(eq(schema.expenses.weddingId, weddingId));
+  }
+
+  async createExpense(insertExpense: InsertExpense): Promise<Expense> {
+    const result = await this.db.insert(schema.expenses).values(insertExpense).returning();
+    return result[0];
+  }
+
+  async updateExpense(id: string, update: Partial<InsertExpense>): Promise<Expense | undefined> {
+    const result = await this.db.update(schema.expenses).set(update).where(eq(schema.expenses.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteExpense(id: string): Promise<boolean> {
+    await this.db.delete(schema.expenses).where(eq(schema.expenses.id, id));
+    return true;
+  }
+
+  // Expense Splits
+  async getExpenseSplit(id: string): Promise<ExpenseSplit | undefined> {
+    const result = await this.db.select().from(schema.expenseSplits).where(eq(schema.expenseSplits.id, id));
+    return result[0];
+  }
+
+  async getExpenseSplitsByExpense(expenseId: string): Promise<ExpenseSplit[]> {
+    return await this.db.select().from(schema.expenseSplits).where(eq(schema.expenseSplits.expenseId, expenseId));
+  }
+
+  async createExpenseSplit(insertSplit: InsertExpenseSplit): Promise<ExpenseSplit> {
+    const result = await this.db.insert(schema.expenseSplits).values(insertSplit).returning();
+    return result[0];
+  }
+
+  async updateExpenseSplit(id: string, update: Partial<InsertExpenseSplit>): Promise<ExpenseSplit | undefined> {
+    const result = await this.db.update(schema.expenseSplits).set(update).where(eq(schema.expenseSplits.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteExpenseSplit(id: string): Promise<boolean> {
+    await this.db.delete(schema.expenseSplits).where(eq(schema.expenseSplits.id, id));
+    return true;
+  }
+
+  async deleteExpenseSplitsByExpense(expenseId: string): Promise<boolean> {
+    await this.db.delete(schema.expenseSplits).where(eq(schema.expenseSplits.expenseId, expenseId));
     return true;
   }
 
