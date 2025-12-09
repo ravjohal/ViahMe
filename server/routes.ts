@@ -1172,6 +1172,25 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   app.post("/api/bookings", async (req, res) => {
     try {
       const validatedData = insertBookingSchema.parse(req.body);
+      
+      // Log the booking request details
+      const vendor = await storage.getVendor(validatedData.vendorId);
+      const event = validatedData.eventId ? await storage.getEvent(validatedData.eventId) : null;
+      const wedding = await storage.getWedding(validatedData.weddingId);
+      
+      console.log('=== BOOKING REQUEST DETAILS ===');
+      console.log('To Vendor:', vendor?.name || 'Unknown', vendor?.email ? `(${vendor.email})` : '');
+      console.log('Wedding:', wedding?.partner1Name && wedding?.partner2Name 
+        ? `${wedding.partner1Name} & ${wedding.partner2Name}` 
+        : wedding?.title || 'Unknown');
+      console.log('Event:', event?.name || 'No specific event');
+      console.log('Event Date:', event?.date ? new Date(event.date).toLocaleDateString() : 'Not specified');
+      console.log('Event Location:', event?.location || 'Not specified');
+      console.log('Guest Count:', event?.guestCount || 'Not specified');
+      console.log('Couple Notes:', validatedData.coupleNotes || 'None');
+      console.log('Status:', validatedData.status);
+      console.log('================================');
+      
       const booking = await storage.createBooking(validatedData);
       
       // Send confirmation emails asynchronously (don't block response)

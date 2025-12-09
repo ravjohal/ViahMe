@@ -91,6 +91,7 @@ export function VendorDetailModal({
   const [quoteBudgetRange, setQuoteBudgetRange] = useState<string>('');
   const [quoteNotes, setQuoteNotes] = useState<string>('');
   const [quoteConfirmStep, setQuoteConfirmStep] = useState<boolean>(false);
+  const [bookingConfirmDialogOpen, setBookingConfirmDialogOpen] = useState<boolean>(false);
 
   const reviewForm = useForm<ReviewFormValues>({
     resolver: zodResolver(reviewFormSchema),
@@ -562,18 +563,6 @@ export function VendorDetailModal({
                 )}
               </div>
             </div>
-          )}
-
-          {/* Request Quote Button */}
-          {weddingId && events.length > 0 && vendor.email && (
-            <Button 
-              className="w-full"
-              onClick={() => setQuoteDialogOpen(true)}
-              data-testid="button-request-quote"
-            >
-              <FileText className="w-4 h-4 mr-2" />
-              Request a Quote
-            </Button>
           )}
 
           <Separator />
@@ -1066,13 +1055,12 @@ export function VendorDetailModal({
                 </div>
 
                 <Button
-                  onClick={handleSubmit}
+                  onClick={() => setBookingConfirmDialogOpen(true)}
                   disabled={selectedEvents.length === 0}
                   className="w-full"
-                  data-testid="button-submit-booking"
+                  data-testid="button-review-booking"
                 >
-                  <Send className="w-4 h-4 mr-2" />
-                  Send Booking Request for {selectedEvents.length} {selectedEvents.length === 1 ? 'Event' : 'Events'}
+                  Review & Send Request for {selectedEvents.length} {selectedEvents.length === 1 ? 'Event' : 'Events'}
                 </Button>
               </div>
             )}
@@ -1177,197 +1165,101 @@ export function VendorDetailModal({
           </DialogContent>
         </Dialog>
 
-        {/* Quote Request Dialog */}
-        <Dialog open={quoteDialogOpen} onOpenChange={(open) => {
-          setQuoteDialogOpen(open);
-          if (!open) {
-            setQuoteConfirmStep(false);
-          }
-        }}>
-          <DialogContent className="max-w-md" data-testid="dialog-quote-request">
+        {/* Booking Confirmation Dialog */}
+        <Dialog open={bookingConfirmDialogOpen} onOpenChange={setBookingConfirmDialogOpen}>
+          <DialogContent className="max-w-md" data-testid="dialog-booking-confirmation">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <FileText className="w-5 h-5 text-primary" />
-                {quoteConfirmStep ? 'Confirm Your Quote Request' : 'Request a Quote'}
+                Confirm Booking Request
               </DialogTitle>
               <DialogDescription>
-                {quoteConfirmStep 
-                  ? 'Please review the information below before sending to ' + vendor.name + '.'
-                  : 'Fill in your event details to receive a custom quote from ' + vendor.name + '.'
-                }
+                Please review the information that will be sent to {vendor.name}.
               </DialogDescription>
             </DialogHeader>
 
-            {!quoteConfirmStep ? (
-              <>
-                <div className="space-y-4 py-4">
-                  <div>
-                    <Label className="text-sm font-medium mb-2 block">Select Event *</Label>
-                    <Select value={quoteEventId} onValueChange={setQuoteEventId}>
-                      <SelectTrigger data-testid="select-quote-event">
-                        <SelectValue placeholder="Choose an event" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {events.map((event) => (
-                          <SelectItem key={event.id} value={event.id}>
+            <div className="space-y-4 py-4">
+              <div className="p-4 rounded-lg bg-primary/5 border border-primary/20 space-y-3">
+                <h4 className="font-semibold text-sm flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-primary" />
+                  The following will be sent to the vendor:
+                </h4>
+                
+                <div className="space-y-2 text-sm">
+                  <div className="border-b pb-2">
+                    <span className="text-muted-foreground">Events:</span>
+                    <ul className="mt-1 space-y-1">
+                      {selectedEvents.map((eventId) => {
+                        const event = events.find(e => e.id === eventId);
+                        if (!event) return null;
+                        return (
+                          <li key={eventId} className="font-medium flex items-center gap-2">
+                            <CheckCircle2 className="w-3 h-3 text-primary" />
                             {event.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {selectedQuoteEvent && (
-                    <div className="p-4 rounded-lg bg-muted/50 border space-y-2">
-                      <h4 className="font-medium text-sm">Event Details (will be shared)</h4>
-                      <div className="grid grid-cols-2 gap-2 text-sm">
-                        {selectedQuoteEvent.date && (
-                          <div>
-                            <span className="text-muted-foreground">Date:</span>
-                            <p className="font-medium">{format(new Date(selectedQuoteEvent.date), 'MMM d, yyyy')}</p>
-                          </div>
-                        )}
-                        {selectedQuoteEvent.location && (
-                          <div>
-                            <span className="text-muted-foreground">Location:</span>
-                            <p className="font-medium">{selectedQuoteEvent.location}</p>
-                          </div>
-                        )}
-                        {selectedQuoteEvent.guestCount && (
-                          <div>
-                            <span className="text-muted-foreground">Guests:</span>
-                            <p className="font-medium">{selectedQuoteEvent.guestCount}</p>
-                          </div>
-                        )}
-                        {selectedQuoteEvent.time && (
-                          <div>
-                            <span className="text-muted-foreground">Time:</span>
-                            <p className="font-medium">{selectedQuoteEvent.time}</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  <div>
-                    <Label className="text-sm font-medium mb-2 block">Budget Range (Optional)</Label>
-                    <Input
-                      placeholder="e.g., $2,000 - $5,000"
-                      value={quoteBudgetRange}
-                      onChange={(e) => setQuoteBudgetRange(e.target.value)}
-                      data-testid="input-quote-budget"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Share your budget to help the vendor tailor their quote.
-                    </p>
-                  </div>
-
-                  <div>
-                    <Label className="text-sm font-medium mb-2 block">Additional Notes (Optional)</Label>
-                    <Textarea
-                      placeholder="Any specific requirements, questions, or details you'd like to share..."
-                      value={quoteNotes}
-                      onChange={(e) => setQuoteNotes(e.target.value)}
-                      rows={3}
-                      data-testid="textarea-quote-notes"
-                    />
-                  </div>
-                </div>
-
-                <DialogFooter className="gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setQuoteDialogOpen(false);
-                      setQuoteEventId('');
-                      setQuoteBudgetRange('');
-                      setQuoteNotes('');
-                    }}
-                    data-testid="button-cancel-quote"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={() => setQuoteConfirmStep(true)}
-                    disabled={!quoteEventId}
-                    data-testid="button-review-quote"
-                  >
-                    Review & Send
-                  </Button>
-                </DialogFooter>
-              </>
-            ) : (
-              <>
-                <div className="space-y-4 py-4">
-                  <div className="p-4 rounded-lg bg-primary/5 border border-primary/20 space-y-3">
-                    <h4 className="font-semibold text-sm flex items-center gap-2">
-                      <Mail className="w-4 h-4 text-primary" />
-                      The following will be sent to {vendor.name}:
-                    </h4>
-                    
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between border-b pb-2">
-                        <span className="text-muted-foreground">Event:</span>
-                        <span className="font-medium">{selectedQuoteEvent?.name}</span>
-                      </div>
-                      
-                      {selectedQuoteEvent?.date && (
-                        <div className="flex justify-between border-b pb-2">
-                          <span className="text-muted-foreground">Date:</span>
-                          <span className="font-medium">{format(new Date(selectedQuoteEvent.date), 'MMM d, yyyy')}</span>
-                        </div>
-                      )}
-                      
-                      {selectedQuoteEvent?.location && (
-                        <div className="flex justify-between border-b pb-2">
-                          <span className="text-muted-foreground">Location:</span>
-                          <span className="font-medium">{selectedQuoteEvent.location}</span>
-                        </div>
-                      )}
-                      
-                      {selectedQuoteEvent?.guestCount && (
-                        <div className="flex justify-between border-b pb-2">
-                          <span className="text-muted-foreground">Guest Count:</span>
-                          <span className="font-medium">{selectedQuoteEvent.guestCount}</span>
-                        </div>
-                      )}
-                      
-                      <div className="flex justify-between border-b pb-2">
-                        <span className="text-muted-foreground">Budget Range:</span>
-                        <span className="font-medium">{quoteBudgetRange || 'Not specified'}</span>
-                      </div>
-                      
-                      <div className="pt-2">
-                        <span className="text-muted-foreground">Additional Notes:</span>
-                        <p className="font-medium mt-1">{quoteNotes || 'None'}</p>
-                      </div>
-                    </div>
+                            {event.date && (
+                              <span className="text-muted-foreground text-xs">
+                                ({format(new Date(event.date), 'MMM d, yyyy')})
+                              </span>
+                            )}
+                          </li>
+                        );
+                      })}
+                    </ul>
                   </div>
                   
-                  <p className="text-xs text-muted-foreground text-center">
-                    Your contact email will also be shared so the vendor can respond.
-                  </p>
+                  {/* Show event details for selected events */}
+                  {selectedEvents.length > 0 && (() => {
+                    const firstEvent = events.find(e => e.id === selectedEvents[0]);
+                    if (!firstEvent) return null;
+                    return (
+                      <>
+                        {firstEvent.location && (
+                          <div className="flex justify-between border-b pb-2">
+                            <span className="text-muted-foreground">Location:</span>
+                            <span className="font-medium">{firstEvent.location}</span>
+                          </div>
+                        )}
+                        {firstEvent.guestCount && (
+                          <div className="flex justify-between border-b pb-2">
+                            <span className="text-muted-foreground">Guest Count:</span>
+                            <span className="font-medium">{firstEvent.guestCount}</span>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
+                  
+                  <div className="pt-2">
+                    <span className="text-muted-foreground">Your Message:</span>
+                    <p className="font-medium mt-1">{notes || 'No message added'}</p>
+                  </div>
                 </div>
+              </div>
+              
+              <p className="text-xs text-muted-foreground text-center">
+                Your contact email will also be shared so the vendor can respond.
+              </p>
+            </div>
 
-                <DialogFooter className="gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setQuoteConfirmStep(false)}
-                    data-testid="button-back-quote"
-                  >
-                    Back
-                  </Button>
-                  <Button
-                    onClick={handleQuoteRequest}
-                    disabled={quoteRequestMutation.isPending}
-                    data-testid="button-confirm-send-quote"
-                  >
-                    <Send className="w-4 h-4 mr-2" />
-                    {quoteRequestMutation.isPending ? 'Sending...' : 'Confirm & Send'}
-                  </Button>
-                </DialogFooter>
-              </>
-            )}
+            <DialogFooter className="gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setBookingConfirmDialogOpen(false)}
+                data-testid="button-back-booking"
+              >
+                Back to Edit
+              </Button>
+              <Button
+                onClick={() => {
+                  handleSubmit();
+                  setBookingConfirmDialogOpen(false);
+                }}
+                data-testid="button-confirm-send-booking"
+              >
+                <Send className="w-4 h-4 mr-2" />
+                Confirm & Send
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </DialogContent>
