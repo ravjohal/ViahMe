@@ -1196,9 +1196,12 @@ export function VendorDetailModal({
                           <li key={eventId} className="font-medium flex items-center gap-2">
                             <CheckCircle2 className="w-3 h-3 text-primary" />
                             {event.name}
-                            {event.date && (
+                            {(event.date || event.time) && (
                               <span className="text-muted-foreground text-xs">
-                                ({format(new Date(event.date), 'MMM d, yyyy')})
+                                ({[
+                                  event.date && format(new Date(event.date), 'MMM d, yyyy'),
+                                  event.time
+                                ].filter(Boolean).join(' at ')})
                               </span>
                             )}
                           </li>

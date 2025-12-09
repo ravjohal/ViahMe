@@ -1185,6 +1185,7 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
         : wedding?.title || 'Unknown');
       console.log('Event:', event?.name || 'No specific event');
       console.log('Event Date:', event?.date ? new Date(event.date).toLocaleDateString() : 'Not specified');
+      console.log('Event Time:', event?.time || 'Not specified');
       console.log('Event Location:', event?.location || 'Not specified');
       console.log('Guest Count:', event?.guestCount || 'Not specified');
       console.log('Couple Notes:', validatedData.coupleNotes || 'None');
