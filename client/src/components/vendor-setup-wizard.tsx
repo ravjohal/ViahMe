@@ -463,18 +463,33 @@ export function VendorSetupWizard({ initialData, onComplete, onCancel }: VendorS
           {STEPS.map((step) => (
             <button
               key={step.id}
-              onClick={() => {
-                if (step.id < currentStep) setCurrentStep(step.id);
-              }}
-              className={`flex-1 h-2 rounded-full transition-colors ${
+              onClick={() => setCurrentStep(step.id)}
+              className={`flex-1 h-2 rounded-full transition-colors cursor-pointer ${
                 step.id === currentStep
                   ? "bg-primary"
                   : step.id < currentStep
-                    ? "bg-primary/50 cursor-pointer hover:bg-primary/70"
-                    : "bg-muted"
+                    ? "bg-primary/50 hover:bg-primary/70"
+                    : "bg-muted hover:bg-muted-foreground/30"
               }`}
+              title={step.label}
               data-testid={`progress-step-${step.id}`}
             />
+          ))}
+        </div>
+        <div className="flex gap-1 flex-wrap mt-2">
+          {STEPS.map((step) => (
+            <button
+              key={step.id}
+              onClick={() => setCurrentStep(step.id)}
+              className={`text-xs px-2 py-1 rounded-md transition-colors cursor-pointer ${
+                step.id === currentStep
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted hover:bg-muted-foreground/20 text-muted-foreground"
+              }`}
+              data-testid={`step-label-${step.id}`}
+            >
+              {step.title}
+            </button>
           ))}
         </div>
       </div>
