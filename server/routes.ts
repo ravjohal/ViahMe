@@ -524,6 +524,27 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
     }
   });
 
+  // Get the current user's vendor profile
+  app.get("/api/vendors/me", async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      if (!authReq.session?.userId) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      
+      const vendors = await storage.getAllVendors();
+      const userVendor = vendors.find(v => v.userId === authReq.session.userId);
+      
+      if (!userVendor) {
+        return res.status(404).json({ error: "Vendor not found" });
+      }
+      
+      res.json(userVendor);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch vendor profile" });
+    }
+  });
+
   app.get("/api/vendors/:id", async (req, res) => {
     try {
       const vendor = await storage.getVendor(req.params.id);
