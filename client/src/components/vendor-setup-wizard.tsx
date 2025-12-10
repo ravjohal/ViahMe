@@ -67,8 +67,45 @@ export function VendorSetupWizard({ initialData, onComplete, onCancel }: VendorS
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
+  const [dragOverLogo, setDragOverLogo] = useState(false);
+  const [dragOverCover, setDragOverCover] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
+
+  const handleDragOver = (e: React.DragEvent, type: 'logo' | 'cover') => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (type === 'logo') setDragOverLogo(true);
+    else setDragOverCover(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent, type: 'logo' | 'cover') => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (type === 'logo') setDragOverLogo(false);
+    else setDragOverCover(false);
+  };
+
+  const handleDrop = (e: React.DragEvent, type: 'logo' | 'cover') => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (type === 'logo') setDragOverLogo(false);
+    else setDragOverCover(false);
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      if (file.type.startsWith('image/')) {
+        handleImageUpload(file, type);
+      } else {
+        toast({
+          title: "Invalid File",
+          description: "Please drop an image file (JPG, PNG, etc.)",
+          variant: "destructive",
+        });
+      }
+    }
+  };
 
   const validateStep = (step: number): boolean => {
     const newErrors: Record<string, string> = {};
@@ -363,16 +400,23 @@ export function VendorSetupWizard({ initialData, onComplete, onCancel }: VendorS
                   </Button>
                 </div>
               ) : (
-                <Button
-                  type="button"
-                  variant="outline"
+                <div
+                  onDragOver={(e) => handleDragOver(e, 'logo')}
+                  onDragLeave={(e) => handleDragLeave(e, 'logo')}
+                  onDrop={(e) => handleDrop(e, 'logo')}
                   onClick={() => logoInputRef.current?.click()}
-                  disabled={uploadingLogo}
-                  data-testid="button-upload-logo"
+                  className={`w-32 h-32 border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer transition-colors ${
+                    dragOverLogo 
+                      ? "border-primary bg-primary/10" 
+                      : "border-muted-foreground/30 hover:border-primary/50 hover:bg-muted/50"
+                  } ${uploadingLogo ? "opacity-50 pointer-events-none" : ""}`}
+                  data-testid="dropzone-logo"
                 >
-                  <Upload className="w-4 h-4 mr-2" />
-                  {uploadingLogo ? "Uploading..." : "Upload Logo"}
-                </Button>
+                  <Upload className={`w-6 h-6 mb-2 ${dragOverLogo ? "text-primary" : "text-muted-foreground"}`} />
+                  <span className="text-xs text-muted-foreground text-center px-2">
+                    {uploadingLogo ? "Uploading..." : "Drop or click"}
+                  </span>
+                </div>
               )}
             </div>
 
@@ -409,16 +453,23 @@ export function VendorSetupWizard({ initialData, onComplete, onCancel }: VendorS
                   </Button>
                 </div>
               ) : (
-                <Button
-                  type="button"
-                  variant="outline"
+                <div
+                  onDragOver={(e) => handleDragOver(e, 'cover')}
+                  onDragLeave={(e) => handleDragLeave(e, 'cover')}
+                  onDrop={(e) => handleDrop(e, 'cover')}
                   onClick={() => coverInputRef.current?.click()}
-                  disabled={uploadingCover}
-                  data-testid="button-upload-cover"
+                  className={`w-full h-32 border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer transition-colors ${
+                    dragOverCover 
+                      ? "border-primary bg-primary/10" 
+                      : "border-muted-foreground/30 hover:border-primary/50 hover:bg-muted/50"
+                  } ${uploadingCover ? "opacity-50 pointer-events-none" : ""}`}
+                  data-testid="dropzone-cover"
                 >
-                  <Image className="w-4 h-4 mr-2" />
-                  {uploadingCover ? "Uploading..." : "Upload Cover Image"}
-                </Button>
+                  <Image className={`w-6 h-6 mb-2 ${dragOverCover ? "text-primary" : "text-muted-foreground"}`} />
+                  <span className="text-xs text-muted-foreground text-center px-2">
+                    {uploadingCover ? "Uploading..." : "Drop or click to upload cover image"}
+                  </span>
+                </div>
               )}
             </div>
             
