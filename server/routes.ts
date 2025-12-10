@@ -504,9 +504,14 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
 
   app.get("/api/vendors", async (req, res) => {
     try {
-      const { category, location } = req.query;
+      const { category, location, includeUnpublished } = req.query;
 
       let vendors = await storage.getAllVendors();
+
+      // Only show published vendors unless explicitly requesting unpublished (for admin/vendor use)
+      if (includeUnpublished !== "true") {
+        vendors = vendors.filter((v) => v.isPublished === true);
+      }
 
       if (category && typeof category === "string") {
         vendors = vendors.filter((v) => v.category === category);
