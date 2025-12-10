@@ -14,7 +14,8 @@ import {
   User,
   Menu,
   X,
-  Users
+  Users,
+  Settings
 } from "lucide-react";
 import { useState } from "react";
 import viahLogo from "@assets/viah-logo_1763669612969.png";
@@ -28,6 +29,7 @@ const navItems = [
   { href: "/vendor-calendar", label: "Availability", icon: Clock },
   { href: "/vendor-team", label: "Team", icon: Users },
   { href: "/vendor-analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/vendor-profile", label: "Profile", icon: Settings },
 ];
 
 export function VendorHeader() {
