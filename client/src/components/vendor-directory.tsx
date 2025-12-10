@@ -24,34 +24,54 @@ interface VendorDirectoryProps {
 }
 
 const VENDOR_CATEGORIES = [
-  { value: "all", label: "All Categories" },
-  { value: "makeup_artist", label: "Makeup Artists" },
-  { value: "dj", label: "DJs" },
-  { value: "dhol_player", label: "Dhol Players" },
-  { value: "turban_tier", label: "Turban Tiers" },
-  { value: "mehndi_artist", label: "Mehndi Artists" },
-  { value: "photographer", label: "Photographers" },
-  { value: "videographer", label: "Videographers" },
-  { value: "caterer", label: "Caterers" },
-  { value: "banquet_hall", label: "Banquet Halls" },
-  { value: "gurdwara", label: "Gurdwaras" },
-  { value: "temple", label: "Temples" },
-  { value: "decorator", label: "Decorators" },
-  { value: "florist", label: "Florists" },
-  { value: "horse_rental", label: "Horse Rentals" },
-  { value: "sword_rental", label: "Sword Rentals" },
-  { value: "tent_service", label: "Tent Services" },
-  { value: "limo_service", label: "Limo Services" },
-  { value: "mobile_food", label: "Mobile Food Vendors" },
-  { value: "baraat_band", label: "Baraat Bands" },
-  // Hindu-specific vendors
-  { value: "pandit", label: "Pandits (Hindu Priests)" },
-  { value: "mandap_decorator", label: "Mandap Decorators" },
-  { value: "haldi_supplies", label: "Haldi Supplies" },
-  { value: "pooja_items", label: "Pooja Items" },
-  { value: "astrologer", label: "Vedic Astrologers" },
-  { value: "garland_maker", label: "Garland Makers" },
+  { value: "all", label: "All Categories", aliases: [] },
+  { value: "makeup_artist", label: "Makeup Artists", aliases: ["Makeup Artist", "Makeup"] },
+  { value: "dj", label: "DJs", aliases: ["DJ & Music", "DJ", "Entertainment"] },
+  { value: "dhol_player", label: "Dhol Players", aliases: ["Dhol", "Live Musicians"] },
+  { value: "turban_tier", label: "Turban Tiers", aliases: ["Turban"] },
+  { value: "mehndi_artist", label: "Mehndi Artists", aliases: ["Mehndi Artist", "Mehndi"] },
+  { value: "photographer", label: "Photographers", aliases: ["Photography", "Photo"] },
+  { value: "videographer", label: "Videographers", aliases: ["Videography", "Video"] },
+  { value: "caterer", label: "Caterers", aliases: ["Catering", "Food"] },
+  { value: "banquet_hall", label: "Banquet Halls", aliases: ["Venues", "Venue", "Banquet"] },
+  { value: "gurdwara", label: "Gurdwaras", aliases: ["Gurdwara"] },
+  { value: "temple", label: "Temples", aliases: ["Temple"] },
+  { value: "decorator", label: "Decorators", aliases: ["Decor & Rentals", "Decor", "Decoration"] },
+  { value: "florist", label: "Florists", aliases: ["Florist", "Flowers"] },
+  { value: "horse_rental", label: "Horse Rentals", aliases: ["Horse"] },
+  { value: "sword_rental", label: "Sword Rentals", aliases: ["Sword"] },
+  { value: "tent_service", label: "Tent Services", aliases: ["Tent"] },
+  { value: "limo_service", label: "Limo Services", aliases: ["Limo", "Transportation"] },
+  { value: "mobile_food", label: "Mobile Food Vendors", aliases: ["Food Truck", "Mobile Food"] },
+  { value: "baraat_band", label: "Baraat Bands", aliases: ["Baraat", "Band"] },
+  { value: "pandit", label: "Pandits (Hindu Priests)", aliases: ["Pandit", "Priest & Officiant", "Priest"] },
+  { value: "mandap_decorator", label: "Mandap Decorators", aliases: ["Mandap"] },
+  { value: "haldi_supplies", label: "Haldi Supplies", aliases: ["Haldi"] },
+  { value: "pooja_items", label: "Pooja Items", aliases: ["Pooja"] },
+  { value: "astrologer", label: "Vedic Astrologers", aliases: ["Astrologer"] },
+  { value: "garland_maker", label: "Garland Makers", aliases: ["Garland"] },
+  { value: "event_planner", label: "Event Planners", aliases: ["Event Planning", "Planner", "Coordinator"] },
 ];
+
+function matchesCategory(vendor: Vendor, categoryFilter: string): boolean {
+  if (categoryFilter === "all") return true;
+  
+  const category = VENDOR_CATEGORIES.find(c => c.value === categoryFilter);
+  if (!category) return false;
+  
+  const vendorCategory = vendor.category?.toLowerCase() || "";
+  const vendorCategories = vendor.categories || [];
+  
+  if (vendorCategory === categoryFilter) return true;
+  if (vendorCategories.includes(categoryFilter)) return true;
+  
+  for (const alias of category.aliases) {
+    if (vendorCategory === alias.toLowerCase()) return true;
+    if (vendorCategories.some(vc => vc.toLowerCase() === alias.toLowerCase())) return true;
+  }
+  
+  return false;
+}
 
 const PRICE_RANGES = [
   { value: "all", label: "All Prices" },
@@ -86,15 +106,21 @@ export function VendorDirectory({
 
   const filteredVendors = vendors.filter((vendor) => {
     // Get human-readable category label for search
-    const categoryLabel = VENDOR_CATEGORIES.find(cat => cat.value === vendor.category)?.label || vendor.category;
+    const categoryDef = VENDOR_CATEGORIES.find(cat => 
+      cat.value === vendor.category || 
+      cat.aliases.some(a => a.toLowerCase() === vendor.category?.toLowerCase())
+    );
+    const categoryLabel = categoryDef?.label || vendor.category;
     
+    const searchLower = searchTerm.toLowerCase();
     const matchesSearch =
-      vendor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vendor.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      categoryLabel.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vendor.category.toLowerCase().includes(searchTerm.toLowerCase());
+      vendor.name.toLowerCase().includes(searchLower) ||
+      vendor.description?.toLowerCase().includes(searchLower) ||
+      categoryLabel.toLowerCase().includes(searchLower) ||
+      vendor.category?.toLowerCase().includes(searchLower) ||
+      vendor.categories?.some(c => c.toLowerCase().includes(searchLower));
 
-    const matchesCategory = categoryFilter === "all" || vendor.category === categoryFilter;
+    const matchesCat = matchesCategory(vendor, categoryFilter);
     const matchesPrice = priceFilter === "all" || vendor.priceRange === priceFilter;
     const matchesCity = cityFilter === "all" || vendor.city === cityFilter;
 
@@ -104,7 +130,7 @@ export function VendorDirectory({
       vendor.culturalSpecialties.length === 0 ||
       vendor.culturalSpecialties.includes(tradition);
 
-    return matchesSearch && matchesCategory && matchesPrice && matchesCity && matchesTradition;
+    return matchesSearch && matchesCat && matchesPrice && matchesCity && matchesTradition;
   });
 
   // Sort to show featured vendors first
