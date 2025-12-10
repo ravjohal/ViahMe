@@ -80,6 +80,8 @@ export default function VendorProfilePage() {
     phone: string;
     priceRange: string;
     description: string;
+    logoUrl?: string;
+    coverImageUrl?: string;
   }) => {
     updateVendorMutation.mutate({
       name: data.name,
@@ -91,6 +93,8 @@ export default function VendorProfilePage() {
       phone: data.phone,
       priceRange: data.priceRange,
       description: data.description,
+      logoUrl: data.logoUrl || null,
+      coverImageUrl: data.coverImageUrl || null,
     });
   };
 
@@ -138,6 +142,8 @@ export default function VendorProfilePage() {
               phone: vendor.phone || "",
               priceRange: vendor.priceRange,
               description: vendor.description || "",
+              logoUrl: vendor.logoUrl || "",
+              coverImageUrl: vendor.coverImageUrl || "",
             }}
             onComplete={handleWizardComplete}
             onCancel={() => setIsEditing(false)}

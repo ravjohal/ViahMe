@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -14,9 +14,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { VENDOR_CATEGORIES } from "@shared/schema";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Upload, X, Image } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
-interface VendorSetupData {
+export interface VendorSetupData {
   name: string;
   categories: string[];
   preferredWeddingTraditions: string[];
@@ -25,6 +27,8 @@ interface VendorSetupData {
   phone: string;
   priceRange: string;
   description: string;
+  logoUrl?: string;
+  coverImageUrl?: string;
 }
 
 interface VendorSetupWizardProps {
@@ -40,10 +44,12 @@ const STEPS = [
   { id: 4, title: "Location", label: "Address" },
   { id: 5, title: "Contact", label: "Email & Phone" },
   { id: 6, title: "Pricing", label: "Price Range" },
-  { id: 7, title: "Details", label: "Description" },
+  { id: 7, title: "Branding", label: "Logo & Cover Image" },
+  { id: 8, title: "Details", label: "Description" },
 ];
 
 export function VendorSetupWizard({ initialData, onComplete, onCancel }: VendorSetupWizardProps) {
+  const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<VendorSetupData>({
     name: initialData?.name || "",
@@ -54,9 +60,15 @@ export function VendorSetupWizard({ initialData, onComplete, onCancel }: VendorS
     phone: initialData?.phone || "",
     priceRange: initialData?.priceRange || "$",
     description: initialData?.description || "",
+    logoUrl: initialData?.logoUrl || "",
+    coverImageUrl: initialData?.coverImageUrl || "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
 
   const validateStep = (step: number): boolean => {
     const newErrors: Record<string, string> = {};
@@ -100,6 +112,61 @@ export function VendorSetupWizard({ initialData, onComplete, onCancel }: VendorS
     }
   };
 
+  const handleImageUpload = async (file: File, type: 'logo' | 'cover') => {
+    const setUploading = type === 'logo' ? setUploadingLogo : setUploadingCover;
+    setUploading(true);
+
+    try {
+      // Get upload URL from object storage
+      const urlResponse = await fetch('/api/objects/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!urlResponse.ok) {
+        throw new Error('Failed to get upload URL');
+      }
+
+      const { uploadURL } = await urlResponse.json();
+
+      // Upload file to object storage
+      const uploadResponse = await fetch(uploadURL, {
+        method: 'PUT',
+        body: file,
+        headers: {
+          'Content-Type': file.type,
+        },
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error('Upload failed');
+      }
+
+      // Extract the object path from the upload URL
+      const urlObj = new URL(uploadURL);
+      const objectPath = urlObj.pathname;
+      
+      if (type === 'logo') {
+        setFormData(prev => ({ ...prev, logoUrl: objectPath }));
+      } else {
+        setFormData(prev => ({ ...prev, coverImageUrl: objectPath }));
+      }
+
+      toast({
+        title: "Image Uploaded",
+        description: `Your ${type === 'logo' ? 'logo' : 'cover image'} has been uploaded.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Upload Failed",
+        description: "Failed to upload image. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const isLastStep = currentStep === STEPS.length;
 
   const renderStepContent = () => {
@@ -123,33 +190,32 @@ export function VendorSetupWizard({ initialData, onComplete, onCancel }: VendorS
 
       case 2:
         return (
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">Select all services you provide</p>
-            <div className="grid grid-cols-2 gap-3">
-              {VENDOR_CATEGORIES.map((category) => (
-                <div key={category} className="flex items-center gap-2">
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">Select all service categories that apply to your business</p>
+            <div className="grid grid-cols-2 gap-2 max-h-[280px] overflow-y-auto pr-2">
+              {VENDOR_CATEGORIES.map((cat) => (
+                <label
+                  key={cat}
+                  className="flex items-center gap-2 p-2 rounded-md border cursor-pointer hover:bg-muted/50"
+                >
                   <Checkbox
-                    id={`wizard-category-${category}`}
-                    checked={formData.categories.includes(category)}
+                    checked={formData.categories.includes(cat)}
                     onCheckedChange={(checked) => {
                       if (checked) {
-                        setFormData({
-                          ...formData,
-                          categories: [...formData.categories, category],
-                        });
+                        setFormData({ ...formData, categories: [...formData.categories, cat] });
                       } else {
                         setFormData({
                           ...formData,
-                          categories: formData.categories.filter((c) => c !== category),
+                          categories: formData.categories.filter((c) => c !== cat),
                         });
                       }
                     }}
-                    data-testid={`checkbox-wizard-category-${category}`}
+                    data-testid={`checkbox-category-${cat}`}
                   />
-                  <Label htmlFor={`wizard-category-${category}`} className="font-normal cursor-pointer text-sm">
-                    {category.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
-                  </Label>
-                </div>
+                  <span className="text-sm">
+                    {cat.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                  </span>
+                </label>
               ))}
             </div>
             {errors.categories && <p className="text-sm text-destructive">{errors.categories}</p>}
@@ -158,48 +224,37 @@ export function VendorSetupWizard({ initialData, onComplete, onCancel }: VendorS
 
       case 3:
         return (
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">Which wedding types do you specialize in?</p>
-            <div className="grid grid-cols-2 gap-3">
-              {(["sikh", "hindu", "muslim", "gujarati", "south_indian", "mixed", "general"] as const).map(
-                (tradition) => (
-                  <div key={tradition} className="flex items-center gap-2">
-                    <Checkbox
-                      id={`wizard-tradition-${tradition}`}
-                      checked={formData.preferredWeddingTraditions.includes(tradition)}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setFormData({
-                            ...formData,
-                            preferredWeddingTraditions: [
-                              ...formData.preferredWeddingTraditions,
-                              tradition,
-                            ],
-                          });
-                        } else {
-                          setFormData({
-                            ...formData,
-                            preferredWeddingTraditions: formData.preferredWeddingTraditions.filter(
-                              (t) => t !== tradition
-                            ),
-                          });
-                        }
-                      }}
-                      data-testid={`checkbox-wizard-tradition-${tradition}`}
-                    />
-                    <Label
-                      htmlFor={`wizard-tradition-${tradition}`}
-                      className="font-normal cursor-pointer text-sm"
-                    >
-                      {tradition === "south_indian"
-                        ? "South Indian"
-                        : tradition.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
-                    </Label>
-                  </div>
-                )
-              )}
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">Select wedding traditions you specialize in (optional)</p>
+            <div className="grid grid-cols-2 gap-2">
+              {["sikh", "hindu", "muslim", "gujarati", "south_indian", "mixed", "general"].map((tradition) => (
+                <label
+                  key={tradition}
+                  className="flex items-center gap-2 p-3 rounded-md border cursor-pointer hover:bg-muted/50"
+                >
+                  <Checkbox
+                    checked={formData.preferredWeddingTraditions.includes(tradition)}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setFormData({
+                          ...formData,
+                          preferredWeddingTraditions: [...formData.preferredWeddingTraditions, tradition],
+                        });
+                      } else {
+                        setFormData({
+                          ...formData,
+                          preferredWeddingTraditions: formData.preferredWeddingTraditions.filter(
+                            (t) => t !== tradition
+                          ),
+                        });
+                      }
+                    }}
+                    data-testid={`checkbox-tradition-${tradition}`}
+                  />
+                  <span className="text-sm capitalize">{tradition.replace(/_/g, " ")}</span>
+                </label>
+              ))}
             </div>
-            <p className="text-xs text-muted-foreground mt-2">Leave blank to work with all traditions</p>
           </div>
         );
 
@@ -210,9 +265,9 @@ export function VendorSetupWizard({ initialData, onComplete, onCancel }: VendorS
               <Label htmlFor="location">Business Address</Label>
               <AddressAutocomplete
                 value={formData.location}
-                onChange={(address) => setFormData({ ...formData, location: address })}
+                onChange={(value) => setFormData({ ...formData, location: value })}
                 placeholder="Enter your business address"
-                testid="input-wizard-location"
+                data-testid="input-wizard-location"
               />
               {errors.location && <p className="text-sm text-destructive mt-1">{errors.location}</p>}
             </div>
@@ -223,19 +278,19 @@ export function VendorSetupWizard({ initialData, onComplete, onCancel }: VendorS
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Business Email</Label>
               <Input
                 id="email"
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="business@example.com"
+                placeholder="contact@yourbusiness.com"
                 data-testid="input-wizard-email"
               />
               {errors.email && <p className="text-sm text-destructive mt-1">{errors.email}</p>}
             </div>
             <div>
-              <Label htmlFor="phone">Phone</Label>
+              <Label htmlFor="phone">Business Phone</Label>
               <Input
                 id="phone"
                 type="tel"
@@ -254,8 +309,11 @@ export function VendorSetupWizard({ initialData, onComplete, onCancel }: VendorS
           <div className="space-y-4">
             <div>
               <Label htmlFor="priceRange">Price Range</Label>
-              <Select value={formData.priceRange} onValueChange={(value) => setFormData({ ...formData, priceRange: value })}>
-                <SelectTrigger id="priceRange" data-testid="select-wizard-price-range">
+              <Select
+                value={formData.priceRange}
+                onValueChange={(value) => setFormData({ ...formData, priceRange: value })}
+              >
+                <SelectTrigger data-testid="select-wizard-price">
                   <SelectValue placeholder="Select price range" />
                 </SelectTrigger>
                 <SelectContent>
@@ -270,6 +328,105 @@ export function VendorSetupWizard({ initialData, onComplete, onCancel }: VendorS
         );
 
       case 7:
+        return (
+          <div className="space-y-6">
+            <div>
+              <Label className="mb-2 block">Business Logo</Label>
+              <p className="text-sm text-muted-foreground mb-3">Upload your business logo (recommended: square, at least 200x200px)</p>
+              
+              <input
+                ref={logoInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleImageUpload(file, 'logo');
+                }}
+              />
+              
+              {formData.logoUrl ? (
+                <div className="relative inline-block">
+                  <img 
+                    src={formData.logoUrl} 
+                    alt="Logo preview" 
+                    className="w-24 h-24 object-cover rounded-lg border"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute -top-2 -right-2 h-6 w-6"
+                    onClick={() => setFormData(prev => ({ ...prev, logoUrl: "" }))}
+                  >
+                    <X className="w-3 h-3" />
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => logoInputRef.current?.click()}
+                  disabled={uploadingLogo}
+                  data-testid="button-upload-logo"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  {uploadingLogo ? "Uploading..." : "Upload Logo"}
+                </Button>
+              )}
+            </div>
+
+            <div>
+              <Label className="mb-2 block">Cover Image</Label>
+              <p className="text-sm text-muted-foreground mb-3">Upload a background image for your profile (recommended: 1200x400px)</p>
+              
+              <input
+                ref={coverInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleImageUpload(file, 'cover');
+                }}
+              />
+              
+              {formData.coverImageUrl ? (
+                <div className="relative">
+                  <img 
+                    src={formData.coverImageUrl} 
+                    alt="Cover preview" 
+                    className="w-full h-32 object-cover rounded-lg border"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-2 right-2 h-6 w-6"
+                    onClick={() => setFormData(prev => ({ ...prev, coverImageUrl: "" }))}
+                  >
+                    <X className="w-3 h-3" />
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => coverInputRef.current?.click()}
+                  disabled={uploadingCover}
+                  data-testid="button-upload-cover"
+                >
+                  <Image className="w-4 h-4 mr-2" />
+                  {uploadingCover ? "Uploading..." : "Upload Cover Image"}
+                </Button>
+              )}
+            </div>
+            
+            <p className="text-xs text-muted-foreground">Images are optional - you can add them later from your profile settings.</p>
+          </div>
+        );
+
+      case 8:
         return (
           <div className="space-y-4">
             <div>
@@ -293,25 +450,27 @@ export function VendorSetupWizard({ initialData, onComplete, onCancel }: VendorS
   };
 
   return (
-    <div className="space-y-6">
-      {/* Progress Steps */}
-      <div className="space-y-2">
+    <div className="flex flex-col h-full">
+      {/* Progress Steps - Fixed at top */}
+      <div className="space-y-2 mb-6">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-semibold">
             Step {currentStep} of {STEPS.length}
           </span>
           <span className="text-xs text-muted-foreground">{STEPS[currentStep - 1]?.label}</span>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-1">
           {STEPS.map((step) => (
             <button
               key={step.id}
-              onClick={() => setCurrentStep(step.id)}
+              onClick={() => {
+                if (step.id < currentStep) setCurrentStep(step.id);
+              }}
               className={`flex-1 h-2 rounded-full transition-colors ${
                 step.id === currentStep
                   ? "bg-primary"
                   : step.id < currentStep
-                    ? "bg-primary/50"
+                    ? "bg-primary/50 cursor-pointer hover:bg-primary/70"
                     : "bg-muted"
               }`}
               data-testid={`progress-step-${step.id}`}
@@ -320,17 +479,19 @@ export function VendorSetupWizard({ initialData, onComplete, onCancel }: VendorS
         </div>
       </div>
 
-      {/* Step Content */}
-      <Card>
+      {/* Step Content - Fixed height to keep buttons in same place */}
+      <Card className="flex-1">
         <CardHeader>
           <CardTitle>{STEPS[currentStep - 1]?.title}</CardTitle>
           <CardDescription>{STEPS[currentStep - 1]?.label}</CardDescription>
         </CardHeader>
-        <CardContent>{renderStepContent()}</CardContent>
+        <CardContent className="min-h-[320px]">
+          {renderStepContent()}
+        </CardContent>
       </Card>
 
-      {/* Navigation */}
-      <div className="flex gap-3 justify-between">
+      {/* Navigation - Fixed at bottom */}
+      <div className="flex gap-3 justify-between mt-6 pt-4 border-t">
         <Button
           variant="outline"
           onClick={onCancel}

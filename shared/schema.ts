@@ -172,6 +172,8 @@ export const vendors = pgTable("vendors", {
   priceRange: text("price_range").notNull(), // '$' | '$$' | '$$$' | '$$$$'
   culturalSpecialties: text("cultural_specialties").array(), // ['sikh', 'hindu', 'punjabi', etc]
   description: text("description"),
+  logoUrl: text("logo_url"), // Business logo image URL
+  coverImageUrl: text("cover_image_url"), // Cover/background image URL for profile
   portfolio: jsonb("portfolio"), // Array of image URLs
   availability: jsonb("availability"), // Calendar data
   contact: text("contact"),

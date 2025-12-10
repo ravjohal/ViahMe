@@ -56,23 +56,44 @@ export function VendorCard({
       onClick={() => onSelect?.(vendor)}
       data-testid={`card-vendor-${vendor.id}`}
     >
-      {featured && (
-        <div className="bg-primary px-4 py-2 text-center">
-          <span className="text-xs font-semibold text-primary-foreground">
-            ⭐ RECOMMENDED
-          </span>
+      {/* Cover image or featured banner */}
+      {vendor.coverImageUrl ? (
+        <div className="relative h-32 overflow-hidden">
+          <img 
+            src={vendor.coverImageUrl} 
+            alt={`${vendor.name} cover`}
+            className="w-full h-full object-cover"
+          />
+          {featured && (
+            <div className="absolute top-2 left-2 bg-primary px-3 py-1 rounded-md">
+              <span className="text-xs font-semibold text-primary-foreground">RECOMMENDED</span>
+            </div>
+          )}
         </div>
-      )}
+      ) : featured ? (
+        <div className="bg-primary px-4 py-2 text-center">
+          <span className="text-xs font-semibold text-primary-foreground">RECOMMENDED</span>
+        </div>
+      ) : null}
 
       <div className="p-6">
         <div className="flex items-start justify-between mb-4">
-          <div className="flex-1">
-            <h3 className="font-semibold text-lg text-foreground mb-1 group-hover:text-primary transition-colors">
-              {vendor.name}
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              {CATEGORY_LABELS[vendor.category] || vendor.category}
-            </p>
+          <div className="flex items-center gap-3 flex-1">
+            {vendor.logoUrl && (
+              <img 
+                src={vendor.logoUrl} 
+                alt={`${vendor.name} logo`}
+                className="w-12 h-12 object-cover rounded-lg border flex-shrink-0"
+              />
+            )}
+            <div>
+              <h3 className="font-semibold text-lg text-foreground mb-1 group-hover:text-primary transition-colors">
+                {vendor.name}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {CATEGORY_LABELS[vendor.category] || vendor.category}
+              </p>
+            </div>
           </div>
           {rating > 0 && (
             <div className="flex flex-col items-end gap-1">
