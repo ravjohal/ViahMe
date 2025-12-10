@@ -98,13 +98,13 @@ export function AppHeader() {
 
   return (
     <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex h-24 items-center justify-between px-6 gap-4">
+      <div className="flex h-16 sm:h-20 lg:h-24 items-center justify-between px-4 sm:px-6 gap-2 sm:gap-4">
         {/* Logo and Brand */}
-        <Link href={user?.role === "vendor" ? "/vendor-dashboard" : "/dashboard"} className="flex items-center gap-3 hover-elevate active-elevate-2 rounded-md px-3 py-2 -ml-3">
+        <Link href={user?.role === "vendor" ? "/vendor-dashboard" : "/dashboard"} className="flex items-center gap-2 sm:gap-3 hover-elevate active-elevate-2 rounded-md px-2 sm:px-3 py-2 -ml-2 sm:-ml-3 flex-shrink-0">
           <img 
             src={new URL("@assets/viah-logo_1763669612969.png", import.meta.url).href}
             alt="Viah.me"
-            className="h-20 w-auto object-contain"
+            className="h-10 sm:h-14 lg:h-20 w-auto object-contain"
             data-testid="logo-viah"
           />
           {/* Show greeting for both couples and vendors */}
