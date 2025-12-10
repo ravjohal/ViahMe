@@ -950,6 +950,12 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   app.patch("/api/vendors/:id", async (req, res) => {
     try {
       const validatedData = insertVendorSchema.partial().parse(req.body);
+      
+      // Sync preferredWeddingTraditions to culturalSpecialties for filtering
+      if (validatedData.preferredWeddingTraditions) {
+        (validatedData as any).culturalSpecialties = validatedData.preferredWeddingTraditions;
+      }
+      
       const vendor = await storage.updateVendor(req.params.id, validatedData);
       if (!vendor) {
         return res.status(404).json({ error: "Vendor not found" });
