@@ -60,7 +60,7 @@ export function VendorCard({
       {vendor.coverImageUrl ? (
         <div className="relative h-32 overflow-hidden">
           <img 
-            src={vendor.coverImageUrl} 
+            src={vendor.coverImageUrl.startsWith('/objects') ? vendor.coverImageUrl : `/objects${vendor.coverImageUrl}`} 
             alt={`${vendor.name} cover`}
             className="w-full h-full object-cover"
           />
@@ -81,7 +81,7 @@ export function VendorCard({
           <div className="flex items-center gap-3 flex-1">
             {vendor.logoUrl && (
               <img 
-                src={vendor.logoUrl} 
+                src={vendor.logoUrl.startsWith('/objects') ? vendor.logoUrl : `/objects${vendor.logoUrl}`} 
                 alt={`${vendor.name} logo`}
                 className="w-12 h-12 object-cover rounded-lg border flex-shrink-0"
               />

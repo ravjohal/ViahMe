@@ -385,7 +385,7 @@ export function VendorSetupWizard({ initialData, onComplete, onCancel }: VendorS
               {formData.logoUrl ? (
                 <div className="relative inline-block">
                   <img 
-                    src={formData.logoUrl} 
+                    src={formData.logoUrl.startsWith('/objects') ? formData.logoUrl : `/objects${formData.logoUrl}`} 
                     alt="Logo preview" 
                     className="w-24 h-24 object-cover rounded-lg border"
                   />
@@ -438,7 +438,7 @@ export function VendorSetupWizard({ initialData, onComplete, onCancel }: VendorS
               {formData.coverImageUrl ? (
                 <div className="relative">
                   <img 
-                    src={formData.coverImageUrl} 
+                    src={formData.coverImageUrl.startsWith('/objects') ? formData.coverImageUrl : `/objects${formData.coverImageUrl}`} 
                     alt="Cover preview" 
                     className="w-full h-32 object-cover rounded-lg border"
                   />
