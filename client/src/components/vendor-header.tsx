@@ -45,28 +45,28 @@ export function VendorHeader() {
 
   return (
     <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex h-16 sm:h-20 lg:h-24 items-center justify-between px-4 sm:px-6 gap-2 sm:gap-4">
+      <div className="flex h-14 sm:h-16 items-center px-3 sm:px-4 lg:px-6 gap-2 sm:gap-4">
         {/* Logo and Vendor Name */}
-        <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-shrink-0">
-          <Link href="/vendor-dashboard" className="flex items-center gap-2 sm:gap-3 hover-elevate active-elevate-2 rounded-md px-2 sm:px-3 py-2 -ml-2 sm:-ml-3">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 shrink-0">
+          <Link href="/vendor-dashboard" className="flex items-center hover-elevate active-elevate-2 rounded-md p-1 -ml-1">
             <img 
               src={viahLogo} 
               alt="Viah.me" 
-              className="h-10 sm:h-14 lg:h-20 w-auto object-contain"
+              className="h-8 sm:h-10 w-auto object-contain"
               data-testid="logo-viah"
             />
           </Link>
           {vendor?.name && (
             <>
-              <Separator orientation="vertical" className="h-6 sm:h-8 hidden sm:block" />
-              <span className="font-display text-sm sm:text-base lg:text-lg font-semibold text-foreground hidden sm:block truncate max-w-[150px] lg:max-w-none" data-testid="text-vendor-name">
+              <Separator orientation="vertical" className="h-5 sm:h-6 hidden md:block" />
+              <span className="font-display text-sm sm:text-base font-semibold text-foreground hidden md:block truncate max-w-[120px] lg:max-w-[200px]" data-testid="text-vendor-name">
                 {vendor.name}
               </span>
             </>
           )}
         </div>
 
-        {/* Navigation - centered */}
+        {/* Navigation - takes remaining space on desktop */}
         <nav className="hidden lg:flex items-center gap-1 flex-1 justify-center">
           {navItems.map((item) => {
             const isActive = location === item.href;
@@ -79,19 +79,22 @@ export function VendorHeader() {
                   className={isActive ? "bg-primary/10 text-primary" : ""}
                   data-testid={`nav-${item.label.toLowerCase()}`}
                 >
-                  <Icon className="w-4 h-4 mr-2" />
-                  {item.label}
+                  <Icon className="w-4 h-4 mr-1.5" />
+                  <span className="hidden xl:inline">{item.label}</span>
                 </Button>
               </Link>
             );
           })}
         </nav>
 
+        {/* Spacer for mobile/tablet to push menu button to right */}
+        <div className="flex-1 lg:hidden" />
+
         {/* User section */}
-        <div className="hidden lg:flex items-center gap-4">
+        <div className="hidden lg:flex items-center gap-3 shrink-0">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <User className="w-4 h-4" />
-            <span data-testid="text-vendor-email">{user?.email}</span>
+            <span className="hidden xl:inline max-w-[150px] truncate" data-testid="text-vendor-email">{user?.email}</span>
           </div>
           <Button
             variant="ghost"
@@ -99,8 +102,8 @@ export function VendorHeader() {
             onClick={() => logout()}
             data-testid="button-logout"
           >
-            <LogOut className="w-4 h-4 mr-2" />
-            Logout
+            <LogOut className="w-4 h-4 xl:mr-2" />
+            <span className="hidden xl:inline">Logout</span>
           </Button>
         </div>
 
@@ -108,7 +111,7 @@ export function VendorHeader() {
         <Button
           variant="ghost"
           size="icon"
-          className="lg:hidden"
+          className="lg:hidden shrink-0"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           data-testid="button-mobile-menu"
         >
