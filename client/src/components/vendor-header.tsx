@@ -1,6 +1,8 @@
 import { Link, useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { 
   LayoutDashboard, 
   Calendar, 
@@ -16,6 +18,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import viahLogo from "@assets/viah-logo_1763669612969.png";
+import type { Vendor } from "@shared/schema";
 
 const navItems = [
   { href: "/vendor-dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -32,18 +35,34 @@ export function VendorHeader() {
   const { user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Fetch vendor profile for current user
+  const { data: vendor } = useQuery<Vendor>({
+    queryKey: ["/api/vendors/me"],
+    enabled: !!user,
+  });
+
   return (
     <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-24 items-center justify-between px-6 gap-4">
-        {/* Logo - matches AppHeader */}
-        <Link href="/vendor-dashboard" className="flex items-center gap-3 hover-elevate active-elevate-2 rounded-md px-3 py-2 -ml-3">
-          <img 
-            src={viahLogo} 
-            alt="Viah.me" 
-            className="h-20 w-auto object-contain"
-            data-testid="logo-viah"
-          />
-        </Link>
+        {/* Logo and Vendor Name */}
+        <div className="flex items-center gap-4">
+          <Link href="/vendor-dashboard" className="flex items-center gap-3 hover-elevate active-elevate-2 rounded-md px-3 py-2 -ml-3">
+            <img 
+              src={viahLogo} 
+              alt="Viah.me" 
+              className="h-20 w-auto object-contain"
+              data-testid="logo-viah"
+            />
+          </Link>
+          {vendor?.name && (
+            <>
+              <Separator orientation="vertical" className="h-8" />
+              <span className="font-display text-lg font-semibold text-foreground" data-testid="text-vendor-name">
+                {vendor.name}
+              </span>
+            </>
+          )}
+        </div>
 
         {/* Navigation - centered */}
         <nav className="hidden lg:flex items-center gap-1 flex-1 justify-center">
