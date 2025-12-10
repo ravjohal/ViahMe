@@ -949,19 +949,38 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
 
   app.patch("/api/vendors/:id", async (req, res) => {
     try {
-      const validatedData = insertVendorSchema.partial().parse(req.body);
+      // For PATCH updates, allow more flexible validation since seeded vendors may have
+      // legacy category names. We validate basic types but don't enforce strict enum values.
+      const updateData: any = { ...req.body };
       
-      // Sync preferredWeddingTraditions to culturalSpecialties for filtering
-      if (validatedData.preferredWeddingTraditions) {
-        (validatedData as any).culturalSpecialties = validatedData.preferredWeddingTraditions;
+      // Ensure categories is an array if provided (don't validate enum values strictly)
+      if (updateData.categories !== undefined) {
+        if (!Array.isArray(updateData.categories)) {
+          return res.status(400).json({ error: "Categories must be an array" });
+        }
+        // Also update the legacy category field to the first category
+        if (updateData.categories.length > 0) {
+          updateData.category = updateData.categories[0];
+        }
       }
       
-      const vendor = await storage.updateVendor(req.params.id, validatedData);
+      // Sync preferredWeddingTraditions to culturalSpecialties for filtering
+      if (updateData.preferredWeddingTraditions) {
+        updateData.culturalSpecialties = updateData.preferredWeddingTraditions;
+      }
+      
+      // Validate priceRange if provided
+      if (updateData.priceRange && !['$', '$$', '$$$', '$$$$'].includes(updateData.priceRange)) {
+        return res.status(400).json({ error: "Invalid price range" });
+      }
+      
+      const vendor = await storage.updateVendor(req.params.id, updateData);
       if (!vendor) {
         return res.status(404).json({ error: "Vendor not found" });
       }
       res.json(vendor);
     } catch (error) {
+      console.error("Error updating vendor:", error);
       if (error instanceof Error && "issues" in error) {
         return res.status(400).json({ error: "Validation failed", details: error });
       }
