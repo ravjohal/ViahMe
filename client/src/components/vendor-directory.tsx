@@ -101,6 +101,7 @@ export function VendorDirectory({
     const matchesTradition =
       !tradition ||
       !vendor.culturalSpecialties ||
+      vendor.culturalSpecialties.length === 0 ||
       vendor.culturalSpecialties.includes(tradition);
 
     return matchesSearch && matchesCategory && matchesPrice && matchesCity && matchesTradition;
