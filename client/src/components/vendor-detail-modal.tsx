@@ -1184,71 +1184,81 @@ export function VendorDetailModal({
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-4 py-4">
-              <div className="p-4 rounded-lg bg-primary/5 border border-primary/20 space-y-3">
-                <h4 className="font-semibold text-sm flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-primary" />
-                  The following will be sent to the vendor:
-                </h4>
-                
-                <div className="space-y-2 text-sm">
-                  <div className="border-b pb-2">
-                    <span className="text-muted-foreground">Events:</span>
-                    <ul className="mt-1 space-y-1">
-                      {selectedEvents.map((eventId) => {
-                        const event = events.find(e => e.id === eventId);
-                        if (!event) return null;
-                        return (
-                          <li key={eventId} className="font-medium flex items-center gap-2">
-                            <CheckCircle2 className="w-3 h-3 text-primary" />
-                            {event.name}
-                            {(event.date || event.time) && (
-                              <span className="text-muted-foreground text-xs">
-                                ({[
-                                  event.date && format(new Date(event.date), 'MMM d, yyyy'),
-                                  event.time
-                                ].filter(Boolean).join(' at ')})
-                              </span>
+            <ScrollArea className="max-h-[60vh]">
+              <div className="space-y-4 py-4 pr-4">
+                <div className="p-4 rounded-lg bg-primary/5 border border-primary/20 space-y-4">
+                  <h4 className="font-semibold text-sm flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-primary" />
+                    The following will be sent to the vendor:
+                  </h4>
+                  
+                  <div className="space-y-3 text-sm">
+                    <div className="text-muted-foreground font-medium">
+                      {selectedEvents.length} {selectedEvents.length === 1 ? 'Event' : 'Events'} Selected:
+                    </div>
+                    
+                    {selectedEvents.map((eventId, index) => {
+                      const event = events.find(e => e.id === eventId);
+                      if (!event) return null;
+                      return (
+                        <div 
+                          key={eventId} 
+                          className="p-3 rounded-lg bg-background border space-y-2"
+                          data-testid={`event-summary-${eventId}`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-xs px-2 py-0">
+                              Event {index + 1}
+                            </Badge>
+                            <span className="font-semibold">{event.name}</span>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs pl-1">
+                            {event.date && (
+                              <div className="flex items-center gap-1">
+                                <Calendar className="w-3 h-3 text-muted-foreground" />
+                                <span className="text-muted-foreground">Date:</span>
+                                <span className="font-medium">{format(new Date(event.date), 'MMM d, yyyy')}</span>
+                              </div>
                             )}
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
-                  
-                  {/* Show event details for selected events */}
-                  {selectedEvents.length > 0 && (() => {
-                    const firstEvent = events.find(e => e.id === selectedEvents[0]);
-                    if (!firstEvent) return null;
-                    return (
-                      <>
-                        {firstEvent.location && (
-                          <div className="flex justify-between border-b pb-2">
-                            <span className="text-muted-foreground">Location:</span>
-                            <span className="font-medium">{firstEvent.location}</span>
+                            {event.time && (
+                              <div className="flex items-center gap-1">
+                                <span className="text-muted-foreground">Time:</span>
+                                <span className="font-medium">{event.time}</span>
+                              </div>
+                            )}
+                            {event.location && (
+                              <div className="flex items-center gap-1 col-span-2">
+                                <MapPin className="w-3 h-3 text-muted-foreground" />
+                                <span className="text-muted-foreground">Location:</span>
+                                <span className="font-medium">{event.location}</span>
+                              </div>
+                            )}
+                            {event.guestCount && (
+                              <div className="flex items-center gap-1">
+                                <span className="text-muted-foreground">Guests:</span>
+                                <span className="font-medium">{event.guestCount}</span>
+                              </div>
+                            )}
                           </div>
-                        )}
-                        {firstEvent.guestCount && (
-                          <div className="flex justify-between border-b pb-2">
-                            <span className="text-muted-foreground">Guest Count:</span>
-                            <span className="font-medium">{firstEvent.guestCount}</span>
-                          </div>
-                        )}
-                      </>
-                    );
-                  })()}
-                  
-                  <div className="pt-2">
-                    <span className="text-muted-foreground">Your Message:</span>
-                    <p className="font-medium mt-1">{notes || 'No message added'}</p>
+                        </div>
+                      );
+                    })}
+                    
+                    <Separator className="my-2" />
+                    
+                    <div>
+                      <span className="text-muted-foreground">Your Message:</span>
+                      <p className="font-medium mt-1 p-2 rounded bg-muted/50">{notes || 'No message added'}</p>
+                    </div>
                   </div>
                 </div>
+                
+                <p className="text-xs text-muted-foreground text-center">
+                  Your contact email will also be shared so the vendor can respond.
+                </p>
               </div>
-              
-              <p className="text-xs text-muted-foreground text-center">
-                Your contact email will also be shared so the vendor can respond.
-              </p>
-            </div>
+            </ScrollArea>
 
             <DialogFooter className="gap-2">
               <Button
