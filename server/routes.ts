@@ -3271,18 +3271,44 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
     }
   });
 
-  // Get all conversations for a wedding
+  // Get all conversations for a wedding (includes bookings as synthetic conversations)
   app.get("/api/conversations/wedding/:weddingId", async (req, res) => {
     try {
-      const conversationIds = await storage.getConversationsByWedding(req.params.weddingId);
+      const weddingId = req.params.weddingId;
       
-      // Enrich with vendor metadata using shared parser
-      const conversations = await Promise.all(
+      // Fetch conversations and bookings in parallel
+      const [conversationIds, bookings, events] = await Promise.all([
+        storage.getConversationsByWedding(weddingId),
+        storage.getBookingsByWedding(weddingId),
+        storage.getEventsByWedding(weddingId),
+      ]);
+      
+      // Create event lookup map
+      const eventMap = new Map(events.map(e => [e.id, e]));
+      
+      // Track which vendor+event combinations have conversations
+      const existingConversations = new Set<string>();
+      
+      // Enrich conversations with vendor metadata and booking status
+      const conversationsWithMetadata = await Promise.all(
         conversationIds.map(async (convId) => {
           const parsed = parseConversationId(convId);
           if (!parsed) return null;
           
           const vendor = await storage.getVendor(parsed.vendorId);
+          const event = parsed.eventId ? eventMap.get(parsed.eventId) : null;
+          
+          // Track this conversation exists
+          const key = `${parsed.vendorId}:${parsed.eventId || 'general'}`;
+          existingConversations.add(key);
+          
+          // Check if there's a booking for this vendor+event
+          // Normalize null/undefined for comparison
+          const parsedEventId = parsed.eventId || null;
+          const booking = bookings.find(b => 
+            b.vendorId === parsed.vendorId && 
+            (b.eventId || null) === parsedEventId
+          );
           
           return {
             conversationId: convId,
@@ -3290,12 +3316,44 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
             vendorId: parsed.vendorId,
             vendorName: vendor?.name || 'Unknown Vendor',
             vendorCategory: vendor?.category || '',
+            eventId: parsed.eventId,
+            eventName: event?.name,
+            bookingId: booking?.id,
+            bookingStatus: booking?.status,
           };
         })
       );
       
-      res.json(conversations.filter(Boolean));
+      // Create synthetic conversations for bookings that don't have conversations yet
+      const syntheticConversations = await Promise.all(
+        bookings
+          .filter(booking => {
+            const key = `${booking.vendorId}:${booking.eventId || 'general'}`;
+            return !existingConversations.has(key);
+          })
+          .map(async (booking) => {
+            const vendor = await storage.getVendor(booking.vendorId);
+            const event = booking.eventId ? eventMap.get(booking.eventId) : null;
+            const convId = generateConversationId(weddingId, booking.vendorId, booking.eventId || undefined);
+            
+            return {
+              conversationId: convId,
+              weddingId: weddingId,
+              vendorId: booking.vendorId,
+              vendorName: vendor?.name || 'Unknown Vendor',
+              vendorCategory: vendor?.category || '',
+              eventId: booking.eventId,
+              eventName: event?.name,
+              bookingId: booking.id,
+              bookingStatus: booking.status,
+            };
+          })
+      );
+      
+      const allConversations = [...conversationsWithMetadata.filter(Boolean), ...syntheticConversations];
+      res.json(allConversations);
     } catch (error) {
+      console.error("Error fetching wedding conversations:", error);
       res.status(500).json({ error: "Failed to fetch conversations" });
     }
   });

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { MessageCircle, Send, User, ChevronRight, ChevronDown, PartyPopper } from "lucide-react";
+import { MessageCircle, Send, User, ChevronRight, ChevronDown, PartyPopper, Clock, CheckCircle, XCircle } from "lucide-react";
 import type { Message } from "@shared/schema";
 
 const DEMO_WEDDING_ID = "demo-wedding-1";
@@ -27,6 +27,44 @@ interface ConversationWithMetadata {
     createdAt: string;
   };
   totalMessages?: number;
+  bookingId?: string;
+  bookingStatus?: string;
+}
+
+function getBookingStatusBadge(status?: string) {
+  if (!status) return null;
+  
+  switch (status) {
+    case 'pending':
+      return (
+        <Badge variant="secondary" className="text-xs">
+          <Clock className="w-3 h-3 mr-1" />
+          Request Sent
+        </Badge>
+      );
+    case 'confirmed':
+      return (
+        <Badge variant="default" className="text-xs">
+          <CheckCircle className="w-3 h-3 mr-1" />
+          Confirmed
+        </Badge>
+      );
+    case 'declined':
+      return (
+        <Badge variant="destructive" className="text-xs">
+          <XCircle className="w-3 h-3 mr-1" />
+          Declined
+        </Badge>
+      );
+    case 'cancelled':
+      return (
+        <Badge variant="outline" className="text-xs">
+          Cancelled
+        </Badge>
+      );
+    default:
+      return null;
+  }
 }
 
 interface VendorGroup {
@@ -199,7 +237,7 @@ export default function MessagesPage() {
                               <Badge variant="default" className="text-xs">{group.totalUnread}</Badge>
                             )}
                           </div>
-                          <div className="flex items-center gap-2 mt-1">
+                          <div className="flex items-center gap-2 mt-1 flex-wrap">
                             <p className="text-sm text-muted-foreground truncate">
                               {group.vendorCategory.replace(/_/g, " ")}
                             </p>
@@ -208,6 +246,7 @@ export default function MessagesPage() {
                                 {group.events.length} events
                               </Badge>
                             )}
+                            {group.events.length === 1 && getBookingStatusBadge(group.events[0].bookingStatus)}
                           </div>
                         </div>
                         {group.events.length > 1 ? (
@@ -242,11 +281,14 @@ export default function MessagesPage() {
                               )}
                               <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 ml-auto" />
                             </div>
-                            {event.lastMessage && (
-                              <p className="text-xs text-muted-foreground truncate mt-1 pl-6">
-                                {event.lastMessage.content}
-                              </p>
-                            )}
+                            <div className="flex items-center gap-2 mt-1 pl-6">
+                              {getBookingStatusBadge(event.bookingStatus)}
+                              {event.lastMessage && (
+                                <p className="text-xs text-muted-foreground truncate">
+                                  {event.lastMessage.content}
+                                </p>
+                              )}
+                            </div>
                           </button>
                         ))}
                       </div>
@@ -270,7 +312,7 @@ export default function MessagesPage() {
                     <h3 className="font-semibold">
                       {selectedConvo?.vendorName || "Vendor"}
                     </h3>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <p className="text-sm text-muted-foreground">
                         {selectedConvo?.vendorCategory.replace(/_/g, " ") || ""}
                       </p>
@@ -279,6 +321,7 @@ export default function MessagesPage() {
                           {selectedConvo.eventName}
                         </Badge>
                       )}
+                      {getBookingStatusBadge(selectedConvo?.bookingStatus)}
                     </div>
                   </div>
                 </div>
