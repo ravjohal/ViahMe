@@ -140,14 +140,27 @@ import { randomUUID, randomBytes } from "crypto";
 import bcrypt from "bcrypt";
 
 // Helper functions for conversationId management
-export function generateConversationId(weddingId: string, vendorId: string): string {
-  return `${weddingId}-vendor-${vendorId}`;
+export function generateConversationId(weddingId: string, vendorId: string, eventId?: string): string {
+  const base = `${weddingId}-vendor-${vendorId}`;
+  return eventId ? `${base}-event-${eventId}` : base;
 }
 
-export function parseConversationId(conversationId: string): { weddingId: string; vendorId: string } | null {
-  const parts = conversationId.split('-vendor-');
+export function parseConversationId(conversationId: string): { weddingId: string; vendorId: string; eventId?: string } | null {
+  // New format: weddingId-vendor-vendorId-event-eventId
+  // Old format: weddingId-vendor-vendorId (still supported)
+  const eventParts = conversationId.split('-event-');
+  const hasEventId = eventParts.length === 2;
+  const baseConversation = eventParts[0];
+  const eventId = hasEventId ? eventParts[1] : undefined;
+  
+  const parts = baseConversation.split('-vendor-');
   if (parts.length !== 2) return null;
-  return { weddingId: parts[0], vendorId: parts[1] };
+  
+  return { 
+    weddingId: parts[0], 
+    vendorId: parts[1],
+    eventId 
+  };
 }
 
 export interface IStorage {
@@ -1804,8 +1817,12 @@ export class MemStorage implements IStorage {
 
   async createMessage(insertMessage: InsertMessage): Promise<Message> {
     const id = randomUUID();
-    // Ensure consistent conversationId format
-    const conversationId = generateConversationId(insertMessage.weddingId, insertMessage.vendorId);
+    // Ensure consistent conversationId format - include eventId if present
+    const conversationId = generateConversationId(
+      insertMessage.weddingId, 
+      insertMessage.vendorId, 
+      insertMessage.eventId || undefined
+    );
     const message: Message = {
       ...insertMessage,
       id,
@@ -1813,6 +1830,9 @@ export class MemStorage implements IStorage {
       isRead: false,
       createdAt: new Date(),
       attachments: insertMessage.attachments || null,
+      eventId: insertMessage.eventId || null,
+      messageType: insertMessage.messageType || 'message',
+      bookingId: insertMessage.bookingId || null,
     };
     this.messages.set(id, message);
     return message;

@@ -665,14 +665,17 @@ export type ContractTemplate = typeof contractTemplates.$inferSelect;
 
 export const messages = pgTable("messages", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  conversationId: varchar("conversation_id").notNull(), // Composite of weddingId-vendorId for grouping
+  conversationId: varchar("conversation_id").notNull(), // Composite of weddingId-vendorId-eventId for grouping
   weddingId: varchar("wedding_id").notNull(),
   vendorId: varchar("vendor_id").notNull(),
+  eventId: varchar("event_id"), // Optional - for event-specific conversations
   senderId: varchar("sender_id").notNull(), // Could be couple or vendor
-  senderType: text("sender_type").notNull(), // 'couple' | 'vendor'
+  senderType: text("sender_type").notNull(), // 'couple' | 'vendor' | 'system'
   content: text("content").notNull(),
   attachments: jsonb("attachments"), // Array of file URLs
   isRead: boolean("is_read").default(false),
+  messageType: text("message_type").default('message'), // 'message' | 'booking_request' | 'booking_confirmed' | 'booking_declined'
+  bookingId: varchar("booking_id"), // Reference to booking for booking-related messages
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -680,9 +683,10 @@ export const insertMessageSchema = createInsertSchema(messages).omit({
   id: true,
   createdAt: true,
   isRead: true,
-  conversationId: true, // Generated server-side from weddingId + vendorId
+  conversationId: true, // Generated server-side from weddingId + vendorId + eventId
 }).extend({
-  senderType: z.enum(['couple', 'vendor']),
+  senderType: z.enum(['couple', 'vendor', 'system']),
+  messageType: z.enum(['message', 'booking_request', 'booking_confirmed', 'booking_declined']).optional(),
 });
 
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
