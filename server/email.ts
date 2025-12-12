@@ -1405,3 +1405,129 @@ Your South Asian Wedding Planning Platform
     throw error;
   }
 }
+
+export async function sendInquiryClosedEmail(params: {
+  to: string;
+  vendorName: string;
+  coupleName: string;
+  reason?: string;
+}) {
+  const { client, fromEmail } = await getUncachableResendClient();
+  
+  const { to, vendorName, coupleName, reason } = params;
+  
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+          }
+          .header {
+            background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
+            color: white;
+            padding: 30px 20px;
+            border-radius: 8px 8px 0 0;
+            text-align: center;
+          }
+          .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+          }
+          .content {
+            background: white;
+            padding: 30px;
+            border: 1px solid #e5e7eb;
+            border-top: none;
+          }
+          .details {
+            background: #f3f4f6;
+            border-left: 4px solid #6b7280;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+          }
+          .footer {
+            text-align: center;
+            padding: 20px;
+            color: #6b7280;
+            font-size: 14px;
+            border-top: 1px solid #e5e7eb;
+            margin-top: 30px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>Inquiry Closed</h1>
+        </div>
+        <div class="content">
+          <p>Dear ${vendorName},</p>
+          
+          <p>We wanted to let you know that <strong>${coupleName}</strong> has decided to close their inquiry with you.</p>
+          
+          ${reason ? `
+          <div class="details">
+            <strong>Reason provided:</strong>
+            <p style="margin: 8px 0 0 0;">${reason}</p>
+          </div>
+          ` : ''}
+          
+          <p>This may mean they've decided to go in a different direction for their wedding planning. We appreciate your time and responsiveness.</p>
+          
+          <p>You'll continue to receive new inquiries from other couples looking for your services. Keep your profile updated to attract more leads!</p>
+          
+          <p style="margin-top: 30px;">Best regards,</p>
+          <p><strong>Viah.me Team</strong></p>
+        </div>
+        <div class="footer">
+          <p>This is an automated notification from Viah.me.</p>
+          <p>Connecting South Asian couples with culturally-specialized vendors</p>
+        </div>
+      </body>
+    </html>
+  `;
+
+  const plaintext = `
+Inquiry Closed
+
+Dear ${vendorName},
+
+We wanted to let you know that ${coupleName} has decided to close their inquiry with you.
+
+${reason ? `Reason provided:\n${reason}\n` : ''}
+
+This may mean they've decided to go in a different direction for their wedding planning. We appreciate your time and responsiveness.
+
+You'll continue to receive new inquiries from other couples looking for your services. Keep your profile updated to attract more leads!
+
+Best regards,
+Viah.me Team
+
+---
+This is an automated notification from Viah.me.
+Connecting South Asian couples with culturally-specialized vendors
+  `.trim();
+
+  try {
+    const result = await client.emails.send({
+      from: fromEmail,
+      to,
+      subject: `Inquiry Closed by ${coupleName}`,
+      html,
+      text: plaintext,
+    });
+    return result;
+  } catch (error) {
+    console.error('Failed to send inquiry closed email:', error);
+    throw error;
+  }
+}

@@ -135,6 +135,8 @@ import {
   type InsertExpenseSplit,
   type QuoteRequest,
   type InsertQuoteRequest,
+  type ConversationStatus,
+  type InsertConversationStatus,
 } from "@shared/schema";
 import { randomUUID, randomBytes } from "crypto";
 import bcrypt from "bcrypt";
@@ -326,6 +328,12 @@ export interface IStorage {
   createMessage(message: InsertMessage): Promise<Message>;
   markMessageAsRead(id: string): Promise<Message | undefined>;
   getUnreadCount(conversationId: string, recipientType: 'couple' | 'vendor'): Promise<number>;
+
+  // Conversation Status
+  getConversationStatus(conversationId: string): Promise<ConversationStatus | undefined>;
+  createConversationStatus(status: InsertConversationStatus): Promise<ConversationStatus>;
+  updateConversationStatus(conversationId: string, status: Partial<InsertConversationStatus>): Promise<ConversationStatus | undefined>;
+  closeConversation(conversationId: string, closedBy: string, closedByType: 'couple' | 'vendor', reason?: string): Promise<ConversationStatus>;
 
   // Quick Reply Templates
   getQuickReplyTemplate(id: string): Promise<QuickReplyTemplate | undefined>;
@@ -814,6 +822,7 @@ export class MemStorage implements IStorage {
   private contracts: Map<string, Contract>;
   private contractTemplates: Map<string, ContractTemplate>;
   private messages: Map<string, Message>;
+  private conversationStatuses: Map<string, ConversationStatus>;
   private quickReplyTemplates: Map<string, QuickReplyTemplate>;
   private followUpReminders: Map<string, FollowUpReminder>;
   private reviews: Map<string, Review>;
@@ -850,6 +859,7 @@ export class MemStorage implements IStorage {
     this.contracts = new Map();
     this.contractTemplates = new Map();
     this.messages = new Map();
+    this.conversationStatuses = new Map();
     this.quickReplyTemplates = new Map();
     this.followUpReminders = new Map();
     this.reviews = new Map();
@@ -1854,6 +1864,58 @@ export class MemStorage implements IStorage {
         !m.isRead && 
         m.senderType !== recipientType
       ).length;
+  }
+
+  // Conversation Status
+  async getConversationStatus(conversationId: string): Promise<ConversationStatus | undefined> {
+    return Array.from(this.conversationStatuses.values()).find(s => s.conversationId === conversationId);
+  }
+
+  async createConversationStatus(insert: InsertConversationStatus): Promise<ConversationStatus> {
+    const id = randomUUID();
+    const status: ConversationStatus = {
+      ...insert,
+      id,
+      status: insert.status || 'open',
+      closedBy: insert.closedBy || null,
+      closedByType: insert.closedByType || null,
+      closureReason: insert.closureReason || null,
+      closedAt: insert.closedAt || null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.conversationStatuses.set(id, status);
+    return status;
+  }
+
+  async updateConversationStatus(conversationId: string, updates: Partial<InsertConversationStatus>): Promise<ConversationStatus | undefined> {
+    const existing = Array.from(this.conversationStatuses.values()).find(s => s.conversationId === conversationId);
+    if (!existing) return undefined;
+    const updated: ConversationStatus = { ...existing, ...updates, updatedAt: new Date() };
+    this.conversationStatuses.set(existing.id, updated);
+    return updated;
+  }
+
+  async closeConversation(conversationId: string, closedBy: string, closedByType: 'couple' | 'vendor', reason?: string): Promise<ConversationStatus> {
+    let existing = Array.from(this.conversationStatuses.values()).find(s => s.conversationId === conversationId);
+    if (!existing) {
+      const parsed = parseConversationId(conversationId);
+      if (!parsed) throw new Error("Invalid conversationId");
+      existing = await this.createConversationStatus({
+        conversationId,
+        weddingId: parsed.weddingId,
+        vendorId: parsed.vendorId,
+        eventId: parsed.eventId,
+      });
+    }
+    const result = await this.updateConversationStatus(conversationId, {
+      status: 'closed',
+      closedBy,
+      closedByType,
+      closureReason: reason,
+      closedAt: new Date(),
+    });
+    return result as ConversationStatus;
   }
 
   // Quick Reply Templates
@@ -4479,6 +4541,48 @@ export class DBStorage implements IStorage {
       .where(eq(schema.messages.conversationId, conversationId));
     
     return result.filter(m => !m.isRead && m.senderType !== recipientType).length;
+  }
+
+  // Conversation Status
+  async getConversationStatus(conversationId: string): Promise<ConversationStatus | undefined> {
+    const result = await this.db.select().from(schema.conversationStatus)
+      .where(eq(schema.conversationStatus.conversationId, conversationId));
+    return result[0];
+  }
+
+  async createConversationStatus(insert: InsertConversationStatus): Promise<ConversationStatus> {
+    const result = await this.db.insert(schema.conversationStatus).values(insert).returning();
+    return result[0];
+  }
+
+  async updateConversationStatus(conversationId: string, updates: Partial<InsertConversationStatus>): Promise<ConversationStatus | undefined> {
+    const result = await this.db.update(schema.conversationStatus)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(schema.conversationStatus.conversationId, conversationId))
+      .returning();
+    return result[0];
+  }
+
+  async closeConversation(conversationId: string, closedBy: string, closedByType: 'couple' | 'vendor', reason?: string): Promise<ConversationStatus> {
+    let existing = await this.getConversationStatus(conversationId);
+    if (!existing) {
+      const parsed = parseConversationId(conversationId);
+      if (!parsed) throw new Error("Invalid conversationId");
+      existing = await this.createConversationStatus({
+        conversationId,
+        weddingId: parsed.weddingId,
+        vendorId: parsed.vendorId,
+        eventId: parsed.eventId,
+      });
+    }
+    const result = await this.updateConversationStatus(conversationId, {
+      status: 'closed',
+      closedBy,
+      closedByType,
+      closureReason: reason,
+      closedAt: new Date(),
+    });
+    return result as ConversationStatus;
   }
 
   // Quick Reply Templates

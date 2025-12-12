@@ -8,8 +8,21 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { MessageCircle, Send, User, ChevronRight, ChevronDown, PartyPopper, Clock, CheckCircle, XCircle, Loader2 } from "lucide-react";
-import type { Message, Wedding } from "@shared/schema";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
+import { MessageCircle, Send, User, ChevronRight, ChevronDown, PartyPopper, Clock, CheckCircle, XCircle, Loader2, Archive, AlertTriangle } from "lucide-react";
+import type { Message, Wedding, ConversationStatus } from "@shared/schema";
 
 interface ConversationWithMetadata {
   conversationId: string;
@@ -75,12 +88,14 @@ interface VendorGroup {
 }
 
 export default function MessagesPage() {
+  const { toast } = useToast();
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [messageText, setMessageText] = useState("");
   const [expandedVendors, setExpandedVendors] = useState<Set<string>>(new Set());
+  const [closeDialogOpen, setCloseDialogOpen] = useState(false);
+  const [closeReason, setCloseReason] = useState("");
   const hasAutoSelectedRef = useRef(false);
 
-  // Real-time message updates via WebSocket
   useMessageSocket(selectedConversation);
 
   const { data: weddings = [], isLoading: weddingsLoading } = useQuery<Wedding[]>({
@@ -99,6 +114,13 @@ export default function MessagesPage() {
     queryKey: ["/api/messages", selectedConversation],
     enabled: !!selectedConversation,
   });
+
+  const { data: conversationStatus } = useQuery<ConversationStatus | { status: 'open' }>({
+    queryKey: ["/api/conversations", selectedConversation, "status"],
+    enabled: !!selectedConversation,
+  });
+
+  const isConversationClosed = conversationStatus?.status === 'closed';
 
   const groupConversationsByVendor = (convos: ConversationWithMetadata[]): VendorGroup[] => {
     const groupMap = new Map<string, VendorGroup>();
@@ -180,7 +202,7 @@ export default function MessagesPage() {
       const response = await apiRequest("POST", "/api/messages", {
         weddingId: conversation.weddingId,
         vendorId: conversation.vendorId,
-        eventId: conversation.eventId, // Include eventId for proper conversation grouping
+        eventId: conversation.eventId,
         senderId: conversation.weddingId,
         senderType: "couple",
         content,
@@ -193,12 +215,54 @@ export default function MessagesPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/conversations/wedding", weddingId] });
       setMessageText("");
     },
+    onError: (error: any) => {
+      if (error?.message?.includes("closed")) {
+        toast({
+          title: "Conversation closed",
+          description: "This inquiry has been closed and no new messages can be sent.",
+          variant: "destructive",
+        });
+      }
+    },
+  });
+
+  const closeInquiryMutation = useMutation({
+    mutationFn: async ({ reason }: { reason?: string }) => {
+      if (!selectedConversation) throw new Error("No conversation selected");
+      
+      const response = await apiRequest("PATCH", `/api/conversations/${encodeURIComponent(selectedConversation)}/close`, {
+        reason,
+      });
+      
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Inquiry closed",
+        description: "The vendor has been notified that you've closed this inquiry.",
+      });
+      setCloseDialogOpen(false);
+      setCloseReason("");
+      queryClient.invalidateQueries({ queryKey: ["/api/conversations", selectedConversation, "status"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/conversations/wedding", weddingId] });
+    },
+    onError: () => {
+      toast({
+        title: "Failed to close inquiry",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    },
   });
 
   const handleSendMessage = () => {
-    if (messageText.trim() && selectedConversation) {
+    if (messageText.trim() && selectedConversation && !isConversationClosed) {
       sendMessageMutation.mutate(messageText);
     }
+  };
+
+  const handleCloseInquiry = () => {
+    closeInquiryMutation.mutate({ reason: closeReason || undefined });
   };
 
   const selectedConvo = conversations.find(c => c.conversationId === selectedConversation);
@@ -358,28 +422,95 @@ export default function MessagesPage() {
           {selectedConversation ? (
             <>
               <div className="p-4 border-b">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <User className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold">
-                      {selectedConvo?.vendorName || "Vendor"}
-                    </h3>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-sm text-muted-foreground">
-                        {selectedConvo?.vendorCategory.replace(/_/g, " ") || ""}
-                      </p>
-                      {selectedConvo?.eventName && (
-                        <Badge variant="outline" className="text-xs">
-                          {selectedConvo.eventName}
-                        </Badge>
-                      )}
-                      {getBookingStatusBadge(selectedConvo?.bookingStatus)}
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <User className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold">
+                        {selectedConvo?.vendorName || "Vendor"}
+                      </h3>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm text-muted-foreground">
+                          {selectedConvo?.vendorCategory.replace(/_/g, " ") || ""}
+                        </p>
+                        {selectedConvo?.eventName && (
+                          <Badge variant="outline" className="text-xs">
+                            {selectedConvo.eventName}
+                          </Badge>
+                        )}
+                        {getBookingStatusBadge(selectedConvo?.bookingStatus)}
+                        {isConversationClosed && (
+                          <Badge variant="secondary" className="text-xs">
+                            <Archive className="w-3 h-3 mr-1" />
+                            Closed
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </div>
+                  {!isConversationClosed && (
+                    <AlertDialog open={closeDialogOpen} onOpenChange={setCloseDialogOpen}>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="outline" size="sm" data-testid="button-close-inquiry">
+                          <Archive className="w-4 h-4 mr-2" />
+                          Close Inquiry
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle className="flex items-center gap-2">
+                            <AlertTriangle className="w-5 h-5 text-amber-500" />
+                            Close this inquiry?
+                          </AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will close your conversation with {selectedConvo?.vendorName}. 
+                            The vendor will be notified and you won't be able to send more messages.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <div className="py-4">
+                          <label className="text-sm font-medium mb-2 block">
+                            Reason (optional)
+                          </label>
+                          <Textarea
+                            placeholder="Let the vendor know why you're closing this inquiry..."
+                            value={closeReason}
+                            onChange={(e) => setCloseReason(e.target.value)}
+                            className="resize-none"
+                            rows={3}
+                            data-testid="input-close-reason"
+                          />
+                        </div>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel data-testid="button-cancel-close">Cancel</AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={handleCloseInquiry}
+                            disabled={closeInquiryMutation.isPending}
+                            data-testid="button-confirm-close"
+                          >
+                            {closeInquiryMutation.isPending ? (
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            ) : (
+                              <Archive className="w-4 h-4 mr-2" />
+                            )}
+                            Close Inquiry
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
                 </div>
               </div>
+
+              {isConversationClosed && (
+                <div className="px-4 py-3 bg-muted/50 border-b flex items-center gap-2">
+                  <Archive className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">
+                    This inquiry has been closed. You can no longer send messages.
+                  </span>
+                </div>
+              )}
 
               <ScrollArea className="flex-1 p-4">
                 {messages.length === 0 ? (
@@ -432,29 +563,36 @@ export default function MessagesPage() {
 
               <Separator />
               <div className="p-4">
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handleSendMessage();
-                  }}
-                  className="flex gap-2"
-                >
-                  <Input
-                    value={messageText}
-                    onChange={(e) => setMessageText(e.target.value)}
-                    placeholder="Type your message..."
-                    disabled={sendMessageMutation.isPending}
-                    data-testid="input-message"
-                  />
-                  <Button
-                    type="submit"
-                    disabled={!messageText.trim() || sendMessageMutation.isPending}
-                    data-testid="button-send-message"
+                {isConversationClosed ? (
+                  <div className="flex items-center justify-center py-2 text-muted-foreground">
+                    <Archive className="w-4 h-4 mr-2" />
+                    <span className="text-sm">Messaging is disabled for closed inquiries</span>
+                  </div>
+                ) : (
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }}
+                    className="flex gap-2"
                   >
-                    <Send className="w-4 h-4 mr-2" />
-                    Send
-                  </Button>
-                </form>
+                    <Input
+                      value={messageText}
+                      onChange={(e) => setMessageText(e.target.value)}
+                      placeholder="Type your message..."
+                      disabled={sendMessageMutation.isPending}
+                      data-testid="input-message"
+                    />
+                    <Button
+                      type="submit"
+                      disabled={!messageText.trim() || sendMessageMutation.isPending}
+                      data-testid="button-send-message"
+                    >
+                      <Send className="w-4 h-4 mr-2" />
+                      Send
+                    </Button>
+                  </form>
+                )}
               </div>
             </>
           ) : (

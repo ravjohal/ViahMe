@@ -693,6 +693,37 @@ export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type Message = typeof messages.$inferSelect;
 
 // ============================================================================
+// CONVERSATION STATUS - Track whether conversations are open or closed
+// ============================================================================
+
+export const conversationStatus = pgTable("conversation_status", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  conversationId: varchar("conversation_id").notNull().unique(),
+  weddingId: varchar("wedding_id").notNull(),
+  vendorId: varchar("vendor_id").notNull(),
+  eventId: varchar("event_id"),
+  status: text("status").notNull().default('open'), // 'open' | 'closed'
+  closedBy: varchar("closed_by"), // userId who closed the conversation
+  closedByType: text("closed_by_type"), // 'couple' | 'vendor'
+  closureReason: text("closure_reason"),
+  closedAt: timestamp("closed_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertConversationStatusSchema = createInsertSchema(conversationStatus).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  status: z.enum(['open', 'closed']).optional(),
+  closedByType: z.enum(['couple', 'vendor']).optional(),
+});
+
+export type InsertConversationStatus = z.infer<typeof insertConversationStatusSchema>;
+export type ConversationStatus = typeof conversationStatus.$inferSelect;
+
+// ============================================================================
 // QUICK REPLY TEMPLATES - Vendor response templates for common inquiries
 // ============================================================================
 

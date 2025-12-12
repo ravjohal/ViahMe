@@ -3391,6 +3391,21 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   app.post("/api/messages", async (req, res) => {
     try {
       const validatedData = insertMessageSchema.parse(req.body);
+      
+      // Check if conversation is closed before allowing new messages
+      const conversationId = generateConversationId(
+        validatedData.weddingId,
+        validatedData.vendorId,
+        validatedData.eventId
+      );
+      const conversationStatus = await storage.getConversationStatus(conversationId);
+      if (conversationStatus?.status === 'closed') {
+        return res.status(403).json({ 
+          error: "Conversation closed", 
+          message: "This inquiry has been closed and no new messages can be sent." 
+        });
+      }
+      
       const message = await storage.createMessage(validatedData);
       
       // Broadcast new message via WebSocket for real-time updates
@@ -3430,6 +3445,78 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
       res.json({ count });
     } catch (error) {
       res.status(500).json({ error: "Failed to get unread count" });
+    }
+  });
+
+  // ============================================================================
+  // CONVERSATION STATUS - Close/Withdraw Inquiry
+  // ============================================================================
+
+  // Get conversation status
+  app.get("/api/conversations/:conversationId/status", async (req, res) => {
+    try {
+      const status = await storage.getConversationStatus(decodeURIComponent(req.params.conversationId));
+      if (!status) {
+        return res.json({ status: 'open' });
+      }
+      res.json(status);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get conversation status" });
+    }
+  });
+
+  // Close/withdraw an inquiry
+  app.patch("/api/conversations/:conversationId/close", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      const conversationId = decodeURIComponent(req.params.conversationId);
+      const { reason } = req.body;
+      
+      const parsed = parseConversationId(conversationId);
+      if (!parsed) {
+        return res.status(400).json({ error: "Invalid conversation ID" });
+      }
+      
+      // Verify the user is authorized to close this conversation
+      const wedding = await storage.getWedding(parsed.weddingId);
+      if (!wedding || wedding.userId !== authReq.session.userId) {
+        return res.status(403).json({ error: "You can only close inquiries for your own wedding" });
+      }
+      
+      // Close the conversation
+      const status = await storage.closeConversation(
+        conversationId,
+        authReq.session.userId,
+        'couple',
+        reason
+      );
+      
+      // Send email notification to vendor
+      try {
+        const vendor = await storage.getVendor(parsed.vendorId);
+        const user = vendor?.userId ? await storage.getUser(vendor.userId) : null;
+        
+        if (user?.email && vendor) {
+          const coupleName = wedding.partner1Name && wedding.partner2Name
+            ? `${wedding.partner1Name} & ${wedding.partner2Name}`
+            : wedding.partner1Name || wedding.partner2Name || 'A couple';
+          
+          const { sendInquiryClosedEmail } = await import("./email");
+          await sendInquiryClosedEmail(
+            user.email,
+            vendor.name,
+            coupleName,
+            reason || undefined
+          );
+        }
+      } catch (emailError) {
+        console.error("Failed to send inquiry closed email:", emailError);
+      }
+      
+      res.json(status);
+    } catch (error) {
+      console.error("Error closing conversation:", error);
+      res.status(500).json({ error: "Failed to close conversation" });
     }
   });
 
