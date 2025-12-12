@@ -3398,6 +3398,7 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
           const firstMessage = messages[0];
           
           // Build couple name with fallback
+          console.log(`[lead-inbox] Wedding ID: ${parsed.weddingId}, Partner1: ${wedding?.partner1Name}, Partner2: ${wedding?.partner2Name}, EventId: ${parsed.eventId}, EventName: ${eventName}`);
           const coupleName = wedding?.partner1Name && wedding?.partner2Name 
             ? `${wedding.partner1Name} & ${wedding.partner2Name}`
             : wedding?.partner1Name || wedding?.partner2Name || 'Couple';
