@@ -3374,14 +3374,23 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   // ============================================================================
 
   // Get lead inbox data for a vendor (conversations with unread counts and wedding details)
+  // Also includes booking requests that may not have messages yet
   app.get("/api/lead-inbox/:vendorId", async (req, res) => {
     try {
-      const conversationIds = await storage.getConversationsByVendor(req.params.vendorId);
+      const vendorId = req.params.vendorId;
+      const conversationIds = await storage.getConversationsByVendor(vendorId);
       
-      const leads = await Promise.all(
+      // Track which wedding+event combinations already have conversations
+      const existingConversations = new Set<string>();
+      
+      const leadsFromConversations = await Promise.all(
         conversationIds.map(async (convId) => {
           const parsed = parseConversationId(convId);
           if (!parsed) return null;
+          
+          // Track this conversation
+          const key = parsed.eventId ? `${parsed.weddingId}-${parsed.eventId}` : parsed.weddingId;
+          existingConversations.add(key);
           
           const messages = await storage.getConversationMessages(convId);
           const wedding = await storage.getWedding(parsed.weddingId);
@@ -3397,8 +3406,6 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
           const lastMessage = messages[messages.length - 1];
           const firstMessage = messages[0];
           
-          // Build couple name with fallback
-          console.log(`[lead-inbox] Wedding ID: ${parsed.weddingId}, Partner1: ${wedding?.partner1Name}, Partner2: ${wedding?.partner2Name}, EventId: ${parsed.eventId}, EventName: ${eventName}`);
           const coupleName = wedding?.partner1Name && wedding?.partner2Name 
             ? `${wedding.partner1Name} & ${wedding.partner2Name}`
             : wedding?.partner1Name || wedding?.partner2Name || 'Couple';
@@ -3420,22 +3427,76 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
             } : null,
             firstInquiryDate: firstMessage?.createdAt,
             totalMessages: messages.length,
+            bookingStatus: undefined as string | undefined,
+            bookingId: undefined as string | undefined,
           };
         })
       );
       
+      // Also fetch bookings for this vendor that don't have conversations yet
+      const bookings = await storage.getBookingsByVendor(vendorId);
+      
+      const leadsFromBookings = await Promise.all(
+        (bookings || []).map(async (booking) => {
+          // Check if this booking already has a conversation
+          const key = booking.eventId ? `${booking.weddingId}-${booking.eventId}` : booking.weddingId;
+          if (existingConversations.has(key)) {
+            return null; // Skip - already included from conversations
+          }
+          
+          const wedding = await storage.getWedding(booking.weddingId);
+          if (!wedding) return null;
+          
+          let eventName: string | undefined;
+          if (booking.eventId) {
+            const event = await storage.getEvent(booking.eventId);
+            eventName = event?.name;
+          }
+          
+          const coupleName = wedding.partner1Name && wedding.partner2Name 
+            ? `${wedding.partner1Name} & ${wedding.partner2Name}`
+            : wedding.partner1Name || wedding.partner2Name || 'Couple';
+          
+          // Generate a conversation ID for this booking
+          const convId = generateConversationId(booking.weddingId, vendorId, booking.eventId || undefined);
+          
+          return {
+            conversationId: convId,
+            weddingId: booking.weddingId,
+            vendorId: vendorId,
+            coupleName,
+            eventName,
+            weddingDate: wedding.date,
+            city: wedding.city,
+            tradition: wedding.tradition,
+            unreadCount: 1, // Treat new booking requests as unread
+            lastMessage: {
+              content: `Booking request: ${booking.status === 'pending' ? 'Awaiting your response' : booking.status}`,
+              senderType: 'couple',
+              createdAt: booking.requestDate,
+            },
+            firstInquiryDate: booking.requestDate,
+            totalMessages: 0,
+            bookingStatus: booking.status,
+            bookingId: booking.id,
+          };
+        })
+      );
+      
+      // Combine both sources
+      const allLeads = [...leadsFromConversations, ...leadsFromBookings].filter(Boolean);
+      
       // Sort by unread count first, then by last message date
-      const sortedLeads = leads
-        .filter(Boolean)
-        .sort((a, b) => {
-          if (b!.unreadCount !== a!.unreadCount) return b!.unreadCount - a!.unreadCount;
-          const aDate = a!.lastMessage?.createdAt || new Date(0);
-          const bDate = b!.lastMessage?.createdAt || new Date(0);
-          return new Date(bDate).getTime() - new Date(aDate).getTime();
-        });
+      const sortedLeads = allLeads.sort((a, b) => {
+        if (b!.unreadCount !== a!.unreadCount) return b!.unreadCount - a!.unreadCount;
+        const aDate = a!.lastMessage?.createdAt || new Date(0);
+        const bDate = b!.lastMessage?.createdAt || new Date(0);
+        return new Date(bDate).getTime() - new Date(aDate).getTime();
+      });
       
       res.json(sortedLeads);
     } catch (error) {
+      console.error("Error fetching lead inbox:", error);
       res.status(500).json({ error: "Failed to fetch lead inbox" });
     }
   });

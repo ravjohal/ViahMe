@@ -72,6 +72,8 @@ interface Lead {
   } | null;
   firstInquiryDate?: string;
   totalMessages: number;
+  bookingStatus?: string;
+  bookingId?: string;
 }
 
 interface WeddingGroup {
