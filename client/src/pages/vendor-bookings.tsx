@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import type { Vendor, Booking } from "@shared/schema";
+import type { Vendor, Booking, Event } from "@shared/schema";
 import { useLocation, useSearch } from "wouter";
 import {
   Calendar,
@@ -39,6 +39,8 @@ import {
   MessageSquare,
   Plus,
   Trash2,
+  Users,
+  MapPin,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -96,6 +98,39 @@ export default function VendorBookings() {
       return response.json();
     },
     enabled: !!vendorId,
+  });
+
+  // Get unique wedding IDs from bookings to fetch their events
+  const uniqueWeddingIds = Array.from(new Set(bookings.map(b => b.weddingId).filter(Boolean))) as string[];
+  
+  // Fetch events for all weddings that have bookings
+  const { data: eventsMap = {} } = useQuery<Record<string, Event>>({
+    queryKey: ["/api/events/for-bookings", uniqueWeddingIds],
+    queryFn: async () => {
+      if (uniqueWeddingIds.length === 0) return {};
+      
+      // Fetch events for each wedding in parallel
+      const eventPromises = uniqueWeddingIds.map(async (weddingId) => {
+        try {
+          const response = await fetch(`/api/events/${weddingId}`);
+          if (!response.ok) return [];
+          return await response.json();
+        } catch {
+          return [];
+        }
+      });
+      
+      const allEventsArrays = await Promise.all(eventPromises);
+      const allEvents = allEventsArrays.flat() as Event[];
+      
+      // Create a map of eventId -> event for easy lookup
+      const map: Record<string, Event> = {};
+      allEvents.forEach(event => {
+        map[event.id] = event;
+      });
+      return map;
+    },
+    enabled: uniqueWeddingIds.length > 0,
   });
 
   const updateBookingMutation = useMutation({
@@ -332,17 +367,49 @@ export default function VendorBookings() {
           </Card>
         ) : (
           <div className="space-y-4">
-            {filteredBookings.map((booking) => (
+            {filteredBookings.map((booking) => {
+              const event = booking.eventId ? eventsMap[booking.eventId] : null;
+              return (
               <Card key={booking.id} className="p-6" data-testid={`card-booking-${booking.id}`}>
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <h3 className="font-semibold text-lg" data-testid={`text-booking-event-${booking.id}`}>
-                      Booking Request
+                      {event?.name || "Booking Request"}
                     </h3>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Wedding #{booking.weddingId?.slice(0, 8)}
-                      {booking.eventId && ` - Event #${booking.eventId.slice(0, 8)}`}
-                    </p>
+                    {event && (
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-muted-foreground">
+                        {event.date && (
+                          <span className="flex items-center gap-1">
+                            <CalendarDays className="w-3.5 h-3.5" />
+                            {format(new Date(event.date), 'MMM d, yyyy')}
+                          </span>
+                        )}
+                        {event.time && (
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5" />
+                            {event.time}
+                          </span>
+                        )}
+                        {event.guestCount && (
+                          <span className="flex items-center gap-1">
+                            <Users className="w-3.5 h-3.5" />
+                            {event.guestCount} guests
+                          </span>
+                        )}
+                        {event.location && (
+                          <span className="flex items-center gap-1">
+                            <MapPin className="w-3.5 h-3.5" />
+                            {event.location}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    {!event && (
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Wedding #{booking.weddingId?.slice(0, 8)}
+                        {booking.eventId && ` - Event #${booking.eventId.slice(0, 8)}`}
+                      </p>
+                    )}
                   </div>
                   <Badge
                     variant={
@@ -459,7 +526,8 @@ export default function VendorBookings() {
                   </div>
                 )}
               </Card>
-            ))}
+            );
+            })}
           </div>
         )}
       </main>
