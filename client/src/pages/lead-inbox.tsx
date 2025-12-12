@@ -1096,9 +1096,15 @@ export default function LeadInbox() {
                             )}
                             
                             <Textarea
-                              placeholder="Write your reply..."
+                              placeholder="Write your reply... (Press Enter to send, Shift+Enter for new line)"
                               value={replyContent}
                               onChange={(e) => setReplyContent(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" && !e.shiftKey) {
+                                  e.preventDefault();
+                                  handleSendReply();
+                                }
+                              }}
                               className="min-h-[120px] resize-none"
                               data-testid="textarea-reply"
                             />
