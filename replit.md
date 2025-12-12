@@ -29,6 +29,11 @@ Key architectural decisions and features include:
   - **Planning Snapshot API**: `/api/weddings/:id/guest-planning-snapshot` endpoint aggregates all planning data server-side for accurate analysis
   - Note: "Source" concept removed - suggestions now come directly from team members via the permission-based collaboration system
 - **Communication & Collaboration**: Messaging system for couple-vendor communication, review system, document storage, and team collaboration with granular role-based access control and activity logging.
+- **AI-Powered Message Suggestions**: Gemini LLM integration for intelligent message drafting:
+  - **Vendor Reply Suggestions**: AI generates 3 culturally-aware response options for vendors replying to couple inquiries
+  - **Couple Booking Suggestions**: AI helps couples craft effective vendor booking request messages
+  - **Context-Aware**: Suggestions consider wedding tradition, event details, and conversation history
+  - **Input Sanitization**: Server-side validation with length limits (1000 chars for messages, 100 chars for names) to prevent abuse
 - **Live Wedding Experience**: Real-Time Guest Concierge system including a Gap Concierge Designer and Ritual Control Panel for couples, feeding into a public-facing Guest Live Feed.
 - **Real-Time Master Timeline**: Day-of coordination system for couples and vendors:
   - **Drag-and-drop event reordering** using dnd-kit with WebSocket broadcast for real-time sync
