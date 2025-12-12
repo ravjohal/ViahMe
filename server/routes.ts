@@ -3387,16 +3387,27 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
           const wedding = await storage.getWedding(parsed.weddingId);
           const unreadCount = await storage.getUnreadCount(convId, 'vendor');
           
+          // Get event name if eventId exists
+          let eventName: string | undefined;
+          if (parsed.eventId) {
+            const event = await storage.getEvent(parsed.eventId);
+            eventName = event?.name;
+          }
+          
           const lastMessage = messages[messages.length - 1];
           const firstMessage = messages[0];
+          
+          // Build couple name with fallback
+          const coupleName = wedding?.coupleName1 && wedding?.coupleName2 
+            ? `${wedding.coupleName1} & ${wedding.coupleName2}`
+            : wedding?.coupleName1 || 'Couple';
           
           return {
             conversationId: convId,
             weddingId: parsed.weddingId,
             vendorId: parsed.vendorId,
-            coupleName: wedding?.coupleName1 && wedding?.coupleName2 
-              ? `${wedding.coupleName1} & ${wedding.coupleName2}`
-              : wedding?.coupleName1 || 'Unknown',
+            coupleName,
+            eventName,
             weddingDate: wedding?.date,
             city: wedding?.city,
             tradition: wedding?.tradition,

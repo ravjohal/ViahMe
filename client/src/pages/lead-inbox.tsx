@@ -58,6 +58,7 @@ interface Lead {
   weddingId: string;
   vendorId: string;
   coupleName: string;
+  eventName?: string;
   weddingDate?: string;
   city?: string;
   tradition?: string;
@@ -572,6 +573,11 @@ export default function LeadInbox() {
                                   <div className="flex items-center gap-2">
                                     <Heart className="h-4 w-4 text-primary shrink-0" />
                                     <span className="font-medium truncate">{lead.coupleName}</span>
+                                    {lead.eventName && (
+                                      <span className="text-xs text-muted-foreground font-normal">
+                                        • {lead.eventName}
+                                      </span>
+                                    )}
                                     <Badge variant="default" className="text-xs">{lead.unreadCount}</Badge>
                                   </div>
                                   {lead.lastMessage && (
@@ -626,6 +632,11 @@ export default function LeadInbox() {
                                   <span className="font-medium truncate flex items-center gap-2">
                                     <Heart className="h-4 w-4 text-muted-foreground" />
                                     {lead.coupleName}
+                                    {lead.eventName && (
+                                      <span className="text-xs text-muted-foreground font-normal">
+                                        • {lead.eventName}
+                                      </span>
+                                    )}
                                   </span>
                                   <p className="text-xs text-muted-foreground mt-1">
                                     {lead.totalMessages} messages
@@ -651,6 +662,11 @@ export default function LeadInbox() {
                           <CardTitle className="flex items-center gap-2">
                             <Heart className="h-5 w-5 text-primary" />
                             {selectedLead.coupleName}
+                            {selectedLead.eventName && (
+                              <Badge variant="outline" className="ml-2 font-normal">
+                                {selectedLead.eventName}
+                              </Badge>
+                            )}
                           </CardTitle>
                           <CardDescription className="flex flex-wrap items-center gap-3 mt-2">
                             {selectedLead.weddingDate && (
