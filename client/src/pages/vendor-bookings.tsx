@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { VendorHeader } from "@/components/vendor-header";
@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -27,7 +28,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { Vendor, Booking } from "@shared/schema";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import {
   Calendar,
   CalendarDays,
@@ -51,6 +52,24 @@ export default function VendorBookings() {
   const { toast } = useToast();
   const { user, isLoading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
+  const searchString = useSearch();
+  
+  // Parse filter from URL query params
+  const getFilterFromUrl = () => {
+    const params = new URLSearchParams(searchString);
+    const filter = params.get("filter");
+    if (filter === "pending" || filter === "confirmed" || filter === "declined") {
+      return filter;
+    }
+    return "all";
+  };
+  
+  const [activeFilter, setActiveFilter] = useState<"all" | "pending" | "confirmed" | "declined">(getFilterFromUrl());
+  
+  // Update filter when URL changes
+  useEffect(() => {
+    setActiveFilter(getFilterFromUrl());
+  }, [searchString]);
 
   const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
   const [selectedBookingForDecline, setSelectedBookingForDecline] = useState<Booking | null>(null);
@@ -190,6 +209,22 @@ export default function VendorBookings() {
   const pendingBookings = bookings.filter((b: Booking) => b.status === "pending");
   const confirmedBookings = bookings.filter((b: Booking) => b.status === "confirmed");
   const declinedBookings = bookings.filter((b: Booking) => b.status === "declined");
+  
+  // Filter bookings based on active filter
+  const filteredBookings = activeFilter === "all" 
+    ? bookings 
+    : bookings.filter((b: Booking) => b.status === activeFilter);
+  
+  const handleFilterChange = (filter: string) => {
+    const newFilter = filter as "all" | "pending" | "confirmed" | "declined";
+    setActiveFilter(newFilter);
+    // Update URL without triggering navigation
+    if (newFilter === "all") {
+      window.history.replaceState({}, '', '/vendor-bookings');
+    } else {
+      window.history.replaceState({}, '', `/vendor-bookings?filter=${newFilter}`);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-background dark:to-background">
@@ -202,7 +237,11 @@ export default function VendorBookings() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <Card className="p-4">
+          <Card 
+            className={`p-4 hover-elevate cursor-pointer ${activeFilter === "pending" ? "ring-2 ring-yellow-500" : ""}`}
+            onClick={() => handleFilterChange("pending")}
+            data-testid="filter-card-pending"
+          >
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-yellow-500/10">
                 <Clock className="w-5 h-5 text-yellow-600" />
@@ -213,7 +252,11 @@ export default function VendorBookings() {
               </div>
             </div>
           </Card>
-          <Card className="p-4">
+          <Card 
+            className={`p-4 hover-elevate cursor-pointer ${activeFilter === "confirmed" ? "ring-2 ring-green-500" : ""}`}
+            onClick={() => handleFilterChange("confirmed")}
+            data-testid="filter-card-confirmed"
+          >
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-green-500/10">
                 <CheckCircle className="w-5 h-5 text-green-600" />
@@ -224,7 +267,11 @@ export default function VendorBookings() {
               </div>
             </div>
           </Card>
-          <Card className="p-4">
+          <Card 
+            className={`p-4 hover-elevate cursor-pointer ${activeFilter === "declined" ? "ring-2 ring-red-500" : ""}`}
+            onClick={() => handleFilterChange("declined")}
+            data-testid="filter-card-declined"
+          >
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-red-500/10">
                 <XCircle className="w-5 h-5 text-red-600" />
@@ -237,21 +284,55 @@ export default function VendorBookings() {
           </Card>
         </div>
 
+        {/* Filter Tabs */}
+        <div className="mb-6">
+          <Tabs value={activeFilter} onValueChange={handleFilterChange}>
+            <TabsList data-testid="tabs-booking-filter">
+              <TabsTrigger value="all" data-testid="tab-all">
+                All ({bookings.length})
+              </TabsTrigger>
+              <TabsTrigger value="pending" data-testid="tab-pending">
+                Pending ({pendingBookings.length})
+              </TabsTrigger>
+              <TabsTrigger value="confirmed" data-testid="tab-confirmed">
+                Confirmed ({confirmedBookings.length})
+              </TabsTrigger>
+              <TabsTrigger value="declined" data-testid="tab-declined">
+                Declined ({declinedBookings.length})
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
         {bookingsLoading || vendorsLoading ? (
           <Card className="p-6">
             <Skeleton className="h-32 w-full" />
           </Card>
-        ) : bookings.length === 0 ? (
+        ) : filteredBookings.length === 0 ? (
           <Card className="p-12 text-center">
             <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No Booking Requests</h3>
+            <h3 className="text-lg font-semibold mb-2">
+              {activeFilter === "all" ? "No Booking Requests" : `No ${activeFilter.charAt(0).toUpperCase() + activeFilter.slice(1)} Bookings`}
+            </h3>
             <p className="text-muted-foreground">
-              You haven't received any booking requests yet.
+              {activeFilter === "all" 
+                ? "You haven't received any booking requests yet."
+                : `You don't have any ${activeFilter} bookings.`}
             </p>
+            {activeFilter !== "all" && (
+              <Button 
+                variant="outline" 
+                className="mt-4"
+                onClick={() => handleFilterChange("all")}
+                data-testid="button-show-all"
+              >
+                Show All Bookings
+              </Button>
+            )}
           </Card>
         ) : (
           <div className="space-y-4">
-            {bookings.map((booking) => (
+            {filteredBookings.map((booking) => (
               <Card key={booking.id} className="p-6" data-testid={`card-booking-${booking.id}`}>
                 <div className="flex items-start justify-between mb-4">
                   <div>

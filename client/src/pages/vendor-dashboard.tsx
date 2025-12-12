@@ -861,7 +861,7 @@ export default function VendorDashboard() {
         {/* Stats Cards */}
         {currentVendor && (
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-8">
-          <Card className="p-6">
+          <Card className="p-6 hover-elevate cursor-pointer" onClick={() => setLocation("/vendor-bookings?filter=pending")} data-testid="card-pending-requests">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-xl bg-chart-1/10">
                 <Clock className="w-6 h-6 text-chart-1" />
@@ -875,7 +875,7 @@ export default function VendorDashboard() {
             </div>
           </Card>
 
-          <Card className="p-6">
+          <Card className="p-6 hover-elevate cursor-pointer" onClick={() => setLocation("/vendor-bookings?filter=confirmed")} data-testid="card-confirmed-bookings">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-xl bg-chart-2/10">
                 <CheckCircle className="w-6 h-6 text-chart-2" />
@@ -889,7 +889,7 @@ export default function VendorDashboard() {
             </div>
           </Card>
 
-          <Card className="p-6">
+          <Card className="p-6 hover-elevate cursor-pointer" onClick={() => setLocation("/vendor-contracts")} data-testid="card-active-contracts">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-xl bg-chart-3/10">
                 <FileText className="w-6 h-6 text-chart-3" />
@@ -903,7 +903,7 @@ export default function VendorDashboard() {
             </div>
           </Card>
 
-          <Card className="p-6">
+          <Card className="p-6 hover-elevate cursor-pointer" onClick={() => setLocation("/vendor-bookings")} data-testid="card-total-bookings">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-xl bg-chart-4/10">
                 <Calendar className="w-6 h-6 text-chart-4" />
