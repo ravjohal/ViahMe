@@ -64,6 +64,9 @@ export default function Vendors() {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/bookings"] });
+      // Also invalidate lead inbox so vendor sees the new booking immediately
+      queryClient.invalidateQueries({ queryKey: ["/api/lead-inbox"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
       const eventCount = variables.eventIds.length;
       toast({
         title: "Booking Request Sent",
