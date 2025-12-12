@@ -917,18 +917,17 @@ export default function LeadInbox() {
                                     <div
                                       className={`max-w-[80%] rounded-lg p-3 ${
                                         isVendor
-                                          ? "bg-primary text-primary-foreground"
-                                          : "bg-background border"
+                                          ? "bg-emerald-500 dark:bg-emerald-600 text-white"
+                                          : "bg-amber-100 dark:bg-amber-900/40 text-amber-900 dark:text-amber-100 border border-amber-200 dark:border-amber-800"
                                       }`}
                                     >
                                       <div className="flex items-center gap-2 mb-1">
-                                        <Badge 
-                                          variant={isVendor ? "secondary" : "default"} 
-                                          className={`text-xs ${isVendor ? "bg-primary-foreground/20 text-primary-foreground" : ""}`}
-                                        >
+                                        <span className={`text-xs font-medium ${
+                                          isVendor ? "text-white/90" : "text-amber-700 dark:text-amber-300"
+                                        }`}>
                                           {isVendor ? "You" : "Couple"}
-                                        </Badge>
-                                        <span className={`text-xs ${isVendor ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                                        </span>
+                                        <span className={`text-xs ${isVendor ? "text-white/70" : "text-amber-600/70 dark:text-amber-400/70"}`}>
                                           {message.createdAt && formatDistanceToNow(
                                             typeof message.createdAt === 'string' ? parseISO(message.createdAt) : message.createdAt,
                                             { addSuffix: true }

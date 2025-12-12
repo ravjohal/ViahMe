@@ -405,16 +405,23 @@ export default function MessagesPage() {
                           <div
                             className={`max-w-[70%] rounded-lg p-3 ${
                               isCouple
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-muted"
+                                ? "bg-amber-500 dark:bg-amber-600 text-white"
+                                : "bg-rose-100 dark:bg-rose-900/40 text-rose-900 dark:text-rose-100 border border-rose-200 dark:border-rose-800"
                             }`}
                           >
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className={`text-xs font-medium ${
+                                isCouple ? "text-white/90" : "text-rose-700 dark:text-rose-300"
+                              }`}>
+                                {isCouple ? "You" : "Vendor"}
+                              </span>
+                              <span className={`text-xs ${
+                                isCouple ? "text-white/70" : "text-rose-600/70 dark:text-rose-400/70"
+                              }`}>
+                                {new Date(message.createdAt).toLocaleString()}
+                              </span>
+                            </div>
                             <p className="text-sm">{message.content}</p>
-                            <p className={`text-xs mt-1 ${
-                              isCouple ? "text-primary-foreground/70" : "text-muted-foreground"
-                            }`}>
-                              {new Date(message.createdAt).toLocaleString()}
-                            </p>
                           </div>
                         </div>
                       );
