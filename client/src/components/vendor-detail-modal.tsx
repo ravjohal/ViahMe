@@ -461,7 +461,7 @@ export function VendorDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
-      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col overflow-hidden" data-testid="dialog-vendor-detail">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" data-testid="dialog-vendor-detail">
         <DialogHeader className="sticky top-0 z-50 bg-background pb-4">
           <DialogTitle className="font-display text-2xl flex items-center gap-3">
             <Avatar className="h-10 w-10 border-2 border-primary/20">
