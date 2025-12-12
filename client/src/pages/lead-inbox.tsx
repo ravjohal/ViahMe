@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
+import { VendorHeader } from "@/components/vendor-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -423,21 +424,17 @@ export default function LeadInbox() {
   
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
+      <VendorHeader />
+      <main className="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => setLocation("/vendor-dashboard")} data-testid="button-back">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold tracking-tight flex items-center gap-2">
-                <Inbox className="h-7 w-7 text-primary" />
-                Lead Inbox
-              </h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                Manage inquiries and respond to couples
-              </p>
-            </div>
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight flex items-center gap-2">
+              <Inbox className="h-7 w-7 text-primary" />
+              Lead Inbox
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Manage inquiries and respond to couples
+            </p>
           </div>
           
           <div className="flex items-center gap-3">
@@ -908,7 +905,7 @@ export default function LeadInbox() {
             )}
           </TabsContent>
         </Tabs>
-      </div>
+      </main>
       
       <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
         <DialogContent className="max-w-lg">

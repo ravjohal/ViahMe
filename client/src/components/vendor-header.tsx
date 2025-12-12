@@ -15,7 +15,8 @@ import {
   Menu,
   X,
   Users,
-  Settings
+  Settings,
+  Inbox
 } from "lucide-react";
 import { useState } from "react";
 import viahLogo from "@assets/viah-logo_1763669612969.png";
@@ -24,6 +25,7 @@ import type { Vendor } from "@shared/schema";
 const navItems = [
   { href: "/vendor-dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/vendor-bookings", label: "Bookings", icon: Calendar },
+  { href: "/lead-inbox", label: "Messages", icon: Inbox },
   { href: "/vendor-contracts", label: "Contracts", icon: FileText },
   { href: "/vendor-packages", label: "Packages", icon: Package },
   { href: "/vendor-calendar", label: "Availability", icon: Clock },
