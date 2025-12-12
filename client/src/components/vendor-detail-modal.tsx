@@ -462,7 +462,7 @@ export function VendorDetailModal({
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" data-testid="dialog-vendor-detail">
-        <DialogHeader className="sticky top-0 z-50 bg-background pb-4">
+        <DialogHeader>
           <DialogTitle className="font-display text-2xl flex items-center gap-3">
             <Avatar className="h-10 w-10 border-2 border-primary/20">
               <AvatarFallback className="bg-primary/10 text-primary font-semibold">
@@ -1173,8 +1173,8 @@ export function VendorDetailModal({
 
         {/* Booking Confirmation Dialog */}
         <Dialog open={bookingConfirmDialogOpen} onOpenChange={setBookingConfirmDialogOpen}>
-          <DialogContent className="max-w-md max-h-[90vh] flex flex-col" data-testid="dialog-booking-confirmation">
-            <DialogHeader className="sticky top-0 z-50 bg-background border-b pb-4">
+          <DialogContent className="max-w-md max-h-[85vh] flex flex-col p-0" data-testid="dialog-booking-confirmation">
+            <DialogHeader className="shrink-0 px-6 pt-6 pb-4 border-b">
               <DialogTitle className="flex items-center gap-2">
                 <FileText className="w-5 h-5 text-primary" />
                 Confirm Booking Request
@@ -1184,8 +1184,8 @@ export function VendorDetailModal({
               </DialogDescription>
             </DialogHeader>
 
-            <ScrollArea className="flex-1 overflow-y-auto">
-              <div className="space-y-4 py-4 pr-4">
+            <div className="flex-1 overflow-y-auto px-6 py-4">
+              <div className="space-y-4">
                 <div className="p-4 rounded-lg bg-primary/5 border border-primary/20 space-y-4">
                   <h4 className="font-semibold text-sm flex items-center gap-2">
                     <Mail className="w-4 h-4 text-primary" />
@@ -1258,9 +1258,9 @@ export function VendorDetailModal({
                   Your contact email will also be shared so the vendor can respond.
                 </p>
               </div>
-            </ScrollArea>
+            </div>
 
-            <DialogFooter className="gap-2 sticky bottom-0 z-50 bg-background border-t pt-4 mt-4">
+            <DialogFooter className="shrink-0 gap-2 px-6 py-4 border-t">
               <Button
                 variant="outline"
                 onClick={() => setBookingConfirmDialogOpen(false)}
