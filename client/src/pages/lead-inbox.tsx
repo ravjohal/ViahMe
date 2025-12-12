@@ -649,34 +649,43 @@ export default function LeadInbox() {
                       </div>
                     ) : (
                       <ScrollArea className="h-[300px]">
-                        <div className="divide-y">
+                        <div className="p-3 space-y-3">
                           {unreadWeddingGroups.map((group) => (
-                            <div key={group.weddingId}>
+                            <div 
+                              key={group.weddingId}
+                              className="rounded-lg border border-primary/20 bg-gradient-to-r from-primary/5 to-transparent overflow-hidden"
+                            >
                               <button
                                 onClick={() => handleWeddingClick(group)}
                                 className={`w-full p-4 text-left hover-elevate transition-colors ${
-                                  group.events.length === 1 && selectedLead?.conversationId === group.events[0].conversationId ? "bg-accent" : ""
+                                  group.events.length === 1 && selectedLead?.conversationId === group.events[0].conversationId ? "bg-primary/10" : ""
                                 }`}
                                 data-testid={`wedding-group-${group.weddingId}`}
                               >
                                 <div className="flex items-start justify-between gap-2">
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2">
-                                      <Heart className="h-4 w-4 text-primary shrink-0" />
-                                      <span className="font-medium truncate">{group.coupleName}</span>
-                                      <Badge variant="default" className="text-xs">{group.totalUnread}</Badge>
-                                      {group.events.length > 1 && (
-                                        <Badge variant="outline" className="text-xs">
-                                          {group.events.length} events
-                                        </Badge>
-                                      )}
+                                      <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+                                        <Heart className="h-4 w-4 text-primary" />
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                          <span className="font-semibold text-foreground">{group.coupleName}</span>
+                                          <Badge variant="default" className="text-xs">{group.totalUnread} new</Badge>
+                                        </div>
+                                        {group.events.length > 1 && (
+                                          <span className="text-xs text-muted-foreground">
+                                            {group.events.length} events
+                                          </span>
+                                        )}
+                                      </div>
                                     </div>
                                     {group.events.length === 1 && group.events[0].lastMessage && (
-                                      <p className="text-sm text-muted-foreground truncate mt-1">
+                                      <p className="text-sm text-muted-foreground truncate mt-2 ml-10">
                                         {group.events[0].lastMessage.content}
                                       </p>
                                     )}
-                                    <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                                    <div className="flex items-center gap-2 mt-2 ml-10 text-xs text-muted-foreground">
                                       {group.city && (
                                         <span className="flex items-center gap-1">
                                           <MapPin className="h-3 w-3" />
@@ -684,15 +693,15 @@ export default function LeadInbox() {
                                         </span>
                                       )}
                                       {group.tradition && (
-                                        <Badge variant="outline" className="text-xs">{group.tradition}</Badge>
+                                        <Badge variant="secondary" className="text-xs">{group.tradition}</Badge>
                                       )}
                                     </div>
                                   </div>
                                   {group.events.length > 1 ? (
                                     expandedWeddings.has(group.weddingId) ? (
-                                      <ChevronDown className="h-5 w-5 text-muted-foreground shrink-0" />
+                                      <ChevronDown className="h-5 w-5 text-primary shrink-0" />
                                     ) : (
-                                      <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
+                                      <ChevronRight className="h-5 w-5 text-primary shrink-0" />
                                     )
                                   ) : (
                                     <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
@@ -700,20 +709,24 @@ export default function LeadInbox() {
                                 </div>
                               </button>
                               {group.events.length > 1 && expandedWeddings.has(group.weddingId) && (
-                                <div className="bg-muted/30 border-t">
-                                  {group.events.map((event) => (
+                                <div className="border-t border-primary/10 bg-muted/30">
+                                  {group.events.map((event, idx) => (
                                     <button
                                       key={event.conversationId}
                                       onClick={() => setSelectedLead(event)}
-                                      className={`w-full pl-10 pr-4 py-3 text-left hover-elevate transition-colors border-b last:border-b-0 ${
+                                      className={`w-full pl-6 pr-4 py-3 text-left hover-elevate transition-colors ${
+                                        idx !== group.events.length - 1 ? "border-b border-muted" : ""
+                                      } ${
                                         selectedLead?.conversationId === event.conversationId ? "bg-accent" : ""
                                       }`}
                                       data-testid={`event-item-${event.conversationId}`}
                                     >
-                                      <div className="flex items-center justify-between gap-2">
+                                      <div className="flex items-center gap-3">
+                                        <div className="w-6 h-6 rounded-md bg-secondary flex items-center justify-center shrink-0">
+                                          <PartyPopper className="h-3 w-3 text-muted-foreground" />
+                                        </div>
                                         <div className="flex-1 min-w-0">
                                           <div className="flex items-center gap-2">
-                                            <PartyPopper className="h-3 w-3 text-muted-foreground shrink-0" />
                                             <span className="text-sm font-medium truncate">
                                               {event.eventName || "General Inquiry"}
                                             </span>
@@ -722,7 +735,7 @@ export default function LeadInbox() {
                                             )}
                                           </div>
                                           {event.lastMessage && (
-                                            <p className="text-xs text-muted-foreground truncate mt-1 pl-5">
+                                            <p className="text-xs text-muted-foreground truncate mt-0.5">
                                               {event.lastMessage.content}
                                             </p>
                                           )}
@@ -751,66 +764,69 @@ export default function LeadInbox() {
                     </CardHeader>
                     <CardContent className="p-0">
                       <ScrollArea className="h-[200px]">
-                        <div className="divide-y">
+                        <div className="p-3 space-y-2">
                           {readWeddingGroups.map((group) => (
-                            <div key={group.weddingId}>
+                            <div 
+                              key={group.weddingId}
+                              className="rounded-lg border bg-card overflow-hidden"
+                            >
                               <button
                                 onClick={() => handleWeddingClick(group)}
-                                className={`w-full p-4 text-left hover-elevate transition-colors ${
+                                className={`w-full p-3 text-left hover-elevate transition-colors ${
                                   group.events.length === 1 && selectedLead?.conversationId === group.events[0].conversationId ? "bg-accent" : ""
                                 }`}
                                 data-testid={`wedding-group-read-${group.weddingId}`}
                               >
-                                <div className="flex items-start justify-between gap-2">
-                                  <div className="flex-1 min-w-0">
-                                    <span className="font-medium truncate flex items-center gap-2">
-                                      <Heart className="h-4 w-4 text-muted-foreground" />
-                                      {group.coupleName}
-                                      {group.events.length > 1 && (
-                                        <Badge variant="outline" className="text-xs">
-                                          {group.events.length} events
-                                        </Badge>
-                                      )}
-                                    </span>
-                                    <p className="text-xs text-muted-foreground mt-1">
-                                      {group.events.reduce((sum, e) => sum + e.totalMessages, 0)} messages
-                                    </p>
+                                <div className="flex items-center justify-between gap-2">
+                                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                                    <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center shrink-0">
+                                      <Heart className="h-3.5 w-3.5 text-muted-foreground" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <span className="font-medium text-sm truncate block">{group.coupleName}</span>
+                                      <span className="text-xs text-muted-foreground">
+                                        {group.events.reduce((sum, e) => sum + e.totalMessages, 0)} messages
+                                        {group.events.length > 1 && ` · ${group.events.length} events`}
+                                      </span>
+                                    </div>
                                   </div>
                                   {group.events.length > 1 ? (
                                     expandedWeddings.has(group.weddingId) ? (
-                                      <ChevronDown className="h-5 w-5 text-muted-foreground shrink-0" />
+                                      <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
                                     ) : (
-                                      <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
+                                      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
                                     )
                                   ) : (
-                                    <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
+                                    <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
                                   )}
                                 </div>
                               </button>
                               {group.events.length > 1 && expandedWeddings.has(group.weddingId) && (
-                                <div className="bg-muted/30 border-t">
-                                  {group.events.map((event) => (
+                                <div className="border-t bg-muted/20">
+                                  {group.events.map((event, idx) => (
                                     <button
                                       key={event.conversationId}
                                       onClick={() => setSelectedLead(event)}
-                                      className={`w-full pl-10 pr-4 py-3 text-left hover-elevate transition-colors border-b last:border-b-0 ${
+                                      className={`w-full pl-5 pr-3 py-2.5 text-left hover-elevate transition-colors ${
+                                        idx !== group.events.length - 1 ? "border-b border-muted/50" : ""
+                                      } ${
                                         selectedLead?.conversationId === event.conversationId ? "bg-accent" : ""
                                       }`}
                                       data-testid={`event-item-read-${event.conversationId}`}
                                     >
-                                      <div className="flex items-center justify-between gap-2">
-                                        <div className="flex-1 min-w-0">
-                                          <div className="flex items-center gap-2">
-                                            <PartyPopper className="h-3 w-3 text-muted-foreground shrink-0" />
-                                            <span className="text-sm font-medium truncate">
-                                              {event.eventName || "General Inquiry"}
-                                            </span>
-                                          </div>
-                                          <p className="text-xs text-muted-foreground mt-1 pl-5">
-                                            {event.totalMessages} messages
-                                          </p>
+                                      <div className="flex items-center gap-2">
+                                        <div className="w-5 h-5 rounded bg-secondary/50 flex items-center justify-center shrink-0">
+                                          <PartyPopper className="h-2.5 w-2.5 text-muted-foreground" />
                                         </div>
-                                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                                        <div className="flex-1 min-w-0">
+                                          <span className="text-sm truncate block">
+                                            {event.eventName || "General Inquiry"}
+                                          </span>
+                                          <span className="text-xs text-muted-foreground">
+                                            {event.totalMessages} messages
+                                          </span>
+                                        </div>
+                                        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                                       </div>
                                     </button>
                                   ))}

@@ -249,44 +249,55 @@ export default function MessagesPage() {
                 </p>
               </div>
             ) : (
-              <div className="p-2">
+              <div className="p-3 space-y-3">
                 {vendorGroups.map((group) => (
-                  <div key={group.vendorId} className="mb-1">
+                  <div 
+                    key={group.vendorId} 
+                    className={`rounded-lg border overflow-hidden ${
+                      group.totalUnread > 0 
+                        ? "border-primary/20 bg-gradient-to-r from-primary/5 to-transparent" 
+                        : "bg-card"
+                    }`}
+                  >
                     <button
                       onClick={() => handleVendorClick(group)}
-                      className={`w-full p-3 rounded-lg text-left hover-elevate ${
-                        group.events.length === 1 && selectedConversation === group.events[0].conversationId ? "bg-muted" : ""
+                      className={`w-full p-4 text-left hover-elevate ${
+                        group.events.length === 1 && selectedConversation === group.events[0].conversationId 
+                          ? group.totalUnread > 0 ? "bg-primary/10" : "bg-accent" 
+                          : ""
                       }`}
                       data-testid={`vendor-group-${group.vendorId}`}
                     >
                       <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <User className="w-5 h-5 text-primary" />
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          group.totalUnread > 0 ? "bg-primary/15" : "bg-muted"
+                        }`}>
+                          <User className={`w-5 h-5 ${group.totalUnread > 0 ? "text-primary" : "text-muted-foreground"}`} />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium truncate">{group.vendorName}</p>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="font-semibold truncate">{group.vendorName}</p>
                             {group.totalUnread > 0 && (
-                              <Badge variant="default" className="text-xs">{group.totalUnread}</Badge>
+                              <Badge variant="default" className="text-xs">{group.totalUnread} new</Badge>
                             )}
                           </div>
                           <div className="flex items-center gap-2 mt-1 flex-wrap">
-                            <p className="text-sm text-muted-foreground truncate">
+                            <Badge variant="secondary" className="text-xs font-normal">
                               {group.vendorCategory.replace(/_/g, " ")}
-                            </p>
+                            </Badge>
                             {group.events.length > 1 && (
-                              <Badge variant="outline" className="text-xs">
+                              <span className="text-xs text-muted-foreground">
                                 {group.events.length} events
-                              </Badge>
+                              </span>
                             )}
                             {group.events.length === 1 && getBookingStatusBadge(group.events[0].bookingStatus)}
                           </div>
                         </div>
                         {group.events.length > 1 ? (
                           expandedVendors.has(group.vendorId) ? (
-                            <ChevronDown className="w-5 h-5 text-muted-foreground shrink-0" />
+                            <ChevronDown className={`w-5 h-5 shrink-0 ${group.totalUnread > 0 ? "text-primary" : "text-muted-foreground"}`} />
                           ) : (
-                            <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+                            <ChevronRight className={`w-5 h-5 shrink-0 ${group.totalUnread > 0 ? "text-primary" : "text-muted-foreground"}`} />
                           )
                         ) : (
                           <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
@@ -294,33 +305,39 @@ export default function MessagesPage() {
                       </div>
                     </button>
                     {group.events.length > 1 && expandedVendors.has(group.vendorId) && (
-                      <div className="ml-4 pl-4 border-l border-muted">
-                        {group.events.map((event) => (
+                      <div className={`border-t ${group.totalUnread > 0 ? "border-primary/10 bg-muted/30" : "border-muted bg-muted/20"}`}>
+                        {group.events.map((event, idx) => (
                           <button
                             key={event.conversationId}
                             onClick={() => setSelectedConversation(event.conversationId)}
-                            className={`w-full p-2 rounded-lg text-left hover-elevate mb-1 ${
-                              selectedConversation === event.conversationId ? "bg-muted" : ""
+                            className={`w-full pl-6 pr-4 py-3 text-left hover-elevate ${
+                              idx !== group.events.length - 1 ? "border-b border-muted/50" : ""
+                            } ${
+                              selectedConversation === event.conversationId ? "bg-accent" : ""
                             }`}
                             data-testid={`event-conversation-${event.conversationId}`}
                           >
-                            <div className="flex items-center gap-2">
-                              <PartyPopper className="w-4 h-4 text-muted-foreground shrink-0" />
-                              <span className="text-sm font-medium truncate">
-                                {event.eventName || "General Inquiry"}
-                              </span>
-                              {(event.unreadCount || 0) > 0 && (
-                                <Badge variant="default" className="text-xs">{event.unreadCount}</Badge>
-                              )}
-                              <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 ml-auto" />
-                            </div>
-                            <div className="flex items-center gap-2 mt-1 pl-6">
-                              {getBookingStatusBadge(event.bookingStatus)}
-                              {event.lastMessage && (
-                                <p className="text-xs text-muted-foreground truncate">
-                                  {event.lastMessage.content}
-                                </p>
-                              )}
+                            <div className="flex items-center gap-3">
+                              <div className="w-6 h-6 rounded-md bg-secondary flex items-center justify-center shrink-0">
+                                <PartyPopper className="w-3 h-3 text-muted-foreground" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-medium truncate">
+                                    {event.eventName || "General Inquiry"}
+                                  </span>
+                                  {(event.unreadCount || 0) > 0 && (
+                                    <Badge variant="default" className="text-xs">{event.unreadCount}</Badge>
+                                  )}
+                                  {getBookingStatusBadge(event.bookingStatus)}
+                                </div>
+                                {event.lastMessage && (
+                                  <p className="text-xs text-muted-foreground truncate mt-0.5">
+                                    {event.lastMessage.content}
+                                  </p>
+                                )}
+                              </div>
+                              <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
                             </div>
                           </button>
                         ))}
