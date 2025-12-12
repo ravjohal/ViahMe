@@ -24,7 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { format, formatDistanceToNow, isBefore, isToday, parseISO } from "date-fns";
 import { Link, useLocation, useSearch } from "wouter";
-import type { Vendor, QuickReplyTemplate, FollowUpReminder, InsertQuickReplyTemplate, InsertFollowUpReminder } from "@shared/schema";
+import type { Vendor, QuickReplyTemplate, FollowUpReminder, InsertQuickReplyTemplate, InsertFollowUpReminder, Message } from "@shared/schema";
 import {
   Inbox,
   Mail,
@@ -151,6 +151,18 @@ export default function LeadInbox() {
     enabled: !!vendorId,
   });
   
+  // Fetch full conversation messages when a lead is selected
+  const { data: conversationMessages = [], isLoading: messagesLoading } = useQuery<Message[]>({
+    queryKey: ["/api/messages", selectedLead?.conversationId],
+    queryFn: async () => {
+      if (!selectedLead?.conversationId) return [];
+      const response = await fetch(`/api/messages/${encodeURIComponent(selectedLead.conversationId)}`);
+      if (!response.ok) throw new Error("Failed to fetch messages");
+      return response.json();
+    },
+    enabled: !!selectedLead?.conversationId,
+  });
+  
   // Handle conversation pre-selection from URL query parameter (e.g., from booking cards)
   useEffect(() => {
     if (initialConversationHandled || leads.length === 0) return;
@@ -188,6 +200,7 @@ export default function LeadInbox() {
       toast({ title: "Message sent successfully!" });
       setReplyContent("");
       queryClient.invalidateQueries({ queryKey: ["/api/lead-inbox", vendorId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/messages", selectedLead?.conversationId] });
     },
     onError: () => {
       toast({ title: "Failed to send message", variant: "destructive" });
@@ -654,42 +667,68 @@ export default function LeadInbox() {
                             )}
                           </CardDescription>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => handleSetReminder(selectedLead)}
-                            data-testid="button-set-reminder"
-                          >
-                            <Bell className="h-4 w-4 mr-1" />
-                            Set Reminder
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => setLocation(`/messages?conversation=${selectedLead.conversationId}`)}
-                            data-testid="button-view-full"
-                          >
-                            <MessageSquare className="h-4 w-4 mr-1" />
-                            Full Thread
-                          </Button>
-                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleSetReminder(selectedLead)}
+                          data-testid="button-set-reminder"
+                        >
+                          <Bell className="h-4 w-4 mr-1" />
+                          Set Reminder
+                        </Button>
                       </div>
                     </CardHeader>
-                    <CardContent className="p-4 space-y-4">
-                      {selectedLead.lastMessage && (
-                        <div className="bg-muted/50 rounded-lg p-4">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Badge variant={selectedLead.lastMessage.senderType === "vendor" ? "secondary" : "default"} className="text-xs">
-                              {selectedLead.lastMessage.senderType === "vendor" ? "You" : "Couple"}
-                            </Badge>
-                            <span className="text-xs text-muted-foreground">
-                              {formatDistanceToNow(parseISO(selectedLead.lastMessage.createdAt), { addSuffix: true })}
-                            </span>
-                          </div>
-                          <p className="text-sm">{selectedLead.lastMessage.content}</p>
-                        </div>
-                      )}
+                    <CardContent className="p-4 space-y-4 flex flex-col h-[calc(100vh-400px)] min-h-[400px]">
+                      <div className="flex-1 overflow-hidden">
+                        <Label className="text-sm font-medium mb-2 block">Conversation</Label>
+                        <ScrollArea className="h-full border rounded-lg p-3 bg-muted/30">
+                          {messagesLoading ? (
+                            <div className="space-y-3">
+                              <Skeleton className="h-16 w-3/4" />
+                              <Skeleton className="h-16 w-3/4 ml-auto" />
+                              <Skeleton className="h-16 w-3/4" />
+                            </div>
+                          ) : conversationMessages.length === 0 ? (
+                            <div className="flex items-center justify-center h-32 text-muted-foreground text-sm">
+                              No messages yet. Start the conversation!
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              {conversationMessages.map((message) => {
+                                const isVendor = message.senderType === "vendor";
+                                return (
+                                  <div
+                                    key={message.id}
+                                    className={`flex ${isVendor ? "justify-end" : "justify-start"}`}
+                                    data-testid={`message-${message.id}`}
+                                  >
+                                    <div
+                                      className={`max-w-[80%] rounded-lg p-3 ${
+                                        isVendor
+                                          ? "bg-primary text-primary-foreground"
+                                          : "bg-background border"
+                                      }`}
+                                    >
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <Badge 
+                                          variant={isVendor ? "secondary" : "default"} 
+                                          className={`text-xs ${isVendor ? "bg-primary-foreground/20 text-primary-foreground" : ""}`}
+                                        >
+                                          {isVendor ? "You" : "Couple"}
+                                        </Badge>
+                                        <span className={`text-xs ${isVendor ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                                          {message.createdAt && formatDistanceToNow(parseISO(message.createdAt as string), { addSuffix: true })}
+                                        </span>
+                                      </div>
+                                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </ScrollArea>
+                      </div>
                       
                       <Separator />
                       
