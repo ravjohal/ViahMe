@@ -583,6 +583,24 @@ export default function VendorBookings() {
                     </div>
                   </div>
                 )}
+
+                {/* Message Couple Button - always visible */}
+                <div className={`flex gap-2 ${booking.status !== "pending" ? "mt-4 pt-4 border-t" : ""}`}>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => {
+                      const conversationId = booking.eventId 
+                        ? `${booking.weddingId}-vendor-${booking.vendorId}-event-${booking.eventId}`
+                        : `${booking.weddingId}-vendor-${booking.vendorId}`;
+                      setLocation(`/vendor/messages?conversation=${conversationId}`);
+                    }}
+                    data-testid={`button-message-couple-${booking.id}`}
+                  >
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    Message Couple
+                  </Button>
+                </div>
               </Card>
             );
             })}
