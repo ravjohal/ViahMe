@@ -59,6 +59,7 @@ interface Lead {
   conversationId: string;
   weddingId: string;
   vendorId: string;
+  eventId?: string;
   coupleName: string;
   eventName?: string;
   weddingDate?: string;
