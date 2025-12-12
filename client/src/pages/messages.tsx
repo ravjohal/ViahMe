@@ -24,6 +24,23 @@ import { useToast } from "@/hooks/use-toast";
 import { MessageCircle, Send, User, ChevronRight, ChevronDown, PartyPopper, Clock, CheckCircle, XCircle, Loader2, Archive, AlertTriangle } from "lucide-react";
 import type { Message, Wedding, ConversationStatus } from "@shared/schema";
 
+const VENDOR_COLORS = [
+  { bg: "bg-rose-50 dark:bg-rose-950/30", border: "border-rose-200 dark:border-rose-800", icon: "bg-rose-100 dark:bg-rose-900/50" },
+  { bg: "bg-sky-50 dark:bg-sky-950/30", border: "border-sky-200 dark:border-sky-800", icon: "bg-sky-100 dark:bg-sky-900/50" },
+  { bg: "bg-amber-50 dark:bg-amber-950/30", border: "border-amber-200 dark:border-amber-800", icon: "bg-amber-100 dark:bg-amber-900/50" },
+  { bg: "bg-emerald-50 dark:bg-emerald-950/30", border: "border-emerald-200 dark:border-emerald-800", icon: "bg-emerald-100 dark:bg-emerald-900/50" },
+  { bg: "bg-violet-50 dark:bg-violet-950/30", border: "border-violet-200 dark:border-violet-800", icon: "bg-violet-100 dark:bg-violet-900/50" },
+  { bg: "bg-cyan-50 dark:bg-cyan-950/30", border: "border-cyan-200 dark:border-cyan-800", icon: "bg-cyan-100 dark:bg-cyan-900/50" },
+];
+
+const EVENT_COLORS = [
+  "bg-orange-50 dark:bg-orange-950/20",
+  "bg-teal-50 dark:bg-teal-950/20",
+  "bg-pink-50 dark:bg-pink-950/20",
+  "bg-indigo-50 dark:bg-indigo-950/20",
+  "bg-lime-50 dark:bg-lime-950/20",
+];
+
 interface ConversationWithMetadata {
   conversationId: string;
   weddingId: string;
@@ -318,29 +335,25 @@ export default function MessagesPage() {
               </div>
             ) : (
               <div className="p-3 space-y-3">
-                {vendorGroups.map((group) => (
+                {vendorGroups.map((group, vendorIdx) => {
+                  const vendorColor = VENDOR_COLORS[vendorIdx % VENDOR_COLORS.length];
+                  return (
                   <div 
                     key={group.vendorId} 
-                    className={`rounded-lg border overflow-hidden ${
-                      group.totalUnread > 0 
-                        ? "border-primary/20 bg-gradient-to-r from-primary/5 to-transparent" 
-                        : "bg-card"
-                    }`}
+                    className={`rounded-lg border overflow-hidden ${vendorColor.bg} ${vendorColor.border}`}
                   >
                     <button
                       onClick={() => handleVendorClick(group)}
                       className={`w-full p-4 text-left hover-elevate ${
                         group.events.length === 1 && selectedConversation === group.events[0].conversationId 
-                          ? group.totalUnread > 0 ? "bg-primary/10" : "bg-accent" 
+                          ? "ring-2 ring-primary ring-inset" 
                           : ""
                       }`}
                       data-testid={`vendor-group-${group.vendorId}`}
                     >
                       <div className="flex items-start gap-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          group.totalUnread > 0 ? "bg-primary/15" : "bg-muted"
-                        }`}>
-                          <User className={`w-5 h-5 ${group.totalUnread > 0 ? "text-primary" : "text-muted-foreground"}`} />
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${vendorColor.icon}`}>
+                          <User className="w-5 h-5 text-foreground/70" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
@@ -373,21 +386,23 @@ export default function MessagesPage() {
                       </div>
                     </button>
                     {group.events.length > 1 && expandedVendors.has(group.vendorId) && (
-                      <div className={`border-t ${group.totalUnread > 0 ? "border-primary/10 bg-muted/30" : "border-muted bg-muted/20"}`}>
-                        {group.events.map((event, idx) => (
+                      <div className="border-t border-inherit">
+                        {group.events.map((event, eventIdx) => {
+                          const eventColor = EVENT_COLORS[eventIdx % EVENT_COLORS.length];
+                          return (
                           <button
                             key={event.conversationId}
                             onClick={() => setSelectedConversation(event.conversationId)}
-                            className={`w-full pl-6 pr-4 py-3 text-left hover-elevate ${
-                              idx !== group.events.length - 1 ? "border-b border-muted/50" : ""
+                            className={`w-full pl-6 pr-4 py-3 text-left hover-elevate ${eventColor} ${
+                              eventIdx !== group.events.length - 1 ? "border-b border-muted/30" : ""
                             } ${
-                              selectedConversation === event.conversationId ? "bg-accent" : ""
+                              selectedConversation === event.conversationId ? "ring-2 ring-primary ring-inset" : ""
                             }`}
                             data-testid={`event-conversation-${event.conversationId}`}
                           >
                             <div className="flex items-center gap-3">
-                              <div className="w-6 h-6 rounded-md bg-secondary flex items-center justify-center shrink-0">
-                                <PartyPopper className="w-3 h-3 text-muted-foreground" />
+                              <div className="w-6 h-6 rounded-md bg-background/50 flex items-center justify-center shrink-0">
+                                <PartyPopper className="w-3 h-3 text-foreground/60" />
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
@@ -408,11 +423,13 @@ export default function MessagesPage() {
                               <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
                             </div>
                           </button>
-                        ))}
+                        );
+                        })}
                       </div>
                     )}
                   </div>
-                ))}
+                );
+                })}
               </div>
             )}
           </ScrollArea>

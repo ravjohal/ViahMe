@@ -57,6 +57,23 @@ import {
   Archive,
 } from "lucide-react";
 
+const COUPLE_COLORS = [
+  { bg: "bg-rose-50 dark:bg-rose-950/30", border: "border-rose-200 dark:border-rose-800", icon: "bg-rose-100 dark:bg-rose-900/50" },
+  { bg: "bg-sky-50 dark:bg-sky-950/30", border: "border-sky-200 dark:border-sky-800", icon: "bg-sky-100 dark:bg-sky-900/50" },
+  { bg: "bg-amber-50 dark:bg-amber-950/30", border: "border-amber-200 dark:border-amber-800", icon: "bg-amber-100 dark:bg-amber-900/50" },
+  { bg: "bg-emerald-50 dark:bg-emerald-950/30", border: "border-emerald-200 dark:border-emerald-800", icon: "bg-emerald-100 dark:bg-emerald-900/50" },
+  { bg: "bg-violet-50 dark:bg-violet-950/30", border: "border-violet-200 dark:border-violet-800", icon: "bg-violet-100 dark:bg-violet-900/50" },
+  { bg: "bg-cyan-50 dark:bg-cyan-950/30", border: "border-cyan-200 dark:border-cyan-800", icon: "bg-cyan-100 dark:bg-cyan-900/50" },
+];
+
+const EVENT_COLORS = [
+  "bg-orange-50 dark:bg-orange-950/20",
+  "bg-teal-50 dark:bg-teal-950/20",
+  "bg-pink-50 dark:bg-pink-950/20",
+  "bg-indigo-50 dark:bg-indigo-950/20",
+  "bg-lime-50 dark:bg-lime-950/20",
+];
+
 interface Lead {
   conversationId: string;
   weddingId: string;
@@ -679,23 +696,25 @@ export default function LeadInbox() {
                     ) : (
                       <ScrollArea className="h-[300px]">
                         <div className="p-3 space-y-3">
-                          {unreadWeddingGroups.map((group) => (
+                          {unreadWeddingGroups.map((group, groupIdx) => {
+                            const coupleColor = COUPLE_COLORS[groupIdx % COUPLE_COLORS.length];
+                            return (
                             <div 
                               key={group.weddingId}
-                              className="rounded-lg border border-primary/20 bg-gradient-to-r from-primary/5 to-transparent overflow-hidden"
+                              className={`rounded-lg border overflow-hidden ${coupleColor.bg} ${coupleColor.border}`}
                             >
                               <button
                                 onClick={() => handleWeddingClick(group)}
                                 className={`w-full p-4 text-left hover-elevate transition-colors ${
-                                  group.events.length === 1 && selectedLead?.conversationId === group.events[0].conversationId ? "bg-primary/10" : ""
+                                  group.events.length === 1 && selectedLead?.conversationId === group.events[0].conversationId ? "ring-2 ring-primary ring-inset" : ""
                                 }`}
                                 data-testid={`wedding-group-${group.weddingId}`}
                               >
                                 <div className="flex items-start justify-between gap-2">
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2">
-                                      <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
-                                        <Heart className="h-4 w-4 text-primary" />
+                                      <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${coupleColor.icon}`}>
+                                        <Heart className="h-4 w-4 text-foreground/70" />
                                       </div>
                                       <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 flex-wrap">
@@ -738,21 +757,23 @@ export default function LeadInbox() {
                                 </div>
                               </button>
                               {group.events.length > 1 && expandedWeddings.has(group.weddingId) && (
-                                <div className="border-t border-primary/10 bg-muted/30">
-                                  {group.events.map((event, idx) => (
+                                <div className="border-t border-inherit">
+                                  {group.events.map((event, eventIdx) => {
+                                    const eventColor = EVENT_COLORS[eventIdx % EVENT_COLORS.length];
+                                    return (
                                     <button
                                       key={event.conversationId}
                                       onClick={() => setSelectedLead(event)}
-                                      className={`w-full pl-6 pr-4 py-3 text-left hover-elevate transition-colors ${
-                                        idx !== group.events.length - 1 ? "border-b border-muted" : ""
+                                      className={`w-full pl-6 pr-4 py-3 text-left hover-elevate transition-colors ${eventColor} ${
+                                        eventIdx !== group.events.length - 1 ? "border-b border-muted/30" : ""
                                       } ${
-                                        selectedLead?.conversationId === event.conversationId ? "bg-accent" : ""
+                                        selectedLead?.conversationId === event.conversationId ? "ring-2 ring-primary ring-inset" : ""
                                       }`}
                                       data-testid={`event-item-${event.conversationId}`}
                                     >
                                       <div className="flex items-center gap-3">
-                                        <div className="w-6 h-6 rounded-md bg-secondary flex items-center justify-center shrink-0">
-                                          <PartyPopper className="h-3 w-3 text-muted-foreground" />
+                                        <div className="w-6 h-6 rounded-md bg-background/50 flex items-center justify-center shrink-0">
+                                          <PartyPopper className="h-3 w-3 text-foreground/60" />
                                         </div>
                                         <div className="flex-1 min-w-0">
                                           <div className="flex items-center gap-2">
@@ -772,11 +793,13 @@ export default function LeadInbox() {
                                         <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
                                       </div>
                                     </button>
-                                  ))}
+                                  );
+                                  })}
                                 </div>
                               )}
                             </div>
-                          ))}
+                          );
+                          })}
                         </div>
                       </ScrollArea>
                     )}
@@ -794,22 +817,24 @@ export default function LeadInbox() {
                     <CardContent className="p-0">
                       <ScrollArea className="h-[200px]">
                         <div className="p-3 space-y-2">
-                          {readWeddingGroups.map((group) => (
+                          {readWeddingGroups.map((group, groupIdx) => {
+                            const coupleColor = COUPLE_COLORS[groupIdx % COUPLE_COLORS.length];
+                            return (
                             <div 
                               key={group.weddingId}
-                              className="rounded-lg border bg-card overflow-hidden"
+                              className={`rounded-lg border overflow-hidden ${coupleColor.bg} ${coupleColor.border}`}
                             >
                               <button
                                 onClick={() => handleWeddingClick(group)}
                                 className={`w-full p-3 text-left hover-elevate transition-colors ${
-                                  group.events.length === 1 && selectedLead?.conversationId === group.events[0].conversationId ? "bg-accent" : ""
+                                  group.events.length === 1 && selectedLead?.conversationId === group.events[0].conversationId ? "ring-2 ring-primary ring-inset" : ""
                                 }`}
                                 data-testid={`wedding-group-read-${group.weddingId}`}
                               >
                                 <div className="flex items-center justify-between gap-2">
                                   <div className="flex items-center gap-3 flex-1 min-w-0">
-                                    <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center shrink-0">
-                                      <Heart className="h-3.5 w-3.5 text-muted-foreground" />
+                                    <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${coupleColor.icon}`}>
+                                      <Heart className="h-3.5 w-3.5 text-foreground/70" />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                       <span className="font-medium text-sm truncate block">{group.coupleName}</span>
@@ -831,21 +856,23 @@ export default function LeadInbox() {
                                 </div>
                               </button>
                               {group.events.length > 1 && expandedWeddings.has(group.weddingId) && (
-                                <div className="border-t bg-muted/20">
-                                  {group.events.map((event, idx) => (
+                                <div className="border-t border-inherit">
+                                  {group.events.map((event, eventIdx) => {
+                                    const eventColor = EVENT_COLORS[eventIdx % EVENT_COLORS.length];
+                                    return (
                                     <button
                                       key={event.conversationId}
                                       onClick={() => setSelectedLead(event)}
-                                      className={`w-full pl-5 pr-3 py-2.5 text-left hover-elevate transition-colors ${
-                                        idx !== group.events.length - 1 ? "border-b border-muted/50" : ""
+                                      className={`w-full pl-5 pr-3 py-2.5 text-left hover-elevate transition-colors ${eventColor} ${
+                                        eventIdx !== group.events.length - 1 ? "border-b border-muted/30" : ""
                                       } ${
-                                        selectedLead?.conversationId === event.conversationId ? "bg-accent" : ""
+                                        selectedLead?.conversationId === event.conversationId ? "ring-2 ring-primary ring-inset" : ""
                                       }`}
                                       data-testid={`event-item-read-${event.conversationId}`}
                                     >
                                       <div className="flex items-center gap-2">
-                                        <div className="w-5 h-5 rounded bg-secondary/50 flex items-center justify-center shrink-0">
-                                          <PartyPopper className="h-2.5 w-2.5 text-muted-foreground" />
+                                        <div className="w-5 h-5 rounded bg-background/50 flex items-center justify-center shrink-0">
+                                          <PartyPopper className="h-2.5 w-2.5 text-foreground/60" />
                                         </div>
                                         <div className="flex-1 min-w-0">
                                           <span className="text-sm truncate block">
@@ -858,11 +885,13 @@ export default function LeadInbox() {
                                         <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                                       </div>
                                     </button>
-                                  ))}
+                                  );
+                                  })}
                                 </div>
                               )}
                             </div>
-                          ))}
+                          );
+                          })}
                         </div>
                       </ScrollArea>
                     </CardContent>
