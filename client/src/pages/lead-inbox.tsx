@@ -25,7 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { format, formatDistanceToNow, isBefore, isToday, parseISO } from "date-fns";
 import { Link, useLocation, useSearch } from "wouter";
-import type { Vendor, QuickReplyTemplate, FollowUpReminder, InsertQuickReplyTemplate, InsertFollowUpReminder, Message } from "@shared/schema";
+import type { Vendor, QuickReplyTemplate, FollowUpReminder, InsertQuickReplyTemplate, InsertFollowUpReminder, Message, ConversationStatus } from "@shared/schema";
 import {
   Inbox,
   Mail,
@@ -54,6 +54,7 @@ import {
   Copy,
   Settings,
   PartyPopper,
+  Archive,
 } from "lucide-react";
 
 interface Lead {
@@ -184,6 +185,29 @@ export default function LeadInbox() {
     },
     enabled: !!selectedLead?.conversationId,
   });
+  
+  // Fetch conversation status to check if closed
+  const { data: conversationStatus, isLoading: statusLoading, isError: statusError } = useQuery<ConversationStatus | { status: 'open' }>({
+    queryKey: ["/api/conversations", selectedLead?.conversationId, "status"],
+    queryFn: async () => {
+      if (!selectedLead?.conversationId) return { status: 'open' as const };
+      const response = await fetch(`/api/conversations/${encodeURIComponent(selectedLead.conversationId)}/status`);
+      if (!response.ok) {
+        // 404 means no status record exists, treat as open
+        if (response.status === 404) {
+          return { status: 'open' as const };
+        }
+        throw new Error("Failed to fetch conversation status");
+      }
+      return response.json();
+    },
+    enabled: !!selectedLead?.conversationId,
+    retry: 1,
+  });
+  
+  const isConversationClosed = conversationStatus?.status === 'closed';
+  // Disable reply if status is loading, closed, or there's an error
+  const isReplyDisabled = statusLoading || isConversationClosed || statusError;
   
   // Handle conversation pre-selection from URL query parameter (e.g., from booking cards)
   useEffect(() => {
@@ -860,6 +884,12 @@ export default function LeadInbox() {
                                 {selectedLead.eventName}
                               </Badge>
                             )}
+                            {isConversationClosed && (
+                              <Badge variant="secondary" className="ml-2 font-normal" data-testid="badge-conversation-closed">
+                                <Archive className="w-3 h-3 mr-1" />
+                                Closed
+                              </Badge>
+                            )}
                           </CardTitle>
                           <CardDescription className="flex flex-wrap items-center gap-3 mt-2">
                             {selectedLead.weddingDate && (
@@ -891,6 +921,12 @@ export default function LeadInbox() {
                       </div>
                     </CardHeader>
                     <CardContent className="p-4 space-y-4 flex flex-col h-[calc(100vh-400px)] min-h-[400px]">
+                      {isConversationClosed && (
+                        <div className="px-3 py-2 bg-muted/50 rounded-lg flex items-center gap-2" data-testid="banner-conversation-closed">
+                          <Archive className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">This inquiry has been closed by the couple.</span>
+                        </div>
+                      )}
                       <div className="flex-1 overflow-hidden">
                         <Label className="text-sm font-medium mb-2 block">Conversation</Label>
                         <ScrollArea className="h-full border rounded-lg p-3 bg-muted/30">
@@ -947,84 +983,109 @@ export default function LeadInbox() {
                       <Separator />
                       
                       <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <Label className="text-sm font-medium">Quick Reply</Label>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleGetAiSuggestions}
-                            disabled={aiSuggestionsLoading}
-                            data-testid="button-ai-suggest"
-                          >
-                            <Sparkles className="h-3 w-3 mr-1" />
-                            {aiSuggestionsLoading ? "Generating..." : "AI Suggest"}
-                          </Button>
-                        </div>
-                        
-                        {templates.length > 0 && (
-                          <div className="flex flex-wrap gap-2 mb-3">
-                            {templates.slice(0, 4).map((template) => (
-                              <Button
-                                key={template.id}
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleUseTemplate(template)}
-                                data-testid={`button-use-template-${template.id}`}
-                              >
-                                <Zap className="h-3 w-3 mr-1" />
-                                {template.name}
-                              </Button>
-                            ))}
-                            {templates.length > 4 && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setActiveTab("templates")}
-                              >
-                                +{templates.length - 4} more
-                              </Button>
+                        {statusLoading ? (
+                          <div className="space-y-3" data-testid="reply-loading">
+                            <Skeleton className="h-8 w-full" />
+                            <Skeleton className="h-24 w-full" />
+                            <Skeleton className="h-10 w-32 ml-auto" />
+                          </div>
+                        ) : isReplyDisabled ? (
+                          <div className="text-center py-6 text-muted-foreground" data-testid="reply-disabled-message">
+                            <Archive className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                            {isConversationClosed ? (
+                              <>
+                                <p className="text-sm">This inquiry has been closed by the couple.</p>
+                                <p className="text-xs mt-1">You can no longer send messages to this conversation.</p>
+                              </>
+                            ) : (
+                              <>
+                                <p className="text-sm">Unable to verify conversation status.</p>
+                                <p className="text-xs mt-1">Please refresh the page to try again.</p>
+                              </>
                             )}
                           </div>
-                        )}
-                        
-                        {aiSuggestions.length > 0 && (
-                          <div className="mb-3 space-y-2">
-                            <Label className="text-xs text-muted-foreground">AI Suggestions - Click to use</Label>
-                            {aiSuggestions.map((suggestion, index) => (
-                              <div
-                                key={index}
-                                className="p-3 bg-primary/5 border border-primary/20 rounded-lg cursor-pointer hover-elevate"
-                                onClick={() => handleUseAiSuggestion(suggestion)}
-                                data-testid={`button-use-ai-suggestion-${index}`}
+                        ) : (
+                          <>
+                            <div className="flex items-center justify-between mb-2">
+                              <Label className="text-sm font-medium">Quick Reply</Label>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleGetAiSuggestions}
+                                disabled={aiSuggestionsLoading}
+                                data-testid="button-ai-suggest"
                               >
-                                <p className="text-sm line-clamp-3">{suggestion}</p>
-                                <div className="flex items-center gap-1 mt-2 text-xs text-primary">
-                                  <Sparkles className="h-3 w-3" />
-                                  Click to use this suggestion
-                                </div>
+                                <Sparkles className="h-3 w-3 mr-1" />
+                                {aiSuggestionsLoading ? "Generating..." : "AI Suggest"}
+                              </Button>
+                            </div>
+                            
+                            {templates.length > 0 && (
+                              <div className="flex flex-wrap gap-2 mb-3">
+                                {templates.slice(0, 4).map((template) => (
+                                  <Button
+                                    key={template.id}
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleUseTemplate(template)}
+                                    data-testid={`button-use-template-${template.id}`}
+                                  >
+                                    <Zap className="h-3 w-3 mr-1" />
+                                    {template.name}
+                                  </Button>
+                                ))}
+                                {templates.length > 4 && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setActiveTab("templates")}
+                                  >
+                                    +{templates.length - 4} more
+                                  </Button>
+                                )}
                               </div>
-                            ))}
-                          </div>
+                            )}
+                            
+                            {aiSuggestions.length > 0 && (
+                              <div className="mb-3 space-y-2">
+                                <Label className="text-xs text-muted-foreground">AI Suggestions - Click to use</Label>
+                                {aiSuggestions.map((suggestion, index) => (
+                                  <div
+                                    key={index}
+                                    className="p-3 bg-primary/5 border border-primary/20 rounded-lg cursor-pointer hover-elevate"
+                                    onClick={() => handleUseAiSuggestion(suggestion)}
+                                    data-testid={`button-use-ai-suggestion-${index}`}
+                                  >
+                                    <p className="text-sm line-clamp-3">{suggestion}</p>
+                                    <div className="flex items-center gap-1 mt-2 text-xs text-primary">
+                                      <Sparkles className="h-3 w-3" />
+                                      Click to use this suggestion
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            
+                            <Textarea
+                              placeholder="Write your reply..."
+                              value={replyContent}
+                              onChange={(e) => setReplyContent(e.target.value)}
+                              className="min-h-[120px] resize-none"
+                              data-testid="textarea-reply"
+                            />
+                            
+                            <div className="flex justify-end mt-3 gap-2">
+                              <Button
+                                onClick={handleSendReply}
+                                disabled={!replyContent.trim() || sendMessageMutation.isPending}
+                                data-testid="button-send-reply"
+                              >
+                                <Send className="h-4 w-4 mr-2" />
+                                {sendMessageMutation.isPending ? "Sending..." : "Send Reply"}
+                              </Button>
+                            </div>
+                          </>
                         )}
-                        
-                        <Textarea
-                          placeholder="Write your reply..."
-                          value={replyContent}
-                          onChange={(e) => setReplyContent(e.target.value)}
-                          className="min-h-[120px] resize-none"
-                          data-testid="textarea-reply"
-                        />
-                        
-                        <div className="flex justify-end mt-3 gap-2">
-                          <Button
-                            onClick={handleSendReply}
-                            disabled={!replyContent.trim() || sendMessageMutation.isPending}
-                            data-testid="button-send-reply"
-                          >
-                            <Send className="h-4 w-4 mr-2" />
-                            {sendMessageMutation.isPending ? "Sending..." : "Send Reply"}
-                          </Button>
-                        </div>
                       </div>
                     </CardContent>
                   </Card>
