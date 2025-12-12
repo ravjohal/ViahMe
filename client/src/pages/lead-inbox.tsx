@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { VendorHeader } from "@/components/vendor-header";
@@ -45,12 +45,14 @@ import {
   ArrowLeft,
   ArrowRight,
   ChevronRight,
+  ChevronDown,
   Heart,
   MapPin,
   FileText,
   Zap,
   Copy,
   Settings,
+  PartyPopper,
 } from "lucide-react";
 
 interface Lead {
@@ -72,6 +74,16 @@ interface Lead {
   totalMessages: number;
 }
 
+interface WeddingGroup {
+  weddingId: string;
+  coupleName: string;
+  weddingDate?: string;
+  city?: string;
+  tradition?: string;
+  events: Lead[];
+  totalUnread: number;
+}
+
 interface EnrichedReminder extends Omit<FollowUpReminder, 'reminderDate'> {
   coupleName: string;
   reminderDate: Date | string;
@@ -86,6 +98,8 @@ export default function LeadInbox() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [replyContent, setReplyContent] = useState("");
   const [initialConversationHandled, setInitialConversationHandled] = useState(false);
+  const [expandedWeddings, setExpandedWeddings] = useState<Set<string>>(new Set());
+  const hasAutoSelectedRef = useRef(false);
   
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<QuickReplyTemplate | null>(null);
@@ -427,6 +441,79 @@ export default function LeadInbox() {
   const readLeads = leads.filter(l => l.unreadCount === 0);
   const totalUnread = unreadLeads.reduce((sum, l) => sum + l.unreadCount, 0);
   
+  const groupLeadsByWedding = (leadsToGroup: Lead[]): WeddingGroup[] => {
+    const groupMap = new Map<string, WeddingGroup>();
+    
+    leadsToGroup.forEach(lead => {
+      if (!groupMap.has(lead.weddingId)) {
+        groupMap.set(lead.weddingId, {
+          weddingId: lead.weddingId,
+          coupleName: lead.coupleName,
+          weddingDate: lead.weddingDate,
+          city: lead.city,
+          tradition: lead.tradition,
+          events: [],
+          totalUnread: 0,
+        });
+      }
+      const group = groupMap.get(lead.weddingId)!;
+      group.events.push(lead);
+      group.totalUnread += lead.unreadCount;
+    });
+    
+    return Array.from(groupMap.values()).sort((a, b) => b.totalUnread - a.totalUnread);
+  };
+  
+  const unreadWeddingGroups = groupLeadsByWedding(unreadLeads);
+  const readWeddingGroups = groupLeadsByWedding(readLeads);
+  
+  const unreadGroupsKey = unreadWeddingGroups.map(g => 
+    `${g.weddingId}:${g.events.map(e => `${e.conversationId}:${e.unreadCount}`).join('|')}`
+  ).join(',');
+  
+  useEffect(() => {
+    if (unreadWeddingGroups.length > 0) {
+      const weddingsWithMultipleUnread = unreadWeddingGroups
+        .filter(g => g.events.length > 1 && g.totalUnread > 0);
+      
+      if (weddingsWithMultipleUnread.length > 0) {
+        const idsToExpand = weddingsWithMultipleUnread.map(g => g.weddingId);
+        setExpandedWeddings(prev => {
+          const newSet = new Set(prev);
+          idsToExpand.forEach(id => newSet.add(id));
+          return newSet;
+        });
+      }
+      
+      if (!hasAutoSelectedRef.current) {
+        hasAutoSelectedRef.current = true;
+        const targetGroup = unreadWeddingGroups[0];
+        const unreadEvent = targetGroup.events.find(e => e.unreadCount > 0) || targetGroup.events[0];
+        setSelectedLead(unreadEvent);
+      }
+    }
+  }, [unreadGroupsKey]);
+  
+  const toggleWeddingExpanded = (weddingId: string) => {
+    setExpandedWeddings(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(weddingId)) {
+        newSet.delete(weddingId);
+      } else {
+        newSet.add(weddingId);
+      }
+      return newSet;
+    });
+  };
+  
+  const handleWeddingClick = (group: WeddingGroup) => {
+    if (group.events.length === 1) {
+      setSelectedLead(group.events[0]);
+    } else {
+      toggleWeddingExpanded(group.weddingId);
+    }
+  };
+  
   const overdueReminders = pendingReminders.filter(r => 
     isBefore(parseISO(r.reminderDate.toString()), new Date()) && !isToday(parseISO(r.reminderDate.toString()))
   );
@@ -540,8 +627,8 @@ export default function LeadInbox() {
                         <Mail className="h-5 w-5" />
                         New Inquiries
                       </span>
-                      {unreadLeads.length > 0 && (
-                        <Badge variant="default">{unreadLeads.length}</Badge>
+                      {unreadWeddingGroups.length > 0 && (
+                        <Badge variant="default">{totalUnread}</Badge>
                       )}
                     </CardTitle>
                   </CardHeader>
@@ -551,7 +638,7 @@ export default function LeadInbox() {
                         <Skeleton className="h-20" />
                         <Skeleton className="h-20" />
                       </div>
-                    ) : unreadLeads.length === 0 ? (
+                    ) : unreadWeddingGroups.length === 0 ? (
                       <div className="p-6 text-center text-muted-foreground">
                         <MailOpen className="h-10 w-10 mx-auto mb-2 opacity-50" />
                         <p className="text-sm">No new inquiries</p>
@@ -559,47 +646,90 @@ export default function LeadInbox() {
                     ) : (
                       <ScrollArea className="h-[300px]">
                         <div className="divide-y">
-                          {unreadLeads.map((lead) => (
-                            <button
-                              key={lead.conversationId}
-                              onClick={() => setSelectedLead(lead)}
-                              className={`w-full p-4 text-left hover-elevate transition-colors ${
-                                selectedLead?.conversationId === lead.conversationId ? "bg-accent" : ""
-                              }`}
-                              data-testid={`lead-item-${lead.conversationId}`}
-                            >
-                              <div className="flex items-start justify-between gap-2">
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2">
-                                    <Heart className="h-4 w-4 text-primary shrink-0" />
-                                    <span className="font-medium truncate">{lead.coupleName}</span>
-                                    {lead.eventName && (
-                                      <span className="text-xs text-muted-foreground font-normal">
-                                        • {lead.eventName}
-                                      </span>
+                          {unreadWeddingGroups.map((group) => (
+                            <div key={group.weddingId}>
+                              <button
+                                onClick={() => handleWeddingClick(group)}
+                                className={`w-full p-4 text-left hover-elevate transition-colors ${
+                                  group.events.length === 1 && selectedLead?.conversationId === group.events[0].conversationId ? "bg-accent" : ""
+                                }`}
+                                data-testid={`wedding-group-${group.weddingId}`}
+                              >
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <Heart className="h-4 w-4 text-primary shrink-0" />
+                                      <span className="font-medium truncate">{group.coupleName}</span>
+                                      <Badge variant="default" className="text-xs">{group.totalUnread}</Badge>
+                                      {group.events.length > 1 && (
+                                        <Badge variant="outline" className="text-xs">
+                                          {group.events.length} events
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    {group.events.length === 1 && group.events[0].lastMessage && (
+                                      <p className="text-sm text-muted-foreground truncate mt-1">
+                                        {group.events[0].lastMessage.content}
+                                      </p>
                                     )}
-                                    <Badge variant="default" className="text-xs">{lead.unreadCount}</Badge>
+                                    <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                                      {group.city && (
+                                        <span className="flex items-center gap-1">
+                                          <MapPin className="h-3 w-3" />
+                                          {group.city}
+                                        </span>
+                                      )}
+                                      {group.tradition && (
+                                        <Badge variant="outline" className="text-xs">{group.tradition}</Badge>
+                                      )}
+                                    </div>
                                   </div>
-                                  {lead.lastMessage && (
-                                    <p className="text-sm text-muted-foreground truncate mt-1">
-                                      {lead.lastMessage.content}
-                                    </p>
+                                  {group.events.length > 1 ? (
+                                    expandedWeddings.has(group.weddingId) ? (
+                                      <ChevronDown className="h-5 w-5 text-muted-foreground shrink-0" />
+                                    ) : (
+                                      <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
+                                    )
+                                  ) : (
+                                    <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
                                   )}
-                                  <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-                                    {lead.city && (
-                                      <span className="flex items-center gap-1">
-                                        <MapPin className="h-3 w-3" />
-                                        {lead.city}
-                                      </span>
-                                    )}
-                                    {lead.tradition && (
-                                      <Badge variant="outline" className="text-xs">{lead.tradition}</Badge>
-                                    )}
-                                  </div>
                                 </div>
-                                <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
-                              </div>
-                            </button>
+                              </button>
+                              {group.events.length > 1 && expandedWeddings.has(group.weddingId) && (
+                                <div className="bg-muted/30 border-t">
+                                  {group.events.map((event) => (
+                                    <button
+                                      key={event.conversationId}
+                                      onClick={() => setSelectedLead(event)}
+                                      className={`w-full pl-10 pr-4 py-3 text-left hover-elevate transition-colors border-b last:border-b-0 ${
+                                        selectedLead?.conversationId === event.conversationId ? "bg-accent" : ""
+                                      }`}
+                                      data-testid={`event-item-${event.conversationId}`}
+                                    >
+                                      <div className="flex items-center justify-between gap-2">
+                                        <div className="flex-1 min-w-0">
+                                          <div className="flex items-center gap-2">
+                                            <PartyPopper className="h-3 w-3 text-muted-foreground shrink-0" />
+                                            <span className="text-sm font-medium truncate">
+                                              {event.eventName || "General Inquiry"}
+                                            </span>
+                                            {event.unreadCount > 0 && (
+                                              <Badge variant="default" className="text-xs">{event.unreadCount}</Badge>
+                                            )}
+                                          </div>
+                                          {event.lastMessage && (
+                                            <p className="text-xs text-muted-foreground truncate mt-1 pl-5">
+                                              {event.lastMessage.content}
+                                            </p>
+                                          )}
+                                        </div>
+                                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                                      </div>
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
                           ))}
                         </div>
                       </ScrollArea>
@@ -607,7 +737,7 @@ export default function LeadInbox() {
                   </CardContent>
                 </Card>
                 
-                {readLeads.length > 0 && (
+                {readWeddingGroups.length > 0 && (
                   <Card>
                     <CardHeader className="pb-3">
                       <CardTitle className="text-lg flex items-center gap-2">
@@ -618,33 +748,71 @@ export default function LeadInbox() {
                     <CardContent className="p-0">
                       <ScrollArea className="h-[200px]">
                         <div className="divide-y">
-                          {readLeads.map((lead) => (
-                            <button
-                              key={lead.conversationId}
-                              onClick={() => setSelectedLead(lead)}
-                              className={`w-full p-4 text-left hover-elevate transition-colors ${
-                                selectedLead?.conversationId === lead.conversationId ? "bg-accent" : ""
-                              }`}
-                              data-testid={`lead-item-read-${lead.conversationId}`}
-                            >
-                              <div className="flex items-start justify-between gap-2">
-                                <div className="flex-1 min-w-0">
-                                  <span className="font-medium truncate flex items-center gap-2">
-                                    <Heart className="h-4 w-4 text-muted-foreground" />
-                                    {lead.coupleName}
-                                    {lead.eventName && (
-                                      <span className="text-xs text-muted-foreground font-normal">
-                                        • {lead.eventName}
-                                      </span>
-                                    )}
-                                  </span>
-                                  <p className="text-xs text-muted-foreground mt-1">
-                                    {lead.totalMessages} messages
-                                  </p>
+                          {readWeddingGroups.map((group) => (
+                            <div key={group.weddingId}>
+                              <button
+                                onClick={() => handleWeddingClick(group)}
+                                className={`w-full p-4 text-left hover-elevate transition-colors ${
+                                  group.events.length === 1 && selectedLead?.conversationId === group.events[0].conversationId ? "bg-accent" : ""
+                                }`}
+                                data-testid={`wedding-group-read-${group.weddingId}`}
+                              >
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="flex-1 min-w-0">
+                                    <span className="font-medium truncate flex items-center gap-2">
+                                      <Heart className="h-4 w-4 text-muted-foreground" />
+                                      {group.coupleName}
+                                      {group.events.length > 1 && (
+                                        <Badge variant="outline" className="text-xs">
+                                          {group.events.length} events
+                                        </Badge>
+                                      )}
+                                    </span>
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                      {group.events.reduce((sum, e) => sum + e.totalMessages, 0)} messages
+                                    </p>
+                                  </div>
+                                  {group.events.length > 1 ? (
+                                    expandedWeddings.has(group.weddingId) ? (
+                                      <ChevronDown className="h-5 w-5 text-muted-foreground shrink-0" />
+                                    ) : (
+                                      <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
+                                    )
+                                  ) : (
+                                    <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
+                                  )}
                                 </div>
-                                <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
-                              </div>
-                            </button>
+                              </button>
+                              {group.events.length > 1 && expandedWeddings.has(group.weddingId) && (
+                                <div className="bg-muted/30 border-t">
+                                  {group.events.map((event) => (
+                                    <button
+                                      key={event.conversationId}
+                                      onClick={() => setSelectedLead(event)}
+                                      className={`w-full pl-10 pr-4 py-3 text-left hover-elevate transition-colors border-b last:border-b-0 ${
+                                        selectedLead?.conversationId === event.conversationId ? "bg-accent" : ""
+                                      }`}
+                                      data-testid={`event-item-read-${event.conversationId}`}
+                                    >
+                                      <div className="flex items-center justify-between gap-2">
+                                        <div className="flex-1 min-w-0">
+                                          <div className="flex items-center gap-2">
+                                            <PartyPopper className="h-3 w-3 text-muted-foreground shrink-0" />
+                                            <span className="text-sm font-medium truncate">
+                                              {event.eventName || "General Inquiry"}
+                                            </span>
+                                          </div>
+                                          <p className="text-xs text-muted-foreground mt-1 pl-5">
+                                            {event.totalMessages} messages
+                                          </p>
+                                        </div>
+                                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                                      </div>
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
                           ))}
                         </div>
                       </ScrollArea>
