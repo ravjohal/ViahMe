@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { z } from "zod";
-import { storage as defaultStorage, parseConversationId, type IStorage } from "./storage";
+import { storage as defaultStorage, parseConversationId, generateConversationId, type IStorage } from "./storage";
 import { registerAuthRoutes } from "./auth-routes";
 import { requireAuth, requireRole, type AuthRequest } from "./auth-middleware";
 import {
