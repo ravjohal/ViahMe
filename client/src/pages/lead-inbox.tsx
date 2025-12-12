@@ -206,10 +206,11 @@ export default function LeadInbox() {
   }, [leads, searchString, initialConversationHandled]);
   
   const sendMessageMutation = useMutation({
-    mutationFn: async (data: { weddingId: string; vendorId: string; content: string }) => {
+    mutationFn: async (data: { weddingId: string; vendorId: string; eventId?: string; content: string }) => {
       return apiRequest("POST", "/api/messages", {
         weddingId: data.weddingId,
         vendorId: data.vendorId,
+        eventId: data.eventId, // Include eventId for proper conversation grouping
         senderId: data.vendorId,
         senderType: "vendor",
         content: data.content,
@@ -395,6 +396,7 @@ export default function LeadInbox() {
     sendMessageMutation.mutate({
       weddingId: selectedLead.weddingId,
       vendorId: selectedLead.vendorId,
+      eventId: selectedLead.eventId, // Include eventId for proper conversation grouping
       content: replyContent,
     });
   };

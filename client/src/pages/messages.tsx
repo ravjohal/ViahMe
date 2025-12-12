@@ -176,6 +176,7 @@ export default function MessagesPage() {
       const response = await apiRequest("POST", "/api/messages", {
         weddingId: conversation.weddingId,
         vendorId: conversation.vendorId,
+        eventId: conversation.eventId, // Include eventId for proper conversation grouping
         senderId: conversation.weddingId,
         senderType: "couple",
         content,
@@ -185,6 +186,7 @@ export default function MessagesPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/messages", selectedConversation] });
+      queryClient.invalidateQueries({ queryKey: ["/api/conversations/wedding", weddingId] });
       setMessageText("");
     },
   });
