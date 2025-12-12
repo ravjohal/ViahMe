@@ -261,7 +261,7 @@ function AppLayout() {
   ];
   
   // Hide header on auth pages, guest websites, and vendor pages (vendors have their own header)
-  const isVendorPage = location.startsWith("/vendor-");
+  const isVendorPage = location.startsWith("/vendor-") || location.startsWith("/lead-inbox");
   const hideHeader = authPages.includes(location) || 
                      location.startsWith("/wedding/") ||
                      isVendorPage;
