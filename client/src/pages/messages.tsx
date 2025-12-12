@@ -7,10 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { MessageCircle, Send, User, ChevronRight, ChevronDown, PartyPopper, Clock, CheckCircle, XCircle } from "lucide-react";
-import type { Message } from "@shared/schema";
-
-const DEMO_WEDDING_ID = "demo-wedding-1";
+import { MessageCircle, Send, User, ChevronRight, ChevronDown, PartyPopper, Clock, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import type { Message, Wedding } from "@shared/schema";
 
 interface ConversationWithMetadata {
   conversationId: string;
@@ -81,8 +79,16 @@ export default function MessagesPage() {
   const [expandedVendors, setExpandedVendors] = useState<Set<string>>(new Set());
   const hasAutoSelectedRef = useRef(false);
 
+  const { data: weddings = [], isLoading: weddingsLoading } = useQuery<Wedding[]>({
+    queryKey: ["/api/weddings"],
+  });
+
+  const wedding = weddings?.[0];
+  const weddingId = wedding?.id;
+
   const { data: conversations = [] } = useQuery<ConversationWithMetadata[]>({
-    queryKey: ["/api/conversations/wedding", DEMO_WEDDING_ID],
+    queryKey: ["/api/conversations/wedding", weddingId],
+    enabled: !!weddingId,
   });
 
   const { data: messages = [] } = useQuery<Message[]>({
@@ -191,6 +197,31 @@ export default function MessagesPage() {
 
   const selectedConvo = conversations.find(c => c.conversationId === selectedConversation);
 
+  if (weddingsLoading) {
+    return (
+      <div className="h-[calc(100vh-8rem)] p-6 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-muted-foreground" />
+          <p className="text-muted-foreground">Loading messages...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!wedding) {
+    return (
+      <div className="h-[calc(100vh-8rem)] p-6 flex items-center justify-center">
+        <div className="text-center">
+          <MessageCircle className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+          <h3 className="font-semibold mb-2">No Wedding Found</h3>
+          <p className="text-muted-foreground text-sm">
+            Please create a wedding first to start messaging vendors.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-[calc(100vh-8rem)] p-6">
       <div className="mb-6">
@@ -212,7 +243,7 @@ export default function MessagesPage() {
                 <MessageCircle className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
                 <p className="text-muted-foreground text-sm">No conversations yet</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Message vendors to start planning
+                  Request a booking from a vendor to start a conversation
                 </p>
               </div>
             ) : (
