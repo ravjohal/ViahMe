@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import type { Vendor, Booking, Event } from "@shared/schema";
+import type { Vendor, Booking, Event, Wedding } from "@shared/schema";
 import { useLocation, useSearch } from "wouter";
 import {
   Calendar,
@@ -41,6 +41,8 @@ import {
   Trash2,
   Users,
   MapPin,
+  Mail,
+  Heart,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -100,7 +102,7 @@ export default function VendorBookings() {
     enabled: !!vendorId,
   });
 
-  // Get unique wedding IDs from bookings to fetch their events
+  // Get unique wedding IDs from bookings to fetch their events and wedding info
   const uniqueWeddingIds = Array.from(new Set(bookings.map(b => b.weddingId).filter(Boolean))) as string[];
   
   // Fetch events for all weddings that have bookings
@@ -127,6 +129,37 @@ export default function VendorBookings() {
       const map: Record<string, Event> = {};
       allEvents.forEach(event => {
         map[event.id] = event;
+      });
+      return map;
+    },
+    enabled: uniqueWeddingIds.length > 0,
+  });
+  
+  // Fetch wedding info for all bookings
+  const { data: weddingsMap = {} } = useQuery<Record<string, Wedding>>({
+    queryKey: ["/api/weddings/for-bookings", uniqueWeddingIds],
+    queryFn: async () => {
+      if (uniqueWeddingIds.length === 0) return {};
+      
+      // Fetch weddings in parallel
+      const weddingPromises = uniqueWeddingIds.map(async (weddingId) => {
+        try {
+          const response = await fetch(`/api/weddings/${weddingId}`);
+          if (!response.ok) return null;
+          return await response.json();
+        } catch {
+          return null;
+        }
+      });
+      
+      const allWeddings = await Promise.all(weddingPromises);
+      
+      // Create a map of weddingId -> wedding for easy lookup
+      const map: Record<string, Wedding> = {};
+      allWeddings.forEach(wedding => {
+        if (wedding) {
+          map[wedding.id] = wedding;
+        }
       });
       return map;
     },
@@ -369,8 +402,33 @@ export default function VendorBookings() {
           <div className="space-y-4">
             {filteredBookings.map((booking) => {
               const event = booking.eventId ? eventsMap[booking.eventId] : null;
+              const wedding = booking.weddingId ? weddingsMap[booking.weddingId] : null;
+              const coupleName = wedding?.partner1Name && wedding?.partner2Name 
+                ? `${wedding.partner1Name} & ${wedding.partner2Name}`
+                : wedding?.partner1Name || wedding?.partner2Name || null;
               return (
               <Card key={booking.id} className="p-6" data-testid={`card-booking-${booking.id}`}>
+                {/* Request From Section */}
+                {(coupleName || wedding?.coupleEmail) && (
+                  <div className="mb-4 pb-4 border-b">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Heart className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Request from:</span>
+                      {coupleName && (
+                        <span className="font-semibold text-primary" data-testid={`text-couple-name-${booking.id}`}>
+                          {coupleName}
+                        </span>
+                      )}
+                      {wedding?.coupleEmail && (
+                        <span className="flex items-center gap-1 text-muted-foreground">
+                          <Mail className="w-3.5 h-3.5" />
+                          {wedding.coupleEmail}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <h3 className="font-semibold text-lg" data-testid={`text-booking-event-${booking.id}`}>
@@ -404,7 +462,7 @@ export default function VendorBookings() {
                         )}
                       </div>
                     )}
-                    {!event && (
+                    {!event && !coupleName && (
                       <p className="text-sm text-muted-foreground mt-1">
                         Wedding #{booking.weddingId?.slice(0, 8)}
                         {booking.eventId && ` - Event #${booking.eventId.slice(0, 8)}`}
