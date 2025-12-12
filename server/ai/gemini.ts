@@ -314,3 +314,145 @@ Respond with a JSON array of improvement suggestions, each as a concise actionab
     return [];
   }
 }
+
+// ============================================================================
+// VENDOR REPLY SUGGESTIONS - AI-powered response suggestions for vendor inbox
+// ============================================================================
+
+const VENDOR_REPLY_PROMPT = `You are an expert communication assistant for wedding vendors on Viah.me, a South Asian wedding management platform. You help vendors craft professional, warm, and culturally-aware responses to couple inquiries.
+
+Your role is to:
+1. Generate helpful, professional response suggestions that vendors can use or adapt
+2. Maintain a warm, welcoming tone appropriate for wedding communications
+3. Be culturally sensitive to South Asian wedding traditions
+4. Keep responses concise but helpful
+5. Include relevant follow-up questions when appropriate
+
+Response guidelines:
+- Be professional but warm and personable
+- Address specific questions from the couple
+- Offer to provide more details or schedule a call
+- Show enthusiasm for potentially being part of their special day
+- Be culturally aware of multi-day celebrations, specific ceremonies, and traditions`;
+
+export interface VendorReplySuggestionRequest {
+  vendorName: string;
+  vendorCategory: string;
+  coupleName: string;
+  coupleMessage: string;
+  eventName?: string;
+  weddingDate?: string;
+  tradition?: string;
+  bookingStatus?: string;
+}
+
+export async function generateVendorReplySuggestions(
+  request: VendorReplySuggestionRequest
+): Promise<string[]> {
+  const prompt = `Generate 3 professional response suggestions for this vendor to reply to a couple's inquiry:
+
+Vendor: ${request.vendorName} (${request.vendorCategory})
+Couple: ${request.coupleName}
+${request.eventName ? `Event: ${request.eventName}` : ""}
+${request.weddingDate ? `Wedding Date: ${request.weddingDate}` : ""}
+${request.tradition ? `Wedding Tradition: ${request.tradition}` : ""}
+${request.bookingStatus ? `Booking Status: ${request.bookingStatus}` : ""}
+
+Couple's Message:
+"${request.coupleMessage}"
+
+Generate 3 different response options:
+1. A brief, warm acknowledgment with a call to action
+2. A detailed response addressing their message with follow-up questions
+3. A friendly, enthusiastic response emphasizing your experience
+
+Return as a JSON array of 3 strings.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      config: {
+        systemInstruction: VENDOR_REPLY_PROMPT,
+        responseMimeType: "application/json",
+      },
+      contents: prompt,
+    });
+
+    const text = response.text || "[]";
+    return JSON.parse(text);
+  } catch (error) {
+    console.error("Error generating vendor reply suggestions:", error);
+    return [];
+  }
+}
+
+// ============================================================================
+// COUPLE BOOKING REQUEST SUGGESTIONS - AI-powered message suggestions for couples
+// ============================================================================
+
+const COUPLE_MESSAGE_PROMPT = `You are an expert communication assistant for couples on Viah.me, a South Asian wedding management platform. You help couples craft effective, professional messages when contacting wedding vendors.
+
+Your role is to:
+1. Generate helpful message suggestions for couples reaching out to vendors
+2. Ensure the message includes relevant details vendors need
+3. Be culturally aware of South Asian wedding traditions and multi-day celebrations
+4. Keep messages concise but informative
+5. Include relevant questions about services, pricing, or availability
+
+Message guidelines:
+- Be polite and professional
+- Include key details: wedding date, event type, guest count if relevant
+- Ask about availability and pricing
+- Mention specific cultural requirements if applicable
+- Show genuine interest in the vendor's services`;
+
+export interface CoupleMessageSuggestionRequest {
+  vendorName: string;
+  vendorCategory: string;
+  coupleName: string;
+  eventName?: string;
+  eventDate?: string;
+  tradition?: string;
+  city?: string;
+  guestCount?: number;
+  existingNotes?: string;
+}
+
+export async function generateCoupleMessageSuggestions(
+  request: CoupleMessageSuggestionRequest
+): Promise<string[]> {
+  const prompt = `Generate 3 message suggestions for this couple to send when requesting a booking from a vendor:
+
+Vendor: ${request.vendorName} (${request.vendorCategory})
+Couple Name: ${request.coupleName}
+${request.eventName ? `Event: ${request.eventName}` : ""}
+${request.eventDate ? `Event Date: ${request.eventDate}` : ""}
+${request.tradition ? `Wedding Tradition: ${request.tradition}` : ""}
+${request.city ? `Location: ${request.city}` : ""}
+${request.guestCount ? `Estimated Guest Count: ${request.guestCount}` : ""}
+${request.existingNotes ? `Couple's Notes So Far: ${request.existingNotes}` : ""}
+
+Generate 3 different booking request message options:
+1. A brief, professional inquiry asking about availability and pricing
+2. A detailed message with specific questions about the ${request.vendorCategory} services
+3. A warm, personal message expressing interest in their work
+
+Return as a JSON array of 3 strings.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      config: {
+        systemInstruction: COUPLE_MESSAGE_PROMPT,
+        responseMimeType: "application/json",
+      },
+      contents: prompt,
+    });
+
+    const text = response.text || "[]";
+    return JSON.parse(text);
+  } catch (error) {
+    console.error("Error generating couple message suggestions:", error);
+    return [];
+  }
+}

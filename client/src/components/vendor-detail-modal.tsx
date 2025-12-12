@@ -37,7 +37,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { Star, MapPin, DollarSign, Phone, Mail, Send, StarIcon, AlertCircle, ExternalLink, Calendar, CheckCircle2, XCircle, Building2, ShieldCheck, FileText } from "lucide-react";
+import { Star, MapPin, DollarSign, Phone, Mail, Send, StarIcon, AlertCircle, ExternalLink, Calendar, CheckCircle2, XCircle, Building2, ShieldCheck, FileText, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -53,6 +53,10 @@ interface VendorDetailModalProps {
   isAuthenticated?: boolean;
   onAuthRequired?: () => void;
   weddingId?: string;
+  coupleName?: string;
+  weddingDate?: string;
+  tradition?: string;
+  city?: string;
 }
 
 const reviewFormSchema = z.object({
@@ -71,10 +75,18 @@ export function VendorDetailModal({
   isAuthenticated = true,
   onAuthRequired,
   weddingId,
+  coupleName,
+  weddingDate,
+  tradition,
+  city,
 }: VendorDetailModalProps) {
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
   const [notes, setNotes] = useState("");
   const [showReviewForm, setShowReviewForm] = useState(false);
+  
+  // AI suggestion state
+  const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
+  const [aiSuggestionsLoading, setAiSuggestionsLoading] = useState(false);
   const [reviewError, setReviewError] = useState<string | null>(null);
   const { toast } = useToast();
   
@@ -356,6 +368,47 @@ export function VendorDetailModal({
         ? prev.filter(id => id !== eventId)
         : [...prev, eventId]
     );
+  };
+
+  // AI suggestion handler for booking messages
+  const handleGetAiSuggestions = async () => {
+    if (!vendor) return;
+    
+    setAiSuggestionsLoading(true);
+    setAiSuggestions([]);
+    
+    try {
+      const selectedEventNames = events
+        .filter(e => selectedEvents.includes(e.id))
+        .map(e => e.name)
+        .join(", ");
+      
+      const response = await apiRequest("POST", "/api/ai/couple-message-suggestions", {
+        vendorName: vendor.name,
+        vendorCategory: vendor.category,
+        coupleName: coupleName || "Couple",
+        eventName: selectedEventNames || undefined,
+        eventDate: weddingDate,
+        tradition,
+        city,
+        existingNotes: notes || undefined,
+      });
+      
+      const data = await response.json();
+      if (data.suggestions && Array.isArray(data.suggestions)) {
+        setAiSuggestions(data.suggestions);
+      }
+    } catch (error) {
+      toast({ title: "Failed to get AI suggestions", variant: "destructive" });
+    } finally {
+      setAiSuggestionsLoading(false);
+    }
+  };
+
+  const handleUseAiSuggestion = (suggestion: string) => {
+    setNotes(suggestion);
+    setAiSuggestions([]);
+    toast({ title: "AI suggestion applied to your message" });
   };
 
   // Quote request handler
@@ -1046,9 +1099,42 @@ export function VendorDetailModal({
                 </div>
 
                 <div>
-                  <Label htmlFor="booking-notes" className="text-base">
-                    Message to Vendor (Optional)
-                  </Label>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label htmlFor="booking-notes" className="text-base">
+                      Message to Vendor (Optional)
+                    </Label>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleGetAiSuggestions}
+                      disabled={aiSuggestionsLoading}
+                      data-testid="button-ai-suggest-booking"
+                    >
+                      <Sparkles className="h-3 w-3 mr-1" />
+                      {aiSuggestionsLoading ? "Generating..." : "AI Suggest"}
+                    </Button>
+                  </div>
+                  
+                  {aiSuggestions.length > 0 && (
+                    <div className="mb-3 space-y-2">
+                      <Label className="text-xs text-muted-foreground">AI Suggestions - Click to use</Label>
+                      {aiSuggestions.map((suggestion, index) => (
+                        <div
+                          key={index}
+                          className="p-3 bg-primary/5 border border-primary/20 rounded-lg cursor-pointer hover-elevate"
+                          onClick={() => handleUseAiSuggestion(suggestion)}
+                          data-testid={`button-use-ai-suggestion-${index}`}
+                        >
+                          <p className="text-sm line-clamp-3">{suggestion}</p>
+                          <div className="flex items-center gap-1 mt-2 text-xs text-primary">
+                            <Sparkles className="h-3 w-3" />
+                            Click to use this suggestion
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
                   <Textarea
                     id="booking-notes"
                     placeholder="Tell the vendor about your specific needs, preferences, or questions..."
@@ -1056,7 +1142,6 @@ export function VendorDetailModal({
                     onChange={(e) => setNotes(e.target.value)}
                     rows={4}
                     data-testid="textarea-booking-notes"
-                    className="mt-2"
                   />
                 </div>
 

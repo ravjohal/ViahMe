@@ -63,10 +63,14 @@ import {
   chatWithPlanner,
   generateContractClause,
   suggestContractImprovements,
+  generateVendorReplySuggestions,
+  generateCoupleMessageSuggestions,
   type ContractDraftRequest,
   type ContractReviewRequest,
   type ChatMessage,
   type WeddingContext,
+  type VendorReplySuggestionRequest,
+  type CoupleMessageSuggestionRequest,
 } from "./ai/gemini";
 
 // Flag to track if seeding has been done for default storage
@@ -2685,6 +2689,107 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
       console.error("Error in chat:", error);
       res.status(500).json({ 
         error: "Failed to get response",
+        message: error instanceof Error ? error.message : "Please try again later"
+      });
+    }
+  });
+
+  // Vendor reply suggestions - AI-powered response suggestions for vendor inbox
+  app.post("/api/ai/vendor-reply-suggestions", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      if (!authReq.session.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      // Verify user is a vendor
+      const user = await storage.getUser(authReq.session.userId);
+      if (!user || user.role !== 'vendor') {
+        return res.status(403).json({ error: "Only vendors can access this endpoint" });
+      }
+
+      const { vendorName, vendorCategory, coupleName, coupleMessage, eventName, weddingDate, tradition, bookingStatus } = req.body;
+      
+      // Validate required fields
+      if (!vendorName || !coupleName || !coupleMessage) {
+        return res.status(400).json({ 
+          error: "Missing required fields",
+          message: "vendorName, coupleName, and coupleMessage are required" 
+        });
+      }
+      
+      // Input sanitization - limit string lengths to prevent abuse
+      const sanitize = (str: string | undefined, maxLen: number) => 
+        str ? str.slice(0, maxLen).trim() : undefined;
+      
+      const request: VendorReplySuggestionRequest = {
+        vendorName: sanitize(vendorName, 100)!,
+        vendorCategory: sanitize(vendorCategory, 50) || "Wedding Vendor",
+        coupleName: sanitize(coupleName, 100)!,
+        coupleMessage: sanitize(coupleMessage, 1000)!,
+        eventName: sanitize(eventName, 100),
+        weddingDate: sanitize(weddingDate, 50),
+        tradition: sanitize(tradition, 50),
+        bookingStatus: sanitize(bookingStatus, 50),
+      };
+
+      const suggestions = await generateVendorReplySuggestions(request);
+      res.json({ suggestions });
+    } catch (error) {
+      console.error("Error generating vendor reply suggestions:", error);
+      res.status(500).json({ 
+        error: "Failed to generate suggestions",
+        message: error instanceof Error ? error.message : "Please try again later"
+      });
+    }
+  });
+
+  // Couple booking request suggestions - AI-powered message suggestions for couples
+  app.post("/api/ai/couple-message-suggestions", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      if (!authReq.session.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      // Verify user is a couple
+      const user = await storage.getUser(authReq.session.userId);
+      if (!user || user.role !== 'couple') {
+        return res.status(403).json({ error: "Only couples can access this endpoint" });
+      }
+
+      const { vendorName, vendorCategory, coupleName, eventName, eventDate, tradition, city, guestCount, existingNotes } = req.body;
+      
+      // Validate required fields
+      if (!vendorName || !coupleName) {
+        return res.status(400).json({ 
+          error: "Missing required fields",
+          message: "vendorName and coupleName are required" 
+        });
+      }
+      
+      // Input sanitization - limit string lengths to prevent abuse
+      const sanitize = (str: string | undefined, maxLen: number) => 
+        str ? str.slice(0, maxLen).trim() : undefined;
+
+      const request: CoupleMessageSuggestionRequest = {
+        vendorName: sanitize(vendorName, 100)!,
+        vendorCategory: sanitize(vendorCategory, 50) || "Wedding Vendor",
+        coupleName: sanitize(coupleName, 100)!,
+        eventName: sanitize(eventName, 200),
+        eventDate: sanitize(eventDate, 50),
+        tradition: sanitize(tradition, 50),
+        city: sanitize(city, 50),
+        guestCount: typeof guestCount === 'number' ? Math.min(guestCount, 10000) : undefined,
+        existingNotes: sanitize(existingNotes, 500),
+      };
+
+      const suggestions = await generateCoupleMessageSuggestions(request);
+      res.json({ suggestions });
+    } catch (error) {
+      console.error("Error generating couple message suggestions:", error);
+      res.status(500).json({ 
+        error: "Failed to generate suggestions",
         message: error instanceof Error ? error.message : "Please try again later"
       });
     }

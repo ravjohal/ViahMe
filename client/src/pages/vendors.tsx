@@ -174,6 +174,12 @@ export default function Vendors() {
         isAuthenticated={!!user && user.role === "couple"}
         onAuthRequired={() => setLocation("/onboarding")}
         weddingId={wedding?.id}
+        coupleName={wedding?.coupleName1 && wedding?.coupleName2 
+          ? `${wedding.coupleName1} & ${wedding.coupleName2}` 
+          : wedding?.coupleName1 || undefined}
+        weddingDate={wedding?.date || undefined}
+        tradition={wedding?.tradition || undefined}
+        city={wedding?.city || undefined}
       />
 
       <VendorComparisonModal

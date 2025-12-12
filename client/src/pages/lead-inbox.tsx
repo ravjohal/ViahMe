@@ -105,6 +105,10 @@ export default function LeadInbox() {
     note: "",
   });
   
+  // AI suggestion state
+  const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
+  const [aiSuggestionsLoading, setAiSuggestionsLoading] = useState(false);
+  
   const { data: vendors, isLoading: vendorsLoading } = useQuery<Vendor[]>({
     queryKey: ["/api/vendors"],
     enabled: !!user && user.role === "vendor",
@@ -360,6 +364,46 @@ export default function LeadInbox() {
       conversationId: selectedLead.conversationId,
       content: replyContent,
     });
+  };
+  
+  const handleGetAiSuggestions = async () => {
+    if (!selectedLead || !currentVendor) {
+      toast({ title: "Please select a conversation first", variant: "destructive" });
+      return;
+    }
+    
+    const coupleMessage = selectedLead.lastMessage?.senderType === "couple" 
+      ? selectedLead.lastMessage.content 
+      : "Hello, I'm interested in your services for my wedding.";
+    
+    setAiSuggestionsLoading(true);
+    setAiSuggestions([]);
+    
+    try {
+      const response = await apiRequest("POST", "/api/ai/vendor-reply-suggestions", {
+        vendorName: currentVendor.name,
+        vendorCategory: currentVendor.category,
+        coupleName: selectedLead.coupleName,
+        coupleMessage,
+        weddingDate: selectedLead.weddingDate,
+        tradition: selectedLead.tradition,
+      });
+      
+      const data = await response.json();
+      if (data.suggestions && Array.isArray(data.suggestions)) {
+        setAiSuggestions(data.suggestions);
+      }
+    } catch (error) {
+      toast({ title: "Failed to get AI suggestions", variant: "destructive" });
+    } finally {
+      setAiSuggestionsLoading(false);
+    }
+  };
+  
+  const handleUseAiSuggestion = (suggestion: string) => {
+    setReplyContent(suggestion);
+    setAiSuggestions([]);
+    toast({ title: "AI suggestion applied to your reply" });
   };
   
   const unreadLeads = leads.filter(l => l.unreadCount > 0);
@@ -650,7 +694,20 @@ export default function LeadInbox() {
                       <Separator />
                       
                       <div>
-                        <Label className="text-sm font-medium mb-2 block">Quick Reply</Label>
+                        <div className="flex items-center justify-between mb-2">
+                          <Label className="text-sm font-medium">Quick Reply</Label>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleGetAiSuggestions}
+                            disabled={aiSuggestionsLoading}
+                            data-testid="button-ai-suggest"
+                          >
+                            <Sparkles className="h-3 w-3 mr-1" />
+                            {aiSuggestionsLoading ? "Generating..." : "AI Suggest"}
+                          </Button>
+                        </div>
+                        
                         {templates.length > 0 && (
                           <div className="flex flex-wrap gap-2 mb-3">
                             {templates.slice(0, 4).map((template) => (
@@ -677,6 +734,26 @@ export default function LeadInbox() {
                           </div>
                         )}
                         
+                        {aiSuggestions.length > 0 && (
+                          <div className="mb-3 space-y-2">
+                            <Label className="text-xs text-muted-foreground">AI Suggestions - Click to use</Label>
+                            {aiSuggestions.map((suggestion, index) => (
+                              <div
+                                key={index}
+                                className="p-3 bg-primary/5 border border-primary/20 rounded-lg cursor-pointer hover-elevate"
+                                onClick={() => handleUseAiSuggestion(suggestion)}
+                                data-testid={`button-use-ai-suggestion-${index}`}
+                              >
+                                <p className="text-sm line-clamp-3">{suggestion}</p>
+                                <div className="flex items-center gap-1 mt-2 text-xs text-primary">
+                                  <Sparkles className="h-3 w-3" />
+                                  Click to use this suggestion
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        
                         <Textarea
                           placeholder="Write your reply..."
                           value={replyContent}
@@ -685,7 +762,7 @@ export default function LeadInbox() {
                           data-testid="textarea-reply"
                         />
                         
-                        <div className="flex justify-end mt-3">
+                        <div className="flex justify-end mt-3 gap-2">
                           <Button
                             onClick={handleSendReply}
                             disabled={!replyContent.trim() || sendMessageMutation.isPending}
