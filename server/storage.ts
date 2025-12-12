@@ -4450,8 +4450,12 @@ export class DBStorage implements IStorage {
   }
 
   async createMessage(insertMessage: InsertMessage): Promise<Message> {
-    // Ensure consistent conversationId format
-    const conversationId = generateConversationId(insertMessage.weddingId, insertMessage.vendorId);
+    // Ensure consistent conversationId format - include eventId if present
+    const conversationId = generateConversationId(
+      insertMessage.weddingId, 
+      insertMessage.vendorId,
+      insertMessage.eventId || undefined
+    );
     const result = await this.db.insert(schema.messages).values({
       ...insertMessage,
       conversationId,
