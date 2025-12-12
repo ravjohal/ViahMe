@@ -189,9 +189,11 @@ export default function LeadInbox() {
   }, [leads, searchString, initialConversationHandled]);
   
   const sendMessageMutation = useMutation({
-    mutationFn: async (data: { conversationId: string; content: string }) => {
+    mutationFn: async (data: { weddingId: string; vendorId: string; content: string }) => {
       return apiRequest("POST", "/api/messages", {
-        conversationId: data.conversationId,
+        weddingId: data.weddingId,
+        vendorId: data.vendorId,
+        senderId: data.vendorId,
         senderType: "vendor",
         content: data.content,
       });
@@ -374,7 +376,8 @@ export default function LeadInbox() {
     }
     
     sendMessageMutation.mutate({
-      conversationId: selectedLead.conversationId,
+      weddingId: selectedLead.weddingId,
+      vendorId: selectedLead.vendorId,
       content: replyContent,
     });
   };
@@ -717,7 +720,10 @@ export default function LeadInbox() {
                                           {isVendor ? "You" : "Couple"}
                                         </Badge>
                                         <span className={`text-xs ${isVendor ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                                          {message.createdAt && formatDistanceToNow(parseISO(message.createdAt as string), { addSuffix: true })}
+                                          {message.createdAt && formatDistanceToNow(
+                                            typeof message.createdAt === 'string' ? parseISO(message.createdAt) : message.createdAt,
+                                            { addSuffix: true }
+                                          )}
                                         </span>
                                       </div>
                                       <p className="text-sm whitespace-pre-wrap">{message.content}</p>
