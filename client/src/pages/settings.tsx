@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,9 +17,11 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Settings as SettingsIcon, User, Lock, Bell, LogOut, Trash2 } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
+import { Settings as SettingsIcon, User, Lock, Bell, LogOut, Trash2, Heart } from "lucide-react";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import type { Wedding } from "@shared/schema";
 
 export default function Settings() {
   const { user, logout } = useAuth();
@@ -30,6 +32,23 @@ export default function Settings() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [partner1Name, setPartner1Name] = useState("");
+  const [partner2Name, setPartner2Name] = useState("");
+  const [isSavingWedding, setIsSavingWedding] = useState(false);
+
+  const { data: weddings } = useQuery<Wedding[]>({
+    queryKey: ["/api/weddings"],
+    enabled: !!user && user.role === "couple",
+  });
+
+  const wedding = weddings?.[0];
+
+  useEffect(() => {
+    if (wedding) {
+      setPartner1Name(wedding.partner1Name || "");
+      setPartner2Name(wedding.partner2Name || "");
+    }
+  }, [wedding]);
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,6 +100,44 @@ export default function Settings() {
   const handleLogout = async () => {
     await logout();
     setLocation("/login");
+  };
+
+  const handleSaveWeddingDetails = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!wedding) return;
+
+    if (!partner1Name.trim() || !partner2Name.trim()) {
+      toast({
+        title: "Error",
+        description: "Both partner names are required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSavingWedding(true);
+    try {
+      await apiRequest("PATCH", `/api/weddings/${wedding.id}`, {
+        partner1Name: partner1Name.trim(),
+        partner2Name: partner2Name.trim(),
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings"] });
+
+      toast({
+        title: "Wedding Details Updated",
+        description: "Your partner names have been saved successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update wedding details",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingWedding(false);
+    }
   };
 
   const handleDeleteAccount = async () => {
@@ -154,6 +211,51 @@ export default function Settings() {
               </div>
             </div>
           </Card>
+
+          {/* Wedding Details - Only for couples */}
+          {user.role === "couple" && wedding && (
+            <Card className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-lg bg-pink-100">
+                  <Heart className="w-5 h-5 text-pink-600" />
+                </div>
+                <h2 className="text-xl font-semibold">Wedding Details</h2>
+              </div>
+              <Separator className="mb-4" />
+              <form onSubmit={handleSaveWeddingDetails} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="partner1-name">Your Name</Label>
+                  <Input
+                    id="partner1-name"
+                    type="text"
+                    value={partner1Name}
+                    onChange={(e) => setPartner1Name(e.target.value)}
+                    placeholder="Enter your name"
+                    data-testid="input-partner1-name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="partner2-name">Partner's Name</Label>
+                  <Input
+                    id="partner2-name"
+                    type="text"
+                    value={partner2Name}
+                    onChange={(e) => setPartner2Name(e.target.value)}
+                    placeholder="Enter your partner's name"
+                    data-testid="input-partner2-name"
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  disabled={isSavingWedding}
+                  className="bg-gradient-to-r from-orange-600 to-pink-600 hover:from-orange-700 hover:to-pink-700"
+                  data-testid="button-save-wedding-details"
+                >
+                  {isSavingWedding ? "Saving..." : "Save Wedding Details"}
+                </Button>
+              </form>
+            </Card>
+          )}
 
           {/* Change Password */}
           <Card className="p-6">

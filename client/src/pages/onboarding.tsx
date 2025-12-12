@@ -19,6 +19,8 @@ const registerSchema = z
     email: z.string().email("Please enter a valid email address"),
     password: z.string().min(8, "Password must be at least 8 characters"),
     confirmPassword: z.string(),
+    partner1Name: z.string().min(1, "Please enter your name"),
+    partner2Name: z.string().min(1, "Please enter your partner's name"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -55,6 +57,8 @@ export default function Onboarding() {
       email: "",
       password: "",
       confirmPassword: "",
+      partner1Name: "",
+      partner2Name: "",
     },
   });
 
@@ -99,6 +103,8 @@ export default function Onboarding() {
       const weddingPayload = {
         ...questionnaireData,
         userId: loggedInUser.id,
+        partner1Name: registerData.partner1Name,
+        partner2Name: registerData.partner2Name,
       };
       console.log("[Onboarding] Creating wedding with payload:", weddingPayload);
       
@@ -251,6 +257,56 @@ export default function Onboarding() {
                           disabled={isLoading}
                           className="h-12 rounded-lg border-2 focus-visible:ring-orange-500"
                           data-testid="input-register-confirm-password"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="border-t border-gray-200 pt-6 mt-2">
+                  <p className="text-sm text-muted-foreground mb-4">Tell us who's getting married</p>
+                </div>
+
+                <FormField
+                  control={registerForm.control}
+                  name="partner1Name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-foreground font-medium">
+                        Your Name
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="text"
+                          placeholder="Enter your name"
+                          disabled={isLoading}
+                          className="h-12 rounded-lg border-2 focus-visible:ring-orange-500"
+                          data-testid="input-register-partner1-name"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={registerForm.control}
+                  name="partner2Name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-foreground font-medium">
+                        Partner's Name
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="text"
+                          placeholder="Enter your partner's name"
+                          disabled={isLoading}
+                          className="h-12 rounded-lg border-2 focus-visible:ring-orange-500"
+                          data-testid="input-register-partner2-name"
                         />
                       </FormControl>
                       <FormMessage />
