@@ -3398,9 +3398,9 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
           const firstMessage = messages[0];
           
           // Build couple name with fallback
-          const coupleName = wedding?.coupleName1 && wedding?.coupleName2 
-            ? `${wedding.coupleName1} & ${wedding.coupleName2}`
-            : wedding?.coupleName1 || 'Couple';
+          const coupleName = wedding?.partner1Name && wedding?.partner2Name 
+            ? `${wedding.partner1Name} & ${wedding.partner2Name}`
+            : wedding?.partner1Name || wedding?.partner2Name || 'Couple';
           
           return {
             conversationId: convId,
