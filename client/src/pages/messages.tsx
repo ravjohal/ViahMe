@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useMessageSocket } from "@/hooks/use-message-socket";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -78,6 +79,9 @@ export default function MessagesPage() {
   const [messageText, setMessageText] = useState("");
   const [expandedVendors, setExpandedVendors] = useState<Set<string>>(new Set());
   const hasAutoSelectedRef = useRef(false);
+
+  // Real-time message updates via WebSocket
+  useMessageSocket(selectedConversation);
 
   const { data: weddings = [], isLoading: weddingsLoading } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],

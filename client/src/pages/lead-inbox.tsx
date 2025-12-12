@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
+import { useMessageSocket } from "@/hooks/use-message-socket";
 import { VendorHeader } from "@/components/vendor-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -103,6 +104,9 @@ export default function LeadInbox() {
   const [initialConversationHandled, setInitialConversationHandled] = useState(false);
   const [expandedWeddings, setExpandedWeddings] = useState<Set<string>>(new Set());
   const hasAutoSelectedRef = useRef(false);
+  
+  // Real-time message updates via WebSocket
+  useMessageSocket(selectedLead?.conversationId);
   
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<QuickReplyTemplate | null>(null);

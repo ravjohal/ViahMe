@@ -3392,6 +3392,12 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
     try {
       const validatedData = insertMessageSchema.parse(req.body);
       const message = await storage.createMessage(validatedData);
+      
+      // Broadcast new message via WebSocket for real-time updates
+      if (message.conversationId && (global as any).broadcastNewMessage) {
+        (global as any).broadcastNewMessage(message.conversationId, message);
+      }
+      
       res.json(message);
     } catch (error) {
       if (error instanceof Error && "issues" in error) {
@@ -8241,6 +8247,50 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
       connections.forEach((ws) => {
         if (ws.readyState === WebSocket.OPEN) {
           ws.send(message);
+        }
+      });
+    }
+  };
+
+  // ============================================================================
+  // MESSAGING WEBSOCKET - Real-time message notifications
+  // ============================================================================
+  const messageWss = new WebSocketServer({ server: httpServer, path: '/ws/messages' });
+  
+  // Track connections by conversationId for targeted notifications
+  const messageConnections = new Map<string, Set<WebSocket>>();
+  
+  messageWss.on('connection', (ws, req) => {
+    const url = new URL(req.url || '', `http://${req.headers.host}`);
+    const conversationId = url.searchParams.get('conversationId');
+    
+    if (!conversationId) {
+      ws.close(1008, 'conversationId required');
+      return;
+    }
+    
+    if (!messageConnections.has(conversationId)) {
+      messageConnections.set(conversationId, new Set());
+    }
+    messageConnections.get(conversationId)!.add(ws);
+    
+    ws.on('close', () => {
+      messageConnections.get(conversationId)?.delete(ws);
+      if (messageConnections.get(conversationId)?.size === 0) {
+        messageConnections.delete(conversationId);
+      }
+    });
+    
+    ws.send(JSON.stringify({ type: 'connected', conversationId }));
+  });
+  
+  (global as any).broadcastNewMessage = (conversationId: string, message: any) => {
+    const connections = messageConnections.get(conversationId);
+    if (connections) {
+      const payload = JSON.stringify({ type: 'message:new', conversationId, message });
+      connections.forEach((ws) => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(payload);
         }
       });
     }
