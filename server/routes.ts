@@ -1245,6 +1245,28 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
       
       const booking = await storage.createBooking(validatedData);
       
+      // Create a system message in the event-specific conversation thread
+      if (wedding && vendor) {
+        const eventName = event?.name || 'General Inquiry';
+        const coupleName = wedding.partner1Name && wedding.partner2Name 
+          ? `${wedding.partner1Name} & ${wedding.partner2Name}`
+          : wedding.partner1Name || wedding.partner2Name || 'The Couple';
+        
+        const systemMessageContent = `📩 **Booking Request Sent**\n\n${coupleName} has requested a booking for **${eventName}**${event?.date ? ` on ${new Date(event.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}` : ''}.\n\n${validatedData.coupleNotes ? `**Notes from couple:**\n${validatedData.coupleNotes}` : ''}`;
+        
+        await storage.createMessage({
+          weddingId: booking.weddingId,
+          vendorId: booking.vendorId,
+          eventId: booking.eventId || null,
+          bookingId: booking.id,
+          senderId: 'system',
+          senderType: 'system',
+          content: systemMessageContent,
+          messageType: 'booking_request',
+          attachments: null,
+        });
+      }
+      
       // Send confirmation emails asynchronously (don't block response)
       (async () => {
         try {
@@ -1349,6 +1371,38 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
       }
       
       const booking = await storage.updateBooking(req.params.id, req.body);
+      
+      // Create system message for status changes
+      if (booking && req.body.status && req.body.status !== existingBooking.status) {
+        const vendor = await storage.getVendor(booking.vendorId);
+        const event = booking.eventId ? await storage.getEvent(booking.eventId) : null;
+        
+        let messageContent = '';
+        let messageType: 'booking_confirmed' | 'booking_declined' | 'status_update' = 'status_update';
+        
+        if (req.body.status === 'confirmed') {
+          messageType = 'booking_confirmed';
+          messageContent = `✅ **Booking Confirmed**\n\n${vendor?.name || 'The vendor'} has confirmed the booking request for **${event?.name || 'your event'}**.${req.body.vendorNotes ? `\n\n**Vendor notes:**\n${req.body.vendorNotes}` : ''}`;
+        } else if (req.body.status === 'declined') {
+          messageType = 'booking_declined';
+          messageContent = `❌ **Booking Declined**\n\n${vendor?.name || 'The vendor'} has declined the booking request for **${event?.name || 'your event'}**.${req.body.vendorNotes ? `\n\n**Vendor notes:**\n${req.body.vendorNotes}` : ''}`;
+        }
+        
+        if (messageContent) {
+          await storage.createMessage({
+            weddingId: booking.weddingId,
+            vendorId: booking.vendorId,
+            eventId: booking.eventId || null,
+            bookingId: booking.id,
+            senderId: 'system',
+            senderType: 'system',
+            content: messageContent,
+            messageType,
+            attachments: null,
+          });
+        }
+      }
+      
       res.json(booking);
     } catch (error) {
       res.status(500).json({ error: "Failed to update booking" });
