@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Bot, Send, User, Sparkles, Calendar, Users, DollarSign, MapPin, Lightbulb, RefreshCw, Loader2, Wand2, Heart, PartyPopper, Music, Camera, Utensils, Flower2 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import type { Wedding } from "@shared/schema";
 
 interface ChatMessage {
@@ -134,24 +135,6 @@ export default function AiPlanner() {
     });
   };
 
-  const formatContent = (content: string) => {
-    const lines = content.split('\n');
-    return lines.map((line, idx) => {
-      if (line.startsWith('**') && line.endsWith('**')) {
-        return <p key={idx} className="font-semibold mt-2 mb-1">{line.slice(2, -2)}</p>;
-      }
-      if (line.match(/^\d+\./)) {
-        return <p key={idx} className="ml-4">{line}</p>;
-      }
-      if (line.startsWith('- ') || line.startsWith('• ')) {
-        return <p key={idx} className="ml-4">{line}</p>;
-      }
-      if (line.trim() === '') {
-        return <br key={idx} />;
-      }
-      return <p key={idx}>{line}</p>;
-    });
-  };
 
   return (
     <div className="h-full flex flex-col">
@@ -263,8 +246,8 @@ export default function AiPlanner() {
                           : "bg-muted"
                       }`}
                     >
-                      <div className="text-sm prose prose-sm dark:prose-invert max-w-none">
-                        {formatContent(message.content)}
+                      <div className="text-sm prose prose-sm dark:prose-invert max-w-none [&>p]:my-1 [&>ul]:my-2 [&>ol]:my-2 [&>h1]:text-base [&>h2]:text-sm [&>h3]:text-sm [&>h4]:text-sm">
+                        <ReactMarkdown>{message.content}</ReactMarkdown>
                       </div>
                       <p className={`text-xs mt-2 ${message.role === "user" ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
                         {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
