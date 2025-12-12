@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,7 +22,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { format, formatDistanceToNow, isBefore, isToday, parseISO } from "date-fns";
-import { Link, useLocation } from "wouter";
+import { Link, useLocation, useSearch } from "wouter";
 import type { Vendor, QuickReplyTemplate, FollowUpReminder, InsertQuickReplyTemplate, InsertFollowUpReminder } from "@shared/schema";
 import {
   Inbox,
@@ -79,9 +79,11 @@ export default function LeadInbox() {
   const { toast } = useToast();
   const { user, isLoading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
+  const searchString = useSearch();
   const [activeTab, setActiveTab] = useState("inbox");
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [replyContent, setReplyContent] = useState("");
+  const [initialConversationHandled, setInitialConversationHandled] = useState(false);
   
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<QuickReplyTemplate | null>(null);
@@ -143,6 +145,31 @@ export default function LeadInbox() {
     },
     enabled: !!vendorId,
   });
+  
+  // Handle conversation pre-selection from URL query parameter (e.g., from booking cards)
+  useEffect(() => {
+    if (initialConversationHandled || leads.length === 0) return;
+    
+    const params = new URLSearchParams(searchString);
+    const conversationParam = params.get("conversation");
+    
+    if (conversationParam) {
+      // Try to find the lead by exact match or by base conversation ID (without event part)
+      let matchingLead = leads.find(lead => lead.conversationId === conversationParam);
+      
+      // If no exact match, try to match by weddingId-vendorId prefix (for event-specific conversations)
+      if (!matchingLead && conversationParam.includes("-event-")) {
+        const baseConversationId = conversationParam.split("-event-")[0];
+        matchingLead = leads.find(lead => lead.conversationId.startsWith(baseConversationId));
+      }
+      
+      if (matchingLead) {
+        setSelectedLead(matchingLead);
+        setActiveTab("inbox");
+      }
+      setInitialConversationHandled(true);
+    }
+  }, [leads, searchString, initialConversationHandled]);
   
   const sendMessageMutation = useMutation({
     mutationFn: async (data: { conversationId: string; content: string }) => {

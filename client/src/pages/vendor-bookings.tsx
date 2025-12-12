@@ -593,7 +593,7 @@ export default function VendorBookings() {
                       const conversationId = booking.eventId 
                         ? `${booking.weddingId}-vendor-${booking.vendorId}-event-${booking.eventId}`
                         : `${booking.weddingId}-vendor-${booking.vendorId}`;
-                      setLocation(`/vendor/messages?conversation=${conversationId}`);
+                      setLocation(`/lead-inbox?conversation=${encodeURIComponent(conversationId)}`);
                     }}
                     data-testid={`button-message-couple-${booking.id}`}
                   >
