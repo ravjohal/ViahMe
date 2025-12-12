@@ -667,11 +667,11 @@ export default function LeadInbox() {
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="inbox" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-1 space-y-4">
-                <Card>
-                  <CardHeader className="pb-3">
+          <TabsContent value="inbox" className="space-y-6 h-[calc(100vh-280px)] min-h-[500px]">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
+              <div className="lg:col-span-1 flex flex-col gap-4 h-full overflow-hidden">
+                <Card className="flex-1 flex flex-col min-h-0 overflow-hidden">
+                  <CardHeader className="pb-3 shrink-0">
                     <CardTitle className="text-lg flex items-center justify-between gap-2">
                       <span className="flex items-center gap-2">
                         <Mail className="h-5 w-5" />
@@ -682,7 +682,7 @@ export default function LeadInbox() {
                       )}
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="p-0">
+                  <CardContent className="p-0 flex-1 min-h-0 overflow-hidden">
                     {leadsLoading ? (
                       <div className="p-4 space-y-3">
                         <Skeleton className="h-20" />
@@ -694,7 +694,7 @@ export default function LeadInbox() {
                         <p className="text-sm">No new inquiries</p>
                       </div>
                     ) : (
-                      <ScrollArea className="h-[300px]">
+                      <ScrollArea className="h-full">
                         <div className="p-3 space-y-3">
                           {unreadWeddingGroups.map((group, groupIdx) => {
                             const coupleColor = COUPLE_COLORS[groupIdx % COUPLE_COLORS.length];
@@ -807,15 +807,15 @@ export default function LeadInbox() {
                 </Card>
                 
                 {readWeddingGroups.length > 0 && (
-                  <Card>
-                    <CardHeader className="pb-3">
+                  <Card className="shrink-0 max-h-[40%] flex flex-col overflow-hidden">
+                    <CardHeader className="pb-3 shrink-0">
                       <CardTitle className="text-lg flex items-center gap-2">
                         <MailOpen className="h-5 w-5" />
                         Previous Conversations
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="p-0">
-                      <ScrollArea className="h-[200px]">
+                    <CardContent className="p-0 flex-1 min-h-0 overflow-hidden">
+                      <ScrollArea className="h-full">
                         <div className="p-3 space-y-2">
                           {readWeddingGroups.map((group, groupIdx) => {
                             const coupleColor = COUPLE_COLORS[groupIdx % COUPLE_COLORS.length];
