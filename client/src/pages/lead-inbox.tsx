@@ -487,9 +487,7 @@ export default function LeadInbox() {
     toast({ title: "AI suggestion applied to your reply" });
   };
   
-  const unreadLeads = leads.filter(l => l.unreadCount > 0);
-  const readLeads = leads.filter(l => l.unreadCount === 0);
-  const totalUnread = unreadLeads.reduce((sum, l) => sum + l.unreadCount, 0);
+  const totalUnread = leads.reduce((sum, l) => sum + l.unreadCount, 0);
   
   const groupLeadsByWedding = (leadsToGroup: Lead[]): WeddingGroup[] => {
     const groupMap = new Map<string, WeddingGroup>();
@@ -511,19 +509,24 @@ export default function LeadInbox() {
       group.totalUnread += lead.unreadCount;
     });
     
-    return Array.from(groupMap.values()).sort((a, b) => b.totalUnread - a.totalUnread);
+    // Sort by unread count first (those with unread first), then alphabetically by couple name
+    return Array.from(groupMap.values()).sort((a, b) => {
+      if (a.totalUnread > 0 && b.totalUnread === 0) return -1;
+      if (a.totalUnread === 0 && b.totalUnread > 0) return 1;
+      if (a.totalUnread !== b.totalUnread) return b.totalUnread - a.totalUnread;
+      return a.coupleName.localeCompare(b.coupleName);
+    });
   };
   
-  const unreadWeddingGroups = groupLeadsByWedding(unreadLeads);
-  const readWeddingGroups = groupLeadsByWedding(readLeads);
+  const allWeddingGroups = groupLeadsByWedding(leads);
   
-  const unreadGroupsKey = unreadWeddingGroups.map(g => 
+  const groupsKey = allWeddingGroups.map(g => 
     `${g.weddingId}:${g.events.map(e => `${e.conversationId}:${e.unreadCount}`).join('|')}`
   ).join(',');
   
   useEffect(() => {
-    if (unreadWeddingGroups.length > 0) {
-      const weddingsWithMultipleUnread = unreadWeddingGroups
+    if (allWeddingGroups.length > 0) {
+      const weddingsWithMultipleUnread = allWeddingGroups
         .filter(g => g.events.length > 1 && g.totalUnread > 0);
       
       if (weddingsWithMultipleUnread.length > 0) {
@@ -537,12 +540,13 @@ export default function LeadInbox() {
       
       if (!hasAutoSelectedRef.current) {
         hasAutoSelectedRef.current = true;
-        const targetGroup = unreadWeddingGroups[0];
+        // Auto-select first group with unread, or first group overall
+        const targetGroup = allWeddingGroups.find(g => g.totalUnread > 0) || allWeddingGroups[0];
         const unreadEvent = targetGroup.events.find(e => e.unreadCount > 0) || targetGroup.events[0];
         setSelectedLead(unreadEvent);
       }
     }
-  }, [unreadGroupsKey]);
+  }, [groupsKey]);
   
   const toggleWeddingExpanded = (weddingId: string) => {
     setExpandedWeddings(prev => {
@@ -674,11 +678,11 @@ export default function LeadInbox() {
                   <CardHeader className="pb-3 shrink-0">
                     <CardTitle className="text-lg flex items-center justify-between gap-2">
                       <span className="flex items-center gap-2">
-                        <Mail className="h-5 w-5" />
-                        New Inquiries
+                        <MessageSquare className="h-5 w-5" />
+                        Conversations
                       </span>
-                      {unreadWeddingGroups.length > 0 && (
-                        <Badge variant="default">{totalUnread}</Badge>
+                      {totalUnread > 0 && (
+                        <Badge variant="default">{totalUnread} unread</Badge>
                       )}
                     </CardTitle>
                   </CardHeader>
@@ -688,15 +692,15 @@ export default function LeadInbox() {
                         <Skeleton className="h-20" />
                         <Skeleton className="h-20" />
                       </div>
-                    ) : unreadWeddingGroups.length === 0 ? (
+                    ) : allWeddingGroups.length === 0 ? (
                       <div className="p-6 text-center text-muted-foreground">
                         <MailOpen className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                        <p className="text-sm">No new inquiries</p>
+                        <p className="text-sm">No conversations yet</p>
                       </div>
                     ) : (
                       <ScrollArea className="h-full">
                         <div className="p-3 space-y-3">
-                          {unreadWeddingGroups.map((group, groupIdx) => {
+                          {allWeddingGroups.map((group, groupIdx) => {
                             const coupleColor = COUPLE_COLORS[groupIdx % COUPLE_COLORS.length];
                             return (
                             <div 
@@ -719,7 +723,9 @@ export default function LeadInbox() {
                                       <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 flex-wrap">
                                           <span className="font-semibold text-foreground">{group.coupleName}</span>
-                                          <Badge variant="default" className="text-xs">{group.totalUnread} new</Badge>
+                                          {group.totalUnread > 0 && (
+                                            <Badge variant="default" className="text-xs">{group.totalUnread} new</Badge>
+                                          )}
                                         </div>
                                         {group.events.length > 1 && (
                                           <span className="text-xs text-muted-foreground">
@@ -805,98 +811,6 @@ export default function LeadInbox() {
                     )}
                   </CardContent>
                 </Card>
-                
-                {readWeddingGroups.length > 0 && (
-                  <Card className="shrink-0 max-h-[40%] flex flex-col overflow-hidden">
-                    <CardHeader className="pb-3 shrink-0">
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <MailOpen className="h-5 w-5" />
-                        Previous Conversations
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-0 flex-1 min-h-0 overflow-hidden">
-                      <ScrollArea className="h-full">
-                        <div className="p-3 space-y-2">
-                          {readWeddingGroups.map((group, groupIdx) => {
-                            const coupleColor = COUPLE_COLORS[groupIdx % COUPLE_COLORS.length];
-                            return (
-                            <div 
-                              key={group.weddingId}
-                              className={`rounded-lg border overflow-hidden ${coupleColor.bg} ${coupleColor.border}`}
-                            >
-                              <button
-                                onClick={() => handleWeddingClick(group)}
-                                className={`w-full p-3 text-left hover-elevate transition-colors ${
-                                  group.events.length === 1 && selectedLead?.conversationId === group.events[0].conversationId ? "ring-2 ring-primary ring-inset" : ""
-                                }`}
-                                data-testid={`wedding-group-read-${group.weddingId}`}
-                              >
-                                <div className="flex items-center justify-between gap-2">
-                                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                                    <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${coupleColor.icon}`}>
-                                      <Heart className="h-3.5 w-3.5 text-foreground/70" />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                      <span className="font-medium text-sm truncate block">{group.coupleName}</span>
-                                      <span className="text-xs text-muted-foreground">
-                                        {group.events.reduce((sum, e) => sum + e.totalMessages, 0)} messages
-                                        {group.events.length > 1 && ` · ${group.events.length} events`}
-                                      </span>
-                                    </div>
-                                  </div>
-                                  {group.events.length > 1 ? (
-                                    expandedWeddings.has(group.weddingId) ? (
-                                      <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
-                                    ) : (
-                                      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                                    )
-                                  ) : (
-                                    <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                                  )}
-                                </div>
-                              </button>
-                              {group.events.length > 1 && expandedWeddings.has(group.weddingId) && (
-                                <div className="border-t border-inherit">
-                                  {group.events.map((event, eventIdx) => {
-                                    const eventColor = EVENT_COLORS[eventIdx % EVENT_COLORS.length];
-                                    return (
-                                    <button
-                                      key={event.conversationId}
-                                      onClick={() => setSelectedLead(event)}
-                                      className={`w-full pl-5 pr-3 py-2.5 text-left hover-elevate transition-colors ${eventColor} ${
-                                        eventIdx !== group.events.length - 1 ? "border-b border-muted/30" : ""
-                                      } ${
-                                        selectedLead?.conversationId === event.conversationId ? "ring-2 ring-primary ring-inset" : ""
-                                      }`}
-                                      data-testid={`event-item-read-${event.conversationId}`}
-                                    >
-                                      <div className="flex items-center gap-2">
-                                        <div className="w-5 h-5 rounded bg-background/50 flex items-center justify-center shrink-0">
-                                          <PartyPopper className="h-2.5 w-2.5 text-foreground/60" />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                          <span className="text-sm truncate block">
-                                            {event.eventName || "General Inquiry"}
-                                          </span>
-                                          <span className="text-xs text-muted-foreground">
-                                            {event.totalMessages} messages
-                                          </span>
-                                        </div>
-                                        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                                      </div>
-                                    </button>
-                                  );
-                                  })}
-                                </div>
-                              )}
-                            </div>
-                          );
-                          })}
-                        </div>
-                      </ScrollArea>
-                    </CardContent>
-                  </Card>
-                )}
               </div>
               
               <div className="lg:col-span-2">
