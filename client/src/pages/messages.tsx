@@ -112,6 +112,8 @@ export default function MessagesPage() {
   const [closeDialogOpen, setCloseDialogOpen] = useState(false);
   const [closeReason, setCloseReason] = useState("");
   const hasAutoSelectedRef = useRef(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const hasScrolledToUnreadRef = useRef<string | null>(null);
 
   useMessageSocket(selectedConversation);
 
@@ -127,7 +129,7 @@ export default function MessagesPage() {
     enabled: !!weddingId,
   });
 
-  const { data: messages = [] } = useQuery<Message[]>({
+  const { data: messages = [], isLoading: messagesLoading } = useQuery<Message[]>({
     queryKey: ["/api/messages", selectedConversation],
     enabled: !!selectedConversation,
   });
@@ -188,6 +190,57 @@ export default function MessagesPage() {
       }
     }
   }, [vendorGroupsKey]);
+
+  // Mark messages as read when couple views them
+  useEffect(() => {
+    if (!messages.length || !selectedConversation) return;
+    
+    // Find unread messages from vendor (not from couple)
+    const unreadVendorMessages = messages.filter(
+      m => !m.isRead && m.senderType === 'vendor'
+    );
+    
+    // Mark each unread message as read
+    unreadVendorMessages.forEach(async (message) => {
+      try {
+        await apiRequest("PATCH", `/api/messages/${message.id}/read`);
+      } catch (error) {
+        console.error("Failed to mark message as read:", error);
+      }
+    });
+    
+    // Refresh conversations to update unread counts
+    if (unreadVendorMessages.length > 0) {
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["/api/conversations/wedding", weddingId] });
+      }, 500);
+    }
+  }, [messages, selectedConversation, weddingId]);
+
+  // Scroll to first unread message when conversation is selected
+  useEffect(() => {
+    if (!messages.length || !selectedConversation || messagesLoading) return;
+    if (hasScrolledToUnreadRef.current === selectedConversation) return;
+    
+    const firstUnreadMessage = messages.find(
+      m => !m.isRead && m.senderType === 'vendor'
+    );
+    
+    if (firstUnreadMessage) {
+      setTimeout(() => {
+        const unreadElement = document.querySelector(`[data-unread-id="${firstUnreadMessage.id}"]`);
+        if (unreadElement) {
+          unreadElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+    } else {
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+    
+    hasScrolledToUnreadRef.current = selectedConversation;
+  }, [messages, selectedConversation, messagesLoading]);
 
   const toggleVendorExpanded = (vendorId: string) => {
     setExpandedVendors(prev => {
@@ -544,11 +597,13 @@ export default function MessagesPage() {
                   <div className="space-y-4">
                     {messages.map((message) => {
                       const isCouple = message.senderType === "couple";
+                      const isUnread = !message.isRead && message.senderType === 'vendor';
                       return (
                         <div
                           key={message.id}
                           className={`flex ${isCouple ? "justify-end" : "justify-start"}`}
                           data-testid={`message-${message.id}`}
+                          {...(isUnread && { 'data-unread-id': message.id })}
                         >
                           <div
                             className={`max-w-[70%] rounded-lg p-3 ${
@@ -574,6 +629,7 @@ export default function MessagesPage() {
                         </div>
                       );
                     })}
+                    <div ref={messagesEndRef} />
                   </div>
                 )}
               </ScrollArea>
