@@ -3287,15 +3287,21 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
         }
       }
       
-      // Batch fetch all vendors in a single query
-      const vendors = await storage.getVendorsByIds(Array.from(vendorIds));
+      // Batch fetch all vendors and events in parallel
+      const [vendors, events] = await Promise.all([
+        storage.getVendorsByIds(Array.from(vendorIds)),
+        storage.getEventsByWedding(weddingId),
+      ]);
       const vendorMap = new Map(vendors.map(v => [v.id, v]));
+      const eventMap = new Map(events.map(e => [e.id, e]));
       
       // Build unread message notifications
       const unreadVendorMessages: Array<{
         type: 'unread_message';
         vendorId: string;
         vendorName: string;
+        eventId?: string;
+        eventName?: string;
         unreadCount: number;
         conversationId: string;
         latestMessage: string;
@@ -3306,6 +3312,7 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
         const parsed = parseConversationId(convId);
         if (parsed) {
           const vendor = vendorMap.get(parsed.vendorId);
+          const event = parsed.eventId ? eventMap.get(parsed.eventId) : undefined;
           // Messages are already sorted desc by createdAt from storage
           const latestUnread = messages[0];
           
@@ -3313,6 +3320,8 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
             type: 'unread_message',
             vendorId: parsed.vendorId,
             vendorName: vendor?.name || 'Unknown Vendor',
+            eventId: parsed.eventId,
+            eventName: event?.name,
             unreadCount: messages.length,
             conversationId: convId,
             latestMessage: latestUnread.content.slice(0, 100) + (latestUnread.content.length > 100 ? '...' : ''),
@@ -3348,10 +3357,12 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
       
       // Add unread message notifications
       for (const msg of unreadVendorMessages) {
+        // Build title with event name if available
+        const eventSuffix = msg.eventName ? ` for ${msg.eventName}` : '';
         notifications.push({
           id: `msg-${msg.conversationId}`,
           type: 'unread_message',
-          title: `${msg.unreadCount} unread message${msg.unreadCount > 1 ? 's' : ''} from ${msg.vendorName}`,
+          title: `${msg.unreadCount} unread message${msg.unreadCount > 1 ? 's' : ''} from ${msg.vendorName}${eventSuffix}`,
           description: msg.latestMessage,
           link: `/messages?conversation=${msg.conversationId}`,
           createdAt: msg.createdAt,
