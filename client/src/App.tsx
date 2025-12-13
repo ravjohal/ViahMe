@@ -51,7 +51,9 @@ import VendorBookings from "@/pages/vendor-bookings";
 import VendorContracts from "@/pages/vendor-contracts";
 import VendorPackages from "@/pages/vendor-packages";
 import VendorDeposit from "@/pages/vendor-deposit";
-import LeadInbox from "@/pages/lead-inbox";
+import VendorMessages from "@/pages/vendor-messages";
+import VendorTemplates from "@/pages/vendor-templates";
+import VendorReminders from "@/pages/vendor-reminders";
 import ClaimProfile from "@/pages/claim-profile";
 import AiPlanner from "@/pages/ai-planner";
 import LiveTimeline from "@/pages/live-timeline";
@@ -90,9 +92,19 @@ function Router() {
           <VendorDashboard />
         </VendorRoute>
       </Route>
-      <Route path="/lead-inbox">
+      <Route path="/vendor-messages">
         <VendorRoute>
-          <LeadInbox />
+          <VendorMessages />
+        </VendorRoute>
+      </Route>
+      <Route path="/vendor-templates">
+        <VendorRoute>
+          <VendorTemplates />
+        </VendorRoute>
+      </Route>
+      <Route path="/vendor-reminders">
+        <VendorRoute>
+          <VendorReminders />
         </VendorRoute>
       </Route>
       <Route path="/couple-analytics" component={CoupleAnalytics} />
@@ -261,7 +273,7 @@ function AppLayout() {
   ];
   
   // Hide header on auth pages, guest websites, and vendor pages (vendors have their own header)
-  const isVendorPage = location.startsWith("/vendor-") || location.startsWith("/lead-inbox");
+  const isVendorPage = location.startsWith("/vendor-");
   const hideHeader = authPages.includes(location) || 
                      location.startsWith("/wedding/") ||
                      isVendorPage;

@@ -917,13 +917,13 @@ export default function VendorDashboard() {
             </div>
           </Card>
 
-          <Card className="p-6 hover-elevate cursor-pointer" onClick={() => setLocation("/lead-inbox")} data-testid="card-lead-inbox">
+          <Card className="p-6 hover-elevate cursor-pointer" onClick={() => setLocation("/vendor-messages")} data-testid="card-vendor-messages">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-xl bg-primary/10">
                 <MessageSquare className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Lead Inbox</p>
+                <p className="text-sm text-muted-foreground">Messages</p>
                 <p className="font-medium text-primary flex items-center gap-2">
                   View Inquiries
                   <span className="text-xs text-muted-foreground">→</span>
