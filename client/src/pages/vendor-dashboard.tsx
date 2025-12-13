@@ -917,7 +917,7 @@ export default function VendorDashboard() {
             </div>
           </Card>
 
-          <Card className="p-6 hover-elevate cursor-pointer" onClick={() => setLocation("/vendor-messages")} data-testid="card-vendor-messages">
+          <Card className="p-6 hover-elevate cursor-pointer" onClick={() => setLocation("/messages")} data-testid="card-vendor-messages">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-xl bg-primary/10">
                 <MessageSquare className="w-6 h-6 text-primary" />

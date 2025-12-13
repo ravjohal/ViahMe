@@ -51,7 +51,6 @@ import VendorBookings from "@/pages/vendor-bookings";
 import VendorContracts from "@/pages/vendor-contracts";
 import VendorPackages from "@/pages/vendor-packages";
 import VendorDeposit from "@/pages/vendor-deposit";
-import VendorMessages from "@/pages/vendor-messages";
 import VendorTemplates from "@/pages/vendor-templates";
 import VendorReminders from "@/pages/vendor-reminders";
 import ClaimProfile from "@/pages/claim-profile";
@@ -90,11 +89,6 @@ function Router() {
       <Route path="/vendor-dashboard">
         <VendorRoute>
           <VendorDashboard />
-        </VendorRoute>
-      </Route>
-      <Route path="/vendor-messages">
-        <VendorRoute>
-          <VendorMessages />
         </VendorRoute>
       </Route>
       <Route path="/vendor-templates">

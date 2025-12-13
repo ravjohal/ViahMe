@@ -27,7 +27,7 @@ import type { Vendor } from "@shared/schema";
 const navItems = [
   { href: "/vendor-dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/vendor-bookings", label: "Bookings", icon: Calendar },
-  { href: "/vendor-messages", label: "Messages", icon: MessageSquare },
+  { href: "/messages", label: "Messages", icon: MessageSquare },
   { href: "/vendor-templates", label: "Templates", icon: Zap },
   { href: "/vendor-reminders", label: "Reminders", icon: Bell },
   { href: "/vendor-contracts", label: "Contracts", icon: FileText },
