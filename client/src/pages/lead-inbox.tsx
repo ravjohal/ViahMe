@@ -122,6 +122,8 @@ export default function LeadInbox() {
   const [initialConversationHandled, setInitialConversationHandled] = useState(false);
   const [expandedWeddings, setExpandedWeddings] = useState<Set<string>>(new Set());
   const hasAutoSelectedRef = useRef(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const hasScrolledToUnreadRef = useRef<string | null>(null);
   
   // Real-time message updates via WebSocket
   useMessageSocket(selectedLead?.conversationId);
@@ -251,6 +253,36 @@ export default function LeadInbox() {
       }, 500);
     }
   }, [conversationMessages, selectedLead, vendorId]);
+  
+  // Scroll to first unread message when conversation is selected
+  useEffect(() => {
+    if (!conversationMessages.length || !selectedLead || messagesLoading) return;
+    
+    // Only scroll once per conversation
+    if (hasScrolledToUnreadRef.current === selectedLead.conversationId) return;
+    
+    // Find first unread message from couple
+    const firstUnreadMessage = conversationMessages.find(
+      m => !m.isRead && m.senderType === 'couple'
+    );
+    
+    if (firstUnreadMessage) {
+      // Small delay to ensure DOM is rendered
+      setTimeout(() => {
+        const unreadElement = document.querySelector(`[data-unread-id="${firstUnreadMessage.id}"]`);
+        if (unreadElement) {
+          unreadElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+    } else {
+      // No unread messages, scroll to bottom
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+    
+    hasScrolledToUnreadRef.current = selectedLead.conversationId;
+  }, [conversationMessages, selectedLead, messagesLoading]);
   
   // Handle conversation pre-selection from URL query parameter (e.g., from booking cards)
   useEffect(() => {
@@ -839,9 +871,9 @@ export default function LeadInbox() {
                 </Card>
               </div>
               
-              <div className="lg:col-span-2">
+              <div className="lg:col-span-2 h-full">
                 {selectedLead ? (
-                  <Card className="h-full">
+                  <Card className="h-full flex flex-col">
                     <CardHeader className="border-b">
                       <div className="flex items-start justify-between">
                         <div>
@@ -889,7 +921,7 @@ export default function LeadInbox() {
                         </Button>
                       </div>
                     </CardHeader>
-                    <CardContent className="p-4 space-y-4 flex flex-col h-[calc(100vh-400px)] min-h-[400px]">
+                    <CardContent className="p-4 space-y-4 flex flex-col flex-1 min-h-0 overflow-hidden">
                       {isConversationClosed && (
                         <div className="px-3 py-2 bg-muted/50 rounded-lg flex items-center gap-2" data-testid="banner-conversation-closed">
                           <Archive className="w-4 h-4 text-muted-foreground" />
@@ -913,11 +945,13 @@ export default function LeadInbox() {
                             <div className="space-y-3">
                               {conversationMessages.map((message) => {
                                 const isVendor = message.senderType === "vendor";
+                                const isUnread = !message.isRead && message.senderType === 'couple';
                                 return (
                                   <div
                                     key={message.id}
                                     className={`flex ${isVendor ? "justify-end" : "justify-start"}`}
                                     data-testid={`message-${message.id}`}
+                                    {...(isUnread && { 'data-unread-id': message.id })}
                                   >
                                     <div
                                       className={`max-w-[80%] rounded-lg p-3 ${
@@ -944,6 +978,7 @@ export default function LeadInbox() {
                                   </div>
                                 );
                               })}
+                              <div ref={messagesEndRef} />
                             </div>
                           )}
                         </ScrollArea>
