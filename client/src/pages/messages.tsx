@@ -488,10 +488,10 @@ export default function MessagesPage() {
           </ScrollArea>
         </div>
 
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-h-0">
           {selectedConversation ? (
             <>
-              <div className="p-4 border-b">
+              <div className="p-4 border-b shrink-0">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">

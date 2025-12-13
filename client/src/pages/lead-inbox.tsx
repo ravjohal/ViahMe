@@ -928,9 +928,9 @@ export default function LeadInbox() {
                           <span className="text-sm text-muted-foreground">This inquiry has been closed by the couple.</span>
                         </div>
                       )}
-                      <div className="flex-1 overflow-hidden">
-                        <Label className="text-sm font-medium mb-2 block">Conversation</Label>
-                        <ScrollArea className="h-full border rounded-lg p-3 bg-muted/30">
+                      <div className="flex-1 overflow-hidden flex flex-col min-h-0">
+                        <Label className="text-sm font-medium mb-2 block shrink-0">Conversation</Label>
+                        <ScrollArea className="flex-1 border rounded-lg p-3 bg-muted/30">
                           {messagesLoading ? (
                             <div className="space-y-3">
                               <Skeleton className="h-16 w-3/4" />
