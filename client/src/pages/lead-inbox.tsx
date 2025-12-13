@@ -226,6 +226,32 @@ export default function LeadInbox() {
   // Disable reply if status is loading, closed, or there's an error
   const isReplyDisabled = statusLoading || isConversationClosed || statusError;
   
+  // Mark messages as read when vendor views them
+  useEffect(() => {
+    if (!conversationMessages.length || !selectedLead) return;
+    
+    // Find unread messages from the couple (not from vendor)
+    const unreadCoupleMessages = conversationMessages.filter(
+      m => !m.isRead && m.senderType === 'couple'
+    );
+    
+    // Mark each unread message as read
+    unreadCoupleMessages.forEach(async (message) => {
+      try {
+        await apiRequest("PATCH", `/api/messages/${message.id}/read`);
+      } catch (error) {
+        console.error("Failed to mark message as read:", error);
+      }
+    });
+    
+    // Refresh the lead inbox to update unread counts after marking as read
+    if (unreadCoupleMessages.length > 0) {
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["/api/lead-inbox", vendorId] });
+      }, 500);
+    }
+  }, [conversationMessages, selectedLead, vendorId]);
+  
   // Handle conversation pre-selection from URL query parameter (e.g., from booking cards)
   useEffect(() => {
     if (initialConversationHandled || leads.length === 0) return;
