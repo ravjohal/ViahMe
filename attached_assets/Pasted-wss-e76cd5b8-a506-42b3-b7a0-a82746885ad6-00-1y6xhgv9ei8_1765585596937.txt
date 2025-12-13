@@ -1,0 +1,40 @@
+wss://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/ws/messages?conversationId=e82a3e89-0d2f-4301-98be-8e11fcca7949-vendor-7441ffe6-b952-4303-bf74-620de3620e7c' failed: 
+connect @ use-message-socket.ts:15
+(anonymous) @ use-message-socket.ts:43
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=235bc8d7:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=235bc8d7:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=235bc8d7:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=235bc8d7:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=235bc8d7:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=235bc8d7:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=235bc8d7:19447
+commitRootImpl @ chunk-RPCDYKBN.js?v=235bc8d7:19416
+commitRoot @ chunk-RPCDYKBN.js?v=235bc8d7:19277
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=235bc8d7:18895
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=235bc8d7:9119
+(anonymous) @ chunk-RPCDYKBN.js?v=235bc8d7:18627
+use-message-socket.ts:38 Message socket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+ws.onerror @ use-message-socket.ts:38
+use-message-socket.ts:15 WebSocket connection to 'wss://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/ws/messages?conversationId=e82a3e89-0d2f-4301-98be-8e11fcca7949-vendor-7441ffe6-b952-4303-bf74-620de3620e7c-event-ad2db427-9231-4793-81d9-cbf94b1afb91' failed: 
+connect @ use-message-socket.ts:15
+use-message-socket.ts:38 Message socket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+ws.onerror @ use-message-socket.ts:38
+use-message-socket.ts:15 WebSocket connection to 'wss://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/ws/messages?conversationId=e82a3e89-0d2f-4301-98be-8e11fcca7949-vendor-7441ffe6-b952-4303-bf74-620de3620e7c' failed: 
+connect @ use-message-socket.ts:15
+use-message-socket.ts:38 Message socket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+ws.onerror @ use-message-socket.ts:38
+use-message-socket.ts:15 WebSocket connection to 'wss://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/ws/messages?conversationId=e82a3e89-0d2f-4301-98be-8e11fcca7949-vendor-7441ffe6-b952-4303-bf74-620de3620e7c-event-ad2db427-9231-4793-81d9-cbf94b1afb91' failed: 
+connect @ use-message-socket.ts:15
+use-message-socket.ts:38 Message socket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+ws.onerror @ use-message-socket.ts:38
+use-message-socket.ts:15 WebSocket connection to 'wss://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/ws/messages?conversationId=e82a3e89-0d2f-4301-98be-8e11fcca7949-vendor-7441ffe6-b952-4303-bf74-620de3620e7c' failed: 
+connect @ use-message-socket.ts:15
+use-message-socket.ts:38 Message socket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+ws.onerror @ use-message-socket.ts:38
+use-message-socket.ts:15 WebSocket connection to 'wss://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/ws/messages?conversationId=e82a3e89-0d2f-4301-98be-8e11fcca7949-vendor-7441ffe6-b952-4303-bf74-620de3620e7c-event-ad2db427-9231-4793-81d9-cbf94b1afb91' failed: 
+connect @ use-message-socket.ts:15
+use-message-socket.ts:38 Message socket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+ws.onerror @ use-message-socket.ts:38
+use-message-socket.ts:15 WebSocket connection to 'wss://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/ws/messages?conversationId=e82a3e89-0d2f-4301-98be-8e11fcca7949-vendor-7441ffe6-b952-4303-bf74-620de3620e7c' failed: 
+connect @ use-message-socket.ts:15
+use-message-socket.ts:38 Message socket error: Event {isTrusted: true, typ
