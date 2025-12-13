@@ -8299,7 +8299,8 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   // ============================================================================
   // WEBSOCKET SERVER - Real-time updates for guests
   // ============================================================================
-  const wss = new WebSocketServer({ server: httpServer, path: '/ws/live-feed' });
+  // Use noServer mode to manually handle upgrades (avoids conflicts with Vite HMR)
+  const wss = new WebSocketServer({ noServer: true });
   
   const weddingConnections = new Map<string, Set<WebSocket>>();
   
@@ -8342,26 +8343,40 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   // ============================================================================
   // MESSAGING WEBSOCKET - Real-time message notifications
   // ============================================================================
-  const messageWss = new WebSocketServer({ server: httpServer, path: '/ws/messages' });
+  // Use noServer mode to manually handle upgrades (avoids conflicts with Vite HMR)
+  const messageWss = new WebSocketServer({ noServer: true });
   
   // Track connections by conversationId for targeted notifications
   const messageConnections = new Map<string, Set<WebSocket>>();
   
+  messageWss.on('error', (error) => {
+    console.error('[WebSocket] Message server error:', error);
+  });
+  
   messageWss.on('connection', (ws, req) => {
+    console.log('[WebSocket] New message connection from:', req.url);
     const url = new URL(req.url || '', `http://${req.headers.host}`);
     const conversationId = url.searchParams.get('conversationId');
     
     if (!conversationId) {
+      console.log('[WebSocket] Connection rejected: no conversationId');
       ws.close(1008, 'conversationId required');
       return;
     }
+    
+    console.log('[WebSocket] Connected to conversation:', conversationId);
     
     if (!messageConnections.has(conversationId)) {
       messageConnections.set(conversationId, new Set());
     }
     messageConnections.get(conversationId)!.add(ws);
     
-    ws.on('close', () => {
+    ws.on('error', (error) => {
+      console.error('[WebSocket] Client connection error:', error);
+    });
+    
+    ws.on('close', (code, reason) => {
+      console.log('[WebSocket] Connection closed:', conversationId, 'code:', code, 'reason:', reason?.toString());
       messageConnections.get(conversationId)?.delete(ws);
       if (messageConnections.get(conversationId)?.size === 0) {
         messageConnections.delete(conversationId);
@@ -8382,6 +8397,24 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
       });
     }
   };
+
+  // ============================================================================
+  // MANUAL WEBSOCKET UPGRADE HANDLER - Route upgrades to correct WebSocket server
+  // ============================================================================
+  httpServer.on('upgrade', (request, socket, head) => {
+    const { pathname } = new URL(request.url || '', `http://${request.headers.host}`);
+    
+    if (pathname === '/ws/live-feed') {
+      wss.handleUpgrade(request, socket, head, (ws) => {
+        wss.emit('connection', ws, request);
+      });
+    } else if (pathname === '/ws/messages') {
+      messageWss.handleUpgrade(request, socket, head, (ws) => {
+        messageWss.emit('connection', ws, request);
+      });
+    }
+    // Don't destroy socket for unhandled paths - let Vite HMR handle its own upgrades
+  });
 
   // ============================================================================
   // GOOGLE CALENDAR INTEGRATION - Vendor availability from external calendars
