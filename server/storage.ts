@@ -204,6 +204,7 @@ export interface IStorage {
 
   // Vendors
   getVendor(id: string): Promise<Vendor | undefined>;
+  getVendorsByIds(ids: string[]): Promise<Vendor[]>;
   getAllVendors(): Promise<Vendor[]>;
   getVendorsByCategory(category: string): Promise<Vendor[]>;
   getVendorsByLocation(location: string): Promise<Vendor[]>;
@@ -328,6 +329,7 @@ export interface IStorage {
   createMessage(message: InsertMessage): Promise<Message>;
   markMessageAsRead(id: string): Promise<Message | undefined>;
   getUnreadCount(conversationId: string, recipientType: 'couple' | 'vendor'): Promise<number>;
+  getUnreadVendorMessagesByWedding(weddingId: string): Promise<Message[]>;
 
   // Conversation Status
   getConversationStatus(conversationId: string): Promise<ConversationStatus | undefined>;
@@ -1103,6 +1105,15 @@ export class MemStorage implements IStorage {
     return this.vendors.get(id);
   }
 
+  async getVendorsByIds(ids: string[]): Promise<Vendor[]> {
+    const result: Vendor[] = [];
+    for (const id of ids) {
+      const vendor = this.vendors.get(id);
+      if (vendor) result.push(vendor);
+    }
+    return result;
+  }
+
   async getAllVendors(): Promise<Vendor[]> {
     return Array.from(this.vendors.values());
   }
@@ -1864,6 +1875,12 @@ export class MemStorage implements IStorage {
         !m.isRead && 
         m.senderType !== recipientType
       ).length;
+  }
+
+  async getUnreadVendorMessagesByWedding(weddingId: string): Promise<Message[]> {
+    return Array.from(this.messages.values())
+      .filter(m => m.weddingId === weddingId && m.senderType === 'vendor' && !m.isRead)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }
 
   // Conversation Status
@@ -3840,6 +3857,11 @@ export class DBStorage implements IStorage {
     return result[0];
   }
 
+  async getVendorsByIds(ids: string[]): Promise<Vendor[]> {
+    if (ids.length === 0) return [];
+    return await this.db.select().from(schema.vendors).where(inArray(schema.vendors.id, ids));
+  }
+
   async getAllVendors(): Promise<Vendor[]> {
     return await this.db.select().from(schema.vendors);
   }
@@ -4541,6 +4563,21 @@ export class DBStorage implements IStorage {
       .where(eq(schema.messages.conversationId, conversationId));
     
     return result.filter(m => !m.isRead && m.senderType !== recipientType).length;
+  }
+
+  async getUnreadVendorMessagesByWedding(weddingId: string): Promise<Message[]> {
+    const result = await this.db
+      .select()
+      .from(schema.messages)
+      .where(
+        and(
+          eq(schema.messages.weddingId, weddingId),
+          eq(schema.messages.senderType, 'vendor'),
+          eq(schema.messages.isRead, false)
+        )
+      )
+      .orderBy(sql`${schema.messages.createdAt} DESC`);
+    return result;
   }
 
   // Conversation Status

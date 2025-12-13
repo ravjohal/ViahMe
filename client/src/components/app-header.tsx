@@ -17,8 +17,24 @@ import { useAuth } from "@/hooks/use-auth";
 import { usePermissions } from "@/hooks/use-permissions";
 import type { Wedding } from "@shared/schema";
 import type { PermissionCategory } from "@shared/schema";
-import { differenceInDays } from "date-fns";
+import { differenceInDays, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
+
+interface Notification {
+  id: string;
+  type: 'unread_message' | 'team_join';
+  title: string;
+  description: string;
+  link: string;
+  createdAt: string;
+}
+
+interface NotificationsResponse {
+  notifications: Notification[];
+  totalCount: number;
+  unreadMessageCount: number;
+  teamJoinCount: number;
+}
 
 interface NavItem {
   path: string;
@@ -81,6 +97,12 @@ export function AppHeader() {
   const daysUntilWedding = wedding?.weddingDate
     ? differenceInDays(new Date(wedding.weddingDate), new Date())
     : null;
+
+  const { data: notificationsData } = useQuery<NotificationsResponse>({
+    queryKey: ["/api/notifications/couple", wedding?.id],
+    enabled: user?.role !== "vendor" && !!wedding?.id,
+    refetchInterval: 30000,
+  });
   
   const getUserInitials = () => {
     if (!user) return "?";
@@ -225,26 +247,69 @@ export function AppHeader() {
           )}
 
           {/* Notifications */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="relative hidden sm:inline-flex"
-                data-testid="button-notifications"
-              >
-                <Bell className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
-              <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <div className="p-4 text-center text-sm text-muted-foreground">
-                No new notifications
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {user?.role !== "vendor" && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="relative hidden sm:inline-flex"
+                  data-testid="button-notifications"
+                >
+                  <Bell className="w-5 h-5" />
+                  {notificationsData && notificationsData.totalCount > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-primary rounded-full flex items-center justify-center text-[10px] font-bold text-primary-foreground px-1">
+                      {notificationsData.totalCount > 9 ? '9+' : notificationsData.totalCount}
+                    </span>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-80">
+                <DropdownMenuLabel className="flex items-center justify-between">
+                  <span>Notifications</span>
+                  {notificationsData && notificationsData.totalCount > 0 && (
+                    <Badge variant="secondary" className="text-xs">
+                      {notificationsData.totalCount}
+                    </Badge>
+                  )}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {!notificationsData || notificationsData.notifications.length === 0 ? (
+                  <div className="p-4 text-center text-sm text-muted-foreground">
+                    No new notifications
+                  </div>
+                ) : (
+                  <div className="max-h-80 overflow-y-auto">
+                    {notificationsData.notifications.slice(0, 10).map((notification) => (
+                      <Link key={notification.id} href={notification.link}>
+                        <DropdownMenuItem 
+                          className="flex flex-col items-start gap-1 p-3 cursor-pointer"
+                          data-testid={`notification-${notification.id}`}
+                        >
+                          <div className="flex items-center gap-2 w-full">
+                            {notification.type === 'unread_message' ? (
+                              <MessageSquare className="w-4 h-4 text-primary flex-shrink-0" />
+                            ) : (
+                              <UsersRound className="w-4 h-4 text-green-600 flex-shrink-0" />
+                            )}
+                            <span className="font-medium text-sm truncate flex-1">
+                              {notification.title}
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground line-clamp-2 pl-6">
+                            {notification.description}
+                          </p>
+                          <span className="text-xs text-muted-foreground pl-6">
+                            {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
+                          </span>
+                        </DropdownMenuItem>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
 
           {/* User Avatar & Dropdown */}
           {user && (
