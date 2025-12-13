@@ -871,10 +871,10 @@ export default function LeadInbox() {
                 </Card>
               </div>
               
-              <div className="lg:col-span-2 h-full">
+              <div className="lg:col-span-2 h-full overflow-hidden">
                 {selectedLead ? (
-                  <Card className="h-full flex flex-col">
-                    <CardHeader className="border-b">
+                  <Card className="h-full flex flex-col overflow-hidden">
+                    <CardHeader className="border-b shrink-0">
                       <div className="flex items-start justify-between">
                         <div>
                           <CardTitle className="flex items-center gap-2">
@@ -930,7 +930,7 @@ export default function LeadInbox() {
                       )}
                       <div className="flex-1 overflow-hidden flex flex-col min-h-0">
                         <Label className="text-sm font-medium mb-2 block shrink-0">Conversation</Label>
-                        <ScrollArea className="flex-1 border rounded-lg p-3 bg-muted/30">
+                        <ScrollArea className="flex-1 min-h-0 border rounded-lg p-3 bg-muted/30">
                           {messagesLoading ? (
                             <div className="space-y-3">
                               <Skeleton className="h-16 w-3/4" />
