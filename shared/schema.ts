@@ -198,6 +198,10 @@ export const vendors = pgTable("vendors", {
   lastViewNotifiedAt: timestamp("last_view_notified_at"), // Last time we notified vendor about a profile view
   viewCount: integer("view_count").notNull().default(0), // Number of profile views
   optedOutOfNotifications: boolean("opted_out_of_notifications").default(false), // Vendor opted out of claim notifications
+  // Sulekha-specific fields for imported vendor data
+  sulekhaRating: decimal("sulekha_rating", { precision: 3, scale: 1 }), // Sulekha score (e.g., 9.5)
+  experience: text("experience"), // Years in business (e.g., "13 Years in Business")
+  zipCodesServing: text("zip_codes_serving").array(), // Array of ZIP codes served
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

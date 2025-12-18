@@ -1,0 +1,59 @@
+<div class="single-listing " xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="content-blk"><figure><img src="https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg" alt="Absolute Vibez in , "></figure><div class="content">
+      <h3><a title="Indian DJ Services - Absolute Vibez" href="/fremont-ca/dj-service/absolute-vibez-811320">Absolute Vibez</a></h3>
+      <div class="subtitle"><span class="material-icons-outlined">location_on</span><b>Fremont, CA, United States</b></div>
+      <div class="more-detail">
+        <ul>
+          <li>
+            <div class="rating">
+              <div class="sul-rate">1.5</div><b>Sulekha score</b></div>
+          </li>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business
+                            </div>
+          </li>
+        </ul>
+      </div>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="no-claimed"><span class="material-icons">verified</span><a href="javascript:void(0);" onclick="javascript:openContactForm('811320','8775225')">Claim the profile</a></div>
+          </li>
+        </ul>
+      </div>
+      <div class="my-adv">
+        <ul>
+          <li>
+            <div class="open-now"><span class="material-icons-outlined">translate</span><b>Language:</b>Punjabi</div>
+          </li>
+        </ul>
+      </div>
+      <div class="my-serv"><a href="dj-service">DJ Services:&nbsp;
+                      </a>
+          &nbsp;<a title="DJs Band Services in Fremont, CA" href="/fremont-ca/djs-band-services">DJs Band Services</a>, 
+          &nbsp;<a title="Wedding Band DJ in Fremont, CA" href="/fremont-ca/wedding-band-dj">Wedding Band DJ</a><div class="more-links" style="display: none;"><a title="View all services offered by Absolute Vibez" href="javascript:void()" onclick="javascript:openFullServeWeb(this)">View all</a></div>
+      </div>
+    </div>
+  </div>
+  <div class="det-con">
+    <p><b>Serving ZIP Codes:</b>94555, 94539, 94538, 94536, 94537</p>
+    <div class="desc-rev spl-con min-height" id="showFullDescription">
+      <p class="min-height"><b>From the Business:</b>Absolute Vibez offers a variety of services to help make your dream wedding come true. We customize our specialized services to give your event the ambiance you desire. Our full-line of services is your solution to making your wedding an unforgettable day. Our team of professionals awaits to assist you in all aspects of your wedding.  Absolute Vibez is dedicated to providing the finest service in our industry that can fit any budget or size, customized exactly as you desire for your special event. Our team specializes in Indian, Asian, and Punjabi weddings, but have experience in everything from intimate engagement and birthday parties, to lavish Nightclub events. With over 12 years experience, the team behind Absolute Vibez brings together its experience and skills to make your event exactly as you envisioned it.
+<span class="more-links" style="display: none;"><a title="Read More about Absolute Vibez" href="javascript:void()" onclick="javascript:openFullDescriptionWeb(this)">Read more</a></span></p>
+    </div>
+  </div>
+  <div class="btn-outer">
+    <div class="lt-buttons">
+      <p></p>
+    </div>
+    <div class="rt-buttons">
+      <ul>
+        <li>
+          <div class="click-txt"><a title="Enquire Absolute Vibez" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '811320',&quot;Absolute Vibez&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '811320');" class="redtxt"><span class="material-icons-outlined">chat</span><b>Enquire Now</b><div class="res-txt">
+                        Responds in 15 mins
+                      </div></a></div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
