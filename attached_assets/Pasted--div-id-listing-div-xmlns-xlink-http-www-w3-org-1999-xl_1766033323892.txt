@@ -1,0 +1,1580 @@
+<div id="listing_div" xmlns:xlink="http://www.w3.org/1999/xlink"><input type="hidden" id="hdn_onetimecookie" value="1796975" name="hdn_onetimecookie" xmlns:xlink="http://www.w3.org/1999/xlink"><div class="common-promo-blk" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="promote">Ad</div><article id="div_promotionads" class="owl-carousel owl-theme" style="opacity: 1; display: block;"><div class="owl-wrapper-outer"><div class="owl-wrapper" style="width: 1352px; left: 0px; display: block; transition: all; transform: translate3d(0px, 0px, 0px);"><div class="owl-item" style="width: 676px;"><div class="item">
+      <div class="listing-column">
+        <div class="single-promo">
+          <h3><a title="Photography/Video - Creations By Sam Wedding And Events Photographer" href="https://us.sulekha.com/san-jose-ca/photography-video/creations-by-sam-697565">Creations By Sam Wedding And Events Photographer</a></h3>
+          <div class="my-serv"><span class="material-icons-outlined">work_outline</span>Services:&nbsp;
+            <a title="Candid Photography in Anderson, CA" href="/anderson-ca/candid-photography">Candid Photography</a><a title="+14 more services from Creations By Sam Wedding And Events Photographer" href="https://us.sulekha.com/san-jose-ca/photography-video/creations-by-sam-697565#services">
+                + 14 more</a></div>
+          <div class="more-detail">
+            <ul>
+              <li>
+                <div class="rating"><a title="View all reviews" href="https://us.sulekha.com/san-jose-ca/photography-video/creations-by-sam-697565#reviews">5<span class="material-icons-outlined">star</span></a><b>239 Reviews
+                          </b></div>
+              </li>
+              <li>
+                <div class="rating">
+                  <div class="sul-rate">9.5</div><b>Sulekha score</b></div>
+              </li>
+            </ul>
+          </div>
+          <div class="btn-outer">
+            <ul class="">
+              <li><a title="Enquire Creations By Sam Wedding And Events Photographer" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '697565',&quot;Creations By Sam Wedding And Events Photographer&quot;);gaclicktrack('send','event', 'Promoted Ad','Enquire Now', '697565');" class="red-but"><b>Enquire Now</b></a></li>
+              <li><a title="Call Creations By Sam Wedding And Events Photographer" href="javascript:void()" onclick="javascript:openwhatsAppBlk('697565','617-299-8445','96497');gaclicktrack('send','event', 'Promoted Ad-View Number','View Number', '697565');"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+                      <path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+                    </svg></span><b>Call</b></a></li>
+              <li><a title="Connect via Whatsapp" href="javascript:void()" onclick="Before_openEnquiryModal('2','697565',&quot;Creations By Sam Wedding And Events Photographer&quot;);gaclicktrack('send','event', 'Promoted Ad-Whatsapp Chat','Whatsapp', '697565');" class="whatsapp"><span><svg class="svg-inline--fa fa-whatsapp fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="whatsapp" role="img" viewBox="0 0 448 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+                      <path fill="currentColor" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"></path>
+                    </svg></span></a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div></div></div></div><div class="owl-controls clickable" style="display: none;"><div class="owl-buttons"><div class="owl-prev"><span class="material-icons-outlined">chevron_left</span></div><div class="owl-next"><span class="material-icons-outlined">chevron_right</span></div></div></div></article></div><div class="single-listing "><div class="content-blk"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2017-02-22-07-46-07-350_9071843.jpg?v=7157" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Kamran Rehman Photography in San Francisco, CA"></figure><div class="content"><h3><a title="Indian Photography/Video - Kamran Rehman Photography" href="/san-pablo-ca/photography-video/kamran-rehman-photography-920772">Kamran Rehman Photography</a></h3><div class="subtitle"><span class="material-icons-outlined">location_on</span><b>
+Serving customers in  Bay  area with professional support.</b></div><div class="more-detail">
+<ul>
+<li>
+<div class="rating"><a title="View All Reviews" href="/san-pablo-ca/photography-video/kamran-rehman-photography-920772#reviews">5<span class="material-icons-outlined">star</span></a><b>5
+Reviews</b></div>
+</li>
+<li>
+<div class="rating">
+<div class="sul-rate">3.4</div><b>Sulekha score</b></div>
+</li>
+<li>
+<div class="experience"><span class="material-icons-outlined">work_history</span>5 Years in Business</div>
+</li>
+</ul></div><div class="main-det">
+<ul>
+<li>
+<div class="no-claimed"><span class="material-icons">verified</span><a href="javascript:void(0);" onclick="javascript:openContactForm('920772','9071843')">Claim the profile</a></div>
+</li>
+<li>
+<div class="experience"><span class="material-icons-outlined">schedule</span>Closed now</div>
+</li>
+</ul></div><div class="my-adv">
+<ul>
+<li>
+<div class="open-now"><span class="material-icons-outlined">translate</span><b>Language:</b>English</div>
+</li>
+</ul></div><div class="my-serv"><a href="photography-video">Photography/Video:</a>
+<a title="Candid Photography in San Pablo, CA" href="/san-pablo-ca/candid-photography">Candid Photography</a>, <a title="Digital Photography in San Pablo, CA" href="/san-pablo-ca/digital-photography">Digital Photography</a>, <a title="Pre Wedding Photography in San Pablo, CA" href="/san-pablo-ca/pre-wedding-photography">Pre Wedding Photography</a>, <a title="Wedding Photographers in San Pablo, CA" href="/san-pablo-ca/wedding-photographers">Wedding Photographers</a>, <a title="Engagement Photographers in San Pablo, CA" href="/san-pablo-ca/engagement-photographers">Engagement Photographers</a>, <a title="Party Photographers in San Pablo, CA" href="/san-pablo-ca/party-photographers">Party Photographers</a>, <a title="Travel Photographers in San Pablo, CA" href="/san-pablo-ca/travel-photographers">Travel Photographers</a><div class="more-links"><a title="View all services offered by Kamran Rehman Photography" href="javascript:void()" onclick="javascript:openFullServeWeb(this)">View all</a></div></div></div></div><div class="det-con"><p><b>Serving ZIP Codes:</b>94806</p><div class="desc-rev spl-con min-height" id="showFullDescription"><p><b>From the Business:</b>Kamran Rehman Photography is running successfully from past so many years to capture the best photos, along with his friendly nature, discreet presence, and quick intelligent, make him the perfect choice for your occasions. He will leave your day capturing an abundance of beautiful, photo journalistic, and everlasting memories. Duke views each event as a fresh new assignment and strives to capture photos that are exclusive to your special day. Experienced wedding photographer covering all over USA. <span class="more-links"><a title="Read More about Kamran Rehman Photography" href="javascript:void()" onclick="javascript:openFullDescriptionWeb(this)">Read more</a></span></p></div></div><div class="btn-outer"><div class="lt-buttons"><p></p></div><div class="rt-buttons"><ul>
+<li>
+<div class="click-txt"><a title="Enquire Kamran Rehman Photography" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '920772',&quot;Kamran Rehman Photography&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '920772');" class="redtxt"><span class="material-icons-outlined">chat</span><b>Enquire Now</b><div class="res-txt">
+Responds in 15 mins</div></a></div>
+</li></ul></div></div></div><div class="single-listing "><div class="content-blk"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2017-02-22-07-55-48-039_9071921.jpg?v=1489" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Two Perfect Events in San Francisco, CA"></figure><div class="content"><h3><a title="Indian Photography/Video - Two Perfect Events" href="/palo-alto-ca/photography-video/two-perfect-events-920845">Two Perfect Events</a></h3><div class="subtitle"><span class="material-icons-outlined">location_on</span><b>
+Serving customers in  Bay  area with professional support.</b></div><div class="more-detail">
+<ul>
+<li>
+<div class="rating"><a title="View All Reviews" href="/palo-alto-ca/photography-video/two-perfect-events-920845#reviews">5<span class="material-icons-outlined">star</span></a><b>3
+Reviews</b></div>
+</li>
+<li>
+<div class="rating">
+<div class="sul-rate">3.4</div><b>Sulekha score</b></div>
+</li>
+<li>
+<div class="experience"><span class="material-icons-outlined">work_history</span>5 Years in Business</div>
+</li>
+</ul></div><div class="main-det">
+<ul>
+<li>
+<div class="no-claimed"><span class="material-icons">verified</span><a href="javascript:void(0);" onclick="javascript:openContactForm('920845','9071921')">Claim the profile</a></div>
+</li>
+<li>
+<div class="experience"><span class="material-icons-outlined">schedule</span>Closed now</div>
+</li>
+</ul></div><div class="my-adv">
+<ul>
+<li>
+<div class="open-now"><span class="material-icons-outlined">translate</span><b>Language:</b>English</div>
+</li>
+</ul></div><div class="my-serv"><a href="photography-video">Photography/Video:</a>
+<a title="Candid Photography in Palo Alto, CA" href="/palo-alto-ca/candid-photography">Candid Photography</a>, <a title="Digital Photography in Palo Alto, CA" href="/palo-alto-ca/digital-photography">Digital Photography</a>, <a title="Pre Wedding Photography in Palo Alto, CA" href="/palo-alto-ca/pre-wedding-photography">Pre Wedding Photography</a>, <a title="Commercial Photography in Palo Alto, CA" href="/palo-alto-ca/commercial-photography">Commercial Photography</a>, <a title="Wedding Photographers in Palo Alto, CA" href="/palo-alto-ca/wedding-photographers">Wedding Photographers</a>, <a title="Engagement Photographers in Palo Alto, CA" href="/palo-alto-ca/engagement-photographers">Engagement Photographers</a><div class="more-links"><a title="View all services offered by Two Perfect Events" href="javascript:void()" onclick="javascript:openFullServeWeb(this)">View all</a></div></div></div></div><div class="det-con"><p><b>Serving ZIP Codes:</b>94306, 94309, 94303, 94301, 94304</p><div class="desc-rev spl-con min-height" id="showFullDescription"><p><b>From the Business:</b>Two Perfect Events is located in Palo Alto, California. Offering Event planner for all corporate, social, nonprofit events, weddings, and proposals. Creative and exclusive design with graceful execution. Relieving our customers of stress is our passion. We are mainly focused in your vision and customising our services for your needs. We can assist with anything from all pre-planning work, project management, to day-of set up, clean up, execution, and management of all vendors. Planning for an event is exciting.<span class="more-links"><a title="Read More about Two Perfect Events" href="javascript:void()" onclick="javascript:openFullDescriptionWeb(this)">Read more</a></span></p></div></div><div class="btn-outer"><div class="lt-buttons"><p></p></div><div class="rt-buttons"><ul>
+<li>
+<div class="click-txt"><a title="Enquire Two Perfect Events" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '920845',&quot;Two Perfect Events&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '920845');" class="redtxt"><span class="material-icons-outlined">chat</span><b>Enquire Now</b><div class="res-txt">
+Responds in 18 mins</div></a></div>
+</li></ul></div></div></div><div class="single-listing "><div class="content-blk"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2017-02-23-04-18-49-075_9072917.jpg?v=7658" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="American Photobank in San Francisco, CA"></figure><div class="content"><h3><a title="Indian Photography/Video - American Photobank" href="/union-city-ca/photography-video/american-photobank-921141">American Photobank</a></h3><div class="subtitle"><span class="material-icons-outlined">location_on</span><b>
+Serving customers in  Bay  area with professional support.</b></div><div class="more-detail">
+<ul>
+<li>
+<div class="rating"><a title="View All Reviews" href="/union-city-ca/photography-video/american-photobank-921141#reviews">5<span class="material-icons-outlined">star</span></a><b>1
+Review</b></div>
+</li>
+<li>
+<div class="rating">
+<div class="sul-rate">2.9</div><b>Sulekha score</b></div>
+</li>
+<li>
+<div class="experience"><span class="material-icons-outlined">work_history</span>5 Years in Business</div>
+</li>
+</ul></div><div class="main-det">
+<ul>
+<li>
+<div class="no-claimed"><span class="material-icons">verified</span><a href="javascript:void(0);" onclick="javascript:openContactForm('921141','9072917')">Claim the profile</a></div>
+</li>
+<li>
+<div class="experience"><span class="material-icons-outlined">schedule</span>Closed now</div>
+</li>
+</ul></div><div class="my-adv">
+<ul>
+<li>
+<div class="open-now"><span class="material-icons-outlined">translate</span><b>Language:</b>English</div>
+</li>
+</ul></div><div class="my-serv"><a href="photography-video">Photography/Video:</a>
+<a title="Candid Photography in Union City, CA" href="/union-city-ca/candid-photography">Candid Photography</a>, <a title="Digital Photography in Union City, CA" href="/union-city-ca/digital-photography">Digital Photography</a>, <a title="Pre Wedding Photography in Union City, CA" href="/union-city-ca/pre-wedding-photography">Pre Wedding Photography</a>, <a title="Wedding Photographers in Union City, CA" href="/union-city-ca/wedding-photographers">Wedding Photographers</a>, <a title="Engagement Photographers in Union City, CA" href="/union-city-ca/engagement-photographers">Engagement Photographers</a><div class="more-links"><a title="View all services offered by American Photobank" href="javascript:void()" onclick="javascript:openFullServeWeb(this)">View all</a></div></div></div></div><div class="det-con"><p><b>Serving ZIP Codes:</b>94587</p><div class="desc-rev spl-con min-height" id="showFullDescription"><p><b>From the Business:</b>American Photobank follows the Photojournalism &amp; Editorial style of photography. Available for Destination Weddings and Photography Services Worldwide. We offers photography services for Wedding, Photographer, Photojournalism, Destination, Indian weddings etc. If anyone need photography services please contact us via phone or email.<span class="more-links"><a title="Read More about American Photobank" href="javascript:void()" onclick="javascript:openFullDescriptionWeb(this)">Read more</a></span></p></div></div><div class="btn-outer"><div class="lt-buttons"><p></p></div><div class="rt-buttons"><ul>
+<li>
+<div class="click-txt"><a title="Enquire Maqsood Hakim" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '921141',&quot;American Photobank&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '921141');" class="redtxt"><span class="material-icons-outlined">chat</span><b>Enquire Now</b><div class="res-txt">
+Responds in 18 mins</div></a></div>
+</li></ul></div></div></div><div class="single-listing "><div class="content-blk"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2017-02-23-07-52-45-537_9073035.jpg?v=3773" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Viera Photographics in San Francisco, CA"></figure><div class="content"><h3><a title="Indian Photography/Video - Viera Photographics" href="/cotati-ca/photography-video/viera-photographics-921229">Viera Photographics</a></h3><div class="subtitle"><span class="material-icons-outlined">location_on</span><b>
+Serving customers in  Bay  area with professional support.</b></div><div class="more-detail">
+<ul>
+<li>
+<div class="rating"><a title="View All Reviews" href="/cotati-ca/photography-video/viera-photographics-921229#reviews">5<span class="material-icons-outlined">star</span></a><b>2
+Reviews</b></div>
+</li>
+<li>
+<div class="rating">
+<div class="sul-rate">3.4</div><b>Sulekha score</b></div>
+</li>
+<li>
+<div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business</div>
+</li>
+</ul></div><div class="main-det">
+<ul>
+<li>
+<div class="no-claimed"><span class="material-icons">verified</span><a href="javascript:void(0);" onclick="javascript:openContactForm('921229','9073035')">Claim the profile</a></div>
+</li>
+</ul></div><div class="my-adv">
+<ul>
+<li>
+<div class="open-now"><span class="material-icons-outlined">translate</span><b>Language:</b>English</div>
+</li>
+</ul></div><div class="my-serv"><a href="photography-video">Photography/Video:</a>
+<a title="Commercial Photography in Cotati, CA" href="/cotati-ca/commercial-photography">Commercial Photography</a>, <a title="Wedding Photographers in Cotati, CA" href="/cotati-ca/wedding-photographers">Wedding Photographers</a>, <a title="Engagement Photographers in Cotati, CA" href="/cotati-ca/engagement-photographers">Engagement Photographers</a>, <a title="Party Photographers in Cotati, CA" href="/cotati-ca/party-photographers">Party Photographers</a><div class="more-links"><a title="View all services offered by Viera Photographics" href="javascript:void()" onclick="javascript:openFullServeWeb(this)">View all</a></div></div></div></div><div class="det-con"><p><b>Serving ZIP Codes:</b>94931</p><div class="desc-rev spl-con min-height" id="showFullDescription"><p><b>From the Business:</b>San Francisco, Los Angeles, Napa and Sonoma wedding photographers Jaime and Dennis Viera are a husband and wife team who specialize in telling stories through their style of wedding photojournalism and candid documentary wedding photography. Jaime and Dennis and their team are available as Napa Sonoma wedding photographers, San Francisco wedding photographers, Los Angeles wedding photographers, and worldwide destination wedding photographers.<span class="more-links"><a title="Read More about Viera Photographics" href="javascript:void()" onclick="javascript:openFullDescriptionWeb(this)">Read more</a></span></p></div></div><div class="btn-outer"><div class="lt-buttons"><p></p></div><div class="rt-buttons"><ul>
+<li>
+<div class="click-txt"><a title="Enquire Dennis Viera" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '921229',&quot;Viera Photographics&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '921229');" class="redtxt"><span class="material-icons-outlined">chat</span><b>Enquire Now</b><div class="res-txt">
+Responds in 18 mins</div></a></div>
+</li></ul></div></div></div><div class="single-listing "><div class="content-blk"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2017-03-20-05-11-36-487_9097548.jpg?v=9578" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Tap Snap in San Francisco, CA"></figure><div class="content"><h3><a title="Indian Photography/Video - Tap Snap" href="/alameda-ca/photography-video/tap-snap-929319">Tap Snap</a></h3><div class="subtitle"><span class="material-icons-outlined">location_on</span><b>
+Serving customers in  Bay  area with professional support.</b></div><div class="more-detail">
+<ul>
+<li>
+<div class="rating"><a title="View All Reviews" href="/alameda-ca/photography-video/tap-snap-929319#reviews">5<span class="material-icons-outlined">star</span></a><b>1
+Review</b></div>
+</li>
+<li>
+<div class="rating">
+<div class="sul-rate">2.9</div><b>Sulekha score</b></div>
+</li>
+<li>
+<div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business</div>
+</li>
+</ul></div><div class="main-det">
+<ul>
+<li>
+<div class="no-claimed"><span class="material-icons">verified</span><a href="javascript:void(0);" onclick="javascript:openContactForm('929319','9097548')">Claim the profile</a></div>
+</li>
+<li>
+<div class="experience"><span class="material-icons-outlined">schedule</span>Closed now</div>
+</li>
+</ul></div><div class="my-adv">
+<ul>
+<li>
+<div class="open-now"><span class="material-icons-outlined">translate</span><b>Language:</b>English
+,  Hindi</div>
+</li>
+</ul></div><div class="my-serv"><a href="photography-video">Photography/Video:</a>
+<a title="Candid Photography in Alameda, CA" href="/alameda-ca/candid-photography">Candid Photography</a>, <a title="Digital Photography in Alameda, CA" href="/alameda-ca/digital-photography">Digital Photography</a>, <a title="Pre Wedding Photography in Alameda, CA" href="/alameda-ca/pre-wedding-photography">Pre Wedding Photography</a>, <a title="Wedding Photographers in Alameda, CA" href="/alameda-ca/wedding-photographers">Wedding Photographers</a>, <a title="Party Photographers in Alameda, CA" href="/alameda-ca/party-photographers">Party Photographers</a>, <a title="Studio Photography in Alameda, CA" href="/alameda-ca/studio-photography">Studio Photography</a>, <a title="Travel Photographers in Alameda, CA" href="/alameda-ca/travel-photographers">Travel Photographers</a>, <a title="Motion Photography in Alameda, CA" href="/alameda-ca/motion-photography">Motion Photography</a><div class="more-links"><a title="View all services offered by Tap Snap" href="javascript:void()" onclick="javascript:openFullServeWeb(this)">View all</a></div></div></div></div><div class="det-con"><p><b>Serving ZIP Codes:</b>94501, 94502</p><div class="desc-rev spl-con min-height" id="showFullDescription"><p><b>From the Business:</b>Tapsnap Photo Entertainment for events. We've done away with the traditional photo booth and reinvented it for the digital era. That means no walls. No ceilings. No curtains. No limits on your creativity. Perfect for any event large or small TapSnap comes at the perfect time to leverage the latest advances in touchscreen technology and the incredible popularity of social media and digital photo sharing. Your guests can take high-quality photos and make them their own, adding digital props, green screen backgrounds and personal messages with the touch of a fingertip. Then they can share their creations instantly to their Facebook and Twitter profiles, email the photos to themselves or others and print their photos out on high quality photo paper. It’s fully customizable and ready for your corporate and personal branding. Best of all, your TapSnap phototainment specialist will be on hand to take care of everything and provide the best experience to your guests, so you can relax and enjoy your event.<span class="more-links"><a title="Read More about Tap Snap" href="javascript:void()" onclick="javascript:openFullDescriptionWeb(this)">Read more</a></span></p></div></div><div class="btn-outer"><div class="lt-buttons"><p></p></div><div class="rt-buttons"><ul>
+<li>
+<div class="click-txt"><a title="Enquire Tapsnap" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '929319',&quot;Tap Snap&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '929319');" class="redtxt"><span class="material-icons-outlined">chat</span><b>Enquire Now</b><div class="res-txt">
+Responds in 18 mins</div></a></div>
+</li></ul></div></div></div><div class="single-listing "><div class="content-blk"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2017-03-24-02-57-58-516_9102030.jpg?v=398" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="CoolBluez Photography in San Francisco, CA"></figure><div class="content"><h3><a title="Indian Photography/Video - CoolBluez Photography" href="/san-jose-ca/photography-video/coolbluez-photography-930876">CoolBluez Photography</a></h3><div class="subtitle"><span class="material-icons-outlined">location_on</span><b>
+Serving customers in  Bay  area with professional support.</b></div><div class="more-detail">
+<ul>
+<li>
+<div class="rating"><a title="View All Reviews" href="/san-jose-ca/photography-video/coolbluez-photography-930876#reviews">5<span class="material-icons-outlined">star</span></a><b>1
+Review</b></div>
+</li>
+<li>
+<div class="rating">
+<div class="sul-rate">2.9</div><b>Sulekha score</b></div>
+</li>
+<li>
+<div class="experience"><span class="material-icons-outlined">work_history</span>5 Years in Business</div>
+</li>
+</ul></div><div class="main-det">
+<ul>
+<li>
+<div class="no-claimed"><span class="material-icons">verified</span><a href="javascript:void(0);" onclick="javascript:openContactForm('930876','9102030')">Claim the profile</a></div>
+</li>
+</ul></div><div class="my-adv">
+<ul>
+<li>
+<div class="open-now"><span class="material-icons-outlined">translate</span><b>Language:</b>English
+,  Hindi</div>
+</li>
+</ul></div><div class="my-serv"><a href="photography-video">Photography/Video:</a>
+<a title="Pre Wedding Photography in San Jose, CA" href="/san-jose-ca/pre-wedding-photography">Pre Wedding Photography</a>, <a title="Wedding Photographers in San Jose, CA" href="/san-jose-ca/wedding-photographers">Wedding Photographers</a>, <a title="Engagement Photographers in San Jose, CA" href="/san-jose-ca/engagement-photographers">Engagement Photographers</a>, <a title="Wedding Videographers in San Jose, CA" href="/san-jose-ca/wedding-videographers">Wedding Videographers</a>, <a title="Studio Photography in San Jose, CA" href="/san-jose-ca/studio-photography">Studio Photography</a>, <a title="Freelance Photographers in San Jose, CA" href="/san-jose-ca/freelance-photographers">Freelance Photographers</a><div class="more-links"><a title="View all services offered by CoolBluez Photography" href="javascript:void()" onclick="javascript:openFullServeWeb(this)">View all</a></div></div></div></div><div class="det-con"><p><b>Serving ZIP Codes:</b>95196, 95128, 95131, 95110, 95113</p><div class="desc-rev spl-con min-height" id="showFullDescription"><p><b>From the Business:</b>CoolBluez photography: An Exemplary Wedding and Pre Wedding photography Hub. This husband-wife duo has given their heart and soul to take the wedding photography and pre-wedding photography to an advanced level, which delivers great memoirs to the couples. Capt. Pawandeep Singh, a Pilot by profession is the core soul of the CoolBluez R&amp;D. He is an extremely innovative guy and has revolutionized wedding photography and cinematography. Surpreet, always had passion for photography and developed it over the years during her travel to London while flying for Virgin Atlantic Airways for more than 10 years. She heads the photography team at CoolBluez. It is because of their personal involvement with their clients and their team, is why CoolBluez photography is now India’s leading photography house. They have highly skilled professional photographers and cinematographers in their team. CoolBluez photography is a small team of 20; and includes photographers, cinematographers, editors, graphic designers, and other teammates. Everything is in-house in CoolBluez, be it photography, film shooting, film editing or photo editing. We do things in the most creative way for the couples. We do arrangements for the props, location, makeup, stylists, as well as, we fulfill any other specific requirements of our customers. Having done so many Destination Weddings across globe, we feel proud to say that we are amongst the Best Destination Wedding photographers in India. We have offices in New Delhi, India; Noida, India and San Jose, California, U.S.A. We have matched our explicit photography skills with the latest technology providing wonderful experience to our customers. We capture the most beautiful moments of your life in both traditional and candid styles to enhance the beauty of the each and every moment naturally. To make the most out of your wedding and pre wedding experience you can completely rely on us.<span class="more-links"><a title="Read More about CoolBluez Photography" href="javascript:void()" onclick="javascript:openFullDescriptionWeb(this)">Read more</a></span></p></div></div><div class="btn-outer"><div class="lt-buttons"><p></p></div><div class="rt-buttons"><ul>
+<li>
+<div class="click-txt"><a title="Enquire CoolBluez Photography" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '930876',&quot;CoolBluez Photography&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '930876');" class="redtxt"><span class="material-icons-outlined">chat</span><b>Enquire Now</b><div class="res-txt">
+Responds in 15 mins</div></a></div>
+</li></ul></div></div></div><div class="single-listing "><div class="content-blk"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2017-03-28-01-31-01-056_9106040.jpg?v=7854" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Meera Fox Photography in San Francisco, CA"></figure><div class="content"><h3><a title="Indian Photography/Video - Meera Fox Photography" href="/berkeley-ca/photography-video/meera-fox-photography-932191">Meera Fox Photography</a></h3><div class="subtitle"><span class="material-icons-outlined">location_on</span><b>
+Serving customers in  Bay  area with professional support.</b></div><div class="more-detail">
+<ul>
+<li>
+<div class="rating">
+<div class="sul-rate">2.9</div><b>Sulekha score</b></div>
+</li>
+<li>
+<div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business</div>
+</li>
+</ul></div><div class="main-det">
+<ul>
+<li>
+<div class="no-claimed"><span class="material-icons">verified</span><a href="javascript:void(0);" onclick="javascript:openContactForm('932191','9106040')">Claim the profile</a></div>
+</li>
+<li>
+<div class="experience"><span class="material-icons-outlined">schedule</span>Closed now</div>
+</li>
+</ul></div><div class="my-adv">
+<ul>
+<li>
+<div class="open-now"><span class="material-icons-outlined">translate</span><b>Language:</b>English
+,  Hindi</div>
+</li>
+</ul></div><div class="my-serv"><a href="photography-video">Photography/Video:</a>
+<a title="Candid Photography in Berkeley, CA" href="/berkeley-ca/candid-photography">Candid Photography</a>, <a title="Digital Photography in Berkeley, CA" href="/berkeley-ca/digital-photography">Digital Photography</a>, <a title="Pre Wedding Photography in Berkeley, CA" href="/berkeley-ca/pre-wedding-photography">Pre Wedding Photography</a>, <a title="Wedding Photographers in Berkeley, CA" href="/berkeley-ca/wedding-photographers">Wedding Photographers</a>, <a title="Engagement Photographers in Berkeley, CA" href="/berkeley-ca/engagement-photographers">Engagement Photographers</a>, <a title="Wedding Videographers in Berkeley, CA" href="/berkeley-ca/wedding-videographers">Wedding Videographers</a><div class="more-links"><a title="View all services offered by Meera Fox Photography" href="javascript:void()" onclick="javascript:openFullServeWeb(this)">View all</a></div></div></div></div><div class="det-con"><p><b>Serving ZIP Codes:</b>94704, 94702, 94712, 94720, 94705</p><div class="desc-rev spl-con min-height" id="showFullDescription"><p><b>From the Business:</b>Meera Fox is an unobtrusive, polite and relaxed wedding photographer.  She is professional, organized, quick, and efficient at a wedding. She can handle and wrangle a distracted crowd effectively and relatively quietly, when necessary for group portraits, and other than these requested group shots, her taking photographs will not interrupt the flow of your wedding day at all. If you are looking for a wedding photographer in the San Francisco Bay Area of Northern California, Meera Fox will provide you with beautiful wedding photojournalism, both formal and candid wedding portraits, traditional but fun family and wedding party portraits, engagement pictures, and special event photography that is natural, spontaneous, and full of emotion.  Meera  has been photographing weddings and Bay Area events for over ten years.  Her background in model and fashion photography gives her a unique approach to wedding photography.  Meera uses simple, natural looking lighting techniques that make everyone look gorgeous!  Her numerous pictures will tell the true story of your wedding day in every detail. Meera has photographed over 250 weddings and is familiar with many different wedding traditions and cultural ceremonies, including Filipino weddings, Indian weddings, Jewish weddings, Chinese Weddings, Catholic weddings, Buddhist weddings, Gay weddings and Commitment Ceremonies, Renewing Vows, and Civil Ceremonies.  She can photograph weddings with as few as 50 to as many as 550 guests with ease and grace.<span class="more-links"><a title="Read More about Meera Fox Photography" href="javascript:void()" onclick="javascript:openFullDescriptionWeb(this)">Read more</a></span></p></div></div><div class="btn-outer"><div class="lt-buttons"><p></p></div><div class="rt-buttons"><ul>
+<li>
+<div class="click-txt"><a title="Enquire Meera Fox Photgraphy" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '932191',&quot;Meera Fox Photography&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '932191');" class="redtxt"><span class="material-icons-outlined">chat</span><b>Enquire Now</b><div class="res-txt">
+Responds in 18 mins</div></a></div>
+</li></ul></div></div></div><div class="single-listing "><div class="content-blk"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2017-03-28-02-44-45-405_9106091.jpg?v=6700" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Ramit Batra Photographer in San Francisco, CA"></figure><div class="content"><h3><a title="Indian Photography/Video - Ramit Batra Photographer" href="/san-francisco-ca/photography-video/ramit-batra-photographer-932225">Ramit Batra Photographer</a></h3><div class="subtitle"><span class="material-icons-outlined">location_on</span><b>
+Serving customers in  Bay  area with professional support.</b></div><div class="more-detail">
+<ul>
+<li>
+<div class="rating"><a title="View All Reviews" href="/san-francisco-ca/photography-video/ramit-batra-photographer-932225#reviews">5<span class="material-icons-outlined">star</span></a><b>2
+Reviews</b></div>
+</li>
+<li>
+<div class="rating">
+<div class="sul-rate">3.4</div><b>Sulekha score</b></div>
+</li>
+<li>
+<div class="experience"><span class="material-icons-outlined">work_history</span>16 Years in Business</div>
+</li>
+</ul></div><div class="main-det">
+<ul>
+<li>
+<div class="no-claimed"><span class="material-icons">verified</span><a href="javascript:void(0);" onclick="javascript:openContactForm('932225','9106091')">Claim the profile</a></div>
+</li>
+<li>
+<div class="experience"><span class="material-icons-outlined">schedule</span>Closed now</div>
+</li>
+</ul></div><div class="my-adv">
+<ul>
+<li>
+<div class="open-now"><span class="material-icons-outlined">translate</span><b>Language:</b>English
+,  Hindi</div>
+</li>
+</ul></div><div class="my-serv"><a href="photography-video">Photography/Video:</a>
+<a title="Pre Wedding Photography in San Francisco, CA" href="/san-francisco-ca/pre-wedding-photography">Pre Wedding Photography</a>, <a title="Wedding Photographers in San Francisco, CA" href="/san-francisco-ca/wedding-photographers">Wedding Photographers</a>, <a title="Engagement Photographers in San Francisco, CA" href="/san-francisco-ca/engagement-photographers">Engagement Photographers</a>, <a title="Party Photographers in San Francisco, CA" href="/san-francisco-ca/party-photographers">Party Photographers</a>, <a title="Maternity Photographers in San Francisco, CA" href="/san-francisco-ca/maternity-photographers">Maternity Photographers</a>, <a title="Wedding Videographers in San Francisco, CA" href="/san-francisco-ca/wedding-videographers">Wedding Videographers</a>, <a title="Freelance Photographers in San Francisco, CA" href="/san-francisco-ca/freelance-photographers">Freelance Photographers</a><div class="more-links"><a title="View all services offered by Ramit Batra Photographer" href="javascript:void()" onclick="javascript:openFullServeWeb(this)">View all</a></div></div></div></div><div class="det-con"><p><b>Serving ZIP Codes:</b>94128, 94501, 94102, 94117, 94122</p><div class="desc-rev spl-con min-height" id="showFullDescription"><p><b>From the Business:</b>Shagan &amp; Sumeet Booked me online for their December wedding way in advance. During one of our discussions, it so happened that all of us were going to be in SF during a particular week, and we planned to meet for a quick chat before finally meeting in Chandigarh for their wedding. We explored the idea of converting this coffee chat session and making some pictures in the US, rather than try and do a pre-wedding shoot closer to their wedding in Chandigarh or Delhi. With the possibility of Fog in North India around their wedding, i felt that this would give us some really nice pictures exploring the place where these two love birds are going to settle down after the Shaadi. Shagan and Sumeet met in 2006 while studying at PEC in Chandigarh. They pursued their MS degrees in University of Texas at Austin. When I photographed them last winter. Sumeet was working on his PhD at Stanford (damn!) while Shagan graduated from Stanford with her MS in Mathematics and was working in San Francisco.<span class="more-links"><a title="Read More about Ramit Batra Photographer" href="javascript:void()" onclick="javascript:openFullDescriptionWeb(this)">Read more</a></span></p></div></div><div class="btn-outer"><div class="lt-buttons"><p></p></div><div class="rt-buttons"><ul>
+<li>
+<div class="click-txt"><a title="Enquire Ramit Batra" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '932225',&quot;Ramit Batra Photographer&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '932225');" class="redtxt"><span class="material-icons-outlined">chat</span><b>Enquire Now</b><div class="res-txt">
+Responds in 18 mins</div></a></div>
+</li></ul></div></div></div><div class="single-listing "><div class="content-blk"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2017-03-31-02-43-17-262_9109150.jpg?v=4567" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Harry Photography in San Francisco, CA"></figure><div class="content"><h3><a title="Indian Photography/Video - Harry Photography" href="/san-jose-ca/photography-video/harry-photography-933236">Harry Photography</a></h3><div class="subtitle"><span class="material-icons-outlined">location_on</span><b>
+Serving customers in  Bay  area with professional support.</b></div><div class="more-detail">
+<ul>
+<li>
+<div class="rating"><a title="View All Reviews" href="/san-jose-ca/photography-video/harry-photography-933236#reviews">5<span class="material-icons-outlined">star</span></a><b>1
+Review</b></div>
+</li>
+<li>
+<div class="rating">
+<div class="sul-rate">2.9</div><b>Sulekha score</b></div>
+</li>
+<li>
+<div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business</div>
+</li>
+</ul></div><div class="main-det">
+<ul>
+<li>
+<div class="no-claimed"><span class="material-icons">verified</span><a href="javascript:void(0);" onclick="javascript:openContactForm('933236','9109150')">Claim the profile</a></div>
+</li>
+<li>
+<div class="experience"><span class="material-icons-outlined">schedule</span>Closed now</div>
+</li>
+</ul></div><div class="my-adv">
+<ul>
+<li>
+<div class="open-now"><span class="material-icons-outlined">translate</span><b>Language:</b>English
+,  Hindi</div>
+</li>
+</ul></div><div class="my-serv"><a href="photography-video">Photography/Video:</a>
+<a title="Candid Photography in San Jose, CA" href="/san-jose-ca/candid-photography">Candid Photography</a>, <a title="Pre Wedding Photography in San Jose, CA" href="/san-jose-ca/pre-wedding-photography">Pre Wedding Photography</a>, <a title="Commercial Photography in San Jose, CA" href="/san-jose-ca/commercial-photography">Commercial Photography</a>, <a title="Wedding Photographers in San Jose, CA" href="/san-jose-ca/wedding-photographers">Wedding Photographers</a>, <a title="Engagement Photographers in San Jose, CA" href="/san-jose-ca/engagement-photographers">Engagement Photographers</a>, <a title="Party Photographers in San Jose, CA" href="/san-jose-ca/party-photographers">Party Photographers</a>, <a title="Travel Photographers in San Jose, CA" href="/san-jose-ca/travel-photographers">Travel Photographers</a><div class="more-links"><a title="View all services offered by Harry Photography" href="javascript:void()" onclick="javascript:openFullServeWeb(this)">View all</a></div></div></div></div><div class="det-con"><p><b>Serving ZIP Codes:</b>95196, 95128, 95131, 95110, 95113</p><div class="desc-rev spl-con min-height" id="showFullDescription"><p><b>From the Business:</b>Harry Who is a true photographic talent, capturing the important and unforgettable moments of life with his keen eye, cordial hospitality and sharp attention to detail. With charismatic ability and first-rate service, Harry Who? photographs Weddings, Family, Events, and Headshots for the San Jose and San Francisco (SF) Bay Area and beyond. He is also available as a destination wedding photographer across the US and Internationally. Serving The SF Bay Area: Atherton, Belmont, Brisbane, Burlingame, Daly City, Palo Alto, East Palo Alto, Foster City, Half Moon Bay, Hillsborough, Menlo Park, Millbrae, Pacifica, Pescadero, Portola Valley, Redwood City, San Bruno, San Carlos, San Mateo, San Francisco, and Woodside, San Jose, Alum Rock, Cambrian Park, Willow Glen, East San Jose, Campbell, Cupertino, Los Altos, Los Altos Hills, Portola Valley, Los Gatos, Milpitas, Monte Sereno, Mountain View, Santa Clara, Saratoga, Sunnyvale, Fremont.<span class="more-links"><a title="Read More about Harry Photography" href="javascript:void()" onclick="javascript:openFullDescriptionWeb(this)">Read more</a></span></p></div></div><div class="btn-outer"><div class="lt-buttons"><p></p></div><div class="rt-buttons"><ul>
+<li>
+<div class="click-txt"><a title="Enquire Harry" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '933236',&quot;Harry Photography&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '933236');" class="redtxt"><span class="material-icons-outlined">chat</span><b>Enquire Now</b><div class="res-txt">
+Responds in 15 mins</div></a></div>
+</li></ul></div></div></div><div class="single-listing "><div class="content-blk"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2017-04-04-07-30-30-466_9113130.jpg?v=2748" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Nirav Patel Editorial Photographer in San Francisco, CA"></figure><div class="content"><h3><a title="Indian Photography/Video - Nirav Patel Editorial Photographer" href="/santa-rosa-ca/photography-video/nirav-patel-editorial-photographer-934496">Nirav Patel Editorial Photographer</a></h3><div class="subtitle"><span class="material-icons-outlined">location_on</span><b>
+Serving customers in  Bay  area with professional support.</b></div><div class="more-detail">
+<ul>
+<li>
+<div class="rating"><a title="View All Reviews" href="/santa-rosa-ca/photography-video/nirav-patel-editorial-photographer-934496#reviews">5<span class="material-icons-outlined">star</span></a><b>4
+Reviews</b></div>
+</li>
+<li>
+<div class="rating">
+<div class="sul-rate">3.2</div><b>Sulekha score</b></div>
+</li>
+<li>
+<div class="experience"><span class="material-icons-outlined">work_history</span>16 Years in Business</div>
+</li>
+</ul></div><div class="main-det">
+<ul>
+<li>
+<div class="no-claimed"><span class="material-icons">verified</span><a href="javascript:void(0);" onclick="javascript:openContactForm('934496','9113130')">Claim the profile</a></div>
+</li>
+<li>
+<div class="experience"><span class="material-icons-outlined">schedule</span>Closed now</div>
+</li>
+</ul></div><div class="my-adv">
+<ul>
+<li>
+<div class="open-now"><span class="material-icons-outlined">translate</span><b>Language:</b>English
+,  Hindi</div>
+</li>
+</ul></div><div class="my-serv"><a href="photography-video">Photography/Video:</a>
+<a title="Wedding Photographers in Santa Rosa, CA" href="/santa-rosa-ca/wedding-photographers">Wedding Photographers</a>, <a title="Engagement Photographers in Santa Rosa, CA" href="/santa-rosa-ca/engagement-photographers">Engagement Photographers</a>, <a title="Wedding Videographers in Santa Rosa, CA" href="/santa-rosa-ca/wedding-videographers">Wedding Videographers</a>, <a title="Pet Photography in Santa Rosa, CA" href="/santa-rosa-ca/pet-photography">Pet Photography</a>, <a title="Landscape Photography in Santa Rosa, CA" href="/santa-rosa-ca/landscape-photography">Landscape Photography</a>, <a title="Travel Photographers in Santa Rosa, CA" href="/santa-rosa-ca/travel-photographers">Travel Photographers</a>, <a title="Nature Photography in Santa Rosa, CA" href="/santa-rosa-ca/nature-photography">Nature Photography</a><div class="more-links"><a title="View all services offered by Nirav Patel Editorial Photographer" href="javascript:void()" onclick="javascript:openFullServeWeb(this)">View all</a></div></div></div></div><div class="det-con"><p><b>Serving ZIP Codes:</b>95407, 95409, 95401, 95403, 95404</p><div class="desc-rev spl-con min-height" id="showFullDescription"><p><b>From the Business:</b>I am drawn to quiet moments. I think it originated from attempts at self-preservation when I was living in neighborhoods that were...difficult. At the age of 7, I built a sanctuary in my room. In this tiny space, I had a large red tent on my bed which rested against the wall furthest from the window because stones had been thrown through it on several occasions. The bed was surrounded by a moat of blankets and my stuffed animals were my guardians. My imagination soared as I created a beautiful, safe haven. The feeling of loneliness drifted away and was replaced by the comfort of solitude. Here is where I found my quiet moments. To this day I still look for the glimpses of quiet when the world is turbulent. These images are a window into my world.<span class="more-links"><a title="Read More about Nirav Patel Editorial Photographer" href="javascript:void()" onclick="javascript:openFullDescriptionWeb(this)">Read more</a></span></p></div></div><div class="btn-outer"><div class="lt-buttons"><p></p></div><div class="rt-buttons"><ul>
+<li>
+<div class="click-txt"><a title="Enquire Nirav" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '934496',&quot;Nirav Patel Editorial Photographer&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '934496');" class="redtxt"><span class="material-icons-outlined">chat</span><b>Enquire Now</b><div class="res-txt">
+Responds in 15 mins</div></a></div>
+</li></ul></div></div></div><div class="single-listing " xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="content-blk"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2023-07-18-08-58-06-462_66.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Rainbow Studios in , "></figure><div class="content">
+      <h3><a title="Indian Photography/Video - Rainbow Studios" href="/california-city-ca/photography-video/rainbow-studios-1733390">Rainbow Studios</a></h3>
+      <div class="subtitle"><span class="material-icons-outlined">location_on</span><b>Bay Area, California, USA</b></div>
+      <div class="more-detail">
+        <ul>
+          <li>
+            <div class="rating">
+              <div class="sul-rate">1.7</div><b>Sulekha score</b></div>
+          </li>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">work_history</span>
+                          Established Since 2010</div>
+          </li>
+        </ul>
+      </div>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="no-claimed"><span class="material-icons">verified</span><a href="javascript:void(0);" onclick="javascript:openContactForm('1733390','11144666')">Claim the profile</a></div>
+          </li>
+        </ul>
+      </div>
+      <div class="my-serv"><a href="photography-video">Photography/Video:&nbsp;
+                      </a>
+          &nbsp;<a title="Candid Photography in California City, CA" href="/california-city-ca/candid-photography">Candid Photography</a>, 
+          &nbsp;<a title="Digital Photography in California City, CA" href="/california-city-ca/digital-photography">Digital Photography</a>, 
+          &nbsp;<a title="Engagement Photographers in California City, CA" href="/california-city-ca/engagement-photographers">Engagement Photographers</a>, 
+          &nbsp;<a title="Event Photographers in California City, CA" href="/california-city-ca/event-photographers">Event Photographers</a>, 
+          &nbsp;<a title="Event Videography in California City, CA" href="/california-city-ca/event-videography">Event Videography</a>, 
+          &nbsp;<a title="Family Photographers in California City, CA" href="/california-city-ca/family-photographers">Family Photographers</a>, 
+          &nbsp;<a title="Portrait Photographers in California City, CA" href="/california-city-ca/portrait-photographers">Portrait Photographers</a>, 
+          &nbsp;<a title="Pre Wedding Photography in California City, CA" href="/california-city-ca/pre-wedding-photography">Pre Wedding Photography</a>, 
+          &nbsp;<a title="Wedding Photographers in California City, CA" href="/california-city-ca/wedding-photographers">Wedding Photographers</a>, <div class="more-links"><a title="View all services offered by Rainbow Studios" href="javascript:void()" onclick="javascript:openFullServeWeb(this)">View all</a></div>
+      </div>
+    </div>
+  </div>
+  <div class="det-con">
+    <p><b>Serving ZIP Codes:</b>93505, 93504, 60564</p>
+    <div class="desc-rev spl-con min-height" id="showFullDescription">
+      <p class="min-height"><b>From the Business:</b>I am one of the most distinguished photographers and video editors in California City, CA. I specialize in Candid Photography, digital photography,  engagement photographers,  event photographers,  event videography,  family photographers,  portrait photographers,  pre-wedding Photography, wedding photographers,  and house warming photography. When creating a visual story, the images must be unique, creative, and interesting. That is what I strive to achieve through my photography. Nothing feels forced. It’s important to feel like your natural self and if you don’t like having your photo taken, you won’t even know I’m doing it! My main goal is to capture the uniqueness of people and the event. If you have a wedding, I would love to do. For more details kindly contact us. Thanks <span class="more-links" style="display: none;"><a title="Read More about Rainbow Studios" href="javascript:void()" onclick="javascript:openFullDescriptionWeb(this)">Read more</a></span></p>
+    </div>
+  </div>
+  <div class="btn-outer">
+    <div class="lt-buttons">
+      <p></p>
+    </div>
+    <div class="rt-buttons">
+      <ul>
+        <li>
+          <div class="click-txt"><a title="Enquire Vasanth" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1733390',&quot;Rainbow Studios&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1733390');" class="redtxt"><span class="material-icons-outlined">chat</span><b>Enquire Now</b><div class="res-txt">
+                        Responds in 15 mins
+                      </div></a></div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+<div class="single-listing " xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="content-blk"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2023-07-24-07-37-12-500_38.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="RK Portraits USA in , "></figure><div class="content">
+      <h3><a title="Indian Photography/Video - RK Portraits USA" href="/san-francisco-ca/photography-video/rk-portraits-usa-1735343">RK Portraits USA</a></h3>
+      <div class="subtitle"><span class="material-icons-outlined">location_on</span><b>San Francisco, CA, USA</b></div>
+      <div class="more-detail">
+        <ul>
+          <li>
+            <div class="rating">
+              <div class="sul-rate">1.7</div><b>Sulekha score</b></div>
+          </li>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">work_history</span>
+                          Established Since 2010</div>
+          </li>
+        </ul>
+      </div>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="no-claimed"><span class="material-icons">verified</span><a href="javascript:void(0);" onclick="javascript:openContactForm('1735343','11149177')">Claim the profile</a></div>
+          </li>
+        </ul>
+      </div>
+      <div class="my-serv"><a href="photography-video">Photography/Video:&nbsp;
+                      </a>
+          &nbsp;<a title="Birthday Party Photographers in San Francisco, CA" href="/san-francisco-ca/birthday-party-photographers">Birthday Party Photographers</a>, 
+          &nbsp;<a title="Candid Photography in San Francisco, CA" href="/san-francisco-ca/candid-photography">Candid Photography</a>, 
+          &nbsp;<a title="Digital Photography in San Francisco, CA" href="/san-francisco-ca/digital-photography">Digital Photography</a>, 
+          &nbsp;<a title="Engagement Photographers in San Francisco, CA" href="/san-francisco-ca/engagement-photographers">Engagement Photographers</a>, 
+          &nbsp;<a title="Event Photographers in San Francisco, CA" href="/san-francisco-ca/event-photographers">Event Photographers</a>, 
+          &nbsp;<a title="Family Photographers in San Francisco, CA" href="/san-francisco-ca/family-photographers">Family Photographers</a>, 
+          &nbsp;<a title="Maternity Photographers in San Francisco, CA" href="/san-francisco-ca/maternity-photographers">Maternity Photographers</a>, 
+          &nbsp;<a title="Nature Photography in San Francisco, CA" href="/san-francisco-ca/nature-photography">Nature Photography</a>, 
+          &nbsp;<a title="Newborn Photographers in San Francisco, CA" href="/san-francisco-ca/newborn-photographers">Newborn Photographers</a>, 
+          &nbsp;<a title="Party Photographers in San Francisco, CA" href="/san-francisco-ca/party-photographers">Party Photographers</a>, 
+          &nbsp;<a title="Portrait Photographers in San Francisco, CA" href="/san-francisco-ca/portrait-photographers">Portrait Photographers</a>, 
+          &nbsp;<a title="Pre Wedding Photography in San Francisco, CA" href="/san-francisco-ca/pre-wedding-photography">Pre Wedding Photography</a>, 
+          &nbsp;<a title="Travel Photographers in San Francisco, CA" href="/san-francisco-ca/travel-photographers">Travel Photographers</a>, 
+          &nbsp;<a title="Wedding Photographers in San Francisco, CA" href="/san-francisco-ca/wedding-photographers">Wedding Photographers</a>, 
+          &nbsp;<a title="Baby Shower Photographers in San Francisco, CA" href="/san-francisco-ca/baby-shower-photographers">Baby Shower Photographers</a>, 
+          &nbsp;<a title="Event Videography in San Francisco, CA" href="/san-francisco-ca/event-videography">Event Videography</a>, 
+          &nbsp;<a title="Prom Photography in San Francisco, CA" href="/san-francisco-ca/prom-photography">Prom Photography</a>, 
+          &nbsp;<a title="Wedding Videographers in San Francisco, CA" href="/san-francisco-ca/wedding-videographers">Wedding Videographers</a><div class="more-links"><a title="View all services offered by RK Portraits USA" href="javascript:void()" onclick="javascript:openFullServeWeb(this)">View all</a></div>
+      </div>
+    </div>
+  </div>
+  <div class="det-con">
+    <p><b>Serving ZIP Codes:</b>94128, 94501, 94102, 94117, 94122</p>
+    <div class="desc-rev spl-con min-height" id="showFullDescription">
+      <p class="min-height"><b>From the Business:</b>I am one of the most distinguished photographers and videographers in San Francisco, CA. I specialize in Birthday Party Photographers, candid photography,  digital photography,  engagement photographers,  event photographers,  family photographers,  maternity photographers,  nature photographers,  newborn photographers,  party photographers,  portrait photographers,  pre-wedding photographers,  travel photographers,  and wedding photographers. I genuinely love photographing weddings and families, and I would absolutely love the chance to photograph yours! I’m passionate about photography and would like to reach a level of success that is not possible without your help and support. Your feedback is significant and will help me improve my skills. Book your photography session today, and I guarantee that I will capture the best moment of your life. I assure you that you won't be disappointed. For more details, kindly contact me. I look forward to working with you. Thanks!<span class="more-links" style="display: none;"><a title="Read More about RK Portraits USA" href="javascript:void()" onclick="javascript:openFullDescriptionWeb(this)">Read more</a></span></p>
+    </div>
+  </div>
+  <div class="btn-outer">
+    <div class="lt-buttons">
+      <p></p>
+    </div>
+    <div class="rt-buttons">
+      <ul>
+        <li>
+          <div class="click-txt"><a title="Enquire Rama Krishna" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1735343',&quot;RK Portraits USA&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1735343');" class="redtxt"><span class="material-icons-outlined">chat</span><b>Enquire Now</b><div class="res-txt">
+                        Responds in 18 mins
+                      </div></a></div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+<div class="single-listing " xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="content-blk"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2023-08-04-06-11-04-066_79.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="VH Photography in , "></figure><div class="content">
+      <h3><a title="Indian Photography/Video - VH Photography" href="/california-city-ca/photography-video/vh-photography-1739403">VH Photography</a></h3>
+      <div class="subtitle"><span class="material-icons-outlined">location_on</span><b>Bay Area, California, USA</b></div>
+      <div class="more-detail">
+        <ul>
+          <li>
+            <div class="rating">
+              <div class="sul-rate">1.7</div><b>Sulekha score</b></div>
+          </li>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">work_history</span>
+                          Established Since 2010</div>
+          </li>
+        </ul>
+      </div>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="no-claimed"><span class="material-icons">verified</span><a href="javascript:void(0);" onclick="javascript:openContactForm('1739403','11158243')">Claim the profile</a></div>
+          </li>
+        </ul>
+      </div>
+      <div class="my-serv"><a href="photography-video">Photography/Video:&nbsp;
+                      </a>
+          &nbsp;<a title="Birthday Party Photographers in California City, CA" href="/california-city-ca/birthday-party-photographers">Birthday Party Photographers</a>, 
+          &nbsp;<a title="Candid Photography in California City, CA" href="/california-city-ca/candid-photography">Candid Photography</a>, 
+          &nbsp;<a title="Digital Photography in California City, CA" href="/california-city-ca/digital-photography">Digital Photography</a>, 
+          &nbsp;<a title="Engagement Photographers in California City, CA" href="/california-city-ca/engagement-photographers">Engagement Photographers</a>, 
+          &nbsp;<a title="Event Photographers in California City, CA" href="/california-city-ca/event-photographers">Event Photographers</a>, 
+          &nbsp;<a title="Family Photographers in California City, CA" href="/california-city-ca/family-photographers">Family Photographers</a>, 
+          &nbsp;<a title="Maternity Photographers in California City, CA" href="/california-city-ca/maternity-photographers">Maternity Photographers</a>, 
+          &nbsp;<a title="Nature Photography in California City, CA" href="/california-city-ca/nature-photography">Nature Photography</a>, 
+          &nbsp;<a title="Party Photographers in California City, CA" href="/california-city-ca/party-photographers">Party Photographers</a>, 
+          &nbsp;<a title="Pre Wedding Photography in California City, CA" href="/california-city-ca/pre-wedding-photography">Pre Wedding Photography</a>, 
+          &nbsp;<a title="Wedding Photographers in California City, CA" href="/california-city-ca/wedding-photographers">Wedding Photographers</a>, <div class="more-links"><a title="View all services offered by VH Photography" href="javascript:void()" onclick="javascript:openFullServeWeb(this)">View all</a></div>
+      </div>
+    </div>
+  </div>
+  <div class="det-con">
+    <p><b>Serving ZIP Codes:</b>93505, 93504, 60564</p>
+    <div class="desc-rev spl-con min-height" id="showFullDescription">
+      <p class="min-height"><b>From the Business:</b>I am one of the most distinguished photographers and video editors in California City, CA. I specialize in Birthday Party Photographers,Candid Photography,Digital Photography,Engagement Photographers,Event Photographers,Family Photographers,Maternity Photographers,Nature Photography,Party Photographers,Pre-Wedding Photography,Wedding Photographers, and House Warming Photography Hello everyone, I genuinely love photographing weddings and families, and I would absolutely love the chance to photograph yours! I’m passionate about photography and would like to reach a level of success that is not possible without your help and support. Your feedback is significant and will help me improve my skills. Book your photography session today, and I guarantee that I will capture the best moment of your life. I assure you that you won't be disappointed. For more details, kindly contact me. I look forward to working with you. Thanks! This is an important thing to know about me. Because by the end of this, when we take that last sloppy selfie, you better believe I'm going to be squeezing you both to death. You are my people, and I've got you. From the beginning to the end, know that I'm invested in both of you and giving you a piece of my heart. I want to be a part of the story that won't grow old even when you do, for the day when you've got wrinkly little hands wrapped up in one another and a box of these moments that I was able to give you.
+<span class="more-links" style="display: none;"><a title="Read More about VH Photography" href="javascript:void()" onclick="javascript:openFullDescriptionWeb(this)">Read more</a></span></p>
+    </div>
+  </div>
+  <div class="btn-outer">
+    <div class="lt-buttons">
+      <p></p>
+    </div>
+    <div class="rt-buttons">
+      <ul>
+        <li>
+          <div class="click-txt"><a title="Enquire Vibranth" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1739403',&quot;VH Photography&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1739403');" class="redtxt"><span class="material-icons-outlined">chat</span><b>Enquire Now</b><div class="res-txt">
+                        Responds in 18 mins
+                      </div></a></div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+<div class="single-listing " xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="content-blk"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2023-08-07-06-41-02-728_90.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Sejal Sanghvi Photography in , "></figure><div class="content">
+      <h3><a title="Indian Photography/Video - Sejal Sanghvi Photography" href="/danville-ca/photography-video/sejal-sanghvi-photography-1740420">Sejal Sanghvi Photography</a></h3>
+      <div class="subtitle"><span class="material-icons-outlined">location_on</span><b>Danville, CA, USA</b></div>
+      <div class="more-detail">
+        <ul>
+          <li>
+            <div class="rating">
+              <div class="sul-rate">2.9</div><b>Sulekha score</b></div>
+          </li>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">work_history</span>
+                          Established Since 2009</div>
+          </li>
+        </ul>
+      </div>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="no-claimed"><span class="material-icons">verified</span><a href="javascript:void(0);" onclick="javascript:openContactForm('1740420','11160460')">Claim the profile</a></div>
+          </li>
+        </ul>
+      </div>
+      <div class="my-serv"><a href="photography-video">Photography/Video:&nbsp;
+                      </a>
+          &nbsp;<a title="Baby Shower Photographers in Danville, CA" href="/danville-ca/baby-shower-photographers">Baby Shower Photographers</a>, 
+          &nbsp;<a title="Birthday Party Photographers in Danville, CA" href="/danville-ca/birthday-party-photographers">Birthday Party Photographers</a>, 
+          &nbsp;<a title="Candid Photography in Danville, CA" href="/danville-ca/candid-photography">Candid Photography</a>, 
+          &nbsp;<a title="Digital Photography in Danville, CA" href="/danville-ca/digital-photography">Digital Photography</a>, 
+          &nbsp;<a title="Engagement Photographers in Danville, CA" href="/danville-ca/engagement-photographers">Engagement Photographers</a>, 
+          &nbsp;<a title="Event Photographers in Danville, CA" href="/danville-ca/event-photographers">Event Photographers</a>, 
+          &nbsp;<a title="Family Photographers in Danville, CA" href="/danville-ca/family-photographers">Family Photographers</a>, 
+          &nbsp;<a title="Maternity Photographers in Danville, CA" href="/danville-ca/maternity-photographers">Maternity Photographers</a>, 
+          &nbsp;<a title="Portrait Photographers in Danville, CA" href="/danville-ca/portrait-photographers">Portrait Photographers</a>, 
+          &nbsp;<a title="Pre Wedding Photography in Danville, CA" href="/danville-ca/pre-wedding-photography">Pre Wedding Photography</a>, 
+          &nbsp;<a title="Wedding Photographers in Danville, CA" href="/danville-ca/wedding-photographers">Wedding Photographers</a><div class="more-links"><a title="View all services offered by Sejal Sanghvi Photography" href="javascript:void()" onclick="javascript:openFullServeWeb(this)">View all</a></div>
+      </div>
+    </div>
+  </div>
+  <div class="det-con">
+    <p><b>Serving ZIP Codes:</b>94526, 94506</p>
+    <div class="desc-rev spl-con min-height" id="showFullDescription">
+      <p class="min-height"><b>From the Business:</b>Welcome to Sejal Sanghvi Photography, I am a professional photographer with a passion for capturing life's most precious moments through the art of photography. I am passionate about creating stunning images that tell a story and evoke emotions. Whether it's your special day, a family portrait session, or a corporate event, I am dedicated to delivering high-quality images that exceed your expectations.  First, I was born and brought up in Mumbai, India. I moved to the USA in 2009. Second, I used to work as a Dietitian in India and after moving to the US, I thought of changing my career and started doing Multimedia and Website Designing. Third, I started my photography "career" about a year  and Half ago, but I had always had a passion for it while I was in college. When I started working as a Dietitian in India with my first salary I got my first point and shoot camera. Fourth, Like most people I never thought it was something I could make a career out of. My love of photography blossomed after the birth of our first child and has continued to grow ever since. Until within the last couple of years, I kept having my friends and family, and eventually people outside of that started to ask about taking some photos!<span class="more-links" style="display: none;"><a title="Read More about Sejal Sanghvi Photography" href="javascript:void()" onclick="javascript:openFullDescriptionWeb(this)">Read more</a></span></p>
+    </div>
+  </div>
+  <div class="btn-outer">
+    <div class="lt-buttons">
+      <p></p>
+    </div>
+    <div class="rt-buttons">
+      <ul>
+        <li>
+          <div class="click-txt"><a title="Enquire Sejal Sanghvi &nbsp;" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1740420',&quot;Sejal Sanghvi Photography&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1740420');" class="redtxt"><span class="material-icons-outlined">chat</span><b>Enquire Now</b><div class="res-txt">
+                        Responds in 15 mins
+                      </div></a></div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+<div class="single-listing " xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="content-blk"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2023-08-07-07-54-12-996_19.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Blone Gallery in , "></figure><div class="content">
+      <h3><a title="Indian Photography/Video - Blone Gallery" href="/san-francisco-ca/photography-video/blone-gallery-1740432">Blone Gallery</a></h3>
+      <div class="subtitle"><span class="material-icons-outlined">location_on</span><b>San Francisco, CA, United States</b></div>
+      <div class="more-detail">
+        <ul>
+          <li>
+            <div class="rating">
+              <div class="sul-rate">2.9</div><b>Sulekha score</b></div>
+          </li>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">work_history</span>
+                          Established Since 2010</div>
+          </li>
+        </ul>
+      </div>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="no-claimed"><span class="material-icons">verified</span><a href="javascript:void(0);" onclick="javascript:openContactForm('1740432','11160465')">Claim the profile</a></div>
+          </li>
+        </ul>
+      </div>
+      <div class="my-serv"><a href="photography-video">Photography/Video:&nbsp;
+                      </a>
+          &nbsp;<a title="Baby Shower Photographers in San Francisco, CA" href="/san-francisco-ca/baby-shower-photographers">Baby Shower Photographers</a>, 
+          &nbsp;<a title="Birthday Party Photographers in San Francisco, CA" href="/san-francisco-ca/birthday-party-photographers">Birthday Party Photographers</a>, 
+          &nbsp;<a title="Candid Photography in San Francisco, CA" href="/san-francisco-ca/candid-photography">Candid Photography</a>, 
+          &nbsp;<a title="Digital Photography in San Francisco, CA" href="/san-francisco-ca/digital-photography">Digital Photography</a>, 
+          &nbsp;<a title="Engagement Photographers in San Francisco, CA" href="/san-francisco-ca/engagement-photographers">Engagement Photographers</a>, 
+          &nbsp;<a title="Event Photographers in San Francisco, CA" href="/san-francisco-ca/event-photographers">Event Photographers</a>, 
+          &nbsp;<a title="Family Photographers in San Francisco, CA" href="/san-francisco-ca/family-photographers">Family Photographers</a>, 
+          &nbsp;<a title="Maternity Photographers in San Francisco, CA" href="/san-francisco-ca/maternity-photographers">Maternity Photographers</a>, 
+          &nbsp;<a title="Nature Photography in San Francisco, CA" href="/san-francisco-ca/nature-photography">Nature Photography</a>, 
+          &nbsp;<a title="Party Photographers in San Francisco, CA" href="/san-francisco-ca/party-photographers">Party Photographers</a>, 
+          &nbsp;<a title="Portrait Photographers in San Francisco, CA" href="/san-francisco-ca/portrait-photographers">Portrait Photographers</a>, 
+          &nbsp;<a title="Pre Wedding Photography in San Francisco, CA" href="/san-francisco-ca/pre-wedding-photography">Pre Wedding Photography</a>, 
+          &nbsp;<a title="Wedding Photographers in San Francisco, CA" href="/san-francisco-ca/wedding-photographers">Wedding Photographers</a><div class="more-links"><a title="View all services offered by Blone Gallery" href="javascript:void()" onclick="javascript:openFullServeWeb(this)">View all</a></div>
+      </div>
+    </div>
+  </div>
+  <div class="det-con">
+    <p><b>Serving ZIP Codes:</b>94128, 94501, 94102, 94117, 94122</p>
+    <div class="desc-rev spl-con min-height" id="showFullDescription">
+      <p class="min-height"><b>From the Business:</b>Hello everyone! I am Subai, founder of Blone Gallery, a Bay Area-based photography and film company. Capturing a moment and giving it a life of eternity is my intention. I am enthusiastic about photography and have been in this field for over three years. I vividly recall the day when I got my hands on the Canon for the first time. Right then, I realized and followed the call of photos, images, and videos. I have explored several genres of photography since then, generating more desire to quench my thirst for learning and improve myself every day. I love what I do, and I am proud to have found my passion and purpose in life.Reflecting warmth, grace, and beauty through my photography is a mission that I have taken on and have been consistent with. Contact me if you are looking for fast, fun, and quality work. I believe in going the extra mile to satisfy my clients. I am not afraid of falling in love with the pictures, are you<span class="more-links" style="display: none;"><a title="Read More about Blone Gallery" href="javascript:void()" onclick="javascript:openFullDescriptionWeb(this)">Read more</a></span></p>
+    </div>
+  </div>
+  <div class="btn-outer">
+    <div class="lt-buttons">
+      <p></p>
+    </div>
+    <div class="rt-buttons">
+      <ul>
+        <li>
+          <div class="click-txt"><a title="Enquire Subai" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1740432',&quot;Blone Gallery&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1740432');" class="redtxt"><span class="material-icons-outlined">chat</span><b>Enquire Now</b><div class="res-txt">
+                        Responds in 15 mins
+                      </div></a></div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+<div class="single-listing " xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="content-blk"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2023-08-10-03-53-12-144_98.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Rani Frames Photography in , "></figure><div class="content">
+      <h3><a title="Indian Photography/Video - Rani Frames Photography" href="/california-city-ca/photography-video/rani-frames-photography-1741661">Rani Frames Photography</a></h3>
+      <div class="subtitle"><span class="material-icons-outlined">location_on</span><b>California, USA</b></div>
+      <div class="more-detail">
+        <ul>
+          <li>
+            <div class="rating">
+              <div class="sul-rate">2.9</div><b>Sulekha score</b></div>
+          </li>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">work_history</span>
+                          Established Since 2010</div>
+          </li>
+        </ul>
+      </div>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="no-claimed"><span class="material-icons">verified</span><a href="javascript:void(0);" onclick="javascript:openContactForm('1741661','11163081')">Claim the profile</a></div>
+          </li>
+        </ul>
+      </div>
+      <div class="my-serv"><a href="photography-video">Photography/Video:&nbsp;
+                      </a>
+          &nbsp;<a title="Candid Photography in California City, CA" href="/california-city-ca/candid-photography">Candid Photography</a>, 
+          &nbsp;<a title="Digital Photography in California City, CA" href="/california-city-ca/digital-photography">Digital Photography</a>, 
+          &nbsp;<a title="Engagement Photographers in California City, CA" href="/california-city-ca/engagement-photographers">Engagement Photographers</a>, 
+          &nbsp;<a title="Event Photographers in California City, CA" href="/california-city-ca/event-photographers">Event Photographers</a>, 
+          &nbsp;<a title="Event Videography in California City, CA" href="/california-city-ca/event-videography">Event Videography</a>, 
+          &nbsp;<a title="Family Photographers in California City, CA" href="/california-city-ca/family-photographers">Family Photographers</a>, 
+          &nbsp;<a title="Portrait Photographers in California City, CA" href="/california-city-ca/portrait-photographers">Portrait Photographers</a>, 
+          &nbsp;<a title="Pre Wedding Photography in California City, CA" href="/california-city-ca/pre-wedding-photography">Pre Wedding Photography</a>, 
+          &nbsp;<a title="Wedding Photographers in California City, CA" href="/california-city-ca/wedding-photographers">Wedding Photographers</a>, 
+          &nbsp;<a title="Wedding Videographers in California City, CA" href="/california-city-ca/wedding-videographers">Wedding Videographers</a><div class="more-links"><a title="View all services offered by Rani Frames Photography" href="javascript:void()" onclick="javascript:openFullServeWeb(this)">View all</a></div>
+      </div>
+    </div>
+  </div>
+  <div class="det-con">
+    <p><b>Serving ZIP Codes:</b>93505, 93504, 60564</p>
+    <div class="desc-rev spl-con min-height" id="showFullDescription">
+      <p class="min-height"><b>From the Business:</b>My name is Manprit Heer, but I go by many names. My friends tend to call me "Mampz" and clients call me "Rani".  I am currently a student at UC Davis, studying Computer Science engineering with a minor in Technology Management. As a creative spirit, I know there are some looming questions in your head. Yes,  I am left-handed, and yes, I am single. As a Pisces, I am a gentle, empathetic being whose soul thrives off of building personal connections and chasing crazy, life-changing experiences. I love getting to know my clients on a personal level, which only makes the upcoming bookings that much more exciting. Coupled with my hobbies, I have a knack for business and entrepreneurship. I love networking and building things from scratch. There’s a thrill in the risk that has gotten me hooked on the game. I’m past the rose-colored promises of the 9-5 job! I find my purpose in building relationships, capturing moments, and having fun on each adventure that awaits me.<span class="more-links" style="display: none;"><a title="Read More about Rani Frames Photography" href="javascript:void()" onclick="javascript:openFullDescriptionWeb(this)">Read more</a></span></p>
+    </div>
+  </div>
+  <div class="btn-outer">
+    <div class="lt-buttons">
+      <p></p>
+    </div>
+    <div class="rt-buttons">
+      <ul>
+        <li>
+          <div class="click-txt"><a title="Enquire Manprit Heer" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1741661',&quot;Rani Frames Photography&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1741661');" class="redtxt"><span class="material-icons-outlined">chat</span><b>Enquire Now</b><div class="res-txt">
+                        Responds in 18 mins
+                      </div></a></div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+<div class="single-listing " xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="content-blk"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2023-08-29-07-18-43-351_17.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="The 16MM Studios in , "></figure><div class="content">
+      <h3><a title="Indian Photography/Video - The 16MM Studios" href="/santa-clara-ca/photography-video/the-16mm-studios-1748969">The 16MM Studios</a></h3>
+      <div class="subtitle"><span class="material-icons-outlined">location_on</span><b>Santa Clara, CA, USA</b></div>
+      <div class="more-detail">
+        <ul>
+          <li>
+            <div class="rating">
+              <div class="sul-rate">2.9</div><b>Sulekha score</b></div>
+          </li>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">work_history</span>
+                          Established Since 2010</div>
+          </li>
+        </ul>
+      </div>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="no-claimed"><span class="material-icons">verified</span><a href="javascript:void(0);" onclick="javascript:openContactForm('1748969','11178393')">Claim the profile</a></div>
+          </li>
+        </ul>
+      </div>
+      <div class="my-serv"><a href="photography-video">Photography/Video:&nbsp;
+                      </a>
+          &nbsp;<a title="Baby Shower Photographers in Santa Clara, CA" href="/santa-clara-ca/baby-shower-photographers">Baby Shower Photographers</a>, 
+          &nbsp;<a title="Birthday Party Photographers in Santa Clara, CA" href="/santa-clara-ca/birthday-party-photographers">Birthday Party Photographers</a>, 
+          &nbsp;<a title="Candid Photography in Santa Clara, CA" href="/santa-clara-ca/candid-photography">Candid Photography</a>, 
+          &nbsp;<a title="Digital Photography in Santa Clara, CA" href="/santa-clara-ca/digital-photography">Digital Photography</a>, 
+          &nbsp;<a title="Engagement Photographers in Santa Clara, CA" href="/santa-clara-ca/engagement-photographers">Engagement Photographers</a>, 
+          &nbsp;<a title="Event Photographers in Santa Clara, CA" href="/santa-clara-ca/event-photographers">Event Photographers</a>, 
+          &nbsp;<a title="Event Videography in Santa Clara, CA" href="/santa-clara-ca/event-videography">Event Videography</a>, 
+          &nbsp;<a title="Family Photographers in Santa Clara, CA" href="/santa-clara-ca/family-photographers">Family Photographers</a>, 
+          &nbsp;<a title="Maternity Photographers in Santa Clara, CA" href="/santa-clara-ca/maternity-photographers">Maternity Photographers</a>, 
+          &nbsp;<a title="Nature Photography in Santa Clara, CA" href="/santa-clara-ca/nature-photography">Nature Photography</a>, 
+          &nbsp;<a title="Party Photographers in Santa Clara, CA" href="/santa-clara-ca/party-photographers">Party Photographers</a>, 
+          &nbsp;<a title="Portrait Photographers in Santa Clara, CA" href="/santa-clara-ca/portrait-photographers">Portrait Photographers</a>, 
+          &nbsp;<a title="Pre Wedding Photography in Santa Clara, CA" href="/santa-clara-ca/pre-wedding-photography">Pre Wedding Photography</a>, 
+          &nbsp;<a title="Wedding Photographers in Santa Clara, CA" href="/santa-clara-ca/wedding-photographers">Wedding Photographers</a>, 
+          &nbsp;<a title="Wedding Videographers in Santa Clara, CA" href="/santa-clara-ca/wedding-videographers">Wedding Videographers</a><div class="more-links"><a title="View all services offered by The 16MM Studios" href="javascript:void()" onclick="javascript:openFullServeWeb(this)">View all</a></div>
+      </div>
+    </div>
+  </div>
+  <div class="det-con">
+    <p><b>Serving ZIP Codes:</b>95056, 95051, 95050, 95054, 95091</p>
+    <div class="desc-rev spl-con min-height" id="showFullDescription">
+      <p class="min-height"><b>From the Business:</b>A team of wedding photographers based in California provides wedding photography, destination wedding photography, and portrait photography. Bay area Wedding photography, Events photography, Birthday photography, Housewarming photography, Couple photography, Maternity photography, Kids Birthday photography, Engagement photography, Pre-wedding photography, Tamil Wedding photography, Telugu Wedding<span class="more-links" style="display: none;"><a title="Read More about The 16MM Studios" href="javascript:void()" onclick="javascript:openFullDescriptionWeb(this)">Read more</a></span></p>
+    </div>
+  </div>
+  <div class="btn-outer">
+    <div class="lt-buttons">
+      <p></p>
+    </div>
+    <div class="rt-buttons">
+      <ul>
+        <li>
+          <div class="click-txt"><a title="Enquire MM Events" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1748969',&quot;The 16MM Studios&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1748969');" class="redtxt"><span class="material-icons-outlined">chat</span><b>Enquire Now</b><div class="res-txt">
+                        Responds in 18 mins
+                      </div></a></div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+<div class="single-listing " xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="content-blk"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2023-08-29-08-34-02-436_40.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Hazaru Photography in , "></figure><div class="content">
+      <h3><a title="Indian Photography/Video - Hazaru Photography" href="/milpitas-ca/photography-video/hazaru-photography-1748976">Hazaru Photography</a></h3>
+      <div class="subtitle"><span class="material-icons-outlined">location_on</span><b>Milpitas, CA, United States</b></div>
+      <div class="more-detail">
+        <ul>
+          <li>
+            <div class="rating">
+              <div class="sul-rate">2.9</div><b>Sulekha score</b></div>
+          </li>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">work_history</span>
+                          Established Since 2010</div>
+          </li>
+        </ul>
+      </div>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="no-claimed"><span class="material-icons">verified</span><a href="javascript:void(0);" onclick="javascript:openContactForm('1748976','11178398')">Claim the profile</a></div>
+          </li>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">schedule</span>Closed now
+                      </div>
+          </li>
+        </ul>
+      </div>
+      <div class="my-serv"><a href="photography-video">Photography/Video:&nbsp;
+                      </a>
+          &nbsp;<a title="Baby Shower Photographers in Milpitas, CA" href="/milpitas-ca/baby-shower-photographers">Baby Shower Photographers</a>, 
+          &nbsp;<a title="Birthday Party Photographers in Milpitas, CA" href="/milpitas-ca/birthday-party-photographers">Birthday Party Photographers</a>, 
+          &nbsp;<a title="Candid Photography in Milpitas, CA" href="/milpitas-ca/candid-photography">Candid Photography</a>, 
+          &nbsp;<a title="Digital Photography in Milpitas, CA" href="/milpitas-ca/digital-photography">Digital Photography</a>, 
+          &nbsp;<a title="Engagement Photographers in Milpitas, CA" href="/milpitas-ca/engagement-photographers">Engagement Photographers</a>, 
+          &nbsp;<a title="Event Photographers in Milpitas, CA" href="/milpitas-ca/event-photographers">Event Photographers</a>, 
+          &nbsp;<a title="Family Photographers in Milpitas, CA" href="/milpitas-ca/family-photographers">Family Photographers</a>, 
+          &nbsp;<a title="Freelance Photographers in Milpitas, CA" href="/milpitas-ca/freelance-photographers">Freelance Photographers</a>, 
+          &nbsp;<a title="Maternity Photographers in Milpitas, CA" href="/milpitas-ca/maternity-photographers">Maternity Photographers</a>, 
+          &nbsp;<a title="Nature Photography in Milpitas, CA" href="/milpitas-ca/nature-photography">Nature Photography</a>, 
+          &nbsp;<a title="Party Photographers in Milpitas, CA" href="/milpitas-ca/party-photographers">Party Photographers</a>, 
+          &nbsp;<a title="Portrait Photographers in Milpitas, CA" href="/milpitas-ca/portrait-photographers">Portrait Photographers</a>, 
+          &nbsp;<a title="Pre Wedding Photography in Milpitas, CA" href="/milpitas-ca/pre-wedding-photography">Pre Wedding Photography</a>, 
+          &nbsp;<a title="Wedding Photographers in Milpitas, CA" href="/milpitas-ca/wedding-photographers">Wedding Photographers</a>, 
+          &nbsp;<a title="Wedding Videographers in Milpitas, CA" href="/milpitas-ca/wedding-videographers">Wedding Videographers</a><div class="more-links"><a title="View all services offered by Hazaru Photography" href="javascript:void()" onclick="javascript:openFullServeWeb(this)">View all</a></div>
+      </div>
+    </div>
+  </div>
+  <div class="det-con">
+    <p><b>Serving ZIP Codes:</b>95036, 95035, 78613</p>
+    <div class="desc-rev spl-con min-height" id="showFullDescription">
+      <p class="min-height"><b>From the Business:</b>I am one of the most distinguished photographers and videographers in Milpitas, CA. I specialize in Baby Shower Photographers,Birthday Party Photographers,Candid Photography,Digital Photography,Engagement Photographers,Event Photographers,Family Photographers,Freelance Photographers,Maternity Photographers,Nature Photography,Party Photographers,Portrait Photographers,Pre-Wedding Photography,Wedding Photographers, and Wedding Videographers 
+I'm Mohan Hazaru a photographer based in California, and for me, photography is more than just lighting and composition. Personally, I find photography the best cure for bad memories. <span class="more-links" style="display: none;"><a title="Read More about Hazaru Photography" href="javascript:void()" onclick="javascript:openFullDescriptionWeb(this)">Read more</a></span></p>
+    </div>
+  </div>
+  <div class="btn-outer">
+    <div class="lt-buttons">
+      <p></p>
+    </div>
+    <div class="rt-buttons">
+      <ul>
+        <li>
+          <div class="click-txt"><a title="Enquire Mohanpraveen Hazaru" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1748976',&quot;Hazaru Photography&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1748976');" class="redtxt"><span class="material-icons-outlined">chat</span><b>Enquire Now</b><div class="res-txt">
+                        Responds in 15 mins
+                      </div></a></div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+<div class="single-listing " xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="content-blk"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2023-08-30-06-53-08-579_78.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Inugantis Photography in , "></figure><div class="content">
+      <h3><a title="Indian Photography/Video - Inugantis Photography" href="/tracy-ca/photography-video/inugantis-photography-1749417">Inugantis Photography</a></h3>
+      <div class="subtitle"><span class="material-icons-outlined">location_on</span><b>Mountain House, CA, USA</b></div>
+      <div class="more-detail">
+        <ul>
+          <li>
+            <div class="rating">
+              <div class="sul-rate">2.9</div><b>Sulekha score</b></div>
+          </li>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">work_history</span>
+                          Established Since 2010</div>
+          </li>
+        </ul>
+      </div>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="no-claimed"><span class="material-icons">verified</span><a href="javascript:void(0);" onclick="javascript:openContactForm('1749417','11179232')">Claim the profile</a></div>
+          </li>
+        </ul>
+      </div>
+      <div class="my-serv"><a href="photography-video">Photography/Video:&nbsp;
+                      </a>
+          &nbsp;<a title="Baby Shower Photographers in Tracy, CA" href="/tracy-ca/baby-shower-photographers">Baby Shower Photographers</a>, 
+          &nbsp;<a title="Birthday Party Photographers in Tracy, CA" href="/tracy-ca/birthday-party-photographers">Birthday Party Photographers</a>, 
+          &nbsp;<a title="Candid Photography in Tracy, CA" href="/tracy-ca/candid-photography">Candid Photography</a>, 
+          &nbsp;<a title="Digital Photography in Tracy, CA" href="/tracy-ca/digital-photography">Digital Photography</a>, 
+          &nbsp;<a title="Engagement Photographers in Tracy, CA" href="/tracy-ca/engagement-photographers">Engagement Photographers</a>, 
+          &nbsp;<a title="Event Photographers in Tracy, CA" href="/tracy-ca/event-photographers">Event Photographers</a>, 
+          &nbsp;<a title="Family Photographers in Tracy, CA" href="/tracy-ca/family-photographers">Family Photographers</a>, 
+          &nbsp;<a title="Maternity Photographers in Tracy, CA" href="/tracy-ca/maternity-photographers">Maternity Photographers</a>, 
+          &nbsp;<a title="Nature Photography in Tracy, CA" href="/tracy-ca/nature-photography">Nature Photography</a>, 
+          &nbsp;<a title="Party Photographers in Tracy, CA" href="/tracy-ca/party-photographers">Party Photographers</a>, 
+          &nbsp;<a title="Portrait Photographers in Tracy, CA" href="/tracy-ca/portrait-photographers">Portrait Photographers</a>, 
+          &nbsp;<a title="Pre Wedding Photography in Tracy, CA" href="/tracy-ca/pre-wedding-photography">Pre Wedding Photography</a>, 
+          &nbsp;<a title="Wedding Photographers in Tracy, CA" href="/tracy-ca/wedding-photographers">Wedding Photographers</a><div class="more-links"><a title="View all services offered by Inugantis Photography" href="javascript:void()" onclick="javascript:openFullServeWeb(this)">View all</a></div>
+      </div>
+    </div>
+  </div>
+  <div class="det-con">
+    <p><b>Serving ZIP Codes:</b>95391, 95377, 95376, 95304, 95378</p>
+    <div class="desc-rev spl-con min-height" id="showFullDescription">
+      <p class="min-height"><b>From the Business:</b>I am one of the most distinguished photographers and videographers in Tracy, CA. I specialize in Baby Shower Photographers, birthday party photographers, candid photography, digital photography, engagement photographers, event photographers, family photographers, maternity photographers, nature photographers, party photographers, portrait photographers, pre-wedding photographers, and wedding photographers. Hello everyone, I genuinely love photographing weddings and families, and I would absolutely love the chance to photograph yours! I’m passionate about photography and would like to reach a level of success that is not possible without your help and support. Your feedback is significant and will help me improve my skills. Book your photography session today, and I guarantee that I will capture the best moment of your life. I assure you that you won't be disappointed. For more details, kindly contact me. I look forward to working with you. Thanks!<span class="more-links" style="display: none;"><a title="Read More about Inugantis Photography" href="javascript:void()" onclick="javascript:openFullDescriptionWeb(this)">Read more</a></span></p>
+    </div>
+  </div>
+  <div class="btn-outer">
+    <div class="lt-buttons">
+      <p></p>
+    </div>
+    <div class="rt-buttons">
+      <ul>
+        <li>
+          <div class="click-txt"><a title="Enquire Inugantis Photography" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1749417',&quot;Inugantis Photography&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1749417');" class="redtxt"><span class="material-icons-outlined">chat</span><b>Enquire Now</b><div class="res-txt">
+                        Responds in 18 mins
+                      </div></a></div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+<div class="single-listing " xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="content-blk"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2023-08-30-06-11-44-226_68.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Optimus Photography in , "></figure><div class="content">
+      <h3><a title="Indian Photography/Video - Optimus Photography" href="/california-city-ca/photography-video/optimus-photography-1749426">Optimus Photography</a></h3>
+      <div class="subtitle"><span class="material-icons-outlined">location_on</span><b>Mountain House, California, United States</b></div>
+      <div class="more-detail">
+        <ul>
+          <li>
+            <div class="rating">
+              <div class="sul-rate">2.9</div><b>Sulekha score</b></div>
+          </li>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">work_history</span>
+                          Established Since 2010</div>
+          </li>
+        </ul>
+      </div>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="no-claimed"><span class="material-icons">verified</span><a href="javascript:void(0);" onclick="javascript:openContactForm('1749426','11179244')">Claim the profile</a></div>
+          </li>
+        </ul>
+      </div>
+      <div class="my-serv"><a href="photography-video">Photography/Video:&nbsp;
+                      </a>
+          &nbsp;<a title="Baby Shower Photographers in California City, CA" href="/california-city-ca/baby-shower-photographers">Baby Shower Photographers</a>, 
+          &nbsp;<a title="Birthday Party Photographers in California City, CA" href="/california-city-ca/birthday-party-photographers">Birthday Party Photographers</a>, 
+          &nbsp;<a title="Candid Photography in California City, CA" href="/california-city-ca/candid-photography">Candid Photography</a>, 
+          &nbsp;<a title="Digital Photography in California City, CA" href="/california-city-ca/digital-photography">Digital Photography</a>, 
+          &nbsp;<a title="Engagement Photographers in California City, CA" href="/california-city-ca/engagement-photographers">Engagement Photographers</a>, 
+          &nbsp;<a title="Event Photographers in California City, CA" href="/california-city-ca/event-photographers">Event Photographers</a>, 
+          &nbsp;<a title="Event Videography in California City, CA" href="/california-city-ca/event-videography">Event Videography</a>, 
+          &nbsp;<a title="Family Photographers in California City, CA" href="/california-city-ca/family-photographers">Family Photographers</a>, 
+          &nbsp;<a title="Maternity Photographers in California City, CA" href="/california-city-ca/maternity-photographers">Maternity Photographers</a>, 
+          &nbsp;<a title="Nature Photography in California City, CA" href="/california-city-ca/nature-photography">Nature Photography</a>, 
+          &nbsp;<a title="Newborn Photographers in California City, CA" href="/california-city-ca/newborn-photographers">Newborn Photographers</a>, 
+          &nbsp;<a title="Party Photographers in California City, CA" href="/california-city-ca/party-photographers">Party Photographers</a>, 
+          &nbsp;<a title="Portrait Photographers in California City, CA" href="/california-city-ca/portrait-photographers">Portrait Photographers</a>, 
+          &nbsp;<a title="Pre Wedding Photography in California City, CA" href="/california-city-ca/pre-wedding-photography">Pre Wedding Photography</a>, 
+          &nbsp;<a title="Wedding Photographers in California City, CA" href="/california-city-ca/wedding-photographers">Wedding Photographers</a><div class="more-links"><a title="View all services offered by Optimus Photography" href="javascript:void()" onclick="javascript:openFullServeWeb(this)">View all</a></div>
+      </div>
+    </div>
+  </div>
+  <div class="det-con">
+    <p><b>Serving ZIP Codes:</b>93505, 93504, 60564</p>
+    <div class="desc-rev spl-con min-height" id="showFullDescription">
+      <p class="min-height"><b>From the Business:</b>I am one of the most distinguished photographers and video editors in California City, CA. I specialize in Baby Shower Photographers,Birthday Party Photographers,Candid Photography,Digital Photography,Engagement Photographers,Event Photographers,Event Videography,Family Photographers,Maternity Photographers,Nature Photography,Newborn Photographers,Party Photographers,Portrait Photographers,Pre-Wedding Photography, and Wedding Photographers Hello everyone, I genuinely love photographing weddings and families, and I would absolutely love the chance to photograph yours! I’m passionate about photography and would like to reach a level of success that is not possible without your help and support. Your feedback is significant and will help me improve my skills. Book your photography session today, and I guarantee that I will capture the best moment of your life. I assure you that you won't be disappointed. For more details, kindly contact me. I look forward to working with you. Thanks!<span class="more-links" style="display: none;"><a title="Read More about Optimus Photography" href="javascript:void()" onclick="javascript:openFullDescriptionWeb(this)">Read more</a></span></p>
+    </div>
+  </div>
+  <div class="btn-outer">
+    <div class="lt-buttons">
+      <p></p>
+    </div>
+    <div class="rt-buttons">
+      <ul>
+        <li>
+          <div class="click-txt"><a title="Enquire Anudeep Dasa" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1749426',&quot;Optimus Photography&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1749426');" class="redtxt"><span class="material-icons-outlined">chat</span><b>Enquire Now</b><div class="res-txt">
+                        Responds in 15 mins
+                      </div></a></div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+<div class="single-listing " xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="content-blk"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2023-08-31-06-02-20-013_23.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Kapture By Kamal in , "></figure><div class="content">
+      <h3><a title="Indian Photography/Video - Kapture By Kamal" href="/california-city-ca/photography-video/kapture-by-kamal-1749828">Kapture By Kamal</a></h3>
+      <div class="subtitle"><span class="material-icons-outlined">location_on</span><b>California, USA</b></div>
+      <div class="more-detail">
+        <ul>
+          <li>
+            <div class="rating">
+              <div class="sul-rate">2.9</div><b>Sulekha score</b></div>
+          </li>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">work_history</span>
+                          Established Since 2010</div>
+          </li>
+        </ul>
+      </div>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="no-claimed"><span class="material-icons">verified</span><a href="javascript:void(0);" onclick="javascript:openContactForm('1749828','11180018')">Claim the profile</a></div>
+          </li>
+        </ul>
+      </div>
+      <div class="my-serv"><a href="photography-video">Photography/Video:&nbsp;
+                      </a>
+          &nbsp;<a title="Baby Shower Photographers in California City, CA" href="/california-city-ca/baby-shower-photographers">Baby Shower Photographers</a>, 
+          &nbsp;<a title="Birthday Party Photographers in California City, CA" href="/california-city-ca/birthday-party-photographers">Birthday Party Photographers</a>, 
+          &nbsp;<a title="Boudoir Photography in California City, CA" href="/california-city-ca/boudoir-photography">Boudoir Photography</a>, 
+          &nbsp;<a title="Candid Photography in California City, CA" href="/california-city-ca/candid-photography">Candid Photography</a>, 
+          &nbsp;<a title="Digital Photography in California City, CA" href="/california-city-ca/digital-photography">Digital Photography</a>, 
+          &nbsp;<a title="Engagement Photographers in California City, CA" href="/california-city-ca/engagement-photographers">Engagement Photographers</a>, 
+          &nbsp;<a title="Event Photographers in California City, CA" href="/california-city-ca/event-photographers">Event Photographers</a>, 
+          &nbsp;<a title="Family Photographers in California City, CA" href="/california-city-ca/family-photographers">Family Photographers</a>, 
+          &nbsp;<a title="Maternity Photographers in California City, CA" href="/california-city-ca/maternity-photographers">Maternity Photographers</a>, 
+          &nbsp;<a title="Nature Photography in California City, CA" href="/california-city-ca/nature-photography">Nature Photography</a>, 
+          &nbsp;<a title="Newborn Photographers in California City, CA" href="/california-city-ca/newborn-photographers">Newborn Photographers</a>, 
+          &nbsp;<a title="Party Photographers in California City, CA" href="/california-city-ca/party-photographers">Party Photographers</a>, 
+          &nbsp;<a title="Portrait Photographers in California City, CA" href="/california-city-ca/portrait-photographers">Portrait Photographers</a>, 
+          &nbsp;<a title="Pre Wedding Photography in California City, CA" href="/california-city-ca/pre-wedding-photography">Pre Wedding Photography</a>, 
+          &nbsp;<a title="Wedding Photographers in California City, CA" href="/california-city-ca/wedding-photographers">Wedding Photographers</a><div class="more-links"><a title="View all services offered by Kapture By Kamal" href="javascript:void()" onclick="javascript:openFullServeWeb(this)">View all</a></div>
+      </div>
+    </div>
+  </div>
+  <div class="det-con">
+    <p><b>Serving ZIP Codes:</b>93505, 93504, 60564</p>
+    <div class="desc-rev spl-con min-height" id="showFullDescription">
+      <p class="min-height"><b>From the Business:</b>I am one of the most distinguished photographers and video editors in California City, CA. I specialize in Baby Shower Photographers,Birthday Party Photographers,Boudoir Photography,Candid Photography,Digital Photography,Engagement Photographers,Event Photographers,Family Photographers,Maternity Photographers,Nature Photography,Newborn Photographers,Party Photographers,Portrait Photographers,Pre-Wedding Photography, and Wedding Photographers Hi all, When creating a visual story, the images must be unique, creative, and interesting. That is what I strive to achieve through my photography. Nothing feels forced. It’s important to feel like your natural self, and if you don’t like having your photo taken, you won’t even know I’m doing it! My main goal is to capture the uniqueness of the people and the event. If you have a wedding, I would love to do it. For more details, kindly contact us. Thanks  Hello everyone, I genuinely love photographing weddings and families, and I would absolutely love the chance to photograph yours! I’m passionate about photography and would like to reach a level of success that is not possible without your help and support. Your feedback is significant and will help me improve my skills. Book your photography session today, and I guarantee that I will capture the best moment of your life. I assure you that you won't be disappointed. For more details, kindly contact me. I look forward to working with you. Thanks!
+<span class="more-links" style="display: none;"><a title="Read More about Kapture By Kamal" href="javascript:void()" onclick="javascript:openFullDescriptionWeb(this)">Read more</a></span></p>
+    </div>
+  </div>
+  <div class="btn-outer">
+    <div class="lt-buttons">
+      <p></p>
+    </div>
+    <div class="rt-buttons">
+      <ul>
+        <li>
+          <div class="click-txt"><a title="Enquire Kamal Pabla" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1749828',&quot;Kapture By Kamal&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1749828');" class="redtxt"><span class="material-icons-outlined">chat</span><b>Enquire Now</b><div class="res-txt">
+                        Responds in 15 mins
+                      </div></a></div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+<div class="single-listing " xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="content-blk"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2023-09-04-06-23-56-624_65.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Sunshine Studio in , "></figure><div class="content">
+      <h3><a title="Indian Photography/Video - Sunshine Studio" href="/california-city-ca/photography-video/sunshine-studio-1751115">Sunshine Studio</a></h3>
+      <div class="subtitle"><span class="material-icons-outlined">location_on</span><b>California, USA</b></div>
+      <div class="more-detail">
+        <ul>
+          <li>
+            <div class="rating">
+              <div class="sul-rate">2.9</div><b>Sulekha score</b></div>
+          </li>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">work_history</span>
+                          Established Since 2010</div>
+          </li>
+        </ul>
+      </div>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="no-claimed"><span class="material-icons">verified</span><a href="javascript:void(0);" onclick="javascript:openContactForm('1751115','11182772')">Claim the profile</a></div>
+          </li>
+        </ul>
+      </div>
+      <div class="my-serv"><a href="photography-video">Photography/Video:&nbsp;
+                      </a>
+          &nbsp;<a title="Candid Photography in California City, CA" href="/california-city-ca/candid-photography">Candid Photography</a>, 
+          &nbsp;<a title="Digital Photography in California City, CA" href="/california-city-ca/digital-photography">Digital Photography</a>, 
+          &nbsp;<a title="Engagement Photographers in California City, CA" href="/california-city-ca/engagement-photographers">Engagement Photographers</a>, 
+          &nbsp;<a title="Event Photographers in California City, CA" href="/california-city-ca/event-photographers">Event Photographers</a>, 
+          &nbsp;<a title="Event Videography in California City, CA" href="/california-city-ca/event-videography">Event Videography</a>, 
+          &nbsp;<a title="Family Photographers in California City, CA" href="/california-city-ca/family-photographers">Family Photographers</a>, 
+          &nbsp;<a title="Pre Wedding Photography in California City, CA" href="/california-city-ca/pre-wedding-photography">Pre Wedding Photography</a>, 
+          &nbsp;<a title="Wedding Photographers in California City, CA" href="/california-city-ca/wedding-photographers">Wedding Photographers</a>, 
+          &nbsp;<a title="Wedding Videographers in California City, CA" href="/california-city-ca/wedding-videographers">Wedding Videographers</a><div class="more-links"><a title="View all services offered by Sunshine Studio" href="javascript:void()" onclick="javascript:openFullServeWeb(this)">View all</a></div>
+      </div>
+    </div>
+  </div>
+  <div class="det-con">
+    <p><b>Serving ZIP Codes:</b>93505, 93504, 60564</p>
+    <div class="desc-rev spl-con min-height" id="showFullDescription">
+      <p class="min-height"><b>From the Business:</b>I am one of the most distinguished photographers and video editors in California City, CA. I specialize in Candid Photography, digital photography,  engagement photographers,  event photographers,  event videographers,  family photographers,  pre-wedding Photography, wedding photographers,  and wedding videographers. Hi all, When creating a visual story, the images must be unique, creative, and interesting. That is what I strive to achieve through my photography. Nothing feels forced. It’s important to feel like your natural self and if you don’t like having your photo taken, you won’t even know I’m doing it! My main goal is to capture the uniqueness of people and the event. If you have a wedding, I would love to do. For more details kindly contact us. Thanks <span class="more-links" style="display: none;"><a title="Read More about Sunshine Studio" href="javascript:void()" onclick="javascript:openFullDescriptionWeb(this)">Read more</a></span></p>
+    </div>
+  </div>
+  <div class="btn-outer">
+    <div class="lt-buttons">
+      <p></p>
+    </div>
+    <div class="rt-buttons">
+      <ul>
+        <li>
+          <div class="click-txt"><a title="Enquire Sunshine Studio" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1751115',&quot;Sunshine Studio&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1751115');" class="redtxt"><span class="material-icons-outlined">chat</span><b>Enquire Now</b><div class="res-txt">
+                        Responds in 18 mins
+                      </div></a></div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+<div class="single-listing " xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="content-blk"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2023-09-13-12-11-35-740_61.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Swami Photography in , "></figure><div class="content">
+      <h3><a title="Indian Photography/Video - Swami Photography" href="/san-jose-ca/photography-video/swami-photography-1754253">Swami Photography</a></h3>
+      <div class="subtitle"><span class="material-icons-outlined">location_on</span><b>San Jose, CA, United States</b></div>
+      <div class="more-detail">
+        <ul>
+          <li>
+            <div class="rating">
+              <div class="sul-rate">2.9</div><b>Sulekha score</b></div>
+          </li>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">work_history</span>
+                          Established Since 2010</div>
+          </li>
+        </ul>
+      </div>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="no-claimed"><span class="material-icons">verified</span><a href="javascript:void(0);" onclick="javascript:openContactForm('1754253','11189348')">Claim the profile</a></div>
+          </li>
+        </ul>
+      </div>
+      <div class="my-serv"><a href="photography-video">Photography/Video:&nbsp;
+                      </a>
+          &nbsp;<a title="Baby Shower Photographers in San Jose, CA" href="/san-jose-ca/baby-shower-photographers">Baby Shower Photographers</a>, 
+          &nbsp;<a title="Birthday Party Photographers in San Jose, CA" href="/san-jose-ca/birthday-party-photographers">Birthday Party Photographers</a>, 
+          &nbsp;<a title="Candid Photography in San Jose, CA" href="/san-jose-ca/candid-photography">Candid Photography</a>, 
+          &nbsp;<a title="Digital Photography in San Jose, CA" href="/san-jose-ca/digital-photography">Digital Photography</a>, 
+          &nbsp;<a title="Engagement Photographers in San Jose, CA" href="/san-jose-ca/engagement-photographers">Engagement Photographers</a>, 
+          &nbsp;<a title="Event Photographers in San Jose, CA" href="/san-jose-ca/event-photographers">Event Photographers</a>, 
+          &nbsp;<a title="Event Videography in San Jose, CA" href="/san-jose-ca/event-videography">Event Videography</a>, 
+          &nbsp;<a title="Family Photographers in San Jose, CA" href="/san-jose-ca/family-photographers">Family Photographers</a>, 
+          &nbsp;<a title="Maternity Photographers in San Jose, CA" href="/san-jose-ca/maternity-photographers">Maternity Photographers</a>, 
+          &nbsp;<a title="Nature Photography in San Jose, CA" href="/san-jose-ca/nature-photography">Nature Photography</a>, 
+          &nbsp;<a title="Party Photographers in San Jose, CA" href="/san-jose-ca/party-photographers">Party Photographers</a>, 
+          &nbsp;<a title="Portrait Photographers in San Jose, CA" href="/san-jose-ca/portrait-photographers">Portrait Photographers</a>, 
+          &nbsp;<a title="Pre Wedding Photography in San Jose, CA" href="/san-jose-ca/pre-wedding-photography">Pre Wedding Photography</a>, 
+          &nbsp;<a title="Wedding Photographers in San Jose, CA" href="/san-jose-ca/wedding-photographers">Wedding Photographers</a>, 
+          &nbsp;<a title="Wedding Videographers in San Jose, CA" href="/san-jose-ca/wedding-videographers">Wedding Videographers</a><div class="more-links"><a title="View all services offered by Swami Photography" href="javascript:void()" onclick="javascript:openFullServeWeb(this)">View all</a></div>
+      </div>
+    </div>
+  </div>
+  <div class="det-con">
+    <p><b>Serving ZIP Codes:</b>95196, 95128, 95131, 95110, 95113</p>
+    <div class="desc-rev spl-con min-height" id="showFullDescription">
+      <p class="min-height"><b>From the Business:</b>I am one of the most distinguished photographers and videographers in San Jose, CA. I specialize in Baby Shower Photographers,Birthday Party Photographers,Candid Photography,Digital Photography,Engagement Photographers,Event Photographers,Event Videography,Family Photographers,Maternity Photographers,Nature Photography,Party Photographers,Portrait Photographers,Pre-Wedding Photography,Wedding Photographers, and Wedding Videographers I use this site to showcase my photography, share life lessons, and share insights from my podcast. A little bit about me: I grew up in Chennai, moved to Malawi during my high school years, went to college at ASU, and currently live in San Jose. I’m an engineer at Reputation.com and cofounder of ShotStories. Somewhere along the way, I picked up an interest in photography. I think it was when my dad got me a video camera in the mid-90s. I took the camera to school and videotaped my classes, and those recordings are my most precious memories of Africa.I shoot landscapes, portraits, and corporate headshots. I also used to shoot Bollywood concerts and sports, mainly tennis tournaments. In 2018, I was an official photographer at the BNP Paribas Open in Indian Wells. Here is a fun question I asked Roger Federer after his semifinal match: In 2019, my Golden Gate Bridge photo was displayed in the Escaype Art Gallery in San Francisco. The event inspired me to create ShotStories, a digital art gallery platform for photographers, which I’m about to launch soon.<span class="more-links" style="display: none;"><a title="Read More about Swami Photography" href="javascript:void()" onclick="javascript:openFullDescriptionWeb(this)">Read more</a></span></p>
+    </div>
+  </div>
+  <div class="btn-outer">
+    <div class="lt-buttons">
+      <p></p>
+    </div>
+    <div class="rt-buttons">
+      <ul>
+        <li>
+          <div class="click-txt"><a title="Enquire Swami" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1754253',&quot;Swami Photography&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1754253');" class="redtxt"><span class="material-icons-outlined">chat</span><b>Enquire Now</b><div class="res-txt">
+                        Responds in 18 mins
+                      </div></a></div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+<div class="single-listing " xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="content-blk"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2023-09-13-01-50-48-377_1.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="King Studio in , "></figure><div class="content">
+      <h3><a title="Indian Photography/Video - King Studio" href="/fremont-ca/photography-video/king-studio-1754261">King Studio</a></h3>
+      <div class="subtitle"><span class="material-icons-outlined">location_on</span><b>Fremont, California, USA</b></div>
+      <div class="more-detail">
+        <ul>
+          <li>
+            <div class="rating">
+              <div class="sul-rate">2.9</div><b>Sulekha score</b></div>
+          </li>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">work_history</span>
+                          Established Since 2010</div>
+          </li>
+        </ul>
+      </div>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="no-claimed"><span class="material-icons">verified</span><a href="javascript:void(0);" onclick="javascript:openContactForm('1754261','11189374')">Claim the profile</a></div>
+          </li>
+        </ul>
+      </div>
+      <div class="my-serv"><a href="photography-video">Photography/Video:&nbsp;
+                      </a>
+          &nbsp;<a title="Baby Shower Photographers in Fremont, CA" href="/fremont-ca/baby-shower-photographers">Baby Shower Photographers</a>, 
+          &nbsp;<a title="Birthday Party Photographers in Fremont, CA" href="/fremont-ca/birthday-party-photographers">Birthday Party Photographers</a>, 
+          &nbsp;<a title="Candid Photography in Fremont, CA" href="/fremont-ca/candid-photography">Candid Photography</a>, 
+          &nbsp;<a title="Digital Photography in Fremont, CA" href="/fremont-ca/digital-photography">Digital Photography</a>, 
+          &nbsp;<a title="Engagement Photographers in Fremont, CA" href="/fremont-ca/engagement-photographers">Engagement Photographers</a>, 
+          &nbsp;<a title="Event Photographers in Fremont, CA" href="/fremont-ca/event-photographers">Event Photographers</a>, 
+          &nbsp;<a title="Family Photographers in Fremont, CA" href="/fremont-ca/family-photographers">Family Photographers</a>, 
+          &nbsp;<a title="Landscape Photography in Fremont, CA" href="/fremont-ca/landscape-photography">Landscape Photography</a>, 
+          &nbsp;<a title="Maternity Photographers in Fremont, CA" href="/fremont-ca/maternity-photographers">Maternity Photographers</a>, 
+          &nbsp;<a title="Nature Photography in Fremont, CA" href="/fremont-ca/nature-photography">Nature Photography</a>, 
+          &nbsp;<a title="Party Photographers in Fremont, CA" href="/fremont-ca/party-photographers">Party Photographers</a>, 
+          &nbsp;<a title="Portrait Photographers in Fremont, CA" href="/fremont-ca/portrait-photographers">Portrait Photographers</a>, 
+          &nbsp;<a title="Pre Wedding Photography in Fremont, CA" href="/fremont-ca/pre-wedding-photography">Pre Wedding Photography</a>, 
+          &nbsp;<a title="Wedding Photographers in Fremont, CA" href="/fremont-ca/wedding-photographers">Wedding Photographers</a>, 
+          &nbsp;<a title="Wedding Videographers in Fremont, CA" href="/fremont-ca/wedding-videographers">Wedding Videographers</a><div class="more-links"><a title="View all services offered by King Studio" href="javascript:void()" onclick="javascript:openFullServeWeb(this)">View all</a></div>
+      </div>
+    </div>
+  </div>
+  <div class="det-con">
+    <p><b>Serving ZIP Codes:</b>94555, 94539, 94538, 94536, 94537</p>
+    <div class="desc-rev spl-con min-height" id="showFullDescription">
+      <p class="min-height"><b>From the Business:</b>I am one of the most distinguished photographers and videographers in Fremont, CA. I specialize in Baby Shower Photographers, Birthday Party Photographers, Candid Photography, Digital Photography, Engagement Photographers, Event Photographers,Family Photographers, Landscape Photography, Maternity Photographers, Nature Photography, Party Photographers, Portrait Photographers,Pre-Wedding Photography, Wedding Photographers, and Wedding Videographers Hi all, When creating a visual story, the images must be unique, creative, and interesting. That is what I strive to achieve through my photography. Nothing feels forced. It’s important to feel like your natural self, and if you don’t like having your photo taken, you won’t even know I’m doing it! My main goal is to capture the uniqueness of the people and the event. If you have a wedding, I would love to do it. For more details, kindly contact us. Thanks  Hello everyone, I genuinely love photographing weddings and families, and I would absolutely love the chance to photograph yours! I’m passionate about photography and would like to reach a level of success that is not possible without your help and support. Your feedback is significant and will help me improve my skills. Book your photography session today, and I guarantee that I will capture the best moment of your life. I assure you that you won't be disappointed. For more details, kindly contact me. I look forward to working with you. Thanks!
+<span class="more-links" style="display: none;"><a title="Read More about King Studio" href="javascript:void()" onclick="javascript:openFullDescriptionWeb(this)">Read more</a></span></p>
+    </div>
+  </div>
+  <div class="btn-outer">
+    <div class="lt-buttons">
+      <p></p>
+    </div>
+    <div class="rt-buttons">
+      <ul>
+        <li>
+          <div class="click-txt"><a title="Enquire Raja Singh" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1754261',&quot;King Studio&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1754261');" class="redtxt"><span class="material-icons-outlined">chat</span><b>Enquire Now</b><div class="res-txt">
+                        Responds in 18 mins
+                      </div></a></div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+<div class="single-listing " xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="content-blk"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2023-09-14-01-14-44-437_68.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Beautiful Stories Photography in , "></figure><div class="content">
+      <h3><a title="Indian Photography/Video - Beautiful Stories Photography" href="/los-gatos-ca/photography-video/beautiful-stories-photography-1754665">Beautiful Stories Photography</a></h3>
+      <div class="subtitle"><span class="material-icons-outlined">location_on</span><b>Los Gatos, CA, United States</b></div>
+      <div class="more-detail">
+        <ul>
+          <li>
+            <div class="rating">
+              <div class="sul-rate">2.9</div><b>Sulekha score</b></div>
+          </li>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">work_history</span>
+                          Established Since 2010</div>
+          </li>
+        </ul>
+      </div>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="no-claimed"><span class="material-icons">verified</span><a href="javascript:void(0);" onclick="javascript:openContactForm('1754665','11190176')">Claim the profile</a></div>
+          </li>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">schedule</span>Closed now
+                      </div>
+          </li>
+        </ul>
+      </div>
+      <div class="my-serv"><a href="photography-video">Photography/Video:&nbsp;
+                      </a>
+          &nbsp;<a title="Candid Photography in Los Gatos, CA" href="/los-gatos-ca/candid-photography">Candid Photography</a>, 
+          &nbsp;<a title="Family Photographers in Los Gatos, CA" href="/los-gatos-ca/family-photographers">Family Photographers</a>, 
+          &nbsp;<a title="Maternity Photographers in Los Gatos, CA" href="/los-gatos-ca/maternity-photographers">Maternity Photographers</a>, 
+          &nbsp;<a title="Nature Photography in Los Gatos, CA" href="/los-gatos-ca/nature-photography">Nature Photography</a>, 
+          &nbsp;<a title="Newborn Photographers in Los Gatos, CA" href="/los-gatos-ca/newborn-photographers">Newborn Photographers</a><div class="more-links"><a title="View all services offered by Beautiful Stories Photography" href="javascript:void()" onclick="javascript:openFullServeWeb(this)">View all</a></div>
+      </div>
+    </div>
+  </div>
+  <div class="det-con">
+    <p><b>Serving ZIP Codes:</b>95033, 95030, 95032, 95031</p>
+    <div class="desc-rev spl-con min-height" id="showFullDescription">
+      <p class="min-height"><b>From the Business:</b>I am one of the most distinguished photographers and videographers in Los Gatos, CA. I specialize in Candid Photography, family photography, maternity photography, nature photography, and newborn photography. I am a mom to two littles, ages 9 and 2. And I have a superpower: I photograph the real smiles of kids! My other not-so-super powers are baking stuff that no one eats, planning elaborate meals then going with left-overs, and carrying around my toddler up and down our weekend hikes because that little munchkin refuses to walk or let his dad carry him! I love love love my lattes and I let my husband believe he is the best barista on this planet, so I get my steaming hot cup without asking everyday I love stories; nothing tugs at my heartstrings like looking at old photographs and reminiscing about our lives. And that is what I want to create for your family. Your Beautiful Stories! My sessions are fun and relaxed. You will never have to worry about your kids misbehaving. We spend some meaningful time together and come back with a joyous heart and a bucket load of happy memories.<span class="more-links" style="display: none;"><a title="Read More about Beautiful Stories Photography" href="javascript:void()" onclick="javascript:openFullDescriptionWeb(this)">Read more</a></span></p>
+    </div>
+  </div>
+  <div class="btn-outer">
+    <div class="lt-buttons">
+      <p></p>
+    </div>
+    <div class="rt-buttons">
+      <ul>
+        <li>
+          <div class="click-txt"><a title="Enquire Heena Mukhi" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1754665',&quot;Beautiful Stories Photography&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1754665');" class="redtxt"><span class="material-icons-outlined">chat</span><b>Enquire Now</b><div class="res-txt">
+                        Responds in 18 mins
+                      </div></a></div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+<div class="single-listing " xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="content-blk"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2023-09-15-07-49-08-313_39.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Photo By Neil in , "></figure><div class="content">
+      <h3><a title="Indian Photography/Video - Photo By Neil" href="/california-city-ca/photography-video/photo-by-neil-1755084">Photo By Neil</a></h3>
+      <div class="subtitle"><span class="material-icons-outlined">location_on</span><b>California, USA</b></div>
+      <div class="more-detail">
+        <ul>
+          <li>
+            <div class="rating">
+              <div class="sul-rate">1.7</div><b>Sulekha score</b></div>
+          </li>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">work_history</span>
+                          Established Since 2010</div>
+          </li>
+        </ul>
+      </div>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="no-claimed"><span class="material-icons">verified</span><a href="javascript:void(0);" onclick="javascript:openContactForm('1755084','11190955')">Claim the profile</a></div>
+          </li>
+        </ul>
+      </div>
+      <div class="my-serv"><a href="photography-video">Photography/Video:&nbsp;
+                      </a>
+          &nbsp;<a title="Birthday Party Photographers in California City, CA" href="/california-city-ca/birthday-party-photographers">Birthday Party Photographers</a>, 
+          &nbsp;<a title="Candid Photography in California City, CA" href="/california-city-ca/candid-photography">Candid Photography</a>, 
+          &nbsp;<a title="Digital Photography in California City, CA" href="/california-city-ca/digital-photography">Digital Photography</a>, 
+          &nbsp;<a title="Engagement Photographers in California City, CA" href="/california-city-ca/engagement-photographers">Engagement Photographers</a>, 
+          &nbsp;<a title="Event Photographers in California City, CA" href="/california-city-ca/event-photographers">Event Photographers</a>, 
+          &nbsp;<a title="Family Photographers in California City, CA" href="/california-city-ca/family-photographers">Family Photographers</a>, 
+          &nbsp;<a title="Nature Photography in California City, CA" href="/california-city-ca/nature-photography">Nature Photography</a>, 
+          &nbsp;<a title="Party Photographers in California City, CA" href="/california-city-ca/party-photographers">Party Photographers</a>, 
+          &nbsp;<a title="Pre Wedding Photography in California City, CA" href="/california-city-ca/pre-wedding-photography">Pre Wedding Photography</a>, 
+          &nbsp;<a title="Wedding Photographers in California City, CA" href="/california-city-ca/wedding-photographers">Wedding Photographers</a>, 
+          &nbsp;<a title="Wedding Videographers in California City, CA" href="/california-city-ca/wedding-videographers">Wedding Videographers</a><div class="more-links"><a title="View all services offered by Photo By Neil" href="javascript:void()" onclick="javascript:openFullServeWeb(this)">View all</a></div>
+      </div>
+    </div>
+  </div>
+  <div class="det-con">
+    <p><b>Serving ZIP Codes:</b>93505, 93504, 60564</p>
+    <div class="desc-rev spl-con min-height" id="showFullDescription">
+      <p class="min-height"><b>From the Business:</b>I am one of the most distinguished photographers and video editors in California City, CA. I specialize in Birthday Party Photographers, candid photography,  digital photography,  engagement photographers,  event photographers,  family photographers,  nature photographers,  party photographers,Pre-Wedding photographers,  wedding photographers, and Wedding Videographers Hello everyone, I genuinely love photographing weddings and families and would absolutely love the chance to photograph yours! I’m passionate about photography and would like to reach the level of success, which is not possible without your help and support. Your feedback is significant and will help to improve my skills. Book photography session today and I guarantee you to capture the best moment of your life and I assure you that you won't be disappointed. For more details kindly contact me looking forward to working with you. Thanks!<span class="more-links" style="display: none;"><a title="Read More about Photo By Neil" href="javascript:void()" onclick="javascript:openFullDescriptionWeb(this)">Read more</a></span></p>
+    </div>
+  </div>
+  <div class="btn-outer">
+    <div class="lt-buttons">
+      <p></p>
+    </div>
+    <div class="rt-buttons">
+      <ul>
+        <li>
+          <div class="click-txt"><a title="Enquire Nilesh Patel" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1755084',&quot;Photo By Neil&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1755084');" class="redtxt"><span class="material-icons-outlined">chat</span><b>Enquire Now</b><div class="res-txt">
+                        Responds in 15 mins
+                      </div></a></div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+<div class="single-listing " xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="content-blk"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2023-09-15-07-04-20-367_86.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="JB Photo Studios in , "></figure><div class="content">
+      <h3><a title="Indian Photography/Video - JB Photo Studios" href="/california-city-ca/photography-video/jb-photo-studios-1755087">JB Photo Studios</a></h3>
+      <div class="subtitle"><span class="material-icons-outlined">location_on</span><b>Northern California, CA, USA</b></div>
+      <div class="more-detail">
+        <ul>
+          <li>
+            <div class="rating">
+              <div class="sul-rate">2.9</div><b>Sulekha score</b></div>
+          </li>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">work_history</span>
+                          Established Since 2010</div>
+          </li>
+        </ul>
+      </div>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="no-claimed"><span class="material-icons">verified</span><a href="javascript:void(0);" onclick="javascript:openContactForm('1755087','11190965')">Claim the profile</a></div>
+          </li>
+        </ul>
+      </div>
+      <div class="my-serv"><a href="photography-video">Photography/Video:&nbsp;
+                      </a>
+          &nbsp;<a title="Cinematography in California City, CA" href="/california-city-ca/cinematography">Cinematography</a>, 
+          &nbsp;<a title="Digital Photography in California City, CA" href="/california-city-ca/digital-photography">Digital Photography</a>, 
+          &nbsp;<a title="Freelance Photographers in California City, CA" href="/california-city-ca/freelance-photographers">Freelance Photographers</a>, 
+          &nbsp;<a title="Motion Photography in California City, CA" href="/california-city-ca/motion-photography">Motion Photography</a>, 
+          &nbsp;<a title="Nature Photography in California City, CA" href="/california-city-ca/nature-photography">Nature Photography</a>, 
+          &nbsp;<a title="Product Photography in California City, CA" href="/california-city-ca/product-photography">Product Photography</a>, 
+          &nbsp;<a title="Prom Photography in California City, CA" href="/california-city-ca/prom-photography">Prom Photography</a><div class="more-links"><a title="View all services offered by JB Photo Studios" href="javascript:void()" onclick="javascript:openFullServeWeb(this)">View all</a></div>
+      </div>
+    </div>
+  </div>
+  <div class="det-con">
+    <p><b>Serving ZIP Codes:</b>93505, 93504, 60564</p>
+    <div class="desc-rev spl-con min-height" id="showFullDescription">
+      <p class="min-height"><b>From the Business:</b>I’m Jyo; which is short for Jyo-t-sna of Jyotsna Bhamidipati Photography. I’m a Commercial &amp; Editorial photographer based in Sacramento, Northern California but travel throughout California and Nationally/Internationally for commissioned assignments year round. I am inspired by the beauty of the environment that surrounds me, greens, world cultures, travel, and the atmospheric textures that encompass our everyday lives and my work often reflects that. There’s something about the messes, finding little glimpses of beauty and joy in the chaos that surrounds us and embracing those little imperfections is what really drives me. I am a passionate storyteller and when my work showcases that; it humanizes everything I photograph.From environmental portraits, lifestyle portraits &amp; branding visuals for small and larger businesses to creating food images for restaurants and editorials for magazines, I love telling stories visually to make an impact as a powerful narrative through my lens. <span class="more-links" style="display: none;"><a title="Read More about JB Photo Studios" href="javascript:void()" onclick="javascript:openFullDescriptionWeb(this)">Read more</a></span></p>
+    </div>
+  </div>
+  <div class="btn-outer">
+    <div class="lt-buttons">
+      <p></p>
+    </div>
+    <div class="rt-buttons">
+      <ul>
+        <li>
+          <div class="click-txt"><a title="Enquire Jyotsna Bhamidipati" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1755087',&quot;JB Photo Studios&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1755087');" class="redtxt"><span class="material-icons-outlined">chat</span><b>Enquire Now</b><div class="res-txt">
+                        Responds in 18 mins
+                      </div></a></div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+<div class="single-listing " xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="content-blk"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2023-09-20-03-01-27-083_50.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Nikita Photography in , "></figure><div class="content">
+      <h3><a title="Indian Photography/Video - Nikita Photography" href="/san-jose-ca/photography-video/nikita-photography-1756655">Nikita Photography</a></h3>
+      <div class="subtitle"><span class="material-icons-outlined">location_on</span><b>San Jose, CA, U.S.</b></div>
+      <div class="more-detail">
+        <ul>
+          <li>
+            <div class="rating">
+              <div class="sul-rate">2.9</div><b>Sulekha score</b></div>
+          </li>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">work_history</span>
+                          Established Since 2017</div>
+          </li>
+        </ul>
+      </div>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="no-claimed"><span class="material-icons">verified</span><a href="javascript:void(0);" onclick="javascript:openContactForm('1756655','11194292')">Claim the profile</a></div>
+          </li>
+        </ul>
+      </div>
+      <div class="my-serv"><a href="photography-video">Photography/Video:&nbsp;
+                      </a>
+          &nbsp;<a title="Baby Shower Photographers in San Jose, CA" href="/san-jose-ca/baby-shower-photographers">Baby Shower Photographers</a>, 
+          &nbsp;<a title="Birthday Party Photographers in San Jose, CA" href="/san-jose-ca/birthday-party-photographers">Birthday Party Photographers</a>, 
+          &nbsp;<a title="Candid Photography in San Jose, CA" href="/san-jose-ca/candid-photography">Candid Photography</a>, 
+          &nbsp;<a title="Event Photographers in San Jose, CA" href="/san-jose-ca/event-photographers">Event Photographers</a>, 
+          &nbsp;<a title="Family Photographers in San Jose, CA" href="/san-jose-ca/family-photographers">Family Photographers</a>, 
+          &nbsp;<a title="Landscape Photography in San Jose, CA" href="/san-jose-ca/landscape-photography">Landscape Photography</a>, 
+          &nbsp;<a title="Maternity Photographers in San Jose, CA" href="/san-jose-ca/maternity-photographers">Maternity Photographers</a>, 
+          &nbsp;<a title="Nature Photography in San Jose, CA" href="/san-jose-ca/nature-photography">Nature Photography</a>, 
+          &nbsp;<a title="Newborn Photographers in San Jose, CA" href="/san-jose-ca/newborn-photographers">Newborn Photographers</a>, 
+          &nbsp;<a title="Party Photographers in San Jose, CA" href="/san-jose-ca/party-photographers">Party Photographers</a>, 
+          &nbsp;<a title="Pet Photography in San Jose, CA" href="/san-jose-ca/pet-photography">Pet Photography</a>, 
+          &nbsp;<a title="Portrait Photographers in San Jose, CA" href="/san-jose-ca/portrait-photographers">Portrait Photographers</a>, 
+          &nbsp;<a title="Pre Wedding Photography in San Jose, CA" href="/san-jose-ca/pre-wedding-photography">Pre Wedding Photography</a>, 
+          &nbsp;<a title="Travel Photographers in San Jose, CA" href="/san-jose-ca/travel-photographers">Travel Photographers</a>, 
+          &nbsp;<a title="Wedding Photographers in San Jose, CA" href="/san-jose-ca/wedding-photographers">Wedding Photographers</a><div class="more-links"><a title="View all services offered by Nikita Photography" href="javascript:void()" onclick="javascript:openFullServeWeb(this)">View all</a></div>
+      </div>
+    </div>
+  </div>
+  <div class="det-con">
+    <p><b>Serving ZIP Codes:</b>95196, 95128, 95131, 95110, 95113</p>
+    <div class="desc-rev spl-con min-height" id="showFullDescription">
+      <p class="min-height"><b>From the Business:</b>Nikita, A graduate of professional cinematography and a photography enthusiast. Photography is my passion and a hobby.  To me, photography is about people being real and then letting us paint a picture of that moment to remember it forever. This is the story that matters most: real people, real stories, real moments. Please take a few minutes to get to know me. I would love to visit with you by phone or in person and talk about your events, and portrait session. Please reach out to me through the Contact Page. I am one of the most distinguished Photography/Video in San Jose, CA. I specialize in Baby Shower photography, Birthday Party Photographers, Candid Photography, Event Photography, Family Photographers, Landscape Photography, Maternity Photographers, Nature Photography, Newborn Photographers, Party Photographers, Pet Photography, Portrait Photographers, Pre Wedding Photography, Travel Photographers,Wedding Photographers.<span class="more-links" style="display: none;"><a title="Read More about Nikita Photography" href="javascript:void()" onclick="javascript:openFullDescriptionWeb(this)">Read more</a></span></p>
+    </div>
+  </div>
+  <div class="btn-outer">
+    <div class="lt-buttons">
+      <p></p>
+    </div>
+    <div class="rt-buttons">
+      <ul>
+        <li>
+          <div class="click-txt"><a title="Enquire Nikita" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1756655',&quot;Nikita Photography&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1756655');" class="redtxt"><span class="material-icons-outlined">chat</span><b>Enquire Now</b><div class="res-txt">
+                        Responds in 18 mins
+                      </div></a></div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+<div class="single-listing " xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="content-blk"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2023-09-26-02-24-36-744_87.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Shutterbomb Creation in , "></figure><div class="content">
+      <h3><a title="Indian Photography/Video - Shutterbomb Creation" href="/san-jose-ca/photography-video/shutterbomb-creation-1758795">Shutterbomb Creation</a></h3>
+      <div class="subtitle"><span class="material-icons-outlined">location_on</span><b>San Jose, CA, United States</b></div>
+      <div class="more-detail">
+        <ul>
+          <li>
+            <div class="rating">
+              <div class="sul-rate">2.9</div><b>Sulekha score</b></div>
+          </li>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">work_history</span>
+                          Established Since 2017</div>
+          </li>
+        </ul>
+      </div>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="no-claimed"><span class="material-icons">verified</span><a href="javascript:void(0);" onclick="javascript:openContactForm('1758795','11198544')">Claim the profile</a></div>
+          </li>
+        </ul>
+      </div>
+      <div class="my-serv"><a href="photography-video">Photography/Video:&nbsp;
+                      </a>
+          &nbsp;<a title="Engagement Photographers in San Jose, CA" href="/san-jose-ca/engagement-photographers">Engagement Photographers</a>, 
+          &nbsp;<a title="Event Photographers in San Jose, CA" href="/san-jose-ca/event-photographers">Event Photographers</a>, 
+          &nbsp;<a title="Family Photographers in San Jose, CA" href="/san-jose-ca/family-photographers">Family Photographers</a>, 
+          &nbsp;<a title="Maternity Photographers in San Jose, CA" href="/san-jose-ca/maternity-photographers">Maternity Photographers</a>, 
+          &nbsp;<a title="Pre Wedding Photography in San Jose, CA" href="/san-jose-ca/pre-wedding-photography">Pre Wedding Photography</a>, 
+          &nbsp;<a title="Wedding Photographers in San Jose, CA" href="/san-jose-ca/wedding-photographers">Wedding Photographers</a>, <div class="more-links"><a title="View all services offered by Shutterbomb Creation" href="javascript:void()" onclick="javascript:openFullServeWeb(this)">View all</a></div>
+      </div>
+    </div>
+  </div>
+  <div class="det-con">
+    <p><b>Serving ZIP Codes:</b>95196, 95128, 95131, 95110, 95113</p>
+    <div class="desc-rev spl-con min-height" id="showFullDescription">
+      <p class="min-height"><b>From the Business:</b>Photography has been a hobby of mine since I was a teenager in India. I had a lot of fun taking photos, mostly for friends and family, but just having my camera in my hands made me happy. When I moved to California, I put my photography on hold but soon realized that it was my true passion. I began taking photography seriously in 2022, and that is when I decided to expand my business. Photography is about capturing moments and memories that will last a lifetime, not just taking pictures. As a photographer, I get to capture some of life's most beautiful and intimate moments. Each event, from weddings to family sessions, is unique and special in its way, and I am honored to be able to capture these moments for my clients. I am one of the most distinguished Photography/Video in San Jose, CA. I specialize in Engagement photography, Event photography, Family photography, Maternity Photographers, Pre Wedding Photography, Wedding Photographers, Couples photoshoots, In-Home Photoshoot, Outdoor Photoshoot, Senior Portraits, and Graduation Photoshoot.<span class="more-links" style="display: none;"><a title="Read More about Shutterbomb Creation" href="javascript:void()" onclick="javascript:openFullDescriptionWeb(this)">Read more</a></span></p>
+    </div>
+  </div>
+  <div class="btn-outer">
+    <div class="lt-buttons">
+      <p></p>
+    </div>
+    <div class="rt-buttons">
+      <ul>
+        <li>
+          <div class="click-txt"><a title="Enquire Shutterbomb Creation" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1758795',&quot;Shutterbomb Creation&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1758795');" class="redtxt"><span class="material-icons-outlined">chat</span><b>Enquire Now</b><div class="res-txt">
+                        Responds in 18 mins
+                      </div></a></div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+<div class="single-listing " xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="content-blk"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2023-09-26-03-18-11-201_71.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Createye Photography &amp; Videography in , "></figure><div class="content">
+      <h3><a title="Indian Photography/Video - Createye Photography &amp; Videography" href="/dublin-ca/photography-video/createye-photography-videography-1758802">Createye Photography &amp; Videography</a></h3>
+      <div class="subtitle"><span class="material-icons-outlined">location_on</span><b>Dublin, CA, United States</b></div>
+      <div class="more-detail">
+        <ul>
+          <li>
+            <div class="rating">
+              <div class="sul-rate">2.9</div><b>Sulekha score</b></div>
+          </li>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">work_history</span>
+                          Established Since 2013</div>
+          </li>
+        </ul>
+      </div>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="no-claimed"><span class="material-icons">verified</span><a href="javascript:void(0);" onclick="javascript:openContactForm('1758802','11198557')">Claim the profile</a></div>
+          </li>
+        </ul>
+      </div>
+      <div class="my-serv"><a href="photography-video">Photography/Video:&nbsp;
+                      </a>
+          &nbsp;<a title="Cinematography in Dublin, CA" href="/dublin-ca/cinematography">Cinematography</a>, 
+          &nbsp;<a title="Engagement Photographers in Dublin, CA" href="/dublin-ca/engagement-photographers">Engagement Photographers</a>, 
+          &nbsp;<a title="Event Photographers in Dublin, CA" href="/dublin-ca/event-photographers">Event Photographers</a>, 
+          &nbsp;<a title="Event Videography in Dublin, CA" href="/dublin-ca/event-videography">Event Videography</a>, 
+          &nbsp;<a title="Maternity Photographers in Dublin, CA" href="/dublin-ca/maternity-photographers">Maternity Photographers</a>, 
+          &nbsp;<a title="Nature Photography in Dublin, CA" href="/dublin-ca/nature-photography">Nature Photography</a>, 
+          &nbsp;<a title="Portrait Photographers in Dublin, CA" href="/dublin-ca/portrait-photographers">Portrait Photographers</a>, 
+          &nbsp;<a title="Pre Wedding Photography in Dublin, CA" href="/dublin-ca/pre-wedding-photography">Pre Wedding Photography</a>, 
+          &nbsp;<a title="Wedding Photographers in Dublin, CA" href="/dublin-ca/wedding-photographers">Wedding Photographers</a>, 
+          &nbsp;<a title="Wedding Videographers in Dublin, CA" href="/dublin-ca/wedding-videographers">Wedding Videographers</a><div class="more-links"><a title="View all services offered by Createye Photography &amp; Videography" href="javascript:void()" onclick="javascript:openFullServeWeb(this)">View all</a></div>
+      </div>
+    </div>
+  </div>
+  <div class="det-con">
+    <p><b>Serving ZIP Codes:</b>94568</p>
+    <div class="desc-rev spl-con min-height" id="showFullDescription">
+      <p class="min-height"><b>From the Business:</b>I am one of the most distinguished Photography/Video in Dublin, CA. I specialize in Cinematography, Engagement Photographers, Event Photographers, Event Videography, Maternity Photographers, Nature Photography, Portrait Photographers, Pre Wedding Photography, Wedding Photographers, Wedding VideographersWhen creating a visual story, the images must be unique, creative, and interesting. That is what I strive to achieve through my photography. Nothing feels forced. It’s important to feel like your natural self and if you don’t like having your photo taken, you won’t even know I’m doing it! My main goal is to capture the uniqueness of people and the event. If you have a wedding, I would love to do it. For more details kindly contact us.<span class="more-links" style="display: none;"><a title="Read More about Createye Photography &amp; Videography" href="javascript:void()" onclick="javascript:openFullDescriptionWeb(this)">Read more</a></span></p>
+    </div>
+  </div>
+  <div class="btn-outer">
+    <div class="lt-buttons">
+      <p></p>
+    </div>
+    <div class="rt-buttons">
+      <ul>
+        <li>
+          <div class="click-txt"><a title="Enquire Nayanbiswas" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1758802',&quot;Createye Photography &amp; Videography&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1758802');" class="redtxt"><span class="material-icons-outlined">chat</span><b>Enquire Now</b><div class="res-txt">
+                        Responds in 15 mins
+                      </div></a></div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+<div id="div_viewmore_16" class="view-more-txt" xmlns:xlink="http://www.w3.org/1999/xlink"><a href="javascript:void()" onclick="fnchangeviewmore('17','18','Default','2' ,'viewmore');ga('send','event', 'listingpage', 'sorting', 'default');">View More...</a></div></div>
