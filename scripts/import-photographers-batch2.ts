@@ -17,14 +17,16 @@ interface VendorData {
 function parseHtmlListings(html: string): VendorData[] {
   const vendors: VendorData[] = [];
   
-  const listingRegex = /<div class="single-listing[^"]*"[^>]*>([\s\S]*?)(?=<div class="single-listing|$)/gi;
+  // Try both desktop and mobile listing formats
+  const listingRegex = /<div class="(?:single-listing|mobile-single-listing)[^"]*"[^>]*>([\s\S]*?)(?=<div class="(?:single-listing|mobile-single-listing)|$)/gi;
   let match;
   
   while ((match = listingRegex.exec(html)) !== null) {
     const listing = match[1];
     
     const nameMatch = listing.match(/<h3><a[^>]*>([^<]+)<\/a><\/h3>/i) || 
-                      listing.match(/<h3><a[^>]*title="[^"]*"[^>]*>([^<]+)/i);
+                      listing.match(/<h3><a[^>]*title="[^"]*"[^>]*>([^<]+)/i) ||
+                      listing.match(/<div class="fig-title">[\s\S]*?<h3><a[^>]*>([^<]+)/i);
     const name = nameMatch ? nameMatch[1].replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ').trim() : null;
     if (!name) continue;
     
@@ -128,7 +130,7 @@ async function main() {
   const existingNames = new Set(existingVendors.map(v => v.name.toLowerCase().trim()));
   console.log(`Found ${existingNames.size} existing photographers in database`);
   
-  const htmlPath = path.join(process.cwd(), 'attached_assets/Pasted--div-id-listing-div-xmlns-xlink-http-www-w3-org-1999-xl_1766033545868.txt');
+  const htmlPath = path.join(process.cwd(), 'attached_assets/Pasted--div-id-listing-div-xmlns-xlink-http-www-w3-org-1999-xl_1766033563452.txt');
   const html = fs.readFileSync(htmlPath, 'utf-8');
   
   const parsedVendors = parseHtmlListings(html);
