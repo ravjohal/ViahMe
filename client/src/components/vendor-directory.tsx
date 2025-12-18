@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -81,15 +81,6 @@ const PRICE_RANGES = [
   { value: "$$$$", label: "$$$$ - Luxury" },
 ];
 
-const CITIES = [
-  { value: "all", label: "All Cities" },
-  { value: "San Francisco Bay Area", label: "San Francisco Bay Area" },
-  { value: "New York City", label: "New York City" },
-  { value: "Los Angeles", label: "Los Angeles" },
-  { value: "Chicago", label: "Chicago" },
-  { value: "Seattle", label: "Seattle" },
-];
-
 export function VendorDirectory({
   vendors,
   onSelectVendor,
@@ -103,6 +94,20 @@ export function VendorDirectory({
   const [priceFilter, setPriceFilter] = useState("all");
   const [cityFilter, setCityFilter] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
+
+  const availableCities = useMemo(() => {
+    const citySet = new Set<string>();
+    vendors.forEach(vendor => {
+      if (vendor.city) {
+        citySet.add(vendor.city);
+      }
+    });
+    const cities = Array.from(citySet).sort();
+    return [
+      { value: "all", label: "All Cities" },
+      ...cities.map(city => ({ value: city, label: city }))
+    ];
+  }, [vendors]);
 
   const filteredVendors = vendors.filter((vendor) => {
     // Get human-readable category label for search
@@ -214,7 +219,7 @@ export function VendorDirectory({
                 <SelectValue placeholder="Filter by city" />
               </SelectTrigger>
               <SelectContent>
-                {CITIES.map((city) => (
+                {availableCities.map((city) => (
                   <SelectItem key={city.value} value={city.value}>
                     {city.label}
                   </SelectItem>
@@ -255,7 +260,7 @@ export function VendorDirectory({
                   onClick={() => setCityFilter("all")}
                   data-testid="badge-city-filter"
                 >
-                  {CITIES.find((c) => c.value === cityFilter)?.label}
+                  {availableCities.find((c) => c.value === cityFilter)?.label}
                   <span className="ml-2">×</span>
                 </Badge>
               )}
