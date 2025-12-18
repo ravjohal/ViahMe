@@ -19,7 +19,8 @@ interface VendorData {
 function parseHtmlListings(html: string): VendorData[] {
   const vendors: VendorData[] = [];
   
-  const parts = html.split('<div class="single-listing ">');
+  // Handle both patterns: with and without xmlns:xlink attribute
+  const parts = html.split(/<div class="single-listing "\s*(?:xmlns:xlink="[^"]*")?>/i);
   
   for (let i = 1; i < parts.length; i++) {
     const listing = parts[i];
