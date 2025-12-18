@@ -268,9 +268,12 @@ function AppLayout() {
   
   // Hide header on auth pages, guest websites, and vendor pages (vendors have their own header)
   const isVendorPage = location.startsWith("/vendor-");
+  // Hide header on /vendors page for non-logged-in users (they see logo-only header from vendors.tsx)
+  const isPublicVendorsPage = location === "/vendors" && !user;
   const hideHeader = authPages.includes(location) || 
                      location.startsWith("/wedding/") ||
-                     isVendorPage;
+                     isVendorPage ||
+                     isPublicVendorsPage;
   
   return (
     <div className="min-h-screen bg-background">
