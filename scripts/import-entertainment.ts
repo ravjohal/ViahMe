@@ -18,7 +18,8 @@ interface VendorData {
 function parseHtmlListings(html: string): VendorData[] {
   const vendors: VendorData[] = [];
   
-  const parts = html.split('<div class="mobile-single-listing">');
+  // Split on mobile-single-listing with optional xmlns:xlink attribute
+  const parts = html.split(/<div class="mobile-single-listing"(?:\s+xmlns:xlink="[^"]*")?>/i);
   
   for (let i = 1; i < parts.length; i++) {
     const listing = parts[i];
@@ -113,7 +114,9 @@ async function main() {
   console.log(`Found ${existingNames.size} existing entertainment vendors in database`);
   
   const htmlPath = path.join(process.cwd(), 'attached_assets/Pasted--div-id-listing-div-xmlns-xlink-http-www-w3-org-1999-xl_1766080358743.txt');
-  const html = fs.readFileSync(htmlPath, 'utf-8');
+  let html = fs.readFileSync(htmlPath, 'utf-8');
+  // Normalize whitespace to handle multi-line HTML
+  html = html.replace(/\n/g, ' ').replace(/\s+/g, ' ');
   
   const parsedVendors = parseHtmlListings(html);
   console.log(`Parsed ${parsedVendors.length} vendors from HTML`);
