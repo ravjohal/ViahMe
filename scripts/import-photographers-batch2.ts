@@ -130,7 +130,7 @@ async function main() {
   const existingNames = new Set(existingVendors.map(v => v.name.toLowerCase().trim()));
   console.log(`Found ${existingNames.size} existing photographers in database`);
   
-  const htmlPath = path.join(process.cwd(), 'attached_assets/Pasted--div-id-listing-div-xmlns-xlink-http-www-w3-org-1999-xl_1766033563452.txt');
+  const htmlPath = path.join(process.cwd(), 'attached_assets/Pasted--div-id-listing-div-xmlns-xlink-http-www-w3-org-1999-xl_1766033585580.txt');
   const html = fs.readFileSync(htmlPath, 'utf-8');
   
   const parsedVendors = parseHtmlListings(html);
