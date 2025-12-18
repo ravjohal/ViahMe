@@ -20,8 +20,8 @@ interface VendorData {
 function parseHtmlListings(html: string): VendorData[] {
   const vendors: VendorData[] = [];
   
-  // Split on single-listing divs (Bay Area format)
-  const parts = html.split(/<div class="single-listing\s*">/i);
+  // Split on single-listing divs (Bay Area format) - handle newlines before closing >
+  const parts = html.split(/<div class="single-listing\s*/i);
   
   for (let i = 1; i < parts.length; i++) {
     const listing = parts[i];
