@@ -1,0 +1,613 @@
+<div id="listing_div" xmlns:xlink="http://www.w3.org/1999/xlink"><input type="hidden" id="hdn_onetimecookie" value="1798285" name="hdn_onetimecookie" xmlns:xlink="http://www.w3.org/1999/xlink"><div class="common-promo-blk" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="promote">Ad</div><article id="div_promotionads" class="owl-carousel owl-theme" style="opacity: 1; display: block;"><div class="owl-wrapper-outer"><div class="owl-wrapper" style="width: 1352px; left: 0px; display: block;"><div class="owl-item" style="width: 676px;"><div class="item">
+      <div class="listing-column">
+        <div class="single-promo">
+          <h3><a title="Photography/Video - Creations By Sam Wedding And Events Photographer" href="https://us.sulekha.com/san-jose-ca/photography-video/creations-by-sam-697565">Creations By Sam Wedding And Events Photographer</a></h3>
+          <div class="city-txt"><span class="material-icons-outlined">location_on</span><b>
+                      Serving in Sacramento, CA</b></div>
+          <div class="my-serv"><span class="material-icons-outlined">work_outline</span>Services:&nbsp;
+            <a title="Candid Photography in Sacramento, CA" href="/sacramento-ca/candid-photography">Candid Photography</a><a title="+14 more services from Creations By Sam Wedding And Events Photographer" href="https://us.sulekha.com/san-jose-ca/photography-video/creations-by-sam-697565#services">
+                + 14 more</a></div>
+          <div class="more-detail">
+            <ul>
+              <li>
+                <div class="rating"><a title="View all reviews" href="https://us.sulekha.com/san-jose-ca/photography-video/creations-by-sam-697565#reviews">5<span class="material-icons-outlined">star</span></a><b>239 Reviews
+                          </b></div>
+              </li>
+              <li>
+                <div class="rating">
+                  <div class="sul-rate">9.5</div><b>Sulekha score</b></div>
+              </li>
+            </ul>
+          </div>
+          <div class="btn-outer">
+            <ul class="">
+              <li><a title="Enquire Creations By Sam Wedding And Events Photographer" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '697565',&quot;Creations By Sam Wedding And Events Photographer&quot;);gaclicktrack('send','event', 'Promoted Ad','Enquire Now', '697565');" class="red-but"><b>Enquire Now</b></a></li>
+              <li><a title="Call Creations By Sam Wedding And Events Photographer" href="javascript:void(0);" onclick="javascript:openphoneConnect('Creations By Sam Wedding And Events Photographer','96497','6172998445');"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+                      <path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+                    </svg></span><b>Call</b></a></li>
+              <li><a title="Connect via Whatsapp" href="javascript:void()" onclick="Before_openEnquiryModal('2','697565',&quot;Creations By Sam Wedding And Events Photographer&quot;);gaclicktrack('send','event', 'Promoted Ad-Whatsapp Chat','Whatsapp', '697565');" class="whatsapp"><span><svg class="svg-inline--fa fa-whatsapp fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="whatsapp" role="img" viewBox="0 0 448 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+                      <path fill="currentColor" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"></path>
+                    </svg></span></a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div></div></div></div><div class="owl-controls" style="display: none;"><div class="owl-buttons"><div class="owl-prev"><span class="material-icons-outlined">chevron_left</span></div><div class="owl-next"><span class="material-icons-outlined">chevron_right</span></div></div></div></article></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2024-09-24-02-20-50-341_4.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Creations By Sam Wedding And Events Photographer in Sacramento, CA"></figure><div class="content "><h3><a title="Indian Photography/Video - Creations By Sam Wedding And Events Photographer" href="/san-jose-ca/photography-video/creations-by-sam-697565">Creations By Sam Wedding And Events Photographer</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>
+Serving customers in  Sacramento Area</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">call</span><a title="Call Creations By Sam Wedding And Events Photographer" href="javascript:void(0);" onclick="javascript:openphoneConnect('Creations By Sam Wedding And Events Photographer','96497','6172998445');"><b>617-299-8445</b></a><i>
+(pin:96497)
+</i></div><div class="experience"><span class="material-icons-outlined">work_history</span>25 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/san-jose-ca/photography-video/creations-by-sam-697565#reviews">5<span class="material-icons-outlined">star</span></a><b>239
+Reviews</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">9.5<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-trust"><ul><li>
+<div class="trust"><a href="javascript:void(0);" onclick="javascript:openSULTrust();" title="This business Information is been trusted based on users ratings and reviews."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-29-54-504.svg"></span>Trust</a></div></li><li>
+<div class="verified"><a href="javascript:void(0);" onclick="javascript:openSULVerified();" title="This business Information is verified by Sulekha."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-57-40-539.svg"></span>Verified</a></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="wedding-photographers">Wedding Photographers:</a></b><span>Wedding and Reception photography</span>, <span>Wedding and Reception videography</span>, <span>On-Location Studio Photography</span>, <span>Engagement Photography</span></div><div class="more-links" style="display: none;"><a title="View all services offered by Creations By Sam Wedding And Events Photographer" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p></p><p>Hi! I&amp;rsquo;m Sameer &amp;mdash; a wedding and event photographer based in San Jose, traveling as far as your love story and family legacy will take us.</p><p>With three decades behind the lens and a heritage rooted in South Asia, our team has documented countless unions &amp;mdash; especially within the Indian community. We gently bridge cultures and languages, honoring sacred rituals and fleeting moments.</p><p>My team is your one stop shop for your Wedding, Engagement Photography, Videography, Drone and Livestreaming coverages. We employ both journalistic and traditional styles using DSLR, HDCam and Drone cameras for all occasions in standard HD and 4K quality. Our experience in Indian customs (from all regions) and traditional American Weddings gives our team a unique blend of cultural knowledge which is very valuable to our clients. We are also very experienced in providing coverage for Family Portraits, Corporate events, Stage Shows, Arangetram and other events.</p><p>Please see our reels, posts or read our testimonials or watch the Live testimonial on our website.</p><p>Instagram: https://www.instagram.com/creationsbysamphotography?igsh=ZGNjOWZkYTE3MQ==</p><p>&amp;amp;&amp;nbsp;</p><p>Google Reviews from our past clients: https://shorturl.at/Kd4Co</p><p>To discuss details text or call us at 408-605-1817</p><p>or</p><p>Please provide following information, so we can provide you an accurate quote:</p><p>1. What type of event</p><p>2. Exact Date &amp;amp; timings</p><p>3. Event location&amp;nbsp;</p><p>4. How many guests</p><p>5. What services do you want Photography, Videography and Livestreaming?</p><span class="more-links"><a title="Read More about Creations By Sam Wedding And Events Photographer" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span><p></p></div><div class="btn-outer"><ul class=""><li><a title="Call Creations By Sam Wedding And Events Photographer" href="javascript:void(0);" onclick="javascript:openphoneConnect('Creations By Sam Wedding And Events Photographer','96497','6172998445');" class="red-but"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+</svg></span><b>Call</b></a></li><li><a title="Enquire Creations By Sam" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '697565',&quot;Creations By Sam Wedding And Events Photographer&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '697565');"><b>Enquire Now</b></a></li><li><a title="WhatsApp Creations By Sam" href="javascript:void()" onclick="Before_openEnquiryModal('2','697565',&quot;Creations By Sam Wedding And Events Photographer&quot;);gaclicktrack('send','event', 'Response-Whatsapp Chat','Whatsapp', '697565');" class="whatsapp"><span><svg class="svg-inline--fa fa-whatsapp fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="whatsapp" role="img" viewBox="0 0 448 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"></path>
+</svg></span></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2024-01-25-12-11-28-186_88.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Pratiksoni Photography in Sacramento, CA"></figure><div class="content "><h3><a title="Indian Photography/Video - Pratiksoni Photography" href="/pleasanton-ca/photography-video/pratiksoni-photography-1793457">Pratiksoni Photography</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>
+Serving customers in  Sacramento Area</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">call</span><a title="Call Pratiksoni Photography" href="javascript:void(0);" onclick="javascript:openphoneConnect('Pratiksoni Photography','66343','4692995886');"><b>469-299-5886</b></a><i>
+(pin:66343)
+</i></div><div class="experience"><span class="material-icons-outlined">work_history</span>16 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating">
+<div class="sul-rate">5.3<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-trust"><ul><li>
+<div class="trust"><a href="javascript:void(0);" onclick="javascript:openSULTrust();" title="This business Information is been trusted based on users ratings and reviews."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-29-54-504.svg"></span>Trust</a></div></li><li>
+<div class="verified"><a href="javascript:void(0);" onclick="javascript:openSULVerified();" title="This business Information is verified by Sulekha."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-57-40-539.svg"></span>Verified</a></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="photography-video">Photography/Video:</a></b>
+<a title="Baby Shower Photographers in Pleasanton, CA" href="/pleasanton-ca/baby-shower-photographers">Baby Shower Photographers</a>, <a title="Birthday Party Photographers in Pleasanton, CA" href="/pleasanton-ca/birthday-party-photographers">Birthday Party Photographers</a>, <a title="Boudoir Photography in Pleasanton, CA" href="/pleasanton-ca/boudoir-photography">Boudoir Photography</a>, <a title="Candid Photography in Pleasanton, CA" href="/pleasanton-ca/candid-photography">Candid Photography</a>, <a title="Cinematography in Pleasanton, CA" href="/pleasanton-ca/cinematography">Cinematography</a>, <a title="Digital Photography in Pleasanton, CA" href="/pleasanton-ca/digital-photography">Digital Photography</a>, <a title="Engagement Photographers in Pleasanton, CA" href="/pleasanton-ca/engagement-photographers">Engagement Photographers</a>, <a title="Event Photographers in Pleasanton, CA" href="/pleasanton-ca/event-photographers">Event Photographers</a>, <a title="Event Videography in Pleasanton, CA" href="/pleasanton-ca/event-videography">Event Videography</a>, <a title="Family Photographers in Pleasanton, CA" href="/pleasanton-ca/family-photographers">Family Photographers</a>, <a title="Freelance Photographers in Pleasanton, CA" href="/pleasanton-ca/freelance-photographers">Freelance Photographers</a>, <a title="Landscape Photography in Pleasanton, CA" href="/pleasanton-ca/landscape-photography">Landscape Photography</a>, <a title="Maternity Photographers in Pleasanton, CA" href="/pleasanton-ca/maternity-photographers">Maternity Photographers</a>, <a title="Motion Photography in Pleasanton, CA" href="/pleasanton-ca/motion-photography">Motion Photography</a>, <a title="Nature Photography in Pleasanton, CA" href="/pleasanton-ca/nature-photography">Nature Photography</a>, <a title="Newborn Photographers in Pleasanton, CA" href="/pleasanton-ca/newborn-photographers">Newborn Photographers</a>, <a title="Party Photographers in Pleasanton, CA" href="/pleasanton-ca/party-photographers">Party Photographers</a>, <a title="Pet Photography in Pleasanton, CA" href="/pleasanton-ca/pet-photography">Pet Photography</a>, <a title="Portrait Photographers in Pleasanton, CA" href="/pleasanton-ca/portrait-photographers">Portrait Photographers</a>, <a title="Pre Wedding Photography in Pleasanton, CA" href="/pleasanton-ca/pre-wedding-photography">Pre Wedding Photography</a>, <a title="Product Photography in Pleasanton, CA" href="/pleasanton-ca/product-photography">Product Photography</a>, <a title="Prom Photography in Pleasanton, CA" href="/pleasanton-ca/prom-photography">Prom Photography</a>, <a title="Real Estate Photography in Pleasanton, CA" href="/pleasanton-ca/real-">Real Estate Photography</a></div><div class="more-links" style="display: none;"><a title="View all services offered by Pratiksoni Photography" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>Pratiksoni Photography, When creating a visual story, the images must be unique, creative, and interesting. That is what I strive to achieve through my photography. Nothing feels forced. It’s important to feel like your natural self and if you don’t like having your photo taken, you won’t even know I’m doing it! My main goal is to capture the uniqueness of people and the event. If you have a wedding, I would love to do. <span class="more-links"><a title="Read More about Pratiksoni Photography" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class=""><li><a title="Call Pratiksoni Photography" href="javascript:void(0);" onclick="javascript:openphoneConnect('Pratiksoni Photography','66343','4692995886');" class="red-but"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+</svg></span><b>Call</b></a></li><li><a title="Enquire Pratik Soni" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1793457',&quot;Pratiksoni Photography&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1793457');"><b>Enquire Now</b></a></li><li><a title="WhatsApp Pratik Soni" href="javascript:void()" onclick="Before_openEnquiryModal('2','1793457',&quot;Pratiksoni Photography&quot;);gaclicktrack('send','event', 'Response-Whatsapp Chat','Whatsapp', '1793457');" class="whatsapp"><span><svg class="svg-inline--fa fa-whatsapp fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="whatsapp" role="img" viewBox="0 0 448 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"></path>
+</svg></span></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2022-07-19-09-26-11-547_41.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Silicon Photography in Sacramento, CA"></figure><div class="content "><h3><a title="Indian Photography/Video - Silicon Photography" href="/san-jose-ca/photography-video/silicon-photography-616819">Silicon Photography</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>
+Serving customers in  Sacramento Area</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/san-jose-ca/photography-video/silicon-photography-616819#reviews">5<span class="material-icons-outlined">star</span></a><b>4
+Reviews</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">9.5<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-trust"><ul><li>
+<div class="trust"><a href="javascript:void(0);" onclick="javascript:openSULTrust();" title="This business Information is been trusted based on users ratings and reviews."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-29-54-504.svg"></span>Trust</a></div></li><li>
+<div class="verified"><a href="javascript:void(0);" onclick="javascript:openSULVerified();" title="This business Information is verified by Sulekha."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-57-40-539.svg"></span>Verified</a></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="wedding-photographers">Wedding Photographers:</a></b><span>Cinematic Photography</span>, <span>Business/House Warming</span>, <span>Engagement</span>, <span>Private Party</span>, <span>Portraiture</span>, <span>Kids Portfolio</span>, <span>Get Together Parties</span>, <span>Fashion and Art</span>, <span>College Functions</span>, <span>Seminars and Business Meets</span>, <span>Nature</span>, <span>Industrial</span>, <span>Special Event</span>, <span>Wedding Event</span>, <span>Matrimonial</span>, <span>Portrait</span>, <span>High School Senior Portraits</span>, <span>Graduation Ceremony</span>, <span>Cultural Events</span>, <span>Photo</span>, <span>School events</span>, <span>Freelance Photography</span>, <span>Newborn Photography</span>, <span>Freelancer</span>, <span>Engagement Photography</span>, <span>Business Head-Shots</span>, <span>Maternity Pictures</span>, <span>Baby Portraits</span>, <span>Classical Dance Portraits</span>, <span>Aerial Photography</span>, <span>Engagement Portraits</span>, <span>Vertical Photography</span>, <span>Places Photography</span></div><div class="more-links" style="display: none;"><a title="View all services offered by Silicon Photography" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p></p><p>Silicon Photography delivers polished photography and videography for weddings, family events, and corporate functions across San Jose and the Bay Area. The team blends creative framing with clean, true-to-life color so your photos feel natural and timeless. From intimate ceremonies to large-scale celebrations, they plan each shoot carefully—scouting angles, managing lighting, and capturing candid emotions alongside must-have portraits.</p><p>
+Specialties include wedding coverage (with experience in South-Asian rituals like Mehandi, Haldi, Sangeet, and Reception), event films in 4K, and professional headshots/brand imagery for businesses. You can add drone visuals, cinematic highlights, and documentary-style edits to tell the full story of your day. Post-production is handled in-house for consistent quality, delivering crisp images and smooth, well-paced videos. .</p><p>
+Clients receive high-resolution digital files with options for custom albums, wall prints, and quick shareable reels. Booking is straightforward: check availability, discuss your timeline and shot list, and confirm the package that fits your goals and budget. If you want dependable coverage that balances artistry with clear communication, Silicon Photography is a strong choice for turning real moments into lasting visuals. .</p><span class="more-links"><a title="Read More about Silicon Photography" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span><p></p></div><div class="btn-outer"><ul class=""><li><a title="Call Silicon Photography" href="tel:+14085799135" class="red-but"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+</svg></span><b>Call</b></a></li><li><a title="Enquire Siva Dhanasekaran" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '616819',&quot;Silicon Photography&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '616819');"><b>Enquire Now</b></a></li><li><a title="WhatsApp Siva Dhanasekaran" href="javascript:void()" onclick="Before_openEnquiryModal('2','616819',&quot;Silicon Photography&quot;);gaclicktrack('send','event', 'Response-Whatsapp Chat','Whatsapp', '616819');" class="whatsapp"><span><svg class="svg-inline--fa fa-whatsapp fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="whatsapp" role="img" viewBox="0 0 448 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"></path>
+</svg></span></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2024-09-01-02-43-36-717_16.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Two Souls And Beyond in Sacramento, CA"></figure><div class="content "><h3><a title="Indian Photography/Video - Two Souls And Beyond" href="/sacramento-ca/photography-video/two-souls-and-beyond-1061054">Two Souls And Beyond</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>Sacramento, CA, USA</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">work_history</span>
+Established Since 2012</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/sacramento-ca/photography-video/two-souls-and-beyond-1061054#reviews">5<span class="material-icons-outlined">star</span></a><b>10
+Reviews</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">3.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="photography-video">Photography/Video:</a></b>
+<a title="Engagement Photographers in Sacramento, CA" href="/sacramento-ca/engagement-photographers">Engagement Photographers</a>, <a title="Event Photographers in Sacramento, CA" href="/sacramento-ca/event-photographers">Event Photographers</a>, <a title="Event Videography in Sacramento, CA" href="/sacramento-ca/event-videography">Event Videography</a>, <a title="Pre Wedding Photography in Sacramento, CA" href="/sacramento-ca/pre-wedding-photography">Pre Wedding Photography</a>, <a title="Wedding Photographers in Sacramento, CA" href="/sacramento-ca/wedding-photographers">Wedding Photographers</a>, <a title="Wedding Videographers in Sacramento, CA" href="/sacramento-ca/wedding-videographers">Wedding Videographers</a></div><div class="more-links" style="display: none;"><a title="View all services offered by Two Souls And Beyond" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>We at Two Souls and Beyond specialize in intimate weddings, choosing to focus on a select number each year so we can pour our hearts into telling your story. For us, it’s not just about the pictures; it’s about creating a narrative that you and your loved ones will cherish forever.
+Every wedding is a unique chapter in a couple's life, and our aim is to document it with honesty, warmth, and a sense of adventure. Whether we're traveling to a serene beachside or an enchanting hilltop, we immerse ourselves in the experience to ensure that every frame is a reflection of the true essence of your day.
+We see ourselves as more than just photographers. We’re memory-keepers, adventurers, and most importantly, storytellers. We can’t wait to embark on this journey with you and create something beautiful together. Get in touch!<span class="more-links"><a title="Read More about Two Souls And Beyond" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class=""><li><a href="javascript:void(0);" onclick="Before_openEnquiryModal('3' , '1061054',&quot;Two Souls And Beyond&quot;);gaclicktrack('send','event', 'Response-show Number', 'Show number', '1061054');" class="red-but"><b>Show Number</b></a></li><li><a title="Enquire Bharat Gudala" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1061054',&quot;Two Souls And Beyond&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1061054');"><b>Enquire Now</b></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2024-02-20-11-47-17-799_819.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="415Headshots Inc. in Sacramento, CA"></figure><div class="content "><h3><a title="Indian Photography/Video - 415Headshots Inc." href="/sacramento-ca/photography-video/415headshots-inc-1801178">415Headshots Inc.</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>1812 J Street Suite 21</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating">
+<div class="sul-rate">2.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="photography-video">Photography/Video:</a></b>
+<a title="Candid Photography in Sacramento, CA" href="/sacramento-ca/candid-photography">Candid Photography</a>, <a title="Digital Photography in Sacramento, CA" href="/sacramento-ca/digital-photography">Digital Photography</a>, <a title="Pre Wedding Photography in Sacramento, CA" href="/sacramento-ca/pre-wedding-photography">Pre Wedding Photography</a>, <a title="Wedding Photographers in Sacramento, CA" href="/sacramento-ca/wedding-photographers">Wedding Photographers</a>, <a title="Product Photography in Sacramento, CA" href="/sacramento-ca/product-photography">Product Photography</a>, <a title="Engagement Photographers in Sacramento, CA" href="/sacramento-ca/engagement-photographers">Engagement Photographers</a>, <a title="Baby Shower Photographers in Sacramento, CA" href="/sacramento-ca/baby-shower-photographers">Baby Shower Photographers</a>, <a title="Party Photographers in Sacramento, CA" href="/sacramento-ca/party-photographers">Party Photographers</a>, <a title="Maternity Photographers in Sacramento, CA" href="/sacramento-ca/maternity-photographers">Maternity Photographers</a>, <a title="Wedding Videographers in Sacramento, CA" href="/sacramento-ca/wedding-videographers">Wedding Videographers</a>, <a title="Family Photographers in Sacramento, CA" href="/sacramento-ca/family-photographers">Family Photographers</a>, <a title="Portrait Photographers in Sacramento, CA" href="/sacramento-ca/portrait-photographers">Portrait Photographers</a>, <a title="Newborn Photographers in Sacramento, CA" href="/sacramento-ca/newborn-photographers">Newborn Photographers</a>, <a title="Birthday Party Photographers in Sacramento, CA" href="/sacramento-ca/birthday-party-photographers">Birthday Party Photographers</a>, <a title="Event Photographers in Sacramento, CA" href="/sacramento-ca/event-photographers">Event Photographers</a>, <a title="Studio Photography in Sacramento, CA" href="/sacramento-ca/studio-photography">Studio Photography</a>, <a title="Real Estate Photography in Sacramento, CA" href="/sacramento-ca/real-estate-photography">Real Estate Photography</a>, <a title="Pet Photography in Sacramento, CA" href="/sacramento-ca/pet-photography">Pet Photography</a>, <a title="Landscape Photography in Sacramento, CA" href="/sacramento-ca/landscape-photography">Landscape Photography</a>, <a title="Travel Photographers in Sacramento, CA" href="/sacramento-ca/travel-photographers">Travel Photographers</a>, <a title="Motion Photography in Sacramento, CA" href="/sacramento-ca/motion-photography">Motion Photography</a>, <a title="Freelance Photographers in Sacramento, CA" href="/sacramento-ca/freelance-photogra">Freelance Photographers</a></div><div class="more-links" style="display: none;"><a title="View all services offered by 415Headshots Inc." href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>We are one of the most distinguished photography and videography agency in the greater Sacramento and San Francisco Bay Area. We've worked with Fortune 500 companies, corporate events, publications, weddings, events, and more.
+Our team of photographers and videographers specialize in event videography, baby shower photography, birthday party photography, boudoir photography, candid photography, cinematography, digital photography, engagement photography,Event Photographers,Family Photographers,Freelance Photographers,Landscape Photography,Maternity Photographers,Motion Photography,Nature Photography,Newborn Photographers,Party Photographers,Pet Photography,Portrait Photographers,Pre Wedding Photography,Product Photography,Prom Photography,Real Estate Photography,Studio Photography,Travel Photographers,Wedding Photographers,Wedding Videographers<span class="more-links"><a title="Read More about 415Headshots Inc." href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class="double-link"><li><a href="javascript:void(0);" onclick="Before_openEnquiryModal('3' , '1801178',&quot;415Headshots Inc.&quot;);gaclicktrack('send','event', 'Response-show Number', 'Show number', '1801178');" class="red-but"><b>Show Number</b></a></li><li><a title="Enquire Jasmeet Singh" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1801178',&quot;415Headshots Inc.&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1801178');"><b>Enquire Now</b></a></li></ul></div></div><input type="hidden" id="hdn_onetimecookie" value="9500,492838,1881" name="hdn_onetimecookie" xmlns:xlink="http://www.w3.org/1999/xlink"><div class="common-promo-blk sponsored" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="sponsored">New Business</div><article id="div_newbusiness" class="owl-carousel owl-theme" style="opacity: 1; display: block;"><div class="owl-wrapper-outer"><div class="owl-wrapper" style="width: 4056px; left: 0px; display: block; transition: 800ms; transform: translate3d(-676px, 0px, 0px);"><div class="owl-item" style="width: 676px;"><div class="item">
+      <div class="listing-column">
+        <div class="single-promo">
+          <div class="con-image"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2024-09-24-02-20-50-341_4.jpg" onerror="this.src='https://d3aew4oo17ml6.cloudfront.net/common/images/usprime/common-listing-back.jpg'" alt="Creations By Sam Wedding And Events Photographer"></figure><h3><a title="Photography/Video - Creations By Sam Wedding And Events Photographer" href="/san-jose-ca/photography-video/creations-by-sam-697565">Creations By Sam Wedding And Events Photographer</a></h3>
+          </div>
+          <div class="city-txt"><span class="material-icons-outlined">location_on</span><b>
+                      Serving in Sacramento, CA</b></div>
+          <div class="my-serv"><span class="material-icons-outlined">work_outline</span>Services:&nbsp;
+            <a title="Wedding Photographers in Sacramento,CA" href="/sacramento-ca/wedding-photographers">Wedding Photographers</a><a title="+14 more services from Creations By Sam Wedding And Events Photographer" href="/san-jose-ca/photography-video/creations-by-sam-697565#services">
+                + 14 more</a></div>
+          <div class="more-detail">
+            <ul>
+              <li>
+                <div class="rating"><a title="View all reviews" href="/san-jose-ca/photography-video/creations-by-sam-697565#reviews">5<span class="material-icons-outlined">star</span></a><b>239 Reviews
+                          </b></div>
+              </li>
+              <li>
+                <div class="rating">
+                  <div class="sul-rate">9.5</div><b>Sulekha score</b></div>
+              </li>
+            </ul>
+          </div>
+          <div class="btn-outer">
+            <ul class="">
+              <li><a title="Enquire Creations By Sam Wedding And Events Photographer" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '697565',&quot;Creations By Sam Wedding And Events Photographer&quot;);gaclicktrack('send','event', 'Promoted Ad','Enquire Now', '697565');" class="red-but"><b>Enquire Now</b></a></li>
+              <li><a title="Call Creations By Sam Wedding And Events Photographer" href="javascript:void(0);" onclick="javascript:openphoneConnect('Creations By Sam Wedding And Events Photographer','96497','6172998445');"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+                      <path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+                    </svg></span><b>Call</b></a></li>
+              <li><a title="Connect via Whatsapp" href="javascript:void()" onclick="Before_openEnquiryModal('2','697565',&quot;Creations By Sam Wedding And Events Photographer&quot;);gaclicktrack('send','event', 'Promoted Ad-Whatsapp Chat','Whatsapp', '697565');" class="whatsapp"><span><svg class="svg-inline--fa fa-whatsapp fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="whatsapp" role="img" viewBox="0 0 448 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+                      <path fill="currentColor" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"></path>
+                    </svg></span></a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div></div><div class="owl-item" style="width: 676px;"><div class="item">
+      <div class="listing-column">
+        <div class="single-promo">
+          <div class="con-image"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2024-01-25-12-11-28-186_88.jpg" onerror="this.src='https://d3aew4oo17ml6.cloudfront.net/common/images/usprime/common-listing-back.jpg'" alt="Pratiksoni Photography"></figure><h3><a title="Photography/Video - Pratiksoni Photography" href="/pleasanton-ca/photography-video/pratiksoni-photography-1793457">Pratiksoni Photography</a></h3>
+          </div>
+          <div class="city-txt"><span class="material-icons-outlined">location_on</span><b>
+                      Serving in Sacramento, CA</b></div>
+          <div class="my-serv"><span class="material-icons-outlined">work_outline</span>Services:&nbsp;
+            <a title="Wedding Photographers in Sacramento,CA" href="/sacramento-ca/wedding-photographers">Wedding Photographers</a><a title="+26 more services from Pratiksoni Photography" href="/pleasanton-ca/photography-video/pratiksoni-photography-1793457#services">
+                + 26 more</a></div>
+          <div class="more-detail">
+            <ul>
+              <li>
+                <div class="rating">
+                  <div class="sul-rate">5.3</div><b>Sulekha score</b></div>
+              </li>
+            </ul>
+          </div>
+          <div class="btn-outer">
+            <ul class="">
+              <li><a title="Enquire Pratiksoni Photography" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1793457',&quot;Pratiksoni Photography&quot;);gaclicktrack('send','event', 'Promoted Ad','Enquire Now', '1793457');" class="red-but"><b>Enquire Now</b></a></li>
+              <li><a title="Call Pratiksoni Photography" href="javascript:void(0);" onclick="javascript:openphoneConnect('Pratiksoni Photography','66343','4692995886');"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+                      <path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+                    </svg></span><b>Call</b></a></li>
+              <li><a title="Connect via Whatsapp" href="javascript:void()" onclick="Before_openEnquiryModal('2','1793457',&quot;Pratiksoni Photography&quot;);gaclicktrack('send','event', 'Promoted Ad-Whatsapp Chat','Whatsapp', '1793457');" class="whatsapp"><span><svg class="svg-inline--fa fa-whatsapp fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="whatsapp" role="img" viewBox="0 0 448 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+                      <path fill="currentColor" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"></path>
+                    </svg></span></a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div></div><div class="owl-item" style="width: 676px;"><div class="item">
+      <div class="listing-column">
+        <div class="single-promo">
+          <div class="con-image"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2022-07-19-09-26-11-547_41.jpg" onerror="this.src='https://d3aew4oo17ml6.cloudfront.net/common/images/usprime/common-listing-back.jpg'" alt="Silicon Photography"></figure><h3><a title="Photography/Video - Silicon Photography" href="/san-jose-ca/photography-video/silicon-photography-616819">Silicon Photography</a></h3>
+          </div>
+          <div class="city-txt"><span class="material-icons-outlined">location_on</span><b>
+                      Serving in Sacramento, CA</b></div>
+          <div class="my-serv"><span class="material-icons-outlined">work_outline</span>Services:&nbsp;
+            <a title="Wedding Photographers in Sacramento,CA" href="/sacramento-ca/wedding-photographers">Wedding Photographers</a><a title="+20 more services from Silicon Photography" href="/san-jose-ca/photography-video/silicon-photography-616819#services">
+                + 20 more</a></div>
+          <div class="more-detail">
+            <ul>
+              <li>
+                <div class="rating"><a title="View all reviews" href="/san-jose-ca/photography-video/silicon-photography-616819#reviews">5<span class="material-icons-outlined">star</span></a><b>4 Reviews
+                          </b></div>
+              </li>
+              <li>
+                <div class="rating">
+                  <div class="sul-rate">9.5</div><b>Sulekha score</b></div>
+              </li>
+            </ul>
+          </div>
+          <div class="btn-outer">
+            <ul class="double-link">
+              <li><a title="Enquire Silicon Photography" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '616819',&quot;Silicon Photography&quot;);gaclicktrack('send','event', 'Promoted Ad','Enquire Now', '616819');" class="red-but"><b>Enquire Now</b></a></li>
+              <li><a title="Connect via Whatsapp" href="javascript:void()" onclick="Before_openEnquiryModal('2','616819',&quot;Silicon Photography&quot;);gaclicktrack('send','event', 'Promoted Ad-Whatsapp Chat','Whatsapp', '616819');" class="whatsapp"><span><svg class="svg-inline--fa fa-whatsapp fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="whatsapp" role="img" viewBox="0 0 448 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+                      <path fill="currentColor" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"></path>
+                    </svg></span><b>Whatsapp</b></a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div></div></div></div>
+    
+    <div class="owl-controls"><div class="owl-buttons"><div class="owl-prev"><svg class="svg-inline--fa fa-arrow-left" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-left" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" data-fa-i2svg=""><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"></path></svg><!-- <i class="fa fa-arrow-left"></i> Font Awesome fontawesome.com --></div><div class="owl-next"><svg class="svg-inline--fa fa-arrow-right" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-right" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" data-fa-i2svg=""><path fill="currentColor" d="M438.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L338.8 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l306.7 0L233.4 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l160-160z"></path></svg><!-- <i class="fa fa-arrow-right"></i> Font Awesome fontawesome.com --></div></div></div></article></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg" alt="Hershey K Photography in Sacramento, CA"></figure><div class="content "><h3><a title="Indian Photography/Video - Hershey K Photography" href="/sacramento-ca/photography-video/hershey-k-photography-1470107">Hershey K Photography</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>Sacramento</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating">
+<div class="sul-rate">3.4<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="photography-video">Photography/Video:</a></b>
+<a title="Candid Photography in Sacramento, CA" href="/sacramento-ca/candid-photography">Candid Photography</a>, <a title="Digital Photography in Sacramento, CA" href="/sacramento-ca/digital-photography">Digital Photography</a>, <a title="Engagement Photographers in Sacramento, CA" href="/sacramento-ca/engagement-photographers">Engagement Photographers</a>, <a title="Event Photographers in Sacramento, CA" href="/sacramento-ca/event-photographers">Event Photographers</a>, <a title="Family Photographers in Sacramento, CA" href="/sacramento-ca/family-photographers">Family Photographers</a>, <a title="Freelance Photographers in Sacramento, CA" href="/sacramento-ca/freelance-photographers">Freelance Photographers</a>, <a title="Portrait Photographers in Sacramento, CA" href="/sacramento-ca/portrait-photographers">Portrait Photographers</a>, <a title="Pre Wedding Photography in Sacramento, CA" href="/sacramento-ca/pre-wedding-photography">Pre Wedding Photography</a>, <a title="Travel Photographers in Sacramento, CA" href="/sacramento-ca/travel-photographers">Travel Photographers</a>, <a title="Wedding Photographers in Sacramento, CA" href="/sacramento-ca/wedding-photographers">Wedding Photographers</a></div><div class="more-links" style="display: none;"><a title="View all services offered by Hershey K Photography" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>I am one of the most distinguished Photography/Video in Sacramento, CA. I found photography as a long lost calling, being able to capture moments as they are and emotions that come with them. I truly fell in love with photography when I saw the happiness it brought to not only me, but my family and friends as well. I knew I had found my passion when I was able to capture such a wide range of emotions with just one click of a button, which allowed others to cherish that moment for a lifetime. 
+?I aspire to always capture raw and natural moments that you can feel and cherish forever. I strongly believe that stories deserve to be heard and the best way to tell a story is with a heartfelt photograph. <span class="more-links"><a title="Read More about Hershey K Photography" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class="double-link"><li><a href="javascript:void(0);" onclick="Before_openEnquiryModal('3' , '1470107',&quot;Hershey K Photography&quot;);gaclicktrack('send','event', 'Response-show Number', 'Show number', '1470107');" class="red-but"><b>Show Number</b></a></li><li><a title="Enquire Hershey Kaur" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1470107',&quot;Hershey K Photography&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1470107');"><b>Enquire Now</b></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2022-03-18-01-01-01-608_96.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="SBS Production in Sacramento, CA"></figure><div class="content "><h3><a title="Indian Photography/Video - SBS Production" href="/atlanta-ga/photography-video/shots-by-sayani-1161465">SBS Production</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>
+Serving customers in  Sacramento Area</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/atlanta-ga/photography-video/shots-by-sayani-1161465#reviews">5<span class="material-icons-outlined">star</span></a><b>8
+Reviews</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">3.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="two-details"><ul><li><label>Price Range:</label><b>$1k-$3k</b></li></ul></div><div class="prop-details"><ul><li><span>Newborn Packages</span> <b> Avg - $549</b></li><li><span>Photography And Video Services</span> <b> Avg - $224</b></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="photography-video">Photography/Video:</a></b>
+<a title="Cinematography in Atlanta, GA" href="/atlanta-ga/cinematography">Cinematography</a>, <a title="Engagement Photographers in Atlanta, GA" href="/atlanta-ga/engagement-photographers">Engagement Photographers</a>, <a title="Event Videography in Atlanta, GA" href="/atlanta-ga/event-videography">Event Videography</a>, <a title="Freelance Photographers in Atlanta, GA" href="/atlanta-ga/freelance-photographers">Freelance Photographers</a>, <a title="Pre Wedding Photography in Atlanta, GA" href="/atlanta-ga/pre-wedding-photography">Pre Wedding Photography</a>, <a title="Wedding Decorations in Atlanta, GA" href="/atlanta-ga/wedding-decorations">Wedding Decorations</a>, <a title="Wedding Photographers in Atlanta, GA" href="/atlanta-ga/wedding-photographers">Wedding Photographers</a>, <a title="Wedding Videographers in Atlanta, GA" href="/atlanta-ga/wedding-videographers">Wedding Videographers</a></div><div class="more-links" style="display: none;"><a title="View all services offered by SBS Production" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>We are an experienced service provider. We have been in business for over 10 years. Photography/Video in Atlanta, GA, however we have offices in all regions of the US to accomodate. SBS Productions is determined to provide an amazing experience, whether it’s for a wedding, anniversary, and family portraits, maternity or newborn shoot. We are driven to provide life long memories that you can look back on and appreciate over time.<span class="more-links"><a title="Read More about SBS Production" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class=""><li><a href="javascript:void(0);" onclick="Before_openEnquiryModal('3' , '1161465',&quot;SBS Production&quot;);gaclicktrack('send','event', 'Response-show Number', 'Show number', '1161465');" class="red-but"><b>Show Number</b></a></li><li><a title="Enquire Farhaan Sayani" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1161465',&quot;SBS Production&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1161465');"><b>Enquire Now</b></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2020-11-25-06-00-29-520_38.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="VIRDEE FILMS PHOTO-CINEMA in Sacramento, CA"></figure><div class="content "><h3><a title="Indian Photography/Video - VIRDEE FILMS PHOTO-CINEMA" href="/iselin-nj/photography-video/virdee-films-photo-video-1404035">VIRDEE FILMS PHOTO-CINEMA</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>
+Serving customers in  Sacramento Area</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">work_history</span>
+Established Since 1994</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/iselin-nj/photography-video/virdee-films-photo-video-1404035#reviews">5<span class="material-icons-outlined">star</span></a><b>9
+Reviews</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">3.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="photography-video">Photography/Video:</a></b>
+<a title="Baby Shower Photographers in Iselin, NJ" href="/iselin-nj/baby-shower-photographers">Baby Shower Photographers</a>, <a title="Birthday Party Photographers in Iselin, NJ" href="/iselin-nj/birthday-party-photographers">Birthday Party Photographers</a>, <a title="Candid Photography in Iselin, NJ" href="/iselin-nj/candid-photography">Candid Photography</a>, <a title="Cinematography in Iselin, NJ" href="/iselin-nj/cinematography">Cinematography</a>, <a title="Digital Photography in Iselin, NJ" href="/iselin-nj/digital-photography">Digital Photography</a>, <a title="Engagement Photographers in Iselin, NJ" href="/iselin-nj/engagement-photographers">Engagement Photographers</a>, <a title="Event Photographers in Iselin, NJ" href="/iselin-nj/event-photographers">Event Photographers</a>, <a title="Event Videography in Iselin, NJ" href="/iselin-nj/event-videography">Event Videography</a>, <a title="Family Photographers in Iselin, NJ" href="/iselin-nj/family-photographers">Family Photographers</a>, <a title="Maternity Photographers in Iselin, NJ" href="/iselin-nj/maternity-photographers">Maternity Photographers</a>, <a title="Party Photographers in Iselin, NJ" href="/iselin-nj/party-photographers">Party Photographers</a>, <a title="Pre Wedding Photography in Iselin, NJ" href="/iselin-nj/pre-wedding-photography">Pre Wedding Photography</a>, <a title="Wedding Photographers in Iselin, NJ" href="/iselin-nj/wedding-photographers">Wedding Photographers</a>, <a title="Wedding Videographers in Iselin, NJ" href="/iselin-nj/wedding-videographers">Wedding Videographers</a></div><div class="more-links" style="display: none;"><a title="View all services offered by VIRDEE FILMS PHOTO-CINEMA" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>Parwinder Virdee, a professional photographer of America.
+We Done Number of Weddings 27 Years of Experience &nbsp;Nearly 2570 Weddings in
+23 States and 11 Countries
+It's been more then 27 years in Wedding industry. I'm confident, in myself and my work. nearly 2570 weddings later I’m blessed to continue serving couples throughout New York, New Jersey, Pennsylvania, Connecticut and destinations all over the world. I’ve experienced much through the lens of my camera and i'm excited to capture the anticipation, the laughter, and the memories of your wedding for you to enjoy in the years to come. I don’t base that just on my images, but on my passion and personality. I love working with people, and I make every effort to understand what they want.<span class="more-links"><a title="Read More about VIRDEE FILMS PHOTO-CINEMA" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class=""><li><a href="javascript:void(0);" onclick="Before_openEnquiryModal('3' , '1404035',&quot;VIRDEE FILMS PHOTO-CINEMA&quot;);gaclicktrack('send','event', 'Response-show Number', 'Show number', '1404035');" class="red-but"><b>Show Number</b></a></li><li><a title="Enquire PARWINDER VIRDEE" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1404035',&quot;VIRDEE FILMS PHOTO-CINEMA&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1404035');"><b>Enquire Now</b></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2016-11-21-06-00-23-493_8351158.jpg?v=2025" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Raj Photo Creations in Sacramento, CA"></figure><div class="content "><h3><a title="Indian Photography/Video - Raj Photo Creations" href="/sunnyvale-ca/photography-video/raj-photo-creations-645296">Raj Photo Creations</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>
+Serving customers in  Sacramento Area</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating">
+<div class="sul-rate">1.5<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="photography-video">Photography/Video:</a></b>
+<a title="Baby Shower Photographers in Sunnyvale, CA" href="/sunnyvale-ca/baby-shower-photographers">Baby Shower Photographers</a>, <a title="Birthday Party Photographers in Sunnyvale, CA" href="/sunnyvale-ca/birthday-party-photographers">Birthday Party Photographers</a>, <a title="Boudoir Photography in Sunnyvale, CA" href="/sunnyvale-ca/boudoir-photography">Boudoir Photography</a>, <a title="Candid Photography in Sunnyvale, CA" href="/sunnyvale-ca/candid-photography">Candid Photography</a>, <a title="Cinematography in Sunnyvale, CA" href="/sunnyvale-ca/cinematography">Cinematography</a>, <a title="Digital Photography in Sunnyvale, CA" href="/sunnyvale-ca/digital-photography">Digital Photography</a>, <a title="Engagement Photographers in Sunnyvale, CA" href="/sunnyvale-ca/engagement-photographers">Engagement Photographers</a>, <a title="Event Photographers in Sunnyvale, CA" href="/sunnyvale-ca/event-photographers">Event Photographers</a>, <a title="Family Photographers in Sunnyvale, CA" href="/sunnyvale-ca/family-photographers">Family Photographers</a>, <a title="Landscape Photography in Sunnyvale, CA" href="/sunnyvale-ca/landscape-photography">Landscape Photography</a>, <a title="Maternity Photographers in Sunnyvale, CA" href="/sunnyvale-ca/maternity-photographers">Maternity Photographers</a>, <a title="Nature Photography in Sunnyvale, CA" href="/sunnyvale-ca/nature-photography">Nature Photography</a>, <a title="Newborn Photographers in Sunnyvale, CA" href="/sunnyvale-ca/newborn-photographers">Newborn Photographers</a>, <a title="Party Photographers in Sunnyvale, CA" href="/sunnyvale-ca/party-photographers">Party Photographers</a>, <a title="Pet Photography in Sunnyvale, CA" href="/sunnyvale-ca/pet-photography">Pet Photography</a>, <a title="Portrait Photographers in Sunnyvale, CA" href="/sunnyvale-ca/portrait-photographers">Portrait Photographers</a>, <a title="Pre Wedding Photography in Sunnyvale, CA" href="/sunnyvale-ca/pre-wedding-photography">Pre Wedding Photography</a>, <a title="Product Photography in Sunnyvale, CA" href="/sunnyvale-ca/product-photography">Product Photography</a>, <a title="Real Estate Photography in Sunnyvale, CA" href="/sunnyvale-ca/real-estate-photography">Real Estate Photography</a>, <a title="Travel Photographers in Sunnyvale, CA" href="/sunnyvale-ca/travel-photographers">Travel Photographers</a>, <a title="Wedding Photographers in Sunnyvale, CA" href="/sunnyvale-ca/wedding-photographers">Wedding Photographers</a>, <a title="Prom Photography in Sunnyvale, CA" href="/sunnyvale-ca/prom-photography">Prom Photography</a></div><div class="more-links" style="display: none;"><a title="View all services offered by Raj Photo Creations" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>Raj Photo Creations specializes in wedding photo and videography, birthday photo and videography, portrait photography. Kindly contact for more details.<span class="more-links"><a title="Read More about Raj Photo Creations" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class="double-link"><li><a href="javascript:void(0);" onclick="Before_openEnquiryModal('3' , '645296',&quot;Raj Photo Creations&quot;);gaclicktrack('send','event', 'Response-show Number', 'Show number', '645296');" class="red-but"><b>Show Number</b></a></li><li><a title="Enquire Raj" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '645296',&quot;Raj Photo Creations&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '645296');"><b>Enquire Now</b></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2017-07-27-03-43-18-434_52.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="High Dynamic Photography And Films in Sacramento, CA"></figure><div class="content "><h3><a title="Indian Photography/Video - High Dynamic Photography And Films" href="/chicago-il/photography-video/high-dynamic-photography-and-films-810995">High Dynamic Photography And Films</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>
+Serving customers in  Sacramento Area</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">work_history</span>10 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/chicago-il/photography-video/high-dynamic-photography-and-films-810995#reviews">5<span class="material-icons-outlined">star</span></a><b>11
+Reviews</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">3.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="photography-video">Photography/Video:</a></b>
+<a title="Candid Photography in Chicago, IL" href="/chicago-il/candid-photography">Candid Photography</a>, <a title="Digital Photography in Chicago, IL" href="/chicago-il/digital-photography">Digital Photography</a>, <a title="Pre Wedding Photography in Chicago, IL" href="/chicago-il/pre-wedding-photography">Pre Wedding Photography</a>, <a title="Wedding Photographers in Chicago, IL" href="/chicago-il/wedding-photographers">Wedding Photographers</a>, <a title="Engagement Photographers in Chicago, IL" href="/chicago-il/engagement-photographers">Engagement Photographers</a>, <a title="Baby Shower Photographers in Chicago, IL" href="/chicago-il/baby-shower-photographers">Baby Shower Photographers</a>, <a title="Party Photographers in Chicago, IL" href="/chicago-il/party-photographers">Party Photographers</a>, <a title="Maternity Photographers in Chicago, IL" href="/chicago-il/maternity-photographers">Maternity Photographers</a>, <a title="Wedding Videographers in Chicago, IL" href="/chicago-il/wedding-videographers">Wedding Videographers</a>, <a title="Family Photographers in Chicago, IL" href="/chicago-il/family-photographers">Family Photographers</a>, <a title="Portrait Photographers in Chicago, IL" href="/chicago-il/portrait-photographers">Portrait Photographers</a>, <a title="Newborn Photographers in Chicago, IL" href="/chicago-il/newborn-photographers">Newborn Photographers</a>, <a title="Birthday Party Photographers in Chicago, IL" href="/chicago-il/birthday-party-photographers">Birthday Party Photographers</a>, <a title="Event Photographers in Chicago, IL" href="/chicago-il/event-photographers">Event Photographers</a>, <a title="Studio Photography in Chicago, IL" href="/chicago-il/studio-photography">Studio Photography</a>, <a title="Freelance Photographers in Chicago, IL" href="/chicago-il/freelance-photographers">Freelance Photographers</a>, <a title="Prom Photography in Chicago, IL" href="/chicago-il/prom-photography">Prom Photography</a>, <a title="Cinematography in Chicago, IL" href="/chicago-il/cinematography">Cinematography</a></div><div class="more-links" style="display: none;"><a title="View all services offered by High Dynamic Photography And Films" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>Let me start by saying that I love what I do. Indian &amp; Pakistani weddings are the most fantastic occasions, full of energy, vibrancy and dazzling colors. They are wonderful family events that are just bursting with emotion and they are a joy to photograph. Each Indian/Pakistani wedding is a hectic, exhilarating, whirlwind that can last for many days, but the response I get from the couples I photograph is the greatest reward.
+The challenge for the modern wedding photographer is no longer about just having pictures to put in an album. Today the challenge is to capture the essence of an occasion; to accurately and successfully document one of the most momentous celebrations in a couple''s life. It is to provide a photographic record that not only immediately delights, but continues to delight for years to come.
+Experience has shown me that trust is critical. My style and approach is totally unobtrusive, not directing or dictating the day. Like a good waiter, who will fill your glass without you noticing, I aim to take my pictures by drawing as little attention to myself as possible. This is where experience and being prepared pay huge dividends. By understanding the structure of the ceremonies and by having researched the venues I''m able to anticipate my shots in advance and can ensure I''m perfectly placed and ready to capture the moment.
+Each image needs to be a beautiful composition in its own right but it must also record the essence of the moment. Many of the Asian/Indian/Pakistani weddings I''ve documented are noisy, lively, bustling celebrations. They''re filled with color and life, warmth and joy and it''s so vital to capture it all. I aim to capture for posterity the images that people remember; the glance to the side, the nervous smile, the natural beauty and those delicate finer touches that have been so long in the planning. <span class="more-links"><a title="Read More about High Dynamic Photography And Films" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class="double-link"><li><a href="javascript:void(0);" onclick="Before_openEnquiryModal('3' , '810995',&quot;High Dynamic Photography And Films&quot;);gaclicktrack('send','event', 'Response-show Number', 'Show number', '810995');" class="red-but"><b>Show Number</b></a></li><li><a title="Enquire Saud Kazi" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '810995',&quot;High Dynamic Photography And Films&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '810995');"><b>Enquire Now</b></a></li></ul></div></div><div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2016-11-21-06-00-23-493_8351158.jpg?v=2025" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Raj Photo Creations in , "></figure><div class="content ">
+      <h3><a title="Indian Photography/Video - Raj Photo Creations" href="/sunnyvale-ca/photography-video/raj-photo-creations-645296">Raj Photo Creations</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>
+                            Serving customers in Sacramento Area</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">1.5<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="photography-video">Photography/Video:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Baby Shower Photographers in Sunnyvale, CA" href="/sunnyvale-ca/baby-shower-photographers">Baby Shower Photographers</a>, 
+          &nbsp;<a title="Birthday Party Photographers in Sunnyvale, CA" href="/sunnyvale-ca/birthday-party-photographers">Birthday Party Photographers</a>, 
+          &nbsp;<a title="Boudoir Photography in Sunnyvale, CA" href="/sunnyvale-ca/boudoir-photography">Boudoir Photography</a>, 
+          &nbsp;<a title="Candid Photography in Sunnyvale, CA" href="/sunnyvale-ca/candid-photography">Candid Photography</a>, 
+          &nbsp;<a title="Cinematography in Sunnyvale, CA" href="/sunnyvale-ca/cinematography">Cinematography</a>, 
+          &nbsp;<a title="Digital Photography in Sunnyvale, CA" href="/sunnyvale-ca/digital-photography">Digital Photography</a>, 
+          &nbsp;<a title="Engagement Photographers in Sunnyvale, CA" href="/sunnyvale-ca/engagement-photographers">Engagement Photographers</a>, 
+          &nbsp;<a title="Event Photographers in Sunnyvale, CA" href="/sunnyvale-ca/event-photographers">Event Photographers</a>, 
+          &nbsp;<a title="Family Photographers in Sunnyvale, CA" href="/sunnyvale-ca/family-photographers">Family Photographers</a>, 
+          &nbsp;<a title="Landscape Photography in Sunnyvale, CA" href="/sunnyvale-ca/landscape-photography">Landscape Photography</a>, 
+          &nbsp;<a title="Maternity Photographers in Sunnyvale, CA" href="/sunnyvale-ca/maternity-photographers">Maternity Photographers</a>, 
+          &nbsp;<a title="Nature Photography in Sunnyvale, CA" href="/sunnyvale-ca/nature-photography">Nature Photography</a>, 
+          &nbsp;<a title="Newborn Photographers in Sunnyvale, CA" href="/sunnyvale-ca/newborn-photographers">Newborn Photographers</a>, 
+          &nbsp;<a title="Party Photographers in Sunnyvale, CA" href="/sunnyvale-ca/party-photographers">Party Photographers</a>, 
+          &nbsp;<a title="Pet Photography in Sunnyvale, CA" href="/sunnyvale-ca/pet-photography">Pet Photography</a>, 
+          &nbsp;<a title="Portrait Photographers in Sunnyvale, CA" href="/sunnyvale-ca/portrait-photographers">Portrait Photographers</a>, 
+          &nbsp;<a title="Pre Wedding Photography in Sunnyvale, CA" href="/sunnyvale-ca/pre-wedding-photography">Pre Wedding Photography</a>, 
+          &nbsp;<a title="Product Photography in Sunnyvale, CA" href="/sunnyvale-ca/product-photography">Product Photography</a>, 
+          &nbsp;<a title="Real Estate Photography in Sunnyvale, CA" href="/sunnyvale-ca/real-estate-photography">Real Estate Photography</a>, 
+          &nbsp;<a title="Travel Photographers in Sunnyvale, CA" href="/sunnyvale-ca/travel-photographers">Travel Photographers</a>, 
+          &nbsp;<a title="Wedding Photographers in Sunnyvale, CA" href="/sunnyvale-ca/wedding-photographers">Wedding Photographers</a>, 
+          &nbsp;<a title="Prom Photography in Sunnyvale, CA" href="/sunnyvale-ca/prom-photography">Prom Photography</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by Raj Photo Creations" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>Raj Photo Creations specializes in wedding photo and videography, birthday photo and videography, portrait photography. Kindly contact for more details.<span class="more-links"><a title="Read More about Raj Photo Creations" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="double-link">
+      <li><a href="javascript:void(0);" onclick="Before_openEnquiryModal('3' , '645296',&quot;Raj Photo Creations&quot;);gaclicktrack('send','event', 'Response-show Number', 'Show number', '645296');" class="red-but"><b>Show Number</b></a></li>
+      <li><a title="Enquire Raj" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '645296',&quot;Raj Photo Creations&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '645296');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2021-09-20-01-25-33-765_47.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Manish And Sung Photography in , "></figure><div class="content ">
+      <h3><a title="Indian Photography/Video - Manish And Sung Photography" href="/flushing-ny/photography-video/manish-and-sung-photography-699187">Manish And Sung Photography</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>
+                            Serving customers in Sacramento Area</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating"><a title="View All Reviews" href="/flushing-ny/photography-video/manish-and-sung-photography-699187#reviews">5<span class="material-icons-outlined">star</span></a><b>17
+                          Reviews
+                        </b></div>
+      </li>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">3.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="photography-video">Photography/Video:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Digital Photography in Flushing, NY" href="/flushing-ny/digital-photography">Digital Photography</a>, 
+          &nbsp;<a title="Real Estate Photography in Flushing, NY" href="/flushing-ny/real-estate-photography">Real Estate Photography</a>, 
+          &nbsp;<a title="Pet Photography in Flushing, NY" href="/flushing-ny/pet-photography">Pet Photography</a>, 
+          &nbsp;<a title="Landscape Photography in Flushing, NY" href="/flushing-ny/landscape-photography">Landscape Photography</a>, 
+          &nbsp;<a title="Travel Photographers in Flushing, NY" href="/flushing-ny/travel-photographers">Travel Photographers</a>, 
+          &nbsp;<a title="Motion Photography in Flushing, NY" href="/flushing-ny/motion-photography">Motion Photography</a>, 
+          &nbsp;<a title="Freelance Photographers in Flushing, NY" href="/flushing-ny/freelance-photographers">Freelance Photographers</a>, 
+          &nbsp;<a title="Prom Photography in Flushing, NY" href="/flushing-ny/prom-photography">Prom Photography</a>, 
+          &nbsp;<a title="Nature Photography in Flushing, NY" href="/flushing-ny/nature-photography">Nature Photography</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by Manish And Sung Photography" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>As a team Manish Mavani and Sung Kwan Ma , specialize in Weddings, Portraits, and Editorial photography, Videography, and Cinematography. We have worked on an array of creative projects in India, China, Nepal, Pakistan, Vietnam, Malaysia, Hong Kong, Peru, Thailand, Bolivia, Cambodia, and Tibet. Our collective talent and expertise enable us to consistently provide you with the best quality images. We treat your event with professionalism and individual care.<span class="more-links"><a title="Read More about Manish And Sung Photography" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="double-link">
+      <li><a href="javascript:void(0);" onclick="Before_openEnquiryModal('3' , '699187',&quot;Manish And Sung Photography&quot;);gaclicktrack('send','event', 'Response-show Number', 'Show number', '699187');" class="red-but"><b>Show Number</b></a></li>
+      <li><a title="Enquire Manish Mavani" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '699187',&quot;Manish And Sung Photography&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '699187');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://d3aew4oo17ml6.cloudfront.net/localservices/images/large/6-2015-9-2-5-57-48.jpg?v=4278" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Global Photography in , "></figure><div class="content ">
+      <h3><a title="Indian Photography/Video - Global Photography" href="/moorpark-ca/photography-video/global-photography-715856">Global Photography</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>
+                            Serving customers in Sacramento Area</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating"><a title="View All Reviews" href="/moorpark-ca/photography-video/global-photography-715856#reviews">5<span class="material-icons-outlined">star</span></a><b>7
+                          Reviews
+                        </b></div>
+      </li>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">3.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="photography-video">Photography/Video:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Digital Photography in Moorpark, CA" href="/moorpark-ca/digital-photography">Digital Photography</a>, 
+          &nbsp;<a title="Real Estate Photography in Moorpark, CA" href="/moorpark-ca/real-estate-photography">Real Estate Photography</a>, 
+          &nbsp;<a title="Pet Photography in Moorpark, CA" href="/moorpark-ca/pet-photography">Pet Photography</a>, 
+          &nbsp;<a title="Landscape Photography in Moorpark, CA" href="/moorpark-ca/landscape-photography">Landscape Photography</a>, 
+          &nbsp;<a title="Architectural Photography in Moorpark, CA" href="/moorpark-ca/architectural-photography">Architectural Photography</a>, 
+          &nbsp;<a title="Travel Photographers in Moorpark, CA" href="/moorpark-ca/travel-photographers">Travel Photographers</a>, 
+          &nbsp;<a title="Motion Photography in Moorpark, CA" href="/moorpark-ca/motion-photography">Motion Photography</a>, 
+          &nbsp;<a title="Freelance Photographers in Moorpark, CA" href="/moorpark-ca/freelance-photographers">Freelance Photographers</a>, 
+          &nbsp;<a title="Prom Photography in Moorpark, CA" href="/moorpark-ca/prom-photography">Prom Photography</a>, 
+          &nbsp;<a title="Sports Photography in Moorpark, CA" href="/moorpark-ca/sports-photography">Sports Photography</a>, 
+          &nbsp;<a title="Nature Photography in Moorpark, CA" href="/moorpark-ca/nature-photography">Nature Photography</a>, 
+          &nbsp;<a title="Fine Art Photography in Moorpark, CA" href="/moorpark-ca/fine-art-photography">Fine Art Photography</a>, </div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by Global Photography" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>Yogi Patel of Global Photography is the Recipient of 2 Prestigious Kodak Gallery, 2 Fuji Film Masterpiece Awards, Top Ten Photographers in California Award for the last five years along with over 110 Print and Wedding album awards from PPA, PPC and CIPPA. His work has been published in many National and International magazines. Yogi is the one and only Indian Photographer in the USA ( my be the world) to receive all these awards along with his Masters, Craftsmen, Fellow, Business &amp; Arts and Certified Professional Photography degree in USA. Being Indian himself he understands all the important aspects of different religious ceremonies and speaks Hindi, Punjabi, Gujarati and English to communicate. Clients love his fun loving, unique, creative photographic style that he tailors towards the client’s needs. He is very timely, spontaneous and easy to work with.<span class="more-links"><a title="Read More about Global Photography" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="double-link">
+      <li><a href="javascript:void(0);" onclick="Before_openEnquiryModal('3' , '715856',&quot;Global Photography&quot;);gaclicktrack('send','event', 'Response-show Number', 'Show number', '715856');" class="red-but"><b>Show Number</b></a></li>
+      <li><a title="Enquire Yogi Patel" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '715856',&quot;Global Photography&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '715856');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2017-07-27-03-43-18-434_52.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="High Dynamic Photography And Films in , "></figure><div class="content ">
+      <h3><a title="Indian Photography/Video - High Dynamic Photography And Films" href="/chicago-il/photography-video/high-dynamic-photography-and-films-810995">High Dynamic Photography And Films</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>
+                            Serving customers in Sacramento Area</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>10 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating"><a title="View All Reviews" href="/chicago-il/photography-video/high-dynamic-photography-and-films-810995#reviews">5<span class="material-icons-outlined">star</span></a><b>11
+                          Reviews
+                        </b></div>
+      </li>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">3.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="photography-video">Photography/Video:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Candid Photography in Chicago, IL" href="/chicago-il/candid-photography">Candid Photography</a>, 
+          &nbsp;<a title="Digital Photography in Chicago, IL" href="/chicago-il/digital-photography">Digital Photography</a>, 
+          &nbsp;<a title="Pre Wedding Photography in Chicago, IL" href="/chicago-il/pre-wedding-photography">Pre Wedding Photography</a>, 
+          &nbsp;<a title="Wedding Photographers in Chicago, IL" href="/chicago-il/wedding-photographers">Wedding Photographers</a>, 
+          &nbsp;<a title="Engagement Photographers in Chicago, IL" href="/chicago-il/engagement-photographers">Engagement Photographers</a>, 
+          &nbsp;<a title="Baby Shower Photographers in Chicago, IL" href="/chicago-il/baby-shower-photographers">Baby Shower Photographers</a>, 
+          &nbsp;<a title="Party Photographers in Chicago, IL" href="/chicago-il/party-photographers">Party Photographers</a>, 
+          &nbsp;<a title="Maternity Photographers in Chicago, IL" href="/chicago-il/maternity-photographers">Maternity Photographers</a>, 
+          &nbsp;<a title="Wedding Videographers in Chicago, IL" href="/chicago-il/wedding-videographers">Wedding Videographers</a>, 
+          &nbsp;<a title="Family Photographers in Chicago, IL" href="/chicago-il/family-photographers">Family Photographers</a>, 
+          &nbsp;<a title="Portrait Photographers in Chicago, IL" href="/chicago-il/portrait-photographers">Portrait Photographers</a>, 
+          &nbsp;<a title="Newborn Photographers in Chicago, IL" href="/chicago-il/newborn-photographers">Newborn Photographers</a>, 
+          &nbsp;<a title="Birthday Party Photographers in Chicago, IL" href="/chicago-il/birthday-party-photographers">Birthday Party Photographers</a>, 
+          &nbsp;<a title="Event Photographers in Chicago, IL" href="/chicago-il/event-photographers">Event Photographers</a>, 
+          &nbsp;<a title="Studio Photography in Chicago, IL" href="/chicago-il/studio-photography">Studio Photography</a>, 
+          &nbsp;<a title="Freelance Photographers in Chicago, IL" href="/chicago-il/freelance-photographers">Freelance Photographers</a>, 
+          &nbsp;<a title="Prom Photography in Chicago, IL" href="/chicago-il/prom-photography">Prom Photography</a>, 
+          &nbsp;<a title="Cinematography in Chicago, IL" href="/chicago-il/cinematography">Cinematography</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by High Dynamic Photography And Films" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>Let me start by saying that I love what I do. Indian &amp; Pakistani weddings are the most fantastic occasions, full of energy, vibrancy and dazzling colors. They are wonderful family events that are just bursting with emotion and they are a joy to photograph. Each Indian/Pakistani wedding is a hectic, exhilarating, whirlwind that can last for many days, but the response I get from the couples I photograph is the greatest reward.
+The challenge for the modern wedding photographer is no longer about just having pictures to put in an album. Today the challenge is to capture the essence of an occasion; to accurately and successfully document one of the most momentous celebrations in a couple''s life. It is to provide a photographic record that not only immediately delights, but continues to delight for years to come.
+Experience has shown me that trust is critical. My style and approach is totally unobtrusive, not directing or dictating the day. Like a good waiter, who will fill your glass without you noticing, I aim to take my pictures by drawing as little attention to myself as possible. This is where experience and being prepared pay huge dividends. By understanding the structure of the ceremonies and by having researched the venues I''m able to anticipate my shots in advance and can ensure I''m perfectly placed and ready to capture the moment.
+Each image needs to be a beautiful composition in its own right but it must also record the essence of the moment. Many of the Asian/Indian/Pakistani weddings I''ve documented are noisy, lively, bustling celebrations. They''re filled with color and life, warmth and joy and it''s so vital to capture it all. I aim to capture for posterity the images that people remember; the glance to the side, the nervous smile, the natural beauty and those delicate finer touches that have been so long in the planning. <span class="more-links"><a title="Read More about High Dynamic Photography And Films" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="double-link">
+      <li><a href="javascript:void(0);" onclick="Before_openEnquiryModal('3' , '810995',&quot;High Dynamic Photography And Films&quot;);gaclicktrack('send','event', 'Response-show Number', 'Show number', '810995');" class="red-but"><b>Show Number</b></a></li>
+      <li><a title="Enquire Saud Kazi" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '810995',&quot;High Dynamic Photography And Films&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '810995');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2022-05-01-03-29-48-504_44.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Stories By SR in , "></figure><div class="content ">
+      <h3><a title="Indian Photography/Video - Stories By SR" href="/east-brunswick-nj/photography-video/s-r-photography-918327">Stories By SR</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>
+                            Serving customers in Sacramento Area</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating"><a title="View All Reviews" href="/east-brunswick-nj/photography-video/s-r-photography-918327#reviews">5<span class="material-icons-outlined">star</span></a><b>7
+                          Reviews
+                        </b></div>
+      </li>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">3.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="photography-video">Photography/Video:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Engagement Photographers in East Brunswick, NJ" href="/east-brunswick-nj/engagement-photographers">Engagement Photographers</a>, 
+          &nbsp;<a title="Family Photographers in East Brunswick, NJ" href="/east-brunswick-nj/family-photographers">Family Photographers</a>, 
+          &nbsp;<a title="Pre Wedding Photography in East Brunswick, NJ" href="/east-brunswick-nj/pre-wedding-photography">Pre Wedding Photography</a>, 
+          &nbsp;<a title="Wedding Photographers in East Brunswick, NJ" href="/east-brunswick-nj/wedding-photographers">Wedding Photographers</a>, 
+          &nbsp;<a title="Wedding Videographers in East Brunswick, NJ" href="/east-brunswick-nj/wedding-videographers">Wedding Videographers</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by Stories By SR" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>Hello, this is a professional wedding photography company established in 2016. Now has more than 30 people team all over United States. We did 79 weddings in 2021 alone and many other small events. 
+A minimum 10 hours of service is required to book us. This 10 hours can be split in different days/events 
+Example: Haldi, Mehendi, Wedding etc.
+We have professionals allover the states and we would love create the best memories.
+Thank you,
+Suraj Randheer.<span class="more-links"><a title="Read More about Stories By SR" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="double-link">
+      <li><a href="javascript:void(0);" onclick="Before_openEnquiryModal('3' , '918327',&quot;Stories By SR&quot;);gaclicktrack('send','event', 'Response-show Number', 'Show number', '918327');" class="red-but"><b>Show Number</b></a></li>
+      <li><a title="Enquire Suraj Randheer" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '918327',&quot;Stories By SR&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '918327');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2018-01-12-04-07-00-947_91.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Murali Photography in , "></figure><div class="content ">
+      <h3><a title="Indian Photography/Video - Murali Photography" href="/folsom-ca/photography-video/murali-photography-1033986">Murali Photography</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>
+                            Serving customers in Sacramento Area</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>5 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">3.4<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="photography-video">Photography/Video:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Architectural Photography in Folsom, CA" href="/folsom-ca/architectural-photography">Architectural Photography</a>, 
+          &nbsp;<a title="Baby Shower Photographers in Folsom, CA" href="/folsom-ca/baby-shower-photographers">Baby Shower Photographers</a>, 
+          &nbsp;<a title="Birthday Party Photographers in Folsom, CA" href="/folsom-ca/birthday-party-photographers">Birthday Party Photographers</a>, 
+          &nbsp;<a title="Boudoir Photography in Folsom, CA" href="/folsom-ca/boudoir-photography">Boudoir Photography</a>, 
+          &nbsp;<a title="Candid Photography in Folsom, CA" href="/folsom-ca/candid-photography">Candid Photography</a>, 
+          &nbsp;<a title="Commercial Photography in Folsom, CA" href="/folsom-ca/commercial-photography">Commercial Photography</a>, 
+          &nbsp;<a title="Digital Photography in Folsom, CA" href="/folsom-ca/digital-photography">Digital Photography</a>, 
+          &nbsp;<a title="Engagement Photographers in Folsom, CA" href="/folsom-ca/engagement-photographers">Engagement Photographers</a>, 
+          &nbsp;<a title="Event Photographers in Folsom, CA" href="/folsom-ca/event-photographers">Event Photographers</a>, 
+          &nbsp;<a title="Family Photographers in Folsom, CA" href="/folsom-ca/family-photographers">Family Photographers</a>, 
+          &nbsp;<a title="Fine Art Photography in Folsom, CA" href="/folsom-ca/fine-art-photography">Fine Art Photography</a>, 
+          &nbsp;<a title="Freelance Photographers in Folsom, CA" href="/folsom-ca/freelance-photographers">Freelance Photographers</a>, 
+          &nbsp;<a title="Landscape Photography in Folsom, CA" href="/folsom-ca/landscape-photography">Landscape Photography</a>, 
+          &nbsp;<a title="Maternity Photographers in Folsom, CA" href="/folsom-ca/maternity-photographers">Maternity Photographers</a>, 
+          &nbsp;<a title="Motion Photography in Folsom, CA" href="/folsom-ca/motion-photography">Motion Photography</a>, 
+          &nbsp;<a title="Nature Photography in Folsom, CA" href="/folsom-ca/nature-photography">Nature Photography</a>, 
+          &nbsp;<a title="Newborn Photographers in Folsom, CA" href="/folsom-ca/newborn-photographers">Newborn Photographers</a>, 
+          &nbsp;<a title="Party Photographers in Folsom, CA" href="/folsom-ca/party-photographers">Party Photographers</a>, 
+          &nbsp;<a title="Pet Photography in Folsom, CA" href="/folsom-ca/pet-photography">Pet Photography</a>, 
+          &nbsp;<a title="Portrait Photographers in Folsom, CA" href="/folsom-ca/portrait-photographers">Portrait Photographers</a>, 
+          &nbsp;<a title="Pre Wedding Photography in Folsom, CA" href="/folsom-ca/pre-wedding-photography">Pre Wedding Photography</a>, 
+          &nbsp;<a title="Product Photography in Folsom, CA" href="/folsom-ca/product-phot">Product Photography</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by Murali Photography" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>Affordable Event, Wedding , Family and portrait photography to cherish your memories . For more details please contact.<span class="more-links"><a title="Read More about Murali Photography" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="double-link">
+      <li><a href="javascript:void(0);" onclick="Before_openEnquiryModal('3' , '1033986',&quot;Murali Photography&quot;);gaclicktrack('send','event', 'Response-show Number', 'Show number', '1033986');" class="red-but"><b>Show Number</b></a></li>
+      <li><a title="Enquire Murali" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1033986',&quot;Murali Photography&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1033986');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div></div>
