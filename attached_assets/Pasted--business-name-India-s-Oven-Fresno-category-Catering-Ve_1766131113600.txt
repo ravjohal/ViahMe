@@ -1,0 +1,263 @@
+},
+  {
+    "business_name": "India's Oven Fresno",
+    "category": "Catering & Venue",
+    "city": "Fresno",
+    "state": "CA",
+    "website": "https://indiasovenfresno.com",
+    "price_tier": "$",
+    "tags":
+  },
+  {
+    "business_name": "Aperina Studios",
+    "category": "Photography & Video",
+    "city": "Sacramento",
+    "state": "CA",
+    "website": "https://aperina.com",
+    "price_tier": "$$$",
+    "tags":
+  },
+  {
+    "business_name": "Motion 8 Films",
+    "category": "Photography & Video",
+    "city": "Fresno",
+    "state": "CA",
+    "website": "https://motion8films.com",
+    "price_tier": "$$$",
+    "tags":
+  },
+  {
+    "business_name": "Bombay Flavors",
+    "category": "Catering",
+    "city": "Sacramento",
+    "state": "CA",
+    "website": "http://bombayflavors.com",
+    "price_tier": "$$",
+    "tags":
+  },
+  {
+    "business_name": "Sher-E-Punjab",
+    "category": "Catering",
+    "city": "Fresno",
+    "state": "CA",
+    "website": "https://sherepunjabca.com",
+    "price_tier": "$",
+    "tags":
+  },
+  {
+    "business_name": "Hyatt Regency Sacramento",
+    "category": "Venue",
+    "city": "Sacramento",
+    "state": "CA",
+    "website": "https://www.hyatt.com",
+    "price_tier": "$$$",
+    "tags":
+  },
+  {
+    "business_name": "The Grand 1401",
+    "category": "Venue",
+    "city": "Fresno",
+    "state": "CA",
+    "website": "https://thegrand1401.com",
+    "price_tier": "$$",
+    "tags":
+  },
+  {
+    "business_name": "Shan Photography",
+    "category": "Photography",
+    "city": "Sacramento",
+    "state": "CA",
+    "website": "https://www.shanphotography.com",
+    "price_tier": "$$",
+    "tags":
+  },
+  {
+    "business_name": "DKG Production",
+    "category": "Photography & Video",
+    "city": "Fresno",
+    "state": "CA",
+    "website": "https://dkgproduction.com",
+    "price_tier": "$$",
+    "tags": ["Photo", "Video", "Fresno Local"]
+  },
+  {
+    "business_name": "Fresno Fields by Wedgewood",
+    "category": "Venue",
+    "city": "Fresno",
+    "state": "CA",
+    "website": "https://www.wedgewoodweddings.com",
+    "price_tier": "$$",
+    "tags": ["All-Inclusive", "Garden", "Outdoor Ceremony"]
+  },
+  {
+    "business_name": "Vizcaya Sacramento",
+    "category": "Venue",
+    "city": "Sacramento",
+    "state": "CA",
+    "website": "https://vizcayasacramento.com",
+    "price_tier": "$$",
+    "tags": ["Mansion", "Outdoor", "Historic"]
+  },
+  {
+    "business_name": "Brahma Cuisine",
+    "category": "Catering",
+    "city": "Fresno",
+    "state": "CA",
+    "website": "https://brahmacuisine.com",
+    "price_tier": "$",
+    "tags":
+  },
+  {
+    "business_name": "Renu Lal (Henna Designs)",
+    "category": "Mehndi",
+    "city": "Sacramento",
+    "state": "CA",
+    "website": "https://www.hennadesigns.com",
+    "price_tier": "$$",
+    "tags":
+  },
+  {
+    "business_name": "Johal Henna",
+    "category": "Mehndi",
+    "city": "Fresno",
+    "state": "CA",
+    "website": "https://www.instagram.com/johalhenna",
+    "price_tier": "$",
+    "tags":
+  },
+  {
+    "business_name": "CineCrown",
+    "category": "Photography",
+    "city": "Sacramento",
+    "state": "CA",
+    "website": "https://cinecrown.com",
+    "price_tier": "$$$",
+    "tags": ["Cinematic", "Video", "Luxury"]
+  },
+  {
+    "business_name": "Dante Club",
+    "category": "Venue",
+    "city": "Fresno",
+    "state": "CA",
+    "website": "https://www.danteclub.com",
+    "price_tier": "$",
+    "tags": ["Community Hall", "Affordable", "Large Capacity", "Outside Catering"]
+  },
+  {
+    "business_name": "777 Events",
+    "category": "DJ & Lighting",
+    "city": "Sacramento",
+    "state": "CA",
+    "website": "https://www.777events.com",
+    "price_tier": "$$",
+    "tags":
+  },
+  {
+    "business_name": "Pandit Anand Balram Sharma",
+    "category": "Priest",
+    "city": "Hayward",
+    "state": "CA",
+    "website": "http://www.bayareahindupriest.com",
+    "price_tier": "$$",
+    "tags":
+  },
+  {
+    "business_name": "Kimpton Sawyer Hotel",
+    "category": "Venue",
+    "city": "Sacramento",
+    "state": "CA",
+    "website": "https://www.sawyerhotel.com",
+    "price_tier": "$$$$",
+    "tags":
+  },
+  {
+    "business_name": "Ethnic Bollywood",
+    "category": "Fashion",
+    "city": "Sacramento",
+    "state": "CA",
+    "website": "https://www.ethnicbollywood.com",
+    "price_tier": "$$",
+    "tags":
+  },
+  {
+    "business_name": "Fresno Golden Palace",
+    "category": "Venue",
+    "city": "Fresno",
+    "state": "CA",
+    "website": "https://fresnogoldenpalace.com",
+    "price_tier": "$",
+    "tags":
+  },
+  {
+    "business_name": "Parveen Bains Makeup Studio",
+    "category": "Makeup",
+    "city": "Fresno",
+    "state": "CA",
+    "website": "https://pbmuastudios.com",
+    "price_tier": "$$",
+    "tags":
+  },
+  {
+    "business_name": "Majestic Events by Kiran",
+    "category": "Planner",
+    "city": "Sacramento",
+    "state": "CA",
+    "website": "https://www.majesticeventsbykiran.com",
+    "price_tier": "$$",
+    "tags":
+  },
+  {
+    "business_name": "Pardini's Catering & Banquets",
+    "category": "Venue & Catering",
+    "city": "Fresno",
+    "state": "CA",
+    "website": "https://pardiniscatering.com",
+    "price_tier": "$$",
+    "tags": ["Venue", "Catering", "Established"]
+  },
+  {
+    "business_name": "Preeta's Kitchen",
+    "category": "Catering",
+    "city": "Sacramento",
+    "state": "CA",
+    "website": "https://preetaskitchen.com",
+    "price_tier": "$",
+    "tags":
+  },
+  {
+    "business_name": "Wolf Lakes Park",
+    "category": "Venue",
+    "city": "Fresno",
+    "state": "CA",
+    "website": "https://wolflakespark.com",
+    "price_tier": "$$",
+    "tags": ["Outdoor", "Lakeside", "Large Capacity"]
+  },
+  {
+    "business_name": "Desi Jammers Entertainment",
+    "category": "DJ",
+    "city": "Sacramento",
+    "state": "CA",
+    "website": "https://www.facebook.com/desijammers",
+    "price_tier": "$$",
+    "tags":
+  },
+  {
+    "business_name": "Perfect Threading & Henna",
+    "category": "Mehndi",
+    "city": "Selma",
+    "state": "CA",
+    "website": "https://www.perfectthreadingandhenna.com",
+    "price_tier": "$",
+    "tags":
+  },
+  {
+    "business_name": "Visual Impact Design",
+    "category": "Decor",
+    "city": "Sacramento",
+    "state": "CA",
+    "website": "https://visualimpact-design.com",
+    "price_tier": "$$",
+    "tags":
+  }
+]

@@ -25,6 +25,7 @@ function mapCategory(category: string): string {
   if (cat.includes('makeup')) return 'makeup_artist';
   if (cat.includes('mehndi') || cat.includes('henna')) return 'mehndi_artist';
   if (cat.includes('coordinator') || cat.includes('planner')) return 'wedding_coordinator';
+  if (cat.includes('fashion') || cat.includes('clothing') || cat.includes('attire')) return 'fashion';
   return 'venue'; // default
 }
 
@@ -49,7 +50,7 @@ async function main() {
   const existingNames = new Set(existingVendors.map(v => v.name.toLowerCase().trim()));
   console.log(`Found ${existingNames.size} existing vendors in database`);
   
-  const htmlPath = path.join(process.cwd(), 'attached_assets/Pasted--business-name-India-s-Oven-category-Catering-Venue-cit_1766130749356.txt');
+  const htmlPath = path.join(process.cwd(), 'attached_assets/Pasted--business-name-India-s-Oven-Fresno-category-Catering-Ve_1766131113600.txt');
   let content = fs.readFileSync(htmlPath, 'utf-8');
   
   // Fix malformed JSON - remove leading }, and add opening bracket
