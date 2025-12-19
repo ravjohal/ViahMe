@@ -1,0 +1,50 @@
+{
+  "yuba_city_marysville_vendors":,
+      "notes": "The premier luxury option in Yuba City. They have a design studio and showroom locally, which is rare for this size town. They specialize in 'Royal' aesthetics suitable for grand Punjabi weddings."
+    },
+    {
+      "business_name": "We Do Designs",
+      "category": "Decorator & Floral",
+      "location": "Serving Yuba City / Northern CA",
+      "website": "https://www.wedodesigns.net/",
+      "specialties":,
+      "notes": "A mother-daughter team highly active in the Yuba City Sikh wedding circuit. Known for high-concept engagement parties (Kurmai) and elaborate floral work."
+    },
+    {
+      "business_name": "Baramdaa Events",
+      "category": "Decorator",
+      "location": "Yuba City & Sacramento",
+      "website": "https://www.baramdaaevents.com/",
+      "specialties":,
+      "notes": "Listed specifically in Yuba City directories. They focus on 'affordable decor' and creating custom designs based on guest list size, which is crucial for the massive guest counts in this region."
+    },
+    {
+      "business_name": "Angels Party Jumpers & Rentals",
+      "category": "Infrastructure Rentals",
+      "location": "Yuba City, CA",
+      "website": "https://www.angelspartyjumpers.com/",
+      "specialties":,
+      "notes": "Essential for 'Tent Weddings' on private farm land in Yuba City. They provide the heavy infrastructure (canopies, generators) needed before the decorators arrive."
+    }
+  ],
+  "modesto_turlock_vendors":,
+      "notes": "Established in 1986. One of the few local florists in Modesto that explicitly lists 'Mandap Decor', 'Crystal Tree Chandeliers', and 'Indian Chairs' as core services."
+    },
+    {
+      "business_name": "Mimi & Co. Luxury Linens",
+      "category": "Specialty Rentals",
+      "location": "Turlock / Sacramento",
+      "website": "http://mimiandcompany.com/ (Check socials)",
+      "specialties":,
+      "notes": "Critical for upgrading standard venue chairs. They serve the Turlock to Stockton corridor and are known for high-end textiles that transform simple halls."
+    },
+    {
+      "business_name": "Jump City Rentals",
+      "category": "Rentals",
+      "location": "Turlock, CA",
+      "website": "https://jumpcityrental.com/",
+      "specialties":,
+      "notes": "The logistics partner for backyard/estate weddings in Turlock. Necessary for renting 500+ chairs for a Sangeet."
+    }
+  ],
+  "stockton_l
