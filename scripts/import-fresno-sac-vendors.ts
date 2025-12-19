@@ -31,7 +31,7 @@ async function main() {
   const existingNames = new Set(existingVendors.map(v => v.name.toLowerCase().trim()));
   console.log(`Found ${existingNames.size} existing vendors in database`);
 
-  const jsonPath = path.join(process.cwd(), 'attached_assets/Pasted--fresno-vendors-notes-Husband-and-wife-team-specializin_1766137448821.txt');
+  const jsonPath = path.join(process.cwd(), 'attached_assets/Pasted--fresno-vendors-notes-Husband-and-wife-team-specializin_1766137869491.txt');
   let content = fs.readFileSync(jsonPath, 'utf-8');
 
   // Extract vendor objects using regex since JSON is malformed
