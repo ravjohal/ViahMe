@@ -1,0 +1,142 @@
+},
+  {
+    "business_name": "India's Oven",
+    "category": "Catering & Venue",
+    "city": "Fresno",
+    "state": "CA",
+    "website": "https://indiasovenfresno.com",
+    "rating": 4.5,
+    "price_tier": "$",
+    "tags":
+  },
+  {
+    "business_name": "Ritz-Carlton Half Moon Bay",
+    "category": "Venue",
+    "city": "Half Moon Bay",
+    "state": "CA",
+    "website": "https://www.ritzcarlton.com",
+    "rating": 4.8,
+    "price_tier": "$$$$",
+    "tags":
+  },
+  {
+    "business_name": "Fairmont San Jose",
+    "category": "Venue",
+    "city": "San Jose",
+    "state": "CA",
+    "website": "https://www.fairmont.com/san-jose",
+    "rating": 4.6,
+    "price_tier": "$$$",
+    "tags":
+  },
+  {
+    "business_name": "Saba Decor Rentals",
+    "category": "Decor",
+    "city": "Fremont",
+    "state": "CA",
+    "website": "https://www.sabadecorrentals.com",
+    "rating": 4.9,
+    "price_tier": "$$",
+    "tags":
+  },
+  {
+    "business_name": "Jalsa Catering",
+    "category": "Catering",
+    "city": "Santa Clara",
+    "state": "CA",
+    "website": "https://jalsacatering.com",
+    "rating": 4.7,
+    "price_tier": "$$$",
+    "tags":
+  },
+  {
+    "business_name": "Pandit Anand Balram Sharma",
+    "category": "Priest",
+    "city": "Hayward",
+    "state": "CA",
+    "website": "http://www.bayareahindupriest.com",
+    "rating": 4.8,
+    "price_tier": "$$",
+    "tags":
+  },
+  {
+    "business_name": "Vibiana",
+    "category": "Venue",
+    "city": "Los Angeles",
+    "state": "CA",
+    "website": "https://www.vibiana.com",
+    "rating": 4.7,
+    "price_tier": "$$$$",
+    "tags": ["Historic", "High Ceiling", "Premium", "Open Flame Permitted"]
+  },
+  {
+    "business_name": "Hyatt Regency Huntington Beach",
+    "category": "Venue",
+    "city": "Huntington Beach",
+    "state": "CA",
+    "website": "https://www.hyatt.com",
+    "rating": 4.6,
+    "price_tier": "$$$",
+    "tags":
+  },
+  {
+    "business_name": "Amber India",
+    "category": "Catering",
+    "city": "San Francisco",
+    "state": "CA",
+    "website": "https://www.amber-india.com",
+    "rating": 4.5,
+    "price_tier": "$$$",
+    "tags":
+  },
+  {
+    "business_name": "The Dante Club",
+    "category": "Venue",
+    "city": "Fresno",
+    "state": "CA",
+    "website": "https://www.danteclub.com",
+    "rating": 4.3,
+    "price_tier": "$",
+    "tags": ["Large Capacity", "Outside Catering Allowed", "Community Favorite"]
+  },
+  {
+    "business_name": "Lin & Jirsa Photography",
+    "category": "Photography",
+    "city": "Los Angeles",
+    "state": "CA",
+    "website": "https://www.linandjirsa.com",
+    "rating": 5.0,
+    "price_tier": "$$$$",
+    "tags":
+  },
+  {
+    "business_name": "Wicked Entertainment",
+    "category": "DJ & Lighting",
+    "city": "Sacramento",
+    "state": "CA",
+    "website": "https://wickedent.com",
+    "rating": 4.8,
+    "price_tier": "$$",
+    "tags":
+  },
+  {
+    "business_name": "Chandni Restaurant",
+    "category": "Venue & Catering",
+    "city": "Newark",
+    "state": "CA",
+    "website": "http://chandnirestaurant.com",
+    "rating": 4.0,
+    "price_tier": "$",
+    "tags":
+  },
+  {
+    "business_name": "Mantra India",
+    "category": "Catering",
+    "city": "Mountain View",
+    "state": "CA",
+    "website": "https://www.mantraindiausa.com",
+    "rating": 4.4,
+    "price_tier": "$$",
+    "tags":
+  }
+]
