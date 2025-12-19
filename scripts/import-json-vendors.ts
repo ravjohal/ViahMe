@@ -51,7 +51,7 @@ async function main() {
   const existingNames = new Set(existingVendors.map(v => v.name.toLowerCase().trim()));
   console.log(`Found ${existingNames.size} existing vendors in database`);
   
-  const htmlPath = path.join(process.cwd(), 'attached_assets/Pasted--business-name-Fairmont-San-Jose-category-Venue-city-Sa_1766133811342.txt');
+  const htmlPath = path.join(process.cwd(), 'attached_assets/Pasted--business-name-R-R-Event-Rentals-category-Decor-city-Ha_1766134409499.txt');
   let content = fs.readFileSync(htmlPath, 'utf-8');
   
   // Fix malformed JSON - remove leading }, and add opening bracket
