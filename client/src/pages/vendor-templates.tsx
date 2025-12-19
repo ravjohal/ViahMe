@@ -179,16 +179,19 @@ export default function VendorTemplates() {
   
   if (!currentVendor) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6">
-        <Card className="max-w-md">
-          <CardContent className="pt-6 text-center">
-            <Sparkles className="h-12 w-12 mx-auto text-primary mb-4" />
-            <p className="text-muted-foreground mb-4">Complete your vendor profile to access Templates.</p>
-            <Button onClick={() => setLocation("/vendor-dashboard")}>
-              Set Up Profile
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-background">
+        <VendorHeader />
+        <div className="flex items-center justify-center p-6 mt-20">
+          <Card className="max-w-md">
+            <CardContent className="pt-6 text-center">
+              <Sparkles className="h-12 w-12 mx-auto text-primary mb-4" />
+              <p className="text-muted-foreground mb-4">Complete your vendor profile to access Templates.</p>
+              <Button onClick={() => setLocation("/vendor-dashboard")}>
+                Set Up Profile
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
