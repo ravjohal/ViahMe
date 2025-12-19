@@ -15,6 +15,7 @@ interface VendorData {
 
 function mapCategory(category: string): string {
   const cat = category.toLowerCase();
+  if (cat.includes('gurdwara')) return 'gurdwara';
   if (cat.includes('photo')) return 'photographer';
   if (cat.includes('video')) return 'videographer';
   if (cat.includes('cater')) return 'caterer';
@@ -50,7 +51,7 @@ async function main() {
   const existingNames = new Set(existingVendors.map(v => v.name.toLowerCase().trim()));
   console.log(`Found ${existingNames.size} existing vendors in database`);
   
-  const htmlPath = path.join(process.cwd(), 'attached_assets/Pasted--business-name-India-s-Oven-Fresno-category-Catering-Ve_1766131113600.txt');
+  const htmlPath = path.join(process.cwd(), 'attached_assets/Pasted--business-name-Gurdwara-Sahib-Fremont-category-Gurdwara_1766131909392.txt');
   let content = fs.readFileSync(htmlPath, 'utf-8');
   
   // Fix malformed JSON - remove leading }, and add opening bracket
@@ -113,7 +114,7 @@ async function main() {
           ${categories},
           ${vendor.city + ', ' + vendor.state},
           ${city},
-          ${vendor.price_tier},
+          ${vendor.price_tier || '$$'},
           ARRAY['indian', 'south_asian'],
           ${vendor.tags && vendor.tags.length > 0 ? vendor.tags.join(', ') : 'Professional wedding services for South Asian celebrations.'},
           ${vendor.website || null},

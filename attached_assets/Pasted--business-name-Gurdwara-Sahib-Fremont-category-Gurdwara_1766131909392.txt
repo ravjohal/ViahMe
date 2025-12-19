@@ -1,0 +1,181 @@
+},
+  {
+    "business_name": "Gurdwara Sahib Fremont",
+    "category": "Gurdwara",
+    "city": "Fremont",
+    "state": "CA",
+    "address": "300 Gurdwara Rd, Fremont, CA 94536",
+    "phone": "(510) 790-0177",
+    "website": "https://fremontgurdwara.org",
+    "region": "Bay Area",
+    "tags": ["Central Hub", "Large Parking", "Community Events"]
+  },
+  {
+    "business_name": "The Sikh Center of San Francisco Bay Area",
+    "category": "Gurdwara",
+    "city": "El Sobrante",
+    "state": "CA",
+    "address": "3550 Hillcrest Rd, El Sobrante, CA 94803",
+    "phone": "(510) 223-9987",
+    "website": "https://thesikhcenter.com",
+    "region": "Bay Area",
+    "tags":
+  },
+  {
+    "business_name": "Gurdwara Sahib of Hayward",
+    "category": "Gurdwara",
+    "city": "Hayward",
+    "state": "CA",
+    "address": "1805 Hill Ave, Hayward, CA 94541",
+    "phone": "(510) 581-9031",
+    "region": "Bay Area",
+    "tags": ["Local Community", "Accessible"]
+  },
+  {
+    "business_name": "Sikh Temple Sacramento (West Sac)",
+    "category": "Gurdwara",
+    "city": "West Sacramento",
+    "state": "CA",
+    "address": "2301 Evergreen Ave, West Sacramento, CA 95691",
+    "phone": "(916) 371-9737",
+    "website": "https://sikhtemple.org",
+    "region": "Sacramento",
+    "tags":
+  },
+  {
+    "business_name": "Sacramento Sikh Society (Bradshaw)",
+    "category": "Gurdwara",
+    "city": "Sacramento",
+    "state": "CA",
+    "address": "7676 Bradshaw Rd, Sacramento, CA 95829",
+    "phone": "(916) 688-3020",
+    "website": "https://www.bradshawgurdwara.com",
+    "region": "Sacramento",
+    "tags":
+  },
+  {
+    "business_name": "Gurdwara Dasmesh Darbar",
+    "category": "Gurdwara",
+    "city": "Sacramento",
+    "state": "CA",
+    "address": "7733 Elk Grove Florin Rd, Sacramento, CA 95829",
+    "phone": "(916) 682-1090",
+    "region": "Sacramento",
+    "tags": ["Elk Grove Area", "Community Events"]
+  },
+  {
+    "business_name": "Gurdwara Sri Sachkhand Sahib",
+    "category": "Gurdwara",
+    "city": "Roseville",
+    "state": "CA",
+    "address": "1090 Main St, Roseville, CA 95678",
+    "phone": "(916) 773-6056",
+    "region": "Sacramento",
+    "tags":
+  },
+  {
+    "business_name": "Gurdwara Gur Nanak Parkash",
+    "category": "Gurdwara",
+    "city": "Fresno",
+    "state": "CA",
+    "address": "4250 E Lincoln Ave, Fresno, CA 93725",
+    "phone": "(559) 497-0205",
+    "region": "Fresno",
+    "tags":
+  },
+  {
+    "business_name": "Sikh Center of the Pacific Coast",
+    "category": "Gurdwara",
+    "city": "Selma",
+    "state": "CA",
+    "address": "2211 S Highland Ave, Selma, CA 93662",
+    "phone": "(559) 896-4969",
+    "region": "Fresno",
+    "tags":
+  },
+  {
+    "business_name": "Gurdwara Nanaksar Fresno",
+    "category": "Gurdwara",
+    "city": "Fresno",
+    "state": "CA",
+    "address": "3060 S Cherry Ave, Fresno, CA 93706",
+    "phone": "(559) 237-9750",
+    "website": "http://gurdwarananaksar.org",
+    "region": "Fresno",
+    "tags":
+  },
+  {
+    "business_name": "Gurudwara Singh Sabha Fresno",
+    "category": "Gurdwara",
+    "city": "Fresno",
+    "state": "CA",
+    "address": "4827 N Parkway Dr, Fresno, CA 93722",
+    "phone": "(559) 276-8800",
+    "region": "Fresno",
+    "tags":
+  },
+  {
+    "business_name": "Hollywood Sikh Temple (Vermont)",
+    "category": "Gurdwara",
+    "city": "Los Angeles",
+    "state": "CA",
+    "address": "1966 N Vermont Ave, Los Angeles, CA 90027",
+    "phone": "(323) 665-7707",
+    "website": "https://hollywoodsikhtemple.org",
+    "region": "Los Angeles",
+    "tags": ["Historic", "Vermont Gurdwara", "Central LA"]
+  },
+  {
+    "business_name": "Khalsa Care Foundation",
+    "category": "Gurdwara",
+    "city": "Pacoima",
+    "state": "CA",
+    "address": "9989 Laurel Canyon Blvd, Pacoima, CA 91331",
+    "phone": "(818) 896-7700",
+    "website": "http://khalsacarefoundation.org",
+    "region": "Los Angeles",
+    "tags":
+  },
+  {
+    "business_name": "Sri Guru Singh Sabha Walnut",
+    "category": "Gurdwara",
+    "city": "Walnut",
+    "state": "CA",
+    "address": "20001 E Walnut Dr S, Walnut, CA 91789",
+    "phone": "(909) 869-6165",
+    "website": "http://www.walnutsikhtemple.com",
+    "region": "Los Angeles",
+    "tags":
+  },
+  {
+    "business_name": "Gurdwara Singh Sabha Buena Park",
+    "category": "Gurdwara",
+    "city": "Buena Park",
+    "state": "CA",
+    "address": "7122 Orangethorpe Ave, Buena Park, CA 90621",
+    "phone": "(714) 670-8843",
+    "region": "Los Angeles",
+    "tags": ["Orange County", "Popular"]
+  },
+  {
+    "business_name": "Sikh Gurdwara of Los Angeles",
+    "category": "Gurdwara",
+    "city": "North Hollywood",
+    "state": "CA",
+    "address": "7640 Lankershim Blvd, North Hollywood, CA 91605",
+    "phone": "(818) 765-9399",
+    "region": "Los Angeles",
+    "tags": ["Lankershim", "North Hollywood"]
+  },
+  {
+    "business_name": "Gurdwara Sahib Riverside",
+    "category": "Gurdwara",
+    "city": "Jurupa Valley",
+    "state": "CA",
+    "address": "7940 Mission Blvd, Jurupa Valley, CA 92509",
+    "phone": "(951) 685-9701",
+    "website": "http://www.riversidegurdwara.org",
+    "region": "Los Angeles",
+    "tags":
+  }
+]
