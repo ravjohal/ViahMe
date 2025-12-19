@@ -45,12 +45,11 @@ export default function VendorPackages() {
   const [newFeature, setNewFeature] = useState("");
   const [packageFormErrors, setPackageFormErrors] = useState<Record<string, string>>({});
 
-  const { data: vendors, isLoading: vendorsLoading } = useQuery<Vendor[]>({
-    queryKey: ["/api/vendors"],
+  const { data: currentVendor, isLoading: vendorsLoading } = useQuery<Vendor>({
+    queryKey: ["/api/vendors/me"],
     enabled: !!user && user.role === "vendor",
   });
 
-  const currentVendor = vendors?.find(v => v.userId === user?.id);
   const vendorId = currentVendor?.id;
   const hasProfile = !!currentVendor;
 

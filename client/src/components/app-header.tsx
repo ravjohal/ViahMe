@@ -79,19 +79,14 @@ export function AppHeader() {
     enabled: user?.role !== "vendor",
   });
   
-  const { data: vendors } = useQuery<any[]>({
-    queryKey: ["/api/vendors"],
+  const { data: currentVendor } = useQuery<any>({
+    queryKey: ["/api/vendors/me"],
     enabled: user?.role === "vendor",
   });
   
   const wedding = useMemo(() => 
     user?.role !== "vendor" ? weddings?.[0] : undefined,
     [user?.role, weddings]
-  );
-  
-  const currentVendor = useMemo(() =>
-    user?.role === "vendor" ? vendors?.find(v => v.userId === user?.id) : undefined,
-    [user?.role, user?.id, vendors]
   );
   
   const daysUntilWedding = wedding?.weddingDate

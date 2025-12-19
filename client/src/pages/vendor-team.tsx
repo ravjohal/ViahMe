@@ -54,12 +54,10 @@ export default function VendorTeam() {
   const [inviteName, setInviteName] = useState("");
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
 
-  const { data: vendors, isLoading: vendorsLoading } = useQuery<Vendor[]>({
-    queryKey: ["/api/vendors"],
-    enabled: !!user,
+  const { data: currentVendor, isLoading: vendorsLoading } = useQuery<Vendor>({
+    queryKey: ["/api/vendors/me"],
+    enabled: !!user && user.role === "vendor",
   });
-
-  const currentVendor = vendors?.find(v => v.userId === user?.id);
 
   const { data: teammates, isLoading: teammatesLoading } = useQuery<VendorTeammate[]>({
     queryKey: ["/api/vendor-teammates", { vendorId: currentVendor?.id }],

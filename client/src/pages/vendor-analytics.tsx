@@ -32,14 +32,12 @@ interface RevenueTrend {
 export default function VendorAnalytics() {
   const { user } = useAuth();
 
-  // Fetch vendor profile using same pattern as dashboard
-  const { data: vendors, isLoading: vendorsLoading } = useQuery<Vendor[]>({
-    queryKey: ["/api/vendors"],
+  // Fetch vendor profile directly
+  const { data: vendor, isLoading: vendorsLoading } = useQuery<Vendor>({
+    queryKey: ["/api/vendors/me"],
     enabled: !!user && user.role === "vendor",
   });
 
-  // Find vendor by user ID
-  const vendor = vendors?.find(v => v.userId === user?.id);
   const vendorId = vendor?.id;
 
   // Fetch analytics summary

@@ -181,12 +181,11 @@ export default function MessagesPage() {
   const wedding = weddings?.[0];
   const weddingId = wedding?.id;
 
-  const { data: vendors = [], isLoading: vendorsLoading } = useQuery<Vendor[]>({
-    queryKey: ["/api/vendors"],
+  const { data: currentVendor, isLoading: vendorsLoading } = useQuery<Vendor>({
+    queryKey: ["/api/vendors/me"],
     enabled: isVendor && !!user,
   });
 
-  const currentVendor = vendors?.find(v => v.userId === user?.id);
   const vendorId = currentVendor?.id;
 
   const { data: coupleConversations = [] } = useQuery<any[]>({

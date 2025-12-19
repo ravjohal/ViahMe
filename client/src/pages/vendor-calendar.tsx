@@ -72,11 +72,10 @@ export default function VendorCalendar() {
   const [localSelectedDates, setLocalSelectedDates] = useState<Date[]>([]);
   const [localTimeSlot, setLocalTimeSlot] = useState<string>("full_day");
 
-  const { data: vendors = [] } = useQuery<Vendor[]>({
-    queryKey: ["/api/vendors"],
+  const { data: myVendor } = useQuery<Vendor>({
+    queryKey: ["/api/vendors/me"],
+    enabled: !!user && user.role === "vendor",
   });
-
-  const myVendor = vendors.find(v => v.userId === user?.id);
   // Note: Google/Outlook sync UI is temporarily hidden until Nylas integration
   // The code still supports these sources for when they're re-enabled
   const currentCalendarSource = (myVendor?.calendarSource || 'local') as CalendarSource;

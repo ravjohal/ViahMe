@@ -83,12 +83,11 @@ export default function VendorBookings() {
   const [newSlotTime, setNewSlotTime] = useState("morning");
   const [newSlotNotes, setNewSlotNotes] = useState("");
 
-  const { data: vendors, isLoading: vendorsLoading } = useQuery<Vendor[]>({
-    queryKey: ["/api/vendors"],
+  const { data: currentVendor, isLoading: vendorsLoading } = useQuery<Vendor>({
+    queryKey: ["/api/vendors/me"],
     enabled: !!user && user.role === "vendor",
   });
 
-  const currentVendor = vendors?.find(v => v.userId === user?.id);
   const vendorId = currentVendor?.id;
 
   const { data: bookings = [], isLoading: bookingsLoading } = useQuery<Booking[]>({

@@ -119,14 +119,12 @@ export default function VendorDashboard() {
   });
   const [newFeature, setNewFeature] = useState("");
 
-  // Fetch vendor profile for authenticated user
-  const { data: vendors, isLoading: vendorsLoading } = useQuery<Vendor[]>({
-    queryKey: ["/api/vendors"],
+  // Fetch vendor profile for authenticated user directly
+  const { data: currentVendor, isLoading: vendorsLoading } = useQuery<Vendor>({
+    queryKey: ["/api/vendors/me"],
     enabled: !!user && user.role === "vendor",
   });
 
-  // Find vendor by user ID
-  const currentVendor = vendors?.find(v => v.userId === user?.id);
   const vendorId = currentVendor?.id;
 
   const { data: bookings = [], isLoading: bookingsLoading } = useQuery<Booking[]>({
