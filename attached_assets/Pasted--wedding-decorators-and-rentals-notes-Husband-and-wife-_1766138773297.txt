@@ -1,0 +1,208 @@
+{
+  "wedding_decorators_and_rentals":,
+      "notes": "Husband and wife team specializing in high-quality, boutique designs. They offer specific packages for home events and ceremonies."
+    },
+    {
+      "business_name": "Central Valley Event Planning (CVEP)",
+      "category": "Planner & Decorator",
+      "location": "Fresno, CA",
+      "website": "https://www.centralvalleyeventplanning.com/",
+      "phone": "(559) 709-8603",
+      "specialties":,
+      "notes": "Features an in-house 'Master Decorator' (Maryam Khan) to handle design logistics internally."
+    },
+    {
+      "business_name": "Royal Events and Decor",
+      "category": "Decorator",
+      "location": "Fresno, CA",
+      "website": "https://www.royaleventsanddecor.com/",
+      "specialties":,
+      "notes": "Local Fresno vendor focused specifically on event decor and staging."
+    },
+    {
+      "business_name": "Dream Creations",
+      "category": "Decorator & Rentals",
+      "location": "Fresno, CA",
+      "website": "https://www.dreamcreations559.com/",
+      "specialties":,
+      "notes": "Established in 2019, offers customizable rentals and on-site supervision."
+    },
+    {
+      "business_name": "Expo Events (formerly Best Party Rentals)",
+      "category": "Infrastructure & Rentals",
+      "location": "Clovis/Fresno, CA",
+      "website": "https://exporentals.com/",
+      "phone": "(559) 495-3300",
+      "specialties":,
+      "notes": "Critical for outdoor weddings requiring heavy infrastructure like stages for the Mandap and satellite kitchens."
+    },
+    {
+      "business_name": "It's My Party Rentals",
+      "category": "Rentals",
+      "location": "Fresno, CA",
+      "website": "https://itsmypartyrentals.com/",
+      "phone": "(559) 291-1477",
+      "specialties":,
+      "notes": "Key source for the bright linens (hot pink, teal, orange) required for Sangeet and Mehndi events."
+    },
+    {
+      "business_name": "Aroza Event Center",
+      "category": "Venue & Decor",
+      "location": "Clovis, CA",
+      "website": "https://arozausa.com/",
+      "phone": "(559) 218-5723",
+      "specialties":,
+      "notes": "Vertically integrated venue that provides decor, lighting, and food in a single package."
+    },
+    {
+      "business_name": "Maharaja Events (Singh's Production)",
+      "category": "Decorator & Production",
+      "location": "Sacramento, CA",
+      "website": "https://www.singhsproduction.com/",
+      "phone": "916-397-2406",
+      "specialties":,
+      "notes": "A 'One Stop' cultural hub offering everything from decor to clothing, ideal for traditional Punjabi weddings."
+    },
+    {
+      "business_name": "Visual Impact Design",
+      "category": "Floral Design",
+      "location": "Sacramento, CA",
+      "website": "https://www.visualimpact-design.com/",
+      "phone": "916-489-3746",
+      "specialties": ["Floral Mandaps", "Lush Garlands", "Ceremony Arches"],
+      "notes": "Award-winning florist known for creating structure-heavy floral designs suitable for fusion and luxury weddings."
+    },
+    {
+      "business_name": "CL Decor",
+      "category": "Decorator",
+      "location": "Sacramento/Roseville, CA",
+      "website": "https://www.cldecor.com/",
+      "email": "CLDecor@Yahoo.com",
+      "specialties":,
+      "notes": "Specializes in transforming ballrooms with extensive pipe-and-drape and custom lighting rigs."
+    },
+    {
+      "business_name": "Blissful Dream Decorators",
+      "category": "Decorator",
+      "location": "Rancho Cordova/Sacramento, CA",
+      "website": "https://blissfuldreamdecorators.com/",
+      "specialties":,
+      "notes": "Highly rated for 'Aqiqah' and 'Nikah' events; holds inventory of royal throne chairs (Red, Blue, Gold)."
+    },
+    {
+      "business_name": "Majestic Events by Kiran",
+      "category": "Planner & Decorator",
+      "location": "Sacramento, CA",
+      "website": "https://www.majesticeventsdecor.com/",
+      "specialties":,
+      "notes": "Focuses on the experiential 'wow' factors and detailed cultural planning."
+    },
+    {
+      "business_name": "Cultural Event Rentals",
+      "category": "Specialty Rentals",
+      "base_location": "Sonoma, CA (Serves Valley)",
+      "website": "https://culturaleventrentals.com/",
+      "specialties":,
+      "notes": "Critical for Sikh weddings as they stock the specific religious furniture required for the Guru Granth Sahib."
+    },
+    {
+      "business_name": "Saba Decor Rentals",
+      "category": "Decorator",
+      "base_location": "Fremont, CA (Serves Valley)",
+      "website": "https://www.sabadecorrentals.com/",
+      "specialties":,
+      "notes": "High-end vendor that travels to the Valley. Essential for couples wanting 'Bling' or crystal structures local vendors don't stock."
+    }
+  ],
+  "wedding_media_vendors":,
+      "notes": "Large studio model with backup teams; excellent for multi-day events requiring guaranteed coverage."
+    },
+    {
+      "business_name": "Motion 8 Films",
+      "category": "Cinematography & Photography",
+      "location": "Sacramento / Yuba City, CA",
+      "website": "https://www.motion8films.com/",
+      "pricing_start": "$5,000+",
+      "specialties":,
+      "notes": "The premier choice for Sikh weddings in Yuba City/Sacramento. Known for high-end cinematic storytelling and SDEs."
+    },
+    {
+      "business_name": "Aperina Studios",
+      "category": "Photography & Videography",
+      "location": "Citrus Heights, CA",
+      "website": "https://aperina.com/",
+      "pricing_start": "$3,900 (Photo)",
+      "specialties":,
+      "notes": "Boutique 'Friendor' philosophy. High-touch service led by brothers Paul and Vitaliy. Transparent pricing online."
+    },
+    {
+      "business_name": "CineCrown",
+      "category": "Multimedia Agency",
+      "location": "Midtown Sacramento, CA",
+      "website": "https://cinecrown.com/",
+      "phone": "916-800-3388",
+      "specialties":,
+      "notes": "Owns a physical studio space for indoor portraits. Offers a 'Agency' approach with high-end commercial equipment."
+    },
+    {
+      "business_name": "JSK Photography",
+      "category": "Photography",
+      "location": "Central Valley / Sacramento",
+      "website": "https://www.jskphotography.com/",
+      "pricing_start": "$2,500+",
+      "specialties":,
+      "notes": "Perfect for couples who hate 'posing'. Known for efficiency in handling large Indian family group shots."
+    },
+    {
+      "business_name": "Jasmine Mullen Productions",
+      "category": "Videography & Photography",
+      "location": "Elk Grove, CA",
+      "website": "https://jasminemullenproductions.com/",
+      "pricing_start": "$3,500 (Video)",
+      "specialties":,
+      "notes": "Offers a distinct 'Anti-Cinema' style that feels like an elevated home movie. Ideal for modern/Gen-Z couples."
+    },
+    {
+      "business_name": "Red Rose Photo and Film",
+      "category": "Photography & Videography",
+      "location": "Bay Area / Sacramento",
+      "website": "https://redrosephotoandfilm.com/",
+      "specialties":,
+      "notes": "Founded by Rashmi; excellent for families where elders may not speak English fluently."
+    },
+    {
+      "business_name": "Dee and Kris Photography",
+      "category": "Photography",
+      "location": "Sacramento, CA",
+      "website": "https://deeandkrisphotography.com/",
+      "specialties":,
+      "notes": "Dee focuses on drama/light; Kris focuses on romance/emotion. They also own a studio in Midtown."
+    },
+    {
+      "business_name": "Sukanya Singh Photography",
+      "category": "Photography",
+      "location": "Folsom, CA",
+      "website": "https://www.sukanyasinghphoto.com/",
+      "pricing_start": "$800+",
+      "specialties":,
+      "notes": "Great option for pre-wedding events or smaller ceremonies. Transparent pricing and family-focused."
+    },
+    {
+      "business_name": "Gagan Dhiman",
+      "category": "Photography",
+      "location": "Roseville, CA",
+      "website": "https://gagan-dhiman.com/",
+      "pricing_start": "$6,800+",
+      "specialties": ["Photojournalism", "Precision", "Candid Moments"],
+      "notes": "Former combat photographer; brings extreme discipline and grace under pressure to chaotic wedding environments."
+    },
+    {
+      "business_name": "KSway Films",
+      "category": "Cinematography",
+      "location": "Redding / Yuba City",
+      "website": "https://www.kswayfilms.com/",
+      "specialties":,
+      "notes": "Regional specialist often collaborating on Sikh circuits in Yuba City."
+    }
+  ]
+}
