@@ -1,0 +1,192 @@
+},
+  {
+    "business_name": "Fairmont San Jose",
+    "category": "Venue",
+    "city": "San Jose",
+    "state": "CA",
+    "website": "https://www.fairmont.com/san-jose",
+    "rating": 4.7,
+    "price_tier": "$$$",
+    "tags":
+  },
+  {
+    "business_name": "Casa Real at Ruby Hill Winery",
+    "category": "Venue",
+    "city": "Pleasanton",
+    "state": "CA",
+    "website": "https://casarealevents.com",
+    "rating": 4.8,
+    "price_tier": "$$$",
+    "tags": ["Vineyard", "Outdoor Ceremony", "Fire Allowed"]
+  },
+  {
+    "business_name": "Jalsa Catering & Events",
+    "category": "Catering",
+    "city": "Santa Clara",
+    "state": "CA",
+    "website": "https://jalsacatering.com",
+    "rating": 4.8,
+    "price_tier": "$$$",
+    "tags":
+  },
+  {
+    "business_name": "Amber India",
+    "category": "Catering",
+    "city": "Los Altos",
+    "state": "CA",
+    "website": "https://www.amber-india.com",
+    "rating": 4.5,
+    "price_tier": "$$$",
+    "tags":
+  },
+  {
+    "business_name": "Saba Decor Rentals",
+    "category": "Decor",
+    "city": "Fremont",
+    "state": "CA",
+    "website": "https://www.sabadecorrentals.com",
+    "rating": 4.9,
+    "price_tier": "$$",
+    "tags":
+  },
+  {
+    "business_name": "R&R Event Rentals",
+    "category": "Decor",
+    "city": "Hayward",
+    "state": "CA",
+    "website": "https://www.ramanandraveen.com",
+    "rating": 5.0,
+    "price_tier": "$$$",
+    "tags":
+  },
+  {
+    "business_name": "Avasar Mandap",
+    "category": "Decor",
+    "city": "Fremont",
+    "state": "CA",
+    "website": "https://www.avasarmandap.com",
+    "rating": 4.6,
+    "price_tier": "$$",
+    "tags":
+  },
+  {
+    "business_name": "Pandit Anand Balram Sharma",
+    "category": "Priest",
+    "city": "Hayward",
+    "state": "CA",
+    "website": "http://www.bayareahindupriest.com",
+    "rating": 4.8,
+    "price_tier": "$$",
+    "tags":
+  },
+  {
+    "business_name": "Pandit Vivek Shukla",
+    "category": "Priest",
+    "city": "Sunnyvale",
+    "state": "CA",
+    "website": "https://www.panditjiusa.com",
+    "rating": 4.7,
+    "price_tier": "$$",
+    "tags":
+  },
+  {
+    "business_name": "MP Singh Photography",
+    "category": "Photography",
+    "city": "San Jose",
+    "state": "CA",
+    "website": "https://mpsinghphotography.com",
+    "rating": 4.9,
+    "price_tier": "$$$",
+    "tags": ["Editorial", "Candid", "High End"]
+  },
+  {
+    "business_name": "Wedding Documentary",
+    "category": "Photography & Video",
+    "city": "San Jose",
+    "state": "CA",
+    "website": "https://www.weddingdocumentary.com",
+    "rating": 4.8,
+    "price_tier": "$$$",
+    "tags":
+  },
+  {
+    "business_name": "Neetu Josh Art Co",
+    "category": "Makeup",
+    "city": "Fremont",
+    "state": "CA",
+    "website": "https://www.instagram.com/neetujosh_artco",
+    "rating": 5.0,
+    "price_tier": "$$$$",
+    "tags":
+  },
+  {
+    "business_name": "Mantra India",
+    "category": "Catering",
+    "city": "Mountain View",
+    "state": "CA",
+    "website": "https://www.mantraindiausa.com",
+    "rating": 4.4,
+    "price_tier": "$$",
+    "tags":
+  },
+  {
+    "business_name": "Palace of Fine Arts",
+    "category": "Venue",
+    "city": "San Francisco",
+    "state": "CA",
+    "website": "https://palaceoffinearts.org",
+    "rating": 4.8,
+    "price_tier": "$$$",
+    "tags":
+  },
+  {
+    "business_name": "Chandni Restaurant",
+    "category": "Venue & Catering",
+    "city": "Newark",
+    "state": "CA",
+    "website": "http://chandnirestaurant.com",
+    "rating": 4.2,
+    "price_tier": "$",
+    "tags":
+  },
+  {
+    "business_name": "India Community Center",
+    "category": "Venue",
+    "city": "Milpitas",
+    "state": "CA",
+    "website": "https://www.indiacc.org",
+    "rating": 4.5,
+    "price_tier": "$$",
+    "tags":
+  },
+  {
+    "business_name": "Wicked Entertainment",
+    "category": "DJ",
+    "city": "San Jose",
+    "state": "CA",
+    "website": "https://www.wickedent.com",
+    "rating": 4.9,
+    "price_tier": "$$",
+    "tags":
+  },
+  {
+    "business_name": "Toasty's DJ & Lighting",
+    "category": "DJ",
+    "city": "Fremont",
+    "state": "CA",
+    "website": "https://www.toastys.com",
+    "rating": 4.8,
+    "price_tier": "$$",
+    "tags": ["Lighting", "MC", "Fusion"]
+  },
+  {
+    "business_name": "Henna Creation by Alapi",
+    "category": "Mehndi",
+    "city": "Fremont",
+    "state": "CA",
+    "website": "https://www.hennacreation.com",
+    "rating": 4.7,
+    "price_tier": "$",
+    "tags":
+  }
+]
