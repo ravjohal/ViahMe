@@ -1,0 +1,96 @@
+},
+  {
+    "business_name": "Gurdwara Sahib Yuba City (Tierra Buena)",
+    "category": "Gurdwara",
+    "city": "Yuba City",
+    "state": "CA",
+    "address": "2468 Tierra Buena Rd, Yuba City, CA 95993",
+    "phone": "(530) 673-9918",
+    "website": "http://sikhtempleyc.org",
+    "region": "Yuba City",
+    "tags": ["Historic", "Nagar Kirtan Host", "Massive Capacity"]
+  },
+  {
+    "business_name": "Sri Guru Nanak Sikh Temple (Bogue Road)",
+    "category": "Gurdwara",
+    "city": "Yuba City",
+    "state": "CA",
+    "address": "2269 Bogue Rd, Yuba City, CA 95993",
+    "phone": "(530) 671-7237",
+    "region": "Yuba City",
+    "tags":
+  },
+  {
+    "business_name": "Gurdwara Sahib of Milpitas",
+    "category": "Gurdwara",
+    "city": "Milpitas",
+    "state": "CA",
+    "address": "1180 Cadillac Ct, Milpitas, CA 95035",
+    "phone": "(408) 946-1399",
+    "website": "http://www.gurdwaraofmilpitas.com",
+    "region": "Bay Area",
+    "tags":
+  },
+  {
+    "business_name": "Gurdwara Singh Sabha Milpitas",
+    "category": "Gurdwara",
+    "city": "Milpitas",
+    "state": "CA",
+    "address": "362 S Milpitas Blvd, Milpitas, CA 95035",
+    "phone": "(408) 781-3012",
+    "region": "Bay Area",
+    "tags":
+  },
+  {
+    "business_name": "Silicon Valley Gurdwara",
+    "category": "Gurdwara",
+    "city": "Santa Clara",
+    "state": "CA",
+    "address": "2356 Walsh Ave, Santa Clara, CA 95051",
+    "phone": "(408) 475-0634",
+    "website": "https://www.siliconvalleygurdwara.org",
+    "region": "Bay Area",
+    "tags":
+  },
+  {
+    "business_name": "Gurdwara Sahib of Livermore (Tri-Valley)",
+    "category": "Gurdwara",
+    "city": "Livermore",
+    "state": "CA",
+    "address": "2089 Gurdwara St, Livermore, CA 94551",
+    "website": "https://www.livermoregurdwara.org",
+    "region": "Bay Area",
+    "tags":
+  },
+  {
+    "business_name": "Gurdwara Gur Nanak Parkash (Tracy)",
+    "category": "Gurdwara",
+    "city": "Tracy",
+    "state": "CA",
+    "address": "16101 W Grant Line Rd, Tracy, CA 95304",
+    "phone": "(209) 836-0971",
+    "region": "Central Valley",
+    "tags": ["Grant Line", "Large Langar Hall"]
+  },
+  {
+    "business_name": "Gurdwara Sahib Tracy",
+    "category": "Gurdwara",
+    "city": "Tracy",
+    "state": "CA",
+    "address": "11770 W Clover Rd, Tracy, CA 95304",
+    "phone": "(209) 836-2215",
+    "region": "Central Valley",
+    "tags":
+  },
+  {
+    "business_name": "Deshmesh Darbar Lodi",
+    "category": "Gurdwara",
+    "city": "Lodi",
+    "state": "CA",
+    "address": "12098 N West Ln, Lodi, CA 95240",
+    "phone": "(209) 368-5177",
+    "website": "http://www.lodigurdwara.org",
+    "region": "Central Valley",
+    "tags":
+  }
+]
