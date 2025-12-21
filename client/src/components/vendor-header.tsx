@@ -129,10 +129,10 @@ export function VendorHeader() {
               <DropdownMenuSeparator />
               {vendor && (
                 <>
-                  <Link href={`/vendor-profile/${vendor.id}`}>
+                  <Link href={`/vendors?preview=${vendor.id}`}>
                     <DropdownMenuItem className="gap-2 cursor-pointer" data-testid="menu-item-view-profile">
                       <Eye className="w-4 h-4" />
-                      View Profile
+                      Preview as Couple
                     </DropdownMenuItem>
                   </Link>
                   <Link href="/vendor-profile">
@@ -204,7 +204,7 @@ export function VendorHeader() {
             </div>
             {vendor && (
               <>
-                <Link href={`/vendor-profile/${vendor.id}`}>
+                <Link href={`/vendors?preview=${vendor.id}`}>
                   <Button
                     variant="ghost"
                     className="w-full justify-start"
@@ -212,7 +212,7 @@ export function VendorHeader() {
                     data-testid="button-mobile-view-profile"
                   >
                     <Eye className="w-4 h-4 mr-2" />
-                    View Profile
+                    Preview as Couple
                   </Button>
                 </Link>
                 <Link href="/vendor-profile">

@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { VendorDirectory } from "@/components/vendor-directory";
 import { VendorDetailModal } from "@/components/vendor-detail-modal";
 import { VendorComparisonModal } from "@/components/vendor-comparison-modal";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -13,11 +13,13 @@ import type { Wedding, Vendor, Event } from "@shared/schema";
 
 export default function Vendors() {
   const [, setLocation] = useLocation();
+  const searchString = useSearch();
   const { toast } = useToast();
   const { user } = useAuth();
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
   const [comparisonVendors, setComparisonVendors] = useState<Vendor[]>([]);
   const [showComparison, setShowComparison] = useState(false);
+  const [previewHandled, setPreviewHandled] = useState(false);
 
   // Only fetch weddings if user is authenticated
   const { data: weddings } = useQuery<Wedding[]>({
@@ -35,6 +37,36 @@ export default function Vendors() {
     queryKey: ["/api/events", wedding?.id],
     enabled: !!wedding?.id,
   });
+
+  // Handle preview parameter from vendor profile dropdown
+  useEffect(() => {
+    if (!previewHandled && searchString) {
+      const params = new URLSearchParams(searchString);
+      const previewId = params.get('preview');
+      if (previewId) {
+        // First check if vendor is in public list
+        const vendorToPreview = vendors.find(v => v.id === previewId);
+        if (vendorToPreview) {
+          setSelectedVendor(vendorToPreview);
+          setPreviewHandled(true);
+          setLocation('/vendors', { replace: true });
+        } else if (!vendorsLoading) {
+          // Vendor not in public list - fetch directly (for unpublished vendors)
+          fetch(`/api/vendors/${previewId}`)
+            .then(res => res.ok ? res.json() : null)
+            .then(vendor => {
+              if (vendor) {
+                setSelectedVendor(vendor);
+              }
+            })
+            .finally(() => {
+              setPreviewHandled(true);
+              setLocation('/vendors', { replace: true });
+            });
+        }
+      }
+    }
+  }, [vendors, vendorsLoading, searchString, previewHandled, setLocation]);
 
   const bookingMutation = useMutation({
     mutationFn: async (data: {
