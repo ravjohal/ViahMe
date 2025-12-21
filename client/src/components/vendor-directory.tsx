@@ -383,6 +383,27 @@ export function VendorDirectory({
               )}
             </div>
           )}
+
+          <div className="flex items-center justify-between pt-2 border-t">
+            <span className="text-sm text-muted-foreground" data-testid="text-vendor-count">
+              Showing <span className="font-semibold text-foreground">{filteredVendors.length}</span> of {vendors.length} vendors
+            </span>
+            {filteredVendors.length !== vendors.length && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSearchTerm("");
+                  setCategoryFilter("all");
+                  setPriceFilter("all");
+                  setCityFilter("all");
+                }}
+                data-testid="button-clear-all-filters"
+              >
+                Clear all filters
+              </Button>
+            )}
+          </div>
         </div>
       </Card>
 
