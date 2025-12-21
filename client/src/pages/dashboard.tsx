@@ -16,7 +16,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { usePermissions } from "@/hooks/use-permissions";
 import { useAuth } from "@/hooks/use-auth";
 import { PERMISSION_CATEGORIES, type PermissionCategory } from "@shared/schema";
-import type { Wedding, Event, BudgetCategory, Contract, Vendor, EventCostItem, Guest, WeddingRole } from "@shared/schema";
+import type { Wedding, Event, BudgetCategory, Contract, Booking, EventCostItem, Guest, WeddingRole } from "@shared/schema";
 
 const CATEGORY_LABELS: Record<string, string> = {
   catering: "Catering & Food",
@@ -238,8 +238,9 @@ export default function Dashboard() {
     enabled: !!wedding?.id,
   });
 
-  const { data: vendors = [] } = useQuery<Vendor[]>({
-    queryKey: ["/api/vendors"],
+  const { data: bookings = [] } = useQuery<Booking[]>({
+    queryKey: ["/api/bookings", wedding?.id],
+    enabled: !!wedding?.id,
   });
 
   const { data: contracts = [] } = useQuery<Contract[]>({
@@ -331,7 +332,7 @@ export default function Dashboard() {
   const hasBudget = totalBudget > 0;
   const hasCategories = budgetCategories.length > 0;
   const hasEvents = events.length > 0;
-  const hasVendors = vendors.length > 0;
+  const hasVendors = bookings.length > 0;
   const hasGuests = guests.length > 0;
 
   // Step definitions with completion status
@@ -585,7 +586,7 @@ export default function Dashboard() {
                 <div>
                   <p className="text-xs text-muted-foreground">Vendors</p>
                   <p className="font-mono text-xl font-bold" data-testid="stat-vendors-count">
-                    {vendors.length}
+                    {bookings.length}
                   </p>
                 </div>
               </div>
