@@ -189,6 +189,7 @@ export default function Vendors() {
           vendors={vendors}
           onSelectVendor={setSelectedVendor}
           tradition={wedding?.tradition}
+          wedding={wedding}
           onAddToComparison={handleAddToComparison}
           comparisonVendors={comparisonVendors}
           onOpenComparison={() => setShowComparison(true)}

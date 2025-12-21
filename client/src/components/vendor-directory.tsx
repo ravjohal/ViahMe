@@ -11,16 +11,113 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Search, Filter, SlidersHorizontal, GitCompare, X } from "lucide-react";
-import type { Vendor } from "@shared/schema";
+import type { Vendor, Wedding } from "@shared/schema";
 import { VendorCard } from "./vendor-card";
 
 interface VendorDirectoryProps {
   vendors: Vendor[];
   onSelectVendor?: (vendor: Vendor) => void;
   tradition?: string;
+  wedding?: Wedding | null;
   onAddToComparison?: (vendor: Vendor) => void;
   comparisonVendors?: Vendor[];
   onOpenComparison?: () => void;
+}
+
+// Map budget amounts to price range tiers
+function getBudgetTier(totalBudget: string | null | undefined): string[] {
+  if (!totalBudget) return ['$', '$$', '$$$', '$$$$']; // No budget = all tiers match
+  const budget = parseFloat(totalBudget);
+  if (budget < 30000) return ['$', '$$'];
+  if (budget < 75000) return ['$$', '$$$'];
+  if (budget < 150000) return ['$$$', '$$$$'];
+  return ['$$$$'];
+}
+
+// Map wedding location to vendor city format
+function normalizeCity(location: string | undefined): string {
+  if (!location) return '';
+  const loc = location.toLowerCase();
+  if (loc.includes('bay area') || loc.includes('san francisco') || loc.includes('san jose') || loc.includes('oakland')) {
+    return 'San Francisco Bay Area';
+  }
+  if (loc.includes('new york') || loc.includes('nyc') || loc.includes('manhattan')) {
+    return 'New York City';
+  }
+  if (loc.includes('los angeles') || loc.includes('la') || loc.includes('socal')) {
+    return 'Los Angeles';
+  }
+  if (loc.includes('chicago')) return 'Chicago';
+  if (loc.includes('seattle')) return 'Seattle';
+  return location;
+}
+
+// Calculate recommendation score for a vendor based on wedding preferences
+function calculateRecommendationScore(
+  vendor: Vendor, 
+  wedding: Wedding | null | undefined
+): number {
+  let score = 0;
+  
+  // Base score for published vendors
+  if (vendor.isPublished) score += 10;
+  
+  // Featured bonus (manual curation)
+  if (vendor.featured) score += 15;
+  
+  // Rating score (0-25 points based on rating)
+  const rating = vendor.rating ? parseFloat(vendor.rating.toString()) : 0;
+  score += rating * 5; // 5.0 rating = 25 points
+  
+  // Review count bonus (social proof)
+  const reviewCount = vendor.reviewCount || 0;
+  if (reviewCount >= 100) score += 10;
+  else if (reviewCount >= 50) score += 7;
+  else if (reviewCount >= 20) score += 4;
+  else if (reviewCount >= 5) score += 2;
+  
+  if (!wedding) return score;
+  
+  // City match bonus (strongest signal)
+  const coupleCity = normalizeCity(wedding.location);
+  if (coupleCity && vendor.city === coupleCity) {
+    score += 20;
+  } else if (vendor.city === 'San Francisco Bay Area' || vendor.city === 'Los Angeles') {
+    // Major metro areas get a small bonus even if not exact match
+    score += 5;
+  }
+  
+  // Budget tier match bonus
+  const budgetTiers = getBudgetTier(wedding.totalBudget);
+  if (vendor.priceRange && budgetTiers.includes(vendor.priceRange)) {
+    score += 15;
+  }
+  
+  // Tradition match bonus
+  const tradition = wedding.tradition?.toLowerCase();
+  if (tradition && vendor.culturalSpecialties?.length) {
+    if (vendor.culturalSpecialties.some(s => s.toLowerCase() === tradition)) {
+      score += 20;
+    }
+    // Partial match for related traditions
+    if (tradition === 'sikh' && vendor.culturalSpecialties.includes('punjabi')) {
+      score += 10;
+    }
+    if (tradition === 'hindu' && vendor.culturalSpecialties.some(s => 
+      ['south_indian', 'gujarati', 'north_indian'].includes(s)
+    )) {
+      score += 8;
+    }
+  }
+  
+  // Preferred wedding traditions match
+  if (tradition && vendor.preferredWeddingTraditions?.length) {
+    if (vendor.preferredWeddingTraditions.includes(tradition)) {
+      score += 10;
+    }
+  }
+  
+  return score;
 }
 
 const VENDOR_CATEGORIES = [
@@ -85,6 +182,7 @@ export function VendorDirectory({
   vendors,
   onSelectVendor,
   tradition,
+  wedding,
   onAddToComparison,
   comparisonVendors = [],
   onOpenComparison,
@@ -138,15 +236,30 @@ export function VendorDirectory({
     return matchesSearch && matchesCat && matchesPrice && matchesCity && matchesTradition;
   });
 
-  // Sort to show featured vendors first
-  const sortedVendors = [...filteredVendors].sort((a, b) => {
-    if (a.featured && !b.featured) return -1;
-    if (!a.featured && b.featured) return 1;
-    return 0;
-  });
+  // Calculate recommendation scores and sort by score (highest first)
+  const vendorsWithScores = useMemo(() => {
+    return filteredVendors.map(vendor => ({
+      vendor,
+      score: calculateRecommendationScore(vendor, wedding)
+    }));
+  }, [filteredVendors, wedding]);
 
-  const featuredVendors = sortedVendors.filter((v) => v.featured).slice(0, 3);
-  const regularVendors = sortedVendors.filter((v) => !v.featured);
+  const sortedVendors = useMemo(() => {
+    return [...vendorsWithScores]
+      .sort((a, b) => b.score - a.score)
+      .map(v => v.vendor);
+  }, [vendorsWithScores]);
+
+  // Top recommended vendors (score >= 50, max 6)
+  const recommendedVendors = useMemo(() => {
+    return vendorsWithScores
+      .filter(v => v.score >= 50)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 6)
+      .map(v => v.vendor);
+  }, [vendorsWithScores]);
+
+  const regularVendors = sortedVendors.filter(v => !recommendedVendors.includes(v));
 
   return (
     <div className="space-y-6">
@@ -279,7 +392,7 @@ export function VendorDirectory({
         </div>
       </Card>
 
-      {featuredVendors.length > 0 && (
+      {recommendedVendors.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <h3 className="font-display text-xl font-semibold text-foreground">
@@ -290,12 +403,12 @@ export function VendorDirectory({
             </Badge>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredVendors.map((vendor) => (
+            {recommendedVendors.map((vendor) => (
               <VendorCard
                 key={vendor.id}
                 vendor={vendor}
                 onSelect={onSelectVendor}
-                featured
+                featured={vendor.featured ?? undefined}
                 onAddToComparison={onAddToComparison}
                 isInComparison={comparisonVendors.some(v => v.id === vendor.id)}
               />
@@ -305,7 +418,7 @@ export function VendorDirectory({
       )}
 
       <div className="space-y-4">
-        {featuredVendors.length > 0 && (
+        {recommendedVendors.length > 0 && (
           <h3 className="font-display text-xl font-semibold text-foreground">
             All Vendors
           </h3>
