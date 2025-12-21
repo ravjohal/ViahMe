@@ -84,7 +84,16 @@ export default function TasksPage() {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [aiRecommendationsOpen, setAiRecommendationsOpen] = useState(true);
   const [aiRecommendations, setAiRecommendations] = useState<AiRecommendation[]>([]);
-  const [dismissedRecommendations, setDismissedRecommendations] = useState<Set<string>>(new Set());
+  
+  // Load dismissed recommendations from localStorage for persistence across sessions
+  const [dismissedRecommendations, setDismissedRecommendations] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem('dismissedAiRecommendations');
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
 
   const { data: weddings = [], isLoading: weddingsLoading } = useQuery<any[]>({
     queryKey: ["/api/weddings"],
@@ -226,7 +235,16 @@ export default function TasksPage() {
     },
     onSuccess: (_, { recommendation }) => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks", wedding?.id] });
-      setDismissedRecommendations(prev => new Set([...prev, recommendation.title]));
+      // Mark as dismissed so it won't appear in recommendations again
+      setDismissedRecommendations(prev => {
+        const newSet = new Set([...prev, recommendation.title]);
+        try {
+          localStorage.setItem('dismissedAiRecommendations', JSON.stringify([...newSet]));
+        } catch {
+          // Silently fail if localStorage is unavailable
+        }
+        return newSet;
+      });
       toast({
         title: "Task added to your checklist",
         description: recommendation.title,
@@ -241,9 +259,21 @@ export default function TasksPage() {
     },
   });
 
-  // Dismiss a recommendation
+  // Dismiss a recommendation (persists to localStorage)
   const handleDismissRecommendation = (title: string) => {
-    setDismissedRecommendations(prev => new Set([...prev, title]));
+    setDismissedRecommendations(prev => {
+      const newSet = new Set([...prev, title]);
+      try {
+        localStorage.setItem('dismissedAiRecommendations', JSON.stringify([...newSet]));
+      } catch {
+        // Silently fail if localStorage is unavailable
+      }
+      return newSet;
+    });
+    toast({
+      title: "Recommendation dismissed",
+      description: "This suggestion won't appear again.",
+    });
   };
 
   // Visible AI recommendations (exclude dismissed ones)
