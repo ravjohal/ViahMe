@@ -224,6 +224,31 @@ export default function Budget() {
     },
   });
 
+  const confirmBudgetMutation = useMutation({
+    mutationFn: async () => {
+      if (!wedding?.id) {
+        throw new Error("Wedding ID not found");
+      }
+      return await apiRequest("PATCH", `/api/weddings/${wedding.id}`, {
+        budgetConfirmed: true,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings"] });
+      toast({
+        title: "Budget confirmed",
+        description: "Your budget categories have been confirmed. You can still make changes anytime.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to confirm budget",
+        variant: "destructive",
+      });
+    },
+  });
+
   useEffect(() => {
     if (!weddingsLoading && !wedding) {
       setLocation("/onboarding");
@@ -373,6 +398,33 @@ export default function Budget() {
               </p>
             </div>
           </div>
+
+          {/* One-time confirmation banner */}
+          {!wedding.budgetConfirmed && categories.length > 0 && (
+            <Card className="p-4 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 border-emerald-300 dark:border-emerald-700">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-emerald-800 dark:text-emerald-200">Review Your Budget Categories</h3>
+                    <p className="text-sm text-emerald-700 dark:text-emerald-300">
+                      We've allocated your ${parseFloat(wedding.totalBudget || "0").toLocaleString()} budget across {categories.length} categories based on typical wedding spending. Review and confirm when ready.
+                    </p>
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => confirmBudgetMutation.mutate()}
+                  disabled={confirmBudgetMutation.isPending}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white shrink-0"
+                  data-testid="button-confirm-budget"
+                >
+                  {confirmBudgetMutation.isPending ? "Confirming..." : "Confirm Budget"}
+                </Button>
+              </div>
+            </Card>
+          )}
 
           {/* Getting Started Guide - Clickable Steps (same design as Team section) */}
           <div className="grid md:grid-cols-4 gap-4 cursor-pointer">
