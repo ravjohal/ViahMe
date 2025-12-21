@@ -333,21 +333,13 @@ export function AppHeader() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {user.role === "vendor" && currentVendor && (
-                  <>
-                    <Link href={`/vendor-profile/${currentVendor.id}`}>
-                      <DropdownMenuItem className="gap-2 cursor-pointer" data-testid="menu-item-view-profile">
-                        <User className="w-4 h-4" />
-                        View Profile
-                      </DropdownMenuItem>
-                    </Link>
-                    <Link href="/vendor-dashboard?edit=profile">
-                      <DropdownMenuItem className="gap-2 cursor-pointer" data-testid="menu-item-edit-profile">
-                        <Settings className="w-4 h-4" />
-                        Edit Profile
-                      </DropdownMenuItem>
-                    </Link>
-                  </>
+                {user.role === "vendor" && (
+                  <Link href="/vendor-profile">
+                    <DropdownMenuItem className="gap-2 cursor-pointer" data-testid="menu-item-view-profile">
+                      <User className="w-4 h-4" />
+                      View Profile
+                    </DropdownMenuItem>
+                  </Link>
                 )}
                 <Link href="/settings">
                   <DropdownMenuItem className="gap-2 cursor-pointer" data-testid="menu-item-settings">
