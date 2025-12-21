@@ -1,0 +1,140 @@
+{
+  "turban_tiers_california":,
+      "category": "Hybrid (Service & Retail)",
+      "region": "Northern California",
+      "city": "Hayward",
+      "travel_status": "Travels to Venue",
+      "styles":,
+      "phone": "(925) 999-5946",
+      "website": "https://royal-turban-tying-service.ueniweb.com/",
+      "value_proposition": "Physical storefront open 7 days a week. Offers 'Try Before Buy' service to reduce anxiety about style and fit. Stocks accessories like Kalgi and malas."
+    },
+    {
+      "vendor_id": "V_002",
+      "business_name": "Turbanking",
+      "category": "Service Only",
+      "region": "Northern California",
+      "city": "Sacramento",
+      "travel_status": "Travels to Venue",
+      "styles":,
+      "website": "http://turbanking.net/",
+      "value_proposition": "Specializes in the modern 'Wattan Wali' style popular with younger grooms. Offers tiered pricing for Groom vs. Groomsmen to handle large groups efficiently."
+    },
+    {
+      "vendor_id": "V_003",
+      "business_name": "Turban Time",
+      "category": "Service Only",
+      "region": "Southern California",
+      "city": "Riverside",
+      "travel_status": "Travels (Global)",
+      "styles":,
+      "contact_instagram": "@turban.time",
+      "value_proposition": "The premier choice for Southern California luxury weddings. Experienced with high-end venues like the Ritz Carlton and available for destination weddings in Cabo."
+    },
+    {
+      "vendor_id": "V_004",
+      "business_name": "Apna Virsa Turban Service",
+      "category": "Hybrid (Service & Retail)",
+      "region": "Central Valley",
+      "city": "Manteca",
+      "travel_status": "Local Focus",
+      "styles":,
+      "phone": "(209) Area (Via Sulekha)",
+      "website": "https://apnavirsa.ca/ (Note: Check local listing for CA specific contact)",
+      "value_proposition": "Strategically located to serve the Central Valley (Modesto/Stockton). Focuses on 'Virsa' (Heritage) and offers custom groom wear alongside tying services."
+    },
+    {
+      "vendor_id": "V_005",
+      "business_name": "Seattle Turban Tying Service",
+      "category": "Service (Fly-In Expert)",
+      "region": "Out of State (WA)",
+      "city": "Seattle",
+      "travel_status": "YES - Frequent CA Travel",
+      "styles":,
+      "phone": "(206) 771-6638",
+      "website": "https://seattleturban.com/",
+      "value_proposition": "The 'LeBron James' of turban tying. Deploys large teams to handle massive Baraats (20+ people). Frequently flies to California for luxury weddings."
+    },
+    {
+      "vendor_id": "V_006",
+      "business_name": "GoSikh",
+      "category": "Retail Only (Supply Chain)",
+      "region": "Northern California",
+      "city": "Online / Warehouse",
+      "travel_status": "Shipping Only",
+      "styles":,
+      "website": "https://gosikh.com/",
+      "value_proposition": "Critical supply chain partner. Offers free shipping in CA for orders >$75. The go-to source for buying bulk matching fabric for groomsmen."
+    },
+    {
+      "vendor_id": "V_007",
+      "business_name": "Vama Designs",
+      "category": "Styling & Retail",
+      "region": "Northern California",
+      "city": "San Jose",
+      "travel_status": "No (Studio Visit)",
+      "styles":,
+      "email": "vaij@vamadesigns.com",
+      "website": "https://vamadesigns.com/",
+      "value_proposition": "Luxury styling house that coordinates the Turban fabric and color to match the Bride's Lehenga perfectly. Acts as a 'General Contractor' for the groom's entire look."
+    },
+    {
+      "vendor_id": "V_008",
+      "business_name": "Singh Turban Tying NJ",
+      "category": "Service (Fly-In Expert)",
+      "region": "East Coast (NJ)",
+      "city": "Carteret",
+      "travel_status": "YES - Frequent CA Travel",
+      "styles":,
+      "website": "http://www.singhturbantyingnj.com/",
+      "value_proposition": "Highly rated East Coast vendor known for a sharper, formal aesthetic often requested by clients wanting a distinct look. Explicitly markets 'Global Travel'."
+    },
+    {
+      "vendor_id": "V_009",
+      "business_name": "Sari Palace",
+      "category": "Retail Only",
+      "region": "Northern California",
+      "city": "Berkeley",
+      "travel_status": "No",
+      "styles":,
+      "phone": "(510) 841-7274",
+      "website": "https://thesaripalace.com/",
+      "value_proposition": "Legacy vendor (Est. 1987). The essential source for high-end silk and brocade fabrics used for Hindu Safas."
+    },
+    {
+      "vendor_id": "V_010",
+      "business_name": "Turban Tying PA",
+      "category": "Service (Fly-In Expert)",
+      "region": "East Coast (PA)",
+      "city": "Pennsylvania",
+      "travel_status": "YES - Frequent CA Travel",
+      "styles":,
+      "phone": "(908) 319-3842",
+      "website": "https://www.turbantying.com/",
+      "value_proposition": "Another strong option for clients needing 'Fly-In' talent, particularly for destination weddings where local vendors are unavailable."
+    },
+    {
+      "vendor_id": "V_011",
+      "business_name": "Singh Styled",
+      "category": "Retail (Global Brand)",
+      "region": "Global / Online",
+      "city": "Online",
+      "travel_status": "Shipping Only",
+      "styles":,
+      "website": "https://singhstyled.com/",
+      "value_proposition": "Offers the 'Singh Styled' box—a curated kit of turban fabric and beard grooming products. High brand cachet for modern grooms."
+    },
+    {
+      "vendor_id": "V_012",
+      "business_name": "WellGroomed Inc",
+      "category": "Styling & Retail",
+      "region": "Northern California",
+      "city": "Lathrop / Newark",
+      "travel_status": "No",
+      "styles":,
+      "phone": "(209) 801-5485",
+      "website": "https://wellgroomed.ca/",
+      "value_proposition": "High-end groom couture with locations in CA and Canada. Excellent for bespoke Sherwanis that require custom turban fabric matching."
+    }
+  ]
+}

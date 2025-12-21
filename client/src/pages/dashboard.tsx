@@ -334,26 +334,32 @@ export default function Dashboard() {
   const hasEvents = events.length > 0;
   const hasVendors = bookings.length > 0;
   const hasGuests = guests.length > 0;
+  const budgetConfirmed = wedding.budgetConfirmed === true;
+  const eventsConfirmed = wedding.eventsConfirmed === true;
 
   // Step definitions with completion status
   const steps = [
     {
       id: "budget",
       number: 1,
-      title: "Set Your Budget",
-      description: "Decide how much you want to spend on your wedding",
-      completed: hasBudget && hasCategories,
-      inProgress: hasBudget && !hasCategories,
+      title: "Review Your Budget",
+      description: budgetConfirmed 
+        ? "Budget categories confirmed" 
+        : "We've allocated your budget across categories. Review and confirm.",
+      completed: hasBudget && hasCategories && budgetConfirmed,
+      inProgress: hasBudget && hasCategories && !budgetConfirmed,
       path: "/budget",
       color: "emerald",
     },
     {
       id: "events",
       number: 2,
-      title: "Plan Your Events",
-      description: "Add ceremonies and celebrations to your timeline",
-      completed: hasEvents,
-      inProgress: false,
+      title: "Review Your Events",
+      description: eventsConfirmed
+        ? "Event timeline confirmed"
+        : "We've created events based on your tradition. Review and confirm.",
+      completed: hasEvents && eventsConfirmed,
+      inProgress: hasEvents && !eventsConfirmed,
       path: "/timeline",
       color: "orange",
     },
