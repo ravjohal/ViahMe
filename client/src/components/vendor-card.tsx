@@ -148,7 +148,7 @@ export function VendorCard({
             }}
             data-testid={`button-book-vendor-${vendor.id}`}
           >
-            View Details & Book
+            View Details
           </Button>
 
           {onAddToComparison && (

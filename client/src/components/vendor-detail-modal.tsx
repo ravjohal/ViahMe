@@ -605,20 +605,34 @@ export function VendorDetailModal({
             </div>
           )}
 
-          {vendor.contact && (
+          {(vendor.phone || vendor.email || vendor.contact) && (
             <div className="p-4 rounded-lg bg-muted/50 border">
               <h3 className="font-semibold mb-3">Contact Information</h3>
               <div className="space-y-2">
-                {vendor.contact.includes("@") ? (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Mail className="w-4 h-4 text-muted-foreground" />
-                    <span>{vendor.contact}</span>
-                  </div>
-                ) : (
+                {vendor.phone && (
                   <div className="flex items-center gap-2 text-sm">
                     <Phone className="w-4 h-4 text-muted-foreground" />
-                    <span>{vendor.contact}</span>
+                    <a href={`tel:${vendor.phone}`} className="hover:underline">{vendor.phone}</a>
                   </div>
+                )}
+                {vendor.email && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Mail className="w-4 h-4 text-muted-foreground" />
+                    <a href={`mailto:${vendor.email}`} className="hover:underline">{vendor.email}</a>
+                  </div>
+                )}
+                {!vendor.phone && !vendor.email && vendor.contact && (
+                  vendor.contact.includes("@") ? (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Mail className="w-4 h-4 text-muted-foreground" />
+                      <a href={`mailto:${vendor.contact}`} className="hover:underline">{vendor.contact}</a>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Phone className="w-4 h-4 text-muted-foreground" />
+                      <a href={`tel:${vendor.contact}`} className="hover:underline">{vendor.contact}</a>
+                    </div>
+                  )
                 )}
               </div>
             </div>
@@ -626,17 +640,19 @@ export function VendorDetailModal({
 
           <Separator />
 
-          {/* Main Tabs: Reviews and Availability */}
+          {/* Main Tabs: Reviews and Availability (Availability only for claimed vendors) */}
           <Tabs defaultValue="reviews" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className={`grid w-full ${vendor.claimed ? 'grid-cols-2' : 'grid-cols-1'}`}>
               <TabsTrigger value="reviews" data-testid="tab-reviews-section">
                 <Star className="w-4 h-4 mr-2" />
                 Reviews
               </TabsTrigger>
-              <TabsTrigger value="availability" data-testid="tab-availability-section">
-                <Calendar className="w-4 h-4 mr-2" />
-                Availability & Booking
-              </TabsTrigger>
+              {vendor.claimed && (
+                <TabsTrigger value="availability" data-testid="tab-availability-section">
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Availability & Booking
+                </TabsTrigger>
+              )}
             </TabsList>
 
             <TabsContent value="reviews" className="mt-6 space-y-4">
@@ -754,218 +770,65 @@ export function VendorDetailModal({
               </div>
             )}
 
-            <Tabs defaultValue="viah" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="viah" data-testid="tab-viah-reviews">
-                  Viah.me ({reviews.length})
-                </TabsTrigger>
-                <TabsTrigger value="yelp" data-testid="tab-yelp-reviews">
-                  Yelp {yelpData?.available && `(${yelpData.reviews.length})`}
-                </TabsTrigger>
-                <TabsTrigger value="google" data-testid="tab-google-reviews">
-                  Google {googleData?.available && `(${googleData.reviews.length})`}
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="viah" className="mt-4">
-                {reviews.length > 0 ? (
-                  <div className="rounded-lg border">
-                    <ScrollArea className="h-[300px] p-4">
-                      <div className="space-y-4 pr-4">
-                        {reviews.map((review, index) => (
-                          <div 
-                            key={review.id} 
-                            className={`${index !== reviews.length - 1 ? 'pb-4 border-b' : ''}`}
-                            data-testid={`review-${review.id}`}
-                          >
-                            <div className="flex items-start justify-between mb-3">
-                              <div className="flex items-center gap-2">
-                                <div className="flex gap-0.5">
-                                  {[1, 2, 3, 4, 5].map((star) => (
-                                    <Star
-                                      key={star}
-                                      className={`w-4 h-4 ${
-                                        star <= review.rating
-                                          ? "fill-primary text-primary"
-                                          : "text-muted-foreground"
-                                      }`}
-                                    />
-                                  ))}
-                                </div>
-                                <span className="font-mono font-semibold text-sm" data-testid={`text-review-rating-${review.id}`}>
-                                  {review.rating}.0
-                                </span>
+            {/* Reviews from Viah.me only */}
+              {reviews.length > 0 ? (
+                <div className="rounded-lg border">
+                  <ScrollArea className="h-[300px] p-4">
+                    <div className="space-y-4 pr-4">
+                      {reviews.map((review, index) => (
+                        <div 
+                          key={review.id} 
+                          className={`${index !== reviews.length - 1 ? 'pb-4 border-b' : ''}`}
+                          data-testid={`review-${review.id}`}
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <div className="flex gap-0.5">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                  <Star
+                                    key={star}
+                                    className={`w-4 h-4 ${
+                                      star <= review.rating
+                                        ? "fill-primary text-primary"
+                                        : "text-muted-foreground"
+                                    }`}
+                                  />
+                                ))}
                               </div>
-                              <span className="text-xs text-muted-foreground">
-                                {new Date(review.createdAt).toLocaleDateString('en-US', { 
-                                  year: 'numeric', 
-                                  month: 'short', 
-                                  day: 'numeric' 
-                                })}
+                              <span className="font-mono font-semibold text-sm" data-testid={`text-review-rating-${review.id}`}>
+                                {review.rating}.0
                               </span>
                             </div>
-                            {review.comment && (
-                              <p className="text-sm leading-relaxed" data-testid={`text-review-comment-${review.id}`}>
-                                {review.comment}
-                              </p>
-                            )}
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(review.createdAt).toLocaleDateString('en-US', { 
+                                year: 'numeric', 
+                                month: 'short', 
+                                day: 'numeric' 
+                              })}
+                            </span>
                           </div>
-                        ))}
-                      </div>
-                    </ScrollArea>
-                  </div>
-                ) : (
-                  <div className="text-center py-12 text-muted-foreground rounded-lg border bg-muted/20">
-                    <StarIcon className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                    <p className="font-medium mb-1">No Viah.me reviews yet</p>
-                    <p className="text-sm">Be the first to share your experience!</p>
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="yelp" className="mt-4">
-                {yelpData?.available && yelpData.reviews.length > 0 ? (
-                  <div className="rounded-lg border">
-                    <ScrollArea className="h-[300px] p-4">
-                      <div className="space-y-4 pr-4">
-                        {yelpData.reviews.map((review: any, index: number) => (
-                          <div 
-                            key={review.id} 
-                            className={`${index !== yelpData.reviews.length - 1 ? 'pb-4 border-b' : ''}`}
-                          >
-                            <div className="flex items-start justify-between mb-3">
-                              <div className="flex items-center gap-2">
-                                <div className="flex gap-0.5">
-                                  {[1, 2, 3, 4, 5].map((star) => (
-                                    <Star
-                                      key={star}
-                                      className={`w-4 h-4 ${
-                                        star <= review.rating
-                                          ? "fill-primary text-primary"
-                                          : "text-muted-foreground"
-                                      }`}
-                                    />
-                                  ))}
-                                </div>
-                                <span className="font-mono font-semibold text-sm">
-                                  {review.rating}.0
-                                </span>
-                              </div>
-                              <a 
-                                href={review.url} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-1 text-xs text-primary hover:underline"
-                              >
-                                View on Yelp
-                                <ExternalLink className="w-3 h-3" />
-                              </a>
-                            </div>
-                            <p className="text-sm font-medium mb-1">{review.user?.name}</p>
-                            <p className="text-sm leading-relaxed text-muted-foreground">
-                              {review.text}
+                          {review.comment && (
+                            <p className="text-sm leading-relaxed" data-testid={`text-review-comment-${review.id}`}>
+                              {review.comment}
                             </p>
-                          </div>
-                        ))}
-                      </div>
-                    </ScrollArea>
-                  </div>
-                ) : (
-                  <div className="text-center py-12 text-muted-foreground rounded-lg border bg-muted/20">
-                    <StarIcon className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                    <p className="font-medium mb-1">
-                      {yelpData?.message || "No Yelp reviews available"}
-                    </p>
-                    {!yelpData?.available && (
-                      <p className="text-xs">Yelp integration not configured for this vendor</p>
-                    )}
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="google" className="mt-4">
-                {googleData?.available && googleData.reviews.length > 0 ? (
-                  <div className="rounded-lg border">
-                    <ScrollArea className="h-[300px] p-4">
-                      <div className="space-y-4 pr-4">
-                        {googleData.reviews.map((review: any, index: number) => (
-                          <div 
-                            key={index} 
-                            className={`${index !== googleData.reviews.length - 1 ? 'pb-4 border-b' : ''}`}
-                          >
-                            <div className="flex items-start justify-between mb-3">
-                              <div className="flex items-center gap-2">
-                                <div className="flex gap-0.5">
-                                  {[1, 2, 3, 4, 5].map((star) => (
-                                    <Star
-                                      key={star}
-                                      className={`w-4 h-4 ${
-                                        star <= review.rating
-                                          ? "fill-primary text-primary"
-                                          : "text-muted-foreground"
-                                      }`}
-                                    />
-                                  ))}
-                                </div>
-                                <span className="font-mono font-semibold text-sm">
-                                  {review.rating}.0
-                                </span>
-                              </div>
-                              {review.authorAttribution?.uri && (
-                                <a 
-                                  href={review.authorAttribution.uri} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer"
-                                  className="flex items-center gap-1 text-xs text-primary hover:underline"
-                                >
-                                  View on Google
-                                  <ExternalLink className="w-3 h-3" />
-                                </a>
-                              )}
-                            </div>
-                            <p className="text-sm font-medium mb-1">
-                              {review.authorAttribution?.displayName || 'Anonymous'}
-                            </p>
-                            {review.text?.text && (
-                              <p className="text-sm leading-relaxed text-muted-foreground">
-                                {review.text.text}
-                              </p>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </ScrollArea>
-                  </div>
-                ) : (
-                  <div className="text-center py-12 text-muted-foreground rounded-lg border bg-muted/20">
-                    <StarIcon className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                    <p className="font-medium mb-1">
-                      {googleData?.message || "No Google reviews available"}
-                    </p>
-                    {!googleData?.available && (
-                      <p className="text-xs">Google Places integration not configured for this vendor</p>
-                    )}
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </div>
+              ) : (
+                <div className="text-center py-12 text-muted-foreground rounded-lg border bg-muted/20">
+                  <StarIcon className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                  <p className="font-medium mb-1">No reviews yet</p>
+                  <p className="text-sm">Be the first to share your experience!</p>
+                </div>
+              )}
             </TabsContent>
 
+            {vendor.claimed && (
             <TabsContent value="availability" className="mt-6 space-y-4">
-              {isGhostProfile ? (
-                <Alert className="border-muted">
-                  <Building2 className="h-4 w-4" />
-                  <AlertDescription>
-                    <p className="font-medium">Booking Not Available</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      This business profile hasn't been claimed yet. Once the owner claims this profile, they'll be able to share their availability and accept bookings through Viah.me.
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      In the meantime, you can contact them directly using the contact information above.
-                    </p>
-                  </AlertDescription>
-                </Alert>
-              ) : vendor.calendarShared ? (
+              {vendor.calendarShared ? (
                 <div className="space-y-4">
                   <div>
                     <h3 className="font-semibold text-lg mb-2">Check Availability</h3>
@@ -1044,8 +907,11 @@ export function VendorDetailModal({
                 </div>
               )}
             </TabsContent>
+            )}
           </Tabs>
 
+          {vendor.claimed && (
+          <>
           <Separator />
 
           <div className="pt-6">
@@ -1156,6 +1022,8 @@ export function VendorDetailModal({
               </div>
             )}
           </div>
+          </>
+          )}
         </div>
 
         {/* Booking Request Dialog */}
