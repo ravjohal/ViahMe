@@ -986,7 +986,7 @@ export default function TimelinePage() {
             <Button 
               onClick={() => confirmEventsMutation.mutate()}
               disabled={confirmEventsMutation.isPending}
-              className="bg-orange-600 hover:bg-orange-700 text-white shrink-0"
+              className="bg-orange-600 text-white shrink-0"
               data-testid="button-confirm-events"
             >
               {confirmEventsMutation.isPending ? "Confirming..." : "Confirm Events"}
