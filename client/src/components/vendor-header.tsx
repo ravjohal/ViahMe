@@ -28,8 +28,6 @@ import {
   MessageSquare,
   Zap,
   Bell,
-  Eye,
-  Pencil,
 } from "lucide-react";
 import { useState } from "react";
 import viahLogo from "@assets/viah-logo_1763669612969.png";
@@ -46,7 +44,6 @@ const navItems = [
   { href: "/vendor-calendar", label: "Availability", icon: Clock },
   { href: "/vendor-team", label: "Team", icon: Users },
   { href: "/vendor-analytics", label: "Analytics", icon: BarChart3 },
-  { href: "/vendor-profile", label: "Profile", icon: Settings },
 ];
 
 export function VendorHeader() {
@@ -127,23 +124,12 @@ export function VendorHeader() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              {vendor && (
-                <>
-                  <Link href={`/vendors?preview=${vendor.id}`}>
-                    <DropdownMenuItem className="gap-2 cursor-pointer" data-testid="menu-item-view-profile">
-                      <Eye className="w-4 h-4" />
-                      Preview as Couple
-                    </DropdownMenuItem>
-                  </Link>
-                  <Link href="/vendor-profile">
-                    <DropdownMenuItem className="gap-2 cursor-pointer" data-testid="menu-item-edit-profile">
-                      <Pencil className="w-4 h-4" />
-                      Edit Profile
-                    </DropdownMenuItem>
-                  </Link>
-                  <DropdownMenuSeparator />
-                </>
-              )}
+              <Link href="/vendor-profile">
+                <DropdownMenuItem className="gap-2 cursor-pointer" data-testid="menu-item-view-profile">
+                  <User className="w-4 h-4" />
+                  View Profile
+                </DropdownMenuItem>
+              </Link>
               <Link href="/settings">
                 <DropdownMenuItem className="gap-2 cursor-pointer" data-testid="menu-item-settings">
                   <Settings className="w-4 h-4" />
@@ -202,32 +188,17 @@ export function VendorHeader() {
               <User className="w-4 h-4" />
               <span className="truncate">{user?.email}</span>
             </div>
-            {vendor && (
-              <>
-                <Link href={`/vendors?preview=${vendor.id}`}>
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start"
-                    onClick={() => setMobileMenuOpen(false)}
-                    data-testid="button-mobile-view-profile"
-                  >
-                    <Eye className="w-4 h-4 mr-2" />
-                    Preview as Couple
-                  </Button>
-                </Link>
-                <Link href="/vendor-profile">
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start"
-                    onClick={() => setMobileMenuOpen(false)}
-                    data-testid="button-mobile-edit-profile"
-                  >
-                    <Pencil className="w-4 h-4 mr-2" />
-                    Edit Profile
-                  </Button>
-                </Link>
-              </>
-            )}
+            <Link href="/vendor-profile">
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                onClick={() => setMobileMenuOpen(false)}
+                data-testid="button-mobile-view-profile"
+              >
+                <User className="w-4 h-4 mr-2" />
+                View Profile
+              </Button>
+            </Link>
             <Link href="/settings">
               <Button
                 variant="ghost"
