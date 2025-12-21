@@ -121,31 +121,6 @@ export function VendorDetailModal({
     enabled: !!vendor?.id && open,
   });
 
-  // Fetch Yelp reviews
-  const { data: yelpData } = useQuery<{
-    reviews: any[];
-    total: number;
-    source: string;
-    available: boolean;
-    message?: string;
-  }>({
-    queryKey: ["/api/reviews/yelp", vendor?.id],
-    enabled: !!vendor?.id && open,
-  });
-
-  // Fetch Google reviews
-  const { data: googleData } = useQuery<{
-    reviews: any[];
-    displayName?: string;
-    rating?: number;
-    userRatingCount?: number;
-    source: string;
-    available: boolean;
-    message?: string;
-  }>({
-    queryKey: ["/api/reviews/google", vendor?.id],
-    enabled: !!vendor?.id && open,
-  });
 
   // Add review mutation - MUST also be called before any early returns
   const addReviewMutation = useMutation({
