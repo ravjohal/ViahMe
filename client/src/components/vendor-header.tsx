@@ -28,6 +28,7 @@ import {
   MessageSquare,
   Zap,
   Bell,
+  Image,
 } from "lucide-react";
 import { useState } from "react";
 import viahLogo from "@assets/viah-logo_1763669612969.png";
@@ -37,8 +38,8 @@ const navItems = [
   { href: "/vendor-dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/vendor-bookings", label: "Bookings", icon: Calendar },
   { href: "/messages", label: "Messages", icon: MessageSquare },
+  { href: "/vendor-portfolio", label: "Portfolio", icon: Image },
   { href: "/vendor-templates", label: "Templates", icon: Zap },
-  { href: "/vendor-reminders", label: "Reminders", icon: Bell },
   { href: "/vendor-contracts", label: "Contracts", icon: FileText },
   { href: "/vendor-packages", label: "Packages", icon: Package },
   { href: "/vendor-calendar", label: "Availability", icon: Clock },

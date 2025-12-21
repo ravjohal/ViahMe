@@ -59,6 +59,7 @@ import LiveTimeline from "@/pages/live-timeline";
 import VendorTeam from "@/pages/vendor-team";
 import VendorInviteAccept from "@/pages/vendor-invite-accept";
 import VendorProfile from "@/pages/vendor-profile";
+import VendorPortfolio from "@/pages/vendor-portfolio";
 import Expenses from "@/pages/expenses";
 import { VendorRoute } from "@/components/VendorRoute";
 import { CoupleRoute } from "@/components/CoupleRoute";
@@ -233,6 +234,11 @@ function Router() {
       <Route path="/vendor-profile">
         <VendorRoute>
           <VendorProfile />
+        </VendorRoute>
+      </Route>
+      <Route path="/vendor-portfolio">
+        <VendorRoute>
+          <VendorPortfolio />
         </VendorRoute>
       </Route>
       <Route path="/vendor-invite" component={VendorInviteAccept} />
