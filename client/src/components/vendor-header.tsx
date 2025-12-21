@@ -3,6 +3,15 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { 
   LayoutDashboard, 
   Calendar, 
@@ -19,6 +28,8 @@ import {
   MessageSquare,
   Zap,
   Bell,
+  Eye,
+  Pencil,
 } from "lucide-react";
 import { useState } from "react";
 import viahLogo from "@assets/viah-logo_1763669612969.png";
@@ -96,21 +107,60 @@ export function VendorHeader() {
         {/* Spacer for mobile/tablet to push menu button to right */}
         <div className="flex-1 lg:hidden" />
 
-        {/* User section */}
-        <div className="hidden lg:flex items-center gap-3 shrink-0">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <User className="w-4 h-4" />
-            <span className="hidden xl:inline max-w-[150px] truncate" data-testid="text-vendor-email">{user?.email}</span>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => logout()}
-            data-testid="button-logout"
-          >
-            <LogOut className="w-4 h-4 xl:mr-2" />
-            <span className="hidden xl:inline">Logout</span>
-          </Button>
+        {/* User dropdown */}
+        <div className="hidden lg:flex items-center shrink-0">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-9 w-9 rounded-full p-0" data-testid="button-user-menu">
+                <Avatar className="h-9 w-9">
+                  <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
+                    {user?.email?.charAt(0).toUpperCase() || "?"}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none truncate">{user?.email}</p>
+                  <p className="text-xs leading-none text-muted-foreground">Vendor Account</p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {vendor && (
+                <>
+                  <Link href={`/vendor-profile/${vendor.id}`}>
+                    <DropdownMenuItem className="gap-2 cursor-pointer" data-testid="menu-item-view-profile">
+                      <Eye className="w-4 h-4" />
+                      View Profile
+                    </DropdownMenuItem>
+                  </Link>
+                  <Link href="/vendor-profile">
+                    <DropdownMenuItem className="gap-2 cursor-pointer" data-testid="menu-item-edit-profile">
+                      <Pencil className="w-4 h-4" />
+                      Edit Profile
+                    </DropdownMenuItem>
+                  </Link>
+                  <DropdownMenuSeparator />
+                </>
+              )}
+              <Link href="/settings">
+                <DropdownMenuItem className="gap-2 cursor-pointer" data-testid="menu-item-settings">
+                  <Settings className="w-4 h-4" />
+                  Settings
+                </DropdownMenuItem>
+              </Link>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                className="gap-2 cursor-pointer text-destructive focus:text-destructive" 
+                onClick={() => logout()}
+                data-testid="menu-item-logout"
+              >
+                <LogOut className="w-4 h-4" />
+                Log Out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Mobile menu button */}
@@ -148,13 +198,50 @@ export function VendorHeader() {
             })}
           </nav>
           <div className="mt-4 pt-4 border-t flex flex-col gap-2">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground px-4 py-2">
               <User className="w-4 h-4" />
-              <span>{user?.email}</span>
+              <span className="truncate">{user?.email}</span>
             </div>
+            {vendor && (
+              <>
+                <Link href={`/vendor-profile/${vendor.id}`}>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start"
+                    onClick={() => setMobileMenuOpen(false)}
+                    data-testid="button-mobile-view-profile"
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
+                    View Profile
+                  </Button>
+                </Link>
+                <Link href="/vendor-profile">
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start"
+                    onClick={() => setMobileMenuOpen(false)}
+                    data-testid="button-mobile-edit-profile"
+                  >
+                    <Pencil className="w-4 h-4 mr-2" />
+                    Edit Profile
+                  </Button>
+                </Link>
+              </>
+            )}
+            <Link href="/settings">
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                onClick={() => setMobileMenuOpen(false)}
+                data-testid="button-mobile-settings"
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Settings
+              </Button>
+            </Link>
             <Button
               variant="ghost"
-              className="justify-start"
+              className="justify-start text-destructive hover:text-destructive"
               onClick={() => logout()}
               data-testid="button-mobile-logout"
             >
