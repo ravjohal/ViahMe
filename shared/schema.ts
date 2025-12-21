@@ -61,6 +61,8 @@ export const weddings = pgTable("weddings", {
   location: text("location").notNull(), // 'Bay Area' etc
   guestCountEstimate: integer("guest_count_estimate"),
   totalBudget: decimal("total_budget", { precision: 10, scale: 2 }),
+  budgetConfirmed: boolean("budget_confirmed").default(false),
+  eventsConfirmed: boolean("events_confirmed").default(false),
   status: text("status").notNull().default('planning'), // 'planning' | 'active' | 'completed'
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
