@@ -227,13 +227,7 @@ export function VendorDirectory({
     const matchesPrice = priceFilter === "all" || vendor.priceRange === priceFilter;
     const matchesCity = cityFilter === "all" || vendor.city === cityFilter;
 
-    const matchesTradition =
-      !tradition ||
-      !vendor.culturalSpecialties ||
-      vendor.culturalSpecialties.length === 0 ||
-      vendor.culturalSpecialties.includes(tradition);
-
-    return matchesSearch && matchesCat && matchesPrice && matchesCity && matchesTradition;
+    return matchesSearch && matchesCat && matchesPrice && matchesCity;
   });
 
   // Calculate recommendation scores and sort by score (highest first)
