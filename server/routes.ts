@@ -2321,6 +2321,105 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   });
 
   // ============================================================================
+  // AI TASK RECOMMENDATIONS
+  // ============================================================================
+
+  // Generate personalized AI task recommendations
+  app.post("/api/tasks/:weddingId/ai-recommendations", async (req, res) => {
+    try {
+      const { weddingId } = req.params;
+      
+      // Get wedding details
+      const wedding = await storage.getWedding(weddingId);
+      if (!wedding) {
+        return res.status(404).json({ error: "Wedding not found" });
+      }
+      
+      // Get existing tasks
+      const existingTasks = await storage.getTasksByWedding(weddingId);
+      
+      // Get planned events
+      const events = await storage.getEventsByWedding(weddingId);
+      
+      // Import the AI function
+      const { generateTaskRecommendations } = await import('./ai/gemini');
+      
+      const recommendations = await generateTaskRecommendations({
+        tradition: wedding.tradition || 'General',
+        weddingDate: wedding.date ? wedding.date.toISOString().split('T')[0] : undefined,
+        city: wedding.city || undefined,
+        budget: wedding.budget ? Number(wedding.budget) : undefined,
+        events: events.map(e => ({ 
+          name: e.name, 
+          date: e.date ? e.date.toISOString() : undefined 
+        })),
+        existingTasks: existingTasks.map(t => ({
+          title: t.title,
+          completed: t.completed || false,
+          category: t.category || undefined,
+        })),
+        partner1Name: wedding.partner1Name || undefined,
+        partner2Name: wedding.partner2Name || undefined,
+        guestCount: wedding.expectedGuests || undefined,
+      });
+      
+      res.json(recommendations);
+    } catch (error) {
+      console.error("Failed to generate AI task recommendations:", error);
+      res.status(500).json({ error: "Failed to generate recommendations" });
+    }
+  });
+
+  // Add AI-recommended task to checklist
+  app.post("/api/tasks/:weddingId/adopt-recommendation", async (req, res) => {
+    try {
+      const { weddingId } = req.params;
+      const { title, description, priority, category, suggestedDueDate, reason } = req.body;
+      
+      const wedding = await storage.getWedding(weddingId);
+      if (!wedding) {
+        return res.status(404).json({ error: "Wedding not found" });
+      }
+      
+      const taskData = {
+        weddingId,
+        title,
+        description,
+        priority: priority || 'medium',
+        category,
+        dueDate: suggestedDueDate ? new Date(suggestedDueDate) : undefined,
+        isAiRecommended: true,
+        aiReason: reason,
+        aiCategory: category,
+        completed: false,
+      };
+      
+      const task = await storage.createTask(taskData);
+      res.json(task);
+    } catch (error) {
+      console.error("Failed to adopt AI task recommendation:", error);
+      res.status(500).json({ error: "Failed to add task" });
+    }
+  });
+
+  // Dismiss an AI recommendation (track that user doesn't want this)
+  app.post("/api/tasks/:taskId/dismiss", async (req, res) => {
+    try {
+      const { taskId } = req.params;
+      
+      const task = await storage.updateTask(taskId, { dismissed: true });
+      if (!task) {
+        return res.status(404).json({ error: "Task not found" });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Failed to dismiss task:", error);
+      res.status(500).json({ error: "Failed to dismiss task" });
+    }
+  });
+
+  // ============================================================================
   // CONTRACTS
   // ============================================================================
 

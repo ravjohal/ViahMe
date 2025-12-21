@@ -565,6 +565,11 @@ export const tasks = pgTable("tasks", {
   lastReminderSentAt: timestamp("last_reminder_sent_at"), // Track on-demand reminders
   completedAt: timestamp("completed_at"), // When task was completed
   createdAt: timestamp("created_at").defaultNow(),
+  // AI recommendation fields
+  isAiRecommended: boolean("is_ai_recommended").default(false), // Was this task AI-generated
+  aiReason: text("ai_reason"), // Why AI recommended this task
+  aiCategory: text("ai_category"), // AI categorization (e.g., 'vendor', 'venue', 'attire', 'ceremony')
+  dismissed: boolean("dismissed").default(false), // If user dismissed the AI recommendation
 });
 
 export const insertTaskSchema = createInsertSchema(tasks).omit({

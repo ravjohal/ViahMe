@@ -456,3 +456,167 @@ Return as a JSON array of 3 strings.`;
     return [];
   }
 }
+
+// ============================================================================
+// AI TASK RECOMMENDATIONS - Personalized wedding planning task suggestions
+// ============================================================================
+
+const TASK_RECOMMENDATION_PROMPT = `You are an expert South Asian wedding planning assistant for Viah.me. You help couples stay organized by suggesting personalized, culturally-appropriate planning tasks.
+
+Your expertise covers wedding traditions including:
+- Sikh weddings: Roka, Chunni, Mehndi, Maiyan, Anand Karaj, Reception
+- Hindu weddings: Roka, Sangeet, Mehndi, Haldi, Baraat, Mandap ceremony, Vidaai, Reception
+- Muslim weddings: Mangni, Mehndi, Nikah, Walima
+- Gujarati weddings: Pithi, Garba, Mandap ceremony
+- South Indian weddings: Nalangu, Sangeeth, Muhurtham
+- Mixed/Fusion weddings: Blend of traditions
+
+When recommending tasks:
+1. Consider the specific wedding tradition and its unique ceremonies
+2. Prioritize tasks based on how far away the wedding date is
+3. Include culturally-specific tasks (e.g., "Book Dhol players for Baraat" for Hindu/Sikh weddings)
+4. Suggest vendor-related tasks appropriate for South Asian weddings
+5. Include attire tasks specific to the tradition (lehengas, sherwanis, sarees, etc.)
+6. Consider multi-day celebration logistics
+7. Include family-oriented tasks important in South Asian culture
+8. Suggest budget-appropriate options based on typical South Asian wedding costs
+
+Task categories include:
+- venue: Venue booking and coordination
+- vendor: Vendor research and booking
+- attire: Wedding attire and accessories
+- ceremony: Ceremony planning and religious requirements
+- decor: Decorations and flowers
+- catering: Food and beverages
+- entertainment: Music, DJ, photography, videography
+- guest: Guest list and invitations
+- legal: Marriage license and documentation
+- beauty: Hair, makeup, and grooming
+- travel: Honeymoon and guest travel
+- other: Miscellaneous planning tasks`;
+
+export interface TaskRecommendationRequest {
+  tradition: string;
+  weddingDate?: string;
+  city?: string;
+  budget?: number;
+  events: Array<{ name: string; date?: string }>;
+  existingTasks: Array<{ title: string; completed: boolean; category?: string }>;
+  partner1Name?: string;
+  partner2Name?: string;
+  guestCount?: number;
+}
+
+export interface TaskRecommendation {
+  title: string;
+  description: string;
+  priority: 'high' | 'medium' | 'low';
+  category: string;
+  suggestedDueDate?: string;
+  reason: string;
+}
+
+export async function generateTaskRecommendations(
+  request: TaskRecommendationRequest
+): Promise<TaskRecommendation[]> {
+  const today = new Date().toISOString().split('T')[0];
+  
+  const existingTasksList = request.existingTasks
+    .map(t => `- ${t.title} (${t.completed ? 'completed' : 'pending'}${t.category ? `, ${t.category}` : ''})`)
+    .join('\n');
+  
+  const eventsList = request.events
+    .map(e => `- ${e.name}${e.date ? ` (${new Date(e.date).toLocaleDateString()})` : ''}`)
+    .join('\n');
+
+  const prompt = `Generate personalized wedding planning task recommendations for this couple:
+
+Wedding Details:
+- Tradition: ${request.tradition}
+${request.weddingDate ? `- Wedding Date: ${request.weddingDate}` : '- Wedding Date: Not yet set'}
+${request.city ? `- City: ${request.city}` : ''}
+${request.budget ? `- Budget: $${request.budget.toLocaleString()}` : ''}
+${request.guestCount ? `- Expected Guests: ${request.guestCount}` : ''}
+${request.partner1Name && request.partner2Name ? `- Couple: ${request.partner1Name} & ${request.partner2Name}` : ''}
+
+Today's Date: ${today}
+
+Planned Events:
+${eventsList || 'No events planned yet'}
+
+Current Tasks:
+${existingTasksList || 'No tasks created yet'}
+
+Based on the wedding tradition, timeline, and current progress, generate 5-8 personalized task recommendations that:
+1. Are specific to the ${request.tradition} tradition
+2. Consider what tasks are already done or in progress
+3. Are prioritized based on timeline (urgent tasks if wedding is soon)
+4. Include culturally-specific vendor and ceremony tasks
+5. Help the couple stay on track with their planning
+
+For each task, provide:
+- title: A clear, actionable task name
+- description: Brief explanation of what needs to be done
+- priority: 'high', 'medium', or 'low' based on urgency
+- category: One of: venue, vendor, attire, ceremony, decor, catering, entertainment, guest, legal, beauty, travel, other
+- suggestedDueDate: A recommended due date in YYYY-MM-DD format (consider wedding date and typical planning timelines)
+- reason: Why this task is recommended for this specific couple
+
+Return as a JSON array of task objects.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      config: {
+        systemInstruction: TASK_RECOMMENDATION_PROMPT,
+        responseMimeType: "application/json",
+      },
+      contents: prompt,
+    });
+
+    const text = response.text || "[]";
+    const recommendations = JSON.parse(text);
+    
+    // Validate and normalize the response
+    return recommendations.map((rec: any) => ({
+      title: String(rec.title || '').slice(0, 200),
+      description: String(rec.description || '').slice(0, 500),
+      priority: ['high', 'medium', 'low'].includes(rec.priority) ? rec.priority : 'medium',
+      category: String(rec.category || 'other').slice(0, 50),
+      suggestedDueDate: rec.suggestedDueDate || undefined,
+      reason: String(rec.reason || '').slice(0, 300),
+    }));
+  } catch (error) {
+    console.error("Error generating task recommendations:", error);
+    return [];
+  }
+}
+
+// Quick task suggestion for specific category
+export async function suggestTasksForCategory(
+  category: string,
+  tradition: string,
+  existingTasks: string[]
+): Promise<string[]> {
+  const prompt = `Suggest 3 specific ${category} tasks for a ${tradition} wedding that are NOT already in this list:
+${existingTasks.map(t => `- ${t}`).join('\n') || 'No existing tasks'}
+
+Return as a JSON array of 3 task title strings. Be specific and culturally appropriate.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      config: {
+        systemInstruction: TASK_RECOMMENDATION_PROMPT,
+        responseMimeType: "application/json",
+      },
+      contents: prompt,
+    });
+
+    const text = response.text || "[]";
+    return JSON.parse(text);
+  } catch (error) {
+    console.error("Error suggesting category tasks:", error);
+    return [];
+  }
+}

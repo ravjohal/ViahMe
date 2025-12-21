@@ -2,11 +2,12 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import type { Task, Event, WeddingRoleAssignment } from "@shared/schema";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Calendar, CheckCircle2, Circle, AlertCircle, Trash2, Filter, Bell, BellOff, Mail, MessageSquare, User, Send } from "lucide-react";
+import { Plus, Calendar, CheckCircle2, Circle, AlertCircle, Trash2, Filter, Bell, BellOff, Mail, MessageSquare, User, Send, Sparkles, Lightbulb, X, ChevronDown, ChevronUp, Wand2 } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProgressRing } from "@/components/progress-ring";
@@ -63,6 +64,15 @@ interface Collaborator {
   status: string;
 }
 
+interface AiRecommendation {
+  title: string;
+  description: string;
+  priority: 'high' | 'medium' | 'low';
+  category: string;
+  suggestedDueDate?: string;
+  reason: string;
+}
+
 export default function TasksPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -72,6 +82,9 @@ export default function TasksPage() {
   const [filterAssignee, setFilterAssignee] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [aiRecommendationsOpen, setAiRecommendationsOpen] = useState(true);
+  const [aiRecommendations, setAiRecommendations] = useState<AiRecommendation[]>([]);
+  const [dismissedRecommendations, setDismissedRecommendations] = useState<Set<string>>(new Set());
 
   const { data: weddings = [], isLoading: weddingsLoading } = useQuery<any[]>({
     queryKey: ["/api/weddings"],
@@ -181,6 +194,62 @@ export default function TasksPage() {
       });
     },
   });
+
+  // Generate AI task recommendations
+  const generateRecommendationsMutation = useMutation({
+    mutationFn: async (weddingId: string) => {
+      const response = await apiRequest("POST", `/api/tasks/${weddingId}/ai-recommendations`, {});
+      return response.json();
+    },
+    onSuccess: (data: AiRecommendation[]) => {
+      setAiRecommendations(data);
+      setAiRecommendationsOpen(true);
+      toast({
+        title: "Smart recommendations generated",
+        description: `Found ${data.length} personalized tasks for your wedding.`,
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Could not generate recommendations",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Adopt an AI recommendation as a task
+  const adoptRecommendationMutation = useMutation({
+    mutationFn: async ({ weddingId, recommendation }: { weddingId: string; recommendation: AiRecommendation }) => {
+      const response = await apiRequest("POST", `/api/tasks/${weddingId}/adopt-recommendation`, recommendation);
+      return response.json();
+    },
+    onSuccess: (_, { recommendation }) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tasks", wedding?.id] });
+      setDismissedRecommendations(prev => new Set([...prev, recommendation.title]));
+      toast({
+        title: "Task added to your checklist",
+        description: recommendation.title,
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Failed to add task",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Dismiss a recommendation
+  const handleDismissRecommendation = (title: string) => {
+    setDismissedRecommendations(prev => new Set([...prev, title]));
+  };
+
+  // Visible AI recommendations (exclude dismissed ones)
+  const visibleRecommendations = aiRecommendations.filter(
+    rec => !dismissedRecommendations.has(rec.title)
+  );
 
   const form = useForm<InsertTask>({
     resolver: zodResolver(insertTaskSchema),
@@ -632,6 +701,152 @@ export default function TasksPage() {
         </div>
       </div>
 
+      {/* AI Smart Recommendations Section */}
+      <Card className="mb-6 border-primary/20 bg-gradient-to-r from-primary/5 to-transparent">
+        <Collapsible open={aiRecommendationsOpen} onOpenChange={setAiRecommendationsOpen}>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Sparkles className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    Smart Recommendations
+                    {visibleRecommendations.length > 0 && (
+                      <Badge variant="outline" className="ml-2">
+                        {visibleRecommendations.length} suggestions
+                      </Badge>
+                    )}
+                  </CardTitle>
+                  <CardDescription>
+                    AI-powered task suggestions personalized for your {wedding?.tradition || ''} wedding
+                  </CardDescription>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => wedding?.id && generateRecommendationsMutation.mutate(wedding.id)}
+                  disabled={generateRecommendationsMutation.isPending || !wedding?.id}
+                  data-testid="button-generate-recommendations"
+                >
+                  {generateRecommendationsMutation.isPending ? (
+                    <>
+                      <Wand2 className="w-4 h-4 mr-2 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="w-4 h-4 mr-2" />
+                      {aiRecommendations.length > 0 ? 'Refresh' : 'Get Suggestions'}
+                    </>
+                  )}
+                </Button>
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" size="icon" data-testid="button-toggle-recommendations">
+                    {aiRecommendationsOpen ? (
+                      <ChevronUp className="w-4 h-4" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4" />
+                    )}
+                  </Button>
+                </CollapsibleTrigger>
+              </div>
+            </div>
+          </CardHeader>
+          <CollapsibleContent>
+            <CardContent className="pt-0">
+              {generateRecommendationsMutation.isPending ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-24 w-full" />
+                  ))}
+                </div>
+              ) : visibleRecommendations.length === 0 ? (
+                <div className="text-center py-8">
+                  <Lightbulb className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
+                  <p className="text-muted-foreground mb-2">
+                    {aiRecommendations.length > 0 
+                      ? "You've reviewed all suggestions!" 
+                      : "Click 'Get Suggestions' to receive personalized task recommendations"
+                    }
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Our AI considers your tradition, timeline, budget, and existing tasks
+                  </p>
+                </div>
+              ) : (
+                <div className="grid gap-3 md:grid-cols-2">
+                  {visibleRecommendations.map((rec, index) => (
+                    <div
+                      key={`${rec.title}-${index}`}
+                      className="p-4 rounded-lg border bg-card hover-elevate transition-all"
+                      data-testid={`ai-recommendation-${index}`}
+                    >
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <h4 className="font-medium text-sm leading-snug">{rec.title}</h4>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 shrink-0"
+                          onClick={() => handleDismissRecommendation(rec.title)}
+                          data-testid={`button-dismiss-recommendation-${index}`}
+                        >
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
+                        {rec.description}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-2 mb-3">
+                        <Badge
+                          variant="outline"
+                          className={PRIORITY_COLORS[rec.priority] || PRIORITY_COLORS.medium}
+                        >
+                          {PRIORITY_LABELS[rec.priority] || "Medium"}
+                        </Badge>
+                        {rec.category && (
+                          <Badge variant="secondary" className="text-xs">
+                            {rec.category}
+                          </Badge>
+                        )}
+                        {rec.suggestedDueDate && (
+                          <Badge variant="outline" className="text-xs">
+                            <Calendar className="w-3 h-3 mr-1" />
+                            {format(new Date(rec.suggestedDueDate), "MMM d")}
+                          </Badge>
+                        )}
+                      </div>
+                      {rec.reason && (
+                        <p className="text-xs text-primary/80 mb-3 italic">
+                          <Lightbulb className="w-3 h-3 inline mr-1" />
+                          {rec.reason}
+                        </p>
+                      )}
+                      <Button
+                        size="sm"
+                        className="w-full"
+                        disabled={adoptRecommendationMutation.isPending}
+                        onClick={() => wedding?.id && adoptRecommendationMutation.mutate({
+                          weddingId: wedding.id,
+                          recommendation: rec
+                        })}
+                        data-testid={`button-adopt-recommendation-${index}`}
+                      >
+                        <Plus className="w-3 h-3 mr-2" />
+                        Add to Checklist
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </CollapsibleContent>
+        </Collapsible>
+      </Card>
+
       <Card className="p-6">
         {tasksLoading ? (
           <div className="space-y-4">
@@ -716,6 +931,12 @@ export default function TasksPage() {
                       </div>
 
                       <div className="flex flex-wrap items-center gap-2">
+                        {(task as any).isAiRecommended && (
+                          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                            <Sparkles className="w-3 h-3 mr-1" />
+                            AI
+                          </Badge>
+                        )}
                         <Badge
                           variant="outline"
                           className={PRIORITY_COLORS[task.priority as keyof typeof PRIORITY_COLORS] || PRIORITY_COLORS.medium}
