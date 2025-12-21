@@ -596,6 +596,31 @@ export default function TimelinePage() {
     },
   });
 
+  const confirmEventsMutation = useMutation({
+    mutationFn: async () => {
+      if (!wedding?.id) {
+        throw new Error("Wedding ID not found");
+      }
+      return await apiRequest("PATCH", `/api/weddings/${wedding.id}`, {
+        eventsConfirmed: true,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings"] });
+      toast({
+        title: "Events confirmed",
+        description: "Your event timeline has been confirmed. You can still make changes anytime.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to confirm events",
+        variant: "destructive",
+      });
+    },
+  });
+
   const form = useForm<InsertEvent>({
     resolver: zodResolver(insertEventSchema),
     defaultValues: {
@@ -941,8 +966,36 @@ export default function TimelinePage() {
             Add Event
           </Button>
         </div>
+      </div>
 
-        <Dialog open={wizardOpen} onOpenChange={(open) => {
+      {/* One-time confirmation banner */}
+      {!wedding.eventsConfirmed && events.length > 0 && (
+        <Card className="p-4 mb-8 bg-gradient-to-r from-orange-50 to-pink-50 dark:from-orange-950/30 dark:to-pink-950/30 border-orange-300 dark:border-orange-700">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center">
+                <CheckCircle2 className="w-5 h-5 text-orange-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-orange-800 dark:text-orange-200">Review Your Event Timeline</h3>
+                <p className="text-sm text-orange-700 dark:text-orange-300">
+                  We've created {events.length} events based on your wedding tradition. Review and confirm when ready.
+                </p>
+              </div>
+            </div>
+            <Button 
+              onClick={() => confirmEventsMutation.mutate()}
+              disabled={confirmEventsMutation.isPending}
+              className="bg-orange-600 hover:bg-orange-700 text-white shrink-0"
+              data-testid="button-confirm-events"
+            >
+              {confirmEventsMutation.isPending ? "Confirming..." : "Confirm Events"}
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      <Dialog open={wizardOpen} onOpenChange={(open) => {
           setWizardOpen(open);
           if (!open) resetWizard();
         }}>
@@ -1614,7 +1667,6 @@ export default function TimelinePage() {
             </Form>
           </DialogContent>
         </Dialog>
-      </div>
 
       <div className="mb-6 flex items-center gap-3">
         <Dialog open={addDayDialogOpen} onOpenChange={setAddDayDialogOpen}>
