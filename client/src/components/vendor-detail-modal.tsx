@@ -37,7 +37,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { Star, MapPin, DollarSign, Phone, Mail, Send, StarIcon, AlertCircle, ExternalLink, Calendar, CheckCircle2, XCircle, Building2, ShieldCheck, FileText, Sparkles } from "lucide-react";
+import { Star, MapPin, DollarSign, Phone, Mail, Send, StarIcon, AlertCircle, ExternalLink, Calendar, CheckCircle2, XCircle, Building2, ShieldCheck, FileText, Sparkles, Globe } from "lucide-react";
+import { SiInstagram, SiFacebook, SiX } from "react-icons/si";
 import { Input } from "@/components/ui/input";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -580,33 +581,61 @@ export function VendorDetailModal({
             </div>
           )}
 
-          {(vendor.phone || vendor.email || vendor.contact) && (
+          {(vendor.phone || vendor.email || vendor.contact || vendor.website || vendor.instagram || vendor.facebook || vendor.twitter) && (
             <div className="p-4 rounded-lg bg-muted/50 border">
               <h3 className="font-semibold mb-3">Contact Information</h3>
-              <div className="space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {vendor.phone && (
-                  <div className="flex items-center gap-2 text-sm">
+                  <a href={`tel:${vendor.phone}`} className="flex items-center gap-2 text-sm hover:text-primary transition-colors" data-testid="link-vendor-phone">
                     <Phone className="w-4 h-4 text-muted-foreground" />
-                    <a href={`tel:${vendor.phone}`} className="hover:underline">{vendor.phone}</a>
-                  </div>
+                    <span>{vendor.phone}</span>
+                  </a>
                 )}
                 {vendor.email && (
-                  <div className="flex items-center gap-2 text-sm">
+                  <a href={`mailto:${vendor.email}`} className="flex items-center gap-2 text-sm hover:text-primary transition-colors" data-testid="link-vendor-email">
                     <Mail className="w-4 h-4 text-muted-foreground" />
-                    <a href={`mailto:${vendor.email}`} className="hover:underline">{vendor.email}</a>
-                  </div>
+                    <span>{vendor.email}</span>
+                  </a>
+                )}
+                {vendor.website && (
+                  <a href={vendor.website.startsWith('http') ? vendor.website : `https://${vendor.website}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm hover:text-primary transition-colors" data-testid="link-vendor-website">
+                    <Globe className="w-4 h-4 text-muted-foreground" />
+                    <span>Website</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
+                {vendor.instagram && (
+                  <a href={`https://instagram.com/${vendor.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm hover:text-primary transition-colors" data-testid="link-vendor-instagram">
+                    <SiInstagram className="w-4 h-4 text-muted-foreground" />
+                    <span>@{vendor.instagram.replace('@', '')}</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
+                {vendor.facebook && (
+                  <a href={vendor.facebook.startsWith('http') ? vendor.facebook : `https://facebook.com/${vendor.facebook}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm hover:text-primary transition-colors" data-testid="link-vendor-facebook">
+                    <SiFacebook className="w-4 h-4 text-muted-foreground" />
+                    <span>Facebook</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
+                {vendor.twitter && (
+                  <a href={`https://x.com/${vendor.twitter.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm hover:text-primary transition-colors" data-testid="link-vendor-twitter">
+                    <SiX className="w-4 h-4 text-muted-foreground" />
+                    <span>@{vendor.twitter.replace('@', '')}</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
                 )}
                 {!vendor.phone && !vendor.email && vendor.contact && (
                   vendor.contact.includes("@") ? (
-                    <div className="flex items-center gap-2 text-sm">
+                    <a href={`mailto:${vendor.contact}`} className="flex items-center gap-2 text-sm hover:text-primary transition-colors">
                       <Mail className="w-4 h-4 text-muted-foreground" />
-                      <a href={`mailto:${vendor.contact}`} className="hover:underline">{vendor.contact}</a>
-                    </div>
+                      <span>{vendor.contact}</span>
+                    </a>
                   ) : (
-                    <div className="flex items-center gap-2 text-sm">
+                    <a href={`tel:${vendor.contact}`} className="flex items-center gap-2 text-sm hover:text-primary transition-colors">
                       <Phone className="w-4 h-4 text-muted-foreground" />
-                      <a href={`tel:${vendor.contact}`} className="hover:underline">{vendor.contact}</a>
-                    </div>
+                      <span>{vendor.contact}</span>
+                    </a>
                   )
                 )}
               </div>

@@ -182,6 +182,9 @@ export const vendors = pgTable("vendors", {
   email: text("email"), // Vendor business email
   phone: text("phone"), // Vendor business phone
   website: text("website"), // Vendor website URL
+  instagram: text("instagram"), // Instagram handle (without @)
+  facebook: text("facebook"), // Facebook page URL or username
+  twitter: text("twitter"), // Twitter/X handle (without @)
   rating: decimal("rating", { precision: 2, scale: 1 }),
   reviewCount: integer("review_count").default(0),
   featured: boolean("featured").default(false),
