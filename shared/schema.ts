@@ -853,13 +853,31 @@ export const playlistSongs = pgTable("playlist_songs", {
   title: text("title").notNull(),
   artist: text("artist").notNull(),
   duration: text("duration"), // e.g., "3:45"
+  category: text("category"), // 'first_dance' | 'father_daughter' | 'mother_son' | 'cake_cutting' | 'party' | 'slow' | 'entrance' | 'exit' | 'dinner' | 'other'
+  streamingLink: text("streaming_link"), // Spotify or Apple Music link
   requestedBy: text("requested_by"), // Guest name or "Couple"
+  isGuestRequest: boolean("is_guest_request").default(false), // True if submitted by a guest
   notes: text("notes"), // Special instructions for DJ
   voteCount: integer("vote_count").default(0),
   status: text("status").notNull().default('pending'), // 'pending' | 'approved' | 'declined'
   order: integer("order"), // For custom playlist ordering
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
+
+export const SONG_CATEGORIES = [
+  { value: 'first_dance', label: 'First Dance' },
+  { value: 'father_daughter', label: 'Father-Daughter Dance' },
+  { value: 'mother_son', label: 'Mother-Son Dance' },
+  { value: 'cake_cutting', label: 'Cake Cutting' },
+  { value: 'party', label: 'Party Starters' },
+  { value: 'slow', label: 'Slow Songs' },
+  { value: 'entrance', label: 'Entrance' },
+  { value: 'exit', label: 'Exit/Send-Off' },
+  { value: 'dinner', label: 'Dinner Music' },
+  { value: 'cocktail', label: 'Cocktail Hour' },
+  { value: 'ceremony', label: 'Ceremony' },
+  { value: 'other', label: 'Other' },
+] as const;
 
 export const insertPlaylistSongSchema = createInsertSchema(playlistSongs).omit({
   id: true,
@@ -868,6 +886,9 @@ export const insertPlaylistSongSchema = createInsertSchema(playlistSongs).omit({
 }).extend({
   status: z.enum(['pending', 'approved', 'declined']).optional(),
   requestedBy: z.string().optional(),
+  category: z.string().optional(),
+  streamingLink: z.string().url().optional().or(z.literal('')),
+  isGuestRequest: z.boolean().optional(),
 });
 
 export type InsertPlaylistSong = z.infer<typeof insertPlaylistSongSchema>;

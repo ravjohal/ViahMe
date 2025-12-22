@@ -1,11 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import type { Playlist, PlaylistSong, Event, InsertPlaylist, InsertPlaylistSong } from "@shared/schema";
+import { SONG_CATEGORIES } from "@shared/schema";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Music, ThumbsUp, Share2, Trash2, Pencil, Sparkles } from "lucide-react";
+import { Plus, Music, ThumbsUp, Share2, Trash2, Pencil, Sparkles, ExternalLink, FileDown, Check, X, Filter, Link2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -45,6 +47,8 @@ export default function PlaylistsPage() {
   const [songDialogOpen, setSongDialogOpen] = useState(false);
   const [selectedPlaylist, setSelectedPlaylist] = useState<Playlist | null>(null);
   const [voterId] = useState(() => `voter_${Math.random().toString(36).substr(2, 9)}`);
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const { data: weddings = [], isLoading: weddingsLoading } = useQuery<any[]>({
     queryKey: ["/api/weddings"],
@@ -167,8 +171,109 @@ export default function PlaylistsPage() {
       artist: "",
       requestedBy: "",
       notes: "",
+      category: "",
+      streamingLink: "",
     },
   });
+
+  const updateSongMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<InsertPlaylistSong> }) => {
+      return await apiRequest("PATCH", `/api/songs/${id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/playlists", selectedPlaylist?.id, "songs"] });
+      toast({
+        title: "Song updated",
+        description: "Song has been updated successfully.",
+      });
+    },
+  });
+
+  const filteredSongs = useMemo(() => {
+    return songs.filter((song) => {
+      const matchesCategory = categoryFilter === "all" || song.category === categoryFilter;
+      const matchesStatus = statusFilter === "all" || song.status === statusFilter;
+      return matchesCategory && matchesStatus;
+    });
+  }, [songs, categoryFilter, statusFilter]);
+
+  const pendingRequests = useMemo(() => {
+    return songs.filter((song) => song.isGuestRequest && song.status === 'pending');
+  }, [songs]);
+
+  const handleApproveSong = (songId: string) => {
+    updateSongMutation.mutate({ id: songId, data: { status: 'approved' } });
+  };
+
+  const handleDeclineSong = (songId: string) => {
+    updateSongMutation.mutate({ id: songId, data: { status: 'declined' } });
+  };
+
+  const handleExportPDF = () => {
+    if (!selectedPlaylist || songs.length === 0) return;
+    
+    const approvedSongs = songs.filter(s => s.status === 'approved' || !s.isGuestRequest);
+    const event = events.find(e => e.id === selectedPlaylist.eventId);
+    
+    // Group songs by category
+    const songsByCategory: Record<string, PlaylistSong[]> = {};
+    approvedSongs.forEach(song => {
+      const cat = song.category || 'other';
+      if (!songsByCategory[cat]) songsByCategory[cat] = [];
+      songsByCategory[cat].push(song);
+    });
+    
+    // Generate printable HTML
+    let html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>${selectedPlaylist.name} - Playlist</title>
+        <style>
+          body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+          h1 { color: #333; border-bottom: 2px solid #e5a66f; padding-bottom: 10px; }
+          h2 { color: #666; margin-top: 30px; }
+          .event { color: #888; font-size: 14px; margin-bottom: 20px; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+          th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid #ddd; }
+          th { background: #f5f5f5; font-weight: 600; }
+          .category { background: #fef3e2; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-top: 20px; display: inline-block; }
+          .link { color: #e5a66f; font-size: 12px; }
+          .notes { font-size: 12px; color: #888; font-style: italic; }
+          @media print { body { padding: 0; } }
+        </style>
+      </head>
+      <body>
+        <h1>${selectedPlaylist.name}</h1>
+        <p class="event">Event: ${event?.name || 'Unknown'} | Total Songs: ${approvedSongs.length}</p>
+    `;
+    
+    Object.entries(songsByCategory).forEach(([cat, catSongs]) => {
+      const catLabel = SONG_CATEGORIES.find(c => c.value === cat)?.label || 'Other';
+      html += `<span class="category">${catLabel}</span>`;
+      html += `<table><tr><th>#</th><th>Song</th><th>Artist</th><th>Requested By</th><th>Notes</th></tr>`;
+      catSongs.forEach((song, idx) => {
+        html += `<tr>
+          <td>${idx + 1}</td>
+          <td>${song.title}${song.streamingLink ? ` <span class="link">[Link]</span>` : ''}</td>
+          <td>${song.artist || '-'}</td>
+          <td>${song.requestedBy || '-'}</td>
+          <td class="notes">${song.notes || '-'}</td>
+        </tr>`;
+      });
+      html += `</table>`;
+    });
+    
+    html += `</body></html>`;
+    
+    // Open print dialog
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(html);
+      printWindow.document.close();
+      printWindow.print();
+    }
+  };
 
   const handleCreatePlaylist = (data: InsertPlaylist) => {
     // Ensure proper defaults for optional fields
@@ -452,8 +557,99 @@ export default function PlaylistsPage() {
               </DialogHeader>
 
               <div className="space-y-6 pt-4">
+                {/* Pending Guest Requests Alert */}
+                {pendingRequests.length > 0 && (
+                  <Card className="bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800 mb-4">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-amber-600" />
+                        {pendingRequests.length} Guest Request{pendingRequests.length > 1 ? 's' : ''} Pending Approval
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {pendingRequests.slice(0, 3).map((song) => (
+                        <div key={song.id} className="flex items-center justify-between gap-2 p-2 bg-background rounded-md">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{song.title}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {song.artist} • Requested by {song.requestedBy || 'Guest'}
+                            </p>
+                          </div>
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 w-7 p-0 text-green-600"
+                              onClick={() => handleApproveSong(song.id)}
+                              data-testid={`button-approve-${song.id}`}
+                            >
+                              <Check className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 w-7 p-0 text-red-600"
+                              onClick={() => handleDeclineSong(song.id)}
+                              data-testid={`button-decline-${song.id}`}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                      {pendingRequests.length > 3 && (
+                        <p className="text-xs text-muted-foreground text-center pt-1">
+                          +{pendingRequests.length - 3} more pending
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Filter and Export Controls */}
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                  <div className="flex items-center gap-2">
+                    <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                      <SelectTrigger className="w-[180px]" data-testid="select-category-filter">
+                        <Filter className="w-4 h-4 mr-2" />
+                        <SelectValue placeholder="All Categories" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Categories</SelectItem>
+                        {SONG_CATEGORIES.map((cat) => (
+                          <SelectItem key={cat.value} value={cat.value}>
+                            {cat.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                      <SelectTrigger className="w-[140px]" data-testid="select-status-filter">
+                        <SelectValue placeholder="All Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Status</SelectItem>
+                        <SelectItem value="approved">Approved</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="declined">Declined</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleExportPDF}
+                    disabled={songs.length === 0}
+                    className="gap-2"
+                    data-testid="button-export-pdf"
+                  >
+                    <FileDown className="w-4 h-4" />
+                    Export for DJ
+                  </Button>
+                </div>
+
                 <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-lg">Songs ({songs.length})</h3>
+                  <h3 className="font-semibold text-lg">Songs ({filteredSongs.length})</h3>
                   <Dialog open={songDialogOpen} onOpenChange={setSongDialogOpen}>
                     <DialogTrigger asChild>
                       <Button size="sm" data-testid="button-add-song">
@@ -499,6 +695,48 @@ export default function PlaylistsPage() {
                                     value={field.value || ""}
                                     placeholder="e.g., Diljit Dosanjh"
                                     data-testid="input-artist"
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={songForm.control}
+                            name="category"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Moment/Category</FormLabel>
+                                <Select onValueChange={field.onChange} value={field.value || ""}>
+                                  <FormControl>
+                                    <SelectTrigger data-testid="select-song-category">
+                                      <SelectValue placeholder="When should this song play?" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {SONG_CATEGORIES.map((cat) => (
+                                      <SelectItem key={cat.value} value={cat.value}>
+                                        {cat.label}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={songForm.control}
+                            name="streamingLink"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Spotify/Apple Music Link (Optional)</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    {...field}
+                                    value={field.value || ""}
+                                    placeholder="https://open.spotify.com/track/..."
+                                    data-testid="input-streaming-link"
                                   />
                                 </FormControl>
                                 <FormMessage />
@@ -564,14 +802,14 @@ export default function PlaylistsPage() {
                   </Dialog>
                 </div>
 
-                {songs.length === 0 ? (
+                {filteredSongs.length === 0 ? (
                   <div className="text-center py-12 text-muted-foreground">
                     <Music className="w-12 h-12 mx-auto mb-3 opacity-40" />
-                    <p>No songs yet. Add your first song request!</p>
+                    <p>{songs.length === 0 ? "No songs yet. Add your first song request!" : "No songs match the current filters."}</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {songs.map((song, index) => (
+                    {filteredSongs.map((song, index) => (
                       <Card key={song.id} className="hover-elevate" data-testid={`card-song-${song.id}`}>
                         <CardContent className="p-4">
                           <div className="flex items-start gap-4">
@@ -581,9 +819,21 @@ export default function PlaylistsPage() {
                                   #{index + 1}
                                 </span>
                                 <div className="flex-1 min-w-0">
-                                  <h4 className="font-semibold text-base truncate" data-testid={`text-song-title-${song.id}`}>
-                                    {song.title}
-                                  </h4>
+                                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                                    <h4 className="font-semibold text-base truncate" data-testid={`text-song-title-${song.id}`}>
+                                      {song.title}
+                                    </h4>
+                                    {song.category && (
+                                      <Badge variant="secondary" className="text-xs">
+                                        {SONG_CATEGORIES.find(c => c.value === song.category)?.label || song.category}
+                                      </Badge>
+                                    )}
+                                    {song.isGuestRequest && (
+                                      <Badge variant={song.status === 'approved' ? 'default' : song.status === 'declined' ? 'destructive' : 'outline'} className="text-xs">
+                                        {song.status === 'approved' ? 'Approved' : song.status === 'declined' ? 'Declined' : 'Pending'}
+                                      </Badge>
+                                    )}
+                                  </div>
                                   {song.artist && (
                                     <p className="text-sm text-muted-foreground truncate">
                                       {song.artist}
@@ -591,11 +841,26 @@ export default function PlaylistsPage() {
                                   )}
                                 </div>
                               </div>
-                              {song.requestedBy && (
-                                <p className="text-xs text-muted-foreground mb-1">
-                                  Requested by {song.requestedBy}
-                                </p>
-                              )}
+                              <div className="flex items-center gap-3 flex-wrap">
+                                {song.requestedBy && (
+                                  <p className="text-xs text-muted-foreground">
+                                    Requested by {song.requestedBy}
+                                  </p>
+                                )}
+                                {song.streamingLink && (
+                                  <a
+                                    href={song.streamingLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-xs text-primary flex items-center gap-1"
+                                    onClick={(e) => e.stopPropagation()}
+                                    data-testid={`link-streaming-${song.id}`}
+                                  >
+                                    <Link2 className="w-3 h-3" />
+                                    Listen
+                                  </a>
+                                )}
+                              </div>
                               {song.notes && (
                                 <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
                                   {song.notes}
@@ -603,6 +868,28 @@ export default function PlaylistsPage() {
                               )}
                             </div>
                             <div className="flex items-center gap-2">
+                              {song.isGuestRequest && song.status === 'pending' && (
+                                <>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="text-green-600"
+                                    onClick={() => handleApproveSong(song.id)}
+                                    data-testid={`button-approve-song-${song.id}`}
+                                  >
+                                    <Check className="w-4 h-4" />
+                                  </Button>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="text-red-600"
+                                    onClick={() => handleDeclineSong(song.id)}
+                                    data-testid={`button-decline-song-${song.id}`}
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </Button>
+                                </>
+                              )}
                               <Button
                                 variant="outline"
                                 size="sm"
