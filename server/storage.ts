@@ -139,6 +139,16 @@ import {
   type InsertQuoteRequest,
   type ConversationStatus,
   type InsertConversationStatus,
+  type VendorLead,
+  type InsertVendorLead,
+  type LeadNurtureSequence,
+  type InsertLeadNurtureSequence,
+  type LeadNurtureStep,
+  type InsertLeadNurtureStep,
+  type LeadNurtureAction,
+  type InsertLeadNurtureAction,
+  type LeadActivityLog,
+  type InsertLeadActivityLog,
 } from "@shared/schema";
 import { randomUUID, randomBytes } from "crypto";
 import bcrypt from "bcrypt";
@@ -755,6 +765,42 @@ export interface IStorage {
   getQuoteRequestsByVendor(vendorId: string): Promise<QuoteRequest[]>;
   getQuoteRequestsByWedding(weddingId: string): Promise<QuoteRequest[]>;
   updateQuoteRequestStatus(id: string, status: string): Promise<QuoteRequest | undefined>;
+  
+  // ============================================================================
+  // VENDOR LEADS - Lead qualification and nurturing
+  // ============================================================================
+  getVendorLead(id: string): Promise<VendorLead | undefined>;
+  getVendorLeadsByVendor(vendorId: string): Promise<VendorLead[]>;
+  getVendorLeadByWeddingAndVendor(weddingId: string, vendorId: string): Promise<VendorLead | undefined>;
+  createVendorLead(lead: InsertVendorLead): Promise<VendorLead>;
+  updateVendorLead(id: string, lead: Partial<InsertVendorLead>): Promise<VendorLead | undefined>;
+  deleteVendorLead(id: string): Promise<boolean>;
+  
+  // Lead Nurture Sequences
+  getLeadNurtureSequence(id: string): Promise<LeadNurtureSequence | undefined>;
+  getLeadNurtureSequencesByVendor(vendorId: string): Promise<LeadNurtureSequence[]>;
+  getDefaultNurtureSequence(vendorId: string): Promise<LeadNurtureSequence | undefined>;
+  createLeadNurtureSequence(sequence: InsertLeadNurtureSequence): Promise<LeadNurtureSequence>;
+  updateLeadNurtureSequence(id: string, sequence: Partial<InsertLeadNurtureSequence>): Promise<LeadNurtureSequence | undefined>;
+  deleteLeadNurtureSequence(id: string): Promise<boolean>;
+  
+  // Lead Nurture Steps
+  getLeadNurtureStep(id: string): Promise<LeadNurtureStep | undefined>;
+  getLeadNurtureStepsBySequence(sequenceId: string): Promise<LeadNurtureStep[]>;
+  createLeadNurtureStep(step: InsertLeadNurtureStep): Promise<LeadNurtureStep>;
+  updateLeadNurtureStep(id: string, step: Partial<InsertLeadNurtureStep>): Promise<LeadNurtureStep | undefined>;
+  deleteLeadNurtureStep(id: string): Promise<boolean>;
+  
+  // Lead Nurture Actions
+  getLeadNurtureAction(id: string): Promise<LeadNurtureAction | undefined>;
+  getLeadNurtureActionsByLead(leadId: string): Promise<LeadNurtureAction[]>;
+  getPendingNurtureActions(beforeDate: Date): Promise<LeadNurtureAction[]>;
+  createLeadNurtureAction(action: InsertLeadNurtureAction): Promise<LeadNurtureAction>;
+  updateLeadNurtureAction(id: string, action: Partial<InsertLeadNurtureAction>): Promise<LeadNurtureAction | undefined>;
+  
+  // Lead Activity Log
+  getLeadActivityLog(leadId: string): Promise<LeadActivityLog[]>;
+  createLeadActivityLog(activity: InsertLeadActivityLog): Promise<LeadActivityLog>;
 }
 
 // Guest Planning Snapshot - comprehensive view of all guests and per-event costs
@@ -3621,6 +3667,40 @@ export class MemStorage implements IStorage {
   async updateQuoteRequestStatus(id: string, status: string): Promise<QuoteRequest | undefined> {
     throw new Error("MemStorage does not support Quote Requests. Use DBStorage.");
   }
+  
+  // Vendor Leads (stubs)
+  async getVendorLead(id: string): Promise<VendorLead | undefined> { return undefined; }
+  async getVendorLeadsByVendor(vendorId: string): Promise<VendorLead[]> { return []; }
+  async getVendorLeadByWeddingAndVendor(weddingId: string, vendorId: string): Promise<VendorLead | undefined> { return undefined; }
+  async createVendorLead(lead: InsertVendorLead): Promise<VendorLead> { throw new Error("MemStorage does not support Vendor Leads. Use DBStorage."); }
+  async updateVendorLead(id: string, lead: Partial<InsertVendorLead>): Promise<VendorLead | undefined> { throw new Error("MemStorage does not support Vendor Leads. Use DBStorage."); }
+  async deleteVendorLead(id: string): Promise<boolean> { return false; }
+  
+  // Lead Nurture Sequences (stubs)
+  async getLeadNurtureSequence(id: string): Promise<LeadNurtureSequence | undefined> { return undefined; }
+  async getLeadNurtureSequencesByVendor(vendorId: string): Promise<LeadNurtureSequence[]> { return []; }
+  async getDefaultNurtureSequence(vendorId: string): Promise<LeadNurtureSequence | undefined> { return undefined; }
+  async createLeadNurtureSequence(sequence: InsertLeadNurtureSequence): Promise<LeadNurtureSequence> { throw new Error("MemStorage does not support Lead Nurture Sequences. Use DBStorage."); }
+  async updateLeadNurtureSequence(id: string, sequence: Partial<InsertLeadNurtureSequence>): Promise<LeadNurtureSequence | undefined> { throw new Error("MemStorage does not support Lead Nurture Sequences. Use DBStorage."); }
+  async deleteLeadNurtureSequence(id: string): Promise<boolean> { return false; }
+  
+  // Lead Nurture Steps (stubs)
+  async getLeadNurtureStep(id: string): Promise<LeadNurtureStep | undefined> { return undefined; }
+  async getLeadNurtureStepsBySequence(sequenceId: string): Promise<LeadNurtureStep[]> { return []; }
+  async createLeadNurtureStep(step: InsertLeadNurtureStep): Promise<LeadNurtureStep> { throw new Error("MemStorage does not support Lead Nurture Steps. Use DBStorage."); }
+  async updateLeadNurtureStep(id: string, step: Partial<InsertLeadNurtureStep>): Promise<LeadNurtureStep | undefined> { throw new Error("MemStorage does not support Lead Nurture Steps. Use DBStorage."); }
+  async deleteLeadNurtureStep(id: string): Promise<boolean> { return false; }
+  
+  // Lead Nurture Actions (stubs)
+  async getLeadNurtureAction(id: string): Promise<LeadNurtureAction | undefined> { return undefined; }
+  async getLeadNurtureActionsByLead(leadId: string): Promise<LeadNurtureAction[]> { return []; }
+  async getPendingNurtureActions(beforeDate: Date): Promise<LeadNurtureAction[]> { return []; }
+  async createLeadNurtureAction(action: InsertLeadNurtureAction): Promise<LeadNurtureAction> { throw new Error("MemStorage does not support Lead Nurture Actions. Use DBStorage."); }
+  async updateLeadNurtureAction(id: string, action: Partial<InsertLeadNurtureAction>): Promise<LeadNurtureAction | undefined> { throw new Error("MemStorage does not support Lead Nurture Actions. Use DBStorage."); }
+  
+  // Lead Activity Log (stubs)
+  async getLeadActivityLog(leadId: string): Promise<LeadActivityLog[]> { return []; }
+  async createLeadActivityLog(activity: InsertLeadActivityLog): Promise<LeadActivityLog> { throw new Error("MemStorage does not support Lead Activity Log. Use DBStorage."); }
 }
 
 import { neon } from "@neondatabase/serverless";
@@ -8271,6 +8351,161 @@ export class DBStorage implements IStorage {
 
   async updateQuoteRequestStatus(id: string, status: string): Promise<QuoteRequest | undefined> {
     const result = await this.db.update(schema.quoteRequests).set({ status }).where(eq(schema.quoteRequests.id, id)).returning();
+    return result[0];
+  }
+
+  // ============================================================================
+  // VENDOR LEADS - Lead qualification and nurturing
+  // ============================================================================
+
+  async getVendorLead(id: string): Promise<VendorLead | undefined> {
+    const result = await this.db.select().from(schema.vendorLeads).where(eq(schema.vendorLeads.id, id));
+    return result[0];
+  }
+
+  async getVendorLeadsByVendor(vendorId: string): Promise<VendorLead[]> {
+    return await this.db.select().from(schema.vendorLeads)
+      .where(eq(schema.vendorLeads.vendorId, vendorId))
+      .orderBy(sql`${schema.vendorLeads.createdAt} DESC`);
+  }
+
+  async getVendorLeadByWeddingAndVendor(weddingId: string, vendorId: string): Promise<VendorLead | undefined> {
+    const result = await this.db.select().from(schema.vendorLeads)
+      .where(and(
+        eq(schema.vendorLeads.weddingId, weddingId),
+        eq(schema.vendorLeads.vendorId, vendorId)
+      ));
+    return result[0];
+  }
+
+  async createVendorLead(lead: InsertVendorLead): Promise<VendorLead> {
+    const result = await this.db.insert(schema.vendorLeads).values(lead).returning();
+    return result[0];
+  }
+
+  async updateVendorLead(id: string, lead: Partial<InsertVendorLead>): Promise<VendorLead | undefined> {
+    const result = await this.db.update(schema.vendorLeads)
+      .set({ ...lead, updatedAt: new Date() })
+      .where(eq(schema.vendorLeads.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteVendorLead(id: string): Promise<boolean> {
+    await this.db.delete(schema.vendorLeads).where(eq(schema.vendorLeads.id, id));
+    return true;
+  }
+
+  // Lead Nurture Sequences
+  async getLeadNurtureSequence(id: string): Promise<LeadNurtureSequence | undefined> {
+    const result = await this.db.select().from(schema.leadNurtureSequences).where(eq(schema.leadNurtureSequences.id, id));
+    return result[0];
+  }
+
+  async getLeadNurtureSequencesByVendor(vendorId: string): Promise<LeadNurtureSequence[]> {
+    return await this.db.select().from(schema.leadNurtureSequences)
+      .where(eq(schema.leadNurtureSequences.vendorId, vendorId));
+  }
+
+  async getDefaultNurtureSequence(vendorId: string): Promise<LeadNurtureSequence | undefined> {
+    const result = await this.db.select().from(schema.leadNurtureSequences)
+      .where(and(
+        eq(schema.leadNurtureSequences.vendorId, vendorId),
+        eq(schema.leadNurtureSequences.isDefault, true)
+      ));
+    return result[0];
+  }
+
+  async createLeadNurtureSequence(sequence: InsertLeadNurtureSequence): Promise<LeadNurtureSequence> {
+    const result = await this.db.insert(schema.leadNurtureSequences).values(sequence).returning();
+    return result[0];
+  }
+
+  async updateLeadNurtureSequence(id: string, sequence: Partial<InsertLeadNurtureSequence>): Promise<LeadNurtureSequence | undefined> {
+    const result = await this.db.update(schema.leadNurtureSequences)
+      .set(sequence)
+      .where(eq(schema.leadNurtureSequences.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteLeadNurtureSequence(id: string): Promise<boolean> {
+    await this.db.delete(schema.leadNurtureSequences).where(eq(schema.leadNurtureSequences.id, id));
+    return true;
+  }
+
+  // Lead Nurture Steps
+  async getLeadNurtureStep(id: string): Promise<LeadNurtureStep | undefined> {
+    const result = await this.db.select().from(schema.leadNurtureSteps).where(eq(schema.leadNurtureSteps.id, id));
+    return result[0];
+  }
+
+  async getLeadNurtureStepsBySequence(sequenceId: string): Promise<LeadNurtureStep[]> {
+    return await this.db.select().from(schema.leadNurtureSteps)
+      .where(eq(schema.leadNurtureSteps.sequenceId, sequenceId))
+      .orderBy(schema.leadNurtureSteps.stepNumber);
+  }
+
+  async createLeadNurtureStep(step: InsertLeadNurtureStep): Promise<LeadNurtureStep> {
+    const result = await this.db.insert(schema.leadNurtureSteps).values(step).returning();
+    return result[0];
+  }
+
+  async updateLeadNurtureStep(id: string, step: Partial<InsertLeadNurtureStep>): Promise<LeadNurtureStep | undefined> {
+    const result = await this.db.update(schema.leadNurtureSteps)
+      .set(step)
+      .where(eq(schema.leadNurtureSteps.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteLeadNurtureStep(id: string): Promise<boolean> {
+    await this.db.delete(schema.leadNurtureSteps).where(eq(schema.leadNurtureSteps.id, id));
+    return true;
+  }
+
+  // Lead Nurture Actions
+  async getLeadNurtureAction(id: string): Promise<LeadNurtureAction | undefined> {
+    const result = await this.db.select().from(schema.leadNurtureActions).where(eq(schema.leadNurtureActions.id, id));
+    return result[0];
+  }
+
+  async getLeadNurtureActionsByLead(leadId: string): Promise<LeadNurtureAction[]> {
+    return await this.db.select().from(schema.leadNurtureActions)
+      .where(eq(schema.leadNurtureActions.leadId, leadId))
+      .orderBy(schema.leadNurtureActions.scheduledAt);
+  }
+
+  async getPendingNurtureActions(beforeDate: Date): Promise<LeadNurtureAction[]> {
+    return await this.db.select().from(schema.leadNurtureActions)
+      .where(and(
+        eq(schema.leadNurtureActions.status, 'pending'),
+        sql`${schema.leadNurtureActions.scheduledAt} <= ${beforeDate.toISOString()}`
+      ));
+  }
+
+  async createLeadNurtureAction(action: InsertLeadNurtureAction): Promise<LeadNurtureAction> {
+    const result = await this.db.insert(schema.leadNurtureActions).values(action).returning();
+    return result[0];
+  }
+
+  async updateLeadNurtureAction(id: string, action: Partial<InsertLeadNurtureAction>): Promise<LeadNurtureAction | undefined> {
+    const result = await this.db.update(schema.leadNurtureActions)
+      .set(action)
+      .where(eq(schema.leadNurtureActions.id, id))
+      .returning();
+    return result[0];
+  }
+
+  // Lead Activity Log
+  async getLeadActivityLog(leadId: string): Promise<LeadActivityLog[]> {
+    return await this.db.select().from(schema.leadActivityLog)
+      .where(eq(schema.leadActivityLog.leadId, leadId))
+      .orderBy(sql`${schema.leadActivityLog.performedAt} DESC`);
+  }
+
+  async createLeadActivityLog(activity: InsertLeadActivityLog): Promise<LeadActivityLog> {
+    const result = await this.db.insert(schema.leadActivityLog).values(activity).returning();
     return result[0];
   }
 }

@@ -49,6 +49,11 @@ import {
   insertVendorTeammateInvitationSchema,
   insertExpenseSchema,
   VENDOR_TEAMMATE_PERMISSIONS,
+  insertVendorLeadSchema,
+  insertLeadNurtureSequenceSchema,
+  insertLeadNurtureStepSchema,
+  insertLeadActivityLogSchema,
+  type VendorLead,
 } from "@shared/schema";
 import { seedVendors, seedBudgetBenchmarks } from "./seed-data";
 import {
@@ -9450,6 +9455,439 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   app.get("/api/vendor-teammates/permissions", async (req, res) => {
     res.json(VENDOR_TEAMMATE_PERMISSIONS);
   });
+
+  // ============================================================================
+  // VENDOR LEADS - Lead qualification and nurturing system
+  // ============================================================================
+
+  // Get all leads for a vendor
+  app.get("/api/vendor-leads/:vendorId", async (req, res) => {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    try {
+      const { vendorId } = req.params;
+      
+      // Verify user has access to this vendor
+      const hasAccess = await storage.hasVendorTeammateAccess(userId, vendorId);
+      const vendors = await storage.getAllVendors();
+      const userVendor = vendors.find(v => v.userId === userId);
+      
+      if (!hasAccess && (!userVendor || userVendor.id !== vendorId)) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const leads = await storage.getVendorLeadsByVendor(vendorId);
+      res.json(leads);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get a single lead
+  app.get("/api/vendor-leads/:vendorId/:leadId", async (req, res) => {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    try {
+      const { vendorId, leadId } = req.params;
+      
+      // Verify access
+      const hasAccess = await storage.hasVendorTeammateAccess(userId, vendorId);
+      const vendors = await storage.getAllVendors();
+      const userVendor = vendors.find(v => v.userId === userId);
+      
+      if (!hasAccess && (!userVendor || userVendor.id !== vendorId)) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const lead = await storage.getVendorLead(leadId);
+      if (!lead || lead.vendorId !== vendorId) {
+        return res.status(404).json({ error: "Lead not found" });
+      }
+
+      // Also fetch activity log
+      const activity = await storage.getLeadActivityLog(leadId);
+      
+      res.json({ lead, activity });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Create a lead manually
+  app.post("/api/vendor-leads/:vendorId", async (req, res) => {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    try {
+      const { vendorId } = req.params;
+      
+      // Verify access
+      const hasAccess = await storage.hasVendorTeammateAccess(userId, vendorId);
+      const vendors = await storage.getAllVendors();
+      const userVendor = vendors.find(v => v.userId === userId);
+      
+      if (!hasAccess && (!userVendor || userVendor.id !== vendorId)) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const validatedData = insertVendorLeadSchema.parse({
+        ...req.body,
+        vendorId,
+        sourceType: req.body.sourceType || 'manual',
+      });
+
+      // Calculate initial lead score
+      const scores = calculateLeadScore(validatedData);
+      
+      const lead = await storage.createVendorLead({
+        ...validatedData,
+        ...scores,
+      });
+
+      // Log the creation
+      await storage.createLeadActivityLog({
+        leadId: lead.id,
+        activityType: 'note_added',
+        description: 'Lead created manually',
+        performedBy: userId,
+      });
+
+      res.json(lead);
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: 'Invalid data', details: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Update a lead (status, notes, scores, etc.)
+  app.patch("/api/vendor-leads/:vendorId/:leadId", async (req, res) => {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    try {
+      const { vendorId, leadId } = req.params;
+      
+      // Verify access
+      const hasAccess = await storage.hasVendorTeammateAccess(userId, vendorId);
+      const vendors = await storage.getAllVendors();
+      const userVendor = vendors.find(v => v.userId === userId);
+      
+      if (!hasAccess && (!userVendor || userVendor.id !== vendorId)) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const existingLead = await storage.getVendorLead(leadId);
+      if (!existingLead || existingLead.vendorId !== vendorId) {
+        return res.status(404).json({ error: "Lead not found" });
+      }
+
+      // Track status changes
+      const oldStatus = existingLead.status;
+      const newStatus = req.body.status;
+
+      const updates: Partial<VendorLead> = { ...req.body };
+      
+      // Update status timestamps
+      if (newStatus && newStatus !== oldStatus) {
+        updates.statusChangedAt = new Date();
+        if (newStatus === 'won') {
+          updates.wonAt = new Date();
+        } else if (newStatus === 'lost') {
+          updates.lostAt = new Date();
+        }
+      }
+
+      // If marking as contacted, update last contacted
+      if (newStatus === 'contacted' && oldStatus === 'new') {
+        updates.lastContactedAt = new Date();
+      }
+
+      const lead = await storage.updateVendorLead(leadId, updates);
+
+      // Log status change
+      if (newStatus && newStatus !== oldStatus) {
+        await storage.createLeadActivityLog({
+          leadId,
+          activityType: 'status_change',
+          description: `Status changed from "${oldStatus}" to "${newStatus}"`,
+          performedBy: userId,
+          metadata: { oldStatus, newStatus },
+        });
+      }
+
+      res.json(lead);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Add a note/activity to a lead
+  app.post("/api/vendor-leads/:vendorId/:leadId/activity", async (req, res) => {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    try {
+      const { vendorId, leadId } = req.params;
+      const { activityType, description, metadata } = req.body;
+      
+      // Verify access
+      const hasAccess = await storage.hasVendorTeammateAccess(userId, vendorId);
+      const vendors = await storage.getAllVendors();
+      const userVendor = vendors.find(v => v.userId === userId);
+      
+      if (!hasAccess && (!userVendor || userVendor.id !== vendorId)) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const lead = await storage.getVendorLead(leadId);
+      if (!lead || lead.vendorId !== vendorId) {
+        return res.status(404).json({ error: "Lead not found" });
+      }
+
+      const activity = await storage.createLeadActivityLog({
+        leadId,
+        activityType: activityType || 'note_added',
+        description,
+        metadata,
+        performedBy: userId,
+      });
+
+      // Update engagement score based on activity
+      const newEngagementScore = Math.min(100, (lead.engagementScore || 0) + 5);
+      await storage.updateVendorLead(leadId, {
+        engagementScore: newEngagementScore,
+        overallScore: calculateOverallScore({
+          urgencyScore: lead.urgencyScore || 0,
+          budgetFitScore: lead.budgetFitScore || 0,
+          engagementScore: newEngagementScore,
+        }),
+      });
+
+      res.json(activity);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get lead analytics/stats for a vendor
+  app.get("/api/vendor-leads/:vendorId/analytics", async (req, res) => {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    try {
+      const { vendorId } = req.params;
+      
+      // Verify access
+      const hasAccess = await storage.hasVendorTeammateAccess(userId, vendorId);
+      const vendors = await storage.getAllVendors();
+      const userVendor = vendors.find(v => v.userId === userId);
+      
+      if (!hasAccess && (!userVendor || userVendor.id !== vendorId)) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const leads = await storage.getVendorLeadsByVendor(vendorId);
+      
+      const analytics = {
+        total: leads.length,
+        byStatus: {
+          new: leads.filter(l => l.status === 'new').length,
+          contacted: leads.filter(l => l.status === 'contacted').length,
+          qualified: leads.filter(l => l.status === 'qualified').length,
+          proposal_sent: leads.filter(l => l.status === 'proposal_sent').length,
+          negotiating: leads.filter(l => l.status === 'negotiating').length,
+          won: leads.filter(l => l.status === 'won').length,
+          lost: leads.filter(l => l.status === 'lost').length,
+          nurturing: leads.filter(l => l.status === 'nurturing').length,
+        },
+        byPriority: {
+          hot: leads.filter(l => l.priority === 'hot').length,
+          warm: leads.filter(l => l.priority === 'warm').length,
+          medium: leads.filter(l => l.priority === 'medium').length,
+          cold: leads.filter(l => l.priority === 'cold').length,
+        },
+        conversionRate: leads.length > 0 
+          ? (leads.filter(l => l.status === 'won').length / leads.length * 100).toFixed(1)
+          : 0,
+        avgScore: leads.length > 0
+          ? Math.round(leads.reduce((sum, l) => sum + (l.overallScore || 0), 0) / leads.length)
+          : 0,
+        needsFollowUp: leads.filter(l => 
+          l.nextFollowUpAt && new Date(l.nextFollowUpAt) <= new Date()
+        ).length,
+      };
+
+      res.json(analytics);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get nurture sequences for a vendor
+  app.get("/api/vendor-leads/:vendorId/sequences", async (req, res) => {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    try {
+      const { vendorId } = req.params;
+      
+      // Verify access
+      const hasAccess = await storage.hasVendorTeammateAccess(userId, vendorId);
+      const vendors = await storage.getAllVendors();
+      const userVendor = vendors.find(v => v.userId === userId);
+      
+      if (!hasAccess && (!userVendor || userVendor.id !== vendorId)) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const sequences = await storage.getLeadNurtureSequencesByVendor(vendorId);
+      
+      // For each sequence, get its steps
+      const sequencesWithSteps = await Promise.all(
+        sequences.map(async (seq) => {
+          const steps = await storage.getLeadNurtureStepsBySequence(seq.id);
+          return { ...seq, steps };
+        })
+      );
+
+      res.json(sequencesWithSteps);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Create a nurture sequence
+  app.post("/api/vendor-leads/:vendorId/sequences", async (req, res) => {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    try {
+      const { vendorId } = req.params;
+      
+      // Verify access
+      const hasAccess = await storage.hasVendorTeammateAccess(userId, vendorId);
+      const vendors = await storage.getAllVendors();
+      const userVendor = vendors.find(v => v.userId === userId);
+      
+      if (!hasAccess && (!userVendor || userVendor.id !== vendorId)) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const { steps, ...sequenceData } = req.body;
+      
+      const validatedSequence = insertLeadNurtureSequenceSchema.parse({
+        ...sequenceData,
+        vendorId,
+      });
+
+      const sequence = await storage.createLeadNurtureSequence(validatedSequence);
+
+      // Create steps if provided
+      if (steps && Array.isArray(steps)) {
+        for (const step of steps) {
+          await storage.createLeadNurtureStep({
+            ...step,
+            sequenceId: sequence.id,
+          });
+        }
+      }
+
+      res.json(sequence);
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: 'Invalid data', details: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Send a nurture email to a lead
+  app.post("/api/vendor-leads/:vendorId/:leadId/send-email", async (req, res) => {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    try {
+      const { vendorId, leadId } = req.params;
+      const { subject, body } = req.body;
+      
+      // Verify access
+      const hasAccess = await storage.hasVendorTeammateAccess(userId, vendorId);
+      const vendors = await storage.getAllVendors();
+      const userVendor = vendors.find(v => v.userId === userId);
+      
+      if (!hasAccess && (!userVendor || userVendor.id !== vendorId)) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const lead = await storage.getVendorLead(leadId);
+      if (!lead || lead.vendorId !== vendorId) {
+        return res.status(404).json({ error: "Lead not found" });
+      }
+
+      if (!lead.coupleEmail) {
+        return res.status(400).json({ error: "Lead does not have an email address" });
+      }
+
+      const vendor = await storage.getVendor(vendorId);
+      if (!vendor) {
+        return res.status(404).json({ error: "Vendor not found" });
+      }
+
+      // Send email using Resend
+      const { Resend } = await import('resend');
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      
+      const fromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@viah.me';
+      
+      await resend.emails.send({
+        from: `${vendor.name} via Viah.me <${fromEmail}>`,
+        to: lead.coupleEmail,
+        subject: subject,
+        html: body,
+      });
+
+      // Log the email sent
+      await storage.createLeadActivityLog({
+        leadId,
+        activityType: 'email_sent',
+        description: `Email sent: "${subject}"`,
+        metadata: { subject },
+        performedBy: userId,
+      });
+
+      // Update lead
+      await storage.updateVendorLead(leadId, {
+        lastContactedAt: new Date(),
+        followUpCount: (lead.followUpCount || 0) + 1,
+      });
+
+      res.json({ success: true, message: 'Email sent successfully' });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
   
   return httpServer;
 }
@@ -9570,4 +10008,107 @@ function generateBudgetRecommendations(
   }
 
   return recommendations;
+}
+
+// ============================================================================
+// LEAD SCORING FUNCTIONS
+// ============================================================================
+
+interface LeadScoreInput {
+  eventDate?: Date | null;
+  estimatedBudget?: string | null;
+  guestCount?: number | null;
+  tradition?: string | null;
+  city?: string | null;
+}
+
+interface LeadScores {
+  urgencyScore: number;
+  budgetFitScore: number;
+  qualificationScore: number;
+  overallScore: number;
+  priority: 'hot' | 'warm' | 'medium' | 'cold';
+}
+
+function calculateLeadScore(lead: LeadScoreInput): LeadScores {
+  // Urgency score based on wedding date proximity
+  let urgencyScore = 50; // Default medium
+  if (lead.eventDate) {
+    const eventDate = new Date(lead.eventDate);
+    const now = new Date();
+    const daysUntilEvent = Math.floor((eventDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (daysUntilEvent < 0) {
+      urgencyScore = 0; // Past event
+    } else if (daysUntilEvent <= 30) {
+      urgencyScore = 100; // Very urgent
+    } else if (daysUntilEvent <= 90) {
+      urgencyScore = 85;
+    } else if (daysUntilEvent <= 180) {
+      urgencyScore = 70;
+    } else if (daysUntilEvent <= 365) {
+      urgencyScore = 50;
+    } else {
+      urgencyScore = 30; // Far away
+    }
+  }
+
+  // Budget fit score - higher budget generally means more serious lead
+  let budgetFitScore = 50;
+  if (lead.estimatedBudget) {
+    const budget = lead.estimatedBudget.toLowerCase();
+    if (budget.includes('50000') || budget.includes('50k') || budget.includes('premium') || budget.includes('luxury')) {
+      budgetFitScore = 100;
+    } else if (budget.includes('30000') || budget.includes('30k') || budget.includes('high')) {
+      budgetFitScore = 85;
+    } else if (budget.includes('20000') || budget.includes('20k') || budget.includes('medium')) {
+      budgetFitScore = 70;
+    } else if (budget.includes('10000') || budget.includes('10k') || budget.includes('budget')) {
+      budgetFitScore = 50;
+    } else if (budget.includes('5000') || budget.includes('5k') || budget.includes('low')) {
+      budgetFitScore = 30;
+    }
+  }
+
+  // Qualification score based on completeness of info
+  let qualificationScore = 0;
+  if (lead.eventDate) qualificationScore += 25;
+  if (lead.estimatedBudget) qualificationScore += 25;
+  if (lead.guestCount) qualificationScore += 25;
+  if (lead.tradition || lead.city) qualificationScore += 25;
+
+  // Calculate overall score (weighted average)
+  const overallScore = Math.round(
+    (urgencyScore * 0.4) + 
+    (budgetFitScore * 0.3) + 
+    (qualificationScore * 0.3)
+  );
+
+  // Determine priority based on overall score
+  let priority: 'hot' | 'warm' | 'medium' | 'cold' = 'medium';
+  if (overallScore >= 80) {
+    priority = 'hot';
+  } else if (overallScore >= 60) {
+    priority = 'warm';
+  } else if (overallScore >= 40) {
+    priority = 'medium';
+  } else {
+    priority = 'cold';
+  }
+
+  return {
+    urgencyScore,
+    budgetFitScore,
+    qualificationScore,
+    overallScore,
+    priority,
+  };
+}
+
+function calculateOverallScore(scores: { urgencyScore: number; budgetFitScore: number; engagementScore: number }): number {
+  return Math.round(
+    (scores.urgencyScore * 0.35) + 
+    (scores.budgetFitScore * 0.25) + 
+    (scores.engagementScore * 0.4)
+  );
 }
