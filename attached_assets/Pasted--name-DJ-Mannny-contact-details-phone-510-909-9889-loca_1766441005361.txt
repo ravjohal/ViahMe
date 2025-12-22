@@ -1,0 +1,130 @@
+[
+  {
+    "name": "DJ Mannny",
+    "contact_details": {
+      "phone": "(510) 909-9889",
+      "location": "Hayward, CA 94541"
+    }
+  },
+  {
+    "name": "DJ Mirage",
+    "contact_details": {
+      "phone": "(707) 386-4198",
+      "website": "http://www.djmirage.com/",
+      "location": "Fairfield, CA 94534"
+    }
+  },
+  {
+    "name": "DJ ND Brothers",
+    "contact_details": {
+      "phone": "(559) 281-7896",
+      "location": "Fresno, CA"
+    }
+  },
+  {
+    "name": "DJ Panjabi Sound",
+    "contact_details": {
+      "phone": "(510) 508-4481",
+      "location": "San Francisco Bay Area"
+    }
+  },
+  {
+    "name": "DJ Preet",
+    "contact_details": {
+      "phone": "(408) 641-7148",
+      "location": "San Jose, CA"
+    }
+  },
+  {
+    "name": "DJ Ravidrums",
+    "contact_details": {
+      "website": "https://ravidrums.com/",
+      "location": "Los Angeles, CA"
+    }
+  },
+  {
+    "name": "DJ Ronn Productions",
+    "contact_details": {
+      "phone": "(415) 305-6577",
+      "website": "https://djronn.com/",
+      "location": "San Francisco, CA 94115"
+    }
+  },
+  {
+    "name": "DJ SSB",
+    "contact_details": {
+      "phone": "(510) 932-9019",
+      "location": "Oakland, CA"
+    }
+  },
+  {
+    "name": "DJ Salim",
+    "contact_details": {
+      "phone": "(408) 420-7469",
+      "location": "San Jose, CA"
+    }
+  },
+  {
+    "name": "DJ Sam",
+    "contact_details": {
+      "phone": "(510) 508-4481",
+      "location": "25495 Belmont Ave, Hayward, CA"
+    }
+  },
+  {
+    "name": "DJ Shem",
+    "contact_details": {
+      "phone": "(415) 300-5058",
+      "location": "San Francisco Bay Area, CA"
+    }
+  },
+  {
+    "name": "DJ Tal",
+    "contact_details": {
+      "phone": "(510) 909-9889",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "DJ Tasi",
+    "contact_details": {
+      "phone": "(510) 508-4481",
+      "location": "Oakland Hills, CA"
+    }
+  },
+  {
+    "name": "DJ Vdesi Jam",
+    "contact_details": {
+      "phone": "(510) 909-9889",
+      "location": "California"
+    }
+  },
+  {
+    "name": "DJ Vik Events",
+    "contact_details": {
+      "website": "https://djvikevents.com/",
+      "location": "Piscataway, NJ / Serving CA"
+    }
+  },
+  {
+    "name": "DJ Vish",
+    "contact_details": {
+      "phone": "(510) 364-8171",
+      "location": "Fremont, CA"
+    }
+  },
+  {
+    "name": "DJ Yogi",
+    "contact_details": {
+      "phone": "(415) 305-6577",
+      "location": "San Francisco, CA"
+    }
+  },
+  {
+    "name": "DKP Entertainment",
+    "contact_details": {
+      "phone": "(209) 668-6623",
+      "location": "Merced, CA"
+    }
+  }
+]
