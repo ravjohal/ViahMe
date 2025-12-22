@@ -1,0 +1,90 @@
+[
+  {
+    "name": "Ambiance By Tejel",
+    "contact_details": {
+      "phone": "(510) 408-7136",
+      "email": "ambiancebytejel@gmail.com",
+      "website": "http://www.ambiancebytejel.com/",
+      "instagram": "@ambiencebytejel_abt",
+      "location": "Castro Valley / Bay Area, CA"
+    }
+  },
+  {
+    "name": "Ambient Art Photography",
+    "contact_details": {
+      "phone": "(559) 281-7896",
+      "email": "aapfresno@gmail.com",
+      "website": "https://www.aapweddings.com/",
+      "location": "4644 W Jennifer Ave, #102, Fresno, CA 93722"
+    }
+  },
+  {
+    "name": "America's Best Desi MC And Host",
+    "contact_details": {
+      "phone": "(312) 626-4366",
+      "location": "Fremont / Bay Area, CA",
+      "note": "Associated with high-energy South Asian event hosting."
+    }
+  },
+  {
+    "name": "American Dulhan",
+    "contact_details": {
+      "phone": "408-641-7148",
+      "website": "https://us.sulekha.com/hayward-ca/mehndi-service/american-dulhan-930157",
+      "location": "Hayward, CA",
+      "specialty": "Bridal Arabic and Traditional Henna Art"
+    }
+  },
+  {
+    "name": "American Photobank",
+    "contact_details": {
+      "phone": "(510) 517-4686",
+      "email": "maqsood@americanphotobank.com",
+      "website": "https://americanphotobank.com/",
+      "location": "29524 Union City Blvd, Union City, CA"
+    }
+  },
+  {
+    "name": "Amora Events",
+    "contact_details": {
+      "phone": "303-223-0729",
+      "email": "hello@amoragroupco.com",
+      "website": "https://amoragroupco.com/",
+      "location": "Bay Area / Destination Services"
+    }
+  },
+  {
+    "name": "Amruta Vilas",
+    "contact_details": {
+      "phone": "(925) 265-6721",
+      "email": "Amruthavilassanramon@gmail.com",
+      "website": "https://www.amruthavilassanramon.com/",
+      "location": "21001 San Ramon Valley Blvd, San Ramon, CA 94583"
+    }
+  },
+  {
+    "name": "An Elegant Standard Events",
+    "contact_details": {
+      "location": "1330 Galaxy Way Suite B, Concord, CA 94520",
+      "specialty": "South Asian and Fusion Wedding Design",
+      "website": "https://www.partyslate.com/vendors/an-elegant-standard"
+    }
+  },
+  {
+    "name": "Anadika East Bay Boutique",
+    "contact_details": {
+      "phone": "640-600-9258",
+      "location": "1701 San Pablo Ave, Oakland, CA 94612",
+      "category": "Beauty Salon and Bridal Styling"
+    }
+  },
+  {
+    "name": "Anais Event Planning And Design",
+    "contact_details": {
+      "phone": "(415) 275-4776",
+      "email": "info@anaisevents.com",
+      "website": "http://www.anaisevents.com/",
+      "location": "San Francisco / Northern California"
+    }
+  }
+]
