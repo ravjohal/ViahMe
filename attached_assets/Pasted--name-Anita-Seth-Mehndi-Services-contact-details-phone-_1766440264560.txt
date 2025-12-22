@@ -1,0 +1,150 @@
+[
+  {
+    "name": "Anita Seth Mehndi Services",
+    "contact_details": {
+      "phone": "(408) 314-2391",
+      "location": "San Jose, CA",
+      "specialty": "Traditional and Contemporary Mehndi Art"
+    }
+  },
+  {
+    "name": "Anna Beauty Care",
+    "contact_details": {
+      "phone": "(408) 263-1250",
+      "location": "Milpitas / South San Jose, CA",
+      "category": "Bridal Makeup and Threading"
+    }
+  },
+  {
+    "name": "Anshiti Photography",
+    "contact_details": {
+      "email": "info@anshiti.com",
+      "website": "http://anshiti.com/",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Anu Beauty Parlor An Indian Touch",
+    "contact_details": {
+      "phone": "(510) 790-2444",
+      "location": "34401 Dobson Way, Fremont, CA",
+      "category": "Beauty Salon and Bridal Services"
+    }
+  },
+  {
+    "name": "Anusha Chandra Photography",
+    "contact_details": {
+      "email": "contact@anushachandra.com",
+      "website": "https://anushachandra.com/",
+      "location": "San Jose, CA"
+    }
+  },
+  {
+    "name": "Anvi Parikh Photography",
+    "contact_details": {
+      "email": "hello@anviparikh.com",
+      "website": "https://anviparikh.com/",
+      "location": "San Francisco, CA"
+    }
+  },
+  {
+    "name": "Anvita Decors",
+    "contact_details": {
+      "phone": "(408) 641-7148",
+      "location": "Bay Area, CA",
+      "specialty": "Custom Event Decoration"
+    }
+  },
+  {
+    "name": "Apna DJ",
+    "contact_details": {
+      "phone": "(559) 470-3882",
+      "location": "Fresno, CA",
+      "category": "DJ and Entertainment Services"
+    }
+  },
+  {
+    "name": "Apollo Fotografie Fine Art Wedding Photography",
+    "contact_details": {
+      "phone": "(415) 341-6979",
+      "website": "https://apollofotografie.com/",
+      "location": "2059 Market Street, San Francisco, CA"
+    }
+  },
+  {
+    "name": "Archanas Threading And Henna",
+    "contact_details": {
+      "phone": "(408) 833-9118",
+      "location": "2606 Union Ave, San Jose, CA"
+    }
+  },
+  {
+    "name": "Argania Salon",
+    "contact_details": {
+      "phone": "(510) 845-4247",
+      "website": "http://arganiasalon.com/",
+      "location": "2003 Milvia Street, Berkeley, CA"
+    }
+  },
+  {
+    "name": "Aria Dining & Banquets",
+    "contact_details": {
+      "phone": "(408) 724-7744",
+      "location": "Bay Area, CA",
+      "category": "Event Venue and Catering"
+    }
+  },
+  {
+    "name": "Aroma Beauty Bar And Salon",
+    "contact_details": {
+      "phone": "(510) 790-2444",
+      "location": "39171 Farwell Drive, Fremont, CA"
+    }
+  },
+  {
+    "name": "Aroma Threading Salon",
+    "contact_details": {
+      "phone": "(559) 325-2444",
+      "location": "1840 Shaw Ave #104, Clovis, CA"
+    }
+  },
+  {
+    "name": "Aroosi",
+    "contact_details": {
+      "email": "info@aroosi.com",
+      "website": "http://aroosi.com/",
+      "location": "San Jose, CA"
+    }
+  },
+  {
+    "name": "Aroza Event Center",
+    "contact_details": {
+      "phone": "(559) 470-3882",
+      "location": "Clovis, CA",
+      "category": "Banquets and Event Space"
+    }
+  },
+  {
+    "name": "Art And Soul Creation",
+    "contact_details": {
+      "phone": "(510) 517-4686",
+      "website": "http://artandsoulcreation.com/",
+      "location": "Fremont, CA"
+    }
+  },
+  {
+    "name": "Artesia Mehndi Artists",
+    "contact_details": {
+      "phone": "(562) 860-6060",
+      "location": "Artesia, CA"
+    }
+  },
+  {
+    "name": "Artistic Decors",
+    "contact_details": {
+      "phone": "(408) 641-1188",
+      "website": "http://artisticdecors.com/",
+      "location": "Bay Area, CA"
+    }
+  }
+]
