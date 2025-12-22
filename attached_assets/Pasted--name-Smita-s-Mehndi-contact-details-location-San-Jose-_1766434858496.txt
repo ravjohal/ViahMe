@@ -1,0 +1,83 @@
+[
+  {
+    "name": "Smita's Mehndi",
+    "contact_details": {
+      "location": "San Jose, CA",
+      "specialty": "Traditional and Contemporary Henna Art"
+    }
+  },
+  {
+    "name": "Sona's Hair & Makeup",
+    "contact_details": {
+      "phone": "(408) 724-7744",
+      "website": "https://hairbysona.com/",
+      "location": "43547 Mission Blvd, Fremont, CA 94539"
+    }
+  },
+  {
+    "name": "Spotlight Weddings and Events",
+    "contact_details": {
+      "phone": "(415) 847-5651",
+      "email": "terri@spotlightpromoinc.com",
+      "website": "https://www.spotlightsf.com/",
+      "location": "2000 Van Ness Ave, Suite 801, San Francisco, CA 94109"
+    }
+  },
+  {
+    "name": "Stay Gold Beauty",
+    "contact_details": {
+      "location": "Bay Area, CA",
+      "category": "Beauty and Bridal Services"
+    }
+  },
+  {
+    "name": "Striking Invitations",
+    "contact_details": {
+      "phone": "1-800-428-0379",
+      "website": "https://www.theamericanwedding.com/",
+      "category": "Wedding Invitations and Stationery"
+    }
+  },
+  {
+    "name": "Studio 1 Productions",
+    "contact_details": {
+      "phone": "888-255-9944",
+      "email": "info@studio1productions.com",
+      "website": "https://www.studio1productions.com/"
+    }
+  },
+  {
+    "name": "Sujata's Salon",
+    "contact_details": {
+      "phone": "469-920-5998",
+      "website": "https://calendly.com/sujatastudio",
+      "category": "Skincare and Bridal Beauty"
+    }
+  },
+  {
+    "name": "Sun & Moon Photography",
+    "contact_details": {
+      "phone": "602-571-4089",
+      "email": "info@sunandmoonfilms.com",
+      "website": "https://www.sunandmoonfilms.com/",
+      "location": "Serving Los Angeles and the Bay Area"
+    }
+  },
+  {
+    "name": "Sunshine Henna by Priti",
+    "contact_details": {
+      "phone": "949-910-6571",
+      "email": "pritihennaart@gmail.com",
+      "website": "https://www.weddingwire.com/biz/pritis-henna-tattoos-rancho-santa-margarita/d6c5f7276ee09316.html",
+      "location": "Mission Viejo, CA / Serving Southern and Northern California"
+    }
+  },
+  {
+    "name": "Surbhi's Mehndi",
+    "contact_details": {
+      "phone": "+91 72728 78700",
+      "email": "info@zaimboo.in",
+      "category": "Organic Mehndi and Henna Art"
+    }
+  }
+]
