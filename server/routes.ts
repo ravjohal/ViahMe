@@ -1230,13 +1230,32 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   });
 
   app.post("/api/bookings", async (req, res) => {
+    // Require authentication for booking creation
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
     try {
       const validatedData = insertBookingSchema.parse(req.body);
+      
+      // Verify user has access to this wedding (owner or collaborator)
+      const wedding = await storage.getWedding(validatedData.weddingId);
+      if (!wedding) {
+        return res.status(404).json({ error: "Wedding not found" });
+      }
+      
+      const user = await storage.getUser(userId);
+      const isOwner = wedding.userId === userId;
+      const isCollaborator = user ? await storage.isWeddingCollaborator(validatedData.weddingId, user.email) : false;
+      
+      if (!isOwner && !isCollaborator) {
+        return res.status(403).json({ error: "Access denied to this wedding" });
+      }
       
       // Log the booking request details
       const vendor = await storage.getVendor(validatedData.vendorId);
       const event = validatedData.eventId ? await storage.getEvent(validatedData.eventId) : null;
-      const wedding = await storage.getWedding(validatedData.weddingId);
       
       console.log('=== BOOKING REQUEST DETAILS ===');
       console.log('To Vendor:', vendor?.name || 'Unknown', vendor?.email ? `(${vendor.email})` : '');
@@ -1274,6 +1293,74 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
           messageType: 'booking_request',
           attachments: null,
         });
+
+        // Automatically create a lead for this booking request
+        try {
+          // Calculate lead scores based on available info
+          let urgencyScore = 50;
+          let budgetFitScore = 50;
+          let qualificationScore = 25;
+
+          if (event?.date) {
+            const eventDate = new Date(event.date);
+            const now = new Date();
+            const daysUntilEvent = Math.floor((eventDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+            
+            if (daysUntilEvent > 0 && daysUntilEvent <= 30) urgencyScore = 100;
+            else if (daysUntilEvent <= 90) urgencyScore = 85;
+            else if (daysUntilEvent <= 180) urgencyScore = 70;
+            else if (daysUntilEvent <= 365) urgencyScore = 50;
+            else urgencyScore = 30;
+            qualificationScore += 25;
+          }
+
+          if (wedding.totalBudget) {
+            const budget = parseFloat(wedding.totalBudget);
+            if (budget >= 50000) budgetFitScore = 100;
+            else if (budget >= 30000) budgetFitScore = 85;
+            else if (budget >= 20000) budgetFitScore = 70;
+            else if (budget >= 10000) budgetFitScore = 50;
+            else budgetFitScore = 30;
+            qualificationScore += 25;
+          }
+
+          if (event?.guestCount) qualificationScore += 25;
+
+          const overallScore = Math.round((urgencyScore * 0.4) + (budgetFitScore * 0.3) + (qualificationScore * 0.3));
+          let priority: 'hot' | 'warm' | 'medium' | 'cold' = 'medium';
+          if (overallScore >= 80) priority = 'hot';
+          else if (overallScore >= 60) priority = 'warm';
+          else if (overallScore >= 40) priority = 'medium';
+          else priority = 'cold';
+
+          await storage.createVendorLead({
+            vendorId: vendor.id,
+            weddingId: wedding.id,
+            bookingId: booking.id,
+            coupleName,
+            coupleEmail: wedding.coupleEmail || undefined,
+            couplePhone: undefined,
+            sourceType: 'booking_request',
+            status: 'new',
+            priority,
+            eventDate: event?.date ? new Date(event.date) : undefined,
+            estimatedBudget: wedding.totalBudget ? `$${parseFloat(wedding.totalBudget).toLocaleString()}` : undefined,
+            guestCount: event?.guestCount || undefined,
+            tradition: wedding.tradition || undefined,
+            city: wedding.location || undefined,
+            notes: validatedData.coupleNotes || undefined,
+            urgencyScore,
+            budgetFitScore,
+            engagementScore: 50,
+            qualificationScore,
+            overallScore,
+          });
+
+          console.log(`Lead created for vendor ${vendor.name} from booking request`);
+        } catch (leadError) {
+          console.error('Failed to create lead from booking:', leadError);
+          // Don't fail the booking if lead creation fails
+        }
       }
       
       // Send confirmation emails asynchronously (don't block response)

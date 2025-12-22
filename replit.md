@@ -62,6 +62,15 @@ Key architectural decisions and features include:
   - **Event Association**: Link expenses to specific wedding events
   - **Settlement Summary**: Real-time calculation of who owes whom based on payments and shares
   - **Payment Tracking**: Mark individual splits as paid/unpaid for settlement tracking
+- **Vendor Lead Management System**: Automated lead qualification and nurturing for vendors:
+  - **Lead Scoring Algorithm**: Multi-factor scoring based on urgency (wedding date proximity), budget fit, and engagement level
+  - **Priority Classification**: Automatic classification into hot/warm/medium/cold leads based on overall score (hot ≥80, warm ≥60, medium ≥40, cold <40)
+  - **Auto-Lead Creation**: Booking requests automatically create leads with calculated scores
+  - **Lead Dashboard**: Vendor-facing UI with filtering, search, analytics overview, and lead detail views
+  - **Activity Tracking**: Full activity history for each lead including status changes, notes, and email sends
+  - **Nurturing Sequences**: Configurable multi-step email sequences for lead nurturing
+  - **Email Integration**: Direct email sending to leads via Resend with activity logging
+  - **API Endpoints**: Full CRUD for leads, activity logging, analytics, and nurture sequences
 
 ## External Dependencies
 - **PostgreSQL (Neon)**: Relational database.
