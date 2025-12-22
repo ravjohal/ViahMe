@@ -1,0 +1,86 @@
+[
+  {
+    "name": "The Hair and Makeup Company",
+    "contact_details": {
+      "phone": "(831) 920-1256",
+      "email": "thehairandmakeupcompany@gmail.com",
+      "website": "https://thehairandmakeupcompany.com/",
+      "location": "Serving Carmel, Monterey, and the Bay Area"
+    }
+  },
+  {
+    "name": "Lin and Jirsa Photography",
+    "contact_details": {
+      "phone": "(949) 287-2153",
+      "email": "contact@linandjirsa.com",
+      "website": "https://www.linandjirsa.com/",
+      "location": "Los Angeles / Orange County / San Francisco"
+    }
+  },
+  {
+    "name": "Dino Vournas Photography",
+    "contact_details": {
+      "phone": "(510) 502-3466",
+      "email": "dino@dinovournas.com",
+      "website": "https://www.dinovournas.com/",
+      "location": "Oakland / Bay Area, CA"
+    }
+  },
+  {
+    "name": "Priyanka Photography",
+    "contact_details": {
+      "email": "priyangaphotography@gmail.com",
+      "website": "https://priyankakidsphotography.com/",
+      "location": "Bangalore / International Services"
+    }
+  },
+  {
+    "name": "Mona's Mehndi",
+    "contact_details": {
+      "phone": "408-410-6184",
+      "location": "San Jose / Bay Area, CA"
+    }
+  },
+  {
+    "name": "Sikh Center of San Francisco Bay Area",
+    "contact_details": {
+      "phone": "(510) 223-9987",
+      "email": "admin@mygurdwara.com",
+      "website": "https://www.mygurdwara.com/",
+      "location": "3550 Hillcrest Rd, El Sobrante, CA 94803"
+    }
+  },
+  {
+    "name": "Gurdwara Sahib Fremont",
+    "contact_details": {
+      "phone": "(510) 790-0177",
+      "email": "info@fremontgurdwara.org",
+      "website": "https://fremontgurdwara.org/",
+      "location": "300 Gurdwara Road, Fremont, CA 94536"
+    }
+  },
+  {
+    "name": "Gurdwara Sahib of San Jose",
+    "contact_details": {
+      "phone": "(408) 274-9374",
+      "website": "https://www.sanjosegurdwara.org/",
+      "location": "3636 Murillo Ave, San Jose, CA 95148"
+    }
+  },
+  {
+    "name": "Gurdwara Sahib of West Sacramento",
+    "contact_details": {
+      "phone": "(916) 371-1057",
+      "website": "http://www.westsacgurdwara.org/",
+      "location": "2301 Evergreen Ave, West Sacramento, CA 95691"
+    }
+  },
+  {
+    "name": "Bridal by Myra",
+    "contact_details": {
+      "website": "https://bridalbymyra.com/",
+      "instagram": "@bridal_by_myra",
+      "location": "San Francisco Bay Area"
+    }
+  }
+]
