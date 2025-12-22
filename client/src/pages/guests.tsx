@@ -1049,7 +1049,7 @@ export default function Guests() {
   };
 
   // Workflow step progress
-  const hasSuggestions = pendingSuggestions.length === 0;
+  const hasSuggestions = pendingSuggestions.length === 0 && guests.length > 0;
   const hasBudgetSet = budgetData?.settings?.maxGuestBudget && Number(budgetData.settings.maxGuestBudget) > 0;
   const isWithinCapacity = budgetData?.capacity && budgetData.capacity.currentCount <= budgetData.capacity.maxGuests;
 
@@ -1092,10 +1092,6 @@ export default function Guests() {
         <Tabs value={mainTab} onValueChange={setMainTab} className="space-y-6">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <TabsList className="grid grid-cols-2 w-auto">
-              <TabsTrigger value="guest-list" data-testid="tab-guest-list" className="gap-2">
-                <Users className="w-4 h-4" />
-                Guest List
-              </TabsTrigger>
               <TabsTrigger value="guest-planning" data-testid="tab-guest-planning" className="gap-2">
                 <ClipboardList className="w-4 h-4" />
                 Guest Planning
@@ -1104,6 +1100,10 @@ export default function Guests() {
                     {pendingSuggestions.length}
                   </Badge>
                 )}
+              </TabsTrigger>
+              <TabsTrigger value="guest-list" data-testid="tab-guest-list" className="gap-2">
+                <Users className="w-4 h-4" />
+                Guest List
               </TabsTrigger>
             </TabsList>
           </div>
