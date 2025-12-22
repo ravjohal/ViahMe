@@ -91,15 +91,17 @@ export function VendorCard({
                 {vendor.name}
               </h3>
               <div className="flex flex-wrap gap-1">
-                {(vendor.categories && vendor.categories.length > 0 
-                  ? vendor.categories 
-                  : [vendor.category]
-                ).map((cat, idx) => (
-                  <span key={idx} className="text-sm text-muted-foreground">
-                    {CATEGORY_LABELS[cat] || cat.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                    {idx < (vendor.categories?.length || 1) - 1 && <span className="mx-1">·</span>}
-                  </span>
-                ))}
+                {(() => {
+                  const cats = vendor.categories && vendor.categories.length > 0 
+                    ? vendor.categories 
+                    : [vendor.category];
+                  return cats.map((cat, idx) => (
+                    <span key={idx} className="text-sm text-muted-foreground">
+                      {CATEGORY_LABELS[cat] || cat.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      {idx < cats.length - 1 && <span className="mx-1">·</span>}
+                    </span>
+                  ));
+                })()}
               </div>
             </div>
           </div>

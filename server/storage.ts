@@ -1173,7 +1173,10 @@ export class MemStorage implements IStorage {
   }
 
   async getVendorsByCategory(category: string): Promise<Vendor[]> {
-    return Array.from(this.vendors.values()).filter((v) => v.category === category);
+    // Check both the legacy 'category' field and the 'categories' array
+    return Array.from(this.vendors.values()).filter((v) => 
+      v.category === category || (v.categories && v.categories.includes(category))
+    );
   }
 
   async getVendorsByLocation(location: string): Promise<Vendor[]> {
@@ -3983,7 +3986,10 @@ export class DBStorage implements IStorage {
   }
 
   async getVendorsByCategory(category: string): Promise<Vendor[]> {
-    return await this.db.select().from(schema.vendors).where(eq(schema.vendors.category, category));
+    // Check both the legacy 'category' field and the 'categories' array
+    return await this.db.select().from(schema.vendors).where(
+      sql`${schema.vendors.category} = ${category} OR ${category} = ANY(${schema.vendors.categories})`
+    );
   }
 
   async getVendorsByLocation(location: string): Promise<Vendor[]> {

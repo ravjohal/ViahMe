@@ -63,7 +63,12 @@ export function VendorComparisonModal({
     },
     {
       label: "Category",
-      getValue: (vendor: Vendor) => CATEGORY_LABELS[vendor.category] || vendor.category,
+      getValue: (vendor: Vendor) => {
+        const cats = vendor.categories && vendor.categories.length > 0 
+          ? vendor.categories 
+          : [vendor.category];
+        return cats.map(c => CATEGORY_LABELS[c] || c.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())).join(", ");
+      },
     },
     {
       label: "Price Range",
@@ -221,7 +226,10 @@ export function VendorComparisonModal({
                         </Button>
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        {CATEGORY_LABELS[vendor.category] || vendor.category}
+                        {(vendor.categories && vendor.categories.length > 0 
+                          ? vendor.categories 
+                          : [vendor.category]
+                        ).map(c => CATEGORY_LABELS[c] || c.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())).join(", ")}
                       </p>
                     </Card>
                   </th>
