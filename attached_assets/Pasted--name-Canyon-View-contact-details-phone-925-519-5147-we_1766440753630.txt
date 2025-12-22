@@ -1,0 +1,81 @@
+[
+  {
+    "name": "Canyon View",
+    "contact_details": {
+      "phone": "(925) 519-5147",
+      "website": "https://canyonviewvenues.com/",
+      "location": "680 Bollinger Canyon Way, San Ramon, CA 94582"
+    }
+  },
+  {
+    "name": "Capturing Amazing Stories",
+    "contact_details": {
+      "phone": "(408) 641-7148",
+      "website": "https://capturingamazingstories.com/",
+      "location": "California, USA"
+    }
+  },
+  {
+    "name": "Casa Bella Event Planner",
+    "contact_details": {
+      "phone": "(925) 862-2355",
+      "website": "https://www.sunolscasabella.com/",
+      "location": "11984 Main Street, Sunol, CA 94586"
+    }
+  },
+  {
+    "name": "Casa Real At Ruby Hill Winery",
+    "contact_details": {
+      "phone": "(925) 931-0200",
+      "website": "https://casarealevents.com/",
+      "location": "410 Vineyard Ave, Pleasanton, CA 94566"
+    }
+  },
+  {
+    "name": "Castelos Beauty Solutions",
+    "contact_details": {
+      "phone": "(916) 456-1181",
+      "location": "4517 Franklin Blvd, Sacramento, CA 95820"
+    }
+  },
+  {
+    "name": "Celebrations By Ruchi",
+    "contact_details": {
+      "phone": "(510) 517-4686",
+      "website": "http://celebrationsbyruchi.com/",
+      "location": "Fremont, CA"
+    }
+  },
+  {
+    "name": "Central Valley Event Planning (CVEP)",
+    "contact_details": {
+      "phone": "(559) 903-3675",
+      "website": "https://centralvalleyeventplanning.com/",
+      "location": "Fresno, CA"
+    }
+  },
+  {
+    "name": "Champagne & Petals",
+    "contact_details": {
+      "phone": "(408) 320-1378",
+      "website": "https://champagneandpetals.com/",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Chana Productions",
+    "contact_details": {
+      "phone": "(559) 470-3882",
+      "website": "https://chanaproductions.com/",
+      "location": "Fresno, CA"
+    }
+  },
+  {
+    "name": "Chandi Banquet Hall",
+    "contact_details": {
+      "phone": "(510) 791-2422",
+      "website": "https://chandibanquet.com/",
+      "location": "5748 Mowry School Road, Newark, CA 94560"
+    }
+  }
+]
