@@ -1,0 +1,110 @@
+[
+  {
+    "name": "Concepts Event Planner",
+    "contact_details": {
+      "phone": "(408) 641-7148",
+      "website": "https://conceptseventplanner.com/",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "CoolBluez Photography",
+    "contact_details": {
+      "phone": "(408) 823-3888",
+      "website": "http://www.coolbluezphotography.com/",
+      "location": "2029 Sunset View Pl, San Jose, CA"
+    }
+  },
+  {
+    "name": "Corinthian Grand Ballroom",
+    "contact_details": {
+      "phone": "(408) 938-2315",
+      "website": "https://www.corinthiangrandballroom.com/",
+      "location": "196 N 3rd St, San Jose, CA 95112"
+    }
+  },
+  {
+    "name": "Corinthian Ground Transportation",
+    "contact_details": {
+      "phone": "(408) 377-5466",
+      "website": "https://corinthiantransportation.com/",
+      "location": "Cupertino, CA"
+    }
+  },
+  {
+    "name": "Cornejo Event Planner",
+    "contact_details": {
+      "phone": "(408) 314-2391",
+      "location": "74 North 27th Street, San Jose, CA"
+    }
+  },
+  {
+    "name": "Covered With Elegance",
+    "contact_details": {
+      "phone": "(559) 325-2444",
+      "website": "https://www.coveredwithelegance.com/",
+      "location": "135 Shaw Ave, Clovis, CA"
+    }
+  },
+  {
+    "name": "Createye Photography & Videography",
+    "contact_details": {
+      "phone": "(510) 932-9019",
+      "website": "http://createye.com/",
+      "location": "Dublin, CA"
+    }
+  },
+  {
+    "name": "Creative Shot Photography",
+    "contact_details": {
+      "phone": "(415) 305-6577",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Creativside Media",
+    "contact_details": {
+      "website": "https://creativside.com/",
+      "location": "San Francisco, CA"
+    }
+  },
+  {
+    "name": "Creek Hill Farm Horse Carriages",
+    "contact_details": {
+      "phone": "(925) 443-4677",
+      "website": "http://www.creekhillfarm.com/",
+      "location": "Livermore, CA"
+    }
+  },
+  {
+    "name": "Crowne Plaza - Foster City",
+    "contact_details": {
+      "phone": "(650) 570-5700",
+      "website": "https://www.ihg.com/crowneplaza/hotels/us/en/foster-city/sfofc/hoteldetail",
+      "location": "1221 Chess Drive, Foster City, CA 94404"
+    }
+  },
+  {
+    "name": "Cultural Event Rentals",
+    "contact_details": {
+      "phone": "(707) 534-1926",
+      "website": "http://culturaleventrentals.com/",
+      "location": "Sonoma, CA"
+    }
+  },
+  {
+    "name": "Custom Celebrations",
+    "contact_details": {
+      "phone": "(408) 596-3686",
+      "location": "San Jose, CA"
+    }
+  },
+  {
+    "name": "D Royal Engagements",
+    "contact_details": {
+      "phone": "(650) 300-5058",
+      "website": "https://droyalengagements.com/",
+      "location": "Palo Alto, CA"
+    }
+  }
+]
