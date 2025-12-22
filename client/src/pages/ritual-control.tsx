@@ -234,7 +234,7 @@ export default function RitualControlPage() {
 
   const createStageMutation = useMutation({
     mutationFn: async (data: any) => {
-      return await apiRequest("POST", `/api/events/${data.eventId}/stages`, data);
+      return await apiRequest("POST", `/api/ritual-stages`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/events"] });
@@ -255,7 +255,7 @@ export default function RitualControlPage() {
 
   const updateStageMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
-      return await apiRequest("PATCH", `/api/stages/${id}`, data);
+      return await apiRequest("PATCH", `/api/ritual-stages/${id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/events"] });
@@ -270,7 +270,7 @@ export default function RitualControlPage() {
 
   const deleteStageMutation = useMutation({
     mutationFn: async (id: string) => {
-      return await apiRequest("DELETE", `/api/stages/${id}`);
+      return await apiRequest("DELETE", `/api/ritual-stages/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/events"] });
