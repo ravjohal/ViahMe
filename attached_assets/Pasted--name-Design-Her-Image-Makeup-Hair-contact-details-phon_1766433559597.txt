@@ -1,0 +1,97 @@
+[
+  {
+    "name": "Design Her Image Makeup & Hair",
+    "contact_details": {
+      "phone": "408-242-8154",
+      "website": "https://www.designherimage.com/",
+      "location": "2333 Lindaire Ave, San Jose, CA"
+    }
+  },
+  {
+    "name": "Aakruti Seizing The Moments",
+    "contact_details": {
+      "phone": "669-342-9501",
+      "website": "https://aakrutidesigners.com/"
+    }
+  },
+  {
+    "name": "India's Oven",
+    "contact_details": {
+      "phone": "(559) 229-1313",
+      "website": "https://indiasovenfresno.com",
+      "secondary_phone": "(559) 840-2667"
+    }
+  },
+  {
+    "name": "Amazing Events",
+    "contact_details": {
+      "phone": "650-968-3600",
+      "email": "info@amazingevents.com",
+      "website": "https://amazingevents.com/"
+    }
+  },
+  {
+    "name": "Oasis Kids Party Center",
+    "contact_details": {
+      "phone": "516-518-8867",
+      "secondary_phone": "720-709-1517",
+      "website": "https://us.sulekha.com/newark-ca/entertainment/oasis-kids-party-center-787252"
+    }
+  },
+  {
+    "name": "Sri Photography",
+    "contact_details": {
+      "phone": "617-299-8445",
+      "status": "Currently inactive"
+    }
+  },
+  {
+    "name": "Bay Area Event Rentals",
+    "contact_details": {
+      "email": "info@baeventrentals.com",
+      "website": "https://www.baeventrentals.com/"
+    }
+  },
+  {
+    "name": "NYC Bollywood DJs",
+    "contact_details": {
+      "phone": "(646) 555-0199"
+    }
+  },
+  {
+    "name": "MP Singh Photography",
+    "contact_details": {
+      "website": "https://mpsinghphotography.com"
+    }
+  },
+  {
+    "name": "Events By Shweta Kapoor",
+    "contact_details": {
+      "phone": "3016865058"
+    }
+  },
+  {
+    "name": "Blush Secrets Make Up Salon",
+    "contact_details": {
+      "phone": "512-355-7224"
+    }
+  },
+  {
+    "name": "Sowji Styles",
+    "contact_details": {
+      "phone": "640-600-9258"
+    }
+  },
+  {
+    "name": "Dante Club",
+    "contact_details": {
+      "website": "https://www.danteclub.com"
+    }
+  },
+  {
+    "name": "Gurdwara Sahib of Milpitas",
+    "contact_details": {
+      "website": "http://www.gurdwaraofmilpitas.com"
+    }
+  }
+]
