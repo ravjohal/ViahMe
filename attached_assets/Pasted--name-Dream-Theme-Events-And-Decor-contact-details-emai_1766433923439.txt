@@ -1,0 +1,86 @@
+[
+  {
+    "name": "Dream Theme Events And Decor",
+    "contact_details": {
+      "email": "Dreamthemeevents@outlook.com",
+      "secondary_email": "yourdreamthemeeventdesign@gmail.com",
+      "website": "https://dreamthemeevents.company.site/"
+    }
+  },
+  {
+    "name": "Bliss Event Planning",
+    "contact_details": {
+      "phone": "415-497-2280",
+      "email": "samar@blissfuleventplanning.com",
+      "website": "https://blissfuleventplanning.com/"
+    }
+  },
+  {
+    "name": "Mimi & Co. Luxury Linens",
+    "contact_details": {
+      "phone": "916-525-1235",
+      "website": "https://www.weddingwire.com/biz/mimi-company-sacramento/a76756a39a04f14c.html",
+      "location": "1201 Del Paso Blvd, Suite B, Sacramento, CA"
+    }
+  },
+  {
+    "name": "The DJ AY MEN Experience",
+    "contact_details": {
+      "email": "bookings@thedjaymenexperience.com",
+      "website": "https://www.thedjaymenexperience.com/"
+    }
+  },
+  {
+    "name": "Itzy Bitzy Kidzy Photography",
+    "contact_details": {
+      "phone": "951-741-8106",
+      "email": "sarah@itsybitsyphotography.com",
+      "website": "https://www.itsybitsyphotography.com/"
+    }
+  },
+  {
+    "name": "Queen's Creative Events",
+    "contact_details": {
+      "phone": "(925) 318-1275",
+      "email": "info@queenscreativeevents.com",
+      "website": "https://www.queenscreativeevents.com/"
+    }
+  },
+  {
+    "name": "Gurdwara Sahib of Hayward",
+    "contact_details": {
+      "phone": "510-888-1600",
+      "email": "gurdipgujral@haywardgurdwara.com",
+      "website": "http://www.haywardgurdwara.com/"
+    }
+  },
+  {
+    "name": "Desi Jammers Entertainment LLC",
+    "contact_details": {
+      "website": "https://desijamsentertainment.com/"
+    }
+  },
+  {
+    "name": "Sassy Diva Designs",
+    "contact_details": {
+      "phone": "(650) 587-1544",
+      "email": "thesassydiva@sassydivadesigns.com",
+      "website": "https://sassydivadesigns.com/"
+    }
+  },
+  {
+    "name": "Uzma's USA",
+    "contact_details": {
+      "email": "uzmasflorals@gmail.com",
+      "secondary_email": "uzmaali_1@yahoo.com",
+      "website": "https://uzmasflorals.com/"
+    }
+  },
+  {
+    "name": "Mendhika By D - Henna Artist",
+    "contact_details": {
+      "phone": "408-641-7148",
+      "website": "https://us.sulekha.com/sunnyvale-ca/mehndi-service/mendhika-by-d-henna-artist-943476"
+    }
+  }
+]
