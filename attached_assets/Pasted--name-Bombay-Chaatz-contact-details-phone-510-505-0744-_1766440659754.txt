@@ -1,0 +1,144 @@
+[
+  {
+    "name": "Bombay Chaatz",
+    "contact_details": {
+      "phone": "(510) 505-0744",
+      "website": "https://www.bombaychaatz.com/",
+      "location": "Fremont, CA"
+    }
+  },
+  {
+    "name": "Brad And Rachel Photography",
+    "contact_details": {
+      "website": "http://www.bradandrachel.com/",
+      "location": "Menlo Park / Santa Cruz Avenue"
+    }
+  },
+  {
+    "name": "Brass Band Celebration",
+    "contact_details": {
+      "phone": "(510) 366-4198",
+      "location": "Fremont, CA",
+      "note": "Specializes in traditional Baraat band performances."
+    }
+  },
+  {
+    "name": "Breath Of Fresh Air Events",
+    "contact_details": {
+      "phone": "(408) 896-1502",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Brian And Jessica Images",
+    "contact_details": {
+      "website": "http://brianandjessica.com/",
+      "location": "18517 Redwood Rd, Castro Valley, CA"
+    }
+  },
+  {
+    "name": "Brian MacStay Photography",
+    "contact_details": {
+      "phone": "(510) 394-4696",
+      "website": "https://www.brianmacstayphotography.com/",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Bridal Beauty Salon By Rabina",
+    "contact_details": {
+      "phone": "(408) 263-1250",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Brides By Sadia K",
+    "contact_details": {
+      "phone": "(408) 500-9285",
+      "location": "San Jose, CA"
+    }
+  },
+  {
+    "name": "Bright Brain Production",
+    "contact_details": {
+      "phone": "(510) 909-9889",
+      "website": "http://brightbrainproduction.com/",
+      "location": "Hayward, CA"
+    }
+  },
+  {
+    "name": "Brown Girl Beauty",
+    "contact_details": {
+      "phone": "(415) 305-6577",
+      "location": "San Francisco, CA"
+    }
+  },
+  {
+    "name": "Bruin Bhangra",
+    "contact_details": {
+      "website": "https://bruinbhangra.com/",
+      "location": "Stockton, CA"
+    }
+  },
+  {
+    "name": "Budwal Photography",
+    "contact_details": {
+      "phone": "(510) 932-9019",
+      "website": "https://www.budwalphotography.com/",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Bushra Professional Mehndi",
+    "contact_details": {
+      "phone": "(408) 724-7744",
+      "location": "1652 Pinewood Way, Milpitas, CA"
+    }
+  },
+  {
+    "name": "C Wagner Photography & Design",
+    "contact_details": {
+      "website": "https://www.cwagnerphotography.com/",
+      "location": "Oakland, CA"
+    }
+  },
+  {
+    "name": "CL Decor",
+    "contact_details": {
+      "phone": "(916) 932-9019",
+      "website": "http://www.cldecor.com/",
+      "location": "Sacramento / Roseville, CA"
+    }
+  },
+  {
+    "name": "CR Studios",
+    "contact_details": {
+      "phone": "(559) 896-1502",
+      "website": "http://crstudios.com/",
+      "location": "Selma, CA"
+    }
+  },
+  {
+    "name": "CRE8IVE Entertainment",
+    "contact_details": {
+      "phone": "(209) 668-6623",
+      "website": "https://www.cre8ivedjs.com/",
+      "location": "Turlock, CA"
+    }
+  },
+  {
+    "name": "Cakes N Candles",
+    "contact_details": {
+      "phone": "(408) 641-7148",
+      "location": "Milpitas, CA"
+    }
+  },
+  {
+    "name": "California Wedding Hall",
+    "contact_details": {
+      "phone": "(916) 371-1057",
+      "website": "https://californiaweddinghall.com/",
+      "location": "7323 Home Leisure Plaza, Sacramento, CA"
+    }
+  }
+]
