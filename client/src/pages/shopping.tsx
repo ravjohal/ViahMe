@@ -209,7 +209,7 @@ export default function ShoppingPage() {
       <div className="container mx-auto p-6 space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold">Shopping & Measurements</h1>
+            <h1 className="text-3xl font-bold">Shopping List</h1>
             <p className="text-muted-foreground mt-1">Track outfit purchases, alterations, and guest measurements</p>
           </div>
         </div>

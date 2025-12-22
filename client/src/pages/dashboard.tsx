@@ -51,7 +51,7 @@ const COLLABORATOR_FEATURES: FeatureCard[] = [
   { permission: "documents", label: "Documents", description: "Access wedding documents", icon: FileText, path: "/documents", color: "gray" },
   { permission: "playlists", label: "Music & Playlists", description: "Manage music selections", icon: Music, path: "/playlists", color: "violet" },
   { permission: "messages", label: "Messages", description: "Communicate with vendors and team", icon: MessageSquare, path: "/messages", color: "sky" },
-  { permission: "shopping", label: "Shopping & Measurements", description: "Track shopping and measurements", icon: Package, path: "/shopping", color: "fuchsia" },
+  { permission: "shopping", label: "Shopping List", description: "Track shopping and measurements", icon: Package, path: "/shopping", color: "fuchsia" },
   { permission: "invitations", label: "Invitations", description: "Manage wedding invitations", icon: ShoppingBag, path: "/invitations", color: "lime" },
   { permission: "concierge", label: "Guest Concierge", description: "Manage live updates and rituals", icon: Radio, path: "/ritual-control", color: "red" },
   { permission: "ai_planner", label: "AI Wedding Planner", description: "Get AI-powered planning assistance", icon: Bot, path: "/ai-planner", color: "gradient" },

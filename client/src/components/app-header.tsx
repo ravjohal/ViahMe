@@ -54,7 +54,7 @@ const COUPLE_NAV_ITEMS: NavItem[] = [
   { path: "/tasks", label: "Tasks", icon: CheckSquare, permission: "tasks" },
   { path: "/ritual-control", label: "Live Control", icon: Radio, permission: "concierge" },
   { path: "/website-builder", label: "Website", icon: Globe, permission: "website" },
-  { path: "/shopping", label: "Shopping", icon: Package, permission: "shopping" },
+  { path: "/shopping", label: "Shopping List", icon: Package, permission: "shopping" },
   { path: "/cultural-info", label: "Cultural Info", icon: BookOpen },
   { path: "/invitations", label: "Invitations", icon: ShoppingBag, permission: "invitations" },
   { path: "/contracts", label: "Contracts", icon: FileText, permission: "contracts" },
