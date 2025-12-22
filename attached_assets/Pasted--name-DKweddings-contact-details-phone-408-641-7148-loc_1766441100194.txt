@@ -1,0 +1,154 @@
+[
+  {
+    "name": "DKweddings",
+    "contact_details": {
+      "phone": "(408) 641-7148",
+      "location": "Bay Area, CA",
+      "specialty": "Candid Wedding Photography & Cinematography"
+    }
+  },
+  {
+    "name": "Dancing Leaf Events",
+    "contact_details": {
+      "phone": "(510) 909-9889",
+      "website": "http://www.dancingleafevents.com/",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Danny Rey Films",
+    "contact_details": {
+      "phone": "(415) 305-6577",
+      "website": "https://www.dannyreyfilms.com/",
+      "location": "San Francisco, CA"
+    }
+  },
+  {
+    "name": "Darbar Banquet Hall",
+    "contact_details": {
+      "phone": "(925) 432-2241",
+      "website": "http://darbarhall.com/",
+      "location": "3841 Railroad Ave, Pittsburg, CA 94565"
+    }
+  },
+  {
+    "name": "Dari Photography",
+    "contact_details": {
+      "phone": "(415) 300-5058",
+      "website": "https://www.dariphotography.com/",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Day N Night Videos",
+    "contact_details": {
+      "phone": "(559) 222-1144",
+      "location": "3071 West Ashlan Avenue, Fresno, CA 93722"
+    }
+  },
+  {
+    "name": "Dazzle Your Day",
+    "contact_details": {
+      "phone": "(408) 823-3888",
+      "location": "San Jose, CA",
+      "specialty": "Event Planning & Custom Decor"
+    }
+  },
+  {
+    "name": "Decor Queen's",
+    "contact_details": {
+      "phone": "(510) 508-4481",
+      "location": "Fremont, CA",
+      "specialty": "Floral Design & Stage Decor"
+    }
+  },
+  {
+    "name": "Dee Jay PDS",
+    "contact_details": {
+      "phone": "(408) 420-7469",
+      "location": "San Jose, CA 95128",
+      "specialty": "Mobile DJ & Sound Services"
+    }
+  },
+  {
+    "name": "Dee Photo Factory",
+    "contact_details": {
+      "phone": "(408) 823-3888",
+      "website": "http://deephotofactory.com/",
+      "location": "Milpitas, CA"
+    }
+  },
+  {
+    "name": "Dee and Kris Photography",
+    "contact_details": {
+      "phone": "(916) 246-0558",
+      "website": "https://deeandkrisphotography.com/",
+      "location": "Sacramento, CA"
+    }
+  },
+  {
+    "name": "Deep Photo Video",
+    "contact_details": {
+      "phone": "(559) 470-3882",
+      "location": "Fresno Area, CA"
+    }
+  },
+  {
+    "name": "Deepali Anavekar Henna Artist",
+    "contact_details": {
+      "phone": "(925) 265-6721",
+      "location": "San Ramon, CA",
+      "specialty": "Traditional & Organic Bridal Mehndi"
+    }
+  },
+  {
+    "name": "Dembi Productions",
+    "contact_details": {
+      "phone": "(510) 791-2422",
+      "location": "418 Ohlones St, Fremont, CA"
+    }
+  },
+  {
+    "name": "Desi (Campbell)",
+    "contact_details": {
+      "phone": "(408) 540-7244",
+      "website": "http://www.desicampbell.com/",
+      "location": "501 E Campbell Ave, Campbell, CA 95008"
+    }
+  },
+  {
+    "name": "Desi Food & Home Catering",
+    "contact_details": {
+      "phone": "(408) 641-7148",
+      "location": "3436 Cunard Court, San Jose, CA"
+    }
+  },
+  {
+    "name": "Desi Jammers Entertainment",
+    "contact_details": {
+      "phone": "(510) 364-8171",
+      "location": "Union City, CA"
+    }
+  },
+  {
+    "name": "Desi Star Djs",
+    "contact_details": {
+      "phone": "(732) 310-4493",
+      "location": "152 Plainfield Ave, Edison, NJ 08817"
+    }
+  },
+  {
+    "name": "Design And Style Galleria",
+    "contact_details": {
+      "phone": "(510) 517-4686",
+      "location": "40919 Grimmer Blvd, Fremont, CA"
+    }
+  },
+  {
+    "name": "Dhaba Catering",
+    "contact_details": {
+      "phone": "(209) 832-1502",
+      "location": "2242 W Grant Line Rd, Tracy, CA"
+    }
+  }
+]
