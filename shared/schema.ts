@@ -2414,3 +2414,160 @@ export const insertQuoteRequestSchema = createInsertSchema(quoteRequests).omit({
 
 export type InsertQuoteRequest = z.infer<typeof insertQuoteRequestSchema>;
 export type QuoteRequest = typeof quoteRequests.$inferSelect;
+
+// ============================================================================
+// VENDOR LEADS - Lead qualification and nurturing system
+// ============================================================================
+
+export const vendorLeads = pgTable("vendor_leads", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  vendorId: varchar("vendor_id").notNull(),
+  weddingId: varchar("wedding_id").notNull(),
+  coupleName: text("couple_name").notNull(),
+  coupleEmail: text("couple_email"),
+  
+  // Source tracking
+  sourceType: text("source_type").notNull(), // 'booking_request' | 'quote_request' | 'message' | 'manual'
+  sourceId: varchar("source_id"), // ID of the booking/quote/message that created this lead
+  
+  // Lead details
+  eventDate: timestamp("event_date"),
+  eventType: text("event_type"), // Which event type they're interested in
+  estimatedBudget: text("estimated_budget"),
+  guestCount: integer("guest_count"),
+  eventLocation: text("event_location"),
+  tradition: text("tradition"), // Wedding tradition for cultural matching
+  city: text("city"),
+  notes: text("notes"),
+  
+  // Lead scoring (0-100)
+  qualificationScore: integer("qualification_score").default(0),
+  urgencyScore: integer("urgency_score").default(0), // Based on wedding date proximity
+  budgetFitScore: integer("budget_fit_score").default(0), // Based on budget alignment
+  engagementScore: integer("engagement_score").default(0), // Based on response/activity
+  overallScore: integer("overall_score").default(0), // Weighted combination
+  
+  // Lead status pipeline
+  status: text("status").notNull().default('new'), // 'new' | 'contacted' | 'qualified' | 'proposal_sent' | 'negotiating' | 'won' | 'lost' | 'nurturing'
+  priority: text("priority").default('medium'), // 'hot' | 'warm' | 'cold' | 'medium'
+  
+  // Nurturing
+  lastContactedAt: timestamp("last_contacted_at"),
+  nextFollowUpAt: timestamp("next_follow_up_at"),
+  followUpCount: integer("follow_up_count").default(0),
+  autoNurtureEnabled: boolean("auto_nurture_enabled").default(true),
+  nurtureSequenceId: varchar("nurture_sequence_id"),
+  currentNurtureStep: integer("current_nurture_step").default(0),
+  
+  // Tracking
+  firstContactAt: timestamp("first_contact_at").notNull().defaultNow(),
+  statusChangedAt: timestamp("status_changed_at"),
+  wonAt: timestamp("won_at"),
+  lostAt: timestamp("lost_at"),
+  lostReason: text("lost_reason"),
+  
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertVendorLeadSchema = createInsertSchema(vendorLeads).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  status: z.enum(['new', 'contacted', 'qualified', 'proposal_sent', 'negotiating', 'won', 'lost', 'nurturing']).optional(),
+  priority: z.enum(['hot', 'warm', 'cold', 'medium']).optional(),
+  sourceType: z.enum(['booking_request', 'quote_request', 'message', 'manual']),
+});
+
+export type InsertVendorLead = z.infer<typeof insertVendorLeadSchema>;
+export type VendorLead = typeof vendorLeads.$inferSelect;
+
+// Nurturing email sequences
+export const leadNurtureSequences = pgTable("lead_nurture_sequences", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  vendorId: varchar("vendor_id").notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  isDefault: boolean("is_default").default(false), // Default sequence for new leads
+  triggerType: text("trigger_type").notNull(), // 'new_lead' | 'no_response' | 'post_quote' | 'manual'
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertLeadNurtureSequenceSchema = createInsertSchema(leadNurtureSequences).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  triggerType: z.enum(['new_lead', 'no_response', 'post_quote', 'manual']),
+});
+
+export type InsertLeadNurtureSequence = z.infer<typeof insertLeadNurtureSequenceSchema>;
+export type LeadNurtureSequence = typeof leadNurtureSequences.$inferSelect;
+
+// Individual steps in a nurturing sequence
+export const leadNurtureSteps = pgTable("lead_nurture_steps", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sequenceId: varchar("sequence_id").notNull(),
+  stepNumber: integer("step_number").notNull(),
+  delayDays: integer("delay_days").notNull().default(0), // Days to wait before sending
+  actionType: text("action_type").notNull(), // 'email' | 'reminder' | 'status_change' | 'tag'
+  emailSubject: text("email_subject"),
+  emailTemplate: text("email_template"), // Template with variables like {{coupleName}}, {{eventDate}}
+  reminderText: text("reminder_text"),
+  newStatus: text("new_status"), // For status_change actions
+  isActive: boolean("is_active").default(true),
+});
+
+export const insertLeadNurtureStepSchema = createInsertSchema(leadNurtureSteps).omit({
+  id: true,
+}).extend({
+  actionType: z.enum(['email', 'reminder', 'status_change', 'tag']),
+});
+
+export type InsertLeadNurtureStep = z.infer<typeof insertLeadNurtureStepSchema>;
+export type LeadNurtureStep = typeof leadNurtureSteps.$inferSelect;
+
+// Scheduled nurture actions
+export const leadNurtureActions = pgTable("lead_nurture_actions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  leadId: varchar("lead_id").notNull(),
+  stepId: varchar("step_id").notNull(),
+  scheduledAt: timestamp("scheduled_at").notNull(),
+  executedAt: timestamp("executed_at"),
+  status: text("status").notNull().default('pending'), // 'pending' | 'executed' | 'skipped' | 'failed'
+  failureReason: text("failure_reason"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertLeadNurtureActionSchema = createInsertSchema(leadNurtureActions).omit({
+  id: true,
+  createdAt: true,
+  executedAt: true,
+}).extend({
+  status: z.enum(['pending', 'executed', 'skipped', 'failed']).optional(),
+});
+
+export type InsertLeadNurtureAction = z.infer<typeof insertLeadNurtureActionSchema>;
+export type LeadNurtureAction = typeof leadNurtureActions.$inferSelect;
+
+// Lead activity log for tracking all interactions
+export const leadActivityLog = pgTable("lead_activity_log", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  leadId: varchar("lead_id").notNull(),
+  activityType: text("activity_type").notNull(), // 'email_sent' | 'email_opened' | 'replied' | 'call' | 'meeting' | 'status_change' | 'note_added' | 'proposal_viewed'
+  description: text("description").notNull(),
+  metadata: jsonb("metadata"), // Additional data like email subject, call duration, etc.
+  performedBy: varchar("performed_by"), // User ID if manual action
+  performedAt: timestamp("performed_at").notNull().defaultNow(),
+});
+
+export const insertLeadActivityLogSchema = createInsertSchema(leadActivityLog).omit({
+  id: true,
+  performedAt: true,
+}).extend({
+  activityType: z.enum(['email_sent', 'email_opened', 'replied', 'call', 'meeting', 'status_change', 'note_added', 'proposal_viewed']),
+});
+
+export type InsertLeadActivityLog = z.infer<typeof insertLeadActivityLogSchema>;
+export type LeadActivityLog = typeof leadActivityLog.$inferSelect;
