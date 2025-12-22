@@ -1,0 +1,91 @@
+[
+  {
+    "name": "Mighty Portraits",
+    "contact_details": {
+      "phone": "(510) 766-8766",
+      "email": "milan@mightyportraits.com",
+      "website": "https://mightyportraits.com/",
+      "location": "San Jose, CA"
+    }
+  },
+  {
+    "name": "Shobhana Beauty Studio",
+    "contact_details": {
+      "phone": "(209) 877-8720",
+      "secondary_phone": "(209) 879-9852",
+      "email": "shobhanamakeupartist@gmail.com",
+      "website": "https://shobhanabeautystudio.com/",
+      "location": "2724 Naglee Road, Tracy, CA 95304"
+    }
+  },
+  {
+    "name": "Elegant Events & Decor",
+    "contact_details": {
+      "location": "Oakland, CA",
+      "specialty": "South Asian Wedding Decor & Floral"
+    }
+  },
+  {
+    "name": "Altan Gallery",
+    "contact_details": {
+      "location": "Bay Area, CA",
+      "specialty": "Creative Event & Product Design"
+    }
+  },
+  {
+    "name": "Aditya Kondepudi Photography",
+    "contact_details": {
+      "location": "Dublin, CA",
+      "category": "Photography & Cinematography"
+    }
+  },
+  {
+    "name": "Krish Captures",
+    "contact_details": {
+      "location": "Fremont, CA",
+      "category": "South Asian Wedding Photographer"
+    }
+  },
+  {
+    "name": "CR Studios",
+    "contact_details": {
+      "location": "Selma, CA",
+      "category": "Photography & Cinematography"
+    }
+  },
+  {
+    "name": "Wildwood Decors",
+    "contact_details": {
+      "location": "Hercules, CA",
+      "specialty": "Mandaps, Stages, and Floral Arrangements"
+    }
+  },
+  {
+    "name": "Avinash Gandi Photography",
+    "contact_details": {
+      "location": "San Jose, CA",
+      "category": "Wedding Videography & Cinematography"
+    }
+  },
+  {
+    "name": "Chana Productions",
+    "contact_details": {
+      "location": "Fresno, CA",
+      "category": "Professional Video & Cinematography"
+    }
+  },
+  {
+    "name": "Majour Events",
+    "contact_details": {
+      "location": "Pittsburg, CA",
+      "specialty": "Event Decoration & Floral Design"
+    }
+  },
+  {
+    "name": "Gurusurya Khalsa Photography",
+    "contact_details": {
+      "location": "Bay Area, CA",
+      "category": "Wedding Photography & Videography"
+    }
+  }
+]

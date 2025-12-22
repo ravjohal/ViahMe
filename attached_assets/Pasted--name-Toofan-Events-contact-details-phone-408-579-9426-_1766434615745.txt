@@ -1,0 +1,86 @@
+[
+  {
+    "name": "Toofan Events",
+    "contact_details": {
+      "phone": "(408) 579-9426",
+      "secondary_phone": "408-368-6865",
+      "website": "http://www.instantkarmaonline.com/",
+      "location": "Santa Clara, CA",
+      "note": "Associated with Instant Karma / Toofan events planning"
+    }
+  },
+  {
+    "name": "Vivah Celebrations",
+    "contact_details": {
+      "phone": "510-754-0728",
+      "email": "info@vivahcelebrations.com",
+      "website": "https://www.vivahcelebrations.com/",
+      "location": "San Francisco / Bay Area, CA"
+    }
+  },
+  {
+    "name": "Invites And Events",
+    "contact_details": {
+      "phone": "415-626-0461",
+      "email": "info@hyegraph.com",
+      "website": "https://www.hyegraph.com/",
+      "location": "3 Embarcadero Center, San Francisco, CA"
+    }
+  },
+  {
+    "name": "DJK Music/Entertainment Event Services",
+    "contact_details": {
+      "phone": "559-470-3882",
+      "location": "Fresno, CA",
+      "specialty": "Bollywood & South Indian DJ Services"
+    }
+  },
+  {
+    "name": "Mehandi By AA",
+    "contact_details": {
+      "phone": "408-641-7148",
+      "location": "Sunnyvale, CA",
+      "category": "Organic Henna Art"
+    }
+  },
+  {
+    "name": "Desi Production",
+    "contact_details": {
+      "phone": "(510) 508-4481",
+      "location": "Hayward / Bay Area, CA",
+      "specialty": "Event Lighting & Mobile Baraat"
+    }
+  },
+  {
+    "name": "Henna And Beyond",
+    "contact_details": {
+      "email": "hennaandbeyond@gmail.com",
+      "facebook": "Henna and Beyond",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "The Bluedoor Events",
+    "contact_details": {
+      "phone": "510-394-4696",
+      "email": "thebluedoorevents@gmail.com",
+      "location": "Oakland, CA"
+    }
+  },
+  {
+    "name": "Sarah Event Decor LLC",
+    "contact_details": {
+      "phone": "209-688-6623",
+      "location": "Stockton, CA",
+      "specialty": "Wedding Mandaps & Stages"
+    }
+  },
+  {
+    "name": "Orange Petals",
+    "contact_details": {
+      "phone": "510-449-3407",
+      "email": "orangepetalsevents@gmail.com",
+      "location": "Bay Area, CA"
+    }
+  }
+]
