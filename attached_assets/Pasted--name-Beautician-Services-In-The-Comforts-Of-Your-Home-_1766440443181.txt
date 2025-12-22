@@ -1,0 +1,90 @@
+[
+  {
+    "name": "Beautician Services In The Comforts Of Your Home",
+    "category": "makeup_artist",
+    "location": "4074 Mowry Avenue, Fremont, CA, United States",
+    "phone": "(510) 790-2444",
+    "email": null,
+    "website": null
+  },
+  {
+    "name": "Beautiful Stories Photography",
+    "category": "photographer",
+    "location": "Los Gatos, CA, United States",
+    "phone": null,
+    "email": null,
+    "website": "https://beautifulstoriesphotography.com/"
+  },
+  {
+    "name": "Beauty By Thread Arden",
+    "category": "hair_stylist",
+    "location": "1689 Arden Way, Sacramento, CA, United States",
+    "phone": "(916) 929-2321",
+    "email": null,
+    "website": "https://www.beautybythread.com/"
+  },
+  {
+    "name": "Beauty International",
+    "category": "makeup_artist",
+    "location": "954 Henderson Avenue, Sunnyvale, CA 94086, United States",
+    "phone": "(408) 732-2323",
+    "email": null,
+    "website": null
+  },
+  {
+    "name": "Beauty Mark Ink",
+    "category": "makeup_artist",
+    "location": "Mountain View, CA, United States",
+    "phone": "(650) 412-4212",
+    "email": "info@beautymarkink.com",
+    "website": "http://beautymarkink.com/"
+  },
+  {
+    "name": "Beauty Spot Salon",
+    "category": "makeup_artist",
+    "location": "37485 Fremont Blvd, Fremont, CA, United States",
+    "phone": "(510) 790-0400",
+    "email": null,
+    "website": null
+  },
+  {
+    "name": "Beauty Threading Salon",
+    "category": "makeup_artist",
+    "location": "942 East El Camino Real, Sunnyvale, California 94087, USA",
+    "phone": "(408) 736-2300",
+    "email": null,
+    "website": null
+  },
+  {
+    "name": "Bhandal Focus",
+    "category": "photographer",
+    "location": "Bay Area",
+    "phone": "(510) 364-3253",
+    "email": "info@bhandalfocus.com",
+    "website": "http://www.bhandalfocus.com/"
+  },
+  {
+    "name": "Bhavana Dut - Photography & Films",
+    "category": "photographer",
+    "location": "Dublin, CA, USA",
+    "phone": "(510) 932-9019",
+    "email": "info@bhavanadut.com",
+    "website": "http://www.bhavanadut.com/"
+  },
+  {
+    "name": "Bini's Kitchen",
+    "category": "caterer",
+    "location": "2948 Folsom Street, San Francisco, CA, USA",
+    "phone": "(415) 525-4570",
+    "email": "info@biniskitchen.com",
+    "website": "https://biniskitchen.com/"
+  },
+  {
+    "name": "Bits Of Magic Image Studio",
+    "category": "photographer",
+    "location": "Bay Area, CA",
+    "phone": "(408) 823-3888",
+    "email": "info@bitsofmagic.com",
+    "website": "http://www.bitsofmagic.com/"
+  }
+]
