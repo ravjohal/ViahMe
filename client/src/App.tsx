@@ -60,6 +60,7 @@ import VendorTeam from "@/pages/vendor-team";
 import VendorInviteAccept from "@/pages/vendor-invite-accept";
 import VendorProfile from "@/pages/vendor-profile";
 import VendorPortfolio from "@/pages/vendor-portfolio";
+import VendorLeads from "@/pages/vendor-leads";
 import Expenses from "@/pages/expenses";
 import { VendorRoute } from "@/components/VendorRoute";
 import { CoupleRoute } from "@/components/CoupleRoute";
@@ -229,6 +230,11 @@ function Router() {
       <Route path="/vendor-team">
         <VendorRoute>
           <VendorTeam />
+        </VendorRoute>
+      </Route>
+      <Route path="/vendor-leads">
+        <VendorRoute>
+          <VendorLeads />
         </VendorRoute>
       </Route>
       <Route path="/vendor-profile">

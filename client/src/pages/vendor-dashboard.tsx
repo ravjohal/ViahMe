@@ -948,7 +948,26 @@ export default function VendorDashboard() {
               </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <Card 
+                className="p-5 hover-elevate cursor-pointer group" 
+                onClick={() => setLocation("/vendor-leads")}
+                data-testid="quick-action-leads"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2.5 rounded-lg bg-red-100 dark:bg-red-900/30">
+                      <Users className="w-5 h-5 text-red-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium mb-1">Leads</h3>
+                      <p className="text-sm text-muted-foreground">Track and nurture your leads</p>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                </div>
+              </Card>
+
               <Card 
                 className="p-5 hover-elevate cursor-pointer group" 
                 onClick={() => setLocation("/vendor-portfolio")}
