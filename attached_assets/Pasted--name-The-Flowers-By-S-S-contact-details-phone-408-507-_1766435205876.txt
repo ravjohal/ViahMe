@@ -1,0 +1,86 @@
+[
+  {
+    "name": "The Flowers By S&S",
+    "contact_details": {
+      "phone": "(408) 507-1644",
+      "email": "flowersbyss@gmail.com",
+      "website": "https://theflowersbyss.com/",
+      "location": "San Jose, CA"
+    }
+  },
+  {
+    "name": "The Hair Stylists",
+    "contact_details": {
+      "phone": "(408) 263-1250",
+      "location": "Milpitas, CA",
+      "specialty": "Bridal and Formal Hair Styling"
+    }
+  },
+  {
+    "name": "The Makeup Studio",
+    "contact_details": {
+      "phone": "(408) 500-9285",
+      "email": "makeupstudiobyriddhishah@gmail.com",
+      "location": "Fremont / San Jose, CA"
+    }
+  },
+  {
+    "name": "The Party People",
+    "contact_details": {
+      "phone": "(408) 292-7133",
+      "website": "https://www.thepartypeople.com/",
+      "location": "San Jose, CA"
+    }
+  },
+  {
+    "name": "The Photography Co.",
+    "contact_details": {
+      "email": "info@thephotographyco.com",
+      "website": "https://thephotographyco.com/",
+      "location": "Serving California and Worldwide"
+    }
+  },
+  {
+    "name": "The Planning Company",
+    "contact_details": {
+      "phone": "(415) 300-5058",
+      "email": "hello@theplanningco.com",
+      "website": "https://www.theplanningco.com/",
+      "location": "San Francisco, CA"
+    }
+  },
+  {
+    "name": "The Wedding Company",
+    "contact_details": {
+      "phone": "(925) 484-1122",
+      "website": "https://theweddingcompanyca.com/",
+      "location": "Pleasanton, CA"
+    }
+  },
+  {
+    "name": "Third Eye Photography",
+    "contact_details": {
+      "phone": "(408) 393-5460",
+      "email": "thirdeyephotoca@gmail.com",
+      "website": "https://www.thirdeyephotoca.com/",
+      "location": "Santa Clara, CA"
+    }
+  },
+  {
+    "name": "Top Flight Entertainment",
+    "contact_details": {
+      "phone": "(408) 420-7469",
+      "email": "topflightent@gmail.com",
+      "website": "http://www.topflightent.com/",
+      "location": "San Jose, CA"
+    }
+  },
+  {
+    "name": "Touch of Elegance",
+    "contact_details": {
+      "phone": "(510) 673-4554",
+      "email": "info@touchofelegance.com",
+      "location": "Hayward / Bay Area, CA"
+    }
+  }
+]
