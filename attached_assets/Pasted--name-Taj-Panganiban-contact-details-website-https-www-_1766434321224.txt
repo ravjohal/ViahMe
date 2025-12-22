@@ -1,0 +1,83 @@
+[
+  {
+    "name": "Taj Panganiban",
+    "contact_details": {
+      "website": "https://www.tajpanganiban.com/",
+      "location": "San Francisco, CA",
+      "category": "Wedding & Events DJ"
+    }
+  },
+  {
+    "name": "Bombay Flavors",
+    "contact_details": {
+      "phone": "586-999-9901",
+      "secondary_phone": "646-759-9545",
+      "website": "https://www.bombayflavors.com/",
+      "location": "Fremont / San Francisco, CA"
+    }
+  },
+  {
+    "name": "Red Eye Collection",
+    "contact_details": {
+      "phone": "510-821-5730",
+      "website": "https://www.redeyecollection.com/",
+      "location": "San Francisco, CA"
+    }
+  },
+  {
+    "name": "Polka Dots Photography",
+    "contact_details": {
+      "website": "https://www.polkadotsphotographyfl.com/",
+      "location": "Serving Bay Area / Northern California"
+    }
+  },
+  {
+    "name": "Mobile Beauty Service By Saran",
+    "contact_details": {
+      "phone": "640-600-9258",
+      "secondary_phone": "512-355-7224",
+      "location": "2155 Lanai Ave, San Jose, CA"
+    }
+  },
+  {
+    "name": "Elisa Brosius Events",
+    "contact_details": {
+      "phone": "707-563-0427",
+      "email": "Elisa@KrystleProperties.com",
+      "location": "Fairfield / Vallejo, CA"
+    }
+  },
+  {
+    "name": "Amar Ramesh Photography (Studio A)",
+    "contact_details": {
+      "phone": "+91 72999 22881",
+      "website": "https://studioa.amarramesh.com/",
+      "specialty": "International Destination Weddings"
+    }
+  },
+  {
+    "name": "High Five Events",
+    "contact_details": {
+      "phone": "408-629-6800",
+      "email": "info@cateringbyfive.com",
+      "website": "https://hi5catering.com/",
+      "location": "San Jose, CA"
+    }
+  },
+  {
+    "name": "Wedding Documentary Photo + Cinema",
+    "contact_details": {
+      "website": "https://weddingdocumentary.com/",
+      "location": "San Francisco Bay Area",
+      "specialty": "South Asian Wedding Specialist"
+    }
+  },
+  {
+    "name": "Sahana Photography",
+    "contact_details": {
+      "website": "https://sahanaphotography.com/",
+      "location": "San Francisco Bay Area",
+      "category": "Wedding & Lifestyle Photography"
+    }
+  }
+]
