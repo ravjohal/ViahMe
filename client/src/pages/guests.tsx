@@ -56,6 +56,8 @@ import {
   Star,
   TrendingUp,
   AlertTriangle,
+  FileSpreadsheet,
+  Plus,
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import QRCode from "qrcode";
@@ -246,7 +248,7 @@ export default function Guests() {
   
   // Top-level tab state
   const [mainTab, setMainTab] = useState("guest-planning");
-  const [planningTab, setPlanningTab] = useState("review");
+  const [planningTab, setPlanningTab] = useState("add");
   
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
@@ -1049,9 +1051,9 @@ export default function Guests() {
   };
 
   // Workflow step progress
-  const hasSuggestions = pendingSuggestions.length === 0 && guests.length > 0;
+  const hasGuests = guests.length > 0;
+  const allSuggestionsReviewed = hasGuests && pendingSuggestions.length === 0;
   const hasBudgetSet = budgetData?.settings?.maxGuestBudget && Number(budgetData.settings.maxGuestBudget) > 0;
-  const isWithinCapacity = budgetData?.capacity && budgetData.capacity.currentCount <= budgetData.capacity.maxGuests;
 
   // New 3-phase workflow based on user's mental model
   const hasEventsOverCapacity = planningSnapshot?.events.some(e => e.isOverCapacity) || false;
@@ -1060,28 +1062,28 @@ export default function Guests() {
 
   const workflowSteps = [
     {
+      id: "add",
+      label: "Add Guests",
+      description: "Import or add manually",
+      icon: UserPlus,
+      isComplete: hasGuests,
+      count: guests.length,
+    },
+    {
       id: "review",
       label: "Review",
-      description: "Family suggestions",
+      description: "Team suggestions",
       icon: Inbox,
-      isComplete: hasSuggestions, // All suggestions reviewed
+      isComplete: hasGuests && allSuggestionsReviewed,
       count: pendingSuggestions.length,
     },
     {
-      id: "assess",
-      label: "Assess Impact",
-      description: "See the whole picture",
+      id: "optimize",
+      label: "Optimize",
+      description: "Budget & capacity",
       icon: Target,
-      isComplete: hasBudgetSet && !needsCuts,
-      count: needsCuts ? 1 : 0, // Show alert if over capacity/budget
-    },
-    {
-      id: "decide",
-      label: "Decide & Cut",
-      description: "Finalize list",
-      icon: Scissors,
-      isComplete: !needsCuts && cutList.length >= 0, // Complete when within limits
-      count: cutList.length,
+      isComplete: hasGuests && hasBudgetSet && !needsCuts,
+      count: needsCuts ? 1 : 0,
     },
   ];
 
@@ -1515,25 +1517,135 @@ export default function Guests() {
             {/* Planning Tabs Content - 3-phase workflow */}
             <Tabs value={planningTab} onValueChange={setPlanningTab}>
               <TabsList className="hidden">
+                <TabsTrigger value="add">Add Guests</TabsTrigger>
                 <TabsTrigger value="review">Review</TabsTrigger>
-                <TabsTrigger value="assess">Assess Impact</TabsTrigger>
-                <TabsTrigger value="decide">Decide & Cut</TabsTrigger>
+                <TabsTrigger value="optimize">Optimize</TabsTrigger>
               </TabsList>
 
-              {/* Phase 1: Review - Review family suggestions */}
+              {/* Phase 1: Add Guests - Import or add manually */}
+              <TabsContent value="add" className="space-y-6">
+                <Card className="border-2 border-primary/20 bg-gradient-to-br from-orange-50/50 to-pink-50/50 dark:from-orange-950/10 dark:to-pink-950/10">
+                  <CardContent className="p-8">
+                    <div className="text-center mb-8">
+                      <div className="inline-flex p-4 rounded-full bg-primary/10 mb-4">
+                        <UserPlus className="h-10 w-10 text-primary" />
+                      </div>
+                      <h2 className="text-2xl font-bold mb-2">Start Building Your Guest List</h2>
+                      <p className="text-muted-foreground max-w-md mx-auto">
+                        Add guests in bulk, import from a spreadsheet, or add them one at a time. 
+                        This is your planning sandbox - nothing is final until you're ready!
+                      </p>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+                      <Card className="hover-elevate cursor-pointer" onClick={() => setImportDialogOpen(true)} data-testid="card-import-guests">
+                        <CardContent className="p-6 text-center">
+                          <div className="inline-flex p-3 rounded-full bg-blue-100 dark:bg-blue-900/30 mb-4">
+                            <FileSpreadsheet className="h-8 w-8 text-blue-600" />
+                          </div>
+                          <h3 className="font-semibold text-lg mb-2">Import from Spreadsheet</h3>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            Upload a CSV or Excel file with your guest list
+                          </p>
+                          <Button className="w-full" data-testid="button-import-spreadsheet">
+                            <Upload className="w-4 h-4 mr-2" />
+                            Import Guests
+                          </Button>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="hover-elevate cursor-pointer" onClick={() => setDialogOpen(true)} data-testid="card-add-manual">
+                        <CardContent className="p-6 text-center">
+                          <div className="inline-flex p-3 rounded-full bg-green-100 dark:bg-green-900/30 mb-4">
+                            <UserPlus className="h-8 w-8 text-green-600" />
+                          </div>
+                          <h3 className="font-semibold text-lg mb-2">Add Guests Manually</h3>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            Add guests one by one with all their details
+                          </p>
+                          <Button variant="outline" className="w-full" data-testid="button-add-manual">
+                            <Plus className="w-4 h-4 mr-2" />
+                            Add Guest
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {hasGuests && (
+                      <div className="mt-8 text-center">
+                        <Badge variant="outline" className="text-base px-4 py-2 gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-green-500" />
+                          You have {guests.length} guest{guests.length !== 1 ? 's' : ''} so far
+                        </Badge>
+                        <div className="mt-4">
+                          <Button 
+                            variant="default"
+                            onClick={() => setPlanningTab(pendingSuggestions.length > 0 ? "review" : "optimize")}
+                            data-testid="button-continue-planning"
+                          >
+                            Continue to {pendingSuggestions.length > 0 ? "Review Suggestions" : "Optimize"}
+                            <ArrowRight className="h-4 w-4 ml-2" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Quick Tips */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Lightbulb className="h-4 w-4 text-amber-500" />
+                      Quick Tips
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="grid md:grid-cols-3 gap-4 text-sm">
+                    <div className="flex items-start gap-3">
+                      <div className="p-1.5 rounded-full bg-blue-100 dark:bg-blue-900/30">
+                        <FileSpreadsheet className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Excel or CSV works great</p>
+                        <p className="text-muted-foreground">Just include Name, Email, Phone columns</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="p-1.5 rounded-full bg-green-100 dark:bg-green-900/30">
+                        <Users className="h-4 w-4 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Group by household later</p>
+                        <p className="text-muted-foreground">You can organize families after importing</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="p-1.5 rounded-full bg-purple-100 dark:bg-purple-900/30">
+                        <Sparkles className="h-4 w-4 text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Nothing is final yet</p>
+                        <p className="text-muted-foreground">This is your sandbox to plan freely</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Phase 2: Review - Review family suggestions */}
               <TabsContent value="review" className="space-y-6">
-                <Card className={`border-2 ${hasSuggestions ? "border-green-300 bg-green-50/50 dark:bg-green-950/20" : "border-orange-200 bg-orange-50/50 dark:bg-orange-950/20"}`}>
+                <Card className={`border-2 ${allSuggestionsReviewed ? "border-green-300 bg-green-50/50 dark:bg-green-950/20" : "border-orange-200 bg-orange-50/50 dark:bg-orange-950/20"}`}>
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">
-                      <div className={`p-2 rounded-full flex-shrink-0 ${hasSuggestions ? "bg-green-100 dark:bg-green-900/30" : "bg-orange-100 dark:bg-orange-900/30"}`}>
-                        {hasSuggestions ? (
+                      <div className={`p-2 rounded-full flex-shrink-0 ${allSuggestionsReviewed ? "bg-green-100 dark:bg-green-900/30" : "bg-orange-100 dark:bg-orange-900/30"}`}>
+                        {allSuggestionsReviewed ? (
                           <Sparkles className="h-5 w-5 text-green-600" />
                         ) : (
                           <Inbox className="h-5 w-5 text-orange-600" />
                         )}
                       </div>
                       <div className="flex-1">
-                        {hasSuggestions ? (
+                        {allSuggestionsReviewed ? (
                           <>
                             <p className="font-semibold text-green-700 dark:text-green-400">All Caught Up!</p>
                             <p className="text-sm text-muted-foreground mt-1">
@@ -1542,7 +1654,7 @@ export default function Guests() {
                             <Button 
                               size="sm" 
                               className="mt-3 gap-2"
-                              onClick={() => setPlanningTab("assess")}
+                              onClick={() => setPlanningTab("optimize")}
                             >
                               See the Full Picture
                               <ArrowRight className="h-3 w-3" />
@@ -1682,7 +1794,7 @@ export default function Guests() {
               </TabsContent>
 
               {/* Phase 2: Assess Impact - See the WHOLE picture before cutting */}
-              <TabsContent value="assess" className="space-y-6">
+              <TabsContent value="optimize" className="space-y-6">
                 {snapshotLoading ? (
                   <div className="space-y-4">
                     <Skeleton className="h-32 w-full" />
@@ -1727,9 +1839,9 @@ export default function Guests() {
                                 <Button 
                                   size="sm" 
                                   className="mt-3 gap-2"
-                                  onClick={() => setPlanningTab("decide")}
+                                  onClick={() => setMainTab("guest-list")}
                                 >
-                                  Review & Finalize
+                                  View Final Guest List
                                   <ArrowRight className="h-3 w-3" />
                                 </Button>
                               </>
@@ -1739,17 +1851,8 @@ export default function Guests() {
                                 <p className="text-sm text-muted-foreground mt-1">
                                   {hasOverBudget && `Over budget by $${planningSnapshot?.budget.potentialOverage?.toLocaleString()}. `}
                                   {hasEventsOverCapacity && `Some events exceed venue capacity. `}
-                                  Review the details below and proceed to cut guests if needed.
+                                  Review the details below to optimize your guest list.
                                 </p>
-                                <Button 
-                                  size="sm" 
-                                  variant="outline"
-                                  className="mt-3 gap-2"
-                                  onClick={() => setPlanningTab("decide")}
-                                >
-                                  Start Cutting
-                                  <Scissors className="h-3 w-3" />
-                                </Button>
                               </>
                             )}
                           </div>
@@ -2141,123 +2244,25 @@ export default function Guests() {
                       )}
                     </div>
 
-                    {/* Action Button */}
-                    <div className="flex justify-end">
-                      <Button 
-                        size="lg"
-                        onClick={() => setPlanningTab("decide")}
-                        className="gap-2"
-                      >
-                        {needsCuts ? (
-                          <>
-                            <Scissors className="h-4 w-4" />
-                            Start Cutting Guests
-                          </>
-                        ) : (
-                          <>
-                            <CheckCircle2 className="h-4 w-4" />
-                            Review & Finalize
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </>
-                )}
-              </TabsContent>
-
-              {/* Phase 3: Decide & Cut - Make final decisions */}
-              <TabsContent value="decide" className="space-y-6">
-                <Card className={`border-2 ${cutList.length === 0 ? "border-green-300 bg-green-50/50 dark:bg-green-950/20" : "border-amber-200 bg-amber-50/50 dark:bg-amber-950/20"}`}>
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <div className={`p-2 rounded-full flex-shrink-0 ${cutList.length === 0 ? "bg-green-100 dark:bg-green-900/30" : "bg-amber-100 dark:bg-amber-900/30"}`}>
-                        {cutList.length === 0 ? (
-                          <Sparkles className="h-5 w-5 text-green-600" />
-                        ) : (
-                          <Scissors className="h-5 w-5 text-amber-600" />
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        {cutList.length === 0 ? (
-                          <>
-                            <p className="font-semibold text-green-700 dark:text-green-400">Ready to Go!</p>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              Your guest list is finalized. No households have been parked in "Maybe Later".
-                            </p>
-                            <Button 
-                              size="sm" 
-                              className="mt-3 gap-2"
-                              onClick={() => setMainTab("guest-list")}
-                            >
-                              View Final Guest List
-                              <ArrowRight className="h-3 w-3" />
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            <p className="font-semibold">Maybe Later</p>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              You have {cutList.length} household{cutList.length !== 1 ? 's' : ''} parked. These won't receive invitations unless you restore them.
-                            </p>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h2 className="text-lg font-semibold flex items-center gap-2">
-                        <Scissors className="h-5 w-5 text-muted-foreground" />
-                        Maybe Later
-                        {cutList.length > 0 && (
-                          <Badge variant="secondary">{cutList.length} parked</Badge>
-                        )}
-                      </h2>
-                      <p className="text-sm text-muted-foreground">
-                        Guests you might not invite - restore them anytime
-                      </p>
-                    </div>
-                  </div>
-
-                  {cutListLoading ? (
-                    <div className="space-y-3">
-                      {[1, 2, 3].map(i => <Skeleton key={i} className="h-24 w-full" />)}
-                    </div>
-                  ) : cutList.length === 0 ? (
-                    <Card className="border-dashed">
-                      <CardContent className="p-6 text-center">
-                        <Scissors className="h-10 w-10 mx-auto text-muted-foreground mb-3 opacity-50" />
-                        <p className="font-medium mb-1">No Guests Parked</p>
-                        <p className="text-sm text-muted-foreground">
-                          When you need to trim your list, move households here from the Guest List tab.
-                          You can always restore them later.
-                        </p>
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    <div className="space-y-3">
-                      {cutList.map(item => (
-                        <Card key={item.id} data-testid={`card-cut-${item.id}`}>
-                          <CardContent className="p-4">
-                            <div className="flex items-center justify-between gap-4">
+                    {/* Maybe Later Section - Parked Guests */}
+                    {cutList.length > 0 && (
+                      <Card className="border-amber-200 bg-amber-50/30 dark:bg-amber-950/10">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-base flex items-center gap-2">
+                            <Scissors className="h-4 w-4 text-amber-600" />
+                            Maybe Later
+                            <Badge variant="secondary" className="ml-auto">{cutList.length} parked</Badge>
+                          </CardTitle>
+                          <CardDescription>
+                            These guests won't receive invitations - restore them anytime
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                          {cutList.map(item => (
+                            <div key={item.id} className="flex items-center justify-between p-3 bg-background rounded-lg border" data-testid={`card-cut-${item.id}`}>
                               <div>
                                 <p className="font-medium">{item.household?.name || "Unknown"}</p>
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                  <span>{item.household?.maxCount || 0} guests</span>
-                                  {item.cutReason && (
-                                    <>
-                                      <span>•</span>
-                                      <Badge variant="outline" className="text-xs">
-                                        {item.cutReason === "budget" ? "Budget" : 
-                                         item.cutReason === "space" ? "Space" : 
-                                         item.cutReason === "priority" ? "Priority" : "Other"}
-                                      </Badge>
-                                    </>
-                                  )}
-                                </div>
+                                <p className="text-xs text-muted-foreground">{item.household?.maxCount || 0} guests</p>
                               </div>
                               <Button
                                 size="sm"
@@ -2270,12 +2275,25 @@ export default function Guests() {
                                 Restore
                               </Button>
                             </div>
-                          </CardContent>
-                        </Card>
-                      ))}
+                          ))}
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Action Button */}
+                    <div className="flex justify-end">
+                      <Button 
+                        size="lg"
+                        onClick={() => setMainTab("guest-list")}
+                        className="gap-2"
+                        data-testid="button-view-guest-list"
+                      >
+                        <CheckCircle2 className="h-4 w-4" />
+                        View Final Guest List
+                      </Button>
                     </div>
-                  )}
-                </div>
+                  </>
+                )}
               </TabsContent>
             </Tabs>
           </TabsContent>
@@ -2286,6 +2304,8 @@ export default function Guests() {
       <GuestImportDialog
         open={importDialogOpen}
         onOpenChange={setImportDialogOpen}
+        weddingId={wedding.id}
+        events={events}
         onImport={handleBulkImport}
       />
 
@@ -2381,7 +2401,7 @@ export default function Guests() {
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="plusOne"
-                checked={form.watch("plusOne")}
+                checked={form.watch("plusOne") ?? false}
                 onCheckedChange={(checked) => form.setValue("plusOne", checked as boolean)}
                 data-testid="checkbox-plus-one"
               />
