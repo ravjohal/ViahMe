@@ -1,0 +1,97 @@
+[
+  {
+    "name": "Henna Lounge",
+    "contact_details": {
+      "phone": "415-465-4321",
+      "email": "darcy@hennalounge.com",
+      "website": "https://www.hennalounge.com/",
+      "location": "Oakland, CA"
+    }
+  },
+  {
+    "name": "Todd Rafalovich Photography",
+    "contact_details": {
+      "phone": "(650) 345-2441",
+      "email": "todd@rafalovich.com",
+      "website": "https://www.rafalovich.com/"
+    }
+  },
+  {
+    "name": "Surprise At 12",
+    "contact_details": {
+      "phone": "510-320-8217",
+      "location": "Fremont, CA"
+    }
+  },
+  {
+    "name": "Sami Syed Photography",
+    "contact_details": {
+      "phone": "408-649-8845",
+      "email": "samisyedphotography@gmail.com",
+      "website": "https://www.samisyedphotography.com/"
+    }
+  },
+  {
+    "name": "Exotic Events Decors",
+    "contact_details": {
+      "phone": "631-443-3482",
+      "secondary_phone": "971-295-3811",
+      "location": "Pleasanton / Bay Area"
+    }
+  },
+  {
+    "name": "Dustin Cantrell Photography",
+    "contact_details": {
+      "phone": "(661) 345-2451",
+      "website": "https://dustincantrell.com/"
+    }
+  },
+  {
+    "name": "DJ Tanveer",
+    "contact_details": {
+      "phone": "408-410-4107",
+      "website": "https://www.djtanveer.com/",
+      "location": "Santa Clara, CA"
+    }
+  },
+  {
+    "name": "Ian Chin Photography",
+    "contact_details": {
+      "email": "ianchinphotography@gmail.com",
+      "website": "https://ianchinphotography.com/",
+      "location": "San Francisco / Dublin, CA"
+    }
+  },
+  {
+    "name": "Sterling Wine Carriages",
+    "contact_details": {
+      "phone": "(925) 447-1981",
+      "website": "http://www.sterlingwinecarriages.com/",
+      "location": "Livermore, CA"
+    }
+  },
+  {
+    "name": "Deeda Salon",
+    "contact_details": {
+      "phone": "916-249-0607",
+      "email": "hello@thedeeda.com",
+      "website": "https://deedaxcoterie.com/",
+      "location": "1734 34th St, Sacramento, CA"
+    }
+  },
+  {
+    "name": "Minahill Parlor",
+    "contact_details": {
+      "phone": "510-745-0985",
+      "location": "Fremont, CA"
+    }
+  },
+  {
+    "name": "Sunrise Banquet Hall",
+    "contact_details": {
+      "phone": "707-446-2444",
+      "website": "https://www.sunrisebanquethall.com/",
+      "location": "620 Orange Dr, Vacaville, CA"
+    }
+  }
+]

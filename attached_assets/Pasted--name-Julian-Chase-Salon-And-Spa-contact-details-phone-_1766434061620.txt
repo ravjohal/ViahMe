@@ -1,0 +1,85 @@
+[
+  {
+    "name": "Julian Chase Salon And Spa",
+    "contact_details": {
+      "phone": "(650) 321-7025",
+      "email": "salonjulianchase@gmail.com",
+      "website": "https://julianchase.com/",
+      "location": "2343 Birch Street, Palo Alto, CA 94306"
+    }
+  },
+  {
+    "name": "Pictures By Komal",
+    "contact_details": {
+      "phone": "512-761-5207",
+      "email": "hello@komalmalik.com",
+      "website": "https://www.komalmalik.com/"
+    }
+  },
+  {
+    "name": "Shutter Magic Photography",
+    "contact_details": {
+      "phone": "254-718-5478",
+      "website": "https://www.shuttermagic.com/"
+    }
+  },
+  {
+    "name": "Baloni Decor",
+    "contact_details": {
+      "phone": "408-826-9814",
+      "email": "lynnett@sanjoseballoons.com",
+      "website": "https://sanjoseballoons.com/"
+    }
+  },
+  {
+    "name": "Precious Designs & Events",
+    "contact_details": {
+      "phone": "(669) 333-1144",
+      "secondary_phone": "408-896-9073",
+      "website": "https://preciouseve.com/",
+      "location": "San Francisco, CA"
+    }
+  },
+  {
+    "name": "Jalsa Catering",
+    "contact_details": {
+      "phone": "(408) 480-3825",
+      "email": "info@jalsasf.com",
+      "website": "https://jalsacatering.com",
+      "location": "1285 Homestead Road, Santa Clara, CA 95050"
+    }
+  },
+  {
+    "name": "Aykut Events",
+    "contact_details": {
+      "phone": "415-260-9920",
+      "email": "info@aykutevents.com",
+      "website": "https://www.aykutevents.com/"
+    }
+  },
+  {
+    "name": "Samira Decor",
+    "contact_details": {
+      "phone": "510-491-5984",
+      "email": "samshokoor@gmail.com",
+      "website": "https://www.samiradecor.com/",
+      "location": "Union City, CA"
+    }
+  },
+  {
+    "name": "Bhupesh Patel Photography",
+    "contact_details": {
+      "phone": "650-281-5955",
+      "email": "butch10x@gmail.com",
+      "website": "https://www.bpatelphotography.com/",
+      "location": "San Francisco, CA"
+    }
+  },
+  {
+    "name": "Charmantine Events",
+    "contact_details": {
+      "website": "http://charmantine.com/",
+      "location": "Bay Area, CA"
+    }
+  }
+]

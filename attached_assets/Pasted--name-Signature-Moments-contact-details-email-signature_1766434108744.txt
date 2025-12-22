@@ -1,0 +1,84 @@
+[
+  {
+    "name": "Signature Moments",
+    "contact_details": {
+      "email": "signaturemomentsbymk@gmail.com",
+      "website": "https://www.signaturemomentsbymk.com/",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Anmol Video Production",
+    "contact_details": {
+      "phone": "(559) 217-1834",
+      "email": "anmolvisuals@gmail.com",
+      "website": "https://www.anmolvisuals.com/",
+      "location": "Fresno, CA"
+    }
+  },
+  {
+    "name": "Muslim Community Association (MCA)",
+    "contact_details": {
+      "phone": "(408) 727-7277",
+      "email": "facilities@mcabayarea.org",
+      "website": "https://www.mcabayarea.org/",
+      "location": "3003 Scott Blvd, Santa Clara, CA 95054"
+    }
+  },
+  {
+    "name": "Alison Events",
+    "contact_details": {
+      "phone": "(415) 567-2101",
+      "website": "https://alisonevents.com/",
+      "location": "185 Arkansas St, San Francisco, CA"
+    }
+  },
+  {
+    "name": "Anne Claire Brun Photography",
+    "contact_details": {
+      "email": "hello@anneclairebrun.com",
+      "website": "https://anneclairebrun.com/",
+      "location": "Healdsburg / Bay Area, CA"
+    }
+  },
+  {
+    "name": "Lisa Whalen Photography",
+    "contact_details": {
+      "phone": "(510) 508-4100",
+      "email": "lisa@lisawhalen.com",
+      "website": "https://www.lisawhalen.com/"
+    }
+  },
+  {
+    "name": "Appeningz Event",
+    "contact_details": {
+      "phone": "510-912-3211",
+      "location": "3327 Skyward Pl, San Jose, CA"
+    }
+  },
+  {
+    "name": "Jade Studio Productions",
+    "contact_details": {
+      "phone": "(408) 641-1188",
+      "website": "https://www.jadestudioproductions.com/",
+      "location": "San Jose, CA"
+    }
+  },
+  {
+    "name": "A Beautiful Gathering",
+    "contact_details": {
+      "phone": "(925) 519-0308",
+      "email": "info@abeautifulgathering.com",
+      "website": "https://www.abeautifulgathering.com/",
+      "location": "Livermore, CA"
+    }
+  },
+  {
+    "name": "A&S Decorations",
+    "contact_details": {
+      "phone": "(510) 415-4603",
+      "email": "asdecorations@yahoo.com",
+      "location": "Bay Area, CA"
+    }
+  }
+]
