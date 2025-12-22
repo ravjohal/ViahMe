@@ -58,6 +58,8 @@ import {
   AlertTriangle,
   FileSpreadsheet,
   Plus,
+  HelpCircle,
+  Pencil,
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import QRCode from "qrcode";
@@ -284,6 +286,12 @@ export default function Guests() {
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [selectedSuggestion, setSelectedSuggestion] = useState<GuestSuggestion | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+
+  // Event quick-edit state for Optimize tab
+  const [eventEditDialogOpen, setEventEditDialogOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [editEventCostPerHead, setEditEventCostPerHead] = useState("");
+  const [editEventCapacity, setEditEventCapacity] = useState("");
 
   const { data: weddings, isLoading: weddingsLoading } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
@@ -718,6 +726,42 @@ export default function Guests() {
       toast({ title: "Error", description: "Failed to update budget", variant: "destructive" });
     },
   });
+
+  // Event quick-edit mutation for cost per head and venue capacity
+  const updateEventMutation = useMutation({
+    mutationFn: async (data: { eventId: string; costPerHead?: string; venueCapacity?: number | null }) => {
+      return await apiRequest("PATCH", `/api/events/${data.eventId}`, {
+        costPerHead: data.costPerHead,
+        venueCapacity: data.venueCapacity,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/events/${wedding?.id}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-planning-snapshot"] });
+      setEventEditDialogOpen(false);
+      setEditingEvent(null);
+      toast({ title: "Event updated", description: "Cost and capacity settings have been saved." });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to update event", variant: "destructive" });
+    },
+  });
+
+  const handleEditEvent = (event: Event) => {
+    setEditingEvent(event);
+    setEditEventCostPerHead(event.costPerHead || "");
+    setEditEventCapacity(event.venueCapacity?.toString() || "");
+    setEventEditDialogOpen(true);
+  };
+
+  const handleSaveEventEdit = () => {
+    if (!editingEvent) return;
+    updateEventMutation.mutate({
+      eventId: editingEvent.id,
+      costPerHead: editEventCostPerHead || undefined,
+      venueCapacity: editEventCapacity ? parseInt(editEventCapacity) : null,
+    });
+  };
 
   const handleGenerateQRCode = async (household: Household) => {
     const token = householdTokens.get(household.id);
@@ -1793,8 +1837,33 @@ export default function Guests() {
                 </div>
               </TabsContent>
 
-              {/* Phase 2: Assess Impact - See the WHOLE picture before cutting */}
+              {/* Phase 2: Optimize - See the big picture and make adjustments */}
               <TabsContent value="optimize" className="space-y-6">
+                {/* Friendly Intro Explainer */}
+                <Card className="border-blue-200 bg-blue-50/30 dark:bg-blue-950/10">
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/30 flex-shrink-0">
+                        <HelpCircle className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-blue-700 dark:text-blue-400">How This Works</p>
+                        <div className="text-sm text-muted-foreground mt-1 space-y-2">
+                          <p>
+                            <strong>Cost Per Head</strong> = How much each guest costs at an event (food, drinks, etc.)
+                          </p>
+                          <p>
+                            <strong>Venue Capacity</strong> = Maximum number of people your venue can hold
+                          </p>
+                          <p>
+                            We use these to show you if you're over budget or over capacity. Click the "Edit" button on any event to adjust these numbers.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
                 {snapshotLoading ? (
                   <div className="space-y-4">
                     <Skeleton className="h-32 w-full" />
@@ -1985,6 +2054,19 @@ export default function Guests() {
                                           Over Budget
                                         </Badge>
                                       )}
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-7 px-2 text-xs gap-1"
+                                        onClick={() => {
+                                          const fullEvent = events.find(e => e.id === event.id);
+                                          if (fullEvent) handleEditEvent(fullEvent);
+                                        }}
+                                        data-testid={`button-edit-event-${event.id}`}
+                                      >
+                                        <Pencil className="h-3 w-3" />
+                                        Edit
+                                      </Button>
                                     </div>
                                     <p className="text-sm text-muted-foreground">
                                       {event.date ? new Date(event.date).toLocaleDateString() : "Date TBD"}
@@ -2958,6 +3040,66 @@ export default function Guests() {
                 data-testid="button-confirm-reject"
               >
                 {rejectSuggestionMutation.isPending ? "Declining..." : "Decline Suggestion"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Event Quick Edit Dialog */}
+      <Dialog open={eventEditDialogOpen} onOpenChange={setEventEditDialogOpen}>
+        <DialogContent className="sm:max-w-md" data-testid="dialog-edit-event">
+          <DialogHeader>
+            <DialogTitle>Edit Event Settings</DialogTitle>
+            <DialogDescription>
+              Update the cost and capacity for "{editingEvent?.name}". These help you see if you're over budget or over capacity.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="eventCostPerHead">Cost Per Head ($)</Label>
+              <p className="text-xs text-muted-foreground">How much does each guest cost at this event? (food, drinks, etc.)</p>
+              <Input
+                id="eventCostPerHead"
+                type="number"
+                value={editEventCostPerHead}
+                onChange={(e) => setEditEventCostPerHead(e.target.value)}
+                placeholder="e.g., 150"
+                data-testid="input-event-cost-per-head"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="eventCapacity">Venue Capacity</Label>
+              <p className="text-xs text-muted-foreground">What's the maximum number of people your venue can hold?</p>
+              <Input
+                id="eventCapacity"
+                type="number"
+                value={editEventCapacity}
+                onChange={(e) => setEditEventCapacity(e.target.value)}
+                placeholder="e.g., 200"
+                data-testid="input-event-capacity"
+              />
+            </div>
+            
+            <div className="flex gap-2 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setEventEditDialogOpen(false);
+                  setEditingEvent(null);
+                }}
+                data-testid="button-cancel-event-edit"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSaveEventEdit}
+                disabled={updateEventMutation.isPending}
+                data-testid="button-save-event-edit"
+              >
+                {updateEventMutation.isPending ? "Saving..." : "Save Changes"}
               </Button>
             </div>
           </div>
