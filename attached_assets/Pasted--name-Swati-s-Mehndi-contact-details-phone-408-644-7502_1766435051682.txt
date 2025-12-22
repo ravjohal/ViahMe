@@ -1,0 +1,86 @@
+[
+  {
+    "name": "Swati's Mehndi",
+    "contact_details": {
+      "phone": "408-644-7502",
+      "website": "https://shaadibazaarevents.com/wedding-vendors/henna-traditions/",
+      "location": "San Jose / Bay Area, CA"
+    }
+  },
+  {
+    "name": "Sweet Dreams Events",
+    "contact_details": {
+      "phone": "559-641-7606",
+      "email": "sweetdreamsfloral@gmail.com",
+      "website": "https://www.sweetdreamsfloral.com/",
+      "location": "Oakhurst / Fresno Area, CA",
+      "specialty": "Floral Design and Event Decor"
+    }
+  },
+  {
+    "name": "The Glam Station",
+    "contact_details": {
+      "email": "Glamstation@yahoo.com",
+      "website": "https://www.theglamstationspa.com/",
+      "location": "San Jose, CA",
+      "category": "Beauty and Spa Services"
+    }
+  },
+  {
+    "name": "The Mehndi Lady",
+    "contact_details": {
+      "phone": "(510) 709-8903",
+      "email": "lolimehandi@gmail.com",
+      "website": "https://lolihennaandfashions.com/",
+      "location": "Fremont / Bay Area, CA"
+    }
+  },
+  {
+    "name": "The Party Pros",
+    "contact_details": {
+      "phone": "(408) 212-6077",
+      "website": "https://www.sveventrentals.com/",
+      "location": "San Jose, CA",
+      "specialty": "Tents, Chairs, and Party Rentals"
+    }
+  },
+  {
+    "name": "The Wedding Decorators",
+    "contact_details": {
+      "phone": "408-398-3198",
+      "email": "hherrera@realweddingsdecorations.com",
+      "website": "https://www.realweddingsdecorations.com/",
+      "location": "45 Viewmont Ave, San Jose, CA 95127"
+    }
+  },
+  {
+    "name": "Tikka & Turmeric",
+    "contact_details": {
+      "phone": "559-840-2667",
+      "website": "https://indiasovenfresno.com/",
+      "location": "Fresno, CA",
+      "note": "Catering line associated with India's Oven"
+    }
+  },
+  {
+    "name": "The Decor Lab",
+    "contact_details": {
+      "location": "Bay Area, CA",
+      "specialty": "Event Decoration and Design"
+    }
+  },
+  {
+    "name": "Tanzeel's Salon",
+    "contact_details": {
+      "location": "Fremont, CA",
+      "category": "Hair and Beauty Services"
+    }
+  },
+  {
+    "name": "The Cake Shop",
+    "contact_details": {
+      "location": "San Jose, CA",
+      "category": "Custom Cakes and Desserts"
+    }
+  }
+]
