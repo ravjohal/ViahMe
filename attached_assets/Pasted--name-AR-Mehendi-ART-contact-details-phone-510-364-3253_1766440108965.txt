@@ -1,0 +1,135 @@
+[
+  {
+    "name": "AR Mehendi ART",
+    "contact_details": {
+      "phone": "510-364-3253",
+      "location": "Union City, CA"
+    }
+  },
+  {
+    "name": "ARK Photography",
+    "contact_details": {
+      "phone": "209-640-1492",
+      "website": "https://www.ark-photography.com/",
+      "location": "Mountain House, CA"
+    }
+  },
+  {
+    "name": "AVN BD Photography",
+    "contact_details": {
+      "website": "https://avnbdphotography.com/",
+      "location": "San Jose, CA"
+    }
+  },
+  {
+    "name": "Aanya Events",
+    "contact_details": {
+      "phone": "408-641-7148",
+      "website": "https://www.aanyaevents.com/",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Absolute Vibez",
+    "contact_details": {
+      "phone": "510-364-8171",
+      "website": "https://www.absolutevibez.com/",
+      "location": "Fremont, CA"
+    }
+  },
+  {
+    "name": "Absolutely Studios",
+    "contact_details": {
+      "website": "https://absolutelystudios.com/",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Addies Photography",
+    "contact_details": {
+      "phone": "650-388-6880",
+      "website": "http://www.addiesphotography.com/",
+      "location": "San Mateo, CA"
+    }
+  },
+  {
+    "name": "Aditya Kondepudi Photography",
+    "contact_details": {
+      "website": "https://adityakondepudi.com/",
+      "location": "Dublin, CA"
+    }
+  },
+  {
+    "name": "Aesthetika Decor",
+    "contact_details": {
+      "website": "https://aesthetikadecor.com/",
+      "location": "Fremont, CA"
+    }
+  },
+  {
+    "name": "Afsan Catering",
+    "contact_details": {
+      "phone": "408-295-2005",
+      "location": "San Jose, CA"
+    }
+  },
+  {
+    "name": "Akshata Photography",
+    "contact_details": {
+      "website": "https://akshataphotography.com/",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Alka Joshi Henna Artist",
+    "contact_details": {
+      "phone": "415-305-6577",
+      "website": "http://www.alkajoshi.com/",
+      "location": "San Francisco, CA"
+    }
+  },
+  {
+    "name": "All Natural Day Spa",
+    "contact_details": {
+      "phone": "408-287-1240",
+      "website": "https://allnaturaldayspa.com/",
+      "location": "1042 Lincoln Ave, San Jose, CA"
+    }
+  },
+  {
+    "name": "Allora Event Designs",
+    "contact_details": {
+      "phone": "510-909-9889"
+    }
+  },
+  {
+    "name": "Altan Gallery",
+    "contact_details": {
+      "phone": "408-252-8100",
+      "website": "http://www.altangallery.com/",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "AmaSingh Magical Entertainment",
+    "contact_details": {
+      "website": "https://amasingh.com/",
+      "location": "San Jose, CA"
+    }
+  },
+  {
+    "name": "Amanah Photos",
+    "contact_details": {
+      "website": "https://amanahphotos.com/",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Amazae Events Inc",
+    "contact_details": {
+      "phone": "408-596-3686",
+      "website": "https://www.amazaeevents.com/",
+      "location": "San Jose, CA"
+    }
+  }
+]
