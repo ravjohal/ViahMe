@@ -544,9 +544,16 @@ export function VendorDetailModal({
         <div className="space-y-6 mt-4">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <Badge variant="outline" className="mb-2">
-                {vendor.category.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
-              </Badge>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {(vendor.categories && vendor.categories.length > 0 
+                  ? vendor.categories 
+                  : [vendor.category]
+                ).map((cat, idx) => (
+                  <Badge key={idx} variant="outline">
+                    {cat.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                  </Badge>
+                ))}
+              </div>
               {vendor.description && (
                 <p className="text-muted-foreground mt-2">{vendor.description}</p>
               )}
