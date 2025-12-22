@@ -297,15 +297,62 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
               </div>
             )}
 
-            <div className="bg-muted/50 p-4 rounded-lg space-y-2">
-              <h4 className="font-semibold text-sm">File Format Guidelines:</h4>
-              <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-                <li>Include a header row with column names</li>
-                <li>Required: <strong>Name</strong> column</li>
-                <li>Optional: Email, Phone, Side (bride/groom/mutual), Plus One (yes/no), Dietary Restrictions</li>
-                <li>Side values: "bride", "groom", or "mutual"</li>
-                <li>Plus One: "yes", "no", "true", "false", "1", or "0"</li>
-              </ul>
+            <div className="bg-muted/50 p-4 rounded-lg space-y-4">
+              <div className="space-y-2">
+                <h4 className="font-semibold text-sm">File Format Guidelines:</h4>
+                <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                  <li>Include a header row with column names</li>
+                  <li>Required: <strong>Name</strong> column</li>
+                  <li>Optional: Email, Phone, Side (bride/groom/mutual), Plus One (yes/no), Dietary Restrictions</li>
+                  <li>Side values: "bride", "groom", or "mutual"</li>
+                  <li>Plus One: "yes", "no", "true", "false", "1", or "0"</li>
+                </ul>
+              </div>
+              
+              <div className="space-y-2">
+                <h4 className="font-semibold text-sm">Example Format:</h4>
+                <div className="border rounded-lg overflow-hidden bg-background">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-muted/50">
+                        <TableHead className="text-xs font-semibold">Name</TableHead>
+                        <TableHead className="text-xs font-semibold">Email</TableHead>
+                        <TableHead className="text-xs font-semibold">Phone</TableHead>
+                        <TableHead className="text-xs font-semibold">Side</TableHead>
+                        <TableHead className="text-xs font-semibold">Plus One</TableHead>
+                        <TableHead className="text-xs font-semibold">Dietary</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell className="text-xs">Priya Sharma</TableCell>
+                        <TableCell className="text-xs">priya@email.com</TableCell>
+                        <TableCell className="text-xs">555-123-4567</TableCell>
+                        <TableCell className="text-xs">bride</TableCell>
+                        <TableCell className="text-xs">yes</TableCell>
+                        <TableCell className="text-xs">vegetarian</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="text-xs">Rahul Patel</TableCell>
+                        <TableCell className="text-xs">rahul@email.com</TableCell>
+                        <TableCell className="text-xs">555-987-6543</TableCell>
+                        <TableCell className="text-xs">groom</TableCell>
+                        <TableCell className="text-xs">no</TableCell>
+                        <TableCell className="text-xs"></TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="text-xs">Anita Kumar</TableCell>
+                        <TableCell className="text-xs"></TableCell>
+                        <TableCell className="text-xs">555-456-7890</TableCell>
+                        <TableCell className="text-xs">mutual</TableCell>
+                        <TableCell className="text-xs">yes</TableCell>
+                        <TableCell className="text-xs">no nuts</TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </div>
+                <p className="text-xs text-muted-foreground">Empty cells are fine for optional fields</p>
+              </div>
             </div>
           </div>
         )}
