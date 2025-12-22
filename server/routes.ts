@@ -4306,6 +4306,18 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
       }
       
       const review = await storage.createReview(validatedData);
+      
+      // Update vendor's aggregated rating and review count
+      const allVendorReviews = await storage.getReviewsByVendor(validatedData.vendorId);
+      if (allVendorReviews.length > 0) {
+        const totalRating = allVendorReviews.reduce((sum, r) => sum + r.rating, 0);
+        const avgRating = Math.round((totalRating / allVendorReviews.length) * 10) / 10; // Numeric with 1 decimal
+        await storage.updateVendor(validatedData.vendorId, {
+          rating: String(avgRating), // Schema expects string for decimal column
+          reviewCount: allVendorReviews.length,
+        });
+      }
+      
       res.json(review);
     } catch (error) {
       if (error instanceof Error && "issues" in error) {

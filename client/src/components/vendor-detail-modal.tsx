@@ -327,7 +327,10 @@ export function VendorDetailModal({
   // Early return AFTER all hooks are called
   if (!vendor) return null;
 
-  const rating = vendor.rating ? parseFloat(vendor.rating.toString()) : 0;
+  // Compute rating from in-platform reviews
+  const computedRating = reviews.length > 0 
+    ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length 
+    : 0;
 
   const onReviewSubmit = (data: ReviewFormValues) => {
     setReviewError(null);
@@ -548,15 +551,18 @@ export function VendorDetailModal({
                 <p className="text-muted-foreground mt-2">{vendor.description}</p>
               )}
             </div>
-            {rating > 0 && (
+            {reviews.length > 0 ? (
               <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted">
                 <Star className="w-5 h-5 fill-primary text-primary" />
-                <span className="font-mono font-bold text-lg">{rating.toFixed(1)}</span>
-                {vendor.reviewCount && vendor.reviewCount > 0 && (
-                  <span className="text-sm text-muted-foreground">
-                    ({vendor.reviewCount} {vendor.reviewCount === 1 ? "review" : "reviews"})
-                  </span>
-                )}
+                <span className="font-mono font-bold text-lg">{computedRating.toFixed(1)}</span>
+                <span className="text-sm text-muted-foreground">
+                  ({reviews.length} {reviews.length === 1 ? "review" : "reviews"})
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 border border-dashed border-muted-foreground/30">
+                <Star className="w-5 h-5 text-muted-foreground/50" />
+                <span className="text-sm text-muted-foreground">No reviews yet</span>
               </div>
             )}
           </div>
