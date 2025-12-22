@@ -54,6 +54,7 @@ import {
   Inbox,
   Mail,
   Zap,
+  ArrowLeft,
 } from "lucide-react";
 
 const COLORS = [
@@ -650,10 +651,10 @@ export default function MessagesPage() {
   }
 
   const content = (
-    <div className={isVendor ? "max-w-7xl mx-auto p-4 md:p-6 space-y-6" : "h-[calc(100vh-8rem)] p-6"}>
-      <div className={isVendor ? "flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4" : "mb-6"}>
+    <div className={isVendor ? "max-w-7xl mx-auto p-4 md:p-6 space-y-6" : "h-[calc(100vh-8rem)] p-3 md:p-6"}>
+      <div className={isVendor ? "flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4" : "mb-4 md:mb-6"}>
         <div>
-          <h1 className={`font-bold flex items-center gap-2 ${isVendor ? "text-2xl md:text-3xl" : "text-3xl font-playfair"}`}>
+          <h1 className={`font-bold flex items-center gap-2 ${isVendor ? "text-2xl md:text-3xl" : "text-2xl md:text-3xl font-playfair"}`}>
             {isVendor && <Inbox className="h-7 w-7 text-primary" />}
             Messages
           </h1>
@@ -672,8 +673,9 @@ export default function MessagesPage() {
         )}
       </div>
 
-      <Card className={`flex overflow-hidden ${isVendor ? "h-[calc(100vh-220px)] min-h-[500px]" : "h-[calc(100%-100px)]"}`}>
-        <div className="w-80 border-r flex flex-col">
+      <Card className={`flex overflow-hidden ${isVendor ? "h-[calc(100vh-220px)] min-h-[400px] md:min-h-[500px]" : "h-[calc(100%-80px)] md:h-[calc(100%-100px)]"}`}>
+        {/* Conversation list - hidden on mobile when conversation selected */}
+        <div className={`w-full md:w-80 border-r flex flex-col ${selectedConversation ? 'hidden md:flex' : 'flex'}`}>
           <div className="p-4 border-b">
             <h2 className="font-semibold">{isVendor ? "Couples" : "Vendors"}</h2>
           </div>
@@ -810,12 +812,26 @@ export default function MessagesPage() {
           </ScrollArea>
         </div>
 
-        <div className="flex-1 flex flex-col min-h-0">
+        {/* Message area - hidden on mobile when no conversation selected */}
+        <div className={`flex-1 flex flex-col min-h-0 ${selectedConversation ? 'flex' : 'hidden md:flex'}`}>
           {selectedConversation && selectedItem ? (
             <>
               <div className="p-4 border-b shrink-0">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
+                    {/* Back button for mobile */}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="md:hidden"
+                      onClick={() => {
+                        setSelectedConversation(null);
+                        setSelectedItem(null);
+                      }}
+                      data-testid="button-back-to-conversations"
+                    >
+                      <ArrowLeft className="w-5 h-5" />
+                    </Button>
                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                       {isVendor ? <Heart className="w-5 h-5 text-primary" /> : <User className="w-5 h-5 text-primary" />}
                     </div>
