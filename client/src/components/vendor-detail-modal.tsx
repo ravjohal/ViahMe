@@ -37,11 +37,12 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { Star, MapPin, DollarSign, Phone, Mail, Send, StarIcon, AlertCircle, ExternalLink, Calendar, CheckCircle2, XCircle, Building2, ShieldCheck, FileText, Sparkles, Globe } from "lucide-react";
+import { Star, MapPin, DollarSign, Phone, Mail, Send, StarIcon, AlertCircle, ExternalLink, Calendar, CheckCircle2, XCircle, Building2, ShieldCheck, FileText, Sparkles, Globe, User } from "lucide-react";
 import { SiInstagram, SiFacebook, SiX } from "react-icons/si";
 import { Input } from "@/components/ui/input";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import type { Vendor, Event, Review, VendorAvailability } from "@shared/schema";
 
@@ -90,6 +91,7 @@ export function VendorDetailModal({
   const [aiSuggestionsLoading, setAiSuggestionsLoading] = useState(false);
   const [reviewError, setReviewError] = useState<string | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
   
   // Availability calendar state
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
@@ -133,6 +135,8 @@ export function VendorDetailModal({
         vendorId: vendor.id,
         rating: data.rating,
         comment: data.comment?.trim() || null,
+        createdById: user?.id,
+        createdByName: user?.email || 'Family Member',
       });
     },
     onSuccess: () => {
@@ -811,6 +815,16 @@ export function VendorDetailModal({
                               })}
                             </span>
                           </div>
+                          {review.createdByName && (
+                            <div className="flex items-center gap-1.5 mb-2 text-xs text-muted-foreground">
+                              <User className="w-3 h-3" />
+                              <span data-testid={`text-review-author-${review.id}`}>
+                                Reviewed by {review.createdByName.includes('@') 
+                                  ? review.createdByName.split('@')[0] 
+                                  : review.createdByName}
+                              </span>
+                            </div>
+                          )}
                           {review.comment && (
                             <p className="text-sm leading-relaxed" data-testid={`text-review-comment-${review.id}`}>
                               {review.comment}

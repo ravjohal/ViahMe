@@ -25,6 +25,8 @@ import {
   type InsertTask,
   type TaskReminder,
   type InsertTaskReminder,
+  type TaskComment,
+  type InsertTaskComment,
   type Contract,
   type InsertContract,
   type ContractTemplate,
@@ -301,6 +303,12 @@ export interface IStorage {
   hasReminderBeenSent(taskId: string, reminderType: string, today: Date): Promise<boolean>;
   createTaskReminder(reminder: InsertTaskReminder): Promise<TaskReminder>;
   updateTaskReminder(id: string, updates: Partial<InsertTaskReminder>): Promise<TaskReminder | undefined>;
+
+  // Task Comments
+  getTaskComment(id: string): Promise<TaskComment | undefined>;
+  getCommentsByTask(taskId: string): Promise<TaskComment[]>;
+  createTaskComment(comment: InsertTaskComment): Promise<TaskComment>;
+  deleteTaskComment(id: string): Promise<boolean>;
 
   // Contracts
   getContract(id: string): Promise<Contract | undefined>;
@@ -1706,6 +1714,34 @@ export class MemStorage implements IStorage {
     const updated = { ...reminder, ...updates };
     this.taskReminders.set(id, updated);
     return updated;
+  }
+
+  // Task Comments
+  private taskComments: Map<string, TaskComment> = new Map();
+
+  async getTaskComment(id: string): Promise<TaskComment | undefined> {
+    return this.taskComments.get(id);
+  }
+
+  async getCommentsByTask(taskId: string): Promise<TaskComment[]> {
+    return Array.from(this.taskComments.values())
+      .filter(c => c.taskId === taskId)
+      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  }
+
+  async createTaskComment(comment: InsertTaskComment): Promise<TaskComment> {
+    const id = randomUUID();
+    const newComment: TaskComment = {
+      ...comment,
+      id,
+      createdAt: new Date(),
+    };
+    this.taskComments.set(id, newComment);
+    return newComment;
+  }
+
+  async deleteTaskComment(id: string): Promise<boolean> {
+    return this.taskComments.delete(id);
   }
 
   // Contracts
@@ -4414,6 +4450,28 @@ export class DBStorage implements IStorage {
   async updateTaskReminder(id: string, updates: Partial<InsertTaskReminder>): Promise<TaskReminder | undefined> {
     const result = await this.db.update(schema.taskReminders).set(updates).where(eq(schema.taskReminders.id, id)).returning();
     return result[0];
+  }
+
+  // Task Comments
+  async getTaskComment(id: string): Promise<TaskComment | undefined> {
+    const result = await this.db.select().from(schema.taskComments).where(eq(schema.taskComments.id, id));
+    return result[0];
+  }
+
+  async getCommentsByTask(taskId: string): Promise<TaskComment[]> {
+    return await this.db.select().from(schema.taskComments)
+      .where(eq(schema.taskComments.taskId, taskId))
+      .orderBy(schema.taskComments.createdAt);
+  }
+
+  async createTaskComment(comment: InsertTaskComment): Promise<TaskComment> {
+    const result = await this.db.insert(schema.taskComments).values(comment).returning();
+    return result[0];
+  }
+
+  async deleteTaskComment(id: string): Promise<boolean> {
+    await this.db.delete(schema.taskComments).where(eq(schema.taskComments.id, id));
+    return true;
   }
 
   // Contracts

@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import type { Task, Event, WeddingRoleAssignment } from "@shared/schema";
+import type { Task, Event, WeddingRoleAssignment, TaskComment } from "@shared/schema";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Calendar, CheckCircle2, Circle, AlertCircle, Trash2, Filter, Bell, BellOff, Mail, MessageSquare, User, Send, Sparkles, Lightbulb, X, ChevronDown, ChevronUp, Wand2 } from "lucide-react";
+import { Plus, Calendar, CheckCircle2, Circle, AlertCircle, Trash2, Filter, Bell, BellOff, Mail, MessageSquare, User, Send, Sparkles, Lightbulb, X, ChevronDown, ChevronUp, Wand2, MessageCircle } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useAuth } from "@/hooks/use-auth";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -76,6 +78,7 @@ interface AiRecommendation {
 export default function TasksPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [filterPriority, setFilterPriority] = useState<string>("all");
   const [filterCompleted, setFilterCompleted] = useState<string>("all");
   const [filterEvent, setFilterEvent] = useState<string>("all");
@@ -84,6 +87,8 @@ export default function TasksPage() {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [aiRecommendationsOpen, setAiRecommendationsOpen] = useState(true);
   const [aiRecommendations, setAiRecommendations] = useState<AiRecommendation[]>([]);
+  const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set());
+  const [newComment, setNewComment] = useState<{ [taskId: string]: string }>({});
   
   // Load dismissed recommendations from localStorage for persistence across sessions
   const [dismissedRecommendations, setDismissedRecommendations] = useState<Set<string>>(() => {
@@ -280,6 +285,47 @@ export default function TasksPage() {
   const visibleRecommendations = aiRecommendations.filter(
     rec => !dismissedRecommendations.has(rec.title)
   );
+
+  // Task Comments - mutation for adding comments
+  const addCommentMutation = useMutation({
+    mutationFn: async ({ taskId, content }: { taskId: string; content: string }) => {
+      const response = await apiRequest("POST", `/api/tasks/${taskId}/comments`, {
+        taskId,
+        weddingId: wedding?.id,
+        userId: user?.id || 'anonymous',
+        userName: user?.email || 'Family Member',
+        content,
+      });
+      return response.json();
+    },
+    onSuccess: (_, { taskId }) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tasks", taskId, "comments"] });
+      setNewComment(prev => ({ ...prev, [taskId]: '' }));
+      toast({
+        title: "Comment added",
+        description: "Your comment has been posted.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Failed to add comment",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const toggleComments = (taskId: string) => {
+    setExpandedComments(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(taskId)) {
+        newSet.delete(taskId);
+      } else {
+        newSet.add(taskId);
+      }
+      return newSet;
+    });
+  };
 
   const form = useForm<InsertTask>({
     resolver: zodResolver(insertTaskSchema),
@@ -1073,6 +1119,36 @@ export default function TasksPage() {
                           </div>
                         )}
                       </div>
+
+                      {/* Family Collaboration Comments */}
+                      <div className="mt-3 pt-3 border-t">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="gap-2 text-muted-foreground"
+                          onClick={() => toggleComments(task.id)}
+                          data-testid={`button-toggle-comments-${task.id}`}
+                        >
+                          <MessageCircle className="w-4 h-4" />
+                          {expandedComments.has(task.id) ? 'Hide Comments' : 'Family Discussion'}
+                        </Button>
+                        
+                        {expandedComments.has(task.id) && (
+                          <TaskCommentsSection 
+                            taskId={task.id} 
+                            weddingId={wedding?.id || ''}
+                            user={user}
+                            newComment={newComment[task.id] || ''}
+                            setNewComment={(val) => setNewComment(prev => ({ ...prev, [task.id]: val }))}
+                            onSubmit={() => {
+                              if (newComment[task.id]?.trim()) {
+                                addCommentMutation.mutate({ taskId: task.id, content: newComment[task.id] });
+                              }
+                            }}
+                            isPending={addCommentMutation.isPending}
+                          />
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1081,6 +1157,93 @@ export default function TasksPage() {
           </div>
         )}
       </Card>
+    </div>
+  );
+}
+
+// Task Comments Section Component
+function TaskCommentsSection({ 
+  taskId, 
+  weddingId, 
+  user, 
+  newComment, 
+  setNewComment, 
+  onSubmit, 
+  isPending 
+}: { 
+  taskId: string;
+  weddingId: string;
+  user: any;
+  newComment: string;
+  setNewComment: (val: string) => void;
+  onSubmit: () => void;
+  isPending: boolean;
+}) {
+  const { data: comments = [], isLoading } = useQuery<TaskComment[]>({
+    queryKey: ["/api/tasks", taskId, "comments"],
+  });
+
+  return (
+    <div className="mt-3 space-y-3" data-testid={`task-comments-section-${taskId}`}>
+      {isLoading ? (
+        <div className="space-y-2">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+        </div>
+      ) : comments.length === 0 ? (
+        <p className="text-sm text-muted-foreground py-2">
+          No comments yet. Family members can discuss this task here.
+        </p>
+      ) : (
+        <div className="space-y-2 max-h-48 overflow-y-auto">
+          {comments.map((comment) => (
+            <div 
+              key={comment.id} 
+              className="flex items-start gap-2 p-2 rounded-md bg-muted/50"
+              data-testid={`comment-${comment.id}`}
+            >
+              <Avatar className="h-6 w-6">
+                <AvatarFallback className="text-xs">
+                  {comment.userName?.charAt(0)?.toUpperCase() || 'F'}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium">{comment.userName}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {format(new Date(comment.createdAt), "MMM d, h:mm a")}
+                  </span>
+                </div>
+                <p className="text-sm">{comment.content}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      
+      <div className="flex gap-2">
+        <Input
+          value={newComment}
+          onChange={(e) => setNewComment(e.target.value)}
+          placeholder="Add a comment for your family..."
+          className="flex-1"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              onSubmit();
+            }
+          }}
+          data-testid={`input-comment-${taskId}`}
+        />
+        <Button
+          size="sm"
+          disabled={isPending || !newComment.trim()}
+          onClick={onSubmit}
+          data-testid={`button-submit-comment-${taskId}`}
+        >
+          {isPending ? '...' : <Send className="w-4 h-4" />}
+        </Button>
+      </div>
     </div>
   );
 }

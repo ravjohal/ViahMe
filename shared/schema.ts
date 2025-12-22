@@ -612,6 +612,28 @@ export type InsertTaskReminder = z.infer<typeof insertTaskReminderSchema>;
 export type TaskReminder = typeof taskReminders.$inferSelect;
 
 // ============================================================================
+// TASK COMMENTS - Collaborative comments on tasks
+// ============================================================================
+
+export const taskComments = pgTable("task_comments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  taskId: varchar("task_id").notNull(),
+  weddingId: varchar("wedding_id").notNull(),
+  userId: varchar("user_id").notNull(), // Who posted the comment
+  userName: text("user_name").notNull(), // Display name for quick access
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertTaskCommentSchema = createInsertSchema(taskComments).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertTaskComment = z.infer<typeof insertTaskCommentSchema>;
+export type TaskComment = typeof taskComments.$inferSelect;
+
+// ============================================================================
 // CONTRACTS - Vendor contract management
 // ============================================================================
 
@@ -802,6 +824,8 @@ export const reviews = pgTable("reviews", {
   rating: integer("rating").notNull(), // 1-5
   comment: text("comment"),
   helpful: integer("helpful").default(0), // Count of users who found this helpful
+  createdById: varchar("created_by_id"), // User ID of who submitted the review (couple or collaborator)
+  createdByName: text("created_by_name"), // Display name of reviewer for quick access
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -811,6 +835,8 @@ export const insertReviewSchema = createInsertSchema(reviews).omit({
   helpful: true,
 }).extend({
   rating: z.number().min(1).max(5),
+  createdById: z.string().optional(),
+  createdByName: z.string().optional(),
 });
 
 export type InsertReview = z.infer<typeof insertReviewSchema>;

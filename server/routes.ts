@@ -2420,6 +2420,58 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   });
 
   // ============================================================================
+  // TASK COMMENTS - Collaborative comments on tasks
+  // ============================================================================
+
+  // Get comments for a task
+  app.get("/api/tasks/:taskId/comments", async (req, res) => {
+    try {
+      const comments = await storage.getCommentsByTask(req.params.taskId);
+      res.json(comments);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch comments" });
+    }
+  });
+
+  // Add a comment to a task
+  app.post("/api/tasks/:taskId/comments", async (req, res) => {
+    try {
+      const { taskId } = req.params;
+      const { userId, userName, content, weddingId } = req.body;
+      
+      if (!content || content.trim().length === 0) {
+        return res.status(400).json({ error: "Comment content is required" });
+      }
+      
+      const comment = await storage.createTaskComment({
+        taskId,
+        weddingId,
+        userId,
+        userName,
+        content: content.trim(),
+      });
+      
+      res.json(comment);
+    } catch (error) {
+      console.error("Failed to create task comment:", error);
+      res.status(500).json({ error: "Failed to add comment" });
+    }
+  });
+
+  // Delete a comment
+  app.delete("/api/task-comments/:id", async (req, res) => {
+    try {
+      const success = await storage.deleteTaskComment(req.params.id);
+      if (!success) {
+        return res.status(404).json({ error: "Comment not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete comment" });
+    }
+  });
+
+  // ============================================================================
   // CONTRACTS
   // ============================================================================
 
