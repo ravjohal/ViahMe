@@ -1,0 +1,100 @@
+[
+  {
+    "name": "Biya Event And Planner",
+    "category": "caterer",
+    "location": "3739 El Camino Real, Santa Clara, CA",
+    "phone": "(408) 641-7148",
+    "website": "https://biyaevents.com/"
+  },
+  {
+    "name": "Bjorke Photography",
+    "category": "videographer",
+    "location": "Santa Clara, CA",
+    "phone": "(408) 320-1378",
+    "website": "http://bjorkephotography.com/"
+  },
+  {
+    "name": "Blank Canvas Beauty",
+    "category": "hair_stylist",
+    "location": "Fresno Area, CA",
+    "phone": "(559) 903-3675",
+    "website": "http://blankcanvasbeauty.net/"
+  },
+  {
+    "name": "Blended Strokes",
+    "category": "makeup_artist",
+    "location": "San Francisco, CA",
+    "phone": "(415) 305-6577",
+    "website": "http://blendedstrokes.com/"
+  },
+  {
+    "name": "Blissful Dream Decorators",
+    "category": "decor",
+    "location": "Rancho Cordova/Sacramento, CA",
+    "phone": "(916) 932-9019",
+    "website": "http://blissfuldreamdecorators.com/"
+  },
+  {
+    "name": "Bloome Paper Petals",
+    "category": "decor",
+    "location": "San Francisco, CA",
+    "phone": "(415) 505-1808",
+    "website": "https://bloomepaperpetals.com/"
+  },
+  {
+    "name": "Blossom Nail Spa",
+    "category": "makeup_artist",
+    "location": "1122 Branham Ln, San Jose, CA",
+    "phone": "(408) 265-5122",
+    "website": "http://www.blossomnailspa.net/"
+  },
+  {
+    "name": "Blue Lotus Insights",
+    "category": "caterer",
+    "location": "Southern California, CA",
+    "phone": "(310) 412-4212",
+    "website": "http://bluelotusinsights.com/"
+  },
+  {
+    "name": "BollyNaach Dance Entertainment",
+    "category": "entertainment",
+    "location": "1989 Santa Rita Road, Pleasanton, CA",
+    "phone": "(925) 215-0810",
+    "website": "https://bollynaach.com/"
+  },
+  {
+    "name": "Bollywood Beats DJ Services",
+    "category": "dj",
+    "location": "Oakland, CA",
+    "phone": "(510) 508-4481",
+    "website": "https://bollywoodbeats.com/"
+  },
+  {
+    "name": "Bollywood Beauty Salon",
+    "category": "makeup_artist",
+    "location": "820 E El Camino Real, Mountain View, CA",
+    "phone": "(650) 965-3800",
+    "website": "http://bollywoodbeautysalon.com/"
+  },
+  {
+    "name": "Bollywood Events",
+    "category": "dj",
+    "location": "5748 Mowry School Road, Newark, CA",
+    "phone": "(510) 673-4554",
+    "website": "http://bollywood-events.com/"
+  },
+  {
+    "name": "Bollywood Salon & Spa",
+    "category": "makeup_artist",
+    "location": "2855 Stevens Creek Blvd, Santa Clara, CA",
+    "phone": "(408) 244-6009",
+    "website": "http://bollywoodsalonandspa.com/"
+  },
+  {
+    "name": "Bombay Blaze DJs",
+    "category": "dj",
+    "location": "San Francisco Bay Area, CA",
+    "phone": "(510) 909-9889",
+    "website": "http://bombayblazedjs.com/"
+  }
+]
