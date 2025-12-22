@@ -1,0 +1,119 @@
+[
+  {
+    "name": "1000 Fine Events",
+    "contact_details": {
+      "phone": "(510) 709-1700",
+      "website": "https://1000fineevents.com/",
+      "location": "45200 Industrial Drive, Suite 4, Fremont, CA"
+    }
+  },
+  {
+    "name": "123WeddingCards",
+    "contact_details": {
+      "phone": "+91 98291 27575",
+      "email": "sales@123weddingcards.com",
+      "website": "https://www.123weddingcards.com/",
+      "location": "Redwood City, CA (Office)"
+    }
+  },
+  {
+    "name": "2 Friends Events",
+    "contact_details": {
+      "phone": "408-807-5457",
+      "email": "info@2friendsevents.com",
+      "website": "http://2friendsevents.com/",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "4 Karma Studio",
+    "contact_details": {
+      "phone": "(415) 305-6577",
+      "website": "https://4karmastudio.com/",
+      "location": "San Francisco, CA"
+    }
+  },
+  {
+    "name": "415Headshots Inc.",
+    "contact_details": {
+      "phone": "(415) 236-2130",
+      "website": "https://415headshots.com/",
+      "location": "1812 J Street Suite 21, Sacramento/San Francisco, CA"
+    }
+  },
+  {
+    "name": "66strawberries",
+    "contact_details": {
+      "phone": "408-641-7148",
+      "email": "info@66strawberries.com",
+      "website": "http://66strawberries.com/",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "7wonders Decor And Events",
+    "contact_details": {
+      "phone": "415-812-4214",
+      "email": "info@7wondersdecor.com",
+      "website": "https://7wondersdecor.com/",
+      "location": "San Francisco, CA"
+    }
+  },
+  {
+    "name": "85 Miles Creation",
+    "contact_details": {
+      "phone": "559-408-9634",
+      "email": "85milescreation@gmail.com",
+      "location": "Orange Cove, CA"
+    }
+  },
+  {
+    "name": "A Beauty Bar",
+    "contact_details": {
+      "phone": "925-301-8319",
+      "location": "2400 Sycamore Drive, Antioch, CA"
+    }
+  },
+  {
+    "name": "A Day To Remember",
+    "contact_details": {
+      "phone": "650-965-3800",
+      "website": "https://adtr-events.com/",
+      "location": "Los Altos, CA"
+    }
+  },
+  {
+    "name": "A Girl And A Camera Photography",
+    "contact_details": {
+      "phone": "(415) 505-1808",
+      "email": "hello@agirlandacamera.com",
+      "website": "https://agirlandacamera.com/",
+      "location": "San Francisco, CA"
+    }
+  },
+  {
+    "name": "A Lil' Twist3d",
+    "contact_details": {
+      "phone": "408-621-3982",
+      "email": "aliltwist3d@gmail.com",
+      "website": "https://aliltwist3d.com/",
+      "location": "Santa Clara, CA"
+    }
+  },
+  {
+    "name": "A2Zee Beauty Spa",
+    "contact_details": {
+      "phone": "408-724-4444",
+      "location": "1715 Lundy Avenue, San Jose, CA"
+    }
+  },
+  {
+    "name": "AAA Entertainments",
+    "contact_details": {
+      "phone": "510-673-4554",
+      "email": "info@aaaentertainments.com",
+      "website": "https://aaaentertainments.com/",
+      "location": "40931 Fremont Blvd, Fremont, CA"
+    }
+  }
+]
