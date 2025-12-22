@@ -1,0 +1,119 @@
+[
+  {
+    "name": "Bahar Design Wedding Service",
+    "contact_details": {
+      "phone": "(408) 596-3686",
+      "location": "Milpitas, CA",
+      "specialty": "Traditional Afghan and South Asian Wedding Decor"
+    }
+  },
+  {
+    "name": "Balloon Craft",
+    "contact_details": {
+      "phone": "(925) 443-4677",
+      "website": "https://www.ballooncraft.com/",
+      "location": "Livermore, CA"
+    }
+  },
+  {
+    "name": "Balloon Lagoon US",
+    "contact_details": {
+      "phone": "(408) 266-9633",
+      "website": "https://balloonlagoon.com/",
+      "location": "1040 Lincoln Ave, San Jose, CA 95125"
+    }
+  },
+  {
+    "name": "Bangalore Kitchens",
+    "contact_details": {
+      "phone": "(408) 724-7744",
+      "location": "Bay Area, CA",
+      "category": "South Indian Catering and Events"
+    }
+  },
+  {
+    "name": "Barak Shrama Photography",
+    "contact_details": {
+      "phone": "(510) 936-3642",
+      "website": "http://bharatsharmaphotography.com/",
+      "location": "Bay Area, CA",
+      "note": "Commonly identified as Bharat Sharma Photography"
+    }
+  },
+  {
+    "name": "Baramdaa Events",
+    "contact_details": {
+      "phone": "(650) 450-4636",
+      "email": "baramdaa.events@gmail.com",
+      "location": "Los Altos, CA"
+    }
+  },
+  {
+    "name": "Barbaras Events By Design",
+    "contact_details": {
+      "phone": "(510) 534-1926",
+      "location": "Oakland, CA",
+      "category": "Custom Catering and Event Design"
+    }
+  },
+  {
+    "name": "Bay Area Dhol Group",
+    "contact_details": {
+      "phone": "(408) 420-7469",
+      "website": "https://bayareadhol.com/",
+      "location": "San Jose, CA"
+    }
+  },
+  {
+    "name": "Bay Area Party Entertainment",
+    "contact_details": {
+      "phone": "(415) 300-5058",
+      "website": "https://www.bayareapartyentertainment.com/",
+      "location": "1345 17th St, San Francisco, CA 94107"
+    }
+  },
+  {
+    "name": "Bay Area Uplighting",
+    "contact_details": {
+      "phone": "(510) 909-9889",
+      "website": "http://www.bayareauplighting.com/",
+      "location": "27212 Dobbel Ave, Hayward, CA"
+    }
+  },
+  {
+    "name": "BayArea Party Decorators & Rentals",
+    "contact_details": {
+      "phone": "(925) 484-1122",
+      "location": "Pleasanton, CA"
+    }
+  },
+  {
+    "name": "Bayarea Decor By Asha",
+    "contact_details": {
+      "phone": "(510) 508-4481",
+      "location": "Fremont, CA"
+    }
+  },
+  {
+    "name": "Be Wed By Mitra",
+    "contact_details": {
+      "phone": "(408) 641-7148",
+      "website": "https://bewedbymitra.com/",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "BeBe Skin Care And Threading",
+    "contact_details": {
+      "phone": "(415) 921-2323",
+      "location": "1731 Buchanan Street, San Francisco, CA"
+    }
+  },
+  {
+    "name": "Beautician Services",
+    "contact_details": {
+      "phone": "(209) 877-8720",
+      "location": "Jackson Ave, Tracy, CA"
+    }
+  }
+]

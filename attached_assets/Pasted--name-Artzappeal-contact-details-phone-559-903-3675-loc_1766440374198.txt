@@ -1,0 +1,148 @@
+[
+  {
+    "name": "Artzappeal",
+    "contact_details": {
+      "phone": "(559) 903-3675",
+      "location": "Fresno Area, CA",
+      "specialty": "Mehndi and Henna Art"
+    }
+  },
+  {
+    "name": "Arun Patil Photography",
+    "contact_details": {
+      "phone": "(408) 649-8845",
+      "website": "https://www.arunpatilphotography.com/",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Arya Banquet Hall",
+    "contact_details": {
+      "phone": "(408) 320-1378",
+      "website": "https://aryarestaurant.com/banquets/",
+      "location": "19930 Stevens Creek Blvd, Cupertino, CA 95014"
+    }
+  },
+  {
+    "name": "Arya Dance Entertainer",
+    "contact_details": {
+      "phone": "(408) 320-1378",
+      "website": "https://aryaglobalentertainment.com/",
+      "location": "19930 Stevens Creek Blvd, Cupertino, CA 95014"
+    }
+  },
+  {
+    "name": "Ashton Boni Photography",
+    "contact_details": {
+      "phone": "(415) 300-5058",
+      "website": "http://ashtonboni.com/",
+      "location": "Daly City, CA"
+    }
+  },
+  {
+    "name": "Asmas Designs Event Design And Flowers",
+    "contact_details": {
+      "phone": "(925) 944-5555",
+      "email": "info@asmasdesigns.com",
+      "website": "https://asmasdesigns.com/",
+      "location": "1829 Mt Diablo Blvd, Walnut Creek, CA 94596"
+    }
+  },
+  {
+    "name": "Aurum",
+    "contact_details": {
+      "phone": "(650) 935-2636",
+      "email": "info@aurumca.com",
+      "website": "https://aurumca.com/",
+      "location": "132 State Street, Los Altos, CA 94022"
+    }
+  },
+  {
+    "name": "Avant Planners",
+    "contact_details": {
+      "phone": "(408) 641-1188",
+      "email": "info@avantplanners.com",
+      "website": "http://avantplanners.com/",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Avasar Mandap",
+    "contact_details": {
+      "phone": "(510) 508-4481",
+      "location": "Fremont, CA",
+      "specialty": "Wedding Mandaps and Decor"
+    }
+  },
+  {
+    "name": "Avinash Gandi Photography",
+    "contact_details": {
+      "phone": "(408) 641-7148",
+      "location": "San Jose, CA",
+      "category": "Photography and Cinematography"
+    }
+  },
+  {
+    "name": "Avinash Photography",
+    "contact_details": {
+      "website": "https://www.avinashphotography.com/",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Az Desi Events",
+    "contact_details": {
+      "phone": "(510) 909-9889",
+      "location": "Concord, CA",
+      "category": "Catering and Event Planning"
+    }
+  },
+  {
+    "name": "Azal Mehandi",
+    "contact_details": {
+      "phone": "(408) 641-7148",
+      "location": "Sunnyvale, CA",
+      "specialty": "Organic Henna Art"
+    }
+  },
+  {
+    "name": "BBE Loved Events",
+    "contact_details": {
+      "phone": "(925) 321-1100",
+      "email": "belovedevents@gmail.com",
+      "location": "Roundtree Place, Concord, CA"
+    }
+  },
+  {
+    "name": "BBphotographysf",
+    "contact_details": {
+      "website": "https://www.bbphotographysf.com/",
+      "location": "San Francisco Bay Area"
+    }
+  },
+  {
+    "name": "BERKELEY CITY CLUB",
+    "contact_details": {
+      "phone": "(510) 848-7800",
+      "email": "events@berkeleycityclub.com",
+      "website": "https://www.berkeleycityclub.com/",
+      "location": "2315 Durant Avenue, Berkeley, CA 94704"
+    }
+  },
+  {
+    "name": "BS Photo Video",
+    "contact_details": {
+      "phone": "(408) 500-9285",
+      "location": "San Jose, CA",
+      "specialty": "Wedding Photography and Videography"
+    }
+  },
+  {
+    "name": "B_Happy Event Planner",
+    "contact_details": {
+      "phone": "(408) 641-7148",
+      "location": "San Jose, CA",
+      "category": "Custom Event Coordination"
+    }
+  }
+]
