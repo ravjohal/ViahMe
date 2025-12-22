@@ -245,7 +245,7 @@ export default function Guests() {
   const { toast } = useToast();
   
   // Top-level tab state
-  const [mainTab, setMainTab] = useState("guest-list");
+  const [mainTab, setMainTab] = useState("guest-planning");
   const [planningTab, setPlanningTab] = useState("review");
   
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -1110,18 +1110,18 @@ export default function Guests() {
 
           {/* Guest List Tab - Current functionality */}
           <TabsContent value="guest-list" className="space-y-6">
-            <Tabs defaultValue="guests" className="space-y-6">
+            <Tabs defaultValue="allocation" className="space-y-6">
               <TabsList>
+                <TabsTrigger value="allocation" data-testid="tab-allocation">
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  Guest Summary
+                </TabsTrigger>
                 <TabsTrigger value="guests" data-testid="tab-guests">
                   Individual Guests
                 </TabsTrigger>
                 <TabsTrigger value="households" data-testid="tab-households">
                   <Users className="w-4 h-4 mr-2" />
                   Households
-                </TabsTrigger>
-                <TabsTrigger value="allocation" data-testid="tab-allocation">
-                  <BarChart3 className="w-4 h-4 mr-2" />
-                  Guest Summary
                 </TabsTrigger>
               </TabsList>
 
