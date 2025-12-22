@@ -1,0 +1,84 @@
+[
+  {
+    "name": "Sukruthi Party Planning",
+    "contact_details": {
+      "location": "Bay Area, CA",
+      "specialty": "Environmentally Friendly Event Planning"
+    }
+  },
+  {
+    "name": "S.H. Videography",
+    "contact_details": {
+      "phone": "617-840-4119",
+      "website": "https://www.shvideography.com/",
+      "location": "Boston, MA / Serving Destinations"
+    }
+  },
+  {
+    "name": "Sameer Soorma Photography",
+    "contact_details": {
+      "phone": "480-212-3990",
+      "email": "info@sameersoorma.com",
+      "website": "https://sameersoorma.com/",
+      "location": "Serving California and Arizona"
+    }
+  },
+  {
+    "name": "SB Arts",
+    "contact_details": {
+      "phone": "(408) 506-3875",
+      "website": "https://sb-arts.com/",
+      "location": "648 Giguere Ct, San Jose, CA 95133"
+    }
+  },
+  {
+    "name": "Seema's Beauty Salon",
+    "contact_details": {
+      "phone": "(408) 244-6009",
+      "secondary_phone": "(408) 935-8000",
+      "website": "https://seemabeautysalon.com/",
+      "location": "3056 El Camino Real, Santa Clara, CA"
+    }
+  },
+  {
+    "name": "Silver Creek Valley Country Club",
+    "contact_details": {
+      "phone": "(408) 239-5888",
+      "email": "reception@scvcc.com",
+      "website": "https://www.scvcc.com/",
+      "location": "5460 Country Club Pkwy, San Jose, CA 95138"
+    }
+  },
+  {
+    "name": "Simi's Beauty & Mehndi",
+    "contact_details": {
+      "email": "makemeupsimi@gmail.com",
+      "website": "https://www.makemeupsimi.com/",
+      "specialty": "Bridal Makeup & Styling"
+    }
+  },
+  {
+    "name": "Simply Elegant",
+    "contact_details": {
+      "phone": "510-260-6148",
+      "website": "https://www.simplyeevents.com/",
+      "location": "San Pablo, CA / Bay Area"
+    }
+  },
+  {
+    "name": "Simrit's Beauty Salon",
+    "contact_details": {
+      "phone": "01205244681",
+      "website": "https://www.simritsbeautyhub.in/",
+      "location": "Serving International and Regional Clients"
+    }
+  },
+  {
+    "name": "Sitara Jewelry",
+    "contact_details": {
+      "phone": "647-297-0647",
+      "email": "info@sitarajewels.ca",
+      "website": "https://sitarajewels.ca/"
+    }
+  }
+]
