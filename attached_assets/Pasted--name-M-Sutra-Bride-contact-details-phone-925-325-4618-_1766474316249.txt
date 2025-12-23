@@ -1,0 +1,110 @@
+[
+  {
+    "name": "M Sutra Bride",
+    "contact_details": {
+      "phone": "(925) 325-4618",
+      "email": "msutrabride@gmail.com",
+      "website": "https://www.weddingwire.com/biz/m-sutra-bride-antioch/8ff9a96997353409.html",
+      "location": "160 Sunset Dr, Antioch, CA 94583",
+      "specialty": "South Asian Bridal Makeup and Hair Styling"
+    }
+  },
+  {
+    "name": "Madina Market & Restaurant",
+    "contact_details": {
+      "phone": "(510) 445-0786",
+      "location": "41049 Fremont Blvd, Fremont, CA 94538",
+      "specialty": "Afghan and Halal Event Catering"
+    }
+  },
+  {
+    "name": "Madras Cafe",
+    "contact_details": {
+      "phone": "(408) 737-2323",
+      "email": "contact@madrascafe.us",
+      "website": "https://www.madrascafe.us/",
+      "location": "1177 W El Camino Real, Sunnyvale, CA 94087",
+      "specialty": "Authentic South Indian Catering and Party Orders"
+    }
+  },
+  {
+    "name": "Maharani Restaurant",
+    "contact_details": {
+      "phone": "(415) 775-1988",
+      "location": "1122 Post Street, San Francisco, CA 94109",
+      "specialty": "North Indian Cuisine and Event Banquet Services"
+    }
+  },
+  {
+    "name": "Maison de la Photo",
+    "contact_details": {
+      "phone": "(510) 658-2801",
+      "location": "5640 College Ave, Oakland, CA 94618",
+      "specialty": "Fine Art Wedding and Event Photography"
+    }
+  },
+  {
+    "name": "Maitri Events & Decor",
+    "contact_details": {
+      "phone": "(408) 436-8393",
+      "email": "maitri@maitri.org",
+      "website": "https://www.maitrievents.com/",
+      "location": "San Jose / Bay Area, CA",
+      "specialty": "Culturally Focused Event Planning and Decoration"
+    }
+  },
+  {
+    "name": "Makeup By Hina",
+    "contact_details": {
+      "phone": "(408) 641-7148",
+      "location": "San Jose, CA",
+      "specialty": "Bridal Makeup, Hairstyling, and Dupatta Draping"
+    }
+  },
+  {
+    "name": "Makeup By Marium",
+    "contact_details": {
+      "phone": "(949) 345-1913",
+      "email": "mb@makeupbymaryam.com",
+      "website": "https://www.makeupbymaryam.com/",
+      "location": "Mission Viejo, CA (Serving Northern CA)",
+      "specialty": "Professional Glamour and Bridal Makeup Artistry"
+    }
+  },
+  {
+    "name": "Marigold Event Space",
+    "contact_details": {
+      "phone": "(415) 886-9848",
+      "email": "carlos@marigoldeventspace.com",
+      "website": "https://www.marigoldeventspace.com/",
+      "location": "194 Church Street, San Francisco, CA 94114",
+      "specialty": "Boutique Event Venue and Coordination"
+    }
+  },
+  {
+    "name": "Maza Restaurant",
+    "contact_details": {
+      "phone": "(740) 397-2076",
+      "website": "https://www.mazzas.com/",
+      "location": "Serving Bay Area, CA",
+      "specialty": "Italian and Mediterranean Event Catering"
+    }
+  },
+  {
+    "name": "Mehndi By Anjali",
+    "contact_details": {
+      "phone": "(408) 896-1502",
+      "location": "Bay Area, CA",
+      "specialty": "Traditional Bridal Mehndi and Henna Parties"
+    }
+  },
+  {
+    "name": "Mehndi By Ravie",
+    "contact_details": {
+      "email": "hello@ravie.com",
+      "website": "https://ravie.com/",
+      "location": "Bay Area, CA",
+      "specialty": "Modern and Fusion Henna Designs"
+    }
+  }
+]
