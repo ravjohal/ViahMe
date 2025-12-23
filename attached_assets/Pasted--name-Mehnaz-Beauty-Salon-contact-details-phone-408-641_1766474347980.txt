@@ -1,0 +1,117 @@
+[
+  {
+    "name": "Mehnaz Beauty Salon",
+    "contact_details": {
+      "phone": "(408) 641-7148",
+      "location": "San Jose, CA",
+      "specialty": "Bridal Makeup, Hairstyling, and Henna"
+    }
+  },
+  {
+    "name": "Melody Events",
+    "contact_details": {
+      "phone": "(774) 275-7105",
+      "website": "https://www.weddingwire.com/biz/unique-melody-events-design-worcester/69a3713fa8f19365.html",
+      "location": "Bay Area / Nationwide"
+    }
+  },
+  {
+    "name": "Meraki Event Planning",
+    "contact_details": {
+      "phone": "(415) 409-9505",
+      "email": "hello@sincerelymeraki.com",
+      "website": "https://www.sincerelymeraki.com/",
+      "location": "San Francisco Bay Area, CA"
+    }
+  },
+  {
+    "name": "Message in a Bottle",
+    "contact_details": {
+      "phone": "(800) 958-5000",
+      "website": "https://messageinabottle.com/",
+      "location": "Nationwide / Online",
+      "specialty": "Unique Wedding Invitations and Gifts"
+    }
+  },
+  {
+    "name": "Metro Event Center",
+    "contact_details": {
+      "phone": "(909) 629-6600",
+      "website": "https://metro-event-center.wheree.com/",
+      "location": "205 E 2nd St, Pomona, CA 91766"
+    }
+  },
+  {
+    "name": "Mikaela Ruth Photography",
+    "contact_details": {
+      "phone": "(604) 346-6113",
+      "website": "https://www.mikaelaruth.com/",
+      "location": "Bay Area / Destination"
+    }
+  },
+  {
+    "name": "Milestone Events Group",
+    "contact_details": {
+      "phone": "(707) 823-7359",
+      "website": "https://milestoneeventsgroup.com/",
+      "location": "181 Concourse Blvd, Santa Rosa, CA 95403"
+    }
+  },
+  {
+    "name": "Minh's Photography",
+    "contact_details": {
+      "phone": "(925) 498-3638",
+      "website": "https://portraitphotopro.com/",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Minted",
+    "contact_details": {
+      "phone": "(888) 828-6468",
+      "website": "https://www.minted.com/",
+      "location": "San Francisco, CA (HQ)",
+      "specialty": "Wedding Invitations and Stationery"
+    }
+  },
+  {
+    "name": "Misha Photography",
+    "contact_details": {
+      "phone": "(415) 997-9377",
+      "email": "info@photomischa.com",
+      "website": "https://www.photomischa.com/",
+      "location": "777 Florida Street Suite 104, San Francisco, CA 94110"
+    }
+  },
+  {
+    "name": "Miss India Threading",
+    "contact_details": {
+      "phone": "(562) 924-9400",
+      "location": "18423 Pioneer Blvd, Artesia, CA 90701",
+      "specialty": "Bridal Beauty and Threading Services"
+    }
+  },
+  {
+    "name": "Mission d'Amour",
+    "contact_details": {
+      "phone": "(415) 305-6577",
+      "location": "San Francisco, CA",
+      "specialty": "Wedding Planning and Coordination"
+    }
+  },
+  {
+    "name": "Mo's Artistry",
+    "contact_details": {
+      "phone": "(408) 823-3888",
+      "location": "Bay Area, CA",
+      "specialty": "Henna and Bridal Art"
+    }
+  },
+  {
+    "name": "Modern Art Photography",
+    "contact_details": {
+      "phone": "(415) 300-5058",
+      "location": "Bay Area, CA"
+    }
+  }
+]
