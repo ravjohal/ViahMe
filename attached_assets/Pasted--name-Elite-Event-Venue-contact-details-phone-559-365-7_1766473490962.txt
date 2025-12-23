@@ -1,0 +1,157 @@
+[
+  {
+    "name": "Elite Event Venue",
+    "contact_details": {
+      "phone": "(559) 365-7433",
+      "website": "https://eliteeventvenue.com/",
+      "location": "4105 W Figarden Dr, Fresno, CA 93722"
+    }
+  },
+  {
+    "name": "Eminence Events",
+    "contact_details": {
+      "website": "https://www.eminence-mks.com/",
+      "location": "San Francisco Bay Area",
+      "specialty": "Full-service event planning & design"
+    }
+  },
+  {
+    "name": "Enchanting Events",
+    "contact_details": {
+      "phone": "(707) 287-4960",
+      "website": "https://www.enchantedeventsnapa.com/",
+      "location": "Napa / Bay Area, CA"
+    }
+  },
+  {
+    "name": "Eric James Photography",
+    "contact_details": {
+      "website": "https://ericjamesphotography.com/",
+      "location": "Walnut Creek, CA",
+      "specialty": "Wedding and engagement photography"
+    }
+  },
+  {
+    "name": "Eternal Moments Photography",
+    "contact_details": {
+      "phone": "(646) 741-2882",
+      "email": "eternalmoment.llc@gmail.com",
+      "website": "https://www.eternalmoment.us/",
+      "location": "San Francisco, CA"
+    }
+  },
+  {
+    "name": "Eve Decor",
+    "contact_details": {
+      "phone": "(408) 655-2511",
+      "email": "pamila@evedecor.com",
+      "website": "http://www.evedecor.com/",
+      "location": "San Jose, CA"
+    }
+  },
+  {
+    "name": "Event Center At SJSU",
+    "contact_details": {
+      "phone": "(408) 924-6307",
+      "website": "https://www.sjsuevents.com/",
+      "location": "290 S 7th St, San Jose, CA"
+    }
+  },
+  {
+    "name": "Event Planning Lounge",
+    "contact_details": {
+      "phone": "(510) 388-4906",
+      "email": "eventplanninglounge@gmail.com",
+      "website": "https://www.eventplanninglounge.com/",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Event Pro West",
+    "contact_details": {
+      "phone": "(559) 307-6294",
+      "website": "https://eventprorental.com/",
+      "location": "2445 N Sunnyside Ave, Fresno, CA"
+    }
+  },
+  {
+    "name": "EventGram",
+    "contact_details": {
+      "phone": "(585) 536-5007",
+      "email": "eventgramusa@gmail.com",
+      "website": "https://eventgramusa.com/",
+      "location": "Bay Area (HQ: Piscataway, NJ)"
+    }
+  },
+  {
+    "name": "Eventcracker",
+    "contact_details": {
+      "phone": "(971) 295-3811",
+      "email": "info.eventcracker@gmail.com",
+      "location": "San Ramon / Bay Area, CA"
+    }
+  },
+  {
+    "name": "Events By Mirsha",
+    "contact_details": {
+      "phone": "(916) 913-9097",
+      "location": "720 W. 8th Street Suite E, Stockton, CA (Serves Bay Area)"
+    }
+  },
+  {
+    "name": "Events By Monica",
+    "contact_details": {
+      "phone": "(408) 888-6464",
+      "location": "155 Bennett St, Gilroy, CA",
+      "note": "Monica Sebedra - Event planning and rentals"
+    }
+  },
+  {
+    "name": "Events By Rubal",
+    "contact_details": {
+      "phone": "(650) 766-7617",
+      "email": "eventsbyrubal@gmail.com",
+      "website": "https://www.eventsbyrubal.com/",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Events By Satra",
+    "contact_details": {
+      "website": "https://eventsbysatra.com/",
+      "location": "San Francisco, CA",
+      "specialty": "Luxury multicultural and Indian weddings"
+    }
+  },
+  {
+    "name": "Events By The Bay",
+    "contact_details": {
+      "phone": "(844) 709-1195",
+      "email": "Studio@originalweddings.com",
+      "location": "San Francisco, CA"
+    }
+  },
+  {
+    "name": "Evermoore Films",
+    "contact_details": {
+      "phone": "(661) 489-5000",
+      "email": "info@evermoorefilms.com",
+      "website": "https://www.evermoorefilms.com/",
+      "location": "Bakersfield, CA"
+    }
+  },
+  {
+    "name": "Evoke Beauty Salon",
+    "contact_details": {
+      "phone": "(408) 744-2212",
+      "location": "160 S Murphy Ave, Sunnyvale, CA 94086"
+    }
+  },
+  {
+    "name": "Eyebrow Threading Mountain View",
+    "contact_details": {
+      "location": "357 Castro St, Mountain View, CA 94041",
+      "specialty": "Bridal services and henna"
+    }
+  }
+]
