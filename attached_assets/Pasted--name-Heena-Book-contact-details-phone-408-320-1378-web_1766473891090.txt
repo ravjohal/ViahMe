@@ -1,0 +1,112 @@
+[
+  {
+    "name": "Heena Book",
+    "contact_details": {
+      "phone": "(408) 320-1378",
+      "website": "https://heenabook.com/",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Heena By Fatima",
+    "contact_details": {
+      "phone": "(510) 909-9889",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "HelloJin Studio",
+    "contact_details": {
+      "phone": "(510) 415-4212",
+      "website": "https://www.hellojinstudio.com/",
+      "location": "Castro Valley, CA"
+    }
+  },
+  {
+    "name": "Henna And Mehndi Artist",
+    "contact_details": {
+      "phone": "(408) 823-3888",
+      "location": "South Terrace Court, San Jose, CA"
+    }
+  },
+  {
+    "name": "Henna Art By Deepali",
+    "contact_details": {
+      "phone": "(925) 265-6721",
+      "website": "http://www.hennaartbydeepali.com/",
+      "location": "San Ramon, CA"
+    }
+  },
+  {
+    "name": "Henna Art By Teema",
+    "contact_details": {
+      "phone": "(510) 364-8171",
+      "location": "39206 Guardino Dr, Fremont, CA"
+    }
+  },
+  {
+    "name": "Henna Arts By Atika Nadeemullah",
+    "contact_details": {
+      "phone": "(510) 517-4686",
+      "location": "39962 Cedar Blvd, Newark, CA"
+    }
+  },
+  {
+    "name": "Henna Bash",
+    "contact_details": {
+      "phone": "(408) 641-7148",
+      "website": "https://hennabash.com/",
+      "location": "Cupertino, CA"
+    }
+  },
+  {
+    "name": "Henna By Bhumi",
+    "contact_details": {
+      "phone": "(415) 305-6577",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Henna By Jagu",
+    "contact_details": {
+      "phone": "(559) 903-3675",
+      "location": "Fresno Area, CA"
+    }
+  },
+  {
+    "name": "Henna By Jazzie",
+    "contact_details": {
+      "phone": "(559) 470-3882",
+      "location": "Fresno, CA"
+    }
+  },
+  {
+    "name": "Henna By Krishna",
+    "contact_details": {
+      "phone": "(510) 508-4481",
+      "location": "Union City, CA"
+    }
+  },
+  {
+    "name": "Henna By Kush",
+    "contact_details": {
+      "phone": "(510) 932-9019",
+      "website": "https://www.hennabykush.com/",
+      "location": "Oakland, CA"
+    }
+  },
+  {
+    "name": "Henna By Mansi",
+    "contact_details": {
+      "phone": "(408) 641-1188",
+      "location": "Santa Clara, CA"
+    }
+  },
+  {
+    "name": "Henna By Mona",
+    "contact_details": {
+      "phone": "(916) 246-0558",
+      "location": "Sacramento, CA"
+    }
+  }
+]
