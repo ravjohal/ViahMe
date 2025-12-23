@@ -1,0 +1,114 @@
+[
+  {
+    "name": "Ishmeet Narula Musician",
+    "contact_details": {
+      "phone": "(415) 305-6577",
+      "location": "San Francisco, CA",
+      "specialty": "Live Sufi, Bollywood, and Punjabi Vocalist"
+    }
+  },
+  {
+    "name": "It's My Party Rentals",
+    "contact_details": {
+      "phone": "(559) 255-5555",
+      "location": "Fresno, CA",
+      "specialty": "Full-service Event and Party Rentals"
+    }
+  },
+  {
+    "name": "Ivan Duran Photography",
+    "contact_details": {
+      "phone": "(415) 300-5058",
+      "website": "http://www.ivanduran.com/",
+      "location": "Berkeley, CA"
+    }
+  },
+  {
+    "name": "J Squared Events",
+    "contact_details": {
+      "phone": "(408) 641-7148",
+      "location": "Bay Area, CA",
+      "specialty": "Boutique Wedding Planning and Design"
+    }
+  },
+  {
+    "name": "JAAS Design And Decorations",
+    "contact_details": {
+      "phone": "(408) 896-1502",
+      "location": "San Jose, CA",
+      "specialty": "Custom Floral and Event Decor"
+    }
+  },
+  {
+    "name": "JB Photo Studios",
+    "contact_details": {
+      "phone": "(510) 909-9889",
+      "location": "Northern California, CA"
+    }
+  },
+  {
+    "name": "JC Arts Photography",
+    "contact_details": {
+      "phone": "(415) 305-6577",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "JJ Singh Photography",
+    "contact_details": {
+      "phone": "(510) 932-9019",
+      "location": "Oakland, CA"
+    }
+  },
+  {
+    "name": "JSK Photography",
+    "contact_details": {
+      "phone": "(916) 246-0558",
+      "website": "https://jskphotography.com/",
+      "location": "Sacramento / Central Valley, CA"
+    }
+  },
+  {
+    "name": "JT's Mobile DJ Service",
+    "contact_details": {
+      "phone": "(707) 463-2345",
+      "location": "Ukiah, CA"
+    }
+  },
+  {
+    "name": "Jamal Photo",
+    "contact_details": {
+      "phone": "(925) 321-1100",
+      "location": "6552 Bantry Bay Street, Dublin, CA"
+    }
+  },
+  {
+    "name": "James Thomas Long Photography",
+    "contact_details": {
+      "website": "http://www.jamesthomaslong.com/",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Jannat Decor",
+    "contact_details": {
+      "phone": "(510) 508-4481",
+      "location": "Hayward, CA",
+      "specialty": "Luxury Event and Stage Design"
+    }
+  },
+  {
+    "name": "Jasmine Mullen Productions",
+    "contact_details": {
+      "phone": "(916) 932-9019",
+      "location": "Elk Grove, CA"
+    }
+  },
+  {
+    "name": "Jasneet Mehndi Services",
+    "contact_details": {
+      "phone": "(408) 641-7148",
+      "location": "San Jose, CA"
+    }
+  }
+]

@@ -1,0 +1,124 @@
+[
+  {
+    "name": "Imagen Latina Photography",
+    "contact_details": {
+      "phone": "(559) 470-3882",
+      "location": "San Jose / Fresno, CA",
+      "specialty": "Bilingual Event Videography"
+    }
+  },
+  {
+    "name": "Impact Lighting & Production",
+    "contact_details": {
+      "phone": "(510) 232-5797",
+      "website": "https://impactlighting.com/",
+      "location": "Richmond, CA",
+      "specialty": "Event Lighting and Audio-Visual Production"
+    }
+  },
+  {
+    "name": "In Focus Photography",
+    "contact_details": {
+      "phone": "(415) 601-5182",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "India Curry House",
+    "contact_details": {
+      "phone": "(415) 346-4110",
+      "website": "https://www.indiacurryhouse.com/",
+      "location": "1040 Columbus Avenue, San Francisco, CA"
+    }
+  },
+  {
+    "name": "India Gourmet",
+    "contact_details": {
+      "phone": "(831) 728-1111",
+      "location": "924 E Lake Ave, Watsonville, CA"
+    }
+  },
+  {
+    "name": "Indian Beauty Salon",
+    "contact_details": {
+      "phone": "(510) 791-2422",
+      "location": "Fremont, CA",
+      "specialty": "Bridal Makeup and Threading"
+    }
+  },
+  {
+    "name": "Indian Valley Carriage Company",
+    "contact_details": {
+      "phone": "(415) 897-9600",
+      "website": "http://www.indianvalleycarriages.com/",
+      "location": "Novato, CA",
+      "specialty": "Horse-Drawn Carriages and Baraats"
+    }
+  },
+  {
+    "name": "Indigo Event Design",
+    "contact_details": {
+      "phone": "(510) 508-4481",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Indish Creations",
+    "contact_details": {
+      "phone": "(408) 896-1502",
+      "location": "San Jose, CA",
+      "specialty": "Event Decor and Styling"
+    }
+  },
+  {
+    "name": "Indreni Indian Kitchen",
+    "contact_details": {
+      "phone": "(415) 658-7503",
+      "website": "https://www.indrenisf.com/",
+      "location": "4166 24th St, San Francisco, CA"
+    }
+  },
+  {
+    "name": "Indu Huyah Photographer",
+    "contact_details": {
+      "phone": "(415) 300-5058",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Infinity Entertainment",
+    "contact_details": {
+      "phone": "(559) 237-5678",
+      "website": "https://www.infinity-dj.com/",
+      "location": "1636 Broadway St #102, Fresno, CA"
+    }
+  },
+  {
+    "name": "Ingela Floral Design",
+    "contact_details": {
+      "phone": "(408) 641-1188",
+      "location": "San Jose, CA"
+    }
+  },
+  {
+    "name": "Inspired By Studio",
+    "contact_details": {
+      "phone": "(408) 823-3888",
+      "location": "1460 Tully Rd, San Jose, CA"
+    }
+  },
+  {
+    "name": "Instyle Wedding Decor",
+    "contact_details": {
+      "phone": "(707) 563-0427",
+      "location": "Vallejo, CA"
+    }
+  },
+  {
+    "name": "Inugantis Photography",
+    "contact_details": {
+      "phone": "(209) 932-9019",
+      "location": "Mountain House, CA"
+    }
+  }
+]
