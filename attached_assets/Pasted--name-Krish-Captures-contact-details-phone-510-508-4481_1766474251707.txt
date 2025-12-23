@@ -1,0 +1,132 @@
+[
+  {
+    "name": "Krish Captures",
+    "contact_details": {
+      "phone": "(510) 508-4481",
+      "location": "Fremont, CA",
+      "specialty": "Wedding and Event Photography"
+    }
+  },
+  {
+    "name": "Krish Kolors",
+    "contact_details": {
+      "phone": "(408) 641-7148",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Krishna Copy Center",
+    "contact_details": {
+      "phone": "(510) 548-2433",
+      "website": "http://www.krishnacopy.com/",
+      "location": "2111 University Ave, Berkeley, CA 94704"
+    }
+  },
+  {
+    "name": "Krishna Kumar Photography",
+    "contact_details": {
+      "phone": "(415) 305-6577",
+      "location": "California, USA"
+    }
+  },
+  {
+    "name": "Krush Photo Suites",
+    "contact_details": {
+      "phone": "(408) 823-3888",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Kulavision Photography",
+    "contact_details": {
+      "phone": "(559) 237-5678",
+      "website": "http://kulavision.com/",
+      "location": "Fresno, CA"
+    }
+  },
+  {
+    "name": "Kuse Klicks",
+    "contact_details": {
+      "phone": "(415) 300-5058",
+      "location": "San Francisco, CA"
+    }
+  },
+  {
+    "name": "LA Bridal Glam Studio",
+    "contact_details": {
+      "phone": "(562) 860-6100",
+      "location": "18404 Pioneer Blvd, Artesia, CA 90701"
+    }
+  },
+  {
+    "name": "LA Temple Catering",
+    "contact_details": {
+      "phone": "(562) 868-8411",
+      "location": "14611 Shoemaker Ave, Norwalk, CA 90650"
+    }
+  },
+  {
+    "name": "LP Party",
+    "contact_details": {
+      "phone": "(510) 909-9889",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Lakshmis Floral Designs",
+    "contact_details": {
+      "phone": "(408) 293-8188",
+      "location": "San Jose, CA"
+    }
+  },
+  {
+    "name": "Lalkhan's Indian Express",
+    "contact_details": {
+      "phone": "(408) 279-3300",
+      "location": "1150 N 1st St, San Jose, CA 95112"
+    }
+  },
+  {
+    "name": "Lamba Video Production & Image Arts",
+    "contact_details": {
+      "phone": "(510) 932-9019",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Larissa Cleveland Photography",
+    "contact_details": {
+      "phone": "(415) 505-1808",
+      "website": "https://larissacleveland.com/",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Lashes By Beautiful You",
+    "contact_details": {
+      "phone": "(408) 293-8188",
+      "location": "999 Story Rd #9018, San Jose, CA 95122"
+    }
+  },
+  {
+    "name": "Lavish Eventz",
+    "contact_details": {
+      "phone": "(408) 320-1378",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Legar Salon",
+    "contact_details": {
+      "phone": "(650) 322-1200",
+      "location": "334 South California Avenue, Palo Alto, CA 94306"
+    }
+  },
+  {
+    "name": "Leigh Ann Pincus Photography",
+    "contact_details": {
+      "phone": "(510) 932-9019",
+      "location": "Oakland, CA 94611"
+    }
+  }
+]
