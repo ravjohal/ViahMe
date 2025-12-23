@@ -1,0 +1,130 @@
+[
+  {
+    "name": "Fresh Indian Flowers Across USA For All Occasions",
+    "contact_details": {
+      "phone": "(408) 641-7148",
+      "website": "https://www.freshindianflowers.com/",
+      "location": "Cupertino, CA",
+      "specialty": "Fresh flower garlands and South Indian wedding decor"
+    }
+  },
+  {
+    "name": "Fun Services",
+    "contact_details": {
+      "phone": "(408) 293-8188",
+      "website": "http://www.funservicesbayarea.com/",
+      "location": "San Jose, CA",
+      "specialty": "Event entertainment and carnival rentals"
+    }
+  },
+  {
+    "name": "Fusion Moments Media",
+    "contact_details": {
+      "phone": "(510) 932-9019",
+      "website": "https://fusionmomentsmedia.com/",
+      "location": "Richmond, CA",
+      "specialty": "Multicultural wedding photography and cinematography"
+    }
+  },
+  {
+    "name": "G Salon",
+    "contact_details": {
+      "phone": "(916) 443-4677",
+      "location": "Sacramento, CA",
+      "specialty": "Bridal hair and makeup styling"
+    }
+  },
+  {
+    "name": "GN Event Rental Inc",
+    "contact_details": {
+      "phone": "(408) 823-3888",
+      "location": "San Jose, CA",
+      "specialty": "Tent, table, and chair rentals"
+    }
+  },
+  {
+    "name": "Gaana Pehchaana",
+    "contact_details": {
+      "website": "https://gaanapehchaana.com/",
+      "location": "Houston, TX / Serving CA",
+      "specialty": "Bollywood music entertainment and games"
+    }
+  },
+  {
+    "name": "Gabriel Harber Photography",
+    "contact_details": {
+      "phone": "(415) 305-6577",
+      "website": "http://gabrielharber.com/",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Gagan Dhiman",
+    "contact_details": {
+      "phone": "(916) 246-0558",
+      "website": "https://gagandhiman.com/",
+      "location": "Roseville, CA",
+      "specialty": "Fine art wedding photography"
+    }
+  },
+  {
+    "name": "Gala Event Hall",
+    "contact_details": {
+      "phone": "(510) 791-2422",
+      "location": "Fremont, CA",
+      "category": "Event Venue"
+    }
+  },
+  {
+    "name": "Ganesh Vasudeva",
+    "contact_details": {
+      "website": "http://ganeshvasudeva.com/",
+      "location": "San Jose, CA",
+      "specialty": "Classical Bharatanatyam dance performances"
+    }
+  },
+  {
+    "name": "Garam Mirchi",
+    "contact_details": {
+      "phone": "(510) 364-8171",
+      "location": "Fremont, CA",
+      "category": "North Indian Catering"
+    }
+  },
+  {
+    "name": "Garland Garden",
+    "contact_details": {
+      "phone": "(630) 364-8171",
+      "website": "http://garlandgarden.com/",
+      "location": "Oak Brook, IL / Serving CA",
+      "specialty": "Custom Indian wedding garlands"
+    }
+  },
+  {
+    "name": "Garlic Mediterranean Grill",
+    "contact_details": {
+      "phone": "(408) 724-4444",
+      "website": "http://garlicmg.com/",
+      "location": "Santa Clara, CA",
+      "category": "Mediterranean Catering"
+    }
+  },
+  {
+    "name": "Garry Films",
+    "contact_details": {
+      "phone": "(510) 517-4686",
+      "website": "http://garryfilms.com/",
+      "location": "Union City, CA",
+      "specialty": "Indian wedding cinematography"
+    }
+  },
+  {
+    "name": "Gelati Creation",
+    "contact_details": {
+      "phone": "(510) 305-6577",
+      "website": "http://gelaticreation.com/",
+      "location": "Alameda, CA",
+      "specialty": "Custom dessert and gelato bars"
+    }
+  }
+]
