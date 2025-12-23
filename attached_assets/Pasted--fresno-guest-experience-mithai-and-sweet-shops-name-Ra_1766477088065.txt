@@ -1,0 +1,71 @@
+{
+  "fresno_guest_experience": {
+    "mithai_and_sweet_shops": [
+      {
+        "name": "Rangoli Sweets",
+        "location": "Fresno, CA (Multiple locations/service area)",
+        "contact": {
+          "phone": "408-244-1160 (Primary Office)",
+          "website": "https://rangolisweets.us",
+          "notes": "Renowned for customized mithai boxes and fusion sweets. Excellent for welcome bag favors."
+        }
+      },
+      {
+        "name": "Shan-E-Punjab",
+        "location": "4741 W Shaw Ave #106, Fresno, CA 93722",
+        "contact": {
+          "phone": "559-237-4000",
+          "website": "https://shanepunjabfresno.com",
+          "specialty": "Large variety of fresh traditional sweets and bulk grocery for puja needs."
+        }
+      },
+      {
+        "name": "India Sweets & Spices",
+        "location": "3055 W Ashlan Ave, Fresno, CA 93722",
+        "contact": {
+          "phone": "559-221-1234",
+          "notes": "Offers pre-packaged 1lb and 2lb mix sweet boxes perfect for gifting."
+        }
+      }
+    ],
+    "indian_fusion_and_wedding_cakes": [
+      {
+        "name": "Passage To India Bakery",
+        "location": "5562 East Kings Canyon Road, Fresno, CA 93727",
+        "contact": {
+          "phone": "559-720-1111",
+          "website": "https://passagetoindia.net",
+          "specialty": "Eggless cakes, custom wedding tiers, and flavors like Pistachio, Mango, and Rose."
+        }
+      },
+      {
+        "name": "Frosted Cakery",
+        "location": "1292 N Wishon Ave, Fresno, CA 93728",
+        "contact": {
+          "phone": "559-917-8880",
+          "email": "info@frostedcakery.com",
+          "notes": "Premier custom cake studio in Fresno; highly recommended for high-end aesthetic wedding cakes."
+        }
+      }
+    ],
+    "tiffin_and_home_style_meals": [
+      {
+        "name": "Fresno Roti Box",
+        "location": "Fresno, CA",
+        "contact": {
+          "phone": "559-365-6937",
+          "website": "https://fresnorotibox.com",
+          "specialty": "Fresh Punjabi tiffin service and homemade pickles (Achaar)."
+        }
+      },
+      {
+        "name": "Sukhmani Foods",
+        "location": "Serves Fresno via Delivery",
+        "contact": {
+          "website": "https://sukhmanifoods.com",
+          "notes": "Premium nationwide tiffin delivery; ideal if you need healthy, home-style meals for elderly guests staying at hotels."
+        }
+      }
+    ]
+  }
+}
