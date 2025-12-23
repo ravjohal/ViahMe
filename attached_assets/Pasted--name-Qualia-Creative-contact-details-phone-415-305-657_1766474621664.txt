@@ -1,0 +1,115 @@
+[
+  {
+    "name": "Qualia Creative",
+    "contact_details": {
+      "phone": "(415) 305-6577",
+      "website": "http://qualiacreative.com/",
+      "location": "San Francisco, CA",
+      "specialty": "High-end Graphic Design and Branding for Events"
+    }
+  },
+  {
+    "name": "Quality Catering",
+    "contact_details": {
+      "phone": "(408) 896-1502",
+      "location": "San Jose, CA",
+      "specialty": "Multi-cuisine Event Catering"
+    }
+  },
+  {
+    "name": "Quick Photographers",
+    "contact_details": {
+      "phone": "(510) 909-9889",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "R & R Creative Photography",
+    "contact_details": {
+      "phone": "(415) 300-5058",
+      "location": "San Francisco, CA"
+    }
+  },
+  {
+    "name": "R & S Catering",
+    "contact_details": {
+      "phone": "(510) 932-9019",
+      "location": "Fremont, CA"
+    }
+  },
+  {
+    "name": "R.M. Photography",
+    "contact_details": {
+      "phone": "(408) 320-1378",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Radisson Hotel Wedding Services",
+    "contact_details": {
+      "phone": "(408) 279-6600",
+      "website": "https://www.radissonhotelsamericas.com/",
+      "location": "1471 North 4th Street, San Jose, CA 95112"
+    }
+  },
+  {
+    "name": "Raffaello Hall",
+    "contact_details": {
+      "phone": "(510) 791-2422",
+      "location": "Fremont, CA",
+      "specialty": "Banquet and Reception Hall"
+    }
+  },
+  {
+    "name": "Ragini's Henna",
+    "contact_details": {
+      "phone": "(408) 823-3888",
+      "location": "San Jose, CA"
+    }
+  },
+  {
+    "name": "Rahul Henna Art",
+    "contact_details": {
+      "phone": "(510) 508-4481",
+      "location": "Union City, CA"
+    }
+  },
+  {
+    "name": "Rainbow Party Rentals",
+    "contact_details": {
+      "phone": "(408) 293-8188",
+      "location": "San Jose, CA"
+    }
+  },
+  {
+    "name": "Raj Palace Indian Cuisine",
+    "contact_details": {
+      "phone": "(408) 423-8888",
+      "website": "http://rajpalaceusa.com/",
+      "location": "1275 Homestead Rd, Santa Clara, CA 95050"
+    }
+  },
+  {
+    "name": "Rajasthani Food Services",
+    "contact_details": {
+      "phone": "(408) 641-7148",
+      "location": "Bay Area, CA",
+      "specialty": "Traditional Rajasthani Catering"
+    }
+  },
+  {
+    "name": "Rajdhani Sweets & Restaurant",
+    "contact_details": {
+      "phone": "(510) 791-2422",
+      "location": "Fremont, CA",
+      "specialty": "Indian Sweets and Vegetarian Catering"
+    }
+  },
+  {
+    "name": "Raju Henna",
+    "contact_details": {
+      "phone": "(408) 517-4686",
+      "location": "San Jose, CA"
+    }
+  }
+]

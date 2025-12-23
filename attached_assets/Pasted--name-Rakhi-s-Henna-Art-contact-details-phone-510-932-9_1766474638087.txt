@@ -1,0 +1,116 @@
+[
+  {
+    "name": "Rakhi's Henna Art",
+    "contact_details": {
+      "phone": "(510) 932-9019",
+      "location": "Fremont, CA",
+      "specialty": "Bridal and Party Henna"
+    }
+  },
+  {
+    "name": "Rama's Henna",
+    "contact_details": {
+      "phone": "(408) 320-1378",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Ramada Hotel Wedding Venue",
+    "contact_details": {
+      "phone": "(408) 298-0300",
+      "location": "455 South Second Street, San Jose, CA 95113"
+    }
+  },
+  {
+    "name": "Raman's Mehndi",
+    "contact_details": {
+      "phone": "(510) 508-4481",
+      "location": "Union City, CA"
+    }
+  },
+  {
+    "name": "Ramee Indian Kitchen",
+    "contact_details": {
+      "phone": "(408) 720-8040",
+      "website": "https://www.rameeindiankitchen.com/",
+      "location": "1292 Kifer Rd, Sunnyvale, CA 94086"
+    }
+  },
+  {
+    "name": "Rancho San Antonio Events",
+    "contact_details": {
+      "phone": "(650) 903-6392",
+      "location": "Cupertino / Los Altos, CA",
+      "specialty": "Outdoor Event Spaces"
+    }
+  },
+  {
+    "name": "Rani's Henna",
+    "contact_details": {
+      "phone": "(408) 823-3888",
+      "location": "San Jose, CA"
+    }
+  },
+  {
+    "name": "Rao's Catering",
+    "contact_details": {
+      "phone": "(510) 909-9889",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Rashmi's Bakery",
+    "contact_details": {
+      "phone": "(905) 670-5253",
+      "website": "https://www.rashmisbakery.com/",
+      "location": "Serving Bay Area / Online",
+      "specialty": "Eggless, Nut-Free, and Vegan Wedding Cakes"
+    }
+  },
+  {
+    "name": "Rasoi Indian Kitchen",
+    "contact_details": {
+      "phone": "(650) 242-1323",
+      "website": "https://rasoifostercity.com/",
+      "location": "1000 Foster City Blvd, Foster City, CA 94404"
+    }
+  },
+  {
+    "name": "Ravis Indian Cuisine",
+    "contact_details": {
+      "phone": "(408) 423-8888",
+      "website": "http://www.ravisindiancuisine.com/",
+      "location": "1275 Homestead Rd, Santa Clara, CA 95050"
+    }
+  },
+  {
+    "name": "Reba's Henna",
+    "contact_details": {
+      "phone": "(510) 508-4481",
+      "location": "Fremont, CA"
+    }
+  },
+  {
+    "name": "Red Chillies Indian Cuisine",
+    "contact_details": {
+      "phone": "(408) 441-1188",
+      "location": "Milpitas / San Jose, CA",
+      "specialty": "Kerala and South Indian Catering"
+    }
+  },
+  {
+    "name": "Red Egg Concepts",
+    "contact_details": {
+      "phone": "(415) 305-6577",
+      "location": "San Francisco, CA",
+      "specialty": "Event Planning and Design"
+    }
+  },
+  {
+    "name": "Red Rose Catering",
+    "contact_details": {
+      "phone": "(408) 896-1502",
+      "location": "San Jose, CA"
+    }
+  }
+]
