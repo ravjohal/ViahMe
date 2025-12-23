@@ -1,0 +1,118 @@
+[
+  {
+    "name": "Musarrat Mehndi",
+    "contact_details": {
+      "phone": "(408) 641-7148",
+      "location": "San Jose, CA",
+      "specialty": "Bridal Mehndi and Traditional Henna Art"
+    }
+  },
+  {
+    "name": "My Bridal Glam",
+    "contact_details": {
+      "phone": "(510) 909-9889",
+      "location": "Bay Area, CA",
+      "specialty": "Bridal Hair and Makeup Artistry"
+    }
+  },
+  {
+    "name": "My Fair Bride",
+    "contact_details": {
+      "phone": "(415) 305-6577",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "My One Stop Bridal",
+    "contact_details": {
+      "phone": "(408) 320-1378",
+      "location": "San Jose, CA"
+    }
+  },
+  {
+    "name": "My Wedding Colors",
+    "contact_details": {
+      "phone": "(415) 300-5058",
+      "website": "http://myweddingcolors.com/",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "N & N Events",
+    "contact_details": {
+      "phone": "(510) 932-9019",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "NABEELA'S",
+    "contact_details": {
+      "phone": "(510) 791-2422",
+      "location": "Fremont, CA",
+      "specialty": "Pakistani and Indian Catering"
+    }
+  },
+  {
+    "name": "Nadia Ali Makeup Artist (Henna Dil Se)",
+    "contact_details": {
+      "phone": "(310) 617-6967",
+      "email": "info@hennadilse.com",
+      "website": "https://hennadilse.com/",
+      "location": "Cerritos, CA (Serving Bay Area)",
+      "specialty": "Bridal Henna, Makeup, and Hair Styling"
+    }
+  },
+  {
+    "name": "Nadini's Henna",
+    "contact_details": {
+      "phone": "(408) 823-3888",
+      "location": "San Jose, CA"
+    }
+  },
+  {
+    "name": "Nadira's Mehndi",
+    "contact_details": {
+      "phone": "(510) 508-4481",
+      "location": "Union City, CA"
+    }
+  },
+  {
+    "name": "Nady's Henna",
+    "contact_details": {
+      "phone": "(510) 709-8903",
+      "email": "lolimehandi@gmail.com",
+      "website": "https://www.hennafremont.com/",
+      "location": "Fremont, CA"
+    }
+  },
+  {
+    "name": "Nageen's Henna",
+    "contact_details": {
+      "phone": "(408) 517-4686",
+      "location": "San Jose, CA"
+    }
+  },
+  {
+    "name": "Namaste Catering (Namaste Indian Cuisine)",
+    "contact_details": {
+      "phone": "(650) 272-6941",
+      "website": "https://namasteindiabistro.com/",
+      "location": "Palo Alto / Los Gatos, CA",
+      "specialty": "Full-Service Event and Wedding Catering"
+    }
+  },
+  {
+    "name": "Naim's Indian Cuisine",
+    "contact_details": {
+      "phone": "(510) 932-9019",
+      "location": "Fremont, CA"
+    }
+  },
+  {
+    "name": "Narinder's Threading",
+    "contact_details": {
+      "phone": "(408) 293-8188",
+      "location": "San Jose, CA"
+    }
+  }
+]
