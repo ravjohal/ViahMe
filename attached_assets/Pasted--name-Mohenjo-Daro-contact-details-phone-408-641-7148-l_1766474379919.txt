@@ -1,0 +1,87 @@
+[
+  {
+    "name": "Mohenjo Daro",
+    "contact_details": {
+      "phone": "(408) 641-7148",
+      "location": "Bay Area, CA",
+      "specialty": "Sindhi and Pakistani Event Catering"
+    }
+  },
+  {
+    "name": "Moiz Photography",
+    "contact_details": {
+      "phone": "(510) 909-9889",
+      "website": "http://www.moizphotography.com/",
+      "location": "Bay Area, CA",
+      "specialty": "South Asian Wedding Cinematography"
+    }
+  },
+  {
+    "name": "Monika Sebedra (Events By Monica)",
+    "contact_details": {
+      "phone": "(408) 888-6464",
+      "location": "155 Bennett St, Gilroy, CA",
+      "specialty": "Custom Event Planning and Management"
+    }
+  },
+  {
+    "name": "Moonbeams",
+    "contact_details": {
+      "phone": "(800) 578-5780",
+      "website": "https://joelnelson.com/",
+      "location": "Bay Area, CA",
+      "note": "A Joel Nelson Production specializing in live entertainment."
+    }
+  },
+  {
+    "name": "Mount Hamilton Grandview",
+    "contact_details": {
+      "phone": "(408) 251-8909",
+      "email": "jodi@grandviewsanjose.com",
+      "website": "https://www.grandviewsanjose.com/",
+      "location": "15005 Mt Hamilton Rd, San Jose, CA 95140"
+    }
+  },
+  {
+    "name": "Mountain View Eyebrow Threading",
+    "contact_details": {
+      "phone": "(650) 961-3000",
+      "location": "357 Castro St #7, Mountain View, CA 94041",
+      "specialty": "Bridal Grooming and Henna Services"
+    }
+  },
+  {
+    "name": "Movie Magic Productions",
+    "contact_details": {
+      "phone": "(813) 713-5897",
+      "website": "https://marrymetampabay.com/tampa-wedding-vendor/movie-magic-productions/",
+      "location": "Serving Nationwide (HQ: Florida)",
+      "specialty": "Cinematic Wedding Storytelling"
+    }
+  },
+  {
+    "name": "Mudraa",
+    "contact_details": {
+      "website": "https://www.justdial.com/Mumbai/Mudraa-Events-Lower-Parel/",
+      "location": "Lower Parel, Mumbai (Serving International Clients)",
+      "specialty": "High-end Event Production and Management"
+    }
+  },
+  {
+    "name": "Mukhtar's",
+    "contact_details": {
+      "phone": "(510) 517-4686",
+      "location": "Bay Area, CA",
+      "category": "Indian & Pakistani Catering"
+    }
+  },
+  {
+    "name": "Muna (MunaLuchi Bridal)",
+    "contact_details": {
+      "email": "info@munaluchibridal.com",
+      "website": "https://www.munaluchibridal.com/",
+      "location": "Nationwide",
+      "specialty": "Multicultural Wedding Publication and Vendor Network"
+    }
+  }
+]
