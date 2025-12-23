@@ -1,0 +1,137 @@
+[
+  {
+    "name": "Simply Elegant Events",
+    "contact_details": {
+      "phone": "(817) 656-2933",
+      "website": "https://simplyelegantwed.com/",
+      "location": "Bay Area / National Service",
+      "specialty": "Full-Service Wedding Planning and Luxury Rentals"
+    }
+  },
+  {
+    "name": "Simply Flowers",
+    "contact_details": {
+      "phone": "(559) 276-1200",
+      "location": "4729 W Jennifer Ave, Fresno, CA 93722",
+      "specialty": "Custom Floral Arrangements and Delivery"
+    }
+  },
+  {
+    "name": "Skyline Event Center",
+    "contact_details": {
+      "phone": "(510) 679-7437",
+      "website": "https://www.skylineeventcenter.org/",
+      "location": "12540 Skyline Blvd, Oakland, CA 94619",
+      "specialty": "Scenic Wedding Venue and Music Event Space"
+    }
+  },
+  {
+    "name": "Sonia's Henna (Sonia's Henna Art)",
+    "contact_details": {
+      "email": "soniashenna@gmail.com",
+      "website": "https://www.soniashenna.com/",
+      "location": "Bay Area / Sacramento, CA",
+      "specialty": "Professional Bridal Mehndi and Face Painting"
+    }
+  },
+  {
+    "name": "Star Indian Restaurant (Star Chaat Cuisine)",
+    "contact_details": {
+      "phone": "(510) 513-9700",
+      "website": "https://starchaatcuisine.com/",
+      "location": "4930 Dublin Blvd #800, Dublin, CA 94568",
+      "specialty": "Indian Street Food and Full-Service Catering"
+    }
+  },
+  {
+    "name": "Sri Thai Cuisine",
+    "contact_details": {
+      "phone": "(415) 864-3737",
+      "website": "https://www.srithaisf.com/",
+      "location": "460 Gough St, San Francisco, CA 94102",
+      "specialty": "Authentic Thai Event Catering"
+    }
+  },
+  {
+    "name": "Spoonful of Sugar",
+    "contact_details": {
+      "phone": "(707) 338-0509",
+      "website": "https://www.spoonfulofsugarpetaluma.com/",
+      "location": "Petaluma / Bay Area, CA",
+      "specialty": "Custom Wedding Cakes and Specialized Desserts"
+    }
+  },
+  {
+    "name": "Studio 12 Photography & Video",
+    "contact_details": {
+      "phone": "(604) 593-2295",
+      "website": "https://www.studio12movies.ca/",
+      "location": "Bay Area / Destination",
+      "specialty": "Cinematic South Asian Wedding Storytelling"
+    }
+  },
+  {
+    "name": "Sita's Henna",
+    "contact_details": {
+      "phone": "(408) 641-7148",
+      "location": "San Jose / South Bay, CA"
+    }
+  },
+  {
+    "name": "Siva's Henna",
+    "contact_details": {
+      "phone": "(510) 932-9019",
+      "location": "Fremont, CA"
+    }
+  },
+  {
+    "name": "Sona Henna",
+    "contact_details": {
+      "phone": "(617) 230-9114",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Sonali's Henna",
+    "contact_details": {
+      "phone": "(408) 823-3888",
+      "location": "San Jose, CA"
+    }
+  },
+  {
+    "name": "Sree's Henna",
+    "contact_details": {
+      "phone": "(510) 508-4481",
+      "location": "Union City, CA"
+    }
+  },
+  {
+    "name": "Srinagar Restaurant",
+    "contact_details": {
+      "phone": "(484) 434-8425",
+      "location": "Bay Area / Serving CA",
+      "specialty": "Traditional Kashmiri and North Indian Catering"
+    }
+  },
+  {
+    "name": "Subba's Henna",
+    "contact_details": {
+      "phone": "(408) 517-4686",
+      "location": "Milpitas, CA"
+    }
+  },
+  {
+    "name": "Sudha's Henna",
+    "contact_details": {
+      "phone": "(408) 320-1378",
+      "location": "Sunnyvale, CA"
+    }
+  },
+  {
+    "name": "Sujatha's Henna",
+    "contact_details": {
+      "phone": "(510) 932-9019",
+      "location": "Fremont, CA"
+    }
+  }
+]

@@ -1,0 +1,107 @@
+[
+  {
+    "name": "Suman's Henna",
+    "contact_details": {
+      "phone": "(408) 641-7148",
+      "location": "San Jose, CA",
+      "specialty": "Traditional Bridal Mehndi"
+    }
+  },
+  {
+    "name": "Sunita's Henna Art",
+    "contact_details": {
+      "phone": "(510) 508-4481",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Swapna's Henna",
+    "contact_details": {
+      "phone": "(408) 320-1378",
+      "location": "Sunnyvale, CA"
+    }
+  },
+  {
+    "name": "Swati's Henna Art",
+    "contact_details": {
+      "phone": "(510) 709-8903",
+      "website": "https://www.hennafremont.com/",
+      "location": "Fremont, CA",
+      "specialty": "Certified Bridal Mehndi Artist"
+    }
+  },
+  {
+    "name": "Taj Mahal Flavors of India",
+    "contact_details": {
+      "phone": "(925) 533-8057",
+      "website": "https://tajmahalflavorsofindia.com/",
+      "location": "4705 Livermore Outlets Drive, Livermore, CA 94551"
+    }
+  },
+  {
+    "name": "Tandoori Cuisine (Chaat Bhavan)",
+    "contact_details": {
+      "phone": "(408) 773-1100",
+      "website": "https://www.chaatbhavan.com/",
+      "location": "Sunnyvale / Fremont / Dublin, CA",
+      "specialty": "Specialized Indian Vegetarian Catering"
+    }
+  },
+  {
+    "name": "Tasty Indian Cuisine",
+    "contact_details": {
+      "phone": "(408) 823-3888",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "The Fairmont San Francisco",
+    "contact_details": {
+      "phone": "(415) 772-5000",
+      "website": "https://www.fairmont-san-francisco.com/",
+      "location": "950 Mason St, San Francisco, CA 94108"
+    }
+  },
+  {
+    "name": "The Fairmont San Jose",
+    "contact_details": {
+      "phone": "(408) 998-1900",
+      "website": "https://www.fairmont.com/san-jose/",
+      "location": "170 S Market St, San Jose, CA 95113",
+      "note": "Allows outside Indian catering with approval."
+    }
+  },
+  {
+    "name": "The Ritz-Carlton, Half Moon Bay",
+    "contact_details": {
+      "phone": "(650) 712-7000",
+      "website": "https://www.ritzcarlton.com/",
+      "location": "1 Miramontes Point Rd, Half Moon Bay, CA 94019"
+    }
+  },
+  {
+    "name": "Thali Indian Food (Royal Thaali)",
+    "contact_details": {
+      "phone": "(408) 818-8817",
+      "website": "https://royalthaali.com/",
+      "location": "83 Barber Ln, Milpitas, CA 95035"
+    }
+  },
+  {
+    "name": "Tikka Masala Indian Cuisine",
+    "contact_details": {
+      "phone": "(209) 475-8077",
+      "website": "https://www.tikkamasalaca.com/",
+      "location": "Stockton / Tracy Area, CA"
+    }
+  },
+  {
+    "name": "Tirupathi Bhimas",
+    "contact_details": {
+      "phone": "(408) 945-1010",
+      "website": "https://www.tirupathibhimasusa.com/",
+      "location": "1208 S Abel St, Milpitas, CA 95035",
+      "specialty": "Authentic Indian Vegetarian Cuisine"
+    }
+  }
+]
