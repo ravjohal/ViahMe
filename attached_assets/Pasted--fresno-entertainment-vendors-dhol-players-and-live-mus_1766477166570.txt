@@ -1,0 +1,68 @@
+{
+  "fresno_entertainment_vendors": {
+    "dhol_players_and_live_music": [
+      {
+        "name": "DJ Simba & Dhol Services",
+        "location": "Fresno Area, CA",
+        "contact": {
+          "phone": "559-900-3359",
+          "specialty": "Traditional Dhol for Baraats, Jago, and Receptions.",
+          "source": "Sulekha Certified"
+        }
+      },
+      {
+        "name": "Fusion Sounds (Dhol & DJ)",
+        "location": "Serving Fresno & Central Valley",
+        "contact": {
+          "phone": "301-686-5058",
+          "website": "https://www.fusionsounds.com",
+          "notes": "Offers a full production package including live Dhol players synchronized with DJ sets."
+        }
+      },
+      {
+        "name": "Malinder Tooray (BollyDhol)",
+        "location": "California-wide (Frequent Fresno bookings)",
+        "contact": {
+          "website": "https://www.sodjla.com/malinder-tooray",
+          "notes": "One of the most famous female Dhol players in the US; incredible for a high-impact 'Baraat' or 'Sangeet' entrance."
+        }
+      },
+      {
+        "name": "KGS Music (Live Desi Music)",
+        "location": "Serving Central Valley",
+        "contact": {
+          "website": "https://kgsmusicbayarea.com",
+          "specialty": "Live Sitar, Tabla, and Dhol ensembles for a more traditional Vedic or Punjabi atmosphere."
+        }
+      }
+    ],
+    "dance_academies_and_troupes": [
+      {
+        "name": "GHG Bhangra Academy",
+        "location": "Fresno, CA",
+        "contact": {
+          "email": "ghgbhangra.inc@gmail.com",
+          "website": "https://www.ghgbhangra.com",
+          "notes": "Award-winning competitive Bhangra team available for high-energy wedding performances."
+        }
+      },
+      {
+        "name": "Central Valley Bhangra Academy",
+        "location": "Fresno / Clovis / Madera",
+        "contact": {
+          "phone": "559-421-0103 (Coach Amrit)",
+          "website": "https://www.centralvalleybhangra.com",
+          "specialty": "Performance teams and wedding choreography for the bridal party."
+        }
+      },
+      {
+        "name": "RRB Dance Company",
+        "location": "California Regional (Serves Fresno)",
+        "contact": {
+          "website": "https://www.rrbdancecompany.com",
+          "notes": "Specializes in 'Bolly-hop' and fusion; great for a more contemporary reception performance."
+        }
+      }
+    ]
+  }
+}
