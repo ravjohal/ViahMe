@@ -1,0 +1,127 @@
+{
+  "indian_wedding_vendors": {
+    "planners": [
+      {
+        "name": "Tum Hi Ho Events",
+        "location": "New Jersey / Nationwide, USA",
+        "contact": {
+          "phone": "Available via website",
+          "website": "https://www.tumhihoevents.com",
+          "specialty": "South Asian Wedding Coordination"
+        }
+      },
+      {
+        "name": "Sonal J. Shah Event Consultants",
+        "location": "New York, NY",
+        "contact": {
+          "website": "https://sjsevents.com",
+          "specialty": "Luxury South Asian Weddings"
+        }
+      },
+      {
+        "name": "Avant Planners (Purvi Shah)",
+        "location": "Bay Area, CA",
+        "contact": {
+          "email": "avantplanners.ca@gmail.com",
+          "website": "https://www.avantplanners.com"
+        }
+      }
+    ],
+    "photography_videography": [
+      {
+        "name": "TaraWeddings",
+        "location": "Toronto, ON, Canada",
+        "contact": {
+          "email": "info@taraweddings.ca",
+          "website": "https://taraweddings.ca"
+        }
+      },
+      {
+        "name": "Fine Art Production",
+        "location": "New Jersey & Orlando, FL",
+        "contact": {
+          "phone": "732-662-5555",
+          "website": "https://www.fineartproduction.com"
+        }
+      },
+      {
+        "name": "Jeet Studios",
+        "location": "Brampton/Toronto, ON",
+        "contact": {
+          "phone": "+1 647-978-0531",
+          "email": "JeetStudioss@gmail.com"
+        }
+      }
+    ],
+    "decor_and_design": [
+      {
+        "name": "Abhishek Decorators",
+        "location": "North Brunswick, NJ",
+        "contact": {
+          "address": "1577 Livingston Ave, North Brunswick, NJ 08902",
+          "website": "https://abhishekusa.com"
+        }
+      },
+      {
+        "name": "The Wedding Boutique",
+        "location": "Mississauga, ON, Canada",
+        "contact": {
+          "phone": "647-282-7079",
+          "email": "bookings@theweddingboutique.info"
+        }
+      },
+      {
+        "name": "Saba Decor Rentals",
+        "location": "Fremont, CA",
+        "contact": {
+          "phone": "510-440-4890",
+          "email": "Sania@SabaDecor.com"
+        }
+      }
+    ],
+    "catering": [
+      {
+        "name": "Mantra India",
+        "location": "California, USA",
+        "contact": {
+          "phone": "650-960-1001",
+          "email": "mantraindiacatering@gmail.com"
+        }
+      },
+      {
+        "name": "Shivam Catering",
+        "location": "Mississauga, ON, Canada",
+        "contact": {
+          "phone": "905-805-5281",
+          "email": "info@shivamcateringinc.ca"
+        }
+      },
+      {
+        "name": "Tabla Catering",
+        "location": "Orlando, FL",
+        "contact": {
+          "address": "5829 Grand National Dr, Orlando, FL 32819",
+          "website": "https://www.tablacatering.com"
+        }
+      }
+    ],
+    "hair_and_makeup": [
+      {
+        "name": "Drama Queen Studios",
+        "location": "Vancouver, BC, Canada",
+        "contact": {
+          "website": "https://www.dramaqueenstudios.com",
+          "specialty": "Indian Bridal Styling"
+        }
+      },
+      {
+        "name": "Beauty By Krimse",
+        "location": "Toronto, ON / Delhi",
+        "contact": {
+          "email": "kohlikrimse@gmail.com",
+          "website": "https://beautybykrimse.com"
+        }
+      }
+    ]
+  }
+}
