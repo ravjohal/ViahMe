@@ -1,0 +1,105 @@
+{
+  "yuba_city_wedding_vendors": {
+    "venues_and_religious_sites": [
+      {
+        "name": "Sikh Temple Tierra Buena",
+        "location": "2468 Tierra Buena Rd, Yuba City, CA 95993",
+        "contact": {
+          "phone": "530-674-7939",
+          "website": "http://www.yubacitygurdwara.com",
+          "notes": "The primary location for Anand Karaj (Sikh Wedding) ceremonies in the region."
+        }
+      },
+      {
+        "name": "Sutter Buttes Event Center",
+        "location": "1141 Buttes Vista Ln, Yuba City, CA 95993",
+        "contact": {
+          "phone": "530-755-3333",
+          "website": "https://sutterbutteseventcenter.com",
+          "notes": "Large capacity venue perfect for Sangeets and Receptions."
+        }
+      },
+      {
+        "name": "Veterans Memorial Community Bldg",
+        "location": "1425 Veterans Memorial Cir, Yuba City, CA 95993",
+        "contact": {
+          "phone": "530-822-4650",
+          "notes": "A very popular, flexible venue for large community wedding feasts."
+        }
+      }
+    ],
+    "catering_and_mithai": [
+      {
+        "name": "Star Indian Cuisine",
+        "location": "1534 Starr Dr, Yuba City, CA 95993",
+        "contact": {
+          "phone": "530-671-1500",
+          "website": "https://starindianfood.com",
+          "specialty": "Bulk wedding catering and traditional North Indian menu."
+        }
+      },
+      {
+        "name": "Dhillon's Pizza & Indian Cuisine",
+        "location": "711 Gray Ave, Yuba City, CA 95991",
+        "contact": {
+          "phone": "530-751-2222",
+          "notes": "Famous for fusion catering and home-style Punjabi meals for wedding guests."
+        }
+      },
+      {
+        "name": "Punjab Bazaar & Sweets",
+        "location": "1538 Starr Dr, Yuba City, CA 95993",
+        "contact": {
+          "phone": "530-674-3200",
+          "notes": "Excellent source for bulk Mithai boxes and Puja supplies."
+        }
+      }
+    ],
+    "photography_and_cinema": [
+      {
+        "name": "N&A Video Production",
+        "location": "Yuba City, CA",
+        "contact": {
+          "phone": "530-713-3700",
+          "specialty": "Punjabi Wedding Cinematography and High-Definition Video."
+        }
+      },
+      {
+        "name": "Bains Photo & Video",
+        "location": "Yuba City, CA",
+        "contact": {
+          "phone": "530-674-1234",
+          "notes": "Deeply rooted in the Yuba City community; specialists in multi-day Sikh weddings."
+        }
+      }
+    ],
+    "makeup_and_mehndi": [
+      {
+        "name": "Beauty by Gagan",
+        "location": "Yuba City, CA",
+        "contact": {
+          "instagram": "@beautybygagan",
+          "notes": "High-demand MUA for bridal styling and dupatta pinning."
+        }
+      },
+      {
+        "name": "Mehndi by Ravjit",
+        "location": "Yuba City / Marysville",
+        "contact": {
+          "phone": "Available via inquiry",
+          "specialty": "Bridal Mehndi and large group Henna parties."
+        }
+      }
+    ],
+    "apparel_and_boutiques": [
+      {
+        "name": "Gehna Boutique",
+        "location": "Yuba City, CA",
+        "contact": {
+          "phone": "530-671-2500",
+          "notes": "Specializes in Punjabi suits, bridal fabric, and jewelry."
+        }
+      }
+    ]
+  }
+}
