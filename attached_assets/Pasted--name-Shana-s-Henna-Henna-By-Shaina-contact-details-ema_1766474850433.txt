@@ -1,0 +1,114 @@
+[
+  {
+    "name": "Shana's Henna (Henna By Shaina)",
+    "contact_details": {
+      "email": "hennabyshaina@gmail.com",
+      "website": "https://www.hennabyshaina.com/",
+      "location": "San Francisco / Bay Area, CA",
+      "specialty": "Traditional and Fusion Henna Art"
+    }
+  },
+  {
+    "name": "Shanti Indian Cuisine",
+    "contact_details": {
+      "phone": "(707) 645-1700",
+      "location": "910 Lincoln Rd E, Vallejo, CA 94591",
+      "specialty": "Full-Service Event Catering and Banquet Space"
+    }
+  },
+  {
+    "name": "Sharadha Henna / Mehndi",
+    "contact_details": {
+      "phone": "(408) 641-7148",
+      "location": "San Jose, CA"
+    }
+  },
+  {
+    "name": "Sharda's Henna",
+    "contact_details": {
+      "phone": "(510) 932-9019",
+      "location": "Fremont, CA"
+    }
+  },
+  {
+    "name": "Sharmila's Henna / Mehndi",
+    "contact_details": {
+      "phone": "(408) 823-3888",
+      "location": "San Jose, CA"
+    }
+  },
+  {
+    "name": "Shashi's Henna Art",
+    "contact_details": {
+      "phone": "(510) 508-4481",
+      "location": "Hayward / Union City, CA"
+    }
+  },
+  {
+    "name": "Shauna's Henna",
+    "contact_details": {
+      "phone": "(415) 305-6577",
+      "location": "San Francisco, CA"
+    }
+  },
+  {
+    "name": "Shaveta's Henna Art",
+    "contact_details": {
+      "phone": "(408) 320-1378",
+      "location": "Sunnyvale, CA"
+    }
+  },
+  {
+    "name": "Sheetal's Henna",
+    "contact_details": {
+      "phone": "(408) 896-1502",
+      "location": "Milpitas, CA"
+    }
+  },
+  {
+    "name": "Shehnai Bridal Boutique",
+    "contact_details": {
+      "phone": "(510) 917-1955",
+      "website": "https://www.shehnaibridalboutique.com/",
+      "location": "39189 Farwell Dr, Fremont, CA 94538",
+      "specialty": "Luxury Indian Bridal and Groom Wear"
+    }
+  },
+  {
+    "name": "Sheila's Henna",
+    "contact_details": {
+      "phone": "(415) 300-5058",
+      "location": "San Francisco, CA"
+    }
+  },
+  {
+    "name": "Shelby's Photography (Shelby Lea Photography)",
+    "contact_details": {
+      "phone": "(916) 246-0558",
+      "website": "https://shelbyleaphotography.com/",
+      "location": "Sacramento / Bay Area, CA"
+    }
+  },
+  {
+    "name": "Shellie's Photography (Shellie Wall Photography)",
+    "contact_details": {
+      "phone": "(415) 558-9819",
+      "website": "https://shelliewallphotography.com/",
+      "location": "Bay Area / Destination"
+    }
+  },
+  {
+    "name": "Sherina's Henna",
+    "contact_details": {
+      "phone": "(510) 709-8903",
+      "location": "Fremont, CA"
+    }
+  },
+  {
+    "name": "Shiba Henna Art",
+    "contact_details": {
+      "phone": "(408) 517-4686",
+      "location": "San Jose, CA"
+    }
+  }
+]
