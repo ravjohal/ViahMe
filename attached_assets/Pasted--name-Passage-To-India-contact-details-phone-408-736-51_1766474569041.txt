@@ -1,0 +1,120 @@
+[
+  {
+    "name": "Passage To India",
+    "contact_details": {
+      "phone": "(408) 736-5189",
+      "website": "https://passagetoindia.net/",
+      "location": "1100 Lawrence Expy, Sunnyvale, CA 94089",
+      "specialty": "North Indian and Mughlai Catering"
+    }
+  },
+  {
+    "name": "Pavan's Henna",
+    "contact_details": {
+      "phone": "(510) 909-9889",
+      "location": "Bay Area, CA",
+      "specialty": "Traditional Bridal and Event Mehndi"
+    }
+  },
+  {
+    "name": "Pearl Events",
+    "contact_details": {
+      "phone": "(510) 508-4481",
+      "location": "San Francisco / Bay Area, CA",
+      "specialty": "Full-Service Event Planning and Design"
+    }
+  },
+  {
+    "name": "Peasant & The Pear",
+    "contact_details": {
+      "phone": "(925) 820-6611",
+      "website": "https://www.thepearrestaurants.com/",
+      "location": "267 Hartz Ave, Danville, CA 94526",
+      "specialty": "Contemporary American Event Catering"
+    }
+  },
+  {
+    "name": "Perfect Decor",
+    "contact_details": {
+      "phone": "(408) 320-1378",
+      "location": "Bay Area, CA",
+      "specialty": "Custom Backdrops and Event Staging"
+    }
+  },
+  {
+    "name": "Perfect Mix DJ Services",
+    "contact_details": {
+      "phone": "(415) 305-6577",
+      "location": "San Francisco, CA"
+    }
+  },
+  {
+    "name": "Perfect Moments Photography",
+    "contact_details": {
+      "phone": "(916) 246-0558",
+      "website": "http://perfectmomentsphoto.com/",
+      "location": "Sacramento, CA"
+    }
+  },
+  {
+    "name": "Pernia's Pop-Up Shop",
+    "contact_details": {
+      "website": "https://www.perniaspopupshop.com/",
+      "location": "Online / International (Popular for Bridal Wear)",
+      "specialty": "Luxury Indian Designer Wear"
+    }
+  },
+  {
+    "name": "Peter Adams Photography",
+    "contact_details": {
+      "phone": "(415) 300-5058",
+      "website": "https://www.peteradamsphoto.com/",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Peter Tailor",
+    "contact_details": {
+      "phone": "(408) 293-8188",
+      "location": "San Jose, CA",
+      "specialty": "Custom Suit Tailoring and Bridal Alterations"
+    }
+  },
+  {
+    "name": "Photo & Video By Kulavision",
+    "contact_details": {
+      "phone": "(559) 237-5678",
+      "website": "http://kulavision.com/",
+      "location": "Fresno, CA"
+    }
+  },
+  {
+    "name": "Photo Booth Bay Area",
+    "contact_details": {
+      "phone": "(415) 275-4776",
+      "website": "https://photoboothbayarea.com/",
+      "location": "San Francisco, CA"
+    }
+  },
+  {
+    "name": "Photo Factory",
+    "contact_details": {
+      "phone": "(408) 823-3888",
+      "location": "San Jose, CA"
+    }
+  },
+  {
+    "name": "Photo Gallery (The)",
+    "contact_details": {
+      "phone": "(510) 932-9019",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Photo Studio / HM Video",
+    "contact_details": {
+      "phone": "(408) 823-3888",
+      "location": "Milpitas, CA"
+    }
+  }
+]

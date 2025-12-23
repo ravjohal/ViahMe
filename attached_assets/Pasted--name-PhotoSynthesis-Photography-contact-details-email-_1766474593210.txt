@@ -1,0 +1,125 @@
+[
+  {
+    "name": "PhotoSynthesis Photography",
+    "contact_details": {
+      "email": "photosynthesis.photography@hotmail.com",
+      "website": "https://photosynthesisphotography.com/",
+      "location": "Bay Area, CA",
+      "specialty": "Artistic Wedding and Portrait Photography"
+    }
+  },
+  {
+    "name": "Pink Elephant (Polly Martini Events)",
+    "contact_details": {
+      "phone": "(707) 297-0814",
+      "email": "PollyMartiniEvents@gmail.com",
+      "website": "http://www.pollymartini.com/",
+      "location": "San Francisco Bay Area, CA",
+      "specialty": "Premier Mobile Bartending and Event Staffing"
+    }
+  },
+  {
+    "name": "Poonam's Mehndi",
+    "contact_details": {
+      "phone": "(408) 823-3888",
+      "location": "San Jose, CA",
+      "specialty": "Traditional Bridal Mehndi Artistry"
+    }
+  },
+  {
+    "name": "Prashant Photography",
+    "contact_details": {
+      "phone": "(408) 641-7148",
+      "location": "Milpitas / Bay Area, CA",
+      "specialty": "Cinematic South Asian Wedding Media"
+    }
+  },
+  {
+    "name": "Pratibha Henna",
+    "contact_details": {
+      "phone": "(408) 517-4686",
+      "location": "101 North 1st Street, San Jose, CA",
+      "specialty": "Bridal Henna and Private Party Services"
+    }
+  },
+  {
+    "name": "Preeti Henna",
+    "contact_details": {
+      "phone": "(510) 932-9019",
+      "location": "Fremont, CA"
+    }
+  },
+  {
+    "name": "Preeti Mistry (Chef Preeti Mistry)",
+    "contact_details": {
+      "website": "https://www.jwine.com/shifting-the-lens-chef-preeti-mistry/",
+      "location": "Bay Area, CA",
+      "specialty": "High-end Culinary Consulting and Specialized Catering"
+    }
+  },
+  {
+    "name": "Prime Party Rentals",
+    "contact_details": {
+      "phone": "(916) 668-4275",
+      "email": "info@PrimePartyRentals.com",
+      "website": "https://primepartyrentals.com/",
+      "location": "2925 Fulton Ave, Sacramento, CA 95821"
+    }
+  },
+  {
+    "name": "Priti Henna Art",
+    "contact_details": {
+      "phone": "(650) 219-3649",
+      "website": "https://pritiseyebrow.com/",
+      "location": "325 Sharon Park Dr, Menlo Park, CA 94025"
+    }
+  },
+  {
+    "name": "Priya Henna",
+    "contact_details": {
+      "phone": "(408) 320-1378",
+      "location": "Pleasant Hill / Bay Area, CA",
+      "specialty": "Organic Henna and Face Painting for Events"
+    }
+  },
+  {
+    "name": "Pro Media Video",
+    "contact_details": {
+      "phone": "(510) 517-4686",
+      "location": "Fremont, CA",
+      "specialty": "Digital Wedding Cinematography"
+    }
+  },
+  {
+    "name": "Pure Organic Henna",
+    "contact_details": {
+      "phone": "(310) 994-9505",
+      "website": "https://pureorganichenna.com/",
+      "location": "Mobile (Serving Northern & Southern CA)",
+      "specialty": "USDA Certified Organic Henna and Body Art"
+    }
+  },
+  {
+    "name": "Purple Martini Events",
+    "contact_details": {
+      "phone": "(415) 305-6577",
+      "location": "San Francisco, CA"
+    }
+  },
+  {
+    "name": "Pushpa's Henna",
+    "contact_details": {
+      "phone": "(510) 508-4481",
+      "location": "Fremont, CA"
+    }
+  },
+  {
+    "name": "Pyramid Entertainment",
+    "contact_details": {
+      "phone": "(888) 356-2539",
+      "email": "pyramidmusicproductions@gmail.com",
+      "website": "https://www.pyramidmusicproductions.com/",
+      "location": "7740 Balboa Blvd, Van Nuys, CA 91406"
+    }
+  }
+]
