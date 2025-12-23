@@ -1,0 +1,72 @@
+{
+  "fresno_cultural_rentals": {
+    "specialty_indian_decor": [
+      {
+        "name": "Cultural Event Rentals",
+        "location": "Serving Central Valley & Fresno",
+        "contact": {
+          "phone": "707-291-2894",
+          "email": "info@culturaleventrentals.com",
+          "website": "https://culturaleventrentals.com",
+          "notes": "Authentic, handcrafted Indian furniture. Best for Gaddi sets, low-seating bolsters, and traditional brass props."
+        }
+      },
+      {
+        "name": "R&R Event Rentals",
+        "location": "Fresno / Clovis Area",
+        "contact": {
+          "phone": "Available via inquiry",
+          "website": "https://www.ramanandraveen.com",
+          "specialty": "Mandaps, luxury stage backdrops, and colorful silk drapes for Sangeet/Mehndi."
+        }
+      },
+      {
+        "name": "Saba Decor Rentals",
+        "location": "Fremont (Frequently serves Fresno)",
+        "contact": {
+          "phone": "510-270-8200",
+          "email": "Sania@SabaDecor.com",
+          "notes": "Premium inventory of Rajasthani umbrellas, floral swings (Jhoola), and customized drapes."
+        }
+      }
+    ],
+    "boutique_and_fusion_rentals": [
+      {
+        "name": "Stockroom Picks",
+        "location": "Fresno, CA",
+        "contact": {
+          "website": "https://www.stockroompicks.com",
+          "notes": "Specializes in 'Boho' and vintage fusion. Excellent for lounge seating and modern aesthetic Mehndi setups."
+        }
+      },
+      {
+        "name": "Let's Party Prettier",
+        "location": "Fresno/Clovis, CA",
+        "contact": {
+          "website": "https://www.letspartyprettier.com",
+          "notes": "Curated specialty rentals; great for colorful lounge furniture and high-end tabletop decor."
+        }
+      }
+    ],
+    "general_logistics_and_tents": [
+      {
+        "name": "Expo Events & Tents",
+        "location": "3055 W Ashlan Ave, Fresno, CA 93722",
+        "contact": {
+          "phone": "559-495-3300",
+          "website": "https://exporentals.com",
+          "notes": "Essential for high-quality market umbrellas, stage platforms, and climate-controlled tents for outdoor ceremonies."
+        }
+      },
+      {
+        "name": "The Painted Table (Event Design)",
+        "location": "Fresno, CA",
+        "contact": {
+          "phone": "559-443-7199",
+          "website": "https://paintedtablecatering.com",
+          "notes": "A full-service catering and design firm that can source specialty furniture and high-end linens."
+        }
+      }
+    ]
+  }
+}

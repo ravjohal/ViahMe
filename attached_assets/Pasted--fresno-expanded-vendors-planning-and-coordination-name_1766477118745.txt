@@ -1,0 +1,87 @@
+{
+  "fresno_expanded_vendors": {
+    "planning_and_coordination": [
+      {
+        "name": "Central Valley Event Planning",
+        "location": "8839 N Cedar Ave, Ste 10, Fresno, CA 93720",
+        "contact": {
+          "phone": "559-500-5034",
+          "lead": "Humza Chowdhry",
+          "languages": ["English", "Hindi", "Urdu", "Punjabi"],
+          "notes": "Full-service planning with specialized knowledge in South Asian cultural rituals."
+        }
+      }
+    ],
+    "apparel_and_boutiques": [
+      {
+        "name": "Ruhana Boutique",
+        "location": "3081 W Ashlan Ave, Fresno, CA 93722",
+        "contact": {
+          "phone": "559-281-4390",
+          "email": "ruhannaboutique@gmail.com",
+          "specialty": "Traditional Indian party outfits, bridal lehengas, and menswear."
+        }
+      },
+      {
+        "name": "Shehnai Bridal Boutique",
+        "location": "Serving Fresno & Central Valley (Main office in Bay Area)",
+        "contact": {
+          "phone": "510-917-1955",
+          "website": "https://www.shehnaibridalboutique.com",
+          "notes": "High-end custom bridal wear; they frequently provide concierge services to Fresno clients."
+        }
+      }
+    ],
+    "jewelry_and_fine_accessories": [
+      {
+        "name": "Gobind Jewelers",
+        "location": "Fresno, CA",
+        "contact": {
+          "phone": "559-275-2500",
+          "specialty": "22k Gold, Polki, and Bridal Sets.",
+          "website": "https://www.gobindjewelers.com"
+        }
+      },
+      {
+        "name": "The Diamond Gallery",
+        "location": "Fresno, CA",
+        "contact": {
+          "phone": "559-434-3688",
+          "notes": "Excellent for custom engagement rings and high-end wedding bands."
+        }
+      }
+    ],
+    "lighting_and_av_production": [
+      {
+        "name": "Light and Sound Solutions",
+        "location": "P.O. Box 7889, Fresno, CA 93747",
+        "contact": {
+          "phone": "559-224-1111",
+          "email": "Rusty@LightandSoundSolutions.com",
+          "website": "https://www.lightandsoundsolutions.com",
+          "notes": "Specializes in Airstar lighting balloons and large-scale ballroom transformations."
+        }
+      }
+    ],
+    "photography_and_cinema": [
+      {
+        "name": "Shan Photography",
+        "location": "Fresno / Regional",
+        "contact": {
+          "email": "info@shanphotography.com",
+          "website": "https://www.shanphotography.com",
+          "specialty": "15+ years of experience specifically in Fresno Indian Wedding Cinematography."
+        }
+      },
+      {
+        "name": "DKG Production",
+        "location": "Fresno / Bay Area",
+        "contact": {
+          "phone": "via website",
+          "website": "https://dkgproduction.com",
+          "notes": "Known for high-energy cinematic wedding films and drone coverage of Baraats."
+        }
+      }
+    ]
+  }
+}
