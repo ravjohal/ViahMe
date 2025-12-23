@@ -1,0 +1,119 @@
+{
+  "fresno_indian_wedding_vendors": {
+    "venues": [
+      {
+        "name": "Fresno Golden Palace",
+        "location": "2625 W Clinton Ave, Fresno, CA 93705",
+        "contact": {
+          "phone": "559-233-1234",
+          "email": "info@fresnogoldenpalace.com",
+          "website": "https://fresnogoldenpalace.com",
+          "notes": "Specializes in large Indian wedding packages."
+        }
+      },
+      {
+        "name": "Aroza Event Center",
+        "location": "Clovis-Fresno area",
+        "contact": {
+          "phone": "559-218-5723",
+          "website": "https://arozausa.com",
+          "notes": "Luxury venue popular for receptions and Sangeets."
+        }
+      },
+      {
+        "name": "Parkview Event Place",
+        "location": "Fresno, CA",
+        "contact": {
+          "phone": "559-933-9999",
+          "email": "contact@parkvieweventplace.com",
+          "website": "https://www.parkvieweventplace.com"
+        }
+      }
+    ],
+    "caterers": [
+      {
+        "name": "Sher-E-Punjab Restaurant & Catering",
+        "location": "7050 N Cedar Ave, Fresno, CA 93720",
+        "contact": {
+          "phone": "559-299-6400",
+          "website": "https://sherepunjabca.com",
+          "specialty": "North Indian/Punjabi Cuisine"
+        }
+      },
+      {
+        "name": "Star Catering Fresno",
+        "location": "3075 W Dakota Ave, Fresno, CA 93727",
+        "contact": {
+          "phone": "559-312-0825",
+          "website": "https://starcateringfresno.com",
+          "specialty": "International & Indian Fusion"
+        }
+      },
+      {
+        "name": "Bombay Flavors",
+        "location": "Fresno, CA",
+        "contact": {
+          "phone": "586-999-9901",
+          "specialty": "Traditional Indian Catering"
+        }
+      }
+    ],
+    "decorators": [
+      {
+        "name": "Shaan Decor",
+        "location": "Central Valley / Fresno",
+        "contact": {
+          "website": "https://shaandecorandevents.com",
+          "notes": "Experts in Mandaps and Sangeet backdrops."
+        }
+      },
+      {
+        "name": "R&R Event Rentals",
+        "location": "Fresno / Central Valley",
+        "contact": {
+          "website": "https://www.ramanandraveen.com",
+          "notes": "Focused on modern Indian wedding aesthetics."
+        }
+      }
+    ],
+    "photography_videography": [
+      {
+        "name": "KB Brar Photography",
+        "location": "Fresno, CA",
+        "contact": {
+          "phone": "559-681-2828",
+          "website": "https://kbbrar.com",
+          "specialty": "Sikh and Hindu Wedding Storytelling"
+        }
+      },
+      {
+        "name": "Saleena Khan Photo",
+        "location": "Fresno, CA",
+        "contact": {
+          "email": "saleenakhanphoto@gmail.com",
+          "website": "https://saleenakhanphoto.com",
+          "specialty": "South Asian Wedding Portraits"
+        }
+      }
+    ],
+    "hair_and_makeup": [
+      {
+        "name": "Makeup By Sonia Tello",
+        "location": "8054 N Cedar Ave, Fresno, CA 93720",
+        "contact": {
+          "phone": "559-899-4551",
+          "email": "Sonia.D.Tello@Gmail.com",
+          "website": "https://makeupbysonia.net"
+        }
+      },
+      {
+        "name": "Bregina Rose",
+        "location": "Fresno, CA",
+        "contact": {
+          "email": "Breginarose_mua@outlook.com",
+          "website": "https://www.breginarose-makeupandhair.com"
+        }
+      }
+    ]
+  }
+}
