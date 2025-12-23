@@ -1,0 +1,120 @@
+[
+  {
+    "name": "Relish Art",
+    "contact_details": {
+      "phone": "(814) 836-1827",
+      "website": "https://www.relishinc.com/",
+      "location": "Bay Area / National Service",
+      "specialty": "Custom Jewelry and Artistic Gifts for Bridal Parties"
+    }
+  },
+  {
+    "name": "Renaissance Hotel San Jose",
+    "contact_details": {
+      "phone": "(408) 280-1300",
+      "website": "https://www.marriott.com/",
+      "location": "San Jose Marriott, 301 South Market Street, San Jose, CA 95113",
+      "specialty": "Luxury Wedding Venues and Banquet Services"
+    }
+  },
+  {
+    "name": "Renee's Henna",
+    "contact_details": {
+      "phone": "(510) 709-8903",
+      "website": "https://www.hennafremont.com/",
+      "location": "Fremont, CA",
+      "specialty": "Traditional Bridal Henna and Saree Draping"
+    }
+  },
+  {
+    "name": "Resham Indian Cuisine",
+    "contact_details": {
+      "phone": "(408) 743-5522",
+      "location": "Sunnyvale, CA",
+      "specialty": "Authentic North Indian Event Catering"
+    }
+  },
+  {
+    "name": "Richa's Henna",
+    "contact_details": {
+      "phone": "(510) 709-8903",
+      "location": "Milpitas / Fremont, CA",
+      "specialty": "Bridal Mehndi and Party Henna"
+    }
+  },
+  {
+    "name": "Rita's Henna Art",
+    "contact_details": {
+      "phone": "(408) 457-1385",
+      "location": "San Jose, CA",
+      "specialty": "Intricate Traditional Mehndi Designs"
+    }
+  },
+  {
+    "name": "Rivaaz Indian Restaurant",
+    "contact_details": {
+      "phone": "(650) 963-9994",
+      "website": "https://chaatparty.com/",
+      "location": "Bay Area, CA",
+      "specialty": "Event Catering and Interactive Chaat Parties"
+    }
+  },
+  {
+    "name": "RK Video and Photography",
+    "contact_details": {
+      "phone": "(510) 289-3495",
+      "website": "https://rkvcomm.info/",
+      "location": "Oakland / Bay Area, CA",
+      "specialty": "High-Quality Wedding and Event Media Production"
+    }
+  },
+  {
+    "name": "Roasted Coffee and Tea",
+    "contact_details": {
+      "phone": "(980) 777-3011",
+      "website": "https://www.crmdeo.com/",
+      "location": "San Francisco / Sacramento, CA",
+      "specialty": "Luxury Mobile Coffee and Tea Catering for Weddings"
+    }
+  },
+  {
+    "name": "Robert Valdes Photography",
+    "contact_details": {
+      "phone": "(415) 413-8541",
+      "website": "https://robertvaldesphotography.com/",
+      "location": "San Francisco / Monterey, CA",
+      "specialty": "Cinematic Wedding Photography and Videography"
+    }
+  },
+  {
+    "name": "Rohini's Henna",
+    "contact_details": {
+      "phone": "(510) 709-8903",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Roma's Henna Art",
+    "contact_details": {
+      "phone": "(510) 709-8903",
+      "location": "Fremont / Sacramento, CA",
+      "specialty": "Certified Bridal Mehndi Artist"
+    }
+  },
+  {
+    "name": "Rose Garden Florist",
+    "contact_details": {
+      "phone": "(209) 521-2400",
+      "website": "https://www.modestorosegarden.com/",
+      "location": "Modesto / Serving Central Valley & Bay Area, CA",
+      "specialty": "Full-Service Floral Design and Delivery"
+    }
+  },
+  {
+    "name": "Ruby's Henna",
+    "contact_details": {
+      "phone": "(415) 558-9819",
+      "location": "San Francisco, CA"
+    }
+  }
+]
