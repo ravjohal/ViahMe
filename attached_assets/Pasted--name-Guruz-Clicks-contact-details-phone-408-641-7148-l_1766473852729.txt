@@ -1,0 +1,113 @@
+[
+  {
+    "name": "Guruz Clicks",
+    "contact_details": {
+      "phone": "(408) 641-7148",
+      "location": "Bay Area, CA",
+      "specialty": "Candid Wedding and Event Photography"
+    }
+  },
+  {
+    "name": "H & S PhotoStudio",
+    "contact_details": {
+      "phone": "(510) 909-9889",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "H. Khan Photography",
+    "contact_details": {
+      "phone": "(415) 305-6577",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "HM Video And Photography Studio",
+    "contact_details": {
+      "phone": "(408) 320-1378",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Hair By Shooshan",
+    "contact_details": {
+      "phone": "(415) 505-1808",
+      "website": "http://hairbyshooshan.com/",
+      "location": "San Francisco, CA"
+    }
+  },
+  {
+    "name": "Hair By Sona",
+    "contact_details": {
+      "phone": "(510) 364-8171",
+      "location": "43547 Mission Blvd, Fremont, CA 94539"
+    }
+  },
+  {
+    "name": "Hanafi Photography",
+    "contact_details": {
+      "phone": "(415) 300-5058",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Happy Events",
+    "contact_details": {
+      "phone": "(408) 320-1378",
+      "location": "Bay Area, CA",
+      "specialty": "South Asian Wedding Coordination"
+    }
+  },
+  {
+    "name": "Harp Chatha Photography",
+    "contact_details": {
+      "phone": "(209) 668-6623",
+      "website": "http://harpchatha.com/",
+      "location": "Manteca, CA"
+    }
+  },
+  {
+    "name": "Harry Photography",
+    "contact_details": {
+      "phone": "(415) 305-6577",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Hashtags Photography",
+    "contact_details": {
+      "phone": "(510) 508-4481",
+      "location": "613 Amberfield Terrace, Fremont, CA 94536"
+    }
+  },
+  {
+    "name": "Haus Of Sidhu",
+    "contact_details": {
+      "phone": "(707) 386-4198",
+      "location": "Fairfield, CA",
+      "specialty": "Bridal Makeup and Hairstyling"
+    }
+  },
+  {
+    "name": "Haveli Grill",
+    "contact_details": {
+      "phone": "(916) 421-1188",
+      "website": "http://haveligrill.com/",
+      "location": "Sacramento, CA"
+    }
+  },
+  {
+    "name": "Hazaru Photography",
+    "contact_details": {
+      "phone": "(408) 823-3888",
+      "location": "Milpitas, CA"
+    }
+  },
+  {
+    "name": "Heavenly Decor Flowers",
+    "contact_details": {
+      "phone": "(510) 517-4686",
+      "location": "6180 Jarvis Ave, Newark, CA 94560"
+    }
+  }
+]
