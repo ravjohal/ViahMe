@@ -1,0 +1,69 @@
+{
+  "fresno_specialized_traditions": {
+    "baraat_horse_and_carriage": [
+      {
+        "name": "Fresno Carriage and Granite Pass Percherons",
+        "location": "Prather / Fresno area, CA",
+        "contact": {
+          "phone": "559-905-6491",
+          "email": "via inquiry",
+          "notes": "Highly local Fresno provider of white horses and carriages for Grooms."
+        }
+      },
+      {
+        "name": "Grand Carriages & Baraat Horse Services",
+        "location": "Livermore, CA (Serves Fresno/Central Valley)",
+        "contact": {
+          "phone": "925-344-1117",
+          "email": "Grandcarriage@yahoo.com",
+          "website": "https://www.grandcarriage.com",
+          "specialty": "Traditional Indian wedding horses (Ghodi) and decorated carriages."
+        }
+      },
+      {
+        "name": "O'Hara Family Farm",
+        "location": "Arbuckle / Sacramento Area (Serves Fresno)",
+        "contact": {
+          "email": "info@oharafamilyfarm.com",
+          "website": "https://oharafamilyfarm.com",
+          "notes": "Provides horses for riding with a handler and decorated carriages."
+        }
+      }
+    ],
+    "mehndi_and_henna_artists": [
+      {
+        "name": "Johal Henna",
+        "location": "Fresno, CA",
+        "contact": {
+          "phone": "408-641-7148",
+          "specialty": "Bridal Arabic and Traditional Indian Mehndi."
+        }
+      },
+      {
+        "name": "Neethenna",
+        "location": "Fresno, CA",
+        "contact": {
+          "website": "https://www.theknot.com/marketplace/neethenna-fresno-ca-2014443",
+          "notes": "Uses 100% natural organic henna with no chemicals."
+        }
+      },
+      {
+        "name": "Desi Hennawali",
+        "location": "Fresno, CA",
+        "contact": {
+          "via": "Thumbtack / Local Inquiry",
+          "notes": "Specializes in high-demand bridal and group event henna."
+        }
+      },
+      {
+        "name": "Rashi Henna (Vidhi)",
+        "location": "Central Valley / California-wide",
+        "contact": {
+          "phone": "669-292-9115",
+          "website": "https://rashihenna.com",
+          "notes": "Expert in both intricate bridal designs and high-volume guest henna."
+        }
+      }
+    ]
+  }
+}

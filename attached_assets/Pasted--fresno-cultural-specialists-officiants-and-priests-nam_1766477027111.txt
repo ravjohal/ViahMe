@@ -1,0 +1,75 @@
+{
+  "fresno_cultural_specialists": {
+    "officiants_and_priests": [
+      {
+        "name": "Hindu Temple of Fresno",
+        "location": "7699 E. Alluvial Ave, Clovis, CA 93619",
+        "contact": {
+          "phone": "559-434-3100",
+          "priests": ["Shambulinga Shastry", "Siddharath Sarangi"],
+          "website": "https://www.hindutemplefresno.org",
+          "notes": "Offers both on-site and off-site wedding services."
+        }
+      },
+      {
+        "name": "Priest Vidwan Pdt Sridhara Bhattar M.A.",
+        "location": "Fresno, CA",
+        "contact": {
+          "phone": "737-200-5290",
+          "specialty": "Vedic Hindu Wedding Rituals"
+        }
+      },
+      {
+        "name": "Hindu Telugu Priest Subramanyam Veluri",
+        "location": "Fresno, CA",
+        "contact": {
+          "phone": "443-292-9325",
+          "specialty": "South Indian & Vedic Ceremonies"
+        }
+      },
+      {
+        "name": "Sikh Institute of Central California (Gurdwara)",
+        "location": "4827 N Gladstone Ave, Fresno, CA 93726",
+        "contact": {
+          "phone": "559-221-5020",
+          "service": "Anand Karaj (Sikh Wedding) services"
+        }
+      }
+    ],
+    "punjabi_and_bollywood_djs": [
+      {
+        "name": "DJ Gabbar",
+        "location": "Fresno, CA",
+        "contact": {
+          "phone": "310-912-7663",
+          "specialty": "Bhangra, Bollywood & Hip-Hop Fusion"
+        }
+      },
+      {
+        "name": "DJ Jimmy",
+        "location": "Fresno, CA",
+        "contact": {
+          "phone": "312-626-4366",
+          "specialty": "Punjabi Wedding Specialist"
+        }
+      },
+      {
+        "name": "Fusion Sounds (Sandeep Kumar)",
+        "location": "Serving Fresno & Central Valley",
+        "contact": {
+          "phone": "301-686-5058",
+          "website": "https://www.fusionsounds.com",
+          "notes": "Highly rated for high-energy Baraats and Dhol players."
+        }
+      },
+      {
+        "name": "Bhangra West DJ Service",
+        "location": "Fresno / Central Valley",
+        "contact": {
+          "phone": "Available via inquiry",
+          "specialty": "Traditional Punjabi beats and MC services"
+        }
+      }
+    ]
+  }
+}
