@@ -1,0 +1,117 @@
+[
+  {
+    "name": "Shilpa's Henna (Shilpa Kala Art World)",
+    "contact_details": {
+      "phone": "(408) 641-7148",
+      "location": "Fremont / San Jose, CA",
+      "specialty": "Traditional Mehndi and Indian Art Classes"
+    }
+  },
+  {
+    "name": "Shine Photography (YouShine Digital Studio)",
+    "contact_details": {
+      "phone": "(510) 583-1131",
+      "website": "https://www.youshine.com/",
+      "location": "21949 Dolores St, Castro Valley, CA 94546",
+      "specialty": "Digital Portraiture and Event Photography"
+    }
+  },
+  {
+    "name": "Shivani's Henna",
+    "contact_details": {
+      "phone": "(408) 517-4686",
+      "location": "Sunnyvale, CA"
+    }
+  },
+  {
+    "name": "Shobana's Henna",
+    "contact_details": {
+      "phone": "(408) 320-1378",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Shraddha's Henna",
+    "contact_details": {
+      "phone": "(510) 508-4481",
+      "location": "Union City, CA"
+    }
+  },
+  {
+    "name": "Shreena's Henna",
+    "contact_details": {
+      "phone": "(408) 641-7148",
+      "location": "San Jose, CA"
+    }
+  },
+  {
+    "name": "Shreya's Henna",
+    "contact_details": {
+      "phone": "(415) 305-6577",
+      "location": "San Francisco, CA"
+    }
+  },
+  {
+    "name": "Shridevi's Henna",
+    "contact_details": {
+      "phone": "(408) 823-3888",
+      "location": "San Jose, CA"
+    }
+  },
+  {
+    "name": "Shrishti's Henna",
+    "contact_details": {
+      "phone": "(510) 932-9019",
+      "location": "Fremont, CA"
+    }
+  },
+  {
+    "name": "Shruti's Henna Art",
+    "contact_details": {
+      "phone": "(408) 320-1378",
+      "location": "Santa Clara, CA"
+    }
+  },
+  {
+    "name": "Shubha's Henna Art",
+    "contact_details": {
+      "phone": "(510) 508-4481",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Silk and Stones",
+    "contact_details": {
+      "phone": "(408) 210-2101",
+      "website": "https://silkandstones.com/",
+      "location": "Bay Area / Online",
+      "specialty": "Luxury Jewelry and Accessories"
+    }
+  },
+  {
+    "name": "Silver Spoon Catering",
+    "contact_details": {
+      "phone": "(408) 645-1840",
+      "website": "https://www.silverspoonca.com/",
+      "location": "620 Hollenbeck Ave, Sunnyvale, CA 94087",
+      "specialty": "Global Cuisine and Specialized Wedding Menus"
+    }
+  },
+  {
+    "name": "Simar's Henna",
+    "contact_details": {
+      "phone": "(510) 709-8903",
+      "location": "Fremont, CA"
+    }
+  },
+  {
+    "name": "Simran's Henna (Loli Henna & Fashions)",
+    "contact_details": {
+      "phone": "(510) 709-8903",
+      "email": "lolimehandi@gmail.com",
+      "website": "https://www.hennafremont.com/",
+      "location": "Fremont, CA",
+      "specialty": "Certified Bridal Mehndi and Cultural Fashion"
+    }
+  }
+]
