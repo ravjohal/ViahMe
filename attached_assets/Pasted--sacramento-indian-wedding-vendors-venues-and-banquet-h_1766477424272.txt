@@ -1,0 +1,110 @@
+{
+  "sacramento_indian_wedding_vendors": {
+    "venues_and_banquet_halls": [
+      {
+        "name": "White Lotus Banquet Hall",
+        "location": "1300 Howe Ave, Sacramento, CA 95825",
+        "contact": {
+          "phone": "916-564-1300",
+          "website": "http://whitelotusbanquethall.com",
+          "notes": "A premier choice for large Desi weddings and receptions in the city."
+        }
+      },
+      {
+        "name": "Citrus Heights Community Center",
+        "location": "6300 Fountain Square Dr, Citrus Heights, CA 95621",
+        "contact": {
+          "phone": "916-727-5400",
+          "notes": "Very popular for South Asian ceremonies due to flexible outside catering policies."
+        }
+      },
+      {
+        "name": "Sikh Center of Sacramento",
+        "location": "2301 Evergreen Ave, West Sacramento, CA 95691",
+        "contact": {
+          "phone": "916-373-1000",
+          "service": "Anand Karaj (Sikh Wedding) services."
+        }
+      }
+    ],
+    "catering_and_restaurants": [
+      {
+        "name": "India Oven",
+        "location": "3506 El Camino Ave, Sacramento, CA 95821",
+        "contact": {
+          "phone": "916-481-4444",
+          "website": "https://www.indiaoven.com",
+          "specialty": "North Indian/Punjabi catering for large events."
+        }
+      },
+      {
+        "name": "Mantra Indian Cuisine",
+        "location": "1530 W El Camino Ave, Sacramento, CA 95833",
+        "contact": {
+          "phone": "916-564-1001",
+          "website": "https://mantrasacramento.com",
+          "notes": "Known for high-end buffet services and customized wedding menus."
+        }
+      }
+    ],
+    "planning_and_decor": [
+      {
+        "name": "Xquisite Events",
+        "location": "Sacramento / Roseville area",
+        "contact": {
+          "phone": "916-521-5070",
+          "website": "http://www.xquisiteeventsca.com",
+          "specialty": "High-end luxury decor and floral design for South Asian weddings."
+        }
+      },
+      {
+        "name": "Enchanted Events",
+        "location": "Sacramento, CA",
+        "contact": {
+          "phone": "916-832-6805",
+          "website": "https://enchantedevents.decor",
+          "notes": "Experts in Mandaps, Jago decor, and colorful Sangeet setups."
+        }
+      }
+    ],
+    "photography_and_videography": [
+      {
+        "name": "Shyla Photography",
+        "location": "Sacramento, CA",
+        "contact": {
+          "phone": "916-215-6110",
+          "website": "https://shylaphotography.com",
+          "specialty": "Vibrant, storytelling photography for Indian ceremonies."
+        }
+      },
+      {
+        "name": "Wedding Documentary",
+        "location": "Serving Sacramento (Based in Bay Area)",
+        "contact": {
+          "phone": "408-460-1855",
+          "website": "https://www.weddingdocumentary.com",
+          "notes": "High-end cinematic films and photography for South Asian weddings."
+        }
+      }
+    ],
+    "entertainment_and_dj": [
+      {
+        "name": "DJ Salim",
+        "location": "Sacramento / Bay Area",
+        "contact": {
+          "phone": "408-234-6331",
+          "website": "https://djsalim.com",
+          "specialty": "Bhangra, Bollywood, and Top 40 fusion; experienced MC."
+        }
+      },
+      {
+        "name": "Calibhangra Dholis",
+        "location": "Sacramento, CA",
+        "contact": {
+          "phone": "916-838-3465",
+          "specialty": "Professional Dhol players for Baraats and Jago."
+        }
+      }
+    ]
+  }
+}
