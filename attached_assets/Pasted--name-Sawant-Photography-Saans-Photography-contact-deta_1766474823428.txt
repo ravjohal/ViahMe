@@ -1,0 +1,124 @@
+[
+  {
+    "name": "Sawant Photography (Saans Photography)",
+    "contact_details": {
+      "phone": "(408) 320-1378",
+      "website": "https://www.saansphotography.com/",
+      "location": "Bay Area, CA",
+      "specialty": "Cinematic South Asian Wedding Photography"
+    }
+  },
+  {
+    "name": "Say Hello To My Little Friend",
+    "contact_details": {
+      "phone": "(415) 305-6577",
+      "location": "San Francisco, CA",
+      "specialty": "Event Media and Creative Services"
+    }
+  },
+  {
+    "name": "Schone Photography",
+    "contact_details": {
+      "phone": "(415) 300-5058",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Scott Campbell Photography",
+    "contact_details": {
+      "phone": "(415) 558-9819",
+      "website": "https://scottcampbellphoto.com/",
+      "location": "San Francisco, CA"
+    }
+  },
+  {
+    "name": "Scout Video Production",
+    "contact_details": {
+      "phone": "(916) 246-0558",
+      "location": "Sacramento, CA"
+    }
+  },
+  {
+    "name": "Sea Scape Wedding Photography (Seascape Resort)",
+    "contact_details": {
+      "phone": "(831) 662-7140",
+      "website": "https://seascaperesort.com/",
+      "location": "One Seascape Resort Dr, Aptos, CA 95003",
+      "specialty": "Oceanfront Wedding Venue and Media Services"
+    }
+  },
+  {
+    "name": "Seema's Henna (Seema Beauty Salon)",
+    "contact_details": {
+      "phone": "(408) 935-8000",
+      "website": "https://seemabeautysalon.com/",
+      "location": "450 S Main St, Milpitas, CA 95035",
+      "specialty": "Bridal Henna, Threading, and Beauty Services"
+    }
+  },
+  {
+    "name": "Seher's Henna",
+    "contact_details": {
+      "phone": "(510) 932-9019",
+      "location": "Fremont, CA"
+    }
+  },
+  {
+    "name": "Selina Henna",
+    "contact_details": {
+      "phone": "(510) 508-4481",
+      "location": "Hayward / Bay Area, CA"
+    }
+  },
+  {
+    "name": "Senator Hotel (The Senator Office Building)",
+    "contact_details": {
+      "phone": "(916) 491-4310",
+      "website": "https://thesenatorofficebuilding.com/",
+      "location": "1121 L St, Sacramento, CA 95814",
+      "specialty": "Historic Sacramento Event and Banquet Space"
+    }
+  },
+  {
+    "name": "Sequoia Mansion (Wedgewood Weddings)",
+    "contact_details": {
+      "phone": "(866) 966-3009",
+      "website": "https://www.wedgewoodweddings.com/",
+      "location": "643 Bee St, Placerville, CA 95667",
+      "specialty": "All-Inclusive Historic Mansion Wedding Venue"
+    }
+  },
+  {
+    "name": "Serendipity Event Planning",
+    "contact_details": {
+      "phone": "(408) 896-1502",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Shabaaz Indian Cuisine",
+    "contact_details": {
+      "phone": "(408) 641-7148",
+      "location": "Bay Area, CA",
+      "specialty": "North Indian Event Catering"
+    }
+  },
+  {
+    "name": "Shadi Decor (Saba Decor Rentals)",
+    "contact_details": {
+      "phone": "(510) 270-8200",
+      "website": "https://www.sabadecorrentals.com/",
+      "location": "42285 Osgood Rd, Fremont, CA 94539",
+      "specialty": "Indian Wedding Mandaps and Luxury Decor Rentals"
+    }
+  },
+  {
+    "name": "Shalimar Restaurant",
+    "contact_details": {
+      "phone": "(510) 494-1919",
+      "website": "https://shalimarrestaurants.us/",
+      "location": "3325 Walnut Ave, Fremont, CA 94538",
+      "specialty": "Famous Pakistani and North Indian Catering"
+    }
+  }
+]
