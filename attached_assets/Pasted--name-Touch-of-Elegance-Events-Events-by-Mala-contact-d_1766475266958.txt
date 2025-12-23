@@ -1,0 +1,103 @@
+[
+  {
+    "name": "Touch of Elegance Events (Events by Mala)",
+    "contact_details": {
+      "phone": "(917) 566-5404",
+      "website": "https://eventsbymala.com/",
+      "location": "Los Angeles / Serving CA",
+      "specialty": "Luxury South Asian Wedding Planning and Design"
+    }
+  },
+  {
+    "name": "Udupi Palace (San Francisco)",
+    "contact_details": {
+      "phone": "(415) 970-8000",
+      "website": "http://www.udupipalacesf.com/",
+      "location": "1007 1/2 Valencia St, San Francisco, CA 94110",
+      "specialty": "South Indian Vegetarian Catering"
+    }
+  },
+  {
+    "name": "Udupi Palace (Berkeley)",
+    "contact_details": {
+      "phone": "(510) 843-6600",
+      "website": "http://www.udupipalaceberkeley.com/",
+      "location": "1903 University Ave, Berkeley, CA 94704"
+    }
+  },
+  {
+    "name": "Urban Events",
+    "contact_details": {
+      "phone": "(415) 692-1465",
+      "website": "https://urbanevents.com/",
+      "location": "San Francisco Bay Area, CA",
+      "specialty": "Full-Service Corporate and Social Event Management"
+    }
+  },
+  {
+    "name": "Utsav Events",
+    "contact_details": {
+      "phone": "(562) 228-8655",
+      "website": "https://utsavevents.squarespace.com/",
+      "location": "9567 Slauson Ave, Pico Rivera, CA 90660",
+      "specialty": "Boutique Event Decor and Florals"
+    }
+  },
+  {
+    "name": "Vandana's Henna (Vandana Mehndi)",
+    "contact_details": {
+      "phone": "(408) 517-4686",
+      "location": "101 North 1st Street, San Jose, CA",
+      "specialty": "Bridal Mehndi and Cultural Body Art"
+    }
+  },
+  {
+    "name": "Veda Indian Cuisine",
+    "contact_details": {
+      "phone": "(408) 433-5199",
+      "website": "https://vedacuisine.com/",
+      "location": "444 Barber Ln, Milpitas, CA 95035",
+      "specialty": "Authentic North Indian Buffet and Event Catering"
+    }
+  },
+  {
+    "name": "Vibrant Henna",
+    "contact_details": {
+      "phone": "(415) 305-6577",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Vineyard Events (Davies Vineyards)",
+    "contact_details": {
+      "phone": "(707) 709-4245",
+      "website": "https://www.schramsberg.com/events/",
+      "location": "1210 Grayson Ave, St. Helena, CA 94574",
+      "specialty": "Luxury Winery Wedding Events"
+    }
+  },
+  {
+    "name": "Visionary Media",
+    "contact_details": {
+      "email": "info@thevisionarymediagroup.com",
+      "website": "https://www.thevisionarymediagroup.com/",
+      "location": "Bay Area, CA",
+      "specialty": "Creative Video Production and Media Strategy"
+    }
+  },
+  {
+    "name": "Vivah Decorations",
+    "contact_details": {
+      "phone": "(805) 649-1411",
+      "location": "Oak View, CA",
+      "specialty": "Indian Wedding Mandaps and Custom Event Decor"
+    }
+  },
+  {
+    "name": "Vantaggio Events",
+    "contact_details": {
+      "phone": "(408) 896-1502",
+      "location": "Bay Area, CA"
+    }
+  }
+]
