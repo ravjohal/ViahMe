@@ -1,0 +1,81 @@
+{
+  "bay_area_vendor_contacts": {
+    "venues_and_banquets": [
+      {
+        "name": "Golden Peacock Banquet Hall",
+        "location": "2498 Stevens Creek Blvd, Milpitas, CA 95035",
+        "contact": {
+          "phone": "408-942-1500",
+          "website": "http://goldenpeacockbanquet.com",
+          "notes": "A staple in the South Bay for large Indian receptions and Sangeets."
+        }
+      }
+    ],
+    "catering_and_food": [
+      {
+        "name": "Golden Taj",
+        "location": "1295 S Bascom Ave, San Jose, CA 95128",
+        "contact": {
+          "phone": "408-280-5555",
+          "website": "https://goldentaj.com",
+          "specialty": "Traditional Punjabi and North Indian catering."
+        }
+      },
+      {
+        "name": "Glow Event Design",
+        "location": "2762 Octavia St, Suite B, San Francisco, CA 94123",
+        "contact": {
+          "phone": "415-320-8025",
+          "website": "https://gloweventdesign.com",
+          "specialty": "Luxury boutique planning and high-end catering coordination."
+        }
+      }
+    ],
+    "photography_and_video": [
+      {
+        "name": "Gill Digital Video",
+        "location": "Bay Area / Union City, CA",
+        "contact": {
+          "phone": "510-441-2100",
+          "website": "https://gilldigitalvideo.com",
+          "notes": "Highly experienced in Punjabi wedding videography and multi-day event coverage."
+        }
+      },
+      {
+        "name": "Girish Gupta Photography",
+        "location": "San Francisco, CA",
+        "contact": {
+          "phone": "415-533-3141",
+          "website": "https://girishgupta.com",
+          "specialty": "Fine art South Asian wedding photography."
+        }
+      },
+      {
+        "name": "Gold Maple Photography",
+        "location": "Cupertino, CA / Bay Area",
+        "contact": {
+          "phone": "408-898-7654",
+          "website": "https://goldmaplephotography.com"
+        }
+      },
+      {
+        "name": "Gingi Freeman Photography",
+        "location": "Visalia, CA (Serves Fresno/Central Valley)",
+        "contact": {
+          "phone": "559-901-5743",
+          "website": "https://gingifreemanphotography.com"
+        }
+      }
+    ],
+    "decor_and_coordination": [
+      {
+        "name": "Gill Decor",
+        "location": "Bay Area / Fremont, CA",
+        "contact": {
+          "phone": "510-673-8900",
+          "notes": "Specializes in traditional Punjabi wedding decor and event management."
+        }
+      }
+    ]
+  }
+}
