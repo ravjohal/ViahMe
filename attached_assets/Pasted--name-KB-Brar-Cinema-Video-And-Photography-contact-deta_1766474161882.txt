@@ -1,0 +1,155 @@
+[
+  {
+    "name": "KB Brar Cinema Video And Photography",
+    "contact_details": {
+      "phone": "(510) 909-9889",
+      "website": "http://kbbrar.com/",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "KB Mandir Event Hall & Studios",
+    "contact_details": {
+      "phone": "(510) 791-2422",
+      "location": "418 Ohlones St, Fremont, CA",
+      "specialty": "Temple Event Hall and Photography Studio"
+    }
+  },
+  {
+    "name": "KS Artistry",
+    "contact_details": {
+      "phone": "(916) 246-0558",
+      "website": "https://ksartistry.com/",
+      "location": "Sacramento, CA",
+      "specialty": "Bridal Hair and Makeup"
+    }
+  },
+  {
+    "name": "KSway Films",
+    "contact_details": {
+      "phone": "(530) 356-5509",
+      "website": "https://kswayfilms.com/",
+      "location": "Redding, CA"
+    }
+  },
+  {
+    "name": "KV Events & Decor",
+    "contact_details": {
+      "phone": "(408) 641-7148",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Kalpana Beauty Parlor",
+    "contact_details": {
+      "phone": "(408) 255-2555",
+      "location": "2653 Flagstone Dr, San Jose, CA 95132"
+    }
+  },
+  {
+    "name": "Kamala Threading",
+    "contact_details": {
+      "phone": "(510) 841-2323",
+      "location": "1951 Martin Luther King Jr Way, Berkeley, CA 94704"
+    }
+  },
+  {
+    "name": "Kamalas Henna World",
+    "contact_details": {
+      "phone": "(408) 724-4444",
+      "location": "Santa Clara, CA"
+    }
+  },
+  {
+    "name": "Kanda Productions",
+    "contact_details": {
+      "phone": "(925) 321-1100",
+      "website": "http://kandaproductions.com/",
+      "location": "Concord, CA"
+    }
+  },
+  {
+    "name": "Kapture By Kamal",
+    "contact_details": {
+      "phone": "(510) 517-4686",
+      "website": "https://www.kapturebykamal.com/",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Karim Nagi & Arabiqa",
+    "contact_details": {
+      "website": "http://www.karimnagi.com/",
+      "location": "San Francisco, CA",
+      "specialty": "Arab World Music and Dance"
+    }
+  },
+  {
+    "name": "Karwa Chauth By Vibrant Henna",
+    "contact_details": {
+      "phone": "(415) 305-6577",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Kashish Threading And Wax Center",
+    "contact_details": {
+      "phone": "(408) 732-2323",
+      "location": "728 South Wolfe Road, Sunnyvale, CA 94086"
+    }
+  },
+  {
+    "name": "Kasturi Photography",
+    "contact_details": {
+      "phone": "(408) 320-1378",
+      "website": "https://kasturiphotography.com/",
+      "location": "4713 Cheeney St, Santa Clara, CA"
+    }
+  },
+  {
+    "name": "Kathmandu Kitchen Banquet",
+    "contact_details": {
+      "phone": "(916) 441-2172",
+      "website": "https://kathmandukitchen.com/",
+      "location": "1728 Broadway, Sacramento, CA"
+    }
+  },
+  {
+    "name": "Kaustubha Boutique",
+    "contact_details": {
+      "phone": "(650) 300-5058",
+      "location": "Redwood City, CA"
+    }
+  },
+  {
+    "name": "Kayaa Spa",
+    "contact_details": {
+      "phone": "(408) 540-7244",
+      "website": "https://www.kayaaspa.com/",
+      "location": "2190 S Bascom Ave, Campbell, CA 95008"
+    }
+  },
+  {
+    "name": "Kayantra Beauty Wellness",
+    "contact_details": {
+      "phone": "(510) 505-0744",
+      "website": "http://kayantra.com/",
+      "location": "2140 Peralta Blvd, Fremont, CA 94536"
+    }
+  },
+  {
+    "name": "Keith Simonian Photography",
+    "contact_details": {
+      "phone": "(415) 305-6577",
+      "website": "https://keithsimonian.com/",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "KelSweet Event Rentals LLC",
+    "contact_details": {
+      "phone": "(408) 896-1502",
+      "location": "Bay Area, CA"
+    }
+  }
+]
