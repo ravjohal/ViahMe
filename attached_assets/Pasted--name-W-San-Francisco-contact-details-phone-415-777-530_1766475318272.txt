@@ -1,0 +1,133 @@
+[
+  {
+    "name": "W San Francisco",
+    "contact_details": {
+      "phone": "(415) 777-5300",
+      "website": "https://www.marriott.com/en-us/hotels/sfowh-w-san-francisco/events/",
+      "location": "181 Third Street, San Francisco, CA 94103",
+      "specialty": "Modern Urban Wedding Venue and Cultural Ceremonies"
+    }
+  },
+  {
+    "name": "Walnut Creek Marriott",
+    "contact_details": {
+      "phone": "(925) 934-2000",
+      "website": "https://www.marriott.com/en-us/hotels/sfowc-walnut-creek-marriott/",
+      "location": "2355 North Main Street, Walnut Creek, CA 94596",
+      "specialty": "Large Banquet Spaces and In-House Event Planning"
+    }
+  },
+  {
+    "name": "Wedding Documentary Photo & Cinema",
+    "contact_details": {
+      "phone": "(408) 457-1385",
+      "email": "info@weddingdocumentary.com",
+      "website": "https://weddingdocumentary.com/",
+      "location": "San Jose, CA (Serving Worldwide)",
+      "specialty": "Boutique South Asian Wedding Cinematography"
+    }
+  },
+  {
+    "name": "Wedgewood Weddings (Northern CA Network)",
+    "contact_details": {
+      "phone": "(866) 966-3009",
+      "email": "Events@WedgewoodWeddings.com",
+      "website": "https://www.wedgewoodweddings.com/northern-california-wedding-venues",
+      "location": "Multiple (San Ramon, San Jose, San Francisco, Vallejo)",
+      "specialty": "All-Inclusive Wedding Venue Packages"
+    }
+  },
+  {
+    "name": "Westin San Jose (Il Fornaio)",
+    "contact_details": {
+      "phone": "(408) 271-3357",
+      "email": "kpeel@ilfo.com",
+      "website": "https://www.todaysbridesf.com/venues/westin-san-jose-il-fornaio/",
+      "location": "302 South Market Street, San Jose, CA 95113",
+      "specialty": "Historic Hotel Venue with Specialty Italian Catering"
+    }
+  },
+  {
+    "name": "Westin St. Francis San Francisco",
+    "contact_details": {
+      "phone": "(415) 397-7000",
+      "website": "https://www.marriott.com/en-us/hotels/sfouw-the-westin-st-francis-san-francisco-on-union-square/events/",
+      "location": "335 Powell Street, San Francisco, CA 94102",
+      "specialty": "Historic Grand Ballrooms and Luxury Receptions"
+    }
+  },
+  {
+    "name": "Willow Heights Mansion",
+    "contact_details": {
+      "phone": "(408) 778-1978",
+      "website": "http://www.liveloveleal.com/experience/willow-heights-mansion-events",
+      "location": "1978 Willow Springs Road, Morgan Hill, CA 95037",
+      "specialty": "Private Estate Venue and Boutique Catering"
+    }
+  },
+  {
+    "name": "Wine Country Weddings (Napa Valley Weddings)",
+    "contact_details": {
+      "phone": "(707) 252-1156",
+      "email": "napaweddings@gmail.com",
+      "website": "https://www.napavalleyweddings.com/",
+      "location": "Napa Valley, CA",
+      "specialty": "Vineyard Ceremony Planning and Coordination"
+    }
+  },
+  {
+    "name": "Wyndham Hotel Napa Valley",
+    "contact_details": {
+      "phone": "(707) 257-1800",
+      "location": "3425 Solano Ave, Napa, CA 94558",
+      "specialty": "Napa Valley Event Accommodations and Venues"
+    }
+  },
+  {
+    "name": "Yak and Yeti (Indian/Nepalese Catering)",
+    "contact_details": {
+      "phone": "(650) 366-4111",
+      "location": "Belmont / Bay Area, CA",
+      "specialty": "Authentic Himalayan and Indian Catering"
+    }
+  },
+  {
+    "name": "Zaika Indian Cuisine",
+    "contact_details": {
+      "phone": "(331) 757-5122",
+      "website": "https://zaikarestaurants.com/zaika-catering/",
+      "location": "San Jose / Bay Area, CA",
+      "specialty": "Traditional North Indian Catering and Buffet"
+    }
+  },
+  {
+    "name": "Zareen's Restaurant",
+    "contact_details": {
+      "phone": "(650) 427-0158",
+      "email": "catering@zareensrestaurant.com",
+      "website": "https://zareensrestaurant.square.site/",
+      "location": "Mountain View / Palo Alto / Redwood City",
+      "specialty": "High-Quality Halal Indian/Pakistani Event Catering"
+    }
+  },
+  {
+    "name": "Zindagi (Radio Zindagi / Media)",
+    "contact_details": {
+      "phone": "(510) 371-9999",
+      "email": "contactsfo@radiozindagi.com",
+      "website": "https://radiozindagi.com/",
+      "location": "40931 Fremont Blvd, Fremont, CA 94538",
+      "specialty": "South Asian Radio Advertising and Event Promotion"
+    }
+  },
+  {
+    "name": "Zuniga Photography",
+    "contact_details": {
+      "phone": "(310) 297-0460",
+      "email": "gzunigaphoto@gmail.com",
+      "website": "https://www.zunigasart.com/",
+      "location": "Bay Area / Destination",
+      "specialty": "Editorial Wedding and Portrait Photography"
+    }
+  }
+]
