@@ -1,0 +1,103 @@
+[
+  {
+    "name": "Nasreen's Henna (Floral Creations by Nasreen)",
+    "contact_details": {
+      "phone": "(408) 888-3730",
+      "email": "nasreen@floralcreationsbynasreen.com",
+      "website": "https://floralcreationsbynasreen.com/",
+      "location": "Morgan Hill, CA 95037",
+      "specialty": "Custom Floral Design, Mandaps, and Mehndi Decor"
+    }
+  },
+  {
+    "name": "Natural Henna (Pure Organic Henna)",
+    "contact_details": {
+      "phone": "(310) 994-9505",
+      "website": "https://pureorganichenna.com/",
+      "location": "Los Angeles / Serving CA",
+      "specialty": "USDA Certified Organic Henna and Jagua Art"
+    }
+  },
+  {
+    "name": "Navid Photography & Video (Navid Studio)",
+    "contact_details": {
+      "phone": "(310) 753-9622",
+      "website": "https://www.navidstudio.com/",
+      "location": "Newport Beach / Serving Bay Area",
+      "specialty": "High-end Wedding Cinematography and Photography"
+    }
+  },
+  {
+    "name": "Navjot Henna",
+    "contact_details": {
+      "phone": "(510) 932-9019",
+      "location": "Fremont, CA",
+      "specialty": "Traditional Bridal Mehndi"
+    }
+  },
+  {
+    "name": "Neha's Henna (Henna Fremont)",
+    "contact_details": {
+      "phone": "(510) 709-8903",
+      "website": "https://www.hennafremont.com/",
+      "location": "Fremont, CA",
+      "specialty": "Intricate Bridal and Party Henna"
+    }
+  },
+  {
+    "name": "New India Bazar",
+    "contact_details": {
+      "phone": "(408) 249-2599",
+      "website": "https://www.newindiabazar.com/",
+      "location": "2213 El Camino Real, Santa Clara, CA 95050",
+      "specialty": "Catering, Indian Groceries, and Sweets"
+    }
+  },
+  {
+    "name": "New Saffron",
+    "contact_details": {
+      "phone": "(650) 948-0123",
+      "location": "2700 W El Camino Real, Mountain View, CA 94040",
+      "specialty": "Indian Buffet and Event Catering"
+    }
+  },
+  {
+    "name": "Nice Events",
+    "contact_details": {
+      "phone": "(408) 823-3888",
+      "location": "San Jose, CA",
+      "specialty": "Event Planning and Decoration"
+    }
+  },
+  {
+    "name": "Nisha's Henna (Henna By Nisha Soni)",
+    "contact_details": {
+      "phone": "(408) 646-3054",
+      "website": "https://henna-by-nisha-soni.wheree.com/",
+      "location": "786 Claridad Loop, Milpitas, CA 95035",
+      "specialty": "Bridal Mehndi and Custom Cultural Events"
+    }
+  },
+  {
+    "name": "Nitin's Photography",
+    "contact_details": {
+      "phone": "(510) 909-9889",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Noelle's Photography",
+    "contact_details": {
+      "phone": "(415) 305-6577",
+      "location": "San Francisco, CA"
+    }
+  },
+  {
+    "name": "Nu-Life Skin Care",
+    "contact_details": {
+      "phone": "(408) 255-2555",
+      "location": "Cupertino, CA",
+      "specialty": "Pre-Wedding Skincare and Facial Treatments"
+    }
+  }
+]
