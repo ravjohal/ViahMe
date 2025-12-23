@@ -1,0 +1,91 @@
+{
+  "fresno_wedding_directory": {
+    "venues_from_file": [
+      {
+        "name": "Golden Palace Banquet Hall",
+        "location": "2625 W Vassar Ave, Fresno, CA 93705",
+        "contact": {
+          "phone": "559-233-1234",
+          "email": "info@fresnogoldenpalace.com",
+          "website": "https://fresnogoldenpalace.com"
+        }
+      }
+    ],
+    "hair_and_makeup_from_file": [
+      {
+        "name": "Glam By Kaurx",
+        "location": "Fresno, CA",
+        "contact": {
+          "instagram": "@glambykaurx",
+          "notes": "South Asian bridal specialist serving the Central Valley."
+        }
+      },
+      {
+        "name": "Glam By Rajvinder Ghuman",
+        "location": "Fresno, CA",
+        "contact": {
+          "phone": "559-360-9118",
+          "email": "glambyrajvinder@gmail.com",
+          "specialty": "Traditional Punjabi Bridal Styling"
+        }
+      }
+    ],
+    "guest_transportation_and_shuttles": [
+      {
+        "name": "Royalty Coaches Inc.",
+        "location": "3728 W McKinley Ave, Fresno, CA 93722",
+        "contact": {
+          "phone": "559-569-2900",
+          "website": "https://www.royaltycoaches.com",
+          "services": ["Party Buses", "Limo Buses", "Guest Shuttles"]
+        }
+      },
+      {
+        "name": "Limo For You",
+        "location": "Fresno / Central Valley",
+        "contact": {
+          "phone": "559-266-1111",
+          "website": "https://www.limoforyou.com",
+          "notes": "Large fleet of 10-40 passenger buses; award-winning service in Fresno."
+        }
+      },
+      {
+        "name": "Superb Line Charter Bus",
+        "location": "Fresno, CA",
+        "contact": {
+          "phone": "559-333-0412",
+          "website": "https://superbline.org",
+          "notes": "SPAB Certified for high-capacity guest shuttle logistics."
+        }
+      }
+    ],
+    "indian_groceries_and_puja_supplies": [
+      {
+        "name": "Shan-E-Punjab Grocery & Sweets",
+        "location": "4741 W Shaw Ave #106, Fresno, CA 93722",
+        "contact": {
+          "phone": "559-237-4000",
+          "website": "https://shanepunjabfresno.com",
+          "notes": "One-stop shop for bulk Puja items, fresh mithai, and Indian snacks."
+        }
+      },
+      {
+        "name": "Indian Bazaar Fresno",
+        "location": "3622 W Shaw Ave, Fresno, CA 93711",
+        "contact": {
+          "phone": "559-271-1234",
+          "website": "https://indianbazaarfresno.com",
+          "notes": "Carries rare spices, fresh Jalebis, and a variety of festive decorations."
+        }
+      },
+      {
+        "name": "Kohinoor Indian Bazaar",
+        "location": "270 Shaw Ave, Clovis, CA 93612",
+        "contact": {
+          "phone": "559-900-4162",
+          "notes": "Clean, organized shop for religious items and specialty Punjabi groceries."
+        }
+      }
+    ]
+  }
+}
