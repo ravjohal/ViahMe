@@ -1,0 +1,93 @@
+{
+  "sacramento_vendor_directory": [
+    {
+      "name": "White Lotus Banquet Hall",
+      "category": "Venue",
+      "location": "1300 Howe Ave, Sacramento, CA 95825",
+      "contact": {
+        "phone": "(916) 564-1300",
+        "website": "whitelotusbanquethall.com"
+      }
+    },
+    {
+      "name": "India Oven",
+      "category": "Catering",
+      "location": "3506 El Camino Ave, Sacramento, CA 95821",
+      "contact": {
+        "phone": "(916) 481-4444",
+        "website": "indiaoven.com"
+      }
+    },
+    {
+      "name": "Xquisite Events",
+      "category": "Decor",
+      "location": "Roseville / Sacramento",
+      "contact": {
+        "phone": "(916) 521-5070",
+        "website": "xquisiteeventsca.com"
+      }
+    },
+    {
+      "name": "DJ Salim",
+      "category": "DJ/Entertainment",
+      "location": "Sacramento / Bay Area",
+      "contact": {
+        "phone": "(408) 234-6331",
+        "website": "djsalim.com"
+      }
+    },
+    {
+      "name": "Shyla Photography",
+      "category": "Photography",
+      "location": "Sacramento, CA",
+      "contact": {
+        "phone": "(916) 215-6110",
+        "website": "shylaphotography.com"
+      }
+    },
+    {
+      "name": "Art of Henna by Neeta",
+      "category": "Mehndi",
+      "location": "Sacramento, CA",
+      "contact": {
+        "phone": "(916) 769-6343",
+        "website": "artofhennabyneeta.com"
+      }
+    },
+    {
+      "name": "Monsoon Cuisine of India",
+      "category": "Catering",
+      "location": "Sacramento, CA",
+      "contact": {
+        "phone": "(916) 758-5777",
+        "website": "monsooncuisineofindia.com"
+      }
+    },
+    {
+      "name": "Faces by Myra",
+      "category": "Makeup & Hair",
+      "location": "Sacramento, CA",
+      "contact": {
+        "phone": "(916) 743-4444",
+        "instagram": "@facesbymyra"
+      }
+    },
+    {
+      "name": "Sikh Center of Sacramento",
+      "category": "Religious/Venue",
+      "location": "2301 Evergreen Ave, West Sacramento, CA 95691",
+      "contact": {
+        "phone": "(916) 373-1000"
+      }
+    },
+    {
+      "name": "Royalty Coaches",
+      "category": "Transportation",
+      "location": "Serving Sacramento Area",
+      "contact": {
+        "phone": "(559) 569-2900",
+        "website": "royaltycoaches.com"
+      }
+    }
+  ]
+}
