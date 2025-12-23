@@ -1,0 +1,104 @@
+{
+  "sacramento_expanded_directory": {
+    "planning_and_decor": [
+      {
+        "name": "Maharaja Events, Inc.",
+        "location": "10 Main Ave, Sacramento, CA 95838",
+        "contact": {
+          "phone": "916-396-1707",
+          "email": "parneetsingh@singhsproduction.com",
+          "specialty": "One-stop shop: Mandaps, HD Photography, and Custom Bridal Outfits."
+        }
+      },
+      {
+        "name": "Exclusive Mandaps",
+        "location": "9752 Kent St, Elk Grove, CA 95624",
+        "contact": {
+          "email": "info@exclusivemandaps.com",
+          "website": "https://www.exclusivemandaps.com",
+          "notes": "Large showroom available to view mandap pillars and stage setups in person."
+        }
+      },
+      {
+        "name": "Sarah Khan Event Styling",
+        "location": "Sacramento, CA",
+        "contact": {
+          "phone": "240-644-5957",
+          "email": "contact@sarahkhaneventstyling.com",
+          "specialty": "Luxury floral and event design."
+        }
+      }
+    ],
+    "bridal_boutiques_and_fashion": [
+      {
+        "name": "Ethnic Bollywood, Inc.",
+        "location": "3610 N. Freeway Blvd, Suite 125, Sacramento, CA 95834",
+        "contact": {
+          "phone": "916-572-7661",
+          "email": "sales@ethnicbollywood.com",
+          "specialty": "Bridal lehengas and ethnic wear for the entire family."
+        }
+      },
+      {
+        "name": "Zanra (Bridal & Party Collections)",
+        "location": "Sacramento / Bay Area",
+        "contact": {
+          "phone": "848-225-8847",
+          "notes": "Premium collection of lehengas, shararas, and Indo-western gowns."
+        }
+      },
+      {
+        "name": "V4 Fashion Collection",
+        "location": "Sacramento Area",
+        "contact": {
+          "phone": "737-377-4784",
+          "specialty": "Curated bridal wear and saree specialists."
+        }
+      }
+    ],
+    "catering_specialists": [
+      {
+        "name": "Bombay Flavors",
+        "location": "Serving Sacramento, CA",
+        "contact": {
+          "phone": "586-999-9901",
+          "specialty": "Traditional Punjabi and North Indian wedding catering."
+        }
+      },
+      {
+        "name": "Chaat Kafe",
+        "location": "Sacramento, CA",
+        "contact": {
+          "website": "https://chaatkafesac.com",
+          "notes": "Ideal for Sangeet or Mehndi food stalls featuring fresh Indian street food."
+        }
+      },
+      {
+        "name": "Indian Curries & Rolls",
+        "location": "Sacramento, CA",
+        "contact": {
+          "phone": "916-543-1555",
+          "notes": "Provides bulk catering for smaller pre-wedding home events."
+        }
+      }
+    ],
+    "entertainment_and_dj_services": [
+      {
+        "name": "Empire Limousine DJ Service",
+        "location": "Sacramento, CA",
+        "contact": {
+          "phone": "916-444-3344",
+          "notes": "Specializes in full production (DJ, lighting, and guest transit packages)."
+        }
+      },
+      {
+        "name": "Fusion Sounds",
+        "location": "Serving Sacramento Metro",
+        "contact": {
+          "phone": "301-686-5058",
+          "specialty": "Punjabi DJs, LED walls, and Baraat sound systems."
+        }
+      }
+    ]
+  }
+}
