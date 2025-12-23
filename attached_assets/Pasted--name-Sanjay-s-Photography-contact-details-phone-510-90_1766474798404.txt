@@ -1,0 +1,115 @@
+[
+  {
+    "name": "Sanjay's Photography",
+    "contact_details": {
+      "phone": "(510) 909-9889",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Sanjaya's Mehndi Art",
+    "contact_details": {
+      "phone": "(415) 305-6577",
+      "location": "San Francisco / Bay Area, CA"
+    }
+  },
+  {
+    "name": "Sansar Indian Cuisine",
+    "contact_details": {
+      "phone": "(925) 606-6191",
+      "website": "https://www.sansarindiancuisine.com/",
+      "location": "2222 Second St, Livermore, CA 94550",
+      "specialty": "Traditional Indian Catering (Santokh Judge: 925-487-4679)"
+    }
+  },
+  {
+    "name": "Santa Clara Marriott Wedding",
+    "contact_details": {
+      "phone": "(408) 988-1500",
+      "website": "https://www.marriott.com/en-us/hotels/sjcga-santa-clara-marriott/events/",
+      "location": "2700 Mission College Blvd, Santa Clara, CA 95054"
+    }
+  },
+  {
+    "name": "Santosh Photography",
+    "contact_details": {
+      "phone": "(408) 320-1378",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Sanya's Mehndi",
+    "contact_details": {
+      "phone": "(510) 508-4481",
+      "location": "San Francisco, CA"
+    }
+  },
+  {
+    "name": "Sapna Henna Art",
+    "contact_details": {
+      "phone": "(408) 641-7148",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Sarabjit's Photography",
+    "contact_details": {
+      "phone": "(510) 932-9019",
+      "location": "Fremont, CA"
+    }
+  },
+  {
+    "name": "Saravana Bhavan",
+    "contact_details": {
+      "phone": "(408) 383-7755",
+      "website": "https://www.saravanaabhavan.us/location/saravanaa-bhavan-milpitas/",
+      "location": "438 Barber Lane, Milpitas, CA 95035",
+      "specialty": "Authentic South Indian Vegetarian Catering"
+    }
+  },
+  {
+    "name": "Sargam Indian Cuisine",
+    "contact_details": {
+      "phone": "(925) 937-2700",
+      "website": "https://www.sargamindiancuisine.com/",
+      "location": "140 North Civic Dr, Walnut Creek, CA 94596"
+    }
+  },
+  {
+    "name": "Sarita's Henna",
+    "contact_details": {
+      "phone": "(408) 823-3888",
+      "location": "San Jose, CA"
+    }
+  },
+  {
+    "name": "Sasha Photography",
+    "contact_details": {
+      "phone": "(415) 763-5063",
+      "website": "https://sashaweddingphotography.com/",
+      "location": "San Francisco, CA",
+      "specialty": "Artistic and Contemporary Wedding Photography"
+    }
+  },
+  {
+    "name": "Sateesh Photography",
+    "contact_details": {
+      "phone": "(925) 321-1100",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Savitha's Henna",
+    "contact_details": {
+      "phone": "(415) 300-5058",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Savoury Indian Cuisine",
+    "contact_details": {
+      "phone": "(916) 246-0558",
+      "location": "Roseville / Sacramento Area, CA"
+    }
+  }
+]

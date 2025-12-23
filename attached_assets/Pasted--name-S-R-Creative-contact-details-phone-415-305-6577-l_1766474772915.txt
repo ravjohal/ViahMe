@@ -1,0 +1,111 @@
+[
+  {
+    "name": "S&R Creative",
+    "contact_details": {
+      "phone": "(415) 305-6577",
+      "location": "San Francisco / Bay Area, CA",
+      "specialty": "Wedding Photography and Creative Design"
+    }
+  },
+  {
+    "name": "S&S Catering (Indian Cuisine)",
+    "contact_details": {
+      "phone": "(415) 864-3737",
+      "location": "San Francisco, CA",
+      "specialty": "Traditional Indian Event Catering"
+    }
+  },
+  {
+    "name": "S.S. Photography",
+    "contact_details": {
+      "phone": "(510) 932-9019",
+      "location": "Oakland / East Bay, CA",
+      "specialty": "Event and Portrait Photography"
+    }
+  },
+  {
+    "name": "Saba Henna Art",
+    "contact_details": {
+      "phone": "(415) 558-9819",
+      "location": "San Francisco, CA",
+      "specialty": "Custom Bridal Henna"
+    }
+  },
+  {
+    "name": "Sabrina's Henna",
+    "contact_details": {
+      "phone": "(408) 502-2704",
+      "location": "Bay Area / Destination",
+      "specialty": "Luxury Bridal Mehndi Artistry"
+    }
+  },
+  {
+    "name": "Saffron Indian Kitchen",
+    "contact_details": {
+      "phone": "(408) 736-2720",
+      "website": "https://www.snehasaffron.com/",
+      "location": "1292 Kifer Rd, Sunnyvale, CA 94086"
+    }
+  },
+  {
+    "name": "Saffron Indian Cuisine",
+    "contact_details": {
+      "phone": "(650) 593-4261",
+      "website": "https://saffronindiancuisine.com/",
+      "location": "1143 San Carlos Ave, San Carlos, CA 94070"
+    }
+  },
+  {
+    "name": "Sagar Sweets & Restaurant",
+    "contact_details": {
+      "phone": "(408) 737-0170",
+      "location": "Sunnyvale, CA",
+      "specialty": "Indian Sweets and Vegetarian Catering"
+    }
+  },
+  {
+    "name": "Sahara Video Production",
+    "contact_details": {
+      "phone": "(510) 364-8171",
+      "location": "Hayward / Fremont, CA",
+      "specialty": "Digital Wedding Cinematography"
+    }
+  },
+  {
+    "name": "Sakhi's Henna Art",
+    "contact_details": {
+      "phone": "(408) 457-1385",
+      "location": "San Jose, CA"
+    }
+  },
+  {
+    "name": "Saliha's Mehndi Art",
+    "contact_details": {
+      "phone": "(510) 709-8903",
+      "location": "Fremont, CA",
+      "specialty": "Certified Bridal Mehndi Artist"
+    }
+  },
+  {
+    "name": "Samarpan Indian Cuisine",
+    "contact_details": {
+      "phone": "(415) 621-7226",
+      "location": "San Francisco, CA"
+    }
+  },
+  {
+    "name": "Sandeep's Photography",
+    "contact_details": {
+      "phone": "(408) 641-7148",
+      "location": "Bay Area, CA"
+    }
+  },
+  {
+    "name": "Sangam Indian Cuisine",
+    "contact_details": {
+      "phone": "(408) 435-7300",
+      "website": "https://sangamsanjose.com/",
+      "location": "2565 N 1st St, San Jose, CA 95131"
+    }
+  }
+]
