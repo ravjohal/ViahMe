@@ -149,6 +149,8 @@ import {
   type InsertLeadNurtureAction,
   type LeadActivityLog,
   type InsertLeadActivityLog,
+  type VendorClaimStaging,
+  type InsertVendorClaimStaging,
 } from "@shared/schema";
 import { randomUUID, randomBytes } from "crypto";
 import bcrypt from "bcrypt";
@@ -801,6 +803,14 @@ export interface IStorage {
   // Lead Activity Log
   getLeadActivityLog(leadId: string): Promise<LeadActivityLog[]>;
   createLeadActivityLog(activity: InsertLeadActivityLog): Promise<LeadActivityLog>;
+
+  // Vendor Claim Staging
+  getVendorClaimStaging(id: string): Promise<VendorClaimStaging | undefined>;
+  getVendorClaimStagingByVendor(vendorId: string): Promise<VendorClaimStaging[]>;
+  getAllPendingVendorClaims(): Promise<VendorClaimStaging[]>;
+  createVendorClaimStaging(claim: InsertVendorClaimStaging): Promise<VendorClaimStaging>;
+  updateVendorClaimStaging(id: string, claim: Partial<VendorClaimStaging>): Promise<VendorClaimStaging | undefined>;
+  deleteVendorClaimStaging(id: string): Promise<boolean>;
 }
 
 // Guest Planning Snapshot - comprehensive view of all guests and per-event costs
@@ -3703,6 +3713,14 @@ export class MemStorage implements IStorage {
   // Lead Activity Log (stubs)
   async getLeadActivityLog(leadId: string): Promise<LeadActivityLog[]> { return []; }
   async createLeadActivityLog(activity: InsertLeadActivityLog): Promise<LeadActivityLog> { throw new Error("MemStorage does not support Lead Activity Log. Use DBStorage."); }
+  
+  // Vendor Claim Staging (stubs)
+  async getVendorClaimStaging(id: string): Promise<VendorClaimStaging | undefined> { return undefined; }
+  async getVendorClaimStagingByVendor(vendorId: string): Promise<VendorClaimStaging[]> { return []; }
+  async getAllPendingVendorClaims(): Promise<VendorClaimStaging[]> { return []; }
+  async createVendorClaimStaging(claim: InsertVendorClaimStaging): Promise<VendorClaimStaging> { throw new Error("MemStorage does not support Vendor Claim Staging. Use DBStorage."); }
+  async updateVendorClaimStaging(id: string, claim: Partial<VendorClaimStaging>): Promise<VendorClaimStaging | undefined> { throw new Error("MemStorage does not support Vendor Claim Staging. Use DBStorage."); }
+  async deleteVendorClaimStaging(id: string): Promise<boolean> { return false; }
 }
 
 import { neon } from "@neondatabase/serverless";
@@ -8512,6 +8530,44 @@ export class DBStorage implements IStorage {
   async createLeadActivityLog(activity: InsertLeadActivityLog): Promise<LeadActivityLog> {
     const result = await this.db.insert(schema.leadActivityLog).values(activity).returning();
     return result[0];
+  }
+
+  // Vendor Claim Staging
+  async getVendorClaimStaging(id: string): Promise<VendorClaimStaging | undefined> {
+    const result = await this.db.select().from(schema.vendorClaimStaging)
+      .where(eq(schema.vendorClaimStaging.id, id));
+    return result[0];
+  }
+
+  async getVendorClaimStagingByVendor(vendorId: string): Promise<VendorClaimStaging[]> {
+    return await this.db.select().from(schema.vendorClaimStaging)
+      .where(eq(schema.vendorClaimStaging.vendorId, vendorId))
+      .orderBy(sql`${schema.vendorClaimStaging.createdAt} DESC`);
+  }
+
+  async getAllPendingVendorClaims(): Promise<VendorClaimStaging[]> {
+    return await this.db.select().from(schema.vendorClaimStaging)
+      .where(eq(schema.vendorClaimStaging.status, 'pending'))
+      .orderBy(sql`${schema.vendorClaimStaging.createdAt} ASC`);
+  }
+
+  async createVendorClaimStaging(claim: InsertVendorClaimStaging): Promise<VendorClaimStaging> {
+    const result = await this.db.insert(schema.vendorClaimStaging).values(claim).returning();
+    return result[0];
+  }
+
+  async updateVendorClaimStaging(id: string, claim: Partial<VendorClaimStaging>): Promise<VendorClaimStaging | undefined> {
+    const result = await this.db.update(schema.vendorClaimStaging)
+      .set(claim)
+      .where(eq(schema.vendorClaimStaging.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteVendorClaimStaging(id: string): Promise<boolean> {
+    await this.db.delete(schema.vendorClaimStaging)
+      .where(eq(schema.vendorClaimStaging.id, id));
+    return true;
   }
 }
 
