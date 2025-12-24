@@ -11,7 +11,7 @@ export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: text("email").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
-  role: text("role").notNull(), // 'couple' | 'vendor'
+  role: text("role").notNull(), // 'couple' | 'vendor' | 'admin'
   emailVerified: boolean("email_verified").notNull().default(false),
   verificationToken: text("verification_token"),
   verificationTokenExpires: timestamp("verification_token_expires"),
@@ -207,6 +207,11 @@ export const vendors = pgTable("vendors", {
   experience: text("experience"), // Years in business (e.g., "13 Years in Business")
   zipCodesServing: text("zip_codes_serving").array(), // Array of ZIP codes served
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  // Admin approval fields
+  approvalStatus: text("approval_status").notNull().default('approved'), // 'pending' | 'approved' | 'rejected' - admin approval for new vendors
+  approvalNotes: text("approval_notes"), // Admin notes for approval/rejection
+  approvedBy: varchar("approved_by"), // Admin user ID who approved/rejected
+  approvedAt: timestamp("approved_at"), // When the vendor was approved/rejected
 });
 
 export const VENDOR_CATEGORIES = [
@@ -267,6 +272,10 @@ export const insertVendorSchema = createInsertSchema(vendors).omit({
   notifyCooldownUntil: true,
   lastViewNotifiedAt: true,
   viewCount: true,
+  approvalStatus: true,
+  approvalNotes: true,
+  approvedBy: true,
+  approvedAt: true,
 }).extend({
   categories: z.array(z.enum(VENDOR_CATEGORIES)).min(1, "Select at least one service category"),
   preferredWeddingTraditions: z.array(z.enum(['sikh', 'hindu', 'muslim', 'gujarati', 'south_indian', 'mixed', 'general'])).optional(),
