@@ -21,7 +21,6 @@ import { getAllCoupleNavItems, getAllVendorNavItems, type NavItem } from "@/conf
 import type { Wedding } from "@shared/schema";
 import { differenceInDays, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { MessageSquare, UsersRound } from "lucide-react";
 
 interface Notification {
@@ -44,7 +43,6 @@ export function AppHeader() {
   const [location] = useLocation();
   const { user, logout } = useAuth();
   const { canView, isOwner } = usePermissions();
-  const isMobile = useIsMobile();
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   
   const { data: weddings } = useQuery<Wedding[]>({
@@ -326,8 +324,8 @@ export function AppHeader() {
         onOpenChange={setMobileDrawerOpen} 
       />
 
-      {/* Bottom Navigation Bar for Mobile */}
-      {isMobile && user && (
+      {/* Bottom Navigation Bar for Mobile - uses lg:hidden CSS to hide on desktop */}
+      {user && (
         <BottomNavBar onMoreClick={() => setMobileDrawerOpen(true)} />
       )}
     </>
