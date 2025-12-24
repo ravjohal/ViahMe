@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, MapPin, DollarSign, GitCompare, Check, UserPlus, Briefcase } from "lucide-react";
+import { Star, MapPin, DollarSign, GitCompare, Check, UserPlus } from "lucide-react";
 import { Link } from "wouter";
 import type { Vendor } from "@shared/schema";
 
@@ -133,16 +133,19 @@ export function VendorCard({
           </p>
         )}
 
-        <div className="flex items-center gap-4 mb-4 text-sm">
-          <div className="flex items-center gap-1 text-muted-foreground">
-            <MapPin className="w-4 h-4" />
-            <span>{vendor.location}</span>
+        {/* Contact info only visible to logged-in users to prevent scraping */}
+        {isLoggedIn && (
+          <div className="flex items-center gap-4 mb-4 text-sm">
+            <div className="flex items-center gap-1 text-muted-foreground">
+              <MapPin className="w-4 h-4" />
+              <span>{vendor.location}</span>
+            </div>
+            <div className="flex items-center gap-1 text-muted-foreground">
+              <DollarSign className="w-4 h-4" />
+              <span className="font-mono font-semibold">{vendor.priceRange}</span>
+            </div>
           </div>
-          <div className="flex items-center gap-1 text-muted-foreground">
-            <DollarSign className="w-4 h-4" />
-            <span className="font-mono font-semibold">{vendor.priceRange}</span>
-          </div>
-        </div>
+        )}
 
         {vendor.culturalSpecialties && vendor.culturalSpecialties.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
@@ -166,8 +169,8 @@ export function VendorCard({
             View Details
           </Button>
 
-          {/* Show Sign Up to Book for logged-out users viewing claimed vendors */}
-          {!isLoggedIn && vendor.claimed && (
+          {/* Show Sign Up to Book only for logged-out users viewing unclaimed vendors */}
+          {!isLoggedIn && !vendor.claimed && (
             <Link href="/onboarding" onClick={(e) => e.stopPropagation()}>
               <Button
                 variant="secondary"
@@ -176,20 +179,6 @@ export function VendorCard({
               >
                 <UserPlus className="w-4 h-4 mr-2" />
                 Sign Up to Book
-              </Button>
-            </Link>
-          )}
-
-          {/* Show Claim Profile for logged-out users viewing unclaimed vendors */}
-          {!isLoggedIn && !vendor.claimed && (
-            <Link href={`/claim-your-business?vendor=${vendor.id}`} onClick={(e) => e.stopPropagation()}>
-              <Button
-                variant="outline"
-                className="w-full"
-                data-testid={`button-claim-profile-${vendor.id}`}
-              >
-                <Briefcase className="w-4 h-4 mr-2" />
-                Claim This Profile
               </Button>
             </Link>
           )}
