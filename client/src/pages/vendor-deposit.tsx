@@ -239,7 +239,7 @@ export default function VendorDeposit() {
                       </div>
                       <div>
                         <p className="font-semibold">{vendorName || vendor?.name}</p>
-                        <p className="text-sm text-muted-foreground">{vendor?.category}</p>
+                        <p className="text-sm text-muted-foreground">{vendor?.categories?.[0]?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || ''}</p>
                       </div>
                     </div>
                   </div>

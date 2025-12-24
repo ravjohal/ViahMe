@@ -231,7 +231,9 @@ export default function ClaimProfile() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex flex-wrap gap-2">
-              <Badge variant="outline">{vendor.category}</Badge>
+              {vendor.categories?.map((cat: string) => (
+                <Badge key={cat} variant="outline">{cat.split('_').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</Badge>
+              ))}
               {vendor.priceRange && (
                 <Badge variant="secondary">{vendor.priceRange}</Badge>
               )}

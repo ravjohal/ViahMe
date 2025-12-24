@@ -523,7 +523,7 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
       }
 
       if (category && typeof category === "string") {
-        vendors = vendors.filter((v) => v.category === category);
+        vendors = vendors.filter((v) => v.categories?.includes(category));
       }
 
       if (location && typeof location === "string") {
@@ -580,10 +580,11 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
         if (!v.email && !v.phone) return false; // Must have contact info
         
         const searchLower = search.toLowerCase();
+        const categoryMatch = v.categories?.some(cat => cat.toLowerCase().includes(searchLower)) || false;
         return (
           v.name.toLowerCase().includes(searchLower) ||
           v.location.toLowerCase().includes(searchLower) ||
-          v.category.toLowerCase().includes(searchLower)
+          categoryMatch
         );
       });
       
@@ -916,7 +917,7 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
         vendor: {
           id: vendor.id,
           name: vendor.name,
-          category: vendor.category,
+          categories: vendor.categories,
           location: vendor.location,
           phone: vendor.phone,
           website: vendor.website,
@@ -1527,7 +1528,7 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
               to: wedding.coupleEmail,
               coupleName,
               vendorName: vendor.name,
-              vendorCategory: vendor.category,
+              vendorCategory: vendor.categories?.[0] || 'vendor',
               eventName,
               eventDate,
               timeSlot,
@@ -3825,7 +3826,7 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
             weddingId: parsed.weddingId,
             vendorId: parsed.vendorId,
             vendorName: vendor?.name || 'Unknown Vendor',
-            vendorCategory: vendor?.category || '',
+            vendorCategory: vendor?.categories?.[0] || '',
             eventId: parsed.eventId,
             eventName: event?.name,
             bookingId: booking?.id,
@@ -3851,7 +3852,7 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
               weddingId: weddingId,
               vendorId: booking.vendorId,
               vendorName: vendor?.name || 'Unknown Vendor',
-              vendorCategory: vendor?.category || '',
+              vendorCategory: vendor?.categories?.[0] || '',
               eventId: booking.eventId,
               eventName: event?.name,
               bookingId: booking.id,
@@ -3886,7 +3887,7 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
             weddingId: parsed.weddingId,
             vendorId: parsed.vendorId,
             vendorName: vendor?.name || 'Unknown Vendor',
-            vendorCategory: vendor?.category || '',
+            vendorCategory: vendor?.categories?.[0] || '',
           };
         })
       );
@@ -4894,10 +4895,11 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
       const vendors = await storage.getAllVendors();
       const vendorsByCategory: Record<string, any[]> = {};
       vendors.forEach((vendor) => {
-        if (!vendorsByCategory[vendor.category]) {
-          vendorsByCategory[vendor.category] = [];
+        const primaryCategory = vendor.categories?.[0] || 'other';
+        if (!vendorsByCategory[primaryCategory]) {
+          vendorsByCategory[primaryCategory] = [];
         }
-        vendorsByCategory[vendor.category].push(vendor);
+        vendorsByCategory[primaryCategory].push(vendor);
       });
 
       // Calculate analytics
@@ -8805,7 +8807,7 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
         .map(b => ({
           id: b.vendor.id,
           name: b.vendor.name,
-          category: b.vendor.category,
+          categories: b.vendor.categories,
           email: b.vendor.email,
           phone: b.vendor.phone,
         }));

@@ -156,14 +156,11 @@ function matchesCategory(vendor: Vendor, categoryFilter: string): boolean {
   const category = VENDOR_CATEGORIES.find(c => c.value === categoryFilter);
   if (!category) return false;
   
-  const vendorCategory = vendor.category?.toLowerCase() || "";
   const vendorCategories = vendor.categories || [];
   
-  if (vendorCategory === categoryFilter) return true;
   if (vendorCategories.includes(categoryFilter)) return true;
   
   for (const alias of category.aliases) {
-    if (vendorCategory === alias.toLowerCase()) return true;
     if (vendorCategories.some(vc => vc.toLowerCase() === alias.toLowerCase())) return true;
   }
   
@@ -209,18 +206,18 @@ export function VendorDirectory({
 
   const filteredVendors = vendors.filter((vendor) => {
     // Get human-readable category label for search
+    const primaryCategory = vendor.categories?.[0];
     const categoryDef = VENDOR_CATEGORIES.find(cat => 
-      cat.value === vendor.category || 
-      cat.aliases.some(a => a.toLowerCase() === vendor.category?.toLowerCase())
+      cat.value === primaryCategory || 
+      cat.aliases.some(a => a.toLowerCase() === primaryCategory?.toLowerCase())
     );
-    const categoryLabel = categoryDef?.label || vendor.category;
+    const categoryLabel = categoryDef?.label || primaryCategory || '';
     
     const searchLower = searchTerm.toLowerCase();
     const matchesSearch =
       vendor.name.toLowerCase().includes(searchLower) ||
       vendor.description?.toLowerCase().includes(searchLower) ||
       categoryLabel.toLowerCase().includes(searchLower) ||
-      vendor.category?.toLowerCase().includes(searchLower) ||
       vendor.categories?.some(c => c.toLowerCase().includes(searchLower));
 
     const matchesCat = matchesCategory(vendor, categoryFilter);

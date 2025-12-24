@@ -368,7 +368,7 @@ export function VendorDetailModal({
       
       const response = await apiRequest("POST", "/api/ai/couple-message-suggestions", {
         vendorName: vendor.name,
-        vendorCategory: vendor.category,
+        vendorCategory: vendor.categories?.[0] || 'vendor',
         coupleName: coupleName || "Couple",
         eventName: selectedEventNames || undefined,
         eventDate: weddingDate,
@@ -545,10 +545,7 @@ export function VendorDetailModal({
           <div className="flex items-start justify-between gap-4">
             <div>
               <div className="flex flex-wrap gap-2 mb-2">
-                {(vendor.categories && vendor.categories.length > 0 
-                  ? vendor.categories 
-                  : [vendor.category]
-                ).map((cat, idx) => (
+                {(vendor.categories || []).map((cat, idx) => (
                   <Badge key={idx} variant="outline">
                     {cat.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
                   </Badge>

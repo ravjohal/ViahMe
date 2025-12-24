@@ -1173,9 +1173,8 @@ export class MemStorage implements IStorage {
   }
 
   async getVendorsByCategory(category: string): Promise<Vendor[]> {
-    // Check both the legacy 'category' field and the 'categories' array
     return Array.from(this.vendors.values()).filter((v) => 
-      v.category === category || (v.categories && v.categories.includes(category))
+      v.categories?.includes(category)
     );
   }
 
@@ -3025,7 +3024,7 @@ export class MemStorage implements IStorage {
         return {
           date: new Date(booking.confirmedDate!).toISOString().split('T')[0],
           amount: (isNaN(cost) ? 0 : cost).toFixed(2),
-          category: vendor?.category || 'Unknown',
+          category: vendor?.categories?.[0] || 'Unknown',
         };
       })
       .sort((a, b) => a.date.localeCompare(b.date));
@@ -5982,7 +5981,7 @@ export class DBStorage implements IStorage {
         return {
           date: new Date(booking.confirmedDate!).toISOString().split('T')[0],
           amount: (isNaN(cost) ? 0 : cost).toFixed(2),
-          category: vendor?.category || 'Unknown',
+          category: vendor?.categories?.[0] || 'Unknown',
         };
       })
       .sort((a, b) => a.date.localeCompare(b.date));

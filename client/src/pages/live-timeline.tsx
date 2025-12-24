@@ -637,7 +637,7 @@ export default function LiveTimelinePage() {
                     <div className="flex-1">
                       <p className="font-medium">{vendor.name}</p>
                       <p className="text-sm text-muted-foreground">
-                        {vendor.category} {vendor.email && `- ${vendor.email}`}
+                        {vendor.categories?.[0]?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || ''} {vendor.email && `- ${vendor.email}`}
                       </p>
                     </div>
                   </div>

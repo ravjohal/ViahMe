@@ -205,7 +205,7 @@ export default function ClaimYourBusiness() {
                             <div className="flex items-center gap-2 flex-wrap">
                               <h3 className="font-semibold text-lg">{vendor.name}</h3>
                               <Badge variant="outline" className="text-xs">
-                                {getCategoryLabel(vendor.category)}
+                                {getCategoryLabel(vendor.categories?.[0] || 'vendor')}
                               </Badge>
                             </div>
                             <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">

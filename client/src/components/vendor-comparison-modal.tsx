@@ -64,10 +64,7 @@ export function VendorComparisonModal({
     {
       label: "Category",
       getValue: (vendor: Vendor) => {
-        const cats = vendor.categories && vendor.categories.length > 0 
-          ? vendor.categories 
-          : [vendor.category];
-        return cats.map(c => CATEGORY_LABELS[c] || c.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())).join(", ");
+        return (vendor.categories || []).map(c => CATEGORY_LABELS[c] || c.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())).join(", ");
       },
     },
     {
@@ -226,10 +223,7 @@ export function VendorComparisonModal({
                         </Button>
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        {(vendor.categories && vendor.categories.length > 0 
-                          ? vendor.categories 
-                          : [vendor.category]
-                        ).map(c => CATEGORY_LABELS[c] || c.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())).join(", ")}
+                        {(vendor.categories || []).map(c => CATEGORY_LABELS[c] || c.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())).join(", ")}
                       </p>
                     </Card>
                   </th>

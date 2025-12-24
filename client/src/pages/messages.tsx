@@ -593,7 +593,7 @@ export default function MessagesPage() {
     try {
       const response = await apiRequest("POST", "/api/ai/vendor-reply-suggestions", {
         vendorName: currentVendor.name,
-        vendorCategory: currentVendor.category,
+        vendorCategory: currentVendor.categories?.[0] || 'vendor',
         coupleName: selectedItem.displayName,
         coupleMessage,
         weddingDate: selectedItem.weddingDate,

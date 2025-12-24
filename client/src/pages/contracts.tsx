@@ -116,9 +116,10 @@ export default function ContractsPage() {
 
   // Filter templates by selected vendor category
   const filteredTemplates = useMemo(() => {
-    if (!selectedVendor?.category) return allTemplates;
-    return allTemplates.filter(t => t.vendorCategory === selectedVendor.category);
-  }, [allTemplates, selectedVendor?.category]);
+    const primaryCategory = selectedVendor?.categories?.[0];
+    if (!primaryCategory) return allTemplates;
+    return allTemplates.filter(t => t.vendorCategory === primaryCategory);
+  }, [allTemplates, selectedVendor?.categories]);
 
   // Form setup
   const form = useForm<ContractFormData>({
@@ -350,7 +351,7 @@ export default function ContractsPage() {
 
     aiDraftMutation.mutate({
       vendorName: selectedVendor.name,
-      vendorCategory: selectedVendor.category || "General",
+      vendorCategory: selectedVendor.categories?.[0] || "General",
       eventName: selectedEvent.name,
       eventDate: selectedEvent.date ? new Date(selectedEvent.date).toLocaleDateString() : undefined,
       eventLocation: selectedEvent.location || undefined,
@@ -388,7 +389,7 @@ export default function ContractsPage() {
 
     aiReviewMutation.mutate({
       contractText: terms,
-      vendorCategory: selectedVendor?.category || undefined,
+      vendorCategory: selectedVendor?.categories?.[0] || undefined,
       tradition: wedding?.tradition || undefined,
     });
   };
@@ -401,7 +402,7 @@ export default function ContractsPage() {
     }
     aiSuggestionsMutation.mutate({
       currentTerms: terms,
-      vendorCategory: selectedVendor?.category || "General",
+      vendorCategory: selectedVendor?.categories?.[0] || "General",
     });
   };
 
@@ -757,10 +758,10 @@ export default function ContractsPage() {
                             {event.name}
                           </span>
                         )}
-                        {vendor?.category && (
+                        {vendor?.categories?.[0] && (
                           <span className="flex items-center gap-1">
                             <Building2 className="w-4 h-4" />
-                            {vendor.category}
+                            {vendor.categories[0].replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                           </span>
                         )}
                       </div>
@@ -976,8 +977,8 @@ export default function ContractsPage() {
                   <div className="flex-1">
                     <h3 className="font-semibold text-lg">{vendor.name}</h3>
                     <div className="flex items-center gap-2 mt-1">
-                      {vendor.category && (
-                        <Badge variant="outline">{vendor.category}</Badge>
+                      {vendor.categories?.[0] && (
+                        <Badge variant="outline">{vendor.categories[0].replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</Badge>
                       )}
                       {vendor.city && (
                         <span className="text-sm text-muted-foreground flex items-center gap-1">
@@ -1592,7 +1593,7 @@ export default function ContractsPage() {
               <div>
                 <p className="text-sm text-muted-foreground">Vendor</p>
                 <p className="font-medium">{selectedVendor?.name}</p>
-                <p className="text-xs text-muted-foreground">{selectedVendor?.category}</p>
+                <p className="text-xs text-muted-foreground">{selectedVendor?.categories?.[0]?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || ''}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Event</p>

@@ -257,7 +257,7 @@ export default function VendorAvailabilityCalendar() {
                         <div className="flex items-center gap-2">
                           <span>{vendor.name}</span>
                           <Badge variant="outline" className="text-xs">
-                            {vendor.category}
+                            {vendor.categories?.[0]?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Vendor'}
                           </Badge>
                         </div>
                       </SelectItem>
@@ -270,7 +270,7 @@ export default function VendorAvailabilityCalendar() {
                     <h3 className="font-semibold mb-2">{getVendorName(selectedVendor)}</h3>
                     <div className="space-y-2 text-sm">
                       <p className="text-muted-foreground">
-                        <span className="font-medium">Category:</span> {selectedVendor.category}
+                        <span className="font-medium">Category:</span> {selectedVendor.categories?.join(', ') || 'N/A'}
                       </p>
                       <p className="text-muted-foreground">
                         <span className="font-medium">Location:</span> {selectedVendor.location}

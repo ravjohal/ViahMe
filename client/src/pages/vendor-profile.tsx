@@ -135,7 +135,7 @@ export default function VendorProfilePage() {
           <VendorSetupWizard
             initialData={{
               name: vendor.name,
-              categories: vendor.categories || [vendor.category],
+              categories: vendor.categories || [],
               preferredWeddingTraditions: vendor.preferredWeddingTraditions || [],
               location: vendor.location,
               email: vendor.email || "",
@@ -190,7 +190,7 @@ export default function VendorProfilePage() {
                 <div>
                   <Label className="text-sm text-muted-foreground">Service Categories</Label>
                   <div className="flex flex-wrap gap-2 mt-1">
-                    {(vendor.categories || [vendor.category]).map((cat) => (
+                    {(vendor.categories || []).map((cat) => (
                       <Badge key={cat} variant="secondary">
                         {cat.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
                       </Badge>

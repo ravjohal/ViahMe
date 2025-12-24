@@ -98,10 +98,11 @@ export default function AdminVendorClaims() {
   const filteredVendors = vendors.filter(v => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
+    const categoryMatch = v.categories?.some(cat => cat.toLowerCase().includes(query)) || false;
     return (
       v.name.toLowerCase().includes(query) ||
       v.location.toLowerCase().includes(query) ||
-      v.category.toLowerCase().includes(query) ||
+      categoryMatch ||
       v.email?.toLowerCase().includes(query) ||
       v.phone?.includes(query)
     );
@@ -268,7 +269,7 @@ export default function AdminVendorClaims() {
                               )}
                             </TableCell>
                             <TableCell>
-                              <Badge variant="secondary">{getCategoryLabel(vendor.category)}</Badge>
+                              <Badge variant="secondary">{getCategoryLabel(vendor.categories?.[0] || 'vendor')}</Badge>
                             </TableCell>
                             <TableCell>
                               <span className="flex items-center gap-1 text-sm text-muted-foreground">
@@ -359,7 +360,7 @@ export default function AdminVendorClaims() {
             <div className="space-y-4 py-4">
               <div className="p-4 bg-muted/50 rounded-lg space-y-2">
                 <p className="font-medium">{selectedVendor.name}</p>
-                <p className="text-sm text-muted-foreground">{getCategoryLabel(selectedVendor.category)}</p>
+                <p className="text-sm text-muted-foreground">{getCategoryLabel(selectedVendor.categories?.[0] || 'vendor')}</p>
                 <div className="text-sm space-y-1 mt-2">
                   {selectedVendor.email && (
                     <p className="flex items-center gap-2">
