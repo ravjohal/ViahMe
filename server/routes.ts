@@ -1111,6 +1111,151 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
     }
   });
 
+  // ============================================================================
+  // ADMIN: Vendor Claim Staging Management
+  // ============================================================================
+
+  // GET: List all pending vendor claims (admin only)
+  app.get("/api/admin/vendor-claims", async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user || req.user.role !== 'couple') {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      
+      const claims = await storage.getAllPendingVendorClaims();
+      res.json(claims);
+    } catch (error) {
+      console.error("Error fetching pending claims:", error);
+      res.status(500).json({ error: "Failed to fetch pending claims" });
+    }
+  });
+
+  // GET: Get single claim details (admin only)
+  app.get("/api/admin/vendor-claims/:id", async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user || req.user.role !== 'couple') {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      
+      const claim = await storage.getVendorClaimStaging(req.params.id);
+      if (!claim) {
+        return res.status(404).json({ error: "Claim not found" });
+      }
+      
+      // Also fetch the original vendor info
+      const vendor = await storage.getVendor(claim.vendorId);
+      
+      res.json({ claim, vendor });
+    } catch (error) {
+      console.error("Error fetching claim:", error);
+      res.status(500).json({ error: "Failed to fetch claim" });
+    }
+  });
+
+  // POST: Approve a vendor claim (admin only)
+  app.post("/api/admin/vendor-claims/:id/approve", async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user || req.user.role !== 'couple') {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      
+      const { adminNotes } = req.body;
+      
+      const claim = await storage.getVendorClaimStaging(req.params.id);
+      if (!claim) {
+        return res.status(404).json({ error: "Claim not found" });
+      }
+      
+      if (claim.status !== 'pending') {
+        return res.status(400).json({ error: "This claim has already been processed" });
+      }
+      
+      // Get the vendor
+      const vendor = await storage.getVendor(claim.vendorId);
+      if (!vendor) {
+        return res.status(404).json({ error: "Vendor not found" });
+      }
+      
+      if (vendor.claimed) {
+        // Mark claim as denied since vendor already claimed
+        await storage.updateVendorClaimStaging(req.params.id, {
+          status: 'denied',
+          adminNotes: adminNotes || 'Vendor was already claimed by another user',
+          reviewedBy: req.user.id,
+          reviewedAt: new Date(),
+        });
+        return res.status(400).json({ error: "This vendor has already been claimed" });
+      }
+      
+      // Update vendor with claimant's email and generate claim token
+      const claimToken = crypto.randomUUID();
+      const claimTokenExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+      
+      await storage.updateVendor(claim.vendorId, {
+        email: claim.claimantEmail,
+        claimToken,
+        claimTokenExpires,
+      } as any);
+      
+      // Send claim email to claimant
+      const claimLink = `${req.protocol}://${req.get('host')}/claim-profile?token=${claimToken}`;
+      try {
+        await storage.sendClaimEmail(vendor.id, claim.claimantEmail, vendor.name, claimLink);
+      } catch (err) {
+        console.error("Failed to send claim approval email:", err);
+      }
+      
+      // Update claim status
+      await storage.updateVendorClaimStaging(req.params.id, {
+        status: 'approved',
+        adminNotes: adminNotes || null,
+        reviewedBy: req.user.id,
+        reviewedAt: new Date(),
+      });
+      
+      res.json({ 
+        message: "Claim approved! A verification link has been sent to the claimant.",
+        claimLink: process.env.NODE_ENV === 'development' ? claimLink : undefined,
+      });
+    } catch (error) {
+      console.error("Error approving claim:", error);
+      res.status(500).json({ error: "Failed to approve claim" });
+    }
+  });
+
+  // POST: Deny a vendor claim (admin only)
+  app.post("/api/admin/vendor-claims/:id/deny", async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user || req.user.role !== 'couple') {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      
+      const { adminNotes } = req.body;
+      
+      const claim = await storage.getVendorClaimStaging(req.params.id);
+      if (!claim) {
+        return res.status(404).json({ error: "Claim not found" });
+      }
+      
+      if (claim.status !== 'pending') {
+        return res.status(400).json({ error: "This claim has already been processed" });
+      }
+      
+      // Update claim status
+      await storage.updateVendorClaimStaging(req.params.id, {
+        status: 'denied',
+        adminNotes: adminNotes || null,
+        reviewedBy: req.user.id,
+        reviewedAt: new Date(),
+      });
+      
+      res.json({ message: "Claim denied." });
+    } catch (error) {
+      console.error("Error denying claim:", error);
+      res.status(500).json({ error: "Failed to deny claim" });
+    }
+  });
+
   app.post("/api/vendors", async (req, res) => {
     try {
       const validatedData = insertVendorSchema.parse(req.body);
