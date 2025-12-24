@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, MapPin, DollarSign, GitCompare, Check, UserPlus } from "lucide-react";
+import { Star, MapPin, DollarSign, GitCompare, Check, UserPlus, Briefcase } from "lucide-react";
 import { Link } from "wouter";
 import type { Vendor } from "@shared/schema";
 
@@ -52,6 +52,17 @@ export function VendorCard({
 }: VendorCardProps) {
   const rating = vendor.rating ? parseFloat(vendor.rating.toString()) : 0;
   const reviewCount = vendor.reviewCount || 0;
+  
+  // Check if vendor has any contact details in the database
+  const hasContactDetails = !!(
+    vendor.email || 
+    vendor.phone || 
+    vendor.website || 
+    vendor.instagram || 
+    vendor.facebook || 
+    vendor.twitter ||
+    vendor.contact
+  );
 
   return (
     <Card
@@ -169,16 +180,30 @@ export function VendorCard({
             View Details
           </Button>
 
-          {/* Show Sign Up to Book only for logged-out users viewing unclaimed vendors */}
-          {!isLoggedIn && !vendor.claimed && (
+          {/* Show Sign Up and View Contact Details for logged-out users when vendor has contact info */}
+          {!isLoggedIn && hasContactDetails && (
             <Link href="/onboarding" onClick={(e) => e.stopPropagation()}>
               <Button
                 variant="secondary"
                 className="w-full"
-                data-testid={`button-signup-book-${vendor.id}`}
+                data-testid={`button-signup-contact-${vendor.id}`}
               >
                 <UserPlus className="w-4 h-4 mr-2" />
-                Sign Up to Book
+                Sign Up and View Contact Details
+              </Button>
+            </Link>
+          )}
+
+          {/* Show Claim This Profile for logged-out users viewing unclaimed vendors */}
+          {!isLoggedIn && !vendor.claimed && (
+            <Link href={`/claim-your-business?vendor=${vendor.id}`} onClick={(e) => e.stopPropagation()}>
+              <Button
+                variant="outline"
+                className="w-full"
+                data-testid={`button-claim-profile-${vendor.id}`}
+              >
+                <Briefcase className="w-4 h-4 mr-2" />
+                Claim This Profile
               </Button>
             </Link>
           )}
