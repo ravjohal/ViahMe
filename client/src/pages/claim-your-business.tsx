@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { Link, useSearch } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,11 +35,36 @@ import type { Vendor } from "@shared/schema";
 
 export default function ClaimYourBusiness() {
   const { toast } = useToast();
+  const searchString = useSearch();
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
   const [claimDialogOpen, setClaimDialogOpen] = useState(false);
   const [claimSuccess, setClaimSuccess] = useState(false);
+  const [preselectedVendorHandled, setPreselectedVendorHandled] = useState(false);
+
+  // Get vendor ID from URL if provided (e.g., ?vendor=123)
+  const vendorIdFromUrl = new URLSearchParams(searchString).get('vendor');
+
+  // Fetch preselected vendor if ID is in URL
+  const { data: preselectedVendor, isLoading: preselectedLoading } = useQuery<Vendor>({
+    queryKey: ["/api/vendors", vendorIdFromUrl],
+    queryFn: async () => {
+      const response = await fetch(`/api/vendors/${vendorIdFromUrl}`);
+      if (!response.ok) throw new Error("Failed to fetch vendor");
+      return response.json();
+    },
+    enabled: !!vendorIdFromUrl && !preselectedVendorHandled,
+  });
+
+  // Auto-open claim dialog when vendor is preselected from URL
+  useEffect(() => {
+    if (preselectedVendor && !preselectedVendor.claimed && !preselectedVendorHandled) {
+      setSelectedVendor(preselectedVendor);
+      setClaimDialogOpen(true);
+      setPreselectedVendorHandled(true);
+    }
+  }, [preselectedVendor, preselectedVendorHandled]);
 
   const { data: vendors = [], isLoading } = useQuery<Vendor[]>({
     queryKey: ["/api/vendors/unclaimed", debouncedQuery],

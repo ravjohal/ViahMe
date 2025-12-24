@@ -182,7 +182,7 @@ export function VendorCard({
 
           {/* Show Claim Profile for logged-out users viewing unclaimed vendors */}
           {!isLoggedIn && !vendor.claimed && (
-            <Link href="/claim-your-business" onClick={(e) => e.stopPropagation()}>
+            <Link href={`/claim-your-business?vendor=${vendor.id}`} onClick={(e) => e.stopPropagation()}>
               <Button
                 variant="outline"
                 className="w-full"
