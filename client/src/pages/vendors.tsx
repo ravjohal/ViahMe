@@ -193,6 +193,7 @@ export default function Vendors() {
           onAddToComparison={handleAddToComparison}
           comparisonVendors={comparisonVendors}
           onOpenComparison={() => setShowComparison(true)}
+          isLoggedIn={!!user}
         />
       </main>
 

@@ -1,7 +1,8 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, MapPin, DollarSign, GitCompare, Check } from "lucide-react";
+import { Star, MapPin, DollarSign, GitCompare, Check, UserPlus, Briefcase } from "lucide-react";
+import { Link } from "wouter";
 import type { Vendor } from "@shared/schema";
 
 interface VendorCardProps {
@@ -10,6 +11,7 @@ interface VendorCardProps {
   featured?: boolean;
   onAddToComparison?: (vendor: Vendor) => void;
   isInComparison?: boolean;
+  isLoggedIn?: boolean;
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -46,6 +48,7 @@ export function VendorCard({
   featured,
   onAddToComparison,
   isInComparison,
+  isLoggedIn = true,
 }: VendorCardProps) {
   const rating = vendor.rating ? parseFloat(vendor.rating.toString()) : 0;
   const reviewCount = vendor.reviewCount || 0;
@@ -162,6 +165,34 @@ export function VendorCard({
           >
             View Details
           </Button>
+
+          {/* Show Sign Up to Book for logged-out users viewing claimed vendors */}
+          {!isLoggedIn && vendor.claimed && (
+            <Link href="/onboarding" onClick={(e) => e.stopPropagation()}>
+              <Button
+                variant="secondary"
+                className="w-full"
+                data-testid={`button-signup-book-${vendor.id}`}
+              >
+                <UserPlus className="w-4 h-4 mr-2" />
+                Sign Up to Book
+              </Button>
+            </Link>
+          )}
+
+          {/* Show Claim Profile for logged-out users viewing unclaimed vendors */}
+          {!isLoggedIn && !vendor.claimed && (
+            <Link href="/claim-your-business" onClick={(e) => e.stopPropagation()}>
+              <Button
+                variant="outline"
+                className="w-full"
+                data-testid={`button-claim-profile-${vendor.id}`}
+              >
+                <Briefcase className="w-4 h-4 mr-2" />
+                Claim This Profile
+              </Button>
+            </Link>
+          )}
 
           {onAddToComparison && (
             <Button

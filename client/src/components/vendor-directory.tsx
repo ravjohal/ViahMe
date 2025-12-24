@@ -22,6 +22,7 @@ interface VendorDirectoryProps {
   onAddToComparison?: (vendor: Vendor) => void;
   comparisonVendors?: Vendor[];
   onOpenComparison?: () => void;
+  isLoggedIn?: boolean;
 }
 
 // Map budget amounts to price range tiers
@@ -183,6 +184,7 @@ export function VendorDirectory({
   onAddToComparison,
   comparisonVendors = [],
   onOpenComparison,
+  isLoggedIn = true,
 }: VendorDirectoryProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -423,6 +425,7 @@ export function VendorDirectory({
                 featured={vendor.featured ?? undefined}
                 onAddToComparison={onAddToComparison}
                 isInComparison={comparisonVendors.some(v => v.id === vendor.id)}
+                isLoggedIn={isLoggedIn}
               />
             ))}
           </div>
@@ -463,6 +466,7 @@ export function VendorDirectory({
                 onSelect={onSelectVendor}
                 onAddToComparison={onAddToComparison}
                 isInComparison={comparisonVendors.some(v => v.id === vendor.id)}
+                isLoggedIn={isLoggedIn}
               />
             ))}
           </div>
