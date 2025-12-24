@@ -513,9 +513,14 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
 
   app.get("/api/vendors", async (req, res) => {
     try {
-      const { category, location, includeUnpublished } = req.query;
+      const { category, location, includeUnpublished, includeAllApproval } = req.query;
 
       let vendors = await storage.getAllVendors();
+
+      // Only show approved vendors in directory unless admin explicitly requests all
+      if (includeAllApproval !== "true") {
+        vendors = vendors.filter((v) => v.approvalStatus === 'approved');
+      }
 
       // Only show published vendors unless explicitly requesting unpublished (for admin/vendor use)
       if (includeUnpublished !== "true") {

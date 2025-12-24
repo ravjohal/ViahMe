@@ -62,7 +62,7 @@ export default function AdminVendorClaims() {
   const [selectedApprovalVendor, setSelectedApprovalVendor] = useState<Vendor | null>(null);
   const [adminNotes, setAdminNotes] = useState("");
   const [approvalNotes, setApprovalNotes] = useState("");
-  const [activeTab, setActiveTab] = useState("claims");
+  const [activeTab, setActiveTab] = useState("approval");
 
   const { data: vendors = [], isLoading } = useQuery<Vendor[]>({
     queryKey: ["/api/admin/vendors/unclaimed"],
