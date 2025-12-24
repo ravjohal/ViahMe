@@ -37,7 +37,7 @@ export const insertUserSchema = createInsertSchema(users).omit({
 }).extend({
   email: z.string().email(),
   passwordHash: z.string().min(8),
-  role: z.enum(['couple', 'vendor']),
+  role: z.enum(['couple', 'vendor', 'admin']),
   emailVerified: z.boolean().optional(), // Allow setting emailVerified during registration
 });
 
