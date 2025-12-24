@@ -1118,7 +1118,7 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   // GET: List all pending vendor claims (admin only)
   app.get("/api/admin/vendor-claims", async (req: AuthenticatedRequest, res) => {
     try {
-      if (!req.user || req.user.role !== 'couple') {
+      if (!req.user || req.user.role !== 'admin') {
         return res.status(403).json({ error: "Admin access required" });
       }
       
@@ -1133,7 +1133,7 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   // GET: Get single claim details (admin only)
   app.get("/api/admin/vendor-claims/:id", async (req: AuthenticatedRequest, res) => {
     try {
-      if (!req.user || req.user.role !== 'couple') {
+      if (!req.user || req.user.role !== 'admin') {
         return res.status(403).json({ error: "Admin access required" });
       }
       
@@ -1155,7 +1155,7 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   // POST: Approve a vendor claim (admin only)
   app.post("/api/admin/vendor-claims/:id/approve", async (req: AuthenticatedRequest, res) => {
     try {
-      if (!req.user || req.user.role !== 'couple') {
+      if (!req.user || req.user.role !== 'admin') {
         return res.status(403).json({ error: "Admin access required" });
       }
       
@@ -1226,7 +1226,7 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   // POST: Deny a vendor claim (admin only)
   app.post("/api/admin/vendor-claims/:id/deny", async (req: AuthenticatedRequest, res) => {
     try {
-      if (!req.user || req.user.role !== 'couple') {
+      if (!req.user || req.user.role !== 'admin') {
         return res.status(403).json({ error: "Admin access required" });
       }
       
@@ -1253,6 +1253,69 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
     } catch (error) {
       console.error("Error denying claim:", error);
       res.status(500).json({ error: "Failed to deny claim" });
+    }
+  });
+
+  // ============================================================================
+  // ADMIN: Vendor Approval Management
+  // ============================================================================
+
+  // GET: List all vendors pending approval (admin only)
+  app.get("/api/admin/vendors/pending-approval", async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      
+      const vendors = await storage.getPendingApprovalVendors();
+      res.json(vendors);
+    } catch (error) {
+      console.error("Error fetching pending approval vendors:", error);
+      res.status(500).json({ error: "Failed to fetch pending approval vendors" });
+    }
+  });
+
+  // POST: Approve a vendor (admin only)
+  app.post("/api/admin/vendors/:id/approve", async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      
+      const { notes } = req.body;
+      
+      const vendor = await storage.getVendor(req.params.id);
+      if (!vendor) {
+        return res.status(404).json({ error: "Vendor not found" });
+      }
+      
+      const updatedVendor = await storage.approveVendor(req.params.id, req.user.id, notes);
+      res.json({ message: "Vendor approved!", vendor: updatedVendor });
+    } catch (error) {
+      console.error("Error approving vendor:", error);
+      res.status(500).json({ error: "Failed to approve vendor" });
+    }
+  });
+
+  // POST: Reject a vendor (admin only)
+  app.post("/api/admin/vendors/:id/reject", async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      
+      const { notes } = req.body;
+      
+      const vendor = await storage.getVendor(req.params.id);
+      if (!vendor) {
+        return res.status(404).json({ error: "Vendor not found" });
+      }
+      
+      const updatedVendor = await storage.rejectVendor(req.params.id, req.user.id, notes);
+      res.json({ message: "Vendor rejected.", vendor: updatedVendor });
+    } catch (error) {
+      console.error("Error rejecting vendor:", error);
+      res.status(500).json({ error: "Failed to reject vendor" });
     }
   });
 
