@@ -286,3 +286,23 @@
     inset: -1px;
   }
 }
+
+/* Safe area for bottom navigation on mobile devices */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Add padding to main content when bottom nav is visible on mobile */
+@media (max-width: 1023px) {
+  .has-bottom-nav {
+    padding-bottom: 5rem;
+  }
+}
+
+/* Ensure proper touch targets on mobile */
+@media (max-width: 640px) {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}

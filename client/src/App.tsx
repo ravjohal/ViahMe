@@ -287,8 +287,11 @@ function AppLayout() {
                      isVendorPage ||
                      isPublicVendorsPage;
   
+  // Show bottom nav on mobile for authenticated users (not on auth pages or vendor pages)
+  const showBottomNav = user && !hideHeader && !isVendorPage;
+  
   return (
-    <div className="min-h-screen bg-background">
+    <div className={`min-h-screen bg-background ${showBottomNav ? 'pb-20 lg:pb-0' : ''}`}>
       {!hideHeader && <AppHeader />}
       <Router />
       <FloatingChecklist />
