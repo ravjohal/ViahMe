@@ -280,6 +280,41 @@ export type InsertVendor = z.infer<typeof insertVendorSchema>;
 export type Vendor = typeof vendors.$inferSelect;
 
 // ============================================================================
+// VENDOR CLAIM STAGING - Pending claims requiring admin review
+// ============================================================================
+
+export const vendorClaimStaging = pgTable("vendor_claim_staging", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  vendorId: varchar("vendor_id").notNull(), // The vendor being claimed
+  vendorName: text("vendor_name").notNull(), // Copy of vendor name at time of claim
+  vendorCategories: text("vendor_categories").array().notNull(), // Copy of vendor categories
+  vendorLocation: text("vendor_location"), // Copy of vendor location
+  vendorCity: text("vendor_city"), // Copy of vendor city
+  claimantEmail: text("claimant_email").notNull(), // Email provided by the claimant
+  claimantName: text("claimant_name"), // Optional name of claimant
+  claimantPhone: text("claimant_phone"), // Optional phone of claimant
+  businessDocuments: text("business_documents").array(), // Optional document URLs for verification
+  notes: text("notes"), // Optional notes from claimant
+  status: text("status").notNull().default('pending'), // 'pending' | 'approved' | 'denied'
+  adminNotes: text("admin_notes"), // Notes from admin on decision
+  reviewedBy: varchar("reviewed_by"), // Admin user who reviewed
+  reviewedAt: timestamp("reviewed_at"), // When the claim was reviewed
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertVendorClaimStagingSchema = createInsertSchema(vendorClaimStaging).omit({
+  id: true,
+  status: true,
+  adminNotes: true,
+  reviewedBy: true,
+  reviewedAt: true,
+  createdAt: true,
+});
+
+export type InsertVendorClaimStaging = z.infer<typeof insertVendorClaimStagingSchema>;
+export type VendorClaimStaging = typeof vendorClaimStaging.$inferSelect;
+
+// ============================================================================
 // SERVICE PACKAGES - Vendor service packages with cultural specialization
 // ============================================================================
 
