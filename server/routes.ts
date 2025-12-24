@@ -1096,10 +1096,6 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
         if (!Array.isArray(updateData.categories)) {
           return res.status(400).json({ error: "Categories must be an array" });
         }
-        // Also update the legacy category field to the first category
-        if (updateData.categories.length > 0) {
-          updateData.category = updateData.categories[0];
-        }
       }
       
       // Sync preferredWeddingTraditions to culturalSpecialties for filtering

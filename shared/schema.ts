@@ -166,8 +166,7 @@ export const vendors = pgTable("vendors", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id"), // Link to user account (for vendor-owned profiles)
   name: text("name").notNull(),
-  category: text("category").notNull(), // Legacy single category field
-  categories: text("categories").array(), // Multiple service categories vendor provides (new)
+  categories: text("categories").array().notNull(), // Multiple service categories vendor provides
   preferredWeddingTraditions: text("preferred_wedding_traditions").array(), // ['sikh', 'hindu', 'muslim', 'gujarati', 'south_indian', 'mixed', 'general']
   location: text("location").notNull(),
   city: text("city").notNull().default('San Francisco Bay Area'), // 'San Francisco Bay Area' | 'New York City' | 'Los Angeles' | 'Chicago' | 'Seattle'
