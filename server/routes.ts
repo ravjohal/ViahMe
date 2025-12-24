@@ -559,41 +559,8 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
     }
   });
 
-  app.get("/api/vendors/:id", async (req, res) => {
-    try {
-      const vendor = await storage.getVendor(req.params.id);
-      if (!vendor) {
-        return res.status(404).json({ error: "Vendor not found" });
-      }
-      
-      // Track view count for all vendors
-      await storage.incrementVendorViewCount(req.params.id);
-      
-      // For unclaimed ghost profiles, check if we should send a claim notification
-      if (!vendor.claimed && vendor.phone && !vendor.optedOutOfNotifications) {
-        const now = new Date();
-        const cooldownUntil = vendor.notifyCooldownUntil ? new Date(vendor.notifyCooldownUntil) : null;
-        
-        // Only send notification if cooldown has passed (72 hours between notifications)
-        if (!cooldownUntil || now > cooldownUntil) {
-          // Queue claim notification (non-blocking)
-          storage.queueClaimNotification(req.params.id).catch(err => {
-            console.error("Failed to queue claim notification:", err);
-          });
-        }
-      }
-      
-      res.json(vendor);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to fetch vendor" });
-    }
-  });
-
-  // ============================================================================
-  // GHOST PROFILE / CLAIM YOUR PROFILE
-  // ============================================================================
-
   // Search for unclaimed vendor profiles (public - for claim your business page)
+  // NOTE: This must be BEFORE /api/vendors/:id to avoid "unclaimed" being matched as an ID
   app.get("/api/vendors/unclaimed", async (req, res) => {
     try {
       const { search } = req.query;
@@ -634,6 +601,40 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
       res.status(500).json({ error: "Failed to search vendors" });
     }
   });
+
+  app.get("/api/vendors/:id", async (req, res) => {
+    try {
+      const vendor = await storage.getVendor(req.params.id);
+      if (!vendor) {
+        return res.status(404).json({ error: "Vendor not found" });
+      }
+      
+      // Track view count for all vendors
+      await storage.incrementVendorViewCount(req.params.id);
+      
+      // For unclaimed ghost profiles, check if we should send a claim notification
+      if (!vendor.claimed && vendor.phone && !vendor.optedOutOfNotifications) {
+        const now = new Date();
+        const cooldownUntil = vendor.notifyCooldownUntil ? new Date(vendor.notifyCooldownUntil) : null;
+        
+        // Only send notification if cooldown has passed (72 hours between notifications)
+        if (!cooldownUntil || now > cooldownUntil) {
+          // Queue claim notification (non-blocking)
+          storage.queueClaimNotification(req.params.id).catch(err => {
+            console.error("Failed to queue claim notification:", err);
+          });
+        }
+      }
+      
+      res.json(vendor);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch vendor" });
+    }
+  });
+
+  // ============================================================================
+  // GHOST PROFILE / CLAIM YOUR PROFILE
+  // ============================================================================
 
   // Admin: Get all unclaimed vendors for management
   // Protected - only accessible to authenticated couple users (platform operators)
