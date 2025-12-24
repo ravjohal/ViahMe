@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -26,7 +28,8 @@ import {
   ArrowRight,
   Store,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Clock
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -41,7 +44,14 @@ export default function ClaimYourBusiness() {
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
   const [claimDialogOpen, setClaimDialogOpen] = useState(false);
   const [claimSuccess, setClaimSuccess] = useState(false);
+  const [pendingAdminReview, setPendingAdminReview] = useState(false);
   const [preselectedVendorHandled, setPreselectedVendorHandled] = useState(false);
+  
+  // Form state for vendors without email
+  const [claimantEmail, setClaimantEmail] = useState("");
+  const [claimantName, setClaimantName] = useState("");
+  const [claimantPhone, setClaimantPhone] = useState("");
+  const [notes, setNotes] = useState("");
 
   // Get vendor ID from URL if provided (e.g., ?vendor=123)
   const vendorIdFromUrl = new URLSearchParams(searchString).get('vendor');
@@ -77,16 +87,24 @@ export default function ClaimYourBusiness() {
   });
 
   const claimMutation = useMutation({
-    mutationFn: async (vendorId: string) => {
-      const response = await apiRequest("POST", `/api/vendors/${vendorId}/request-claim`, {});
+    mutationFn: async ({ vendorId, claimantData }: { vendorId: string; claimantData?: { claimantEmail: string; claimantName?: string; claimantPhone?: string; notes?: string } }) => {
+      const response = await apiRequest("POST", `/api/vendors/${vendorId}/request-claim`, claimantData || {});
       return response.json();
     },
-    onSuccess: () => {
-      setClaimSuccess(true);
-      toast({
-        title: "Claim request sent!",
-        description: "Check your email for instructions to complete the claim.",
-      });
+    onSuccess: (data) => {
+      if (data.pendingAdminReview) {
+        setPendingAdminReview(true);
+        toast({
+          title: "Claim submitted for review!",
+          description: "An admin will review your request and contact you via email.",
+        });
+      } else {
+        setClaimSuccess(true);
+        toast({
+          title: "Claim request sent!",
+          description: "Check your email for instructions to complete the claim.",
+        });
+      }
     },
     onError: (error: Error) => {
       toast({
@@ -109,13 +127,43 @@ export default function ClaimYourBusiness() {
     setSelectedVendor(vendor);
     setClaimDialogOpen(true);
     setClaimSuccess(false);
+    setPendingAdminReview(false);
+    // Reset form fields
+    setClaimantEmail("");
+    setClaimantName("");
+    setClaimantPhone("");
+    setNotes("");
   };
 
   const handleConfirmClaim = () => {
     if (selectedVendor) {
-      claimMutation.mutate(selectedVendor.id);
+      // If vendor has email, just send claim request
+      if (selectedVendor.email) {
+        claimMutation.mutate({ vendorId: selectedVendor.id });
+      } else {
+        // Vendor has no email, require claimant's email for admin review
+        if (!claimantEmail.trim()) {
+          toast({
+            title: "Email required",
+            description: "Please provide your business email address.",
+            variant: "destructive",
+          });
+          return;
+        }
+        claimMutation.mutate({
+          vendorId: selectedVendor.id,
+          claimantData: {
+            claimantEmail: claimantEmail.trim(),
+            claimantName: claimantName.trim() || undefined,
+            claimantPhone: claimantPhone.trim() || undefined,
+            notes: notes.trim() || undefined,
+          },
+        });
+      }
     }
   };
+  
+  const vendorHasEmail = selectedVendor?.email;
 
   const getCategoryLabel = (category: string) => {
     return category
@@ -322,47 +370,112 @@ export default function ClaimYourBusiness() {
       </main>
 
       <Dialog open={claimDialogOpen} onOpenChange={setClaimDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <ShieldCheck className="h-5 w-5 text-primary" />
               Claim {selectedVendor?.name}
             </DialogTitle>
             <DialogDescription>
-              {claimSuccess ? (
-                "Your claim request has been sent successfully!"
+              {(claimSuccess || pendingAdminReview) ? (
+                pendingAdminReview 
+                  ? "Your claim has been submitted for admin review."
+                  : "Your claim request has been sent successfully!"
+              ) : vendorHasEmail ? (
+                "We'll send verification instructions to the email on file for this business."
               ) : (
-                "We'll send verification instructions to the email or phone number on file for this business."
+                "Please provide your business email so we can verify your ownership."
               )}
             </DialogDescription>
           </DialogHeader>
 
-          {!claimSuccess && selectedVendor && (
+          {!claimSuccess && !pendingAdminReview && selectedVendor && (
             <div className="space-y-4 py-4">
               <div className="p-4 bg-muted/50 rounded-lg space-y-2">
                 <p className="font-medium">{selectedVendor.name}</p>
                 <div className="text-sm text-muted-foreground space-y-1">
-                  {selectedVendor.email && (
+                  {selectedVendor.location && (
                     <p className="flex items-center gap-2">
-                      <Mail className="h-3 w-3" />
-                      {selectedVendor.email.replace(/(.{2})(.*)(@.*)/, "$1***$3")}
+                      <MapPin className="h-3 w-3" />
+                      {selectedVendor.location}
                     </p>
                   )}
-                  {selectedVendor.phone && (
+                  {vendorHasEmail && (
                     <p className="flex items-center gap-2">
-                      <Phone className="h-3 w-3" />
-                      {selectedVendor.phone.replace(/(\d{3})(\d{3})(\d{4})/, "($1) ***-$3")}
+                      <Mail className="h-3 w-3" />
+                      {selectedVendor.email?.replace(/(.{2})(.*)(@.*)/, "$1***$3")}
                     </p>
                   )}
                 </div>
               </div>
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  A verification link will be sent to the contact information above. 
-                  If you don't have access to these, please contact support.
-                </AlertDescription>
-              </Alert>
+              
+              {vendorHasEmail ? (
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    A verification link will be sent to the email address above. 
+                    If you don't have access, please contact support.
+                  </AlertDescription>
+                </Alert>
+              ) : (
+                <div className="space-y-4">
+                  <Alert className="bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800">
+                    <Clock className="h-4 w-4 text-amber-600" />
+                    <AlertDescription className="text-amber-800 dark:text-amber-200">
+                      No email is on file for this business. Please provide your business email address 
+                      so our team can verify your ownership. This may take 1-2 business days.
+                    </AlertDescription>
+                  </Alert>
+                  
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="claimant-email">Business Email *</Label>
+                      <Input
+                        id="claimant-email"
+                        type="email"
+                        placeholder="your@business.com"
+                        value={claimantEmail}
+                        onChange={(e) => setClaimantEmail(e.target.value)}
+                        required
+                        data-testid="input-claimant-email"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="claimant-name">Your Name</Label>
+                      <Input
+                        id="claimant-name"
+                        placeholder="John Smith"
+                        value={claimantName}
+                        onChange={(e) => setClaimantName(e.target.value)}
+                        data-testid="input-claimant-name"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="claimant-phone">Phone Number</Label>
+                      <Input
+                        id="claimant-phone"
+                        type="tel"
+                        placeholder="(555) 123-4567"
+                        value={claimantPhone}
+                        onChange={(e) => setClaimantPhone(e.target.value)}
+                        data-testid="input-claimant-phone"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="notes">Additional Notes</Label>
+                      <Textarea
+                        id="notes"
+                        placeholder="Any additional information to help verify your ownership..."
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        className="resize-none"
+                        rows={2}
+                        data-testid="input-notes"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -376,9 +489,21 @@ export default function ClaimYourBusiness() {
               </Alert>
             </div>
           )}
+          
+          {pendingAdminReview && (
+            <div className="py-4">
+              <Alert className="bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
+                <Clock className="h-4 w-4 text-blue-600" />
+                <AlertDescription className="text-blue-800 dark:text-blue-200">
+                  Your claim has been submitted for review. We'll contact you at <span className="font-medium">{claimantEmail}</span> once 
+                  your ownership is verified (usually within 1-2 business days).
+                </AlertDescription>
+              </Alert>
+            </div>
+          )}
 
           <DialogFooter>
-            {claimSuccess ? (
+            {(claimSuccess || pendingAdminReview) ? (
               <Button onClick={() => setClaimDialogOpen(false)} data-testid="button-close-dialog">
                 Close
               </Button>
@@ -389,18 +514,23 @@ export default function ClaimYourBusiness() {
                 </Button>
                 <Button 
                   onClick={handleConfirmClaim} 
-                  disabled={claimMutation.isPending}
+                  disabled={claimMutation.isPending || (!vendorHasEmail && !claimantEmail.trim())}
                   data-testid="button-confirm-claim"
                 >
                   {claimMutation.isPending ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Sending...
+                      {vendorHasEmail ? "Sending..." : "Submitting..."}
                     </>
-                  ) : (
+                  ) : vendorHasEmail ? (
                     <>
                       <Mail className="h-4 w-4 mr-2" />
                       Send Verification
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck className="h-4 w-4 mr-2" />
+                      Submit for Review
                     </>
                   )}
                 </Button>
