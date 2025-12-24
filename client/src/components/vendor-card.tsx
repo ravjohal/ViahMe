@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, MapPin, DollarSign, GitCompare, Check, UserPlus, Briefcase } from "lucide-react";
+import { Star, MapPin, DollarSign, GitCompare, Check, UserPlus, Briefcase, Mail, Phone, Globe, Instagram } from "lucide-react";
 import { Link } from "wouter";
 import type { Vendor } from "@shared/schema";
 
@@ -66,170 +66,242 @@ export function VendorCard({
 
   return (
     <Card
-      className="overflow-hidden hover-elevate transition-all cursor-pointer group"
-      onClick={() => onSelect?.(vendor)}
+      className="overflow-hidden hover-elevate transition-all group rounded-xl"
       data-testid={`card-vendor-${vendor.id}`}
     >
-      {/* Cover image or featured banner */}
+      {/* Cover image with gradient overlay */}
       {vendor.coverImageUrl ? (
-        <div className="relative h-32 overflow-hidden">
+        <div className="relative h-36 overflow-hidden">
           <img 
             src={vendor.coverImageUrl} 
             alt={`${vendor.name} cover`}
             className="w-full h-full object-cover"
           />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
           {featured && (
-            <div className="absolute top-2 left-2 bg-primary px-3 py-1 rounded-md">
+            <div className="absolute top-3 left-3 bg-primary px-3 py-1 rounded-full shadow-md">
+              <span className="text-xs font-semibold text-primary-foreground">RECOMMENDED</span>
+            </div>
+          )}
+          {/* Rating badge on image */}
+          {reviewCount > 0 && (
+            <div className="absolute bottom-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/95 shadow-sm">
+              <Star className="w-3.5 h-3.5 fill-primary text-primary" />
+              <span className="font-mono font-semibold text-sm text-foreground" data-testid={`text-rating-${vendor.id}`}>
+                {rating.toFixed(1)}
+              </span>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="relative h-24 bg-gradient-to-br from-primary/10 to-primary/5">
+          {featured && (
+            <div className="absolute top-3 left-3 bg-primary px-3 py-1 rounded-full shadow-md">
               <span className="text-xs font-semibold text-primary-foreground">RECOMMENDED</span>
             </div>
           )}
         </div>
-      ) : featured ? (
-        <div className="bg-primary px-4 py-2 text-center">
-          <span className="text-xs font-semibold text-primary-foreground">RECOMMENDED</span>
-        </div>
-      ) : null}
+      )}
 
-      <div className="p-6">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-3 flex-1">
-            {vendor.logoUrl && (
-              <img 
-                src={vendor.logoUrl} 
-                alt={`${vendor.name} logo`}
-                className="w-12 h-12 object-cover rounded-lg border flex-shrink-0"
-              />
-            )}
-            <div>
-              <h3 className="font-semibold text-lg text-foreground mb-1 group-hover:text-primary transition-colors">
-                {vendor.name}
-              </h3>
-              <div className="flex flex-wrap gap-1">
-                {(vendor.categories || []).map((cat, idx) => (
-                  <span key={idx} className="text-sm text-muted-foreground">
-                    {CATEGORY_LABELS[cat] || cat.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                    {idx < (vendor.categories?.length || 1) - 1 && <span className="mx-1">·</span>}
-                  </span>
-                ))}
-              </div>
+      <div className="p-5">
+        {/* Header with logo and name */}
+        <div className="flex items-start gap-3 mb-4">
+          {vendor.logoUrl && (
+            <img 
+              src={vendor.logoUrl} 
+              alt={`${vendor.name} logo`}
+              className="w-14 h-14 object-cover rounded-lg border-2 border-background shadow-sm flex-shrink-0 -mt-8 bg-background"
+            />
+          )}
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-lg text-foreground mb-1 truncate group-hover:text-primary transition-colors">
+              {vendor.name}
+            </h3>
+            <div className="flex flex-wrap gap-1">
+              {(vendor.categories || []).slice(0, 2).map((cat, idx) => (
+                <span key={idx} className="text-sm text-muted-foreground">
+                  {CATEGORY_LABELS[cat] || cat.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                  {idx < Math.min((vendor.categories?.length || 1), 2) - 1 && <span className="mx-1">·</span>}
+                </span>
+              ))}
+              {(vendor.categories?.length || 0) > 2 && (
+                <span className="text-sm text-muted-foreground">+{(vendor.categories?.length || 0) - 2}</span>
+              )}
             </div>
           </div>
-          <div className="flex flex-col items-end gap-1">
-            {reviewCount > 0 ? (
-              <>
-                <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted">
-                  <Star className="w-4 h-4 fill-primary text-primary" />
-                  <span className="font-mono font-semibold text-sm" data-testid={`text-rating-${vendor.id}`}>
-                    {rating.toFixed(1)}
-                  </span>
-                </div>
-                <span className="text-xs text-muted-foreground" data-testid={`text-review-count-${vendor.id}`}>
-                  {reviewCount} {reviewCount === 1 ? 'review' : 'reviews'}
-                </span>
-              </>
-            ) : (
-              <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted/50 border border-dashed border-muted-foreground/30">
-                <Star className="w-4 h-4 text-muted-foreground/50" />
-                <span className="text-xs text-muted-foreground" data-testid={`text-no-reviews-${vendor.id}`}>
-                  No reviews yet
-                </span>
-              </div>
-            )}
-          </div>
+          
+          {/* Rating for cards without cover image */}
+          {!vendor.coverImageUrl && reviewCount > 0 && (
+            <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted">
+              <Star className="w-3.5 h-3.5 fill-primary text-primary" />
+              <span className="font-mono font-semibold text-sm" data-testid={`text-rating-${vendor.id}`}>
+                {rating.toFixed(1)}
+              </span>
+            </div>
+          )}
         </div>
 
+        {/* Description */}
         {vendor.description && (
           <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
             {vendor.description}
           </p>
         )}
 
-        {/* Contact info only visible to logged-in users to prevent scraping */}
-        {isLoggedIn && (
-          <div className="flex items-center gap-4 mb-4 text-sm">
-            <div className="flex items-center gap-1 text-muted-foreground">
-              <MapPin className="w-4 h-4" />
-              <span>{vendor.location}</span>
-            </div>
-            <div className="flex items-center gap-1 text-muted-foreground">
-              <DollarSign className="w-4 h-4" />
-              <span className="font-mono font-semibold">{vendor.priceRange}</span>
+        {/* Location and Price - always visible as general info */}
+        <div className="flex items-center gap-4 mb-4 text-sm">
+          <div className="flex items-center gap-1.5 text-muted-foreground">
+            <MapPin className="w-4 h-4" />
+            <span>{vendor.location}</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-muted-foreground">
+            <DollarSign className="w-4 h-4" />
+            <span className="font-mono font-medium">{vendor.priceRange}</span>
+          </div>
+        </div>
+
+        {/* Contact Details - only for logged-in users viewing unclaimed vendors */}
+        {isLoggedIn && !vendor.claimed && hasContactDetails && (
+          <div className="mb-4 p-3 bg-muted/50 rounded-lg space-y-2">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Contact Info</p>
+            <div className="grid grid-cols-1 gap-2 text-sm">
+              {vendor.email && (
+                <div className="flex items-center gap-2 text-foreground">
+                  <Mail className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="truncate">{vendor.email}</span>
+                </div>
+              )}
+              {vendor.phone && (
+                <div className="flex items-center gap-2 text-foreground">
+                  <Phone className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span>{vendor.phone}</span>
+                </div>
+              )}
+              {vendor.website && (
+                <div className="flex items-center gap-2 text-foreground">
+                  <Globe className="w-3.5 h-3.5 text-muted-foreground" />
+                  <a href={vendor.website} target="_blank" rel="noopener noreferrer" className="truncate text-primary hover:underline" onClick={(e) => e.stopPropagation()}>
+                    {vendor.website.replace(/^https?:\/\//, '')}
+                  </a>
+                </div>
+              )}
+              {vendor.instagram && (
+                <div className="flex items-center gap-2 text-foreground">
+                  <Instagram className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="truncate">@{vendor.instagram.replace('@', '')}</span>
+                </div>
+              )}
             </div>
           </div>
         )}
 
+        {/* Cultural Specialties */}
         {vendor.culturalSpecialties && vendor.culturalSpecialties.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-4">
-            {vendor.culturalSpecialties.map((specialty: string) => (
-              <Badge key={specialty} variant="outline" className="text-xs">
+          <div className="flex flex-wrap gap-1.5 mb-4">
+            {vendor.culturalSpecialties.slice(0, 3).map((specialty: string) => (
+              <Badge key={specialty} variant="secondary" className="text-xs px-2 py-0.5">
                 {specialty}
               </Badge>
             ))}
+            {vendor.culturalSpecialties.length > 3 && (
+              <Badge variant="outline" className="text-xs px-2 py-0.5">
+                +{vendor.culturalSpecialties.length - 3}
+              </Badge>
+            )}
           </div>
         )}
 
+        {/* Review count text */}
+        {reviewCount > 0 ? (
+          <p className="text-xs text-muted-foreground mb-4" data-testid={`text-review-count-${vendor.id}`}>
+            {reviewCount} {reviewCount === 1 ? 'review' : 'reviews'}
+          </p>
+        ) : (
+          <p className="text-xs text-muted-foreground mb-4" data-testid={`text-no-reviews-${vendor.id}`}>
+            No reviews yet
+          </p>
+        )}
+
+        {/* Action Buttons */}
         <div className="space-y-2">
-          <Button
-            className="w-full"
-            onClick={(e) => {
-              e.stopPropagation();
-              onSelect?.(vendor);
-            }}
-            data-testid={`button-book-vendor-${vendor.id}`}
-          >
-            View Details
-          </Button>
-
-          {/* Show Sign Up and View Contact Details for logged-out users when vendor has contact info */}
-          {!isLoggedIn && hasContactDetails && (
-            <Link href="/onboarding" onClick={(e) => e.stopPropagation()}>
-              <Button
-                variant="secondary"
-                className="w-full"
-                data-testid={`button-signup-contact-${vendor.id}`}
-              >
-                <UserPlus className="w-4 h-4 mr-2" />
-                Sign Up and View Contact Details
-              </Button>
-            </Link>
-          )}
-
-          {/* Show Claim This Profile for logged-out users viewing unclaimed vendors */}
-          {!isLoggedIn && !vendor.claimed && (
-            <Link href={`/claim-your-business?vendor=${vendor.id}`} onClick={(e) => e.stopPropagation()}>
-              <Button
-                variant="outline"
-                className="w-full"
-                data-testid={`button-claim-profile-${vendor.id}`}
-              >
-                <Briefcase className="w-4 h-4 mr-2" />
-                Claim This Profile
-              </Button>
-            </Link>
-          )}
-
-          {onAddToComparison && (
-            <Button
-              variant={isInComparison ? "secondary" : "outline"}
-              className="w-full"
-              onClick={(e) => {
-                e.stopPropagation();
-                onAddToComparison(vendor);
-              }}
-              data-testid={`button-add-compare-${vendor.id}`}
-            >
-              {isInComparison ? (
-                <>
-                  <Check className="w-4 h-4 mr-2" />
-                  Added to Compare
-                </>
-              ) : (
-                <>
-                  <GitCompare className="w-4 h-4 mr-2" />
-                  Add to Compare
-                </>
+          {/* LOGGED IN USER BEHAVIOR */}
+          {isLoggedIn && (
+            <>
+              {/* Claimed vendor: Show Request Booking */}
+              {vendor.claimed && (
+                <Button
+                  className="w-full"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSelect?.(vendor);
+                  }}
+                  data-testid={`button-request-booking-${vendor.id}`}
+                >
+                  Request Booking
+                </Button>
               )}
-            </Button>
+              {/* Unclaimed vendor with no contact: only compare available (handled below) */}
+            </>
+          )}
+
+          {/* NOT LOGGED IN USER BEHAVIOR */}
+          {!isLoggedIn && (
+            <>
+              {/* Vendor has contact info AND is not claimed: Sign Up and View Contact Details */}
+              {hasContactDetails && !vendor.claimed && (
+                <Link href="/onboarding" onClick={(e) => e.stopPropagation()}>
+                  <Button
+                    className="w-full"
+                    data-testid={`button-signup-contact-${vendor.id}`}
+                  >
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Sign Up and View Contact Details
+                  </Button>
+                </Link>
+              )}
+
+              {/* Vendor is not claimed: Show Claim This Profile */}
+              {!vendor.claimed && (
+                <Link href={`/claim-your-business?vendor=${vendor.id}`} onClick={(e) => e.stopPropagation()}>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    data-testid={`button-claim-profile-${vendor.id}`}
+                  >
+                    <Briefcase className="w-4 h-4 mr-2" />
+                    Claim This Vendor Profile
+                  </Button>
+                </Link>
+              )}
+            </>
+          )}
+
+          {/* Compare button - smaller, compact style for all users */}
+          {onAddToComparison && (
+            <div className="flex justify-end pt-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs px-3 h-8"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAddToComparison(vendor);
+                }}
+                data-testid={`button-add-compare-${vendor.id}`}
+              >
+                {isInComparison ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 mr-1.5" />
+                    In Compare
+                  </>
+                ) : (
+                  <>
+                    <GitCompare className="w-3.5 h-3.5 mr-1.5" />
+                    Compare
+                  </>
+                )}
+              </Button>
+            </div>
           )}
         </div>
       </div>
