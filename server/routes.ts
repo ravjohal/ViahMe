@@ -841,7 +841,7 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
     }
   });
 
-  // Request to claim a vendor profile (sends notification to vendor)
+  // Request to claim a vendor profile (email verification only)
   app.post("/api/vendors/:id/request-claim", async (req, res) => {
     try {
       const vendor = await storage.getVendor(req.params.id);
@@ -853,37 +853,76 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
         return res.status(400).json({ error: "This profile has already been claimed" });
       }
       
-      if (!vendor.phone && !vendor.email) {
-        return res.status(400).json({ error: "No contact information available for this vendor" });
-      }
-      
-      // Generate claim token
-      const claimToken = crypto.randomUUID();
-      const claimTokenExpires = new Date(Date.now() + 48 * 60 * 60 * 1000); // 48 hours
-      
-      await storage.updateVendor(req.params.id, {
-        claimToken,
-        claimTokenExpires,
-      } as any);
-      
-      // Send claim email/SMS (this would use Resend for email)
-      // For now, just return the claim link for testing
-      const claimLink = `${req.protocol}://${req.get('host')}/claim-profile?token=${claimToken}`;
-      
-      // In production, send email via Resend
+      // If vendor has an email on file, use email verification flow
       if (vendor.email) {
+        // Generate claim token
+        const claimToken = crypto.randomUUID();
+        const claimTokenExpires = new Date(Date.now() + 48 * 60 * 60 * 1000); // 48 hours
+        
+        await storage.updateVendor(req.params.id, {
+          claimToken,
+          claimTokenExpires,
+        } as any);
+        
+        // Send claim email
+        const claimLink = `${req.protocol}://${req.get('host')}/claim-profile?token=${claimToken}`;
+        
         try {
-          // Queue email notification
           await storage.sendClaimEmail(vendor.id, vendor.email, vendor.name, claimLink);
         } catch (err) {
           console.error("Failed to send claim email:", err);
         }
+        
+        return res.json({
+          message: "Claim request sent. Check your email for verification instructions.",
+          requiresEmail: false,
+          // Only include claimLink in development for testing
+          ...(process.env.NODE_ENV === 'development' && { claimLink }),
+        });
       }
       
+      // No email on file - require claimant to provide their email for admin review
+      const { claimantEmail, claimantName, claimantPhone, notes } = req.body;
+      
+      if (!claimantEmail) {
+        return res.status(400).json({ 
+          error: "This vendor has no email on file. Please provide your business email for verification.",
+          requiresEmail: true
+        });
+      }
+      
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(claimantEmail)) {
+        return res.status(400).json({ error: "Please provide a valid email address" });
+      }
+      
+      // Check if there's already a pending claim for this vendor
+      const existingClaims = await storage.getVendorClaimStagingByVendor(req.params.id);
+      const pendingClaim = existingClaims.find(c => c.status === 'pending');
+      if (pendingClaim) {
+        return res.status(400).json({ 
+          error: "There is already a pending claim for this vendor. Please wait for admin review." 
+        });
+      }
+      
+      // Create staging entry for admin review
+      await storage.createVendorClaimStaging({
+        vendorId: req.params.id,
+        vendorName: vendor.name,
+        vendorCategories: vendor.categories,
+        vendorLocation: vendor.location,
+        vendorCity: vendor.city,
+        claimantEmail,
+        claimantName: claimantName || null,
+        claimantPhone: claimantPhone || null,
+        notes: notes || null,
+      });
+      
       res.json({
-        message: "Claim request sent. Check your email or phone for verification instructions.",
-        // Only include claimLink in development for testing
-        ...(process.env.NODE_ENV === 'development' && { claimLink }),
+        message: "Claim request submitted for admin review. We'll contact you at the provided email once verified.",
+        requiresEmail: false,
+        pendingAdminReview: true,
       });
     } catch (error) {
       console.error("Error requesting claim:", error);
