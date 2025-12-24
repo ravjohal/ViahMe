@@ -593,6 +593,133 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   // GHOST PROFILE / CLAIM YOUR PROFILE
   // ============================================================================
 
+  // Search for unclaimed vendor profiles (public - for claim your business page)
+  app.get("/api/vendors/unclaimed", async (req, res) => {
+    try {
+      const { search } = req.query;
+      
+      if (!search || typeof search !== "string" || search.length < 2) {
+        return res.json([]);
+      }
+      
+      const allVendors = await storage.getAllVendors();
+      
+      // Filter to only unclaimed vendors that:
+      // 1. Are not claimed
+      // 2. Have contact info (email or phone) so they can actually be claimed
+      // 3. Match the search query
+      const unclaimedVendors = allVendors.filter(v => {
+        if (v.claimed !== false) return false;
+        if (!v.email && !v.phone) return false; // Must have contact info
+        
+        const searchLower = search.toLowerCase();
+        return (
+          v.name.toLowerCase().includes(searchLower) ||
+          v.location.toLowerCase().includes(searchLower) ||
+          v.category.toLowerCase().includes(searchLower)
+        );
+      });
+      
+      // Return limited results for performance, sanitize sensitive data
+      const sanitizedVendors = unclaimedVendors.slice(0, 20).map(v => ({
+        ...v,
+        // Mask sensitive contact info for public display
+        email: v.email ? v.email.replace(/(.{2})(.*)(@.*)/, "$1***$3") : null,
+        phone: v.phone ? v.phone.replace(/(\d{3})(\d{3})(\d{4})/, "($1) ***-$3") : null,
+      }));
+      
+      res.json(sanitizedVendors);
+    } catch (error) {
+      console.error("Error searching unclaimed vendors:", error);
+      res.status(500).json({ error: "Failed to search vendors" });
+    }
+  });
+
+  // Admin: Get all unclaimed vendors for management
+  // Protected - only accessible to authenticated couple users (platform operators)
+  app.get("/api/admin/vendors/unclaimed", async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      if (!authReq.session?.userId) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      
+      // Verify user is a couple (platform operator role)
+      const user = await storage.getUser(authReq.session.userId);
+      if (!user || user.role !== "couple") {
+        return res.status(403).json({ error: "Access denied. Admin features are for platform operators only." });
+      }
+      
+      const allVendors = await storage.getAllVendors();
+      const unclaimedVendors = allVendors.filter(v => v.claimed === false);
+      
+      res.json(unclaimedVendors);
+    } catch (error) {
+      console.error("Error fetching unclaimed vendors:", error);
+      res.status(500).json({ error: "Failed to fetch unclaimed vendors" });
+    }
+  });
+
+  // Admin: Manually send claim invitation to a vendor
+  // Protected - only accessible to authenticated couple users (platform operators)
+  app.post("/api/admin/vendors/:id/send-claim-invitation", async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      if (!authReq.session?.userId) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      
+      // Verify user is a couple (platform operator role)
+      const user = await storage.getUser(authReq.session.userId);
+      if (!user || user.role !== "couple") {
+        return res.status(403).json({ error: "Access denied. Admin features are for platform operators only." });
+      }
+      
+      const vendor = await storage.getVendor(req.params.id);
+      if (!vendor) {
+        return res.status(404).json({ error: "Vendor not found" });
+      }
+      
+      if (vendor.claimed) {
+        return res.status(400).json({ error: "This profile has already been claimed" });
+      }
+      
+      if (!vendor.email && !vendor.phone) {
+        return res.status(400).json({ error: "Vendor has no email or phone to send invitation to" });
+      }
+      
+      // Generate claim token
+      const claimToken = crypto.randomUUID();
+      const claimTokenExpires = new Date(Date.now() + 48 * 60 * 60 * 1000); // 48 hours
+      
+      await storage.updateVendor(req.params.id, {
+        claimToken,
+        claimTokenExpires,
+      });
+      
+      // Build claim link
+      const claimLink = `${req.protocol}://${req.get('host')}/claim-profile/${claimToken}`;
+      
+      // Send claim email if email exists
+      if (vendor.email) {
+        try {
+          await storage.sendClaimEmail(vendor.id, vendor.email, vendor.name, claimLink);
+        } catch (err) {
+          console.error("Failed to send claim email:", err);
+        }
+      }
+      
+      res.json({ 
+        success: true,
+        message: `Claim invitation sent to ${vendor.email || vendor.phone}`,
+        claimLink: process.env.NODE_ENV === 'development' ? claimLink : undefined,
+      });
+    } catch (error) {
+      console.error("Error sending claim invitation:", error);
+      res.status(500).json({ error: "Failed to send claim invitation" });
+    }
+  });
+
   // Seed vendors from Google Places API (admin only)
   app.post("/api/admin/seed-google-places", async (req, res) => {
     try {

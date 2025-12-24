@@ -53,6 +53,8 @@ import VendorDeposit from "@/pages/vendor-deposit";
 import VendorTemplates from "@/pages/vendor-templates";
 import VendorReminders from "@/pages/vendor-reminders";
 import ClaimProfile from "@/pages/claim-profile";
+import ClaimYourBusiness from "@/pages/claim-your-business";
+import AdminVendorClaims from "@/pages/admin-vendor-claims";
 import AiPlanner from "@/pages/ai-planner";
 import LiveTimeline from "@/pages/live-timeline";
 import VendorTeam from "@/pages/vendor-team";
@@ -77,6 +79,7 @@ function Router() {
       <Route path="/vendor-register" component={VendorRegister} />
       <Route path="/verify-email" component={VerifyEmail} />
       <Route path="/claim-profile/:token" component={ClaimProfile} />
+      <Route path="/claim-your-business" component={ClaimYourBusiness} />
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/reset-password" component={ResetPassword} />
       <Route path="/wedding/:slug" component={GuestWebsite} />
@@ -201,6 +204,11 @@ function Router() {
       <Route path="/ai-planner">
         <CoupleRoute>
           <AiPlanner />
+        </CoupleRoute>
+      </Route>
+      <Route path="/admin/vendor-claims">
+        <CoupleRoute>
+          <AdminVendorClaims />
         </CoupleRoute>
       </Route>
       <Route path="/settings" component={Settings} />
