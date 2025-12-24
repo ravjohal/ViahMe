@@ -58,7 +58,10 @@ export default function AdminVendorClaims() {
   const [selectedClaim, setSelectedClaim] = useState<VendorClaimStaging | null>(null);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [vendorApprovalDialogOpen, setVendorApprovalDialogOpen] = useState(false);
+  const [selectedApprovalVendor, setSelectedApprovalVendor] = useState<Vendor | null>(null);
   const [adminNotes, setAdminNotes] = useState("");
+  const [approvalNotes, setApprovalNotes] = useState("");
   const [activeTab, setActiveTab] = useState("claims");
 
   const { data: vendors = [], isLoading } = useQuery<Vendor[]>({
@@ -68,7 +71,13 @@ export default function AdminVendorClaims() {
 
   const { data: pendingClaims = [], isLoading: isLoadingClaims } = useQuery<VendorClaimStaging[]>({
     queryKey: ["/api/admin/vendor-claims"],
-    enabled: !!user && user.role === 'couple',
+    enabled: !!user && user.role === 'admin',
+  });
+
+  // Vendors pending registration approval
+  const { data: pendingApprovalVendors = [], isLoading: isLoadingApproval } = useQuery<Vendor[]>({
+    queryKey: ["/api/admin/vendors/pending-approval"],
+    enabled: !!user && user.role === 'admin',
   });
 
   const approveMutation = useMutation({
@@ -110,6 +119,52 @@ export default function AdminVendorClaims() {
       toast({
         title: "Denial failed",
         description: error.message || "Failed to deny claim.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Vendor approval mutations (for new vendor registrations)
+  const approveVendorMutation = useMutation({
+    mutationFn: async ({ vendorId, notes }: { vendorId: string; notes?: string }) => {
+      const response = await apiRequest("POST", `/api/admin/vendors/${vendorId}/approve`, { notes });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/vendors/pending-approval'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/vendors'] });
+      setReviewDialogOpen(false);
+      toast({
+        title: "Vendor approved!",
+        description: "The vendor is now visible in the directory.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Approval failed",
+        description: error.message || "Failed to approve vendor.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const rejectVendorMutation = useMutation({
+    mutationFn: async ({ vendorId, notes }: { vendorId: string; notes?: string }) => {
+      const response = await apiRequest("POST", `/api/admin/vendors/${vendorId}/reject`, { notes });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/vendors/pending-approval'] });
+      setReviewDialogOpen(false);
+      toast({
+        title: "Vendor rejected",
+        description: "The vendor has been rejected.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Rejection failed",
+        description: error.message || "Failed to reject vendor.",
         variant: "destructive",
       });
     },
@@ -163,6 +218,27 @@ export default function AdminVendorClaims() {
   const handleDenyClaim = () => {
     if (selectedClaim) {
       denyMutation.mutate({ claimId: selectedClaim.id, notes: adminNotes });
+    }
+  };
+
+  // Vendor approval handlers
+  const handleReviewVendorApproval = (vendor: Vendor) => {
+    setSelectedApprovalVendor(vendor);
+    setApprovalNotes("");
+    setVendorApprovalDialogOpen(true);
+  };
+
+  const handleApproveVendor = () => {
+    if (selectedApprovalVendor) {
+      approveVendorMutation.mutate({ vendorId: selectedApprovalVendor.id, notes: approvalNotes });
+      setVendorApprovalDialogOpen(false);
+    }
+  };
+
+  const handleRejectVendor = () => {
+    if (selectedApprovalVendor) {
+      rejectVendorMutation.mutate({ vendorId: selectedApprovalVendor.id, notes: approvalNotes });
+      setVendorApprovalDialogOpen(false);
     }
   };
 
@@ -297,7 +373,14 @@ export default function AdminVendorClaims() {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="mb-4">
+            <TabsList className="mb-4 flex-wrap">
+              <TabsTrigger value="approval" className="flex items-center gap-2" data-testid="tab-approval">
+                <ShieldCheck className="h-4 w-4" />
+                Vendor Approval
+                {pendingApprovalVendors.length > 0 && (
+                  <Badge variant="destructive" className="ml-1">{pendingApprovalVendors.length}</Badge>
+                )}
+              </TabsTrigger>
               <TabsTrigger value="claims" className="flex items-center gap-2" data-testid="tab-claims">
                 <FileText className="h-4 w-4" />
                 Pending Claims
@@ -310,6 +393,107 @@ export default function AdminVendorClaims() {
                 Unclaimed Vendors
               </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="approval">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Vendor Registration Approval</CardTitle>
+                  <CardDescription>
+                    Review and approve new vendor registrations before they appear in the vendor directory
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {isLoadingApproval ? (
+                    <div className="space-y-3">
+                      {[1, 2, 3].map((i) => (
+                        <Skeleton key={i} className="h-24 w-full" />
+                      ))}
+                    </div>
+                  ) : pendingApprovalVendors.length === 0 ? (
+                    <div className="py-12 text-center">
+                      <CheckCircle2 className="h-12 w-12 mx-auto text-green-500 mb-4" />
+                      <h3 className="text-lg font-medium">All caught up!</h3>
+                      <p className="text-muted-foreground">
+                        No vendors pending approval.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {pendingApprovalVendors.map((vendor) => (
+                        <Card key={vendor.id} className="hover-elevate" data-testid={`card-approval-${vendor.id}`}>
+                          <CardContent className="p-4">
+                            <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                              <div className="flex-1 space-y-2">
+                                <div className="flex items-start justify-between gap-2 flex-wrap">
+                                  <div>
+                                    <h3 className="font-semibold flex items-center gap-2">
+                                      <Building2 className="h-4 w-4 text-primary" />
+                                      {vendor.name}
+                                    </h3>
+                                    {vendor.categories && vendor.categories.length > 0 && (
+                                      <div className="flex flex-wrap gap-1 mt-1">
+                                        {vendor.categories.slice(0, 3).map((cat) => (
+                                          <Badge key={cat} variant="outline" className="text-xs">
+                                            {getCategoryLabel(cat)}
+                                          </Badge>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <Badge variant="secondary" className="shrink-0">
+                                    <Clock className="h-3 w-3 mr-1" />
+                                    Pending Approval
+                                  </Badge>
+                                </div>
+                                
+                                <div className="grid sm:grid-cols-2 gap-2 text-sm">
+                                  {vendor.email && (
+                                    <div>
+                                      <p className="text-muted-foreground text-xs">Email:</p>
+                                      <p className="flex items-center gap-1">
+                                        <Mail className="h-3 w-3" />
+                                        {vendor.email}
+                                      </p>
+                                    </div>
+                                  )}
+                                  {vendor.location && (
+                                    <div>
+                                      <p className="text-muted-foreground text-xs">Location:</p>
+                                      <p className="flex items-center gap-1">
+                                        <MapPin className="h-3 w-3" />
+                                        {vendor.location}
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {vendor.description && (
+                                  <p className="text-sm text-muted-foreground line-clamp-2">
+                                    {vendor.description}
+                                  </p>
+                                )}
+                              </div>
+                              
+                              <div className="flex gap-2 shrink-0">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleReviewVendorApproval(vendor)}
+                                  data-testid={`button-review-approval-${vendor.id}`}
+                                >
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  Review
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
 
             <TabsContent value="claims">
               <Card>
@@ -730,6 +914,134 @@ export default function AdminVendorClaims() {
               data-testid="button-approve-claim"
             >
               {approveMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Approving...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                  Approve
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={vendorApprovalDialogOpen} onOpenChange={setVendorApprovalDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-primary" />
+              Review Vendor: {selectedApprovalVendor?.name}
+            </DialogTitle>
+            <DialogDescription>
+              Approve or reject this vendor's registration for the directory
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedApprovalVendor && (
+            <div className="space-y-4 py-4">
+              <div className="p-4 bg-muted/50 rounded-lg space-y-3">
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Business Name</p>
+                  <p className="font-medium">{selectedApprovalVendor.name}</p>
+                </div>
+                {selectedApprovalVendor.categories && selectedApprovalVendor.categories.length > 0 && (
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Categories</p>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {selectedApprovalVendor.categories.map((cat) => (
+                        <Badge key={cat} variant="outline" className="text-xs">
+                          {getCategoryLabel(cat)}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {selectedApprovalVendor.location && (
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Location</p>
+                    <p className="text-sm flex items-center gap-2">
+                      <MapPin className="h-3 w-3" />
+                      {selectedApprovalVendor.location}
+                    </p>
+                  </div>
+                )}
+                {selectedApprovalVendor.email && (
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Email</p>
+                    <p className="text-sm flex items-center gap-2">
+                      <Mail className="h-3 w-3" />
+                      {selectedApprovalVendor.email}
+                    </p>
+                  </div>
+                )}
+                {selectedApprovalVendor.description && (
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Description</p>
+                    <p className="text-sm">{selectedApprovalVendor.description}</p>
+                  </div>
+                )}
+              </div>
+
+              <Alert className="bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
+                <AlertCircle className="h-4 w-4 text-blue-600" />
+                <AlertDescription className="text-blue-800 dark:text-blue-200">
+                  <strong>Approving</strong> will make this vendor visible in the public directory.
+                  <strong> Rejecting</strong> will keep the vendor hidden from the directory.
+                </AlertDescription>
+              </Alert>
+
+              <div className="space-y-2">
+                <Label htmlFor="approval-notes">Notes (optional)</Label>
+                <Textarea
+                  id="approval-notes"
+                  placeholder="Add any notes for this decision..."
+                  value={approvalNotes}
+                  onChange={(e) => setApprovalNotes(e.target.value)}
+                  className="resize-none"
+                  rows={2}
+                  data-testid="input-approval-notes"
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setVendorApprovalDialogOpen(false)}
+              disabled={approveVendorMutation.isPending || rejectVendorMutation.isPending}
+              data-testid="button-cancel-approval"
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={handleRejectVendor}
+              disabled={approveVendorMutation.isPending || rejectVendorMutation.isPending}
+              data-testid="button-reject-vendor"
+            >
+              {rejectVendorMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Rejecting...
+                </>
+              ) : (
+                <>
+                  <XCircle className="h-4 w-4 mr-2" />
+                  Reject
+                </>
+              )}
+            </Button>
+            <Button 
+              onClick={handleApproveVendor}
+              disabled={approveVendorMutation.isPending || rejectVendorMutation.isPending}
+              data-testid="button-approve-vendor"
+            >
+              {approveVendorMutation.isPending ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   Approving...
