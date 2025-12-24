@@ -811,6 +811,12 @@ export interface IStorage {
   createVendorClaimStaging(claim: InsertVendorClaimStaging): Promise<VendorClaimStaging>;
   updateVendorClaimStaging(id: string, claim: Partial<VendorClaimStaging>): Promise<VendorClaimStaging | undefined>;
   deleteVendorClaimStaging(id: string): Promise<boolean>;
+
+  // Vendor Approval (Admin)
+  getPendingApprovalVendors(): Promise<Vendor[]>;
+  approveVendor(id: string, adminId: string, notes?: string): Promise<Vendor | undefined>;
+  rejectVendor(id: string, adminId: string, notes?: string): Promise<Vendor | undefined>;
+  getApprovedVendors(): Promise<Vendor[]>;
 }
 
 // Guest Planning Snapshot - comprehensive view of all guests and per-event costs
@@ -3721,6 +3727,12 @@ export class MemStorage implements IStorage {
   async createVendorClaimStaging(claim: InsertVendorClaimStaging): Promise<VendorClaimStaging> { throw new Error("MemStorage does not support Vendor Claim Staging. Use DBStorage."); }
   async updateVendorClaimStaging(id: string, claim: Partial<VendorClaimStaging>): Promise<VendorClaimStaging | undefined> { throw new Error("MemStorage does not support Vendor Claim Staging. Use DBStorage."); }
   async deleteVendorClaimStaging(id: string): Promise<boolean> { return false; }
+
+  // Vendor Approval (stubs)
+  async getPendingApprovalVendors(): Promise<Vendor[]> { return []; }
+  async approveVendor(id: string, adminId: string, notes?: string): Promise<Vendor | undefined> { throw new Error("MemStorage does not support Vendor Approval. Use DBStorage."); }
+  async rejectVendor(id: string, adminId: string, notes?: string): Promise<Vendor | undefined> { throw new Error("MemStorage does not support Vendor Approval. Use DBStorage."); }
+  async getApprovedVendors(): Promise<Vendor[]> { return Array.from(this.vendors.values()); }
 }
 
 import { neon } from "@neondatabase/serverless";
@@ -8568,6 +8580,44 @@ export class DBStorage implements IStorage {
     await this.db.delete(schema.vendorClaimStaging)
       .where(eq(schema.vendorClaimStaging.id, id));
     return true;
+  }
+
+  // Vendor Approval (Admin)
+  async getPendingApprovalVendors(): Promise<Vendor[]> {
+    return await this.db.select().from(schema.vendors)
+      .where(eq(schema.vendors.approvalStatus, 'pending'))
+      .orderBy(sql`${schema.vendors.createdAt} ASC`);
+  }
+
+  async approveVendor(id: string, adminId: string, notes?: string): Promise<Vendor | undefined> {
+    const result = await this.db.update(schema.vendors)
+      .set({
+        approvalStatus: 'approved',
+        approvalNotes: notes || null,
+        approvedBy: adminId,
+        approvedAt: new Date(),
+      })
+      .where(eq(schema.vendors.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async rejectVendor(id: string, adminId: string, notes?: string): Promise<Vendor | undefined> {
+    const result = await this.db.update(schema.vendors)
+      .set({
+        approvalStatus: 'rejected',
+        approvalNotes: notes || null,
+        approvedBy: adminId,
+        approvedAt: new Date(),
+      })
+      .where(eq(schema.vendors.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async getApprovedVendors(): Promise<Vendor[]> {
+    return await this.db.select().from(schema.vendors)
+      .where(eq(schema.vendors.approvalStatus, 'approved'));
   }
 }
 
