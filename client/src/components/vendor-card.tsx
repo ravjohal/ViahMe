@@ -247,6 +247,19 @@ export function VendorCard({
           {/* NOT LOGGED IN USER BEHAVIOR */}
           {!isLoggedIn && (
             <>
+              {/* Vendor IS claimed: Sign Up and Book */}
+              {vendor.claimed && (
+                <Link href="/onboarding" onClick={(e) => e.stopPropagation()}>
+                  <Button
+                    className="w-full"
+                    data-testid={`button-signup-book-${vendor.id}`}
+                  >
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Sign Up and Book
+                  </Button>
+                </Link>
+              )}
+
               {/* Vendor has contact info AND is not claimed: Sign Up and View Contact Details */}
               {hasContactDetails && !vendor.claimed && (
                 <Link href="/onboarding" onClick={(e) => e.stopPropagation()}>
