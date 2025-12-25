@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,9 +10,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Filter, SlidersHorizontal, GitCompare, X } from "lucide-react";
+import { Search, Filter, SlidersHorizontal, GitCompare, X, Info } from "lucide-react";
 import type { Vendor, Wedding } from "@shared/schema";
 import { VendorCard } from "./vendor-card";
+import { VendorCategoryGuide } from "./vendor-category-guide";
 
 interface VendorDirectoryProps {
   vendors: Vendor[];
@@ -191,6 +192,11 @@ export function VendorDirectory({
   const [priceFilter, setPriceFilter] = useState("all");
   const [cityFilter, setCityFilter] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
+  const [showCategoryGuide, setShowCategoryGuide] = useState(true);
+
+  useEffect(() => {
+    setShowCategoryGuide(true);
+  }, [categoryFilter]);
 
   const availableCities = useMemo(() => {
     const citySet = new Set<string>();
@@ -405,6 +411,30 @@ export function VendorDirectory({
           </div>
         </div>
       </Card>
+
+      {/* Category Guide - shows when a specific category is selected */}
+      {categoryFilter !== "all" && showCategoryGuide && (
+        <VendorCategoryGuide
+          category={categoryFilter}
+          categoryLabel={VENDOR_CATEGORIES.find(c => c.value === categoryFilter)?.label || categoryFilter}
+          userCity={wedding?.location || cityFilter !== "all" ? cityFilter : "San Francisco Bay Area"}
+          onClose={() => setShowCategoryGuide(false)}
+        />
+      )}
+
+      {/* Show guide toggle button when category is selected but guide is hidden */}
+      {categoryFilter !== "all" && !showCategoryGuide && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowCategoryGuide(true)}
+          className="gap-2"
+          data-testid="button-show-guide"
+        >
+          <Info className="w-4 h-4" />
+          Show {VENDOR_CATEGORIES.find(c => c.value === categoryFilter)?.label} Guide & Pricing
+        </Button>
+      )}
 
       {recommendedVendors.length > 0 && (
         <div className="space-y-4">
