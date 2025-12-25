@@ -417,7 +417,7 @@ export function VendorDirectory({
         <VendorCategoryGuide
           category={categoryFilter}
           categoryLabel={VENDOR_CATEGORIES.find(c => c.value === categoryFilter)?.label || categoryFilter}
-          userCity={wedding?.location || cityFilter !== "all" ? cityFilter : "San Francisco Bay Area"}
+          userCity={wedding?.location ?? (cityFilter !== "all" ? cityFilter : "San Francisco Bay Area")}
           onClose={() => setShowCategoryGuide(false)}
         />
       )}
