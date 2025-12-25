@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Filter, SlidersHorizontal, GitCompare, X, Info } from "lucide-react";
+import { Search, Filter, SlidersHorizontal, GitCompare, X, Info, MapPin } from "lucide-react";
 import type { Vendor, Wedding } from "@shared/schema";
 import { VendorCard } from "./vendor-card";
 import { VendorCategoryGuide } from "./vendor-category-guide";
@@ -190,9 +190,22 @@ export function VendorDirectory({
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [priceFilter, setPriceFilter] = useState("all");
-  const [cityFilter, setCityFilter] = useState("all");
+  const [cityFilter, setCityFilter] = useState(() => {
+    // Initialize with wedding location if available
+    if (wedding?.location) {
+      return wedding.location;
+    }
+    return "all";
+  });
   const [showFilters, setShowFilters] = useState(false);
   const [showCategoryGuide, setShowCategoryGuide] = useState(true);
+
+  // Auto-set city filter when wedding location changes
+  useEffect(() => {
+    if (wedding?.location) {
+      setCityFilter(wedding.location);
+    }
+  }, [wedding?.location]);
 
   useEffect(() => {
     setShowCategoryGuide(true);
@@ -368,12 +381,16 @@ export function VendorDirectory({
               {cityFilter !== "all" && (
                 <Badge
                   variant="secondary"
-                  className="cursor-pointer"
+                  className="cursor-pointer gap-1"
                   onClick={() => setCityFilter("all")}
                   data-testid="badge-city-filter"
                 >
+                  <MapPin className="w-3 h-3" />
                   {availableCities.find((c) => c.value === cityFilter)?.label}
-                  <span className="ml-2">×</span>
+                  {wedding?.location === cityFilter && (
+                    <span className="text-xs opacity-70">(Your area)</span>
+                  )}
+                  <span className="ml-1">×</span>
                 </Badge>
               )}
               {searchTerm && (

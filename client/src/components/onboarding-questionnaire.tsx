@@ -26,6 +26,14 @@ interface OnboardingQuestionnaireProps {
   onComplete: (data: QuestionnaireData) => void;
 }
 
+const METRO_AREAS = [
+  { value: "San Francisco Bay Area", label: "San Francisco Bay Area" },
+  { value: "New York City", label: "New York City Metro" },
+  { value: "Los Angeles", label: "Los Angeles Metro" },
+  { value: "Chicago", label: "Chicago Metro" },
+  { value: "Seattle", label: "Seattle Metro" },
+];
+
 const STEPS = [
   {
     id: 1,
@@ -353,15 +361,24 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                       name="location"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-lg font-semibold tracking-wide" style={{ fontFamily: 'Cormorant Garamond, serif' }}>Location</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="e.g., San Francisco Bay Area"
-                              {...field}
-                              data-testid="input-location"
-                              className="h-12"
-                            />
-                          </FormControl>
+                          <FormLabel className="text-lg font-semibold tracking-wide" style={{ fontFamily: 'Cormorant Garamond, serif' }}>Metro Area</FormLabel>
+                          <p className="text-sm text-muted-foreground mb-2">
+                            Where will most of your wedding events take place? This helps us show you vendors in your area.
+                          </p>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="h-12" data-testid="select-location">
+                                <SelectValue placeholder="Select your metro area" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {METRO_AREAS.map((area) => (
+                                <SelectItem key={area.value} value={area.value} data-testid={`option-location-${area.value.toLowerCase().replace(/\s+/g, '-')}`}>
+                                  {area.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
