@@ -190,27 +190,10 @@ export function VendorDirectory({
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [priceFilter, setPriceFilter] = useState("all");
-  const [cityFilter, setCityFilter] = useState(() => {
-    // Initialize with wedding location if available
-    if (wedding?.location) {
-      return wedding.location;
-    }
-    return "all";
-  });
   const [showFilters, setShowFilters] = useState(false);
   const [showCategoryGuide, setShowCategoryGuide] = useState(true);
 
-  // Auto-set city filter when wedding location changes
-  useEffect(() => {
-    if (wedding?.location) {
-      setCityFilter(wedding.location);
-    }
-  }, [wedding?.location]);
-
-  useEffect(() => {
-    setShowCategoryGuide(true);
-  }, [categoryFilter]);
-
+  // Calculate available cities first
   const availableCities = useMemo(() => {
     const citySet = new Set<string>();
     vendors.forEach(vendor => {
@@ -224,6 +207,37 @@ export function VendorDirectory({
       ...cities.map(city => ({ value: city, label: city }))
     ];
   }, [vendors]);
+
+  // Check if wedding location exists in available vendor cities
+  const weddingCityInVendorList = useMemo(() => {
+    if (!wedding?.location) return null;
+    const normalizedWeddingLocation = normalizeCity(wedding.location);
+    return availableCities.find(c => 
+      c.value !== "all" && 
+      (c.value === wedding.location || normalizeCity(c.value) === normalizedWeddingLocation)
+    )?.value || null;
+  }, [wedding?.location, availableCities]);
+
+  // Initialize city filter - only auto-set if wedding location has vendors
+  const [cityFilter, setCityFilter] = useState("all");
+  const [hasAutoFiltered, setHasAutoFiltered] = useState(false);
+  
+  // Auto-set city filter when wedding location changes
+  // Reset to "all" if wedding location has no vendors available or is cleared
+  useEffect(() => {
+    if (weddingCityInVendorList) {
+      setCityFilter(weddingCityInVendorList);
+      setHasAutoFiltered(true);
+    } else if (hasAutoFiltered) {
+      // Previously auto-filtered but now location is cleared or unsupported - reset to all
+      setCityFilter("all");
+      setHasAutoFiltered(false);
+    }
+  }, [weddingCityInVendorList, hasAutoFiltered]);
+
+  useEffect(() => {
+    setShowCategoryGuide(true);
+  }, [categoryFilter]);
 
   const filteredVendors = vendors.filter((vendor) => {
     // Get human-readable category label for search
@@ -387,7 +401,7 @@ export function VendorDirectory({
                 >
                   <MapPin className="w-3 h-3" />
                   {availableCities.find((c) => c.value === cityFilter)?.label}
-                  {wedding?.location === cityFilter && (
+                  {weddingCityInVendorList === cityFilter && (
                     <span className="text-xs opacity-70">(Your area)</span>
                   )}
                   <span className="ml-1">×</span>
