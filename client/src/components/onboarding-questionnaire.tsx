@@ -8,7 +8,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
-import { Calendar, MapPin, Users, DollarSign, Crown, Gift } from "lucide-react";
+import { Calendar, MapPin, Users, DollarSign, Crown, Gift, Lightbulb, TrendingUp, Info } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const questionnaireSchema = z.object({
@@ -392,27 +392,101 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                 )}
 
                 {currentStep === 5 && (
-                  <FormField
-                    control={form.control}
-                    name="totalBudget"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-lg font-semibold tracking-wide" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-                          Total Budget (Optional)
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            placeholder="e.g., 50000"
-                            {...field}
-                            data-testid="input-budget"
-                            className="h-12"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="space-y-6">
+                    {/* Budget Guidance Panel */}
+                    <div className="p-4 rounded-lg bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200">
+                      <div className="flex items-start gap-3 mb-4">
+                        <div className="p-2 rounded-full bg-emerald-100">
+                          <Lightbulb className="w-5 h-5 text-emerald-600" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-emerald-900 mb-1">Budget Planning Guide</h4>
+                          <p className="text-sm text-emerald-700">
+                            South Asian weddings typically involve multiple events over 3-5 days. Here's how to estimate your budget:
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-3 text-sm">
+                        <div className="flex items-start gap-2">
+                          <TrendingUp className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <span className="font-medium text-emerald-900">Per Guest Rule of Thumb:</span>
+                            <span className="text-emerald-700 ml-1">
+                              Budget $150-$300 per guest for a traditional celebration
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-start gap-2">
+                          <Info className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <span className="font-medium text-emerald-900">Typical Ranges:</span>
+                            <ul className="text-emerald-700 mt-1 space-y-1 ml-2">
+                              <li>• <span className="font-medium">100 guests:</span> $25,000 - $50,000</li>
+                              <li>• <span className="font-medium">200 guests:</span> $40,000 - $80,000</li>
+                              <li>• <span className="font-medium">300+ guests:</span> $60,000 - $150,000+</li>
+                            </ul>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start gap-2">
+                          <Users className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <span className="font-medium text-emerald-900">Key Cost Drivers:</span>
+                            <span className="text-emerald-700 ml-1">
+                              Venue (25-30%), Catering (25-35%), Photography (10-15%), Décor (10-15%)
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Dynamic suggestion based on guest count */}
+                      {form.watch('guestCountEstimate') && parseInt(form.watch('guestCountEstimate') || '0') > 0 && (
+                        <div className="mt-4 p-3 bg-white/60 rounded-md border border-emerald-200">
+                          <p className="text-sm text-emerald-800">
+                            <span className="font-semibold">Based on {form.watch('guestCountEstimate')} guests: </span>
+                            We suggest starting with a budget between{' '}
+                            <span className="font-bold text-emerald-700">
+                              ${(parseInt(form.watch('guestCountEstimate') || '0') * 150).toLocaleString()}
+                            </span>
+                            {' '}-{' '}
+                            <span className="font-bold text-emerald-700">
+                              ${(parseInt(form.watch('guestCountEstimate') || '0') * 300).toLocaleString()}
+                            </span>
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    <FormField
+                      control={form.control}
+                      name="totalBudget"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-lg font-semibold tracking-wide" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+                            Total Budget (Optional)
+                          </FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                              <Input
+                                type="number"
+                                placeholder="e.g., 50000"
+                                {...field}
+                                data-testid="input-budget"
+                                className="h-12 pl-10"
+                              />
+                            </div>
+                          </FormControl>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Don't worry if you're unsure—you can always adjust this later in the Budget section.
+                          </p>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 )}
               </form>
             </Form>
