@@ -1,0 +1,29 @@
+{
+  "global_master_list": [
+    { "id": "GL01", "task": "Finalize Guest List", "category": "Planning", "description": "Consolidate contacts from both families for all events." },
+    { "id": "GL02", "task": "Secure Wedding Insurance", "category": "Legal", "description": "Protect your investment; many US/Canada venues require this." },
+    { "id": "GL03", "task": "Book Lead Photographer", "category": "Vendors", "description": "Ensure they have experience with South Asian lighting and colors." },
+    { "id": "GL04", "task": "Book Videographer", "category": "Vendors", "description": "Decide on cinematic highlight film vs. documentary style." },
+    { "id": "GL05", "task": "Launch Wedding Website", "category": "Digital", "description": "Include dress codes for different events (e.g., 'Indian Festive')." },
+    { "id": "GL06", "task": "Send Save the Dates", "category": "Communications", "description": "Crucial for Desi weddings where guests travel from overseas." },
+    { "id": "GL07", "task": "Book Hotel Room Blocks", "category": "Logistics", "description": "Secure discounted rates for out-of-town guests." },
+    { "id": "GL08", "task": "Hire Lead Makeup & Hair Artist", "category": "Beauty", "description": "Schedule trials for multiple looks (Ceremony vs. Reception)." },
+    { "id": "GL09", "task": "Apply for Marriage License", "category": "Legal", "description": "Check local county/province residency requirements and expiry." },
+    { "id": "GL10", "task": "Select Wedding Registry", "category": "Planning", "description": "Mix traditional items with cash/honeymoon funds." },
+    { "id": "GL11", "task": "Order Physical Invitations", "category": "Communications", "description": "Desi weddings often require multi-page inserts for various events." },
+    { "id": "GL12", "task": "Hire DJ and MC", "category": "Entertainment", "description": "Ensure they can handle bilingual announcements if needed." },
+    { "id": "GL13", "task": "Book Sound & Lighting", "category": "Production", "description": "Often separate from DJ for large ballroom events." },
+    { "id": "GL14", "task": "Finalize Reception Menu", "category": "Food", "description": "Balance heavy traditional dishes with lighter fusion options." },
+    { "id": "GL15", "task": "Arrange Transportation/Shuttles", "category": "Logistics", "description": "Move guests between hotel, temple/church, and reception." },
+    { "id": "GL16", "task": "Draft Seating Chart", "category": "Planning", "description": "Navigate complex family dynamics early!" },
+    { "id": "GL17", "task": "Assemble Welcome Bags", "category": "Guest Experience", "description": "Include bottled water, Tylenol, and Indian snacks (Bhujia/Parle-G)." },
+    { "id": "GL18", "task": "Plan Rehearsal Dinner / Welcome Party", "category": "Events", "description": "The 'icebreaker' event for guests arriving early." },
+    { "id": "GL19", "task": "First Dance Lessons", "category": "Entertainment", "description": "Choreograph your debut as a couple." },
+    { "id": "GL20", "task": "Prepare Vendor Tips/Gratuity", "category": "Budget", "description": "Organize cash envelopes for the day-of." },
+    { "id": "GL21", "task": "Final Headcount for Caterer", "category": "Food", "description": "Confirm numbers 2-4 weeks prior to the first event." },
+    { "id": "GL22", "task": "Order Reception Party Favors", "category": "Gifts", "description": "Personalized mementos for guests to take home." },
+    { "id": "GL23", "task": "Plan Honeymoon Logistics", "category": "Post-Wedding", "description": "Passports, visas, and flight bookings." },
+    { "id": "GL24", "task": "Purchase Wedding Rings", "category": "Jewelry", "description": "Ensure sizing is done at least 2 months out." },
+    { "id": "GL25", "task": "Pack Emergency Kit", "category": "Planning", "description": "Safety pins, stain remover, mints, and double-sided tape." }
+  ]
+}

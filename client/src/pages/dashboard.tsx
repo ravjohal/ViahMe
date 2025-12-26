@@ -16,7 +16,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { usePermissions } from "@/hooks/use-permissions";
 import { useAuth } from "@/hooks/use-auth";
 import { PERMISSION_CATEGORIES, type PermissionCategory } from "@shared/schema";
-import type { Wedding, Event, BudgetCategory, Contract, Booking, EventCostItem, Guest, WeddingRole } from "@shared/schema";
+import type { Wedding, Event, BudgetCategory, Contract, Booking, EventCostItem, Guest, WeddingRole, Task } from "@shared/schema";
 
 const CATEGORY_LABELS: Record<string, string> = {
   catering: "Catering & Food",
@@ -257,6 +257,21 @@ export default function Dashboard() {
     queryKey: ["/api/events", selectedEvent?.id, "cost-items"],
     enabled: !!selectedEvent?.id,
   });
+
+  const { data: tasks = [] } = useQuery<Task[]>({
+    queryKey: ["/api/tasks", wedding?.id],
+    enabled: !!wedding?.id,
+  });
+
+  const upcomingTasks = tasks
+    .filter((t) => !t.completed && !t.dismissed)
+    .sort((a, b) => {
+      if (!a.dueDate && !b.dueDate) return 0;
+      if (!a.dueDate) return 1;
+      if (!b.dueDate) return -1;
+      return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+    })
+    .slice(0, 5);
 
   const deleteEventMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -653,6 +668,58 @@ export default function Dashboard() {
             </Card>
           </div>
         </div>
+
+        {/* Your Top Tasks */}
+        {upcomingTasks.length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <CheckSquare className="w-5 h-5 text-purple-600" />
+                <h2 className="text-xl font-semibold">Your Top Tasks</h2>
+              </div>
+              <Button variant="ghost" onClick={() => setLocation("/tasks")}>
+                View All Tasks
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+            <Card className="divide-y divide-border">
+              {upcomingTasks.map((task) => (
+                <div
+                  key={task.id}
+                  className="p-4 flex items-center gap-4 hover-elevate cursor-pointer"
+                  onClick={() => setLocation("/tasks")}
+                  data-testid={`task-item-${task.id}`}
+                >
+                  <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
+                    task.priority === 'high' ? 'bg-red-500' :
+                    task.priority === 'medium' ? 'bg-amber-500' : 'bg-green-500'
+                  }`} />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{task.title}</p>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      {task.aiCategory && (
+                        <Badge variant="secondary" className="text-xs">
+                          {task.aiCategory}
+                        </Badge>
+                      )}
+                      {task.category && (
+                        <span className="truncate">{task.category}</span>
+                      )}
+                    </div>
+                  </div>
+                  {task.dueDate && (
+                    <div className="text-sm text-muted-foreground flex-shrink-0">
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </Card>
+          </div>
+        )}
 
         {/* Timeline Preview */}
         {hasEvents && (

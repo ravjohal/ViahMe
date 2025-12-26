@@ -4,6 +4,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import { z } from "zod";
 import { storage as defaultStorage, parseConversationId, generateConversationId, type IStorage } from "./storage";
 import { registerAuthRoutes } from "./auth-routes";
+import { getTasksForTradition, calculateDueDate } from "./task-templates";
 import { requireAuth, requireRole, type AuthRequest } from "./auth-middleware";
 import {
   insertWeddingSchema,
@@ -311,6 +312,33 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
             allocatedAmount,
             spentAmount: "0",
             percentage: allocation.percentage,
+          });
+        }
+      }
+
+      // Auto-create tradition-specific tasks
+      if (wedding.tradition) {
+        const taskTemplates = getTasksForTradition(wedding.tradition);
+        
+        for (const template of taskTemplates) {
+          let dueDate: Date | undefined = undefined;
+          
+          // Calculate due date if wedding date is provided
+          if (wedding.weddingDate && template.daysBeforeWedding) {
+            dueDate = calculateDueDate(new Date(wedding.weddingDate), template.daysBeforeWedding);
+          }
+          
+          await storage.createTask({
+            weddingId: wedding.id,
+            title: template.task,
+            description: template.description,
+            category: template.category,
+            priority: template.priority || 'medium',
+            dueDate: dueDate,
+            completed: false,
+            isAiRecommended: true,
+            aiCategory: template.ceremony || template.category,
+            aiReason: `Auto-generated task for ${wedding.tradition} wedding tradition`,
           });
         }
       }
