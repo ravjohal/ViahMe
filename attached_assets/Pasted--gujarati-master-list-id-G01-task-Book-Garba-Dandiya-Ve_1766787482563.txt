@@ -1,0 +1,26 @@
+{
+  "gujarati_master_list": [
+    { "id": "G01", "task": "Book Garba/Dandiya Venue", "category": "Venues", "description": "A large hall for pre-wedding dance night." },
+    { "id": "G02", "task": "Hire Folk Singers/Garba Band", "category": "Entertainment", "description": "Live music specialized in Gujarati folk and dandiya raas." },
+    { "id": "G03", "task": "Purchase Dandiya Sticks", "category": "Logistics", "description": "Bulk wooden sticks for guest participation." },
+    { "id": "G04", "task": "Source Panetar and Gharchola", "category": "Attire", "description": "The traditional white/red and deep red sarees for the bride." },
+    { "id": "G05", "task": "Plan Ponkhana Ritual Props", "category": "Rituals", "description": "Welcoming the groom; requires items for the 'nose-grabbing' ceremony." },
+    { "id": "G06", "task": "Coordinate Sankheda Furniture", "category": "Decor", "description": "Traditional Gujarati lacquered wood chairs for the Mandap." },
+    { "id": "G07", "task": "Check Jain/Vegetarian Menu", "category": "Food", "description": "Verify restrictions on root vegetables (onion, garlic, potato) if applicable." },
+    { "id": "G08", "task": "Arrange Chandlo Matli", "category": "Pre-Wedding", "description": "The formal acceptance of the marriage/engagement ritual." },
+    { "id": "G09", "task": "Source Pithi Setup", "category": "Pre-Wedding", "description": "Yellow turmeric paste ceremony items." },
+    { "id": "G10", "task": "Order Mandavo Decor", "category": "Decor", "description": "Specific vibrant, colorful floral strings and entrance decor." }
+  ],
+  "christian_south_asian_master_list": [
+    { "id": "C01", "task": "Book Church and Priest/Pastor", "category": "Venues", "description": "Secure the sanctuary for the religious ceremony." },
+    { "id": "C02", "task": "Select Wedding Party", "category": "Planning", "description": "Assign Bridesmaids, Groomsmen, Flower Girls, and Ring Bearers." },
+    { "id": "C03", "task": "Purchase Minnu or Thali", "category": "Jewelry", "description": "Gold pendant on silk thread (specifically for Malayalee/South Indian Christians)." },
+    { "id": "C04", "task": "Source White Saree or Wedding Gown", "category": "Attire", "description": "The fusion of Western white with traditional Indian silhouettes." },
+    { "id": "C05", "task": "Hire Choir or Church Organist", "category": "Music", "description": "Live music for hymns and the processional." },
+    { "id": "C06", "task": "Order Multi-Tier Wedding Cake", "category": "Food", "description": "Traditional cake-cutting ceremony for the reception." },
+    { "id": "C07", "task": "Plan Roce Ceremony Items", "category": "Pre-Wedding", "description": "The traditional coconut milk bath (common for Goan/Mangalorean Catholics)." },
+    { "id": "C08", "task": "Arrange Non-Veg Catering", "category": "Food", "description": "Traditional meat dishes like Appam and Stew or Beef/Pork roasts." },
+    { "id": "C09", "task": "Choreograph First Dance", "category": "Entertainment", "description": "Coordinate the couple's first dance for the reception." },
+    { "id": "C10", "task": "Source Ring Exchange Items", "category": "Rituals", "description": "Wedding bands and ceremonial ring cushions." }
+  ]
+}

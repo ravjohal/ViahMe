@@ -1,0 +1,26 @@
+{
+  "hindu_master_list": [
+    { "id": "H01", "task": "Book Mandap and Decorator", "category": "Decor", "description": "Ensure the Mandap allows for a small sacred fire (Havan)." },
+    { "id": "H02", "task": "Hire Hindu Priest/Pandit", "category": "Officiant", "description": "Confirm dialect and if they provide puja samagri." },
+    { "id": "H03", "task": "Source Puja Samagri", "category": "Rituals", "description": "Ghee, incense, camphor, and copper vessels." },
+    { "id": "H04", "task": "Arrange Groom's Baraat", "category": "Logistics", "description": "Book a horse, exotic car, or mobile DJ truck." },
+    { "id": "H05", "task": "Purchase Varmalas", "category": "Florals", "description": "Fresh flower garlands for the initial exchange." },
+    { "id": "H06", "task": "Order Mangalsutra and Sindoor", "category": "Attire/Jewelry", "description": "The sacred necklace and vermilion for the ceremony." },
+    { "id": "H07", "task": "Organize Haldi/Pithi Ceremony", "category": "Pre-Wedding", "description": "Source turmeric powder and coordinated outfits." },
+    { "id": "H08", "task": "Plan Mehndi Event", "category": "Pre-Wedding", "description": "Book henna artists for bride and family." },
+    { "id": "H09", "task": "Source Saptapadi Markers", "category": "Rituals", "description": "Items for the 'Seven Steps' around the fire." },
+    { "id": "H10", "task": "Create Ritual Guide for Guests", "category": "Experience", "description": "Explain the Pheras and rituals to non-Hindu guests." }
+  ],
+  "south_indian_master_list": [
+    { "id": "SI01", "task": "Consult Astrologer for Muhurtham", "category": "Planning", "description": "Set the auspicious early morning start time." },
+    { "id": "SI02", "task": "Hire Nadaswaram & Thavil Ensemble", "category": "Music", "description": "Traditional live wind and drum instruments." },
+    { "id": "SI03", "task": "Source Kanjeevaram Silk Sarees", "category": "Attire", "description": "Plan for 2-3 outfit changes during the ceremony." },
+    { "id": "SI04", "task": "Coordinate Banana Leaf Catering", "category": "Food", "description": "Sadhya meal served on authentic banana leaves." },
+    { "id": "SI05", "task": "Arrange Kashi Yatra Props", "category": "Rituals", "description": "Parasol, walking stick, and wooden sandals." },
+    { "id": "SI06", "task": "Source Bulk Talambralu", "category": "Rituals", "description": "Rice mixed with turmeric or pearls for showering." },
+    { "id": "SI07", "task": "Buy Jeelakarra Bellam Ingredients", "category": "Rituals", "description": "Cumin and jaggery paste for the head ritual." },
+    { "id": "SI08", "task": "Purchase Temple Jewelry", "category": "Jewelry", "description": "Include Vaddanam (waist belt) and Manga Malai." },
+    { "id": "SI09", "task": "Order Specific Thali/Mangalsutra", "category": "Jewelry", "description": "Ensure the design matches your specific sub-caste." },
+    { "id": "SI10", "task": "Source Antarpat (Sacred Curtain)", "category": "Rituals", "description": "Curtain held between the couple before the first look." }
+  ]
+}
