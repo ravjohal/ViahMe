@@ -32,6 +32,8 @@ const METRO_AREAS = [
   { value: "Los Angeles", label: "Los Angeles Metro" },
   { value: "Chicago", label: "Chicago Metro" },
   { value: "Seattle", label: "Seattle Metro" },
+  { value: "Fresno", label: "Fresno Metro" },
+  { value: "Sacramento", label: "Sacramento Metro" },
 ];
 
 const STEPS = [

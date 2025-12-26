@@ -52,6 +52,8 @@ export default function Settings() {
     { value: "Los Angeles", label: "Los Angeles Metro" },
     { value: "Chicago", label: "Chicago Metro" },
     { value: "Seattle", label: "Seattle Metro" },
+    { value: "Fresno", label: "Fresno Metro" },
+    { value: "Sacramento", label: "Sacramento Metro" },
   ];
 
   const { data: weddings } = useQuery<Wedding[]>({
