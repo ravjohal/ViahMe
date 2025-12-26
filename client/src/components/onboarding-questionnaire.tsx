@@ -391,7 +391,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-lg font-semibold tracking-wide" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-                            Estimated Guest Count (Optional)
+                            Estimated Guest Count for  (Optional)
                           </FormLabel>
                           <FormControl>
                             <Input

@@ -51,7 +51,9 @@ export type User = typeof users.$inferSelect;
 export const weddings = pgTable("weddings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull(),
-  tradition: text("tradition").notNull(), // 'sikh' | 'hindu' | 'general'
+  tradition: text("tradition").notNull(), // Main tradition: 'sikh' | 'hindu' | 'muslim' | etc
+  subTradition: text("sub_tradition"), // Single sub-tradition for most main traditions
+  subTraditions: text("sub_traditions").array(), // Multiple sub-traditions for Mixed tradition
   role: text("role").notNull(), // 'bride' | 'groom' | 'planner'
   partner1Name: text("partner1_name"),
   partner2Name: text("partner2_name"),
@@ -72,7 +74,9 @@ export const insertWeddingSchema = createInsertSchema(weddings).omit({
   createdAt: true,
   status: true,
 }).extend({
-  tradition: z.enum(['sikh', 'hindu', 'muslim', 'gujarati', 'south_indian', 'mixed', 'general']),
+  tradition: z.enum(['sikh', 'hindu', 'muslim', 'gujarati', 'south_indian', 'christian', 'jain', 'parsi', 'mixed', 'other']),
+  subTradition: z.string().nullable().optional(),
+  subTraditions: z.array(z.string()).nullable().optional(),
   role: z.enum(['bride', 'groom', 'planner']),
   location: z.string().min(1),
   weddingDate: z.string().optional().transform(val => val ? new Date(val) : undefined),

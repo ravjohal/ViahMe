@@ -1,0 +1,72 @@
+{
+  "hindu": {
+    "label": "Hindu",
+    "subTraditions": [
+      { "value": "punjabi_hindu", "label": "North Indian (Punjabi, Delhi, UP)" },
+      { "value": "bengali_hindu", "label": "East Indian (Bengali, Odia, Assamese)" },
+      { "value": "marathi", "label": "West Indian (Marathi)" },
+      { "value": "rajasthani_marwari", "label": "Rajasthani / Marwari" },
+      { "value": "kashmiri", "label": "Kashmiri" },
+      { "value": "hindu_general", "label": "General Hindu" }
+    ]
+  },
+  "south_indian": {
+    "label": "South Indian",
+    "subTraditions": [
+      { "value": "telugu", "label": "Telugu (Andhra / Telangana)" },
+      { "value": "tamil", "label": "Tamil" },
+      { "value": "malayalee_hindu", "label": "Malayalee (Kerala Hindu)" },
+      { "value": "kannadiga", "label": "Kannadiga (Karnataka)" },
+      { "value": "south_indian_general", "label": "General South Indian" }
+    ]
+  },
+  "muslim": {
+    "label": "Muslim",
+    "subTraditions": [
+      { "value": "pakistani", "label": "Pakistani / Urdu Speaking" },
+      { "value": "hyderabadi", "label": "Hyderabadi" },
+      { "value": "ismaili", "label": "Ismaili" },
+      { "value": "bohra", "label": "Dawoodi Bohra" },
+      { "value": "bengali_muslim", "label": "Bengali Muslim" },
+      { "value": "muslim_general", "label": "General Muslim" }
+    ]
+  },
+  "sikh": {
+    "label": "Sikh",
+    "subTraditions": [
+      { "value": "punjabi_sikh", "label": "Traditional Punjabi Sikh" },
+      { "value": "non_punjabi_sikh", "label": "Non-Punjabi Sikh" },
+      { "value": "sikh_general", "label": "General Sikh" }
+    ]
+  },
+  "gujarati": {
+    "label": "Gujarati",
+    "subTraditions": [
+      { "value": "gujarati_hindu", "label": "Hindu Gujarati" },
+      { "value": "gujarati_jain", "label": "Jain Gujarati" },
+      { "value": "kutchi", "label": "Kutchi" }
+    ]
+  },
+  "christian": {
+    "label": "Christian",
+    "subTraditions": [
+      { "value": "malayalee_christian", "label": "Malayalee Christian (Syro-Malabar/Knanya)" },
+      { "value": "goan_catholic", "label": "Goan / Mangalorean Catholic" },
+      { "value": "indian_christian_general", "label": "General Indian Christian" }
+    ]
+  },
+  "jain": {
+    "label": "Jain",
+    "subTraditions": [
+      { "value": "shvetambara", "label": "Shvetambara" },
+      { "label": "Digambara", "value": "digambara" },
+      { "value": "jain_general", "label": "General Jain" }
+    ]
+  },
+  "parsi": {
+    "label": "Parsi",
+    "subTraditions": [
+      { "value": "parsi_zoroastrian", "label": "Parsi (Zoroastrian)" }
+    ]
+  }
+}
