@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,7 +18,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Settings as SettingsIcon, User, Lock, Bell, LogOut, Trash2, Heart, MapPin, Calendar, Users } from "lucide-react";
+import { Settings as SettingsIcon, User, Lock, Bell, LogOut, Trash2, Heart, MapPin, Calendar, Users, Sparkles } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -29,6 +30,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import type { Wedding } from "@shared/schema";
+import { TRADITION_HIERARCHY, getSubTraditionsForMain, getAllSubTraditions } from "@/lib/tradition-hierarchy";
 
 export default function Settings() {
   const { user, logout } = useAuth();
@@ -44,7 +46,31 @@ export default function Settings() {
   const [weddingLocation, setWeddingLocation] = useState("");
   const [weddingDate, setWeddingDate] = useState("");
   const [guestCountEstimate, setGuestCountEstimate] = useState("");
+  const [tradition, setTradition] = useState("");
+  const [subTradition, setSubTradition] = useState<string | null>(null);
+  const [subTraditions, setSubTraditions] = useState<string[]>([]);
   const [isSavingWedding, setIsSavingWedding] = useState(false);
+
+  const availableSubTraditions = useMemo(() => {
+    if (tradition === "mixed") {
+      return getAllSubTraditions();
+    }
+    return getSubTraditionsForMain(tradition);
+  }, [tradition]);
+
+  const handleMainTraditionChange = (value: string) => {
+    setTradition(value);
+    setSubTradition(null);
+    setSubTraditions([]);
+  };
+
+  const handleSubTraditionMultiSelect = (subValue: string, checked: boolean) => {
+    if (checked) {
+      setSubTraditions((prev) => [...prev, subValue]);
+    } else {
+      setSubTraditions((prev) => prev.filter((v) => v !== subValue));
+    }
+  };
 
   const METRO_AREAS = [
     { value: "San Francisco Bay Area", label: "San Francisco Bay Area" },
@@ -70,6 +96,9 @@ export default function Settings() {
       setWeddingLocation(wedding.location || "");
       setWeddingDate(wedding.weddingDate ? new Date(wedding.weddingDate).toISOString().split('T')[0] : "");
       setGuestCountEstimate(wedding.guestCountEstimate?.toString() || "");
+      setTradition(wedding.tradition || "");
+      setSubTradition(wedding.subTradition || null);
+      setSubTraditions(wedding.subTraditions || []);
     }
   }, [wedding]);
 
@@ -150,12 +179,30 @@ export default function Settings() {
 
     setIsSavingWedding(true);
     try {
+      // Normalize tradition data based on main tradition type
+      let normalizedSubTradition: string | null = null;
+      let normalizedSubTraditions: string[] | null = null;
+      
+      if (tradition === "mixed") {
+        // Mixed traditions: use subTraditions array, clear subTradition
+        normalizedSubTradition = null;
+        normalizedSubTraditions = subTraditions.length > 0 ? subTraditions : null;
+      } else if (tradition !== "other" && tradition) {
+        // Non-mixed, non-other traditions: use single subTradition, clear subTraditions
+        normalizedSubTradition = subTradition || null;
+        normalizedSubTraditions = null;
+      }
+      // "other" tradition has neither subTradition nor subTraditions
+      
       await apiRequest("PATCH", `/api/weddings/${wedding.id}`, {
         partner1Name: partner1Name.trim(),
         partner2Name: partner2Name.trim(),
         location: weddingLocation,
         weddingDate: weddingDate || undefined,
         guestCountEstimate: guestCountEstimate ? parseInt(guestCountEstimate) : undefined,
+        tradition: tradition || undefined,
+        subTradition: normalizedSubTradition,
+        subTraditions: normalizedSubTraditions,
       });
 
       queryClient.invalidateQueries({ queryKey: ["/api/weddings"] });
@@ -306,6 +353,96 @@ export default function Settings() {
                     </SelectContent>
                   </Select>
                 </div>
+
+                <Separator className="my-4" />
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-muted-foreground" />
+                      <Label>Wedding Tradition</Label>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      What cultural traditions will your wedding celebrate?
+                    </p>
+                    <Select value={tradition} onValueChange={handleMainTraditionChange}>
+                      <SelectTrigger data-testid="select-tradition-settings">
+                        <SelectValue placeholder="Select your main tradition" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {TRADITION_HIERARCHY.map((t) => (
+                          <SelectItem key={t.value} value={t.value}>
+                            <div className="flex flex-col">
+                              <span className="font-medium">{t.label}</span>
+                              <span className="text-xs text-muted-foreground">{t.description}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {tradition === "mixed" && availableSubTraditions.length > 0 && (
+                    <div className="space-y-2">
+                      <Label>Select Traditions to Blend</Label>
+                      <p className="text-sm text-muted-foreground mb-2">Choose all the traditions that will be part of your celebration</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 border rounded-lg bg-background">
+                        {availableSubTraditions.map((sub) => (
+                          <div key={sub.value} className="flex items-center space-x-2 p-2 rounded hover-elevate">
+                            <Checkbox
+                              id={`settings-sub-${sub.value}`}
+                              checked={subTraditions.includes(sub.value)}
+                              onCheckedChange={(checked) => handleSubTraditionMultiSelect(sub.value, !!checked)}
+                              data-testid={`settings-checkbox-${sub.value}`}
+                            />
+                            <label
+                              htmlFor={`settings-sub-${sub.value}`}
+                              className="text-sm font-medium leading-none cursor-pointer"
+                            >
+                              {sub.label}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                      {subTraditions.length > 0 && (
+                        <p className="text-sm text-muted-foreground">
+                          Selected: {subTraditions.length} tradition{subTraditions.length > 1 ? 's' : ''}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {tradition !== "mixed" && tradition !== "other" && availableSubTraditions.length > 0 && (
+                    <div className="space-y-2">
+                      <Label>Specific Tradition</Label>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Help us personalize your experience with the specific regional tradition
+                      </p>
+                      <Select value={subTradition || ""} onValueChange={setSubTradition}>
+                        <SelectTrigger data-testid="select-sub-tradition-settings">
+                          <SelectValue placeholder="Select specific tradition (optional)" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableSubTraditions.map((sub) => (
+                            <SelectItem key={sub.value} value={sub.value}>
+                              {sub.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  {tradition === "other" && (
+                    <div className="p-4 bg-muted/50 rounded-lg">
+                      <p className="text-sm text-muted-foreground">
+                        We'll help you create a custom wedding experience. You can add specific cultural elements in your planning dashboard.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                <Separator className="my-4" />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -7,12 +7,16 @@ import { Card } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { Calendar, MapPin, Users, DollarSign, Crown, Gift, Lightbulb, TrendingUp, Info } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { TRADITION_HIERARCHY, getSubTraditionsForMain, getAllSubTraditions, getMainTraditionByValue } from "@/lib/tradition-hierarchy";
 
 const questionnaireSchema = z.object({
-  tradition: z.enum(['sikh', 'hindu', 'muslim', 'gujarati', 'south_indian', 'mixed', 'general']),
+  tradition: z.enum(['sikh', 'hindu', 'muslim', 'gujarati', 'south_indian', 'christian', 'jain', 'parsi', 'mixed', 'other']),
+  subTradition: z.string().nullable().optional(),
+  subTraditions: z.array(z.string()).nullable().optional(),
   role: z.enum(['bride', 'groom', 'planner']),
   weddingDate: z.string().optional(),
   location: z.string().min(1, "Location is required"),
@@ -91,6 +95,8 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
     resolver: zodResolver(questionnaireSchema),
     defaultValues: {
       tradition: "sikh",
+      subTradition: null,
+      subTraditions: [],
       role: "bride",
       weddingDate: "2025-06-15",
       location: "San Francisco Bay Area",
@@ -99,13 +105,57 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
     },
   });
 
+  const selectedMainTradition = form.watch("tradition");
+  const selectedSubTraditions = form.watch("subTraditions") || [];
+
+  const availableSubTraditions = useMemo(() => {
+    if (selectedMainTradition === "mixed") {
+      return getAllSubTraditions();
+    }
+    return getSubTraditionsForMain(selectedMainTradition);
+  }, [selectedMainTradition]);
+
+  const handleMainTraditionChange = (value: string) => {
+    form.setValue("tradition", value as any);
+    form.setValue("subTradition", null);
+    form.setValue("subTraditions", []);
+  };
+
+  const handleSubTraditionMultiSelect = (subValue: string, checked: boolean) => {
+    const current = form.getValues("subTraditions") || [];
+    if (checked) {
+      form.setValue("subTraditions", [...current, subValue]);
+    } else {
+      form.setValue("subTraditions", current.filter((v) => v !== subValue));
+    }
+  };
+
   const onSubmit = (data: QuestionnaireData) => {
     if (currentStep < STEPS.length) {
       setCurrentStep(currentStep + 1);
     } else {
+      // Normalize tradition data based on main tradition type
+      let normalizedSubTradition: string | null = null;
+      let normalizedSubTraditions: string[] | null = null;
+      
+      if (data.tradition === "mixed") {
+        // Mixed traditions: use subTraditions array, clear subTradition
+        normalizedSubTradition = null;
+        normalizedSubTraditions = data.subTraditions && data.subTraditions.length > 0 
+          ? data.subTraditions 
+          : null;
+      } else if (data.tradition !== "other") {
+        // Non-mixed, non-other traditions: use single subTradition, clear subTraditions
+        normalizedSubTradition = data.subTradition || null;
+        normalizedSubTraditions = null;
+      }
+      // "other" tradition has neither subTradition nor subTraditions
+      
       // Transform data before passing to onComplete
       const transformedData = {
         ...data,
+        subTradition: normalizedSubTradition,
+        subTraditions: normalizedSubTraditions,
         weddingDate: data.weddingDate ? new Date(data.weddingDate) : undefined,
         guestCountEstimate: data.guestCountEstimate && data.guestCountEstimate !== "" 
           ? Number(data.guestCountEstimate) 
@@ -247,67 +297,107 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 {currentStep === 1 && (
-                  <FormField
-                    control={form.control}
-                    name="tradition"
-                    render={({ field }) => (
+                  <div className="space-y-6">
+                    <FormField
+                      control={form.control}
+                      name="tradition"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-lg font-semibold tracking-wide" style={{ fontFamily: 'Cormorant Garamond, serif' }}>Main Wedding Tradition</FormLabel>
+                          <Select onValueChange={handleMainTraditionChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger data-testid="select-tradition" className="h-12">
+                                <SelectValue placeholder="Select your main tradition..." />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {TRADITION_HIERARCHY.map((tradition) => (
+                                <SelectItem key={tradition.value} value={tradition.value} data-testid={`option-${tradition.value}`}>
+                                  <div className="flex flex-col">
+                                    <span className="font-semibold">{tradition.label}</span>
+                                    <span className="text-xs text-muted-foreground">{tradition.description}</span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {selectedMainTradition === "mixed" && availableSubTraditions.length > 0 && (
                       <FormItem>
-                        <FormLabel className="text-lg font-semibold tracking-wide" style={{ fontFamily: 'Cormorant Garamond, serif' }}>Wedding Tradition</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger data-testid="select-tradition" className="h-12">
-                              <SelectValue placeholder="Select your tradition..." />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="sikh" data-testid="option-sikh">
-                              <div className="flex flex-col">
-                                <span className="font-semibold">Sikh Wedding</span>
-                                <span className="text-xs text-muted-foreground">Anand Karaj ceremony at Gurdwara</span>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="hindu" data-testid="option-hindu">
-                              <div className="flex flex-col">
-                                <span className="font-semibold">Hindu Wedding</span>
-                                <span className="text-xs text-muted-foreground">Pheras ceremony with Vedic rituals</span>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="muslim" data-testid="option-muslim">
-                              <div className="flex flex-col">
-                                <span className="font-semibold">Muslim Wedding</span>
-                                <span className="text-xs text-muted-foreground">Nikah ceremony with Walima</span>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="gujarati" data-testid="option-gujarati">
-                              <div className="flex flex-col">
-                                <span className="font-semibold">Gujarati Wedding</span>
-                                <span className="text-xs text-muted-foreground">Garba night with traditional Pheras</span>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="south_indian" data-testid="option-south-indian">
-                              <div className="flex flex-col">
-                                <span className="font-semibold">South Indian Wedding</span>
-                                <span className="text-xs text-muted-foreground">Muhurtham with Saptapadi</span>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="mixed" data-testid="option-mixed">
-                              <div className="flex flex-col">
-                                <span className="font-semibold">Mixed Tradition</span>
-                                <span className="text-xs text-muted-foreground">Fusion of multiple cultural customs</span>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="general" data-testid="option-general">
-                              <div className="flex flex-col">
-                                <span className="font-semibold">General Indian Wedding</span>
-                                <span className="text-xs text-muted-foreground">Custom celebration style</span>
-                              </div>
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
+                        <FormLabel className="text-lg font-semibold tracking-wide" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+                          Select Traditions to Blend
+                        </FormLabel>
+                        <p className="text-sm text-muted-foreground mb-3">Choose all the traditions that will be part of your celebration</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto p-2 border rounded-lg bg-background">
+                          {availableSubTraditions.map((sub) => (
+                            <div key={sub.value} className="flex items-center space-x-2 p-2 rounded hover-elevate">
+                              <Checkbox
+                                id={`sub-${sub.value}`}
+                                checked={selectedSubTraditions.includes(sub.value)}
+                                onCheckedChange={(checked) => handleSubTraditionMultiSelect(sub.value, !!checked)}
+                                data-testid={`checkbox-${sub.value}`}
+                              />
+                              <label
+                                htmlFor={`sub-${sub.value}`}
+                                className="text-sm font-medium leading-none cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                              >
+                                {sub.label}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                        {selectedSubTraditions.length > 0 && (
+                          <p className="text-sm text-muted-foreground mt-2">
+                            Selected: {selectedSubTraditions.length} tradition{selectedSubTraditions.length > 1 ? 's' : ''}
+                          </p>
+                        )}
                       </FormItem>
                     )}
-                  />
+
+                    {selectedMainTradition !== "mixed" && selectedMainTradition !== "other" && availableSubTraditions.length > 0 && (
+                      <FormField
+                        control={form.control}
+                        name="subTradition"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-lg font-semibold tracking-wide" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+                              Specific Tradition
+                            </FormLabel>
+                            <p className="text-sm text-muted-foreground mb-2">
+                              Help us personalize your experience with the specific regional tradition
+                            </p>
+                            <Select onValueChange={field.onChange} value={field.value || ""}>
+                              <FormControl>
+                                <SelectTrigger data-testid="select-sub-tradition" className="h-12">
+                                  <SelectValue placeholder="Select specific tradition (optional)..." />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {availableSubTraditions.map((sub) => (
+                                  <SelectItem key={sub.value} value={sub.value} data-testid={`option-sub-${sub.value}`}>
+                                    {sub.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
+                    {selectedMainTradition === "other" && (
+                      <div className="p-4 bg-muted/50 rounded-lg">
+                        <p className="text-sm text-muted-foreground">
+                          We'll help you create a custom wedding experience. You can add specific cultural elements later in your planning dashboard.
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 )}
 
                 {currentStep === 2 && (
