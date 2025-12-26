@@ -17,7 +17,14 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Settings as SettingsIcon, User, Lock, Bell, LogOut, Trash2, Heart } from "lucide-react";
+import { Settings as SettingsIcon, User, Lock, Bell, LogOut, Trash2, Heart, MapPin, Calendar, Users } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
@@ -34,7 +41,18 @@ export default function Settings() {
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [partner1Name, setPartner1Name] = useState("");
   const [partner2Name, setPartner2Name] = useState("");
+  const [weddingLocation, setWeddingLocation] = useState("");
+  const [weddingDate, setWeddingDate] = useState("");
+  const [guestCountEstimate, setGuestCountEstimate] = useState("");
   const [isSavingWedding, setIsSavingWedding] = useState(false);
+
+  const METRO_AREAS = [
+    { value: "San Francisco Bay Area", label: "San Francisco Bay Area" },
+    { value: "New York City", label: "New York City Metro" },
+    { value: "Los Angeles", label: "Los Angeles Metro" },
+    { value: "Chicago", label: "Chicago Metro" },
+    { value: "Seattle", label: "Seattle Metro" },
+  ];
 
   const { data: weddings } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
@@ -47,6 +65,9 @@ export default function Settings() {
     if (wedding) {
       setPartner1Name(wedding.partner1Name || "");
       setPartner2Name(wedding.partner2Name || "");
+      setWeddingLocation(wedding.location || "");
+      setWeddingDate(wedding.weddingDate ? new Date(wedding.weddingDate).toISOString().split('T')[0] : "");
+      setGuestCountEstimate(wedding.guestCountEstimate?.toString() || "");
     }
   }, [wedding]);
 
@@ -116,18 +137,30 @@ export default function Settings() {
       return;
     }
 
+    if (!weddingLocation) {
+      toast({
+        title: "Error",
+        description: "Please select a metro area for your wedding",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSavingWedding(true);
     try {
       await apiRequest("PATCH", `/api/weddings/${wedding.id}`, {
         partner1Name: partner1Name.trim(),
         partner2Name: partner2Name.trim(),
+        location: weddingLocation,
+        weddingDate: weddingDate || undefined,
+        guestCountEstimate: guestCountEstimate ? parseInt(guestCountEstimate) : undefined,
       });
 
       queryClient.invalidateQueries({ queryKey: ["/api/weddings"] });
 
       toast({
         title: "Wedding Details Updated",
-        description: "Your partner names have been saved successfully",
+        description: "Your wedding details have been saved successfully",
       });
     } catch (error: any) {
       toast({
@@ -223,28 +256,85 @@ export default function Settings() {
               </div>
               <Separator className="mb-4" />
               <form onSubmit={handleSaveWeddingDetails} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="partner1-name">Your Name</Label>
-                  <Input
-                    id="partner1-name"
-                    type="text"
-                    value={partner1Name}
-                    onChange={(e) => setPartner1Name(e.target.value)}
-                    placeholder="Enter your name"
-                    data-testid="input-partner1-name"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="partner1-name">Your Name</Label>
+                    <Input
+                      id="partner1-name"
+                      type="text"
+                      value={partner1Name}
+                      onChange={(e) => setPartner1Name(e.target.value)}
+                      placeholder="Enter your name"
+                      data-testid="input-partner1-name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="partner2-name">Partner's Name</Label>
+                    <Input
+                      id="partner2-name"
+                      type="text"
+                      value={partner2Name}
+                      onChange={(e) => setPartner2Name(e.target.value)}
+                      placeholder="Enter your partner's name"
+                      data-testid="input-partner2-name"
+                    />
+                  </div>
                 </div>
+
+                <Separator className="my-4" />
+
                 <div className="space-y-2">
-                  <Label htmlFor="partner2-name">Partner's Name</Label>
-                  <Input
-                    id="partner2-name"
-                    type="text"
-                    value={partner2Name}
-                    onChange={(e) => setPartner2Name(e.target.value)}
-                    placeholder="Enter your partner's name"
-                    data-testid="input-partner2-name"
-                  />
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-muted-foreground" />
+                    <Label htmlFor="wedding-location">Metro Area</Label>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Where will most of your wedding events take place? This helps us show you vendors in your area.
+                  </p>
+                  <Select value={weddingLocation} onValueChange={setWeddingLocation}>
+                    <SelectTrigger data-testid="select-wedding-location">
+                      <SelectValue placeholder="Select your metro area" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {METRO_AREAS.map((area) => (
+                        <SelectItem key={area.value} value={area.value}>
+                          {area.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-muted-foreground" />
+                      <Label htmlFor="wedding-date">Wedding Date</Label>
+                    </div>
+                    <Input
+                      id="wedding-date"
+                      type="date"
+                      value={weddingDate}
+                      onChange={(e) => setWeddingDate(e.target.value)}
+                      data-testid="input-wedding-date"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4 text-muted-foreground" />
+                      <Label htmlFor="guest-count">Estimated Guest Count</Label>
+                    </div>
+                    <Input
+                      id="guest-count"
+                      type="number"
+                      value={guestCountEstimate}
+                      onChange={(e) => setGuestCountEstimate(e.target.value)}
+                      placeholder="e.g., 300"
+                      data-testid="input-guest-count"
+                    />
+                  </div>
+                </div>
+
                 <Button
                   type="submit"
                   disabled={isSavingWedding}
