@@ -180,12 +180,28 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
 
   app.patch("/api/weddings/:id", async (req, res) => {
     try {
-      const wedding = await storage.updateWedding(req.params.id, req.body);
+      // Transform the data before updating
+      const updateData: any = { ...req.body };
+      
+      // Convert weddingDate string to Date if provided
+      if (updateData.weddingDate && typeof updateData.weddingDate === 'string') {
+        updateData.weddingDate = new Date(updateData.weddingDate);
+      }
+      
+      // Ensure guestCountEstimate is a number if provided
+      if (updateData.guestCountEstimate !== undefined) {
+        updateData.guestCountEstimate = typeof updateData.guestCountEstimate === 'string' 
+          ? parseInt(updateData.guestCountEstimate) 
+          : updateData.guestCountEstimate;
+      }
+      
+      const wedding = await storage.updateWedding(req.params.id, updateData);
       if (!wedding) {
         return res.status(404).json({ error: "Wedding not found" });
       }
       res.json(wedding);
     } catch (error) {
+      console.error("Failed to update wedding:", error);
       res.status(500).json({ error: "Failed to update wedding" });
     }
   });
