@@ -60,7 +60,11 @@ import {
   Heart,
   CircleDot,
   Circle,
+  Link2,
+  LayoutPanelLeft,
 } from "lucide-react";
+import { SideBySideDashboard } from "@/components/side-by-side-dashboard";
+import { CollectorLinksManager } from "@/components/collector-links-manager";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 type GuestSuggestionWithSource = GuestSuggestion & {
@@ -477,6 +481,28 @@ export default function GuestManagement() {
       tab: "budget",
       checklist: finalizeChecklist,
     },
+    {
+      id: "compare",
+      label: "Compare",
+      description: "Side-by-side view",
+      icon: LayoutPanelLeft,
+      isComplete: true,
+      progress: 100,
+      count: 0,
+      tab: "compare",
+      checklist: [],
+    },
+    {
+      id: "collect-links",
+      label: "Collector",
+      description: "Family links",
+      icon: Link2,
+      isComplete: true,
+      progress: 100,
+      count: 0,
+      tab: "collector",
+      checklist: [],
+    },
   ];
 
   return (
@@ -519,7 +545,7 @@ export default function GuestManagement() {
             )}
           </div>
           
-          <div className="grid grid-cols-3 gap-2 sm:gap-4">
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-4">
             {workflowSteps.map((step, index) => (
               <button
                 key={step.id}
@@ -1377,6 +1403,55 @@ export default function GuestManagement() {
               </div>
             )}
           </div>
+        </TabsContent>
+
+        <TabsContent value="compare" className="space-y-4 sm:space-y-6">
+          <Card className="border-2 border-purple-200 bg-purple-50/50 dark:bg-purple-950/20">
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-start gap-3">
+                <div className="p-2 rounded-full flex-shrink-0 bg-purple-100 dark:bg-purple-900/30">
+                  <LayoutPanelLeft className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-sm sm:text-base">Side-by-Side Comparison</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                    Compare guest lists between partners. Share your private guests when you're ready, 
+                    and collaborate on final decisions together.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          {wedding?.id && (
+            <SideBySideDashboard 
+              weddingId={wedding.id} 
+              wedding={wedding}
+            />
+          )}
+        </TabsContent>
+
+        <TabsContent value="collector" className="space-y-4 sm:space-y-6">
+          <Card className="border-2 border-blue-200 bg-blue-50/50 dark:bg-blue-950/20">
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-start gap-3">
+                <div className="p-2 rounded-full flex-shrink-0 bg-blue-100 dark:bg-blue-900/30">
+                  <Link2 className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-sm sm:text-base">Guest Collector Links</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                    Create shareable links for family members to suggest guests. 
+                    Each link is assigned to a side (bride/groom) for easy tracking.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          {wedding?.id && (
+            <CollectorLinksManager weddingId={wedding.id} />
+          )}
         </TabsContent>
 
       </Tabs>
