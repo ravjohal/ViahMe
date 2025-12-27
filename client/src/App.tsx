@@ -65,6 +65,7 @@ import VendorLeads from "@/pages/vendor-leads";
 import Expenses from "@/pages/expenses";
 import { VendorRoute } from "@/components/VendorRoute";
 import { CoupleRoute } from "@/components/CoupleRoute";
+import { CouplePlannerChatbot } from "@/components/CouplePlannerChatbot";
 
 function Router() {
   return (
@@ -297,10 +298,20 @@ function AppLayout() {
   // Show bottom nav on mobile for authenticated users (not on auth pages or vendor pages)
   const showBottomNav = user && !hideHeader && !isVendorPage;
   
+  // Show AI planner chatbot for couple users on protected pages
+  const showAiChatbot = user && 
+                        user.role === "couple" && 
+                        !authPages.includes(location) && 
+                        !location.startsWith("/wedding/") &&
+                        !location.startsWith("/rsvp/") &&
+                        !location.startsWith("/live/") &&
+                        location !== "/ai-planner";
+  
   return (
     <div className={`min-h-screen bg-background ${showBottomNav ? 'pb-20 lg:pb-0' : ''}`}>
       {!hideHeader && <AppHeader />}
       <Router />
+      {showAiChatbot && <CouplePlannerChatbot />}
     </div>
   );
 }
