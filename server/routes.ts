@@ -3611,6 +3611,14 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
         return res.status(404).json({ error: "Wedding not found" });
       }
 
+      // Verify user owns this wedding or is a collaborator
+      if (wedding.userId !== authReq.session.userId) {
+        const collaborator = await storage.getCollaborator(weddingId, authReq.session.userId);
+        if (!collaborator) {
+          return res.status(403).json({ error: "Access denied to this wedding" });
+        }
+      }
+
       const events = await storage.getEventsByWedding(weddingId);
 
       const { generateWebsiteContentSuggestions } = await import('./ai/gemini');

@@ -10,10 +10,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { Loader2, ExternalLink, Globe, Copy, Check } from "lucide-react";
-import type { WeddingWebsite, InsertWeddingWebsite } from "@shared/schema";
+import { Loader2, ExternalLink, Globe, Copy, Check, Sparkles, Wand2 } from "lucide-react";
+import type { WeddingWebsite, InsertWeddingWebsite, Wedding } from "@shared/schema";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 
 const websiteFormSchema = z.object({
   slug: z.string().min(3).max(50).regex(/^[a-z0-9-]+$/),
@@ -33,8 +34,10 @@ export default function WebsiteBuilder() {
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
 
+  const [generatingSection, setGeneratingSection] = useState<string | null>(null);
+
   // Get current wedding (for MVP, use most recent wedding)
-  const { data: weddings } = useQuery<any[]>({
+  const { data: weddings } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
   });
 
@@ -42,7 +45,8 @@ export default function WebsiteBuilder() {
   const sortedWeddings = weddings?.sort((a, b) => 
     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
-  const weddingId = sortedWeddings?.[0]?.id;
+  const wedding = sortedWeddings?.[0];
+  const weddingId = wedding?.id;
 
   // Get wedding website
   const { data: website, isLoading } = useQuery<WeddingWebsite>({
@@ -113,6 +117,46 @@ export default function WebsiteBuilder() {
       toast({ title: "Failed to update publish status", variant: "destructive" });
     },
   });
+
+  const generateAISuggestion = async (section: 'welcome' | 'travel' | 'accommodation' | 'faq') => {
+    if (!weddingId) return;
+    
+    setGeneratingSection(section);
+    try {
+      const response = await apiRequest("POST", "/api/ai/website-suggestions", {
+        weddingId,
+        section,
+      });
+      const data = await response.json();
+      
+      if (section === 'faq' && Array.isArray(data.content)) {
+        const faqText = data.content
+          .map((item: { question: string; answer: string }) => 
+            `**Q: ${item.question}**\n${item.answer}`
+          )
+          .join('\n\n');
+        form.setValue('faqInfo', faqText);
+        toast({ title: "FAQ suggestions generated!", description: "Review and edit as needed." });
+      } else if (section === 'welcome') {
+        form.setValue('welcomeMessage', data.content);
+        toast({ title: "Welcome message generated!", description: "Review and edit as needed." });
+      } else if (section === 'travel') {
+        form.setValue('travelInfo', data.content);
+        toast({ title: "Travel info generated!", description: "Review and edit as needed." });
+      } else if (section === 'accommodation') {
+        form.setValue('accommodationInfo', data.content);
+        toast({ title: "Accommodation info generated!", description: "Review and edit as needed." });
+      }
+    } catch (error) {
+      toast({ 
+        title: "Failed to generate suggestions", 
+        description: "Please try again.",
+        variant: "destructive" 
+      });
+    } finally {
+      setGeneratingSection(null);
+    }
+  };
 
   const onSubmit = (data: WebsiteFormData) => {
     if (website) {
@@ -264,8 +308,28 @@ export default function WebsiteBuilder() {
             <TabsContent value="welcome" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Welcome Message</CardTitle>
-                  <CardDescription>Greet your guests with a warm welcome message</CardDescription>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <CardTitle>Welcome Message</CardTitle>
+                      <CardDescription>Greet your guests with a warm welcome message</CardDescription>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => generateAISuggestion('welcome')}
+                      disabled={generatingSection === 'welcome'}
+                      className="flex items-center gap-2"
+                      data-testid="button-ai-welcome"
+                    >
+                      {generatingSection === 'welcome' ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Wand2 className="w-4 h-4" />
+                      )}
+                      AI Suggest
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <FormField
@@ -326,8 +390,28 @@ export default function WebsiteBuilder() {
             <TabsContent value="travel" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Travel Information</CardTitle>
-                  <CardDescription>Help guests plan their travel to your wedding</CardDescription>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <CardTitle>Travel Information</CardTitle>
+                      <CardDescription>Help guests plan their travel to your wedding</CardDescription>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => generateAISuggestion('travel')}
+                      disabled={generatingSection === 'travel'}
+                      className="flex items-center gap-2"
+                      data-testid="button-ai-travel"
+                    >
+                      {generatingSection === 'travel' ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Wand2 className="w-4 h-4" />
+                      )}
+                      AI Suggest
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <FormField
@@ -356,8 +440,28 @@ export default function WebsiteBuilder() {
             <TabsContent value="accommodation" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Accommodation</CardTitle>
-                  <CardDescription>Recommend hotels and places to stay</CardDescription>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <CardTitle>Accommodation</CardTitle>
+                      <CardDescription>Recommend hotels and places to stay</CardDescription>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => generateAISuggestion('accommodation')}
+                      disabled={generatingSection === 'accommodation'}
+                      className="flex items-center gap-2"
+                      data-testid="button-ai-accommodation"
+                    >
+                      {generatingSection === 'accommodation' ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Wand2 className="w-4 h-4" />
+                      )}
+                      AI Suggest
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <FormField
@@ -386,8 +490,34 @@ export default function WebsiteBuilder() {
             <TabsContent value="faq" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Frequently Asked Questions</CardTitle>
-                  <CardDescription>Answer common questions from your guests</CardDescription>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <CardTitle>Frequently Asked Questions</CardTitle>
+                      <CardDescription>Answer common questions from your guests based on your {wedding?.tradition || 'wedding'} tradition</CardDescription>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => generateAISuggestion('faq')}
+                      disabled={generatingSection === 'faq'}
+                      className="flex items-center gap-2"
+                      data-testid="button-ai-faq"
+                    >
+                      {generatingSection === 'faq' ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Wand2 className="w-4 h-4" />
+                      )}
+                      AI Suggest
+                    </Button>
+                  </div>
+                  {wedding?.tradition && (
+                    <Badge variant="secondary" className="mt-2 w-fit">
+                      <Sparkles className="w-3 h-3 mr-1" />
+                      AI will generate FAQs specific to {wedding.tradition} traditions
+                    </Badge>
+                  )}
                 </CardHeader>
                 <CardContent>
                   <FormField
@@ -400,10 +530,11 @@ export default function WebsiteBuilder() {
                           <Textarea
                             {...field}
                             placeholder="What should I wear? When should I arrive? Can I bring a plus-one?"
-                            rows={8}
+                            rows={12}
                             data-testid="input-faq-info"
                           />
                         </FormControl>
+                        <FormDescription>Use **Q: Question** format for questions. AI suggestions will be formatted this way automatically.</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
