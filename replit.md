@@ -50,6 +50,8 @@ Key architectural decisions and features include:
 - **UI/UX**: Features a warm orange/gold primary color palette, elegant typography, Shadcn UI components, hover elevate interactions, and responsive design.
 - **Contract E-Signatures**: Legally-binding digital contract signing system using `react-signature-canvas`.
 - **Photo Gallery & Portfolio System**: Comprehensive visual content management with Inspiration Boards, Vendor Portfolios, and Event Photos.
+- **Gift Registry Integration**: Link-based registry support for major retailers (Amazon, Target, Walmart, Etsy, and custom retailers) displayed on guest websites with branded icons.
+- **YouTube Livestream Integration**: Events can include YouTube livestream URLs, embedded on guest websites for remote guests to watch ceremonies live.
 - **Interactive Task Checklist**: Comprehensive task management with:
   - **Circular Progress Visualization**: ProgressRing component showing completion percentage
   - **Automated Reminders**: Email (Resend) and SMS (Twilio) reminders with configurable days-before settings
