@@ -8544,6 +8544,311 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   });
 
   // ============================================================================
+  // GUEST COLLECTOR LINKS - Shareable links for family to submit guests
+  // ============================================================================
+
+  app.get("/api/weddings/:weddingId/collector-links", async (req, res) => {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      const links = await storage.getGuestCollectorLinksByWedding(req.params.weddingId);
+      res.json(links);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/weddings/:weddingId/collector-links", async (req, res) => {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      const user = await storage.getUser(userId);
+      const link = await storage.createGuestCollectorLink({
+        weddingId: req.params.weddingId,
+        name: req.body.name,
+        side: req.body.side,
+        createdById: userId,
+        createdByName: user?.name || user?.email,
+        maxSubmissions: req.body.maxSubmissions,
+        isActive: true,
+        expiresAt: req.body.expiresAt,
+      });
+      res.status(201).json(link);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/collector-links/:id", async (req, res) => {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      const link = await storage.updateGuestCollectorLink(req.params.id, req.body);
+      if (!link) {
+        return res.status(404).json({ error: "Collector link not found" });
+      }
+      res.json(link);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/collector-links/:id/deactivate", async (req, res) => {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      const link = await storage.deactivateGuestCollectorLink(req.params.id);
+      if (!link) {
+        return res.status(404).json({ error: "Collector link not found" });
+      }
+      res.json(link);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/collector-links/:id", async (req, res) => {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      await storage.deleteGuestCollectorLink(req.params.id);
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Public endpoint - Get collector link info by token (no auth required)
+  app.get("/api/collector/:token", async (req, res) => {
+    try {
+      const link = await storage.getGuestCollectorLinkByToken(req.params.token);
+      if (!link) {
+        return res.status(404).json({ error: "Collector link not found" });
+      }
+      if (!link.isActive) {
+        return res.status(410).json({ error: "This link is no longer active" });
+      }
+      if (link.expiresAt && new Date(link.expiresAt) < new Date()) {
+        return res.status(410).json({ error: "This link has expired" });
+      }
+      if (link.maxSubmissions && link.submissionCount >= link.maxSubmissions) {
+        return res.status(410).json({ error: "This link has reached its submission limit" });
+      }
+      
+      // Get wedding info for display
+      const wedding = await storage.getWedding(link.weddingId);
+      
+      res.json({
+        id: link.id,
+        name: link.name,
+        side: link.side,
+        createdByName: link.createdByName,
+        weddingInfo: wedding ? {
+          partner1Name: wedding.partner1Name,
+          partner2Name: wedding.partner2Name,
+          weddingDate: wedding.weddingDate,
+        } : null,
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Public endpoint - Submit guest via collector link (no auth required)
+  app.post("/api/collector/:token/submit", async (req, res) => {
+    try {
+      const link = await storage.getGuestCollectorLinkByToken(req.params.token);
+      if (!link) {
+        return res.status(404).json({ error: "Collector link not found" });
+      }
+      if (!link.isActive) {
+        return res.status(410).json({ error: "This link is no longer active" });
+      }
+      if (link.expiresAt && new Date(link.expiresAt) < new Date()) {
+        return res.status(410).json({ error: "This link has expired" });
+      }
+      if (link.maxSubmissions && link.submissionCount >= link.maxSubmissions) {
+        return res.status(410).json({ error: "This link has reached its submission limit" });
+      }
+      
+      const submission = await storage.createGuestCollectorSubmission({
+        collectorLinkId: link.id,
+        weddingId: link.weddingId,
+        submitterName: req.body.submitterName,
+        submitterRelation: req.body.submitterRelation,
+        guestName: req.body.guestName,
+        guestEmail: req.body.guestEmail,
+        guestPhone: req.body.guestPhone,
+        relationshipTier: req.body.relationshipTier,
+        notes: req.body.notes,
+      });
+      
+      res.status(201).json({ success: true, submissionId: submission.id });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Collector submissions management
+  app.get("/api/weddings/:weddingId/collector-submissions", async (req, res) => {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      const status = req.query.status as string | undefined;
+      const submissions = await storage.getGuestCollectorSubmissionsByWedding(req.params.weddingId, status);
+      res.json(submissions);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/weddings/:weddingId/collector-submissions/count", async (req, res) => {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      const count = await storage.getPendingCollectorSubmissionsCount(req.params.weddingId);
+      res.json({ count });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/collector-submissions/:id/approve", async (req, res) => {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      const result = await storage.approveCollectorSubmission(req.params.id, userId);
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/collector-submissions/:id/decline", async (req, res) => {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      const result = await storage.declineCollectorSubmission(req.params.id, userId);
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ============================================================================
+  // GUEST SIDE MANAGEMENT - Bride/Groom side features with privacy
+  // ============================================================================
+
+  app.get("/api/weddings/:weddingId/side-statistics", async (req, res) => {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      const stats = await storage.getSideStatistics(req.params.weddingId);
+      res.json(stats);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/weddings/:weddingId/guests-by-side/:side", async (req, res) => {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      const side = req.params.side as 'bride' | 'groom' | 'mutual';
+      const guests = await storage.getGuestsBySide(req.params.weddingId, side);
+      res.json(guests);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/weddings/:weddingId/share-guests", async (req, res) => {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      const { guestIds } = req.body;
+      if (!Array.isArray(guestIds) || guestIds.length === 0) {
+        return res.status(400).json({ error: "guestIds array is required" });
+      }
+      
+      const guests = await storage.shareGuestsWithPartner(req.params.weddingId, guestIds);
+      
+      // Log activity
+      await storage.logCollaboratorActivity({
+        weddingId: req.params.weddingId,
+        collaboratorId: null,
+        userId,
+        action: "guests_shared",
+        targetType: "guest",
+        targetId: guestIds.join(','),
+        details: { count: guestIds.length },
+      });
+      
+      res.json(guests);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/guests/update-consensus-status", async (req, res) => {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      const { guestIds, status } = req.body;
+      if (!Array.isArray(guestIds) || guestIds.length === 0) {
+        return res.status(400).json({ error: "guestIds array is required" });
+      }
+      if (!['pending', 'under_discussion', 'approved', 'declined', 'frozen'].includes(status)) {
+        return res.status(400).json({ error: "Invalid status" });
+      }
+      
+      const guests = await storage.updateGuestConsensusStatus(guestIds, status);
+      res.json(guests);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ============================================================================
   // GUEST LIST SCENARIOS - What-if planning playground
   // ============================================================================
 

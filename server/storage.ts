@@ -3839,6 +3839,33 @@ export class MemStorage implements IStorage {
   async approveVendor(id: string, adminId: string, notes?: string): Promise<Vendor | undefined> { throw new Error("MemStorage does not support Vendor Approval. Use DBStorage."); }
   async rejectVendor(id: string, adminId: string, notes?: string): Promise<Vendor | undefined> { throw new Error("MemStorage does not support Vendor Approval. Use DBStorage."); }
   async getApprovedVendors(): Promise<Vendor[]> { return Array.from(this.vendors.values()); }
+
+  // Guest Collector Links (stubs)
+  async getGuestCollectorLink(id: string): Promise<GuestCollectorLink | undefined> { return undefined; }
+  async getGuestCollectorLinkByToken(token: string): Promise<GuestCollectorLink | undefined> { return undefined; }
+  async getGuestCollectorLinksByWedding(weddingId: string): Promise<GuestCollectorLink[]> { return []; }
+  async createGuestCollectorLink(link: InsertGuestCollectorLink): Promise<GuestCollectorLink> { throw new Error("MemStorage does not support Guest Collector Links. Use DBStorage."); }
+  async updateGuestCollectorLink(id: string, updates: Partial<InsertGuestCollectorLink>): Promise<GuestCollectorLink | undefined> { throw new Error("MemStorage does not support Guest Collector Links. Use DBStorage."); }
+  async deleteGuestCollectorLink(id: string): Promise<boolean> { return false; }
+  async deactivateGuestCollectorLink(id: string): Promise<GuestCollectorLink | undefined> { throw new Error("MemStorage does not support Guest Collector Links. Use DBStorage."); }
+
+  // Guest Collector Submissions (stubs)
+  async getGuestCollectorSubmission(id: string): Promise<GuestCollectorSubmission | undefined> { return undefined; }
+  async getGuestCollectorSubmissionsByLink(linkId: string): Promise<GuestCollectorSubmission[]> { return []; }
+  async getGuestCollectorSubmissionsByWedding(weddingId: string, status?: string): Promise<GuestCollectorSubmission[]> { return []; }
+  async createGuestCollectorSubmission(submission: InsertGuestCollectorSubmission): Promise<GuestCollectorSubmission> { throw new Error("MemStorage does not support Guest Collector Submissions. Use DBStorage."); }
+  async approveCollectorSubmission(id: string, reviewerId: string): Promise<{ household: Household; guests: Guest[] }> { throw new Error("MemStorage does not support Guest Collector Submissions. Use DBStorage."); }
+  async declineCollectorSubmission(id: string, reviewerId: string): Promise<GuestCollectorSubmission> { throw new Error("MemStorage does not support Guest Collector Submissions. Use DBStorage."); }
+  async getPendingCollectorSubmissionsCount(weddingId: string): Promise<number> { return 0; }
+
+  // Guest Side Management (stubs)
+  async getGuestsBySide(weddingId: string, side: 'bride' | 'groom' | 'mutual'): Promise<Guest[]> { return []; }
+  async getGuestsByVisibility(weddingId: string, visibility: 'private' | 'shared', addedBySide?: 'bride' | 'groom'): Promise<Guest[]> { return []; }
+  async shareGuestsWithPartner(weddingId: string, guestIds: string[]): Promise<Guest[]> { return []; }
+  async updateGuestConsensusStatus(guestIds: string[], status: 'pending' | 'under_discussion' | 'approved' | 'declined' | 'frozen'): Promise<Guest[]> { return []; }
+  async getSideStatistics(weddingId: string): Promise<{ bride: { total: number; private: number; shared: number; byStatus: Record<string, number> }; groom: { total: number; private: number; shared: number; byStatus: Record<string, number> }; mutual: { total: number } }> { 
+    return { bride: { total: 0, private: 0, shared: 0, byStatus: {} }, groom: { total: 0, private: 0, shared: 0, byStatus: {} }, mutual: { total: 0 } }; 
+  }
 }
 
 import { neon } from "@neondatabase/serverless";
