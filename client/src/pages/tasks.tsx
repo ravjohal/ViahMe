@@ -85,7 +85,7 @@ export default function TasksPage() {
   const [filterAssignee, setFilterAssignee] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [aiRecommendationsOpen, setAiRecommendationsOpen] = useState(true);
+  const [aiRecommendationsOpen, setAiRecommendationsOpen] = useState(false);
   const [aiRecommendations, setAiRecommendations] = useState<AiRecommendation[]>([]);
   const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set());
   const [newComment, setNewComment] = useState<{ [taskId: string]: string }>({});
@@ -777,152 +777,6 @@ export default function TasksPage() {
         </div>
       </div>
 
-      {/* AI Smart Recommendations Section */}
-      <Card className="mb-6 border-primary/20 bg-gradient-to-r from-primary/5 to-transparent">
-        <Collapsible open={aiRecommendationsOpen} onOpenChange={setAiRecommendationsOpen}>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <Sparkles className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    Smart Recommendations
-                    {visibleRecommendations.length > 0 && (
-                      <Badge variant="outline" className="ml-2">
-                        {visibleRecommendations.length} suggestions
-                      </Badge>
-                    )}
-                  </CardTitle>
-                  <CardDescription>
-                    AI-powered task suggestions personalized for your {wedding?.tradition || ''} wedding
-                  </CardDescription>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => wedding?.id && generateRecommendationsMutation.mutate(wedding.id)}
-                  disabled={generateRecommendationsMutation.isPending || !wedding?.id}
-                  data-testid="button-generate-recommendations"
-                >
-                  {generateRecommendationsMutation.isPending ? (
-                    <>
-                      <Wand2 className="w-4 h-4 mr-2 animate-spin" />
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      <Wand2 className="w-4 h-4 mr-2" />
-                      {aiRecommendations.length > 0 ? 'Refresh' : 'Get Suggestions'}
-                    </>
-                  )}
-                </Button>
-                <CollapsibleTrigger asChild>
-                  <Button variant="ghost" size="icon" data-testid="button-toggle-recommendations">
-                    {aiRecommendationsOpen ? (
-                      <ChevronUp className="w-4 h-4" />
-                    ) : (
-                      <ChevronDown className="w-4 h-4" />
-                    )}
-                  </Button>
-                </CollapsibleTrigger>
-              </div>
-            </div>
-          </CardHeader>
-          <CollapsibleContent>
-            <CardContent className="pt-0">
-              {generateRecommendationsMutation.isPending ? (
-                <div className="space-y-3">
-                  {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="h-24 w-full" />
-                  ))}
-                </div>
-              ) : visibleRecommendations.length === 0 ? (
-                <div className="text-center py-8">
-                  <Lightbulb className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
-                  <p className="text-muted-foreground mb-2">
-                    {aiRecommendations.length > 0 
-                      ? "You've reviewed all suggestions!" 
-                      : "Click 'Get Suggestions' to receive personalized task recommendations"
-                    }
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Our AI considers your tradition, timeline, budget, and existing tasks
-                  </p>
-                </div>
-              ) : (
-                <div className="grid gap-3 md:grid-cols-2">
-                  {visibleRecommendations.map((rec, index) => (
-                    <div
-                      key={`${rec.title}-${index}`}
-                      className="p-4 rounded-lg border bg-card hover-elevate transition-all"
-                      data-testid={`ai-recommendation-${index}`}
-                    >
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <h4 className="font-medium text-sm leading-snug">{rec.title}</h4>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6 shrink-0"
-                          onClick={() => handleDismissRecommendation(rec.title)}
-                          data-testid={`button-dismiss-recommendation-${index}`}
-                        >
-                          <X className="w-3 h-3" />
-                        </Button>
-                      </div>
-                      <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
-                        {rec.description}
-                      </p>
-                      <div className="flex flex-wrap items-center gap-2 mb-3">
-                        <Badge
-                          variant="outline"
-                          className={PRIORITY_COLORS[rec.priority] || PRIORITY_COLORS.medium}
-                        >
-                          {PRIORITY_LABELS[rec.priority] || "Medium"}
-                        </Badge>
-                        {rec.category && (
-                          <Badge variant="secondary" className="text-xs">
-                            {rec.category}
-                          </Badge>
-                        )}
-                        {rec.suggestedDueDate && (
-                          <Badge variant="outline" className="text-xs">
-                            <Calendar className="w-3 h-3 mr-1" />
-                            {format(new Date(rec.suggestedDueDate), "MMM d")}
-                          </Badge>
-                        )}
-                      </div>
-                      {rec.reason && (
-                        <p className="text-xs text-primary/80 mb-3 italic">
-                          <Lightbulb className="w-3 h-3 inline mr-1" />
-                          {rec.reason}
-                        </p>
-                      )}
-                      <Button
-                        size="sm"
-                        className="w-full"
-                        disabled={adoptRecommendationMutation.isPending}
-                        onClick={() => wedding?.id && adoptRecommendationMutation.mutate({
-                          weddingId: wedding.id,
-                          recommendation: rec
-                        })}
-                        data-testid={`button-adopt-recommendation-${index}`}
-                      >
-                        <Plus className="w-3 h-3 mr-2" />
-                        Add to Checklist
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </CollapsibleContent>
-        </Collapsible>
-      </Card>
-
       <Card className="p-6">
         {tasksLoading ? (
           <div className="space-y-4">
@@ -1157,6 +1011,117 @@ export default function TasksPage() {
           </div>
         )}
       </Card>
+
+      {/* AI Smart Suggestions - Secondary section at bottom */}
+      <Collapsible open={aiRecommendationsOpen} onOpenChange={setAiRecommendationsOpen} className="mt-6">
+        <div className="flex items-center justify-between px-1 mb-2">
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground" data-testid="button-toggle-recommendations">
+              <Sparkles className="w-4 h-4" />
+              <span className="text-sm">Need ideas?</span>
+              {visibleRecommendations.length > 0 && (
+                <Badge variant="secondary" className="text-xs ml-1">
+                  {visibleRecommendations.length}
+                </Badge>
+              )}
+              {aiRecommendationsOpen ? (
+                <ChevronUp className="w-3 h-3 ml-1" />
+              ) : (
+                <ChevronDown className="w-3 h-3 ml-1" />
+              )}
+            </Button>
+          </CollapsibleTrigger>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs text-muted-foreground"
+            onClick={() => wedding?.id && generateRecommendationsMutation.mutate(wedding.id)}
+            disabled={generateRecommendationsMutation.isPending || !wedding?.id}
+            data-testid="button-generate-recommendations"
+          >
+            {generateRecommendationsMutation.isPending ? (
+              <Wand2 className="w-3 h-3 animate-spin" />
+            ) : (
+              <>
+                <Wand2 className="w-3 h-3 mr-1" />
+                {aiRecommendations.length > 0 ? 'Refresh' : 'Get AI suggestions'}
+              </>
+            )}
+          </Button>
+        </div>
+        <CollapsibleContent>
+          <Card className="border-dashed">
+            <CardContent className="p-4">
+              {generateRecommendationsMutation.isPending ? (
+                <div className="flex gap-3">
+                  {[1, 2].map((i) => (
+                    <Skeleton key={i} className="h-20 flex-1" />
+                  ))}
+                </div>
+              ) : visibleRecommendations.length === 0 ? (
+                <div className="text-center py-4">
+                  <p className="text-sm text-muted-foreground">
+                    {aiRecommendations.length > 0 
+                      ? "You've reviewed all suggestions!" 
+                      : "Click 'Get AI suggestions' for personalized task ideas"
+                    }
+                  </p>
+                </div>
+              ) : (
+                <div className="flex gap-3 overflow-x-auto pb-2">
+                  {visibleRecommendations.slice(0, 4).map((rec, index) => (
+                    <div
+                      key={`${rec.title}-${index}`}
+                      className="flex-shrink-0 w-64 p-3 rounded-lg border bg-card"
+                      data-testid={`ai-recommendation-${index}`}
+                    >
+                      <div className="flex items-start justify-between gap-1 mb-1">
+                        <h4 className="font-medium text-xs leading-snug line-clamp-2">{rec.title}</h4>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-5 w-5 shrink-0"
+                          onClick={() => handleDismissRecommendation(rec.title)}
+                          data-testid={`button-dismiss-recommendation-${index}`}
+                        >
+                          <X className="w-2.5 h-2.5" />
+                        </Button>
+                      </div>
+                      <div className="flex items-center gap-1 mb-2">
+                        <Badge
+                          variant="outline"
+                          className={`text-[10px] px-1.5 py-0 ${PRIORITY_COLORS[rec.priority] || PRIORITY_COLORS.medium}`}
+                        >
+                          {rec.priority}
+                        </Badge>
+                        {rec.category && (
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                            {rec.category}
+                          </Badge>
+                        )}
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full h-7 text-xs"
+                        disabled={adoptRecommendationMutation.isPending}
+                        onClick={() => wedding?.id && adoptRecommendationMutation.mutate({
+                          weddingId: wedding.id,
+                          recommendation: rec
+                        })}
+                        data-testid={`button-adopt-recommendation-${index}`}
+                      >
+                        <Plus className="w-3 h-3 mr-1" />
+                        Add
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 }
