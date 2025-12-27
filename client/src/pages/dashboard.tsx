@@ -4,6 +4,7 @@ import { TimelineView } from "@/components/timeline-view";
 import { BudgetDashboard } from "@/components/budget-dashboard";
 import { WelcomeTour } from "@/components/welcome-tour";
 import { EventDetailModal } from "@/components/event-detail-modal";
+import { CeremonyCostBreakdown } from "@/components/ceremony-cost-breakdown";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -543,6 +544,13 @@ export default function Dashboard() {
               </Button>
             </div>
           </Card>
+        )}
+
+        {/* Ceremony Cost Breakdown */}
+        {events.length > 0 && (
+          <div className="mb-8">
+            <CeremonyCostBreakdown events={events} />
+          </div>
         )}
 
         {/* Quick Stats Grid */}
