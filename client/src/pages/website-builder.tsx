@@ -56,13 +56,13 @@ export default function WebsiteBuilder() {
     enabled: !!weddingId,
   });
 
-  // Sync photo state with website data when it loads
+  // Sync photo state with website data when it loads or changes
   useEffect(() => {
     if (website) {
       setCouplePhotoUrl(website.couplePhotoUrl || null);
       setGalleryPhotos(website.galleryPhotos || []);
     }
-  }, [website?.id]);
+  }, [website?.couplePhotoUrl, website?.galleryPhotos?.length]);
 
   const form = useForm<WebsiteFormData>({
     resolver: zodResolver(websiteFormSchema),
