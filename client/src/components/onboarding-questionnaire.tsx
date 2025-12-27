@@ -798,15 +798,15 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                         {customEvents.map((event, index) => (
                           <div 
                             key={index} 
-                            className="flex items-start gap-3 p-3 rounded-lg border bg-card"
+                            className="flex flex-col sm:flex-row items-start gap-3 p-3 rounded-lg border bg-card"
                           >
-                            <div className="flex-1 space-y-2">
-                              <div className="grid grid-cols-2 gap-3">
+                            <div className="flex-1 w-full space-y-2">
+                              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                                 <Select
                                   value={event.ceremonyId || ""}
                                   onValueChange={(value) => handleEventChange(index, "ceremonyId", value)}
                                 >
-                                  <SelectTrigger className="h-10" data-testid={`select-ceremony-${index}`}>
+                                  <SelectTrigger className="h-10 w-full sm:flex-1" data-testid={`select-ceremony-${index}`}>
                                     <SelectValue placeholder="Select ceremony type" />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -836,7 +836,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                                   value={event.guestCount || ""}
                                   onChange={(e) => handleEventChange(index, "guestCount", e.target.value)}
                                   data-testid={`input-event-guests-${index}`}
-                                  className="h-10"
+                                  className="h-10 w-full sm:w-32"
                                 />
                               </div>
                               {event.ceremonyId === "custom" && (
@@ -856,7 +856,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                               size="icon"
                               onClick={() => handleRemoveEvent(index)}
                               disabled={customEvents.length <= 1}
-                              className="text-muted-foreground hover:text-destructive mt-1"
+                              className="text-muted-foreground hover:text-destructive self-end sm:self-start sm:mt-1"
                               data-testid={`button-remove-event-${index}`}
                             >
                               <Trash2 className="w-4 h-4" />
