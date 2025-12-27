@@ -12,9 +12,11 @@ import { Progress } from "@/components/ui/progress";
 import { Calendar, MapPin, Users, DollarSign, Crown, Gift, Lightbulb, TrendingUp, Info } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TRADITION_HIERARCHY, getSubTraditionsForMain, getAllSubTraditions, getMainTraditionByValue } from "@/lib/tradition-hierarchy";
+import { getCeremoniesForTradition, getCeremonyById, getDefaultCeremoniesForTradition, type CeremonyDefinition } from "@shared/ceremonies";
 
 const customEventSchema = z.object({
-  name: z.string().min(1),
+  ceremonyId: z.string().optional(),
+  customName: z.string().optional(),
   guestCount: z.string().optional(),
 });
 
@@ -214,8 +216,8 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
       ceremonyGuestCount: "",
       receptionGuestCount: "",
       customEvents: [
-        { name: "Wedding Ceremony", guestCount: "" },
-        { name: "Reception", guestCount: "" },
+        { ceremonyId: "", customName: "", guestCount: "" },
+        { ceremonyId: "", customName: "", guestCount: "" },
       ],
       autoCreateCeremonies: true,
       totalBudget: "50000",
@@ -256,9 +258,15 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
   const customEvents = form.watch("customEvents") || [];
   const autoCreateCeremonies = form.watch("autoCreateCeremonies") ?? true;
 
+  // Get ceremonies available for the selected tradition
+  const availableCeremonies = useMemo(() => {
+    const tradition = form.watch("tradition") || "general";
+    return getCeremoniesForTradition(tradition);
+  }, [selectedMainTradition]);
+
   const handleAddEvent = () => {
     const current = form.getValues("customEvents") || [];
-    form.setValue("customEvents", [...current, { name: "", guestCount: "" }]);
+    form.setValue("customEvents", [...current, { ceremonyId: "", customName: "", guestCount: "" }]);
   };
 
   const handleRemoveEvent = (index: number) => {
@@ -268,11 +276,18 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
     }
   };
 
-  const handleEventChange = (index: number, field: "name" | "guestCount", value: string) => {
+  const handleEventChange = (index: number, field: "ceremonyId" | "customName" | "guestCount", value: string) => {
     const current = form.getValues("customEvents") || [];
-    const updated = current.map((event, i) => 
-      i === index ? { ...event, [field]: value } : event
-    );
+    const updated = current.map((event, i) => {
+      if (i === index) {
+        if (field === "ceremonyId") {
+          // If selecting a ceremony from dropdown, clear customName. If selecting "custom", keep customName.
+          return { ...event, ceremonyId: value, customName: value === "custom" ? event.customName : "" };
+        }
+        return { ...event, [field]: value };
+      }
+      return event;
+    });
     form.setValue("customEvents", updated);
   };
 
@@ -734,25 +749,57 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                         {customEvents.map((event, index) => (
                           <div 
                             key={index} 
-                            className="flex items-center gap-3 p-3 rounded-lg border bg-card"
+                            className="flex items-start gap-3 p-3 rounded-lg border bg-card"
                           >
-                            <div className="flex-1 grid grid-cols-2 gap-3">
-                              <Input
-                                type="text"
-                                placeholder="Event name (e.g., Sangeet)"
-                                value={event.name}
-                                onChange={(e) => handleEventChange(index, "name", e.target.value)}
-                                data-testid={`input-event-name-${index}`}
-                                className="h-10"
-                              />
-                              <Input
-                                type="number"
-                                placeholder="Guest count"
-                                value={event.guestCount || ""}
-                                onChange={(e) => handleEventChange(index, "guestCount", e.target.value)}
-                                data-testid={`input-event-guests-${index}`}
-                                className="h-10"
-                              />
+                            <div className="flex-1 space-y-2">
+                              <div className="grid grid-cols-2 gap-3">
+                                <Select
+                                  value={event.ceremonyId || ""}
+                                  onValueChange={(value) => handleEventChange(index, "ceremonyId", value)}
+                                >
+                                  <SelectTrigger className="h-10" data-testid={`select-ceremony-${index}`}>
+                                    <SelectValue placeholder="Select ceremony type" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {availableCeremonies.map((ceremony) => (
+                                      <SelectItem 
+                                        key={ceremony.id} 
+                                        value={ceremony.id}
+                                        data-testid={`option-ceremony-${ceremony.id}`}
+                                      >
+                                        <div className="flex flex-col">
+                                          <span>{ceremony.name}</span>
+                                          <span className="text-xs text-muted-foreground">{ceremony.description}</span>
+                                        </div>
+                                      </SelectItem>
+                                    ))}
+                                    <SelectItem value="custom" data-testid="option-ceremony-custom">
+                                      <div className="flex flex-col">
+                                        <span className="font-medium">Custom Event</span>
+                                        <span className="text-xs text-muted-foreground">Add your own ceremony or event</span>
+                                      </div>
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <Input
+                                  type="number"
+                                  placeholder="Guest count"
+                                  value={event.guestCount || ""}
+                                  onChange={(e) => handleEventChange(index, "guestCount", e.target.value)}
+                                  data-testid={`input-event-guests-${index}`}
+                                  className="h-10"
+                                />
+                              </div>
+                              {event.ceremonyId === "custom" && (
+                                <Input
+                                  type="text"
+                                  placeholder="Enter custom event name"
+                                  value={event.customName || ""}
+                                  onChange={(e) => handleEventChange(index, "customName", e.target.value)}
+                                  data-testid={`input-custom-event-name-${index}`}
+                                  className="h-10"
+                                />
+                              )}
                             </div>
                             <Button
                               type="button"
@@ -760,7 +807,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                               size="icon"
                               onClick={() => handleRemoveEvent(index)}
                               disabled={customEvents.length <= 1}
-                              className="text-muted-foreground hover:text-destructive"
+                              className="text-muted-foreground hover:text-destructive mt-1"
                               data-testid={`button-remove-event-${index}`}
                             >
                               <Trash2 className="w-4 h-4" />
