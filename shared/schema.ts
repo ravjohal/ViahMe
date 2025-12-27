@@ -62,9 +62,13 @@ export const weddings = pgTable("weddings", {
   weddingDate: timestamp("wedding_date"),
   location: text("location").notNull(), // 'Bay Area' etc
   guestCountEstimate: integer("guest_count_estimate"),
+  ceremonyGuestCount: integer("ceremony_guest_count"), // Event-specific: ceremony guests
+  receptionGuestCount: integer("reception_guest_count"), // Event-specific: reception guests
   totalBudget: decimal("total_budget", { precision: 10, scale: 2 }),
   budgetConfirmed: boolean("budget_confirmed").default(false),
   eventsConfirmed: boolean("events_confirmed").default(false),
+  budgetContribution: text("budget_contribution"), // 'couple_only' | 'both_families' | 'mix'
+  partnerNewToTraditions: boolean("partner_new_to_traditions").default(false), // Culture Bridge feature
   status: text("status").notNull().default('planning'), // 'planning' | 'active' | 'completed'
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
@@ -81,7 +85,11 @@ export const insertWeddingSchema = createInsertSchema(weddings).omit({
   location: z.string().min(1),
   weddingDate: z.string().optional().transform(val => val ? new Date(val) : undefined),
   guestCountEstimate: z.number().min(1).optional(),
+  ceremonyGuestCount: z.number().min(1).optional(),
+  receptionGuestCount: z.number().min(1).optional(),
   totalBudget: z.string().nullable().optional(),
+  budgetContribution: z.enum(['couple_only', 'both_families', 'mix']).nullable().optional(),
+  partnerNewToTraditions: z.boolean().optional(),
 });
 
 export type InsertWedding = z.infer<typeof insertWeddingSchema>;

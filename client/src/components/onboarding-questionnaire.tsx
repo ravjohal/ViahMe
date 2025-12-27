@@ -23,9 +23,99 @@ const questionnaireSchema = z.object({
   location: z.string().min(1, "Location is required"),
   customZipCode: z.string().optional(),
   guestCountEstimate: z.string().optional(),
+  ceremonyGuestCount: z.string().optional(),
+  receptionGuestCount: z.string().optional(),
   totalBudget: z.string().optional(),
   venuePreference: z.enum(['all_inclusive', 'diy_friendly', 'no_preference']).optional(),
+  budgetContribution: z.enum(['couple_only', 'both_families', 'mix']).optional(),
+  partnerNewToTraditions: z.boolean().optional(),
 });
+
+import { Flame, Moon, Sparkles, Music, Flower2, Church, Leaf, Sun, Heart, Star } from "lucide-react";
+
+// Visual tradition cards with descriptions and vibes
+const TRADITION_CARDS = [
+  { 
+    value: "sikh", 
+    label: "Sikh", 
+    description: "Anand Karaj at the Gurdwara",
+    vibe: "Sacred ceremony around the Guru Granth Sahib with Lavaan",
+    color: "from-orange-400 to-amber-500",
+    Icon: Sun,
+  },
+  { 
+    value: "hindu", 
+    label: "Hindu", 
+    description: "Vedic rituals with fire ceremony",
+    vibe: "Saat Pheras around the sacred fire with mantras",
+    color: "from-red-400 to-pink-500",
+    Icon: Flame,
+  },
+  { 
+    value: "muslim", 
+    label: "Muslim", 
+    description: "Nikah ceremony with Mahr",
+    vibe: "Islamic traditions with Mehndi, Nikah, and Walima",
+    color: "from-emerald-400 to-teal-500",
+    Icon: Moon,
+  },
+  { 
+    value: "gujarati", 
+    label: "Gujarati", 
+    description: "Garba, Pithi, and colorful celebrations",
+    vibe: "Vibrant pre-wedding festivities with Dandiya nights",
+    color: "from-yellow-400 to-orange-500",
+    Icon: Music,
+  },
+  { 
+    value: "south_indian", 
+    label: "South Indian", 
+    description: "Muhurtham and temple traditions",
+    vibe: "Kanjeevaram silk, Thali ceremony, and morning rituals",
+    color: "from-purple-400 to-indigo-500",
+    Icon: Flower2,
+  },
+  { 
+    value: "christian", 
+    label: "Christian", 
+    description: "Church ceremony with Indian flair",
+    vibe: "Western traditions blended with South Asian culture",
+    color: "from-blue-400 to-cyan-500",
+    Icon: Church,
+  },
+  { 
+    value: "jain", 
+    label: "Jain", 
+    description: "Spiritual ceremonies with simplicity",
+    vibe: "Traditional rituals emphasizing non-violence and purity",
+    color: "from-lime-400 to-green-500",
+    Icon: Leaf,
+  },
+  { 
+    value: "parsi", 
+    label: "Parsi", 
+    description: "Zoroastrian wedding traditions",
+    vibe: "Lagan ceremony with fire temple blessings",
+    color: "from-amber-400 to-yellow-500",
+    Icon: Sparkles,
+  },
+  { 
+    value: "mixed", 
+    label: "Mixed / Fusion", 
+    description: "Blending two beautiful traditions",
+    vibe: "Honoring both families with combined ceremonies",
+    color: "from-pink-400 to-purple-500",
+    Icon: Heart,
+  },
+  { 
+    value: "other", 
+    label: "Other", 
+    description: "Unique celebration",
+    vibe: "Create your own tradition",
+    color: "from-gray-400 to-slate-500",
+    Icon: Star,
+  },
+];
 
 type QuestionnaireData = z.infer<typeof questionnaireSchema>;
 
@@ -34,18 +124,22 @@ interface OnboardingQuestionnaireProps {
 }
 
 const METRO_AREAS = [
-  { value: "San Francisco Bay Area", label: "San Francisco Bay Area" },
-  { value: "New York City", label: "New York City Metro" },
-  { value: "Los Angeles", label: "Los Angeles Metro" },
-  { value: "Chicago", label: "Chicago Metro" },
-  { value: "Seattle", label: "Seattle Metro" },
-  { value: "Houston", label: "Houston Metro" },
-  { value: "Dallas-Fort Worth", label: "Dallas-Fort Worth Metro" },
-  { value: "Washington DC", label: "Washington DC Metro" },
-  { value: "Atlanta", label: "Atlanta Metro" },
-  { value: "Fresno", label: "Fresno Metro" },
-  { value: "Sacramento", label: "Sacramento Metro" },
-  { value: "Other", label: "Other (Enter ZIP Code)" },
+  { value: "San Francisco Bay Area", label: "San Francisco Bay Area", desiPop: "High" },
+  { value: "New York City", label: "New York City Metro", desiPop: "High" },
+  { value: "Los Angeles", label: "Los Angeles Metro", desiPop: "High" },
+  { value: "Chicago", label: "Chicago Metro", desiPop: "High" },
+  { value: "Houston", label: "Houston Metro", desiPop: "High" },
+  { value: "Dallas-Fort Worth", label: "Dallas-Fort Worth Metro", desiPop: "High" },
+  { value: "Washington DC", label: "Washington DC Metro", desiPop: "High" },
+  { value: "Seattle", label: "Seattle Metro", desiPop: "Medium" },
+  { value: "Atlanta", label: "Atlanta Metro", desiPop: "Medium" },
+  { value: "Philadelphia", label: "Philadelphia Metro", desiPop: "Medium" },
+  { value: "Boston", label: "Boston Metro", desiPop: "Medium" },
+  { value: "Detroit", label: "Detroit Metro", desiPop: "Medium" },
+  { value: "Toronto", label: "Toronto (Canada)", desiPop: "High" },
+  { value: "Vancouver", label: "Vancouver (Canada)", desiPop: "High" },
+  { value: "Fresno", label: "Fresno / Central Valley", desiPop: "Medium" },
+  { value: "Other", label: "Other (Enter ZIP Code)", desiPop: null },
 ];
 
 const STEPS = [
@@ -111,10 +205,16 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
       location: "San Francisco Bay Area",
       customZipCode: "",
       guestCountEstimate: "300",
+      ceremonyGuestCount: "",
+      receptionGuestCount: "",
       totalBudget: "50000",
       venuePreference: "no_preference",
+      budgetContribution: "both_families",
+      partnerNewToTraditions: false,
     },
   });
+
+  const [showEventGuestCounts, setShowEventGuestCounts] = useState(false);
 
   const selectedLocation = form.watch("location");
   const isFlexibleDate = form.watch("flexibleDate");
@@ -250,7 +350,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                 data-testid="logo-viah"
               />
               <p className="text-2xl font-semibold text-orange-600 tracking-wide" style={{ fontFamily: 'Playfair Display, serif' }}>
-                Welcome! Let's plan your perfect celebration 🎊
+                Welcome! Let's plan your perfect celebration
               </p>
             </div>
             <div className="flex flex-col items-end gap-2">
@@ -317,28 +417,84 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                       name="tradition"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-lg font-semibold tracking-wide" style={{ fontFamily: 'Cormorant Garamond, serif' }}>Main Wedding Tradition</FormLabel>
-                          <Select onValueChange={handleMainTraditionChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger data-testid="select-tradition" className="h-12">
-                                <SelectValue placeholder="Select your main tradition..." />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {TRADITION_HIERARCHY.map((tradition) => (
-                                <SelectItem key={tradition.value} value={tradition.value} data-testid={`option-${tradition.value}`}>
-                                  <div className="flex flex-col">
-                                    <span className="font-semibold">{tradition.label}</span>
-                                    <span className="text-xs text-muted-foreground">{tradition.description}</span>
+                          <FormLabel className="text-lg font-semibold tracking-wide" style={{ fontFamily: 'Cormorant Garamond, serif' }}>Select Your Wedding Tradition</FormLabel>
+                          <p className="text-sm text-muted-foreground mb-4">Click on the tradition that best describes your celebration</p>
+                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3" role="radiogroup" aria-label="Select wedding tradition">
+                            {TRADITION_CARDS.map((tradition) => {
+                              const TraditionIcon = tradition.Icon;
+                              return (
+                                <button
+                                  type="button"
+                                  key={tradition.value}
+                                  onClick={() => handleMainTraditionChange(tradition.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                      e.preventDefault();
+                                      handleMainTraditionChange(tradition.value);
+                                    }
+                                  }}
+                                  role="radio"
+                                  aria-checked={field.value === tradition.value}
+                                  className={`relative rounded-xl p-4 transition-all hover-elevate border-2 text-left ${
+                                    field.value === tradition.value 
+                                      ? 'border-primary ring-2 ring-primary/20 bg-primary/5' 
+                                      : 'border-transparent bg-muted/30 hover:border-muted-foreground/20'
+                                  }`}
+                                  data-testid={`card-tradition-${tradition.value}`}
+                                >
+                                  <div className="text-center space-y-2">
+                                    <div className={`w-12 h-12 mx-auto rounded-full bg-gradient-to-br ${tradition.color} flex items-center justify-center`}>
+                                      <TraditionIcon className="w-6 h-6 text-white" />
+                                    </div>
+                                    <div>
+                                      <h4 className="font-semibold text-sm">{tradition.label}</h4>
+                                      <p className="text-xs text-muted-foreground line-clamp-2">{tradition.description}</p>
+                                    </div>
                                   </div>
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                                  {field.value === tradition.value && (
+                                    <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                      </svg>
+                                    </div>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
+
+                    {/* Culture Bridge - Partner new to traditions */}
+                    {selectedMainTradition && selectedMainTradition !== "other" && (
+                      <FormField
+                        control={form.control}
+                        name="partnerNewToTraditions"
+                        render={({ field }) => (
+                          <FormItem className="p-4 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 border border-purple-200 dark:border-purple-800">
+                            <div className="flex items-start gap-3">
+                              <Checkbox
+                                id="partnerNew"
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                                className="mt-1"
+                                data-testid="checkbox-partner-new"
+                              />
+                              <div className="space-y-1">
+                                <label htmlFor="partnerNew" className="font-semibold text-purple-900 dark:text-purple-100 cursor-pointer">
+                                  Is one partner new to these traditions?
+                                </label>
+                                <p className="text-sm text-purple-700 dark:text-purple-300">
+                                  We'll generate helpful guides and email templates you can share with the other side of the family to explain ceremonies, dress codes, and etiquette.
+                                </p>
+                              </div>
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+                    )}
 
                     {/* Tradition Cost Tips */}
                     {selectedMainTradition && selectedMainTradition !== "other" && (
@@ -608,6 +764,70 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                       )}
                     />
 
+                    {/* Event-specific guest counts toggle */}
+                    <div className="p-4 rounded-lg border bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 border-amber-200 dark:border-amber-800">
+                      <div className="flex items-start gap-3">
+                        <Checkbox
+                          id="showEventGuests"
+                          checked={showEventGuestCounts}
+                          onCheckedChange={(checked) => setShowEventGuestCounts(!!checked)}
+                          className="mt-1"
+                          data-testid="checkbox-event-guest-counts"
+                        />
+                        <div className="space-y-1 flex-1">
+                          <label htmlFor="showEventGuests" className="font-semibold text-amber-900 dark:text-amber-100 cursor-pointer">
+                            Different guest counts for ceremony vs reception?
+                          </label>
+                          <p className="text-sm text-amber-700 dark:text-amber-300">
+                            Many South Asian weddings have a smaller ceremony and larger reception. This helps us calculate more accurate costs.
+                          </p>
+                        </div>
+                      </div>
+
+                      {showEventGuestCounts && (
+                        <div className="mt-4 grid grid-cols-2 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="ceremonyGuestCount"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-sm font-medium text-amber-800 dark:text-amber-200">Ceremony Guests</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    type="number"
+                                    placeholder="e.g., 150"
+                                    {...field}
+                                    value={field.value || ""}
+                                    data-testid="input-ceremony-guests"
+                                    className="h-10"
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="receptionGuestCount"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-sm font-medium text-amber-800 dark:text-amber-200">Reception Guests</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    type="number"
+                                    placeholder="e.g., 400"
+                                    {...field}
+                                    value={field.value || ""}
+                                    data-testid="input-reception-guests"
+                                    className="h-10"
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      )}
+                    </div>
+
                     {selectedLocation === "Other" && (
                       <FormField
                         control={form.control}
@@ -749,6 +969,63 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                       )}
                     </div>
 
+                    {/* Budget Contribution Question */}
+                    <FormField
+                      control={form.control}
+                      name="budgetContribution"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-lg font-semibold tracking-wide" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+                            Who is contributing to the budget?
+                          </FormLabel>
+                          <p className="text-sm text-muted-foreground mb-2">
+                            This helps us prioritize cost-saving tips and vendor recommendations
+                          </p>
+                          <Select onValueChange={field.onChange} value={field.value || "both_families"}>
+                            <FormControl>
+                              <SelectTrigger className="h-12" data-testid="select-budget-contribution">
+                                <SelectValue placeholder="Select who's paying" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="couple_only" data-testid="option-couple-only">
+                                <div className="flex flex-col">
+                                  <span className="font-medium">Couple Only (Self-Funded)</span>
+                                  <span className="text-xs text-muted-foreground">We'll prioritize DIY tips & negotiation strategies</span>
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="both_families" data-testid="option-both-families">
+                                <div className="flex flex-col">
+                                  <span className="font-medium">Both Families</span>
+                                  <span className="text-xs text-muted-foreground">Traditional split with family contributions</span>
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="mix" data-testid="option-mix">
+                                <div className="flex flex-col">
+                                  <span className="font-medium">Mix of Couple + Family</span>
+                                  <span className="text-xs text-muted-foreground">Partial family support with couple managing</span>
+                                </div>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Self-Funded Tips */}
+                    {form.watch("budgetContribution") === "couple_only" && (
+                      <div className="p-4 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border border-blue-200 dark:border-blue-800">
+                        <h4 className="font-semibold text-blue-900 dark:text-blue-100 text-sm mb-2">Self-Funded Wedding Tips</h4>
+                        <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
+                          <li>• Consider used decor marketplaces (save 40-60%)</li>
+                          <li>• Negotiate vendor packages and service fees</li>
+                          <li>• Book off-peak dates for better rates</li>
+                          <li>• DIY-friendly venues let you choose affordable caterers</li>
+                        </ul>
+                      </div>
+                    )}
+
                     <FormField
                       control={form.control}
                       name="totalBudget"
@@ -769,6 +1046,16 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                               />
                             </div>
                           </FormControl>
+                          {/* Smart Tip when budget is empty */}
+                          {(!field.value || field.value === "") && form.watch('guestCountEstimate') && parseInt(form.watch('guestCountEstimate') || '0') > 0 && (
+                            <div className="mt-2 p-2 rounded bg-muted/50 border">
+                              <p className="text-xs text-muted-foreground">
+                                <span className="font-medium">Smart Tip:</span> No worries! We've set a placeholder budget of{' '}
+                                <span className="font-bold">${(parseInt(form.watch('guestCountEstimate') || '0') * 200).toLocaleString()}</span>{' '}
+                                based on your {form.watch('guestCountEstimate')}-guest count to get you started.
+                              </p>
+                            </div>
+                          )}
                           <p className="text-xs text-muted-foreground mt-1">
                             Don't worry if you're unsure—you can always adjust this later in the Budget section.
                           </p>
