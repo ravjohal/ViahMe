@@ -835,71 +835,117 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
 
                 {currentStep === 5 && (
                   <div className="space-y-6">
-                    {/* Budget Guidance Panel */}
-                    <div className="p-4 rounded-lg bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200">
-                      <div className="flex items-start gap-3 mb-4">
-                        <div className="p-2 rounded-full bg-emerald-100">
-                          <Lightbulb className="w-5 h-5 text-emerald-600" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-emerald-900 mb-1">Budget Planning Guide</h4>
-                          <p className="text-sm text-emerald-700">
-                            South Asian weddings typically involve multiple events over 3-5 days. Here's how to estimate your budget:
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-3 text-sm">
-                        <div className="flex items-start gap-2">
-                          <TrendingUp className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
-                          <div>
-                            <span className="font-medium text-emerald-900">Per Guest Rule of Thumb:</span>
-                            <span className="text-emerald-700 ml-1">
-                              Budget $150-$300 per guest for a traditional celebration
-                            </span>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-start gap-2">
-                          <Info className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
-                          <div>
-                            <span className="font-medium text-emerald-900">Typical Ranges:</span>
-                            <ul className="text-emerald-700 mt-1 space-y-1 ml-2">
-                              <li>• <span className="font-medium">100 guests:</span> $25,000 - $50,000</li>
-                              <li>• <span className="font-medium">200 guests:</span> $40,000 - $80,000</li>
-                              <li>• <span className="font-medium">300+ guests:</span> $60,000 - $150,000+</li>
-                            </ul>
-                          </div>
-                        </div>
+                    {/* Dynamic Budget Calculator Based on Events */}
+                    {(() => {
+                      // Cost per guest per event type (low - high range)
+                      const eventCostPerGuest: Record<string, { low: number; high: number; defaultGuests: number }> = {
+                        "wedding ceremony": { low: 80, high: 150, defaultGuests: 200 },
+                        "reception": { low: 100, high: 200, defaultGuests: 300 },
+                        "sangeet": { low: 60, high: 120, defaultGuests: 150 },
+                        "mehndi": { low: 40, high: 80, defaultGuests: 100 },
+                        "haldi": { low: 30, high: 60, defaultGuests: 75 },
+                        "baraat": { low: 20, high: 40, defaultGuests: 100 },
+                        "garba": { low: 50, high: 100, defaultGuests: 200 },
+                        "pithi": { low: 30, high: 60, defaultGuests: 75 },
+                        "nikah": { low: 60, high: 120, defaultGuests: 150 },
+                        "walima": { low: 80, high: 150, defaultGuests: 250 },
+                        "dholki": { low: 40, high: 80, defaultGuests: 80 },
+                        "anand karaj": { low: 50, high: 100, defaultGuests: 200 },
+                        "muhurtham": { low: 60, high: 120, defaultGuests: 150 },
+                        "cocktail": { low: 50, high: 100, defaultGuests: 150 },
+                        "rehearsal dinner": { low: 60, high: 120, defaultGuests: 50 },
+                      };
 
-                        <div className="flex items-start gap-2">
-                          <Users className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
-                          <div>
-                            <span className="font-medium text-emerald-900">Key Cost Drivers:</span>
-                            <span className="text-emerald-700 ml-1">
-                              Venue (25-30%), Catering (25-35%), Photography (10-15%), Décor (10-15%)
-                            </span>
-                          </div>
-                        </div>
-                      </div>
+                      const getEventCost = (eventName: string) => {
+                        const normalized = eventName.toLowerCase().trim();
+                        for (const [key, value] of Object.entries(eventCostPerGuest)) {
+                          if (normalized.includes(key) || key.includes(normalized)) {
+                            return value;
+                          }
+                        }
+                        // Default for unknown events
+                        return { low: 50, high: 100, defaultGuests: 150 };
+                      };
 
-                      {/* Dynamic suggestion based on guest count */}
-                      {form.watch('guestCountEstimate') && parseInt(form.watch('guestCountEstimate') || '0') > 0 && (
-                        <div className="mt-4 p-3 bg-white/60 rounded-md border border-emerald-200">
-                          <p className="text-sm text-emerald-800">
-                            <span className="font-semibold">Based on {form.watch('guestCountEstimate')} guests: </span>
-                            We suggest starting with a budget between{' '}
-                            <span className="font-bold text-emerald-700">
-                              ${(parseInt(form.watch('guestCountEstimate') || '0') * 150).toLocaleString()}
-                            </span>
-                            {' '}-{' '}
-                            <span className="font-bold text-emerald-700">
-                              ${(parseInt(form.watch('guestCountEstimate') || '0') * 300).toLocaleString()}
-                            </span>
-                          </p>
+                      const events = customEvents.filter(e => e.name.trim() !== "");
+                      let totalLow = 0;
+                      let totalHigh = 0;
+
+                      const eventBreakdown = events.map(event => {
+                        const cost = getEventCost(event.name);
+                        const guestCount = event.guestCount && parseInt(event.guestCount) > 0 
+                          ? parseInt(event.guestCount) 
+                          : cost.defaultGuests;
+                        const lowCost = cost.low * guestCount;
+                        const highCost = cost.high * guestCount;
+                        totalLow += lowCost;
+                        totalHigh += highCost;
+                        return {
+                          name: event.name,
+                          guests: guestCount,
+                          isDefault: !event.guestCount || parseInt(event.guestCount) === 0,
+                          costPerGuestLow: cost.low,
+                          costPerGuestHigh: cost.high,
+                          totalLow: lowCost,
+                          totalHigh: highCost,
+                        };
+                      });
+
+                      return (
+                        <div className="p-4 rounded-lg bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 border border-emerald-200 dark:border-emerald-800">
+                          <div className="flex items-start gap-3 mb-4">
+                            <div className="p-2 rounded-full bg-emerald-100 dark:bg-emerald-900">
+                              <Lightbulb className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-emerald-900 dark:text-emerald-100 mb-1">Budget Estimate Based on Your Events</h4>
+                              <p className="text-sm text-emerald-700 dark:text-emerald-300">
+                                Here's a cost breakdown per event. Each estimate is based on cost per guest for that specific event type.
+                              </p>
+                            </div>
+                          </div>
+                          
+                          {eventBreakdown.length > 0 ? (
+                            <div className="space-y-2">
+                              {eventBreakdown.map((event, idx) => (
+                                <div key={idx} className="flex items-center justify-between p-2 bg-white/60 dark:bg-white/10 rounded border border-emerald-100 dark:border-emerald-800">
+                                  <div className="flex-1">
+                                    <span className="font-medium text-emerald-900 dark:text-emerald-100">{event.name}</span>
+                                    <span className="text-xs text-emerald-600 dark:text-emerald-400 ml-2">
+                                      ({event.guests} guests{event.isDefault ? " - typical" : ""})
+                                    </span>
+                                  </div>
+                                  <div className="text-right">
+                                    <span className="text-xs text-emerald-600 dark:text-emerald-400 block">
+                                      ${event.costPerGuestLow}-${event.costPerGuestHigh}/guest
+                                    </span>
+                                    <span className="font-semibold text-emerald-800 dark:text-emerald-200">
+                                      ${event.totalLow.toLocaleString()} - ${event.totalHigh.toLocaleString()}
+                                    </span>
+                                  </div>
+                                </div>
+                              ))}
+                              
+                              <div className="mt-3 pt-3 border-t border-emerald-200 dark:border-emerald-700">
+                                <div className="flex items-center justify-between">
+                                  <span className="font-semibold text-emerald-900 dark:text-emerald-100">Estimated Total:</span>
+                                  <span className="text-lg font-bold text-emerald-700 dark:text-emerald-300">
+                                    ${totalLow.toLocaleString()} - ${totalHigh.toLocaleString()}
+                                  </span>
+                                </div>
+                                <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">
+                                  Add 10-15% buffer for unexpected costs
+                                </p>
+                              </div>
+                            </div>
+                          ) : (
+                            <p className="text-sm text-emerald-700 dark:text-emerald-300 italic">
+                              Add events in the previous step to see a budget breakdown.
+                            </p>
+                          )}
                         </div>
-                      )}
-                    </div>
+                      );
+                    })()}
 
                     {/* Budget Contribution Question */}
                     <FormField
@@ -978,16 +1024,6 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                               />
                             </div>
                           </FormControl>
-                          {/* Smart Tip when budget is empty */}
-                          {(!field.value || field.value === "") && form.watch('guestCountEstimate') && parseInt(form.watch('guestCountEstimate') || '0') > 0 && (
-                            <div className="mt-2 p-2 rounded bg-muted/50 border">
-                              <p className="text-xs text-muted-foreground">
-                                <span className="font-medium">Smart Tip:</span> No worries! We've set a placeholder budget of{' '}
-                                <span className="font-bold">${(parseInt(form.watch('guestCountEstimate') || '0') * 200).toLocaleString()}</span>{' '}
-                                based on your {form.watch('guestCountEstimate')}-guest count to get you started.
-                              </p>
-                            </div>
-                          )}
                           <p className="text-xs text-muted-foreground mt-1">
                             Don't worry if you're unsure—you can always adjust this later in the Budget section.
                           </p>
