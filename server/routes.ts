@@ -1902,6 +1902,71 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
         if (req.body.status === 'confirmed') {
           messageType = 'booking_confirmed';
           messageContent = `✅ **Booking Confirmed**\n\n${vendor?.name || 'The vendor'} has confirmed the booking request for **${event?.name || 'your event'}**.${req.body.vendorNotes ? `\n\n**Vendor notes:**\n${req.body.vendorNotes}` : ''}`;
+          
+          // Auto-complete related tasks when vendor is booked
+          if (vendor && vendor.categories) {
+            try {
+              const tasks = await storage.getTasksByWedding(booking.weddingId);
+              const vendorCategories = vendor.categories.map((c: string) => c.toLowerCase());
+              
+              // Find incomplete tasks that match vendor categories
+              for (const task of tasks) {
+                if (task.completed) continue;
+                
+                const taskTitle = task.title.toLowerCase();
+                const taskCategory = (task.category || '').toLowerCase();
+                
+                // Check if task relates to this vendor's category
+                const matchesCategory = vendorCategories.some((vc: string) => {
+                  // Direct category match
+                  if (taskCategory.includes(vc) || vc.includes(taskCategory)) return true;
+                  
+                  // Title contains "book" and vendor category
+                  if (taskTitle.includes('book') && (taskTitle.includes(vc) || vc.includes(taskTitle.split(' ').pop() || ''))) return true;
+                  
+                  // Common mappings
+                  const categoryMappings: Record<string, string[]> = {
+                    'photography': ['photographer', 'photo', 'photography'],
+                    'videography': ['videographer', 'video', 'videography'],
+                    'catering': ['caterer', 'catering', 'food'],
+                    'florist': ['florist', 'flowers', 'floral', 'decor'],
+                    'decorator': ['decorator', 'decor', 'decoration', 'mandap'],
+                    'dj': ['dj', 'music', 'entertainment', 'dhol'],
+                    'venue': ['venue', 'hall', 'banquet', 'temple', 'gurdwara', 'church'],
+                    'makeup': ['makeup', 'hair', 'mehndi', 'henna', 'beauty'],
+                    'officiant': ['priest', 'pandit', 'officiant', 'granthi', 'ragi'],
+                    'attire': ['attire', 'lehenga', 'sherwani', 'dress', 'clothing'],
+                    'jewelry': ['jewelry', 'jewellery'],
+                    'invitation': ['invitation', 'stationery', 'cards'],
+                    'transportation': ['transport', 'baraat', 'car', 'limo'],
+                    'cake': ['cake', 'bakery', 'dessert'],
+                    'band': ['band', 'orchestra', 'kirtan', 'sangeet'],
+                  };
+                  
+                  for (const [key, aliases] of Object.entries(categoryMappings)) {
+                    if (aliases.some(a => vc.includes(a) || a.includes(vc))) {
+                      if (aliases.some(a => taskTitle.includes(a) || taskCategory.includes(a))) {
+                        return true;
+                      }
+                    }
+                  }
+                  
+                  return false;
+                });
+                
+                if (matchesCategory) {
+                  await storage.updateTask(task.id, { 
+                    completed: true, 
+                    completedAt: new Date() 
+                  });
+                  console.log(`Auto-completed task "${task.title}" after booking vendor ${vendor.name}`);
+                }
+              }
+            } catch (taskError) {
+              console.error("Error auto-completing tasks:", taskError);
+              // Don't fail the booking if task completion fails
+            }
+          }
         } else if (req.body.status === 'declined') {
           messageType = 'booking_declined';
           messageContent = `❌ **Booking Declined**\n\n${vendor?.name || 'The vendor'} has declined the booking request for **${event?.name || 'your event'}**.${req.body.vendorNotes ? `\n\n**Vendor notes:**\n${req.body.vendorNotes}` : ''}`;

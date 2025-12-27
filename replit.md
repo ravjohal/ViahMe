@@ -56,6 +56,8 @@ Key architectural decisions and features include:
   - **Task Assignment**: Assign tasks to team members/collaborators from the wedding planning team
   - **On-Demand Reminders**: Couples can send immediate reminders to assigned team members
   - **Filtered Views**: Filter tasks by priority, status, event, and assignee
+  - **Phase-Based Organization**: Tasks organized into 4 planning phases (Vision 12+ months, Curation 6-12 months, Logistics 1-6 months, Home Stretch <1 month)
+  - **Auto-Complete on Vendor Booking**: When a vendor booking is confirmed, related tasks are automatically marked as completed based on vendor category matching
 - **Expense Splitting**: Shared cost management for couples with:
   - **Expense Tracking**: Track all wedding-related expenses with description, amount, and date
   - **Split Types**: Equal split, custom amounts, or single-payer options
