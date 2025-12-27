@@ -8773,7 +8773,15 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
     }
     
     try {
-      const stats = await storage.getSideStatistics(req.params.weddingId);
+      const { weddingId } = req.params;
+      
+      // Verify wedding ownership
+      const wedding = await storage.getWedding(weddingId);
+      if (!wedding || wedding.userId !== userId) {
+        return res.status(403).json({ error: "Not authorized to view this wedding's statistics" });
+      }
+      
+      const stats = await storage.getSideStatistics(weddingId);
       res.json(stats);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -8787,8 +8795,16 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
     }
     
     try {
+      const { weddingId } = req.params;
+      
+      // Verify wedding ownership
+      const wedding = await storage.getWedding(weddingId);
+      if (!wedding || wedding.userId !== userId) {
+        return res.status(403).json({ error: "Not authorized to view this wedding's guests" });
+      }
+      
       const side = req.params.side as 'bride' | 'groom' | 'mutual';
-      const guests = await storage.getGuestsBySide(req.params.weddingId, side);
+      const guests = await storage.getGuestsBySide(weddingId, side);
       res.json(guests);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -8802,12 +8818,20 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
     }
     
     try {
+      const { weddingId } = req.params;
+      
+      // Verify wedding ownership
+      const wedding = await storage.getWedding(weddingId);
+      if (!wedding || wedding.userId !== userId) {
+        return res.status(403).json({ error: "Not authorized to modify this wedding" });
+      }
+      
       const { guestIds } = req.body;
       if (!Array.isArray(guestIds) || guestIds.length === 0) {
         return res.status(400).json({ error: "guestIds array is required" });
       }
       
-      const guests = await storage.shareGuestsWithPartner(req.params.weddingId, guestIds);
+      const guests = await storage.shareGuestsWithPartner(weddingId, guestIds);
       
       // Log activity
       await storage.logCollaboratorActivity({
@@ -8833,12 +8857,20 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
     }
     
     try {
-      const { guestIds, status } = req.body;
+      const { guestIds, status, weddingId } = req.body;
       if (!Array.isArray(guestIds) || guestIds.length === 0) {
         return res.status(400).json({ error: "guestIds array is required" });
       }
       if (!['pending', 'under_discussion', 'approved', 'declined', 'frozen'].includes(status)) {
         return res.status(400).json({ error: "Invalid status" });
+      }
+      
+      // Verify wedding ownership if weddingId is provided
+      if (weddingId) {
+        const wedding = await storage.getWedding(weddingId);
+        if (!wedding || wedding.userId !== userId) {
+          return res.status(403).json({ error: "Not authorized to modify these guests" });
+        }
       }
       
       const guests = await storage.updateGuestConsensusStatus(guestIds, status);
