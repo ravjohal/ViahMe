@@ -213,8 +213,55 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
       const validatedData = insertWeddingSchema.parse(req.body);
       const wedding = await storage.createWedding(validatedData);
 
-      // Auto-create events based on tradition
-      if (wedding.tradition === "sikh") {
+      // Import ceremony catalog for lookups
+      const { CEREMONY_CATALOG } = await import("../shared/ceremonies");
+
+      // Check if customEvents were provided from onboarding
+      const customEvents = req.body.customEvents as Array<{
+        ceremonyId: string;
+        customName?: string;
+        guestCount?: string;
+      }> | undefined;
+
+      if (customEvents && customEvents.length > 0) {
+        // Create events from customEvents with guest counts
+        for (let i = 0; i < customEvents.length; i++) {
+          const customEvent = customEvents[i];
+          const ceremony = CEREMONY_CATALOG.find(c => c.id === customEvent.ceremonyId);
+          
+          // Determine event name and description
+          let eventName: string;
+          let eventDescription: string;
+          let eventType: string;
+          
+          if (customEvent.ceremonyId === "custom" && customEvent.customName) {
+            eventName = customEvent.customName;
+            eventDescription = "Custom event";
+            eventType = "other";
+          } else if (ceremony) {
+            eventName = ceremony.name;
+            eventDescription = ceremony.description;
+            eventType = customEvent.ceremonyId.replace(/^(hindu_|sikh_|muslim_|gujarati_|south_indian_)/, "");
+          } else {
+            continue; // Skip invalid ceremony IDs
+          }
+          
+          // Parse guest count
+          const guestCount = customEvent.guestCount && customEvent.guestCount !== "" 
+            ? parseInt(customEvent.guestCount) 
+            : (ceremony?.defaultGuests || undefined);
+          
+          await storage.createEvent({
+            weddingId: wedding.id,
+            name: eventName,
+            type: eventType as any,
+            description: eventDescription,
+            order: i + 1,
+            guestCount: guestCount,
+          });
+        }
+      } else if (wedding.tradition === "sikh") {
+        // Fallback to hardcoded events if no customEvents provided
         const sikhEvents = [
           {
             weddingId: wedding.id,
