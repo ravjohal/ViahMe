@@ -60,9 +60,11 @@ Key architectural decisions and features include:
   - **Auto-Complete on Vendor Booking**: When a vendor booking is confirmed, related tasks are automatically marked as completed based on vendor category matching
 - **Expense Splitting**: Shared cost management for couples with:
   - **Expense Tracking**: Track all wedding-related expenses with description, amount, and date
+  - **Who Paid Selection**: Dropdown to assign which team member paid for each expense
   - **Split Types**: Equal split, custom amounts, or single-payer options
   - **Event Association**: Link expenses to specific wedding events
   - **Settlement Summary**: Real-time calculation of who owes whom based on payments and shares
+  - **Share Settlement Summary**: Copy-to-clipboard feature for easy sharing of expense breakdown
   - **Payment Tracking**: Mark individual splits as paid/unpaid for settlement tracking
 - **Vendor Lead Management System**: Automated lead qualification and nurturing for vendors:
   - **Lead Scoring Algorithm**: Multi-factor scoring based on urgency (wedding date proximity), budget fit, and engagement level
