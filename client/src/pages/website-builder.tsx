@@ -428,15 +428,16 @@ export default function WebsiteBuilder() {
                         maxNumberOfFiles={1}
                         onGetUploadParameters={async () => {
                           const response = await fetch('/api/objects/upload', { method: 'POST' });
-                          const { uploadURL } = await response.json();
-                          return { method: 'PUT' as const, url: uploadURL };
+                          const data = await response.json();
+                          // Store the objectPath for later use
+                          (window as any).__lastObjectPath = data.objectPath;
+                          return { method: 'PUT' as const, url: data.uploadURL };
                         }}
-                        onComplete={(result) => {
-                          const urls = (result.successful || []).map((file: any) => {
-                            const url = new URL(file.uploadURL);
-                            return `${url.origin}${url.pathname}`;
-                          });
-                          handleCouplePhotoUpload(urls);
+                        onComplete={() => {
+                          const objectPath = (window as any).__lastObjectPath;
+                          if (objectPath) {
+                            handleCouplePhotoUpload([objectPath]);
+                          }
                         }}
                         buttonClassName="w-full"
                       >
@@ -466,15 +467,20 @@ export default function WebsiteBuilder() {
                       maxNumberOfFiles={10}
                       onGetUploadParameters={async () => {
                         const response = await fetch('/api/objects/upload', { method: 'POST' });
-                        const { uploadURL } = await response.json();
-                        return { method: 'PUT' as const, url: uploadURL };
+                        const data = await response.json();
+                        // Store the objectPath for later use
+                        if (!(window as any).__galleryPaths) {
+                          (window as any).__galleryPaths = [];
+                        }
+                        (window as any).__galleryPaths.push(data.objectPath);
+                        return { method: 'PUT' as const, url: data.uploadURL };
                       }}
-                      onComplete={(result) => {
-                        const urls = (result.successful || []).map((file: any) => {
-                          const url = new URL(file.uploadURL);
-                          return `${url.origin}${url.pathname}`;
-                        });
-                        handleGalleryPhotoUpload(urls);
+                      onComplete={() => {
+                        const paths = (window as any).__galleryPaths || [];
+                        if (paths.length > 0) {
+                          handleGalleryPhotoUpload([...paths]);
+                          (window as any).__galleryPaths = [];
+                        }
                       }}
                       buttonClassName="w-full"
                     >
