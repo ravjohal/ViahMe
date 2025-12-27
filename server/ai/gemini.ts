@@ -810,3 +810,136 @@ Write in plain conversational English without any markdown formatting.`;
     throw new Error(`Failed to generate ${section} content. Please try again.`);
   }
 }
+
+// ============================================================================
+// GUEST FAQ CHATBOT - AI assistant for wedding website guests
+// ============================================================================
+
+const GUEST_FAQ_PROMPT = `You are a friendly and helpful wedding concierge assistant for a wedding website. You help guests with questions about the wedding, providing warm and informative responses based on the wedding details shared by the couple.
+
+Your role is to:
+1. Answer guest questions using ONLY the information provided about the wedding
+2. Be warm, welcoming, and enthusiastic about the celebration
+3. If you don't have specific information about something, politely acknowledge that and suggest guests contact the couple directly
+4. Keep responses concise but helpful (2-4 sentences typically)
+5. Be culturally aware of South Asian wedding traditions when relevant
+
+Guidelines:
+- Only use facts from the provided wedding context - never make up details
+- For questions about invitation status, RSVPs, or plus-ones, direct guests to check their invitation or contact the couple
+- Be friendly and conversational, not robotic
+- If asked about something not covered in the provided info, say you don't have that information and suggest reaching out to the couple
+- Never share private couple information beyond what's already on the public website`;
+
+export interface GuestChatContext {
+  coupleName?: string;
+  partner1Name?: string;
+  partner2Name?: string;
+  weddingDate?: string;
+  tradition?: string;
+  welcomeMessage?: string;
+  coupleStory?: string;
+  travelInfo?: string;
+  accommodationInfo?: string;
+  thingsToDoInfo?: string;
+  faqInfo?: string;
+  events?: Array<{
+    name: string;
+    date?: string;
+    time?: string;
+    location?: string;
+    dressCode?: string;
+    locationDetails?: string;
+  }>;
+}
+
+export interface GuestChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export async function chatWithGuestConcierge(
+  message: string,
+  conversationHistory: GuestChatMessage[],
+  weddingContext: GuestChatContext
+): Promise<string> {
+  // Build wedding context information
+  const contextParts: string[] = [];
+  
+  if (weddingContext.coupleName || (weddingContext.partner1Name && weddingContext.partner2Name)) {
+    contextParts.push(`Couple: ${weddingContext.coupleName || `${weddingContext.partner1Name} & ${weddingContext.partner2Name}`}`);
+  }
+  if (weddingContext.weddingDate) {
+    contextParts.push(`Wedding Date: ${new Date(weddingContext.weddingDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`);
+  }
+  if (weddingContext.tradition) {
+    contextParts.push(`Wedding Tradition: ${weddingContext.tradition}`);
+  }
+  if (weddingContext.welcomeMessage) {
+    contextParts.push(`Welcome Message from Couple: ${weddingContext.welcomeMessage}`);
+  }
+  if (weddingContext.coupleStory) {
+    contextParts.push(`Couple's Story: ${weddingContext.coupleStory}`);
+  }
+  if (weddingContext.travelInfo) {
+    contextParts.push(`Travel Information: ${weddingContext.travelInfo}`);
+  }
+  if (weddingContext.accommodationInfo) {
+    contextParts.push(`Accommodation Information: ${weddingContext.accommodationInfo}`);
+  }
+  if (weddingContext.thingsToDoInfo) {
+    contextParts.push(`Things to Do in Area: ${weddingContext.thingsToDoInfo}`);
+  }
+  if (weddingContext.faqInfo) {
+    contextParts.push(`FAQ Information: ${weddingContext.faqInfo}`);
+  }
+  if (weddingContext.events && weddingContext.events.length > 0) {
+    const eventsList = weddingContext.events.map(e => {
+      const parts = [`- ${e.name}`];
+      if (e.date) parts.push(`Date: ${new Date(e.date).toLocaleDateString()}`);
+      if (e.time) parts.push(`Time: ${e.time}`);
+      if (e.location) parts.push(`Location: ${e.location}`);
+      if (e.locationDetails) parts.push(`Venue Details: ${e.locationDetails}`);
+      if (e.dressCode) parts.push(`Dress Code: ${e.dressCode}`);
+      return parts.join(' | ');
+    }).join('\n');
+    contextParts.push(`Wedding Events:\n${eventsList}`);
+  }
+
+  const systemPrompt = `${GUEST_FAQ_PROMPT}
+
+WEDDING INFORMATION (use this to answer questions):
+${contextParts.join('\n\n')}`;
+
+  // Build conversation for the model
+  const contents: Array<{ role: string; parts: Array<{ text: string }> }> = [];
+  
+  // Add conversation history
+  for (const msg of conversationHistory) {
+    contents.push({
+      role: msg.role === "user" ? "user" : "model",
+      parts: [{ text: msg.content }],
+    });
+  }
+  
+  // Add current message
+  contents.push({
+    role: "user",
+    parts: [{ text: message }],
+  });
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      config: {
+        systemInstruction: systemPrompt,
+      },
+      contents: contents,
+    });
+
+    return response.text || "I'm sorry, I couldn't process your question. Please try again or contact the couple directly.";
+  } catch (error) {
+    console.error("Error in guest FAQ chat:", error);
+    throw new Error("Failed to get a response. Please try again.");
+  }
+}

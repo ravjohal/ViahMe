@@ -8,6 +8,7 @@ import { format } from "date-fns";
 import type { WeddingWebsite, Wedding, Event } from "@shared/schema";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ReactMarkdown from "react-markdown";
+import { GuestChatbot } from "@/components/GuestChatbot";
 
 interface PublicWeddingData {
   website: WeddingWebsite;
@@ -327,6 +328,11 @@ export default function GuestWebsite() {
           </div>
         </div>
       </div>
+
+      {/* AI Chatbot - only show on published websites */}
+      {website.isPublished && slug && (
+        <GuestChatbot slug={slug} coupleName={website.welcomeTitle || undefined} />
+      )}
     </div>
   );
 }

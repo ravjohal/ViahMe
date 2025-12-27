@@ -5584,6 +5584,80 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
     }
   });
 
+  // Guest FAQ chatbot (public endpoint for wedding websites)
+  app.post("/api/public/wedding/:slug/chat", async (req, res) => {
+    try {
+      const { message, conversationHistory = [] } = req.body;
+      
+      if (!message || typeof message !== 'string' || message.length > 1000) {
+        return res.status(400).json({ error: "Invalid message" });
+      }
+
+      // Validate conversation history format
+      if (!Array.isArray(conversationHistory) || 
+          !conversationHistory.every((m: any) => 
+            m && typeof m.role === 'string' && 
+            ['user', 'assistant'].includes(m.role) && 
+            typeof m.content === 'string' && 
+            m.content.length <= 2000
+          )) {
+        return res.status(400).json({ error: "Invalid conversation history" });
+      }
+
+      // Get wedding website and related data
+      const website = await storage.getWeddingWebsiteBySlug(req.params.slug);
+      if (!website) {
+        return res.status(404).json({ error: "Wedding website not found" });
+      }
+
+      // Only allow chat on published websites
+      if (!website.isPublished) {
+        return res.status(404).json({ error: "This wedding website hasn't been published yet" });
+      }
+
+      const wedding = await storage.getWedding(website.weddingId);
+      if (!wedding) {
+        return res.status(404).json({ error: "Wedding not found" });
+      }
+
+      const events = await storage.getEventsByWedding(website.weddingId);
+
+      // Build context for AI
+      const { chatWithGuestConcierge } = await import('./ai/gemini');
+      
+      const response = await chatWithGuestConcierge(
+        message.slice(0, 1000),
+        conversationHistory.slice(-10), // Keep last 10 messages for context
+        {
+          coupleName: website.welcomeTitle || undefined,
+          partner1Name: wedding.partner1Name || undefined,
+          partner2Name: wedding.partner2Name || undefined,
+          weddingDate: wedding.weddingDate?.toISOString() || undefined,
+          tradition: wedding.tradition || undefined,
+          welcomeMessage: website.welcomeMessage || undefined,
+          coupleStory: website.coupleStory || undefined,
+          travelInfo: website.travelInfo || undefined,
+          accommodationInfo: website.accommodationInfo || undefined,
+          thingsToDoInfo: website.thingsToDoInfo || undefined,
+          faqInfo: website.faqInfo || undefined,
+          events: events.map(e => ({
+            name: e.name,
+            date: e.date?.toISOString() || undefined,
+            time: e.time || undefined,
+            location: e.location || undefined,
+            dressCode: e.dressCode || undefined,
+            locationDetails: e.locationDetails || undefined,
+          })),
+        }
+      );
+
+      res.json({ response });
+    } catch (error) {
+      console.error("Error in guest chat:", error);
+      res.status(500).json({ error: "Failed to process chat message" });
+    }
+  });
+
   // ============================================================================
   // PHOTO GALLERIES
   // ============================================================================
