@@ -123,20 +123,6 @@ export function MultiCeremonySavingsCalculator({ events, className = "" }: Multi
     }
   }, [eventsWithCosts]);
 
-  if (eventsWithCosts.length === 0 || guestStates.length === 0) {
-    return null;
-  }
-
-  const updateGuestCount = (eventId: number, newCount: number) => {
-    setGuestStates(prev => prev.map(state => 
-      state.eventId === eventId ? { ...state, currentGuests: newCount } : state
-    ));
-  };
-
-  const resetAll = () => {
-    setGuestStates(eventsWithCosts);
-  };
-
   const originalTotal = useMemo(() => {
     return guestStates.reduce((sum, state) => {
       const range = calculateCeremonyTotalRange(state.ceremonyId, state.originalGuests);
@@ -150,6 +136,20 @@ export function MultiCeremonySavingsCalculator({ events, className = "" }: Multi
       return sum + (range.low + range.high) / 2;
     }, 0);
   }, [guestStates]);
+
+  if (eventsWithCosts.length === 0 || guestStates.length === 0) {
+    return null;
+  }
+
+  const updateGuestCount = (eventId: number, newCount: number) => {
+    setGuestStates(prev => prev.map(state => 
+      state.eventId === eventId ? { ...state, currentGuests: newCount } : state
+    ));
+  };
+
+  const resetAll = () => {
+    setGuestStates(eventsWithCosts);
+  };
 
   const totalSavings = originalTotal - currentTotal;
   const totalGuestsReduced = guestStates.reduce((sum, state) => 
