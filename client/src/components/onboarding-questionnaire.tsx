@@ -13,6 +13,11 @@ import { Calendar, MapPin, Users, DollarSign, Crown, Gift, Lightbulb, TrendingUp
 import { motion, AnimatePresence } from "framer-motion";
 import { TRADITION_HIERARCHY, getSubTraditionsForMain, getAllSubTraditions, getMainTraditionByValue } from "@/lib/tradition-hierarchy";
 
+const customEventSchema = z.object({
+  name: z.string().min(1),
+  guestCount: z.string().optional(),
+});
+
 const questionnaireSchema = z.object({
   tradition: z.enum(['sikh', 'hindu', 'muslim', 'gujarati', 'south_indian', 'christian', 'jain', 'parsi', 'mixed', 'other']),
   subTradition: z.string().nullable().optional(),
@@ -25,13 +30,15 @@ const questionnaireSchema = z.object({
   guestCountEstimate: z.string().optional(),
   ceremonyGuestCount: z.string().optional(),
   receptionGuestCount: z.string().optional(),
+  customEvents: z.array(customEventSchema).optional(),
+  autoCreateCeremonies: z.boolean().optional(),
   totalBudget: z.string().optional(),
   venuePreference: z.enum(['all_inclusive', 'diy_friendly', 'no_preference']).optional(),
   budgetContribution: z.enum(['couple_only', 'both_families', 'mix']).optional(),
   partnerNewToTraditions: z.boolean().optional(),
 });
 
-import { Flame, Moon, Sparkles, Flower2, Church, Leaf, Heart, Star, BookOpen, Palette } from "lucide-react";
+import { Flame, Moon, Sparkles, Flower2, Church, Leaf, Heart, Star, BookOpen, Palette, Plus, Trash2 } from "lucide-react";
 
 // Visual tradition cards with descriptions and vibes
 const TRADITION_CARDS = [
@@ -207,14 +214,17 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
       guestCountEstimate: "300",
       ceremonyGuestCount: "",
       receptionGuestCount: "",
+      customEvents: [
+        { name: "Wedding Ceremony", guestCount: "" },
+        { name: "Reception", guestCount: "" },
+      ],
+      autoCreateCeremonies: true,
       totalBudget: "50000",
       venuePreference: "no_preference",
       budgetContribution: "both_families",
       partnerNewToTraditions: false,
     },
   });
-
-  const [showEventGuestCounts, setShowEventGuestCounts] = useState(false);
 
   const selectedLocation = form.watch("location");
   const isFlexibleDate = form.watch("flexibleDate");
@@ -242,6 +252,30 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
     } else {
       form.setValue("subTraditions", current.filter((v) => v !== subValue));
     }
+  };
+
+  // Custom event management helpers
+  const customEvents = form.watch("customEvents") || [];
+  const autoCreateCeremonies = form.watch("autoCreateCeremonies") ?? true;
+
+  const handleAddEvent = () => {
+    const current = form.getValues("customEvents") || [];
+    form.setValue("customEvents", [...current, { name: "", guestCount: "" }]);
+  };
+
+  const handleRemoveEvent = (index: number) => {
+    const current = form.getValues("customEvents") || [];
+    if (current.length > 1) {
+      form.setValue("customEvents", current.filter((_, i) => i !== index));
+    }
+  };
+
+  const handleEventChange = (index: number, field: "name" | "guestCount", value: string) => {
+    const current = form.getValues("customEvents") || [];
+    const updated = current.map((event, i) => 
+      i === index ? { ...event, [field]: value } : event
+    );
+    form.setValue("customEvents", updated);
   };
 
   const onSubmit = (data: QuestionnaireData) => {
@@ -687,91 +721,87 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                         </FormItem>
                       )}
                     />
-                    <FormField
-                      control={form.control}
-                      name="guestCountEstimate"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-lg font-semibold tracking-wide" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-                            Estimated Guest Count (Optional)
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="e.g., 300"
-                              {...field}
-                              value={field.value || ""}
-                              data-testid="input-guest-count"
-                              className="h-12"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {/* Event-specific guest counts toggle */}
-                    <div className="p-4 rounded-lg border bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 border-amber-200 dark:border-amber-800">
-                      <div className="flex items-start gap-3">
-                        <Checkbox
-                          id="showEventGuests"
-                          checked={showEventGuestCounts}
-                          onCheckedChange={(checked) => setShowEventGuestCounts(!!checked)}
-                          className="mt-1"
-                          data-testid="checkbox-event-guest-counts"
-                        />
-                        <div className="space-y-1 flex-1">
-                          <label htmlFor="showEventGuests" className="font-semibold text-amber-900 dark:text-amber-100 cursor-pointer">
-                            Different guest counts for ceremony vs reception?
-                          </label>
-                          <p className="text-sm text-amber-700 dark:text-amber-300">
-                            Many South Asian weddings have a smaller ceremony and larger reception. This helps us calculate more accurate costs.
-                          </p>
-                        </div>
+                    {/* Dynamic Ceremony/Event Creation */}
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="text-lg font-semibold tracking-wide" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+                          Your Wedding Events
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          Add the ceremonies and events you're planning. You can specify guest counts for each.
+                        </p>
                       </div>
 
-                      {showEventGuestCounts && (
-                        <div className="mt-4 grid grid-cols-2 gap-4">
-                          <FormField
-                            control={form.control}
-                            name="ceremonyGuestCount"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="text-sm font-medium text-amber-800 dark:text-amber-200">Ceremony Guests</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    type="number"
-                                    placeholder="e.g., 150"
-                                    {...field}
-                                    value={field.value || ""}
-                                    data-testid="input-ceremony-guests"
-                                    className="h-10"
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
+                      <div className="space-y-3">
+                        {customEvents.map((event, index) => (
+                          <div 
+                            key={index} 
+                            className="flex items-center gap-3 p-3 rounded-lg border bg-card"
+                          >
+                            <div className="flex-1 grid grid-cols-2 gap-3">
+                              <Input
+                                type="text"
+                                placeholder="Event name (e.g., Sangeet)"
+                                value={event.name}
+                                onChange={(e) => handleEventChange(index, "name", e.target.value)}
+                                data-testid={`input-event-name-${index}`}
+                                className="h-10"
+                              />
+                              <Input
+                                type="number"
+                                placeholder="Guest count"
+                                value={event.guestCount || ""}
+                                onChange={(e) => handleEventChange(index, "guestCount", e.target.value)}
+                                data-testid={`input-event-guests-${index}`}
+                                className="h-10"
+                              />
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleRemoveEvent(index)}
+                              disabled={customEvents.length <= 1}
+                              className="text-muted-foreground hover:text-destructive"
+                              data-testid={`button-remove-event-${index}`}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleAddEvent}
+                        className="w-full"
+                        data-testid="button-add-event"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Another Event
+                      </Button>
+
+                      {/* Auto-create ceremonies checkbox */}
+                      <div className="p-4 rounded-lg border bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 border-purple-200 dark:border-purple-800">
+                        <div className="flex items-start gap-3">
+                          <Checkbox
+                            id="autoCreateCeremonies"
+                            checked={autoCreateCeremonies}
+                            onCheckedChange={(checked) => form.setValue("autoCreateCeremonies", !!checked)}
+                            className="mt-1"
+                            data-testid="checkbox-auto-create-ceremonies"
                           />
-                          <FormField
-                            control={form.control}
-                            name="receptionGuestCount"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="text-sm font-medium text-amber-800 dark:text-amber-200">Reception Guests</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    type="number"
-                                    placeholder="e.g., 400"
-                                    {...field}
-                                    value={field.value || ""}
-                                    data-testid="input-reception-guests"
-                                    className="h-10"
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
+                          <div className="space-y-1 flex-1">
+                            <label htmlFor="autoCreateCeremonies" className="font-semibold text-purple-900 dark:text-purple-100 cursor-pointer">
+                              Auto-create traditional ceremonies
+                            </label>
+                            <p className="text-sm text-purple-700 dark:text-purple-300">
+                              We'll automatically add typical ceremonies for your tradition (like Sangeet, Mehndi, etc.) while skipping any you've already added above.
+                            </p>
+                          </div>
                         </div>
-                      )}
+                      </div>
                     </div>
 
                     {selectedLocation === "Other" && (
