@@ -947,11 +947,13 @@ export default function TasksPage() {
                                 <div className="p-3 border-b">
                                   <h4 className="font-medium text-sm">Set Reminder Date</h4>
                                   <p className="text-xs text-muted-foreground mt-1">
-                                    {relatedEvent?.date 
-                                      ? `Event: ${format(new Date(relatedEvent.date), "MMM d, yyyy")}`
-                                      : wedding?.weddingDate
-                                        ? `Wedding: ${format(new Date(wedding.weddingDate), "MMM d, yyyy")}`
-                                        : "No date set"
+                                    {task.dueDate
+                                      ? `Due: ${format(new Date(task.dueDate), "MMM d, yyyy")}`
+                                      : relatedEvent?.date 
+                                        ? `Event: ${format(new Date(relatedEvent.date), "MMM d, yyyy")}`
+                                        : wedding?.weddingDate
+                                          ? `Wedding: ${format(new Date(wedding.weddingDate), "MMM d, yyyy")}`
+                                          : "No date set"
                                     }
                                   </p>
                                 </div>
@@ -972,11 +974,13 @@ export default function TasksPage() {
                                   defaultMonth={
                                     task.reminderDate 
                                       ? new Date(task.reminderDate)
-                                      : relatedEvent?.date 
-                                        ? new Date(new Date(relatedEvent.date).getTime() - 86400000)
-                                        : wedding?.weddingDate
-                                          ? new Date(new Date(wedding.weddingDate).getTime() - 86400000)
-                                          : new Date()
+                                      : task.dueDate
+                                        ? new Date(new Date(task.dueDate).getTime() - 86400000)
+                                        : relatedEvent?.date 
+                                          ? new Date(new Date(relatedEvent.date).getTime() - 86400000)
+                                          : wedding?.weddingDate
+                                            ? new Date(new Date(wedding.weddingDate).getTime() - 86400000)
+                                            : new Date()
                                   }
                                   initialFocus
                                 />
