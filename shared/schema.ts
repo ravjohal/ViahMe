@@ -556,21 +556,93 @@ export const guests = pgTable("guests", {
   dietaryRestrictions: text("dietary_restrictions"), // (deprecated - use invitations table)
   magicLinkTokenHash: varchar("magic_link_token_hash").unique(), // HASHED secure token (deprecated - use household token)
   magicLinkExpires: timestamp("magic_link_expires"), // Token expiration (deprecated - use household token)
+  // Privacy & Consensus fields for South Asian wedding side-based management
+  visibility: text("visibility").notNull().default('shared'), // 'private' | 'shared' - private guests hidden from partner until shared
+  addedBySide: text("added_by_side"), // 'bride' | 'groom' - which partner added this guest
+  consensusStatus: text("consensus_status").notNull().default('approved'), // 'pending' | 'under_discussion' | 'approved' | 'declined' | 'frozen'
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 export const insertGuestSchema = createInsertSchema(guests).omit({
   id: true,
   magicLinkTokenHash: true,
   magicLinkExpires: true,
+  createdAt: true,
 }).extend({
   name: z.string().min(1, { message: "Guest name is required" }),
   side: z.enum(['bride', 'groom', 'mutual']).optional(),
   relationshipTier: z.enum(['immediate_family', 'extended_family', 'friend', 'parents_friend']).optional(),
   rsvpStatus: z.enum(['pending', 'confirmed', 'declined']).optional(),
+  visibility: z.enum(['private', 'shared']).optional(),
+  addedBySide: z.enum(['bride', 'groom']).optional(),
+  consensusStatus: z.enum(['pending', 'under_discussion', 'approved', 'declined', 'frozen']).optional(),
 });
 
 export type InsertGuest = z.infer<typeof insertGuestSchema>;
 export type Guest = typeof guests.$inferSelect;
+
+// ============================================================================
+// GUEST COLLECTOR LINKS - Shareable links for family to submit guest suggestions
+// ============================================================================
+
+export const guestCollectorLinks = pgTable("guest_collector_links", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  token: varchar("token").notNull().unique(), // Unique shareable token
+  name: text("name").notNull(), // e.g., "Mom's Guest List", "Uncle Raj's Contacts"
+  side: text("side").notNull(), // 'bride' | 'groom' - which side this collector belongs to
+  createdById: varchar("created_by_id").notNull(), // User who created this link
+  createdByName: text("created_by_name"), // Cached name of creator
+  maxSubmissions: integer("max_submissions"), // Optional limit on number of submissions
+  submissionCount: integer("submission_count").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  expiresAt: timestamp("expires_at"), // Optional expiration date
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertGuestCollectorLinkSchema = createInsertSchema(guestCollectorLinks).omit({
+  id: true,
+  token: true,
+  submissionCount: true,
+  createdAt: true,
+}).extend({
+  side: z.enum(['bride', 'groom']),
+  expiresAt: z.string().optional().transform(val => val ? new Date(val) : undefined),
+});
+
+export type InsertGuestCollectorLink = z.infer<typeof insertGuestCollectorLinkSchema>;
+export type GuestCollectorLink = typeof guestCollectorLinks.$inferSelect;
+
+// Guest submissions through collector links
+export const guestCollectorSubmissions = pgTable("guest_collector_submissions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  collectorLinkId: varchar("collector_link_id").notNull().references(() => guestCollectorLinks.id, { onDelete: 'cascade' }),
+  weddingId: varchar("wedding_id").notNull(),
+  submitterName: text("submitter_name"), // Name of person submitting (optional)
+  submitterRelation: text("submitter_relation"), // e.g., "Mother of Bride"
+  guestName: text("guest_name").notNull(),
+  guestEmail: text("guest_email"),
+  guestPhone: text("guest_phone"),
+  relationshipTier: text("relationship_tier"), // 'immediate_family' | 'extended_family' | 'friend' | 'parents_friend'
+  notes: text("notes"), // Any notes about the guest
+  status: text("status").notNull().default('pending'), // 'pending' | 'approved' | 'declined'
+  reviewedById: varchar("reviewed_by_id"),
+  reviewedAt: timestamp("reviewed_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertGuestCollectorSubmissionSchema = createInsertSchema(guestCollectorSubmissions).omit({
+  id: true,
+  status: true,
+  reviewedById: true,
+  reviewedAt: true,
+  createdAt: true,
+}).extend({
+  relationshipTier: z.enum(['immediate_family', 'extended_family', 'friend', 'parents_friend']).optional(),
+});
+
+export type InsertGuestCollectorSubmission = z.infer<typeof insertGuestCollectorSubmissionSchema>;
+export type GuestCollectorSubmission = typeof guestCollectorSubmissions.$inferSelect;
 
 // ============================================================================
 // INVITATIONS - Junction table linking guests to specific events
