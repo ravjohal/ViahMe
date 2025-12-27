@@ -259,6 +259,35 @@ export default function WebsiteBuilder() {
               <CardDescription>Configure your wedding website URL and appearance</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {website && (
+                <div className="flex items-center justify-between p-3 bg-muted rounded-lg mb-4">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <Globe className="w-4 h-4 text-muted-foreground shrink-0" />
+                    <a 
+                      href={`/wedding/${website.slug}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-sm font-medium text-primary hover:underline truncate"
+                      data-testid="link-website-url"
+                    >
+                      {window.location.origin}/wedding/{website.slug}
+                    </a>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    asChild
+                    data-testid="button-open-website"
+                  >
+                    <a href={`/wedding/${website.slug}`} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      Open
+                    </a>
+                  </Button>
+                </div>
+              )}
+
               <FormField
                 control={form.control}
                 name="slug"
