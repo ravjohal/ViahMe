@@ -11,9 +11,12 @@ import {
   RotateCcw,
   DollarSign,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Utensils,
+  ExternalLink
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Link } from "wouter";
 import type { Event } from "@shared/schema";
 import { CEREMONY_COST_BREAKDOWNS, CEREMONY_CATALOG, calculateCeremonyTotalRange } from "@shared/ceremonies";
 
@@ -31,6 +34,22 @@ function formatCurrency(amount: number): string {
 
 function formatCurrencyFull(amount: number): string {
   return `$${amount.toLocaleString()}`;
+}
+
+function getTopCostDrivers(ceremonyId: string, guestCount: number): { category: string; savings: number }[] {
+  const breakdown = CEREMONY_COST_BREAKDOWNS[ceremonyId];
+  if (!breakdown) return [];
+  
+  const perPersonItems = breakdown
+    .filter(item => item.unit === "per_person")
+    .map(item => ({
+      category: item.category,
+      savings: ((item.lowCost + item.highCost) / 2) * guestCount
+    }))
+    .sort((a, b) => b.savings - a.savings)
+    .slice(0, 2);
+  
+  return perPersonItems;
 }
 
 function getCeremonyIdFromEvent(event: Event): string | null {
@@ -252,6 +271,8 @@ export function MultiCeremonySavingsCalculator({ events, className = "" }: Multi
               const avgOriginal = (originalRange.low + originalRange.high) / 2;
               const eventSavings = avgOriginal - avgCurrent;
               const guestsChanged = state.currentGuests !== state.originalGuests;
+              const guestsReduced = state.originalGuests - state.currentGuests;
+              const costDrivers = getTopCostDrivers(state.ceremonyId, guestsReduced > 0 ? guestsReduced : 10);
 
               return (
                 <div 
@@ -267,7 +288,7 @@ export function MultiCeremonySavingsCalculator({ events, className = "" }: Multi
                           variant="outline" 
                           className="text-xs bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800"
                         >
-                          -{state.originalGuests - state.currentGuests} guests
+                          -{guestsReduced} guests
                         </Badge>
                       )}
                     </div>
@@ -305,6 +326,26 @@ export function MultiCeremonySavingsCalculator({ events, className = "" }: Multi
                       <span>{state.maxGuests}</span>
                     </div>
                   </div>
+
+                  {costDrivers.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-border/50">
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1.5">
+                        <Utensils className="w-3 h-3" />
+                        <span>Top savings drivers (per-guest costs):</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {costDrivers.map((driver, idx) => (
+                          <Badge 
+                            key={idx} 
+                            variant="secondary" 
+                            className="text-xs font-normal"
+                          >
+                            {driver.category}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -331,6 +372,15 @@ export function MultiCeremonySavingsCalculator({ events, className = "" }: Multi
               Tip: Try reducing 25-50 guests per ceremony to see potential savings
             </p>
           )}
+        </div>
+        <div className="mt-3 pt-3 border-t border-border/50 flex items-center justify-between">
+          <p className="text-xs text-muted-foreground">
+            Savings come mainly from per-guest costs (catering, favors). Fixed costs stay the same.
+          </p>
+          <Link href="/dashboard" className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline" data-testid="link-full-breakdown">
+            See full cost breakdown
+            <ExternalLink className="w-3 h-3" />
+          </Link>
         </div>
       </div>
     </Card>
