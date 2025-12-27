@@ -370,6 +370,12 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
         guestCountEstimate: data.guestCountEstimate && data.guestCountEstimate !== "" 
           ? Number(data.guestCountEstimate) 
           : undefined,
+        ceremonyGuestCount: data.ceremonyGuestCount && data.ceremonyGuestCount !== "" 
+          ? Number(data.ceremonyGuestCount) 
+          : undefined,
+        receptionGuestCount: data.receptionGuestCount && data.receptionGuestCount !== "" 
+          ? Number(data.receptionGuestCount) 
+          : undefined,
         totalBudget: data.totalBudget && data.totalBudget !== "" 
           ? data.totalBudget 
           : null,
