@@ -217,7 +217,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
       receptionGuestCount: "",
       customEvents: [],
       autoCreateCeremonies: true,
-      totalBudget: "50000",
+      totalBudget: "",
       budgetContribution: "both_families",
       partnerNewToTraditions: false,
     },
