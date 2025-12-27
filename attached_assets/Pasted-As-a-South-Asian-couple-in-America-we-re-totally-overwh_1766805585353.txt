@@ -1,0 +1,52 @@
+As a South Asian couple in America, we’re totally overwhelmed. Our parents are talking about 500 guests and 5-day celebrations, but we just want something beautiful, culturally respectful, and—most importantly—within our budget.
+
+We looked through the Viah Me app (analyzing the onboarding flow and logic you’ve built). Here is our "honest" feedback from the perspective of a couple who has no idea where to start and is trying to save every dollar.
+
+1. The "First Impression" Feedback
+The Good:
+
+The Budget Guide: Honestly, this is the most helpful part. Seeing that $150–$300 per guest "Rule of Thumb" immediately gave us a reality check. Most apps just ask "What's your budget?" and we have no idea what a "normal" number even is.
+
+The Traditions: We love that it’s not just "Indian." Seeing "Sikh," "Muslim," and "South Indian" made us feel like the app actually gets us.
+
+The UI: It feels premium. Even though we’re DIY-ing to save money, we don't want the wedding to look cheap. The Playfair Display and Cormorant fonts make it feel like a luxury experience.
+
+The "Scary" Parts:
+
+The "Mixed" Button: One of us is Punjabi Sikh and the other is Hindu. When we clicked "Mixed," we were hoping for more guidance. Right now, it feels like we just get a "general" list, but we’re actually trying to figure out how to do two ceremonies in one day without spending double the money.
+
+2. How to Improve (The "DIY Couple" Wishlist)
+A. The "Auntie-Proof" Guest List Tool
+We are terrified of the guest list expanding.
+
+Improvement: In the guest count section, add a "Budget vs. Guest Count" toggle. Show us in real-time: "If you cut 50 guests, you save roughly $10,000." Seeing that trade-off visually would help us say "No" to our parents' long-lost friends.
+
+B. Explainer Tooltips (The "Wait, what's that?" factor)
+We grew up here. We know we need a "Mandap" or a "Grathni," but we don't know the specifics.
+
+Improvement: In the "Tradition" step, add a small info icon (ℹ️) that explains the cost of that tradition. For example: "Sikh weddings usually involve a Gurdwara, which can save you $5k–$10k compared to a hotel ballroom ceremony."
+
+C. The "Hidden Costs" Warning
+Since we are DIY, we’re going to miss things like service charges (22%!!), taxes, and tips.
+
+Improvement: On the Budget Planning screen, include a small disclaimer: "Don't forget to set aside 15% for 'hidden costs' like tips and service fees."
+
+D. Vendor "Vetting" for DIY-ers
+DIY couples usually look for "diamond in the rough" vendors—people who are great but don't charge "Wedding Industry" premiums.
+
+Improvement: In the Location step, ask: "Are you looking for All-Inclusive Venues or DIY-Friendly Venues (bring your own catering)?" Bringing our own catering is the #1 way we plan to save money.
+
+E. The "Sub-Tradition" Integration
+As we discussed earlier, "Hindu" is too broad.
+
+Improvement: Make sure that after we pick "Hindu," the app immediately asks for the region. If we're Bengali, we don't want to see tasks for a Punjabi Choora ceremony. It just adds clutter to our DIY brain.
+
+3. Technical "Small Wins" for the Onboarding
+Location: You only have 7 metro areas. We are in Houston (one of the biggest Desi hubs!). You need a "Can't find my city" or an "Other" option that allows us to type in a zip code.
+
+The Date: If we haven't picked a date because we're looking for the "cheapest" month (like a Friday in November), let us select "I’m flexible / looking for off-peak dates."
+
+The Verdict
+We would definitely use this over a generic app like The Knot because it feels like it was built for our culture. If you add more "Education" (explaining the rituals) and "Cost-Saving Tips" directly into the onboarding, you’ll have us hooked.
+
+"Can you help us figure out a 3-day timeline that doesn't cost $100k? That's what we really need the app to do next!"

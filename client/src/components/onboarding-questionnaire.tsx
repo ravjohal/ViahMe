@@ -19,9 +19,12 @@ const questionnaireSchema = z.object({
   subTraditions: z.array(z.string()).nullable().optional(),
   role: z.enum(['bride', 'groom', 'planner']),
   weddingDate: z.string().optional(),
+  flexibleDate: z.boolean().optional(),
   location: z.string().min(1, "Location is required"),
+  customZipCode: z.string().optional(),
   guestCountEstimate: z.string().optional(),
   totalBudget: z.string().optional(),
+  venuePreference: z.enum(['all_inclusive', 'diy_friendly', 'no_preference']).optional(),
 });
 
 type QuestionnaireData = z.infer<typeof questionnaireSchema>;
@@ -36,8 +39,13 @@ const METRO_AREAS = [
   { value: "Los Angeles", label: "Los Angeles Metro" },
   { value: "Chicago", label: "Chicago Metro" },
   { value: "Seattle", label: "Seattle Metro" },
+  { value: "Houston", label: "Houston Metro" },
+  { value: "Dallas-Fort Worth", label: "Dallas-Fort Worth Metro" },
+  { value: "Washington DC", label: "Washington DC Metro" },
+  { value: "Atlanta", label: "Atlanta Metro" },
   { value: "Fresno", label: "Fresno Metro" },
   { value: "Sacramento", label: "Sacramento Metro" },
+  { value: "Other", label: "Other (Enter ZIP Code)" },
 ];
 
 const STEPS = [
@@ -99,11 +107,17 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
       subTraditions: [],
       role: "bride",
       weddingDate: "2025-06-15",
+      flexibleDate: false,
       location: "San Francisco Bay Area",
+      customZipCode: "",
       guestCountEstimate: "300",
       totalBudget: "50000",
+      venuePreference: "no_preference",
     },
   });
+
+  const selectedLocation = form.watch("location");
+  const isFlexibleDate = form.watch("flexibleDate");
 
   const selectedMainTradition = form.watch("tradition");
   const selectedSubTraditions = form.watch("subTraditions") || [];
@@ -426,24 +440,51 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                 )}
 
                 {currentStep === 3 && (
-                  <FormField
-                    control={form.control}
-                    name="weddingDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-lg font-semibold tracking-wide" style={{ fontFamily: 'Cormorant Garamond, serif' }}>Wedding Date (Optional)</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="date"
-                            {...field}
-                            data-testid="input-wedding-date"
-                            className="h-12"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="space-y-6">
+                    <FormField
+                      control={form.control}
+                      name="weddingDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-lg font-semibold tracking-wide" style={{ fontFamily: 'Cormorant Garamond, serif' }}>Wedding Date (Optional)</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="date"
+                              {...field}
+                              disabled={isFlexibleDate}
+                              data-testid="input-wedding-date"
+                              className="h-12"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="flexibleDate"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 bg-gradient-to-r from-purple-50 to-indigo-50">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                              data-testid="checkbox-flexible-date"
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel className="font-medium">
+                              I'm flexible / looking for off-peak dates
+                            </FormLabel>
+                            <p className="text-sm text-muted-foreground">
+                              Looking for the best deal? Off-peak dates (weekdays, November-February) can save 20-40% on venue costs
+                            </p>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 )}
 
                 {currentStep === 4 && (
@@ -481,7 +522,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-lg font-semibold tracking-wide" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-                            Estimated Guest Count for  (Optional)
+                            Estimated Guest Count (Optional)
                           </FormLabel>
                           <FormControl>
                             <Input
@@ -493,6 +534,77 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                               className="h-12"
                             />
                           </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {selectedLocation === "Other" && (
+                      <FormField
+                        control={form.control}
+                        name="customZipCode"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-lg font-semibold tracking-wide" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+                              ZIP Code
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="text"
+                                placeholder="e.g., 77001"
+                                {...field}
+                                maxLength={5}
+                                data-testid="input-zip-code"
+                                className="h-12"
+                              />
+                            </FormControl>
+                            <p className="text-xs text-muted-foreground">
+                              Enter your ZIP code so we can show you nearby vendors
+                            </p>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
+                    <FormField
+                      control={form.control}
+                      name="venuePreference"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-lg font-semibold tracking-wide" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+                            Venue Style Preference
+                          </FormLabel>
+                          <p className="text-sm text-muted-foreground mb-2">
+                            DIY-friendly venues (bring your own catering) can save 30-50% on food costs
+                          </p>
+                          <Select onValueChange={field.onChange} value={field.value || "no_preference"}>
+                            <FormControl>
+                              <SelectTrigger className="h-12" data-testid="select-venue-preference">
+                                <SelectValue placeholder="Select venue preference" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="no_preference" data-testid="option-venue-no-preference">
+                                <div className="flex flex-col">
+                                  <span className="font-medium">No preference</span>
+                                  <span className="text-xs text-muted-foreground">Show me all venues</span>
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="all_inclusive" data-testid="option-venue-all-inclusive">
+                                <div className="flex flex-col">
+                                  <span className="font-medium">All-Inclusive Venues</span>
+                                  <span className="text-xs text-muted-foreground">Convenience with in-house catering & services</span>
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="diy_friendly" data-testid="option-venue-diy">
+                                <div className="flex flex-col">
+                                  <span className="font-medium">DIY-Friendly Venues</span>
+                                  <span className="text-xs text-muted-foreground">Bring your own catering - save 30-50%</span>
+                                </div>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -595,6 +707,24 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                         </FormItem>
                       )}
                     />
+
+                    {/* Hidden Costs Warning */}
+                    <div className="p-4 rounded-lg bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200">
+                      <div className="flex items-start gap-3">
+                        <div className="p-1.5 rounded-full bg-amber-100">
+                          <Info className="w-4 h-4 text-amber-600" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-amber-900 text-sm mb-1">Don't Forget Hidden Costs!</h4>
+                          <p className="text-sm text-amber-700">
+                            Set aside <span className="font-bold">15%</span> of your budget for hidden costs like service charges (often 22%), taxes, tips, and last-minute additions.
+                          </p>
+                          <p className="text-xs text-amber-600 mt-1 italic">
+                            A $50,000 wedding may actually cost ~$57,500 after these fees
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
               </form>
