@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, MapPin, Calendar, Clock, Navigation, Info, Hotel, HelpCircle, Camera, Gift, ExternalLink } from "lucide-react";
+import { Loader2, MapPin, Calendar, Clock, Navigation, Info, Hotel, HelpCircle, Camera, Gift, ExternalLink, Video } from "lucide-react";
 import { format } from "date-fns";
 import type { WeddingWebsite, Wedding, Event, WeddingRegistry, RegistryRetailer } from "@shared/schema";
 import { SiAmazon, SiTarget, SiWalmart, SiEtsy } from "react-icons/si";
@@ -27,6 +27,25 @@ const getRetailerIcon = (slug: string) => {
     case "etsy": return <SiEtsy className="w-5 h-5" />;
     default: return <Gift className="w-5 h-5" />;
   }
+};
+
+const getYouTubeEmbedUrl = (url: string): string | null => {
+  if (!url) return null;
+  
+  // Handle various YouTube URL formats
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/live\/)([a-zA-Z0-9_-]{11})/,
+    /youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/
+  ];
+  
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) {
+      return `https://www.youtube.com/embed/${match[1]}`;
+    }
+  }
+  
+  return null;
 };
 
 export default function GuestWebsite() {
@@ -211,6 +230,29 @@ export default function GuestWebsite() {
                           View on Map
                         </a>
                       </Button>
+                    )}
+                    
+                    {/* YouTube Livestream */}
+                    {event.livestreamUrl && getYouTubeEmbedUrl(event.livestreamUrl) && (
+                      <div className="mt-4 space-y-2">
+                        <div className="flex items-center gap-2 text-sm font-medium">
+                          <Video className="w-4 h-4 text-red-500" />
+                          <span>Watch Live</span>
+                        </div>
+                        <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-muted">
+                          <iframe
+                            src={getYouTubeEmbedUrl(event.livestreamUrl)!}
+                            title={`${event.name} Livestream`}
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            className="absolute inset-0 w-full h-full"
+                            data-testid={`video-livestream-${event.id}`}
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Can't join in person? Watch the ceremony live from anywhere.
+                        </p>
+                      </div>
                     )}
                   </div>
                 </div>
