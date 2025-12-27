@@ -269,6 +269,23 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
   // Custom event management helpers
   const customEvents = form.watch("customEvents") || [];
   const autoCreateCeremonies = form.watch("autoCreateCeremonies") ?? true;
+  
+  // Repopulate default ceremonies when autoCreateCeremonies is re-enabled
+  useEffect(() => {
+    if (autoCreateCeremonies) {
+      const currentEvents = form.getValues("customEvents") || [];
+      if (currentEvents.length === 0) {
+        const tradition = form.getValues("tradition") || "sikh";
+        const defaultCeremonyIds = getDefaultCeremoniesForTradition(tradition);
+        const defaultEvents = defaultCeremonyIds.map(id => ({
+          ceremonyId: id,
+          customName: "",
+          guestCount: "",
+        }));
+        form.setValue("customEvents", defaultEvents);
+      }
+    }
+  }, [autoCreateCeremonies]);
 
   // Get ceremonies available for the selected tradition
   const availableCeremonies = useMemo(() => {
@@ -294,7 +311,11 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
 
   const handleAddEvent = () => {
     const current = form.getValues("customEvents") || [];
-    form.setValue("customEvents", [...current, { ceremonyId: "", customName: "", guestCount: "" }]);
+    // Find an unselected ceremony from the catalog to suggest
+    const selectedIds = new Set(current.map(e => e.ceremonyId));
+    const unselected = traditionCeremonies.find(c => !selectedIds.has(c.id));
+    const defaultCeremonyId = unselected?.id || "";
+    form.setValue("customEvents", [...current, { ceremonyId: defaultCeremonyId, customName: "", guestCount: "" }]);
   };
 
   const handleRemoveEvent = (index: number) => {
