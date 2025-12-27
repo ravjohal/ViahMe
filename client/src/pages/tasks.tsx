@@ -22,6 +22,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar as CalendarPicker } from "@/components/ui/calendar";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -163,7 +169,7 @@ export default function TasksPage() {
   });
 
   const reminderMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: { reminderEnabled?: boolean; reminderDaysBefore?: number; reminderMethod?: string } }) => {
+    mutationFn: async ({ id, data }: { id: string; data: { reminderEnabled?: boolean; reminderDate?: string; reminderDaysBefore?: number; reminderMethod?: string } }) => {
       const response = await apiRequest("PATCH", `/api/tasks/${id}/reminder`, data);
       return response.json();
     },
@@ -914,62 +920,112 @@ export default function TasksPage() {
                           </Button>
                         )}
 
-                        {task.dueDate && !task.completed && (
+                        {!task.completed && (
                           <div className="flex items-center gap-2 ml-auto">
-                            <Button
-                              size="sm"
-                              variant={task.reminderEnabled ? "default" : "outline"}
-                              className="h-7 gap-1 text-xs"
-                              disabled={reminderMutation.isPending}
-                              onClick={() => reminderMutation.mutate({
-                                id: task.id,
-                                data: { reminderEnabled: !task.reminderEnabled }
-                              })}
-                              data-testid={`button-toggle-reminder-${task.id}`}
-                            >
-                              {reminderMutation.isPending ? (
-                                <span className="animate-pulse">...</span>
-                              ) : task.reminderEnabled ? (
-                                <>
-                                  <Bell className="w-3 h-3" />
-                                  {task.reminderDaysBefore || 1}d before
-                                </>
-                              ) : (
-                                <>
-                                  <BellOff className="w-3 h-3" />
-                                  No reminder
-                                </>
-                              )}
-                            </Button>
-                            {task.reminderEnabled && (
-                              <Select
-                                value={task.reminderMethod || "email"}
-                                disabled={reminderMutation.isPending}
-                                onValueChange={(value) => reminderMutation.mutate({
-                                  id: task.id,
-                                  data: { reminderMethod: value }
-                                })}
-                              >
-                                <SelectTrigger className="h-7 w-24 text-xs" data-testid={`select-reminder-method-${task.id}`}>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="email">
-                                    <div className="flex items-center gap-1">
-                                      <Mail className="w-3 h-3" />
-                                      Email
-                                    </div>
-                                  </SelectItem>
-                                  <SelectItem value="sms">
-                                    <div className="flex items-center gap-1">
-                                      <MessageSquare className="w-3 h-3" />
-                                      SMS
-                                    </div>
-                                  </SelectItem>
-                                  <SelectItem value="both">Both</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            )}
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant={task.reminderEnabled ? "default" : "outline"}
+                                  className="h-7 gap-1 text-xs"
+                                  data-testid={`button-set-reminder-${task.id}`}
+                                >
+                                  {task.reminderEnabled && task.reminderDate ? (
+                                    <>
+                                      <Bell className="w-3 h-3" />
+                                      {format(new Date(task.reminderDate), "MMM d")}
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Bell className="w-3 h-3" />
+                                      Set Reminder
+                                    </>
+                                  )}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="end">
+                                <div className="p-3 border-b">
+                                  <h4 className="font-medium text-sm">Set Reminder Date</h4>
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    {relatedEvent?.date 
+                                      ? `Event: ${format(new Date(relatedEvent.date), "MMM d, yyyy")}`
+                                      : wedding?.weddingDate
+                                        ? `Wedding: ${format(new Date(wedding.weddingDate), "MMM d, yyyy")}`
+                                        : "No date set"
+                                    }
+                                  </p>
+                                </div>
+                                <CalendarPicker
+                                  mode="single"
+                                  selected={task.reminderDate ? new Date(task.reminderDate) : undefined}
+                                  onSelect={(date) => {
+                                    if (date) {
+                                      reminderMutation.mutate({
+                                        id: task.id,
+                                        data: { 
+                                          reminderEnabled: true, 
+                                          reminderDate: date.toISOString() 
+                                        }
+                                      });
+                                    }
+                                  }}
+                                  defaultMonth={
+                                    task.reminderDate 
+                                      ? new Date(task.reminderDate)
+                                      : relatedEvent?.date 
+                                        ? new Date(new Date(relatedEvent.date).getTime() - 86400000)
+                                        : wedding?.weddingDate
+                                          ? new Date(new Date(wedding.weddingDate).getTime() - 86400000)
+                                          : new Date()
+                                  }
+                                  initialFocus
+                                />
+                                <div className="p-3 border-t space-y-2">
+                                  <Select
+                                    value={task.reminderMethod || "email"}
+                                    disabled={reminderMutation.isPending}
+                                    onValueChange={(value) => reminderMutation.mutate({
+                                      id: task.id,
+                                      data: { reminderMethod: value }
+                                    })}
+                                  >
+                                    <SelectTrigger className="h-8 text-xs" data-testid={`select-reminder-method-${task.id}`}>
+                                      <SelectValue placeholder="Notify via..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="email">
+                                        <div className="flex items-center gap-1">
+                                          <Mail className="w-3 h-3" />
+                                          Email
+                                        </div>
+                                      </SelectItem>
+                                      <SelectItem value="sms">
+                                        <div className="flex items-center gap-1">
+                                          <MessageSquare className="w-3 h-3" />
+                                          SMS
+                                        </div>
+                                      </SelectItem>
+                                      <SelectItem value="both">Both</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  {task.reminderEnabled && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="w-full text-xs text-muted-foreground"
+                                      onClick={() => reminderMutation.mutate({
+                                        id: task.id,
+                                        data: { reminderEnabled: false, reminderDate: undefined }
+                                      })}
+                                      data-testid={`button-clear-reminder-${task.id}`}
+                                    >
+                                      <BellOff className="w-3 h-3 mr-1" />
+                                      Clear Reminder
+                                    </Button>
+                                  )}
+                                </div>
+                              </PopoverContent>
+                            </Popover>
                           </div>
                         )}
                       </div>

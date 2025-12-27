@@ -2822,10 +2822,13 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
         return res.status(404).json({ error: "Task not found" });
       }
 
-      const { reminderEnabled, reminderDaysBefore, reminderMethod } = req.body;
+      const { reminderEnabled, reminderDate, reminderDaysBefore, reminderMethod } = req.body;
       
       const updates: any = {};
       if (reminderEnabled !== undefined) updates.reminderEnabled = Boolean(reminderEnabled);
+      if (reminderDate !== undefined) {
+        updates.reminderDate = reminderDate ? new Date(reminderDate) : null;
+      }
       if (reminderDaysBefore !== undefined) {
         const days = parseInt(reminderDaysBefore);
         if (!isNaN(days) && days >= 1 && days <= 30) {

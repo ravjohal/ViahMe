@@ -619,7 +619,8 @@ export const tasks = pgTable("tasks", {
   assignedToId: varchar("assigned_to_id"), // Team member user ID
   assignedToName: text("assigned_to_name"), // Cached name for display
   reminderEnabled: boolean("reminder_enabled").default(false),
-  reminderDaysBefore: integer("reminder_days_before").default(1), // Days before due date to send reminder
+  reminderDate: timestamp("reminder_date"), // Specific date to send reminder
+  reminderDaysBefore: integer("reminder_days_before").default(1), // Days before due date to send reminder (legacy)
   reminderMethod: text("reminder_method").default('email'), // 'email' | 'sms' | 'both'
   lastReminderSentAt: timestamp("last_reminder_sent_at"), // Track on-demand reminders
   completedAt: timestamp("completed_at"), // When task was completed
@@ -638,6 +639,7 @@ export const insertTaskSchema = createInsertSchema(tasks).omit({
 }).extend({
   priority: z.enum(['high', 'medium', 'low']).optional(),
   dueDate: z.string().optional().transform(val => val ? new Date(val) : undefined),
+  reminderDate: z.string().optional().transform(val => val ? new Date(val) : undefined),
   reminderMethod: z.enum(['email', 'sms', 'both']).optional(),
 });
 
