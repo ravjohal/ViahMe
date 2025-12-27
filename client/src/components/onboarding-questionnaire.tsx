@@ -33,7 +33,6 @@ const questionnaireSchema = z.object({
   customEvents: z.array(customEventSchema).optional(),
   autoCreateCeremonies: z.boolean().optional(),
   totalBudget: z.string().optional(),
-  venuePreference: z.enum(['all_inclusive', 'diy_friendly', 'no_preference']).optional(),
   budgetContribution: z.enum(['couple_only', 'both_families', 'mix']).optional(),
   partnerNewToTraditions: z.boolean().optional(),
 });
@@ -220,7 +219,6 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
       ],
       autoCreateCeremonies: true,
       totalBudget: "50000",
-      venuePreference: "no_preference",
       budgetContribution: "both_families",
       partnerNewToTraditions: false,
     },
@@ -832,48 +830,6 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                       />
                     )}
 
-                    <FormField
-                      control={form.control}
-                      name="venuePreference"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-lg font-semibold tracking-wide" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-                            Venue Style Preference
-                          </FormLabel>
-                          <p className="text-sm text-muted-foreground mb-2">
-                            DIY-friendly venues (bring your own catering) can save 30-50% on food costs
-                          </p>
-                          <Select onValueChange={field.onChange} value={field.value || "no_preference"}>
-                            <FormControl>
-                              <SelectTrigger className="h-12" data-testid="select-venue-preference">
-                                <SelectValue placeholder="Select venue preference" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="no_preference" data-testid="option-venue-no-preference">
-                                <div className="flex flex-col">
-                                  <span className="font-medium">No preference</span>
-                                  <span className="text-xs text-muted-foreground">Show me all venues</span>
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="all_inclusive" data-testid="option-venue-all-inclusive">
-                                <div className="flex flex-col">
-                                  <span className="font-medium">All-Inclusive Venues</span>
-                                  <span className="text-xs text-muted-foreground">Convenience with in-house catering & services</span>
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="diy_friendly" data-testid="option-venue-diy">
-                                <div className="flex flex-col">
-                                  <span className="font-medium">DIY-Friendly Venues</span>
-                                  <span className="text-xs text-muted-foreground">Bring your own catering - save 30-50%</span>
-                                </div>
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
                   </>
                 )}
 
