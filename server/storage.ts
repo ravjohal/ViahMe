@@ -155,6 +155,10 @@ import {
   type InsertLeadActivityLog,
   type VendorClaimStaging,
   type InsertVendorClaimStaging,
+  type GuestCollectorLink,
+  type InsertGuestCollectorLink,
+  type GuestCollectorSubmission,
+  type InsertGuestCollectorSubmission,
 } from "@shared/schema";
 import { randomUUID, randomBytes } from "crypto";
 import bcrypt from "bcrypt";
@@ -716,6 +720,31 @@ export interface IStorage {
 
   // Guest Planning Snapshot (comprehensive view for planning)
   getGuestPlanningSnapshot(weddingId: string): Promise<GuestPlanningSnapshot>;
+
+  // Guest Collector Links (shareable links for family to submit guests)
+  getGuestCollectorLink(id: string): Promise<GuestCollectorLink | undefined>;
+  getGuestCollectorLinkByToken(token: string): Promise<GuestCollectorLink | undefined>;
+  getGuestCollectorLinksByWedding(weddingId: string): Promise<GuestCollectorLink[]>;
+  createGuestCollectorLink(link: InsertGuestCollectorLink): Promise<GuestCollectorLink>;
+  updateGuestCollectorLink(id: string, updates: Partial<InsertGuestCollectorLink>): Promise<GuestCollectorLink | undefined>;
+  deleteGuestCollectorLink(id: string): Promise<boolean>;
+  deactivateGuestCollectorLink(id: string): Promise<GuestCollectorLink | undefined>;
+
+  // Guest Collector Submissions (submissions through collector links)
+  getGuestCollectorSubmission(id: string): Promise<GuestCollectorSubmission | undefined>;
+  getGuestCollectorSubmissionsByLink(linkId: string): Promise<GuestCollectorSubmission[]>;
+  getGuestCollectorSubmissionsByWedding(weddingId: string, status?: string): Promise<GuestCollectorSubmission[]>;
+  createGuestCollectorSubmission(submission: InsertGuestCollectorSubmission): Promise<GuestCollectorSubmission>;
+  approveCollectorSubmission(id: string, reviewerId: string): Promise<{ household: Household; guests: Guest[] }>;
+  declineCollectorSubmission(id: string, reviewerId: string): Promise<GuestCollectorSubmission>;
+  getPendingCollectorSubmissionsCount(weddingId: string): Promise<number>;
+
+  // Guest Side Management (bride/groom side features)
+  getGuestsBySide(weddingId: string, side: 'bride' | 'groom' | 'mutual'): Promise<Guest[]>;
+  getGuestsByVisibility(weddingId: string, visibility: 'private' | 'shared', addedBySide?: 'bride' | 'groom'): Promise<Guest[]>;
+  shareGuestsWithPartner(weddingId: string, guestIds: string[]): Promise<Guest[]>;
+  updateGuestConsensusStatus(guestIds: string[], status: 'pending' | 'under_discussion' | 'approved' | 'declined' | 'frozen'): Promise<Guest[]>;
+  getSideStatistics(weddingId: string): Promise<{ bride: { total: number; private: number; shared: number; byStatus: Record<string, number> }; groom: { total: number; private: number; shared: number; byStatus: Record<string, number> }; mutual: { total: number } }>;
 
   // ============================================================================
   // REAL-TIME MASTER TIMELINE
@@ -8771,6 +8800,226 @@ export class DBStorage implements IStorage {
   async getApprovedVendors(): Promise<Vendor[]> {
     return await this.db.select().from(schema.vendors)
       .where(eq(schema.vendors.approvalStatus, 'approved'));
+  }
+
+  // Guest Collector Links
+  async getGuestCollectorLink(id: string): Promise<GuestCollectorLink | undefined> {
+    const result = await this.db.select().from(schema.guestCollectorLinks)
+      .where(eq(schema.guestCollectorLinks.id, id));
+    return result[0];
+  }
+
+  async getGuestCollectorLinkByToken(token: string): Promise<GuestCollectorLink | undefined> {
+    const result = await this.db.select().from(schema.guestCollectorLinks)
+      .where(eq(schema.guestCollectorLinks.token, token));
+    return result[0];
+  }
+
+  async getGuestCollectorLinksByWedding(weddingId: string): Promise<GuestCollectorLink[]> {
+    return await this.db.select().from(schema.guestCollectorLinks)
+      .where(eq(schema.guestCollectorLinks.weddingId, weddingId))
+      .orderBy(sql`${schema.guestCollectorLinks.createdAt} DESC`);
+  }
+
+  async createGuestCollectorLink(link: InsertGuestCollectorLink): Promise<GuestCollectorLink> {
+    const token = randomBytes(16).toString('hex');
+    const result = await this.db.insert(schema.guestCollectorLinks)
+      .values({ ...link, token })
+      .returning();
+    return result[0];
+  }
+
+  async updateGuestCollectorLink(id: string, updates: Partial<InsertGuestCollectorLink>): Promise<GuestCollectorLink | undefined> {
+    const result = await this.db.update(schema.guestCollectorLinks)
+      .set(updates)
+      .where(eq(schema.guestCollectorLinks.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteGuestCollectorLink(id: string): Promise<boolean> {
+    await this.db.delete(schema.guestCollectorLinks)
+      .where(eq(schema.guestCollectorLinks.id, id));
+    return true;
+  }
+
+  async deactivateGuestCollectorLink(id: string): Promise<GuestCollectorLink | undefined> {
+    const result = await this.db.update(schema.guestCollectorLinks)
+      .set({ isActive: false })
+      .where(eq(schema.guestCollectorLinks.id, id))
+      .returning();
+    return result[0];
+  }
+
+  // Guest Collector Submissions
+  async getGuestCollectorSubmission(id: string): Promise<GuestCollectorSubmission | undefined> {
+    const result = await this.db.select().from(schema.guestCollectorSubmissions)
+      .where(eq(schema.guestCollectorSubmissions.id, id));
+    return result[0];
+  }
+
+  async getGuestCollectorSubmissionsByLink(linkId: string): Promise<GuestCollectorSubmission[]> {
+    return await this.db.select().from(schema.guestCollectorSubmissions)
+      .where(eq(schema.guestCollectorSubmissions.collectorLinkId, linkId))
+      .orderBy(sql`${schema.guestCollectorSubmissions.createdAt} DESC`);
+  }
+
+  async getGuestCollectorSubmissionsByWedding(weddingId: string, status?: string): Promise<GuestCollectorSubmission[]> {
+    if (status) {
+      return await this.db.select().from(schema.guestCollectorSubmissions)
+        .where(and(
+          eq(schema.guestCollectorSubmissions.weddingId, weddingId),
+          eq(schema.guestCollectorSubmissions.status, status)
+        ))
+        .orderBy(sql`${schema.guestCollectorSubmissions.createdAt} DESC`);
+    }
+    return await this.db.select().from(schema.guestCollectorSubmissions)
+      .where(eq(schema.guestCollectorSubmissions.weddingId, weddingId))
+      .orderBy(sql`${schema.guestCollectorSubmissions.createdAt} DESC`);
+  }
+
+  async createGuestCollectorSubmission(submission: InsertGuestCollectorSubmission): Promise<GuestCollectorSubmission> {
+    const result = await this.db.insert(schema.guestCollectorSubmissions)
+      .values(submission)
+      .returning();
+    // Increment submission count on the collector link
+    await this.db.update(schema.guestCollectorLinks)
+      .set({ submissionCount: sql`submission_count + 1` })
+      .where(eq(schema.guestCollectorLinks.id, submission.collectorLinkId));
+    return result[0];
+  }
+
+  async approveCollectorSubmission(id: string, reviewerId: string): Promise<{ household: Household; guests: Guest[] }> {
+    const submission = await this.getGuestCollectorSubmission(id);
+    if (!submission) throw new Error("Submission not found");
+    
+    // Get collector link to determine side
+    const link = await this.getGuestCollectorLink(submission.collectorLinkId);
+    if (!link) throw new Error("Collector link not found");
+    
+    // Create household for the guest
+    const household = await this.createHousehold({
+      weddingId: submission.weddingId,
+      name: submission.guestName,
+      side: link.side as 'bride' | 'groom',
+      relationshipTier: (submission.relationshipTier as any) || 'friend',
+      priorityTier: 'should_invite',
+    });
+    
+    // Create guest
+    const guest = await this.createGuest({
+      weddingId: submission.weddingId,
+      householdId: household.id,
+      name: submission.guestName,
+      email: submission.guestEmail || undefined,
+      phone: submission.guestPhone || undefined,
+      side: link.side as 'bride' | 'groom',
+      relationshipTier: (submission.relationshipTier as any) || 'friend',
+      visibility: 'shared',
+      addedBySide: link.side as 'bride' | 'groom',
+      consensusStatus: 'pending',
+    });
+    
+    // Mark submission as approved
+    await this.db.update(schema.guestCollectorSubmissions)
+      .set({ status: 'approved', reviewedById: reviewerId, reviewedAt: new Date() })
+      .where(eq(schema.guestCollectorSubmissions.id, id));
+    
+    return { household, guests: [guest] };
+  }
+
+  async declineCollectorSubmission(id: string, reviewerId: string): Promise<GuestCollectorSubmission> {
+    const result = await this.db.update(schema.guestCollectorSubmissions)
+      .set({ status: 'declined', reviewedById: reviewerId, reviewedAt: new Date() })
+      .where(eq(schema.guestCollectorSubmissions.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async getPendingCollectorSubmissionsCount(weddingId: string): Promise<number> {
+    const result = await this.db.select({ count: sql<number>`count(*)` })
+      .from(schema.guestCollectorSubmissions)
+      .where(and(
+        eq(schema.guestCollectorSubmissions.weddingId, weddingId),
+        eq(schema.guestCollectorSubmissions.status, 'pending')
+      ));
+    return Number(result[0]?.count || 0);
+  }
+
+  // Guest Side Management
+  async getGuestsBySide(weddingId: string, side: 'bride' | 'groom' | 'mutual'): Promise<Guest[]> {
+    return await this.db.select().from(schema.guests)
+      .where(and(
+        eq(schema.guests.weddingId, weddingId),
+        eq(schema.guests.side, side)
+      ));
+  }
+
+  async getGuestsByVisibility(weddingId: string, visibility: 'private' | 'shared', addedBySide?: 'bride' | 'groom'): Promise<Guest[]> {
+    const conditions = [
+      eq(schema.guests.weddingId, weddingId),
+      eq(schema.guests.visibility, visibility)
+    ];
+    if (addedBySide) {
+      conditions.push(eq(schema.guests.addedBySide, addedBySide));
+    }
+    return await this.db.select().from(schema.guests)
+      .where(and(...conditions));
+  }
+
+  async shareGuestsWithPartner(weddingId: string, guestIds: string[]): Promise<Guest[]> {
+    if (guestIds.length === 0) return [];
+    const result = await this.db.update(schema.guests)
+      .set({ visibility: 'shared' })
+      .where(and(
+        eq(schema.guests.weddingId, weddingId),
+        inArray(schema.guests.id, guestIds)
+      ))
+      .returning();
+    return result;
+  }
+
+  async updateGuestConsensusStatus(guestIds: string[], status: 'pending' | 'under_discussion' | 'approved' | 'declined' | 'frozen'): Promise<Guest[]> {
+    if (guestIds.length === 0) return [];
+    const result = await this.db.update(schema.guests)
+      .set({ consensusStatus: status })
+      .where(inArray(schema.guests.id, guestIds))
+      .returning();
+    return result;
+  }
+
+  async getSideStatistics(weddingId: string): Promise<{ 
+    bride: { total: number; private: number; shared: number; byStatus: Record<string, number> }; 
+    groom: { total: number; private: number; shared: number; byStatus: Record<string, number> }; 
+    mutual: { total: number } 
+  }> {
+    const guests = await this.getGuestsByWedding(weddingId);
+    
+    const stats = {
+      bride: { total: 0, private: 0, shared: 0, byStatus: {} as Record<string, number> },
+      groom: { total: 0, private: 0, shared: 0, byStatus: {} as Record<string, number> },
+      mutual: { total: 0 }
+    };
+    
+    for (const guest of guests) {
+      if (guest.side === 'bride') {
+        stats.bride.total++;
+        if (guest.visibility === 'private') stats.bride.private++;
+        else stats.bride.shared++;
+        const status = guest.consensusStatus || 'approved';
+        stats.bride.byStatus[status] = (stats.bride.byStatus[status] || 0) + 1;
+      } else if (guest.side === 'groom') {
+        stats.groom.total++;
+        if (guest.visibility === 'private') stats.groom.private++;
+        else stats.groom.shared++;
+        const status = guest.consensusStatus || 'approved';
+        stats.groom.byStatus[status] = (stats.groom.byStatus[status] || 0) + 1;
+      } else {
+        stats.mutual.total++;
+      }
+    }
+    
+    return stats;
   }
 }
 
