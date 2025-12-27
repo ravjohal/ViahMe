@@ -63,6 +63,7 @@ import VendorProfile from "@/pages/vendor-profile";
 import VendorPortfolio from "@/pages/vendor-portfolio";
 import VendorLeads from "@/pages/vendor-leads";
 import Expenses from "@/pages/expenses";
+import GuestCollector from "@/pages/guest-collector";
 import { VendorRoute } from "@/components/VendorRoute";
 import { CoupleRoute } from "@/components/CoupleRoute";
 import { CouplePlannerChatbot } from "@/components/CouplePlannerChatbot";
@@ -88,6 +89,7 @@ function Router() {
       <Route path="/checkout" component={Checkout} />
       <Route path="/order-confirmation" component={OrderConfirmation} />
       <Route path="/pay-deposit/:bookingId" component={VendorDeposit} />
+      <Route path="/collect/:token" component={GuestCollector} />
       
       {/* Dashboard - no specific permission, just authentication */}
       <Route path="/dashboard" component={Dashboard} />
