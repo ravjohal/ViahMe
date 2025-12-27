@@ -427,9 +427,9 @@ export default function WebsiteBuilder() {
                       <ObjectUploader
                         maxNumberOfFiles={1}
                         onGetUploadParameters={async () => {
-                          const response = await fetch('/api/documents/upload-url');
-                          const { url } = await response.json();
-                          return { method: 'PUT' as const, url };
+                          const response = await fetch('/api/objects/upload', { method: 'POST' });
+                          const { uploadURL } = await response.json();
+                          return { method: 'PUT' as const, url: uploadURL };
                         }}
                         onComplete={(result) => {
                           const urls = (result.successful || []).map((file: any) => {
@@ -465,9 +465,9 @@ export default function WebsiteBuilder() {
                     <ObjectUploader
                       maxNumberOfFiles={10}
                       onGetUploadParameters={async () => {
-                        const response = await fetch('/api/documents/upload-url');
-                        const { url } = await response.json();
-                        return { method: 'PUT' as const, url };
+                        const response = await fetch('/api/objects/upload', { method: 'POST' });
+                        const { uploadURL } = await response.json();
+                        return { method: 'PUT' as const, url: uploadURL };
                       }}
                       onComplete={(result) => {
                         const urls = (result.successful || []).map((file: any) => {
