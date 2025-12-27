@@ -1208,6 +1208,52 @@ export type InsertWeddingWebsite = z.infer<typeof insertWeddingWebsiteSchema>;
 export type WeddingWebsite = typeof weddingWebsites.$inferSelect;
 
 // ============================================================================
+// WEDDING REGISTRIES - Gift registry links from major retailers
+// ============================================================================
+
+export const registryRetailers = pgTable("registry_retailers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(), // "Amazon", "Target", "Walmart", etc.
+  slug: text("slug").notNull().unique(), // "amazon", "target", "walmart"
+  logoUrl: text("logo_url"), // URL to retailer logo
+  websiteUrl: text("website_url").notNull(), // Base website URL
+  registryUrlPattern: text("registry_url_pattern"), // Pattern for registry URLs (for validation)
+  helpText: text("help_text"), // Instructions for finding registry link
+  isActive: boolean("is_active").default(true),
+  sortOrder: integer("sort_order").default(0),
+});
+
+export const insertRegistryRetailerSchema = createInsertSchema(registryRetailers).omit({
+  id: true,
+});
+
+export type InsertRegistryRetailer = z.infer<typeof insertRegistryRetailerSchema>;
+export type RegistryRetailer = typeof registryRetailers.$inferSelect;
+
+export const weddingRegistries = pgTable("wedding_registries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  retailerId: varchar("retailer_id"), // Links to registryRetailers, null for custom
+  customRetailerName: text("custom_retailer_name"), // For custom/other retailers
+  customLogoUrl: text("custom_logo_url"), // Custom logo for non-preset retailers
+  registryUrl: text("registry_url").notNull(), // Full URL to the registry
+  notes: text("notes"), // Optional notes (e.g., "Our main registry")
+  sortOrder: integer("sort_order").default(0),
+  isPrimary: boolean("is_primary").default(false), // Highlight as primary registry
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertWeddingRegistrySchema = createInsertSchema(weddingRegistries).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  registryUrl: z.string().url("Please enter a valid URL"),
+});
+
+export type InsertWeddingRegistry = z.infer<typeof insertWeddingRegistrySchema>;
+export type WeddingRegistry = typeof weddingRegistries.$inferSelect;
+
+// ============================================================================
 // PHOTO GALLERIES - Inspiration boards, vendor portfolios, event photo sharing
 // ============================================================================
 

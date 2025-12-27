@@ -51,6 +51,10 @@ import {
   type InsertDocument,
   type WeddingWebsite,
   type InsertWeddingWebsite,
+  type RegistryRetailer,
+  type InsertRegistryRetailer,
+  type WeddingRegistry,
+  type InsertWeddingRegistry,
   type PhotoGallery,
   type InsertPhotoGallery,
   type Photo,
@@ -426,6 +430,19 @@ export interface IStorage {
   createWeddingWebsite(website: InsertWeddingWebsite): Promise<WeddingWebsite>;
   updateWeddingWebsite(id: string, website: Partial<InsertWeddingWebsite>): Promise<WeddingWebsite | undefined>;
   deleteWeddingWebsite(id: string): Promise<boolean>;
+
+  // Registry Retailers (preset retailers)
+  getRegistryRetailer(id: string): Promise<RegistryRetailer | undefined>;
+  getAllRegistryRetailers(): Promise<RegistryRetailer[]>;
+  getActiveRegistryRetailers(): Promise<RegistryRetailer[]>;
+
+  // Wedding Registries (couples' registry links)
+  getWeddingRegistry(id: string): Promise<WeddingRegistry | undefined>;
+  getRegistriesByWedding(weddingId: string): Promise<WeddingRegistry[]>;
+  getRegistriesWithRetailersByWedding(weddingId: string): Promise<Array<WeddingRegistry & { retailer?: RegistryRetailer }>>;
+  createWeddingRegistry(registry: InsertWeddingRegistry): Promise<WeddingRegistry>;
+  updateWeddingRegistry(id: string, registry: Partial<InsertWeddingRegistry>): Promise<WeddingRegistry | undefined>;
+  deleteWeddingRegistry(id: string): Promise<boolean>;
 
   // Photo Galleries
   getPhotoGallery(id: string): Promise<PhotoGallery | undefined>;
@@ -2489,6 +2506,66 @@ export class MemStorage implements IStorage {
 
   async deleteWeddingWebsite(id: string): Promise<boolean> {
     return this.weddingWebsites.delete(id);
+  }
+
+  // Registry Retailers (MemStorage - presets are in database, stub implementation)
+  async getRegistryRetailer(id: string): Promise<RegistryRetailer | undefined> {
+    return undefined; // Presets are stored in database
+  }
+
+  async getAllRegistryRetailers(): Promise<RegistryRetailer[]> {
+    return []; // Presets are stored in database
+  }
+
+  async getActiveRegistryRetailers(): Promise<RegistryRetailer[]> {
+    return []; // Presets are stored in database
+  }
+
+  // Wedding Registries (MemStorage)
+  private weddingRegistries: Map<string, WeddingRegistry> = new Map();
+
+  async getWeddingRegistry(id: string): Promise<WeddingRegistry | undefined> {
+    return this.weddingRegistries.get(id);
+  }
+
+  async getRegistriesByWedding(weddingId: string): Promise<WeddingRegistry[]> {
+    return Array.from(this.weddingRegistries.values())
+      .filter(r => r.weddingId === weddingId)
+      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+  }
+
+  async getRegistriesWithRetailersByWedding(weddingId: string): Promise<Array<WeddingRegistry & { retailer?: RegistryRetailer }>> {
+    const registries = await this.getRegistriesByWedding(weddingId);
+    return registries.map(r => ({ ...r, retailer: undefined }));
+  }
+
+  async createWeddingRegistry(registry: InsertWeddingRegistry): Promise<WeddingRegistry> {
+    const newRegistry: WeddingRegistry = {
+      id: randomUUID(),
+      weddingId: registry.weddingId,
+      retailerId: registry.retailerId ?? null,
+      customRetailerName: registry.customRetailerName ?? null,
+      customLogoUrl: registry.customLogoUrl ?? null,
+      registryUrl: registry.registryUrl,
+      notes: registry.notes ?? null,
+      sortOrder: registry.sortOrder ?? 0,
+      isPrimary: registry.isPrimary ?? false,
+      createdAt: new Date(),
+    };
+    this.weddingRegistries.set(newRegistry.id, newRegistry);
+    return newRegistry;
+  }
+
+  async updateWeddingRegistry(id: string, registry: Partial<InsertWeddingRegistry>): Promise<WeddingRegistry | undefined> {
+    const existing = this.weddingRegistries.get(id);
+    if (!existing) return undefined;
+    const updated: WeddingRegistry = { ...existing, ...registry };
+    this.weddingRegistries.set(id, updated);
+    return updated;
+  }
+
+  async deleteWeddingRegistry(id: string): Promise<boolean> {
+    return this.weddingRegistries.delete(id);
   }
 
   // Photo Galleries
@@ -5215,6 +5292,82 @@ export class DBStorage implements IStorage {
     const result = await this.db
       .delete(schema.weddingWebsites)
       .where(eq(schema.weddingWebsites.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  // Registry Retailers
+  async getRegistryRetailer(id: string): Promise<RegistryRetailer | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.registryRetailers)
+      .where(eq(schema.registryRetailers.id, id));
+    return result[0];
+  }
+
+  async getAllRegistryRetailers(): Promise<RegistryRetailer[]> {
+    return await this.db
+      .select()
+      .from(schema.registryRetailers)
+      .orderBy(schema.registryRetailers.sortOrder);
+  }
+
+  async getActiveRegistryRetailers(): Promise<RegistryRetailer[]> {
+    return await this.db
+      .select()
+      .from(schema.registryRetailers)
+      .where(eq(schema.registryRetailers.isActive, true))
+      .orderBy(schema.registryRetailers.sortOrder);
+  }
+
+  // Wedding Registries
+  async getWeddingRegistry(id: string): Promise<WeddingRegistry | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.weddingRegistries)
+      .where(eq(schema.weddingRegistries.id, id));
+    return result[0];
+  }
+
+  async getRegistriesByWedding(weddingId: string): Promise<WeddingRegistry[]> {
+    return await this.db
+      .select()
+      .from(schema.weddingRegistries)
+      .where(eq(schema.weddingRegistries.weddingId, weddingId))
+      .orderBy(schema.weddingRegistries.sortOrder);
+  }
+
+  async getRegistriesWithRetailersByWedding(weddingId: string): Promise<Array<WeddingRegistry & { retailer?: RegistryRetailer }>> {
+    const registries = await this.getRegistriesByWedding(weddingId);
+    const retailers = await this.getAllRegistryRetailers();
+    const retailerMap = new Map(retailers.map(r => [r.id, r]));
+    return registries.map(reg => ({
+      ...reg,
+      retailer: reg.retailerId ? retailerMap.get(reg.retailerId) : undefined,
+    }));
+  }
+
+  async createWeddingRegistry(registry: InsertWeddingRegistry): Promise<WeddingRegistry> {
+    const result = await this.db
+      .insert(schema.weddingRegistries)
+      .values(registry)
+      .returning();
+    return result[0];
+  }
+
+  async updateWeddingRegistry(id: string, registry: Partial<InsertWeddingRegistry>): Promise<WeddingRegistry | undefined> {
+    const result = await this.db
+      .update(schema.weddingRegistries)
+      .set(registry)
+      .where(eq(schema.weddingRegistries.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteWeddingRegistry(id: string): Promise<boolean> {
+    const result = await this.db
+      .delete(schema.weddingRegistries)
+      .where(eq(schema.weddingRegistries.id, id))
       .returning();
     return result.length > 0;
   }

@@ -10,9 +10,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { Loader2, ExternalLink, Globe, Copy, Check, Sparkles, Wand2, Eye, Info, Upload, ImagePlus, Trash2 } from "lucide-react";
+import { Loader2, ExternalLink, Globe, Copy, Check, Sparkles, Wand2, Eye, Info, Upload, ImagePlus, Trash2, Gift, Plus, X } from "lucide-react";
 import { ObjectUploader } from "@/components/ObjectUploader";
-import type { WeddingWebsite, InsertWeddingWebsite, Wedding } from "@shared/schema";
+import type { WeddingWebsite, InsertWeddingWebsite, Wedding, RegistryRetailer, WeddingRegistry } from "@shared/schema";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SiAmazon, SiTarget, SiWalmart, SiEtsy } from "react-icons/si";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
@@ -165,6 +167,73 @@ export default function WebsiteBuilder() {
       toast({ title: "Failed to update publish status", variant: "destructive" });
     },
   });
+
+  // Registry state and queries
+  const [showAddRegistry, setShowAddRegistry] = useState(false);
+  const [newRegistryUrl, setNewRegistryUrl] = useState("");
+  const [newRegistryRetailerId, setNewRegistryRetailerId] = useState<string | null>(null);
+  const [newRegistryCustomName, setNewRegistryCustomName] = useState("");
+  const [newRegistryNotes, setNewRegistryNotes] = useState("");
+
+  const { data: retailers = [] } = useQuery<RegistryRetailer[]>({
+    queryKey: ["/api/registry-retailers"],
+  });
+
+  const { data: registries = [] } = useQuery<(WeddingRegistry & { retailer?: RegistryRetailer })[]>({
+    queryKey: ["/api/weddings", weddingId, "registries"],
+    enabled: !!weddingId,
+  });
+
+  const createRegistry = useMutation({
+    mutationFn: async (data: { registryUrl: string; retailerId?: string; customRetailerName?: string; notes?: string }) => {
+      return await apiRequest("POST", `/api/weddings/${weddingId}/registries`, data);
+    },
+    onSuccess: () => {
+      toast({ title: "Registry added!" });
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", weddingId, "registries"] });
+      setShowAddRegistry(false);
+      setNewRegistryUrl("");
+      setNewRegistryRetailerId(null);
+      setNewRegistryCustomName("");
+      setNewRegistryNotes("");
+    },
+    onError: () => {
+      toast({ title: "Failed to add registry", variant: "destructive" });
+    },
+  });
+
+  const deleteRegistry = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiRequest("DELETE", `/api/registries/${id}`);
+    },
+    onSuccess: () => {
+      toast({ title: "Registry removed" });
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", weddingId, "registries"] });
+    },
+    onError: () => {
+      toast({ title: "Failed to remove registry", variant: "destructive" });
+    },
+  });
+
+  const handleAddRegistry = () => {
+    if (!newRegistryUrl.trim()) return;
+    createRegistry.mutate({
+      registryUrl: newRegistryUrl,
+      retailerId: newRegistryRetailerId || undefined,
+      customRetailerName: newRegistryRetailerId ? undefined : newRegistryCustomName || undefined,
+      notes: newRegistryNotes || undefined,
+    });
+  };
+
+  const getRetailerIcon = (slug: string) => {
+    switch (slug) {
+      case "amazon": return <SiAmazon className="w-5 h-5" />;
+      case "target": return <SiTarget className="w-5 h-5" />;
+      case "walmart": return <SiWalmart className="w-5 h-5" />;
+      case "etsy": return <SiEtsy className="w-5 h-5" />;
+      default: return <Gift className="w-5 h-5" />;
+    }
+  };
 
   const generateAISuggestion = async (section: 'welcome' | 'travel' | 'accommodation' | 'faq') => {
     if (!weddingId) return;
@@ -383,11 +452,12 @@ export default function WebsiteBuilder() {
           </Card>
 
           <Tabs defaultValue="photos" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="photos">Photos</TabsTrigger>
               <TabsTrigger value="welcome">Welcome</TabsTrigger>
+              <TabsTrigger value="registry">Registry</TabsTrigger>
               <TabsTrigger value="travel">Travel</TabsTrigger>
-              <TabsTrigger value="accommodation">Accommodation</TabsTrigger>
+              <TabsTrigger value="accommodation">Stay</TabsTrigger>
               <TabsTrigger value="faq">FAQ</TabsTrigger>
             </TabsList>
 
@@ -604,6 +674,186 @@ export default function WebsiteBuilder() {
                       </FormItem>
                     )}
                   />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="registry" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <Gift className="w-5 h-5" />
+                        Gift Registries
+                      </CardTitle>
+                      <CardDescription>
+                        Link your registries from Amazon, Target, Walmart, and other retailers so guests can easily find your wish list
+                      </CardDescription>
+                    </div>
+                    {!showAddRegistry && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setShowAddRegistry(true)}
+                        className="flex items-center gap-2"
+                        data-testid="button-add-registry"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Add Registry
+                      </Button>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {showAddRegistry && (
+                    <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium">Add a Registry</h4>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setShowAddRegistry(false)}
+                          data-testid="button-cancel-add-registry"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-sm font-medium mb-1.5 block">Retailer</label>
+                          <Select
+                            value={newRegistryRetailerId || "custom"}
+                            onValueChange={(val) => setNewRegistryRetailerId(val === "custom" ? null : val)}
+                          >
+                            <SelectTrigger data-testid="select-retailer">
+                              <SelectValue placeholder="Select a retailer" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {retailers.map((retailer) => (
+                                <SelectItem key={retailer.id} value={retailer.id}>
+                                  <span className="flex items-center gap-2">
+                                    {getRetailerIcon(retailer.slug)}
+                                    {retailer.name}
+                                  </span>
+                                </SelectItem>
+                              ))}
+                              <SelectItem value="custom">
+                                <span className="flex items-center gap-2">
+                                  <Gift className="w-4 h-4" />
+                                  Other / Custom
+                                </span>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {!newRegistryRetailerId && (
+                          <div>
+                            <label className="text-sm font-medium mb-1.5 block">Custom Retailer Name</label>
+                            <Input
+                              value={newRegistryCustomName}
+                              onChange={(e) => setNewRegistryCustomName(e.target.value)}
+                              placeholder="e.g., Honeyfund, Blueprint Registry"
+                              data-testid="input-custom-retailer-name"
+                            />
+                          </div>
+                        )}
+
+                        <div>
+                          <label className="text-sm font-medium mb-1.5 block">Registry URL</label>
+                          <Input
+                            value={newRegistryUrl}
+                            onChange={(e) => setNewRegistryUrl(e.target.value)}
+                            placeholder="https://www.amazon.com/wedding/your-registry"
+                            data-testid="input-registry-url"
+                          />
+                          {newRegistryRetailerId && retailers.find(r => r.id === newRegistryRetailerId)?.helpText && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {retailers.find(r => r.id === newRegistryRetailerId)?.helpText}
+                            </p>
+                          )}
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-medium mb-1.5 block">Notes (optional)</label>
+                          <Input
+                            value={newRegistryNotes}
+                            onChange={(e) => setNewRegistryNotes(e.target.value)}
+                            placeholder="e.g., Our main registry"
+                            data-testid="input-registry-notes"
+                          />
+                        </div>
+
+                        <Button
+                          type="button"
+                          onClick={handleAddRegistry}
+                          disabled={!newRegistryUrl.trim() || createRegistry.isPending}
+                          className="w-full"
+                          data-testid="button-save-registry"
+                        >
+                          {createRegistry.isPending ? (
+                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                          ) : null}
+                          Add Registry
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {registries.length > 0 ? (
+                    <div className="space-y-3">
+                      {registries.map((registry) => (
+                        <div
+                          key={registry.id}
+                          className="flex items-center justify-between gap-4 p-3 border rounded-lg hover-elevate"
+                          data-testid={`registry-item-${registry.id}`}
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                              {registry.retailer ? getRetailerIcon(registry.retailer.slug) : <Gift className="w-5 h-5" />}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-medium truncate">
+                                {registry.retailer?.name || registry.customRetailerName || "Custom Registry"}
+                              </p>
+                              {registry.notes && (
+                                <p className="text-sm text-muted-foreground truncate">{registry.notes}</p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => window.open(registry.registryUrl, '_blank')}
+                              data-testid={`button-view-registry-${registry.id}`}
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => deleteRegistry.mutate(registry.id)}
+                              data-testid={`button-delete-registry-${registry.id}`}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : !showAddRegistry ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Gift className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                      <p className="font-medium">No registries added yet</p>
+                      <p className="text-sm mt-1">Add your registries from Amazon, Target, Walmart, and more</p>
+                    </div>
+                  ) : null}
                 </CardContent>
               </Card>
             </TabsContent>

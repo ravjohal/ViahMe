@@ -5531,6 +5531,79 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
     }
   });
 
+  // ============================================================================
+  // WEDDING REGISTRIES
+  // ============================================================================
+
+  // Get all active registry retailers (preset options)
+  app.get("/api/registry-retailers", async (req, res) => {
+    try {
+      const retailers = await storage.getActiveRegistryRetailers();
+      res.json(retailers);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch registry retailers" });
+    }
+  });
+
+  // Get registries for a wedding (with retailer details)
+  app.get("/api/weddings/:weddingId/registries", async (req, res) => {
+    try {
+      const registries = await storage.getRegistriesWithRetailersByWedding(req.params.weddingId);
+      res.json(registries);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch registries" });
+    }
+  });
+
+  // Create a registry for a wedding
+  app.post("/api/weddings/:weddingId/registries", async (req, res) => {
+    try {
+      const { insertWeddingRegistrySchema } = await import("@shared/schema");
+      const validatedData = insertWeddingRegistrySchema.parse({
+        ...req.body,
+        weddingId: req.params.weddingId,
+      });
+      const registry = await storage.createWeddingRegistry(validatedData);
+      res.status(201).json(registry);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      res.status(500).json({ error: "Failed to create registry" });
+    }
+  });
+
+  // Update a registry
+  app.patch("/api/registries/:id", async (req, res) => {
+    try {
+      const { insertWeddingRegistrySchema } = await import("@shared/schema");
+      const validatedData = insertWeddingRegistrySchema.partial().parse(req.body);
+      const registry = await storage.updateWeddingRegistry(req.params.id, validatedData);
+      if (!registry) {
+        return res.status(404).json({ error: "Registry not found" });
+      }
+      res.json(registry);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      res.status(500).json({ error: "Failed to update registry" });
+    }
+  });
+
+  // Delete a registry
+  app.delete("/api/registries/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteWeddingRegistry(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Registry not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete registry" });
+    }
+  });
+
   // Get public wedding data by slug (for guest website)
   app.get("/api/public/wedding/:slug", async (req, res) => {
     try {
@@ -5554,11 +5627,13 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
       }
 
       const events = await storage.getEventsByWedding(website.weddingId);
+      const registries = await storage.getRegistriesWithRetailersByWedding(website.weddingId);
 
       res.json({
         website,
         wedding,
         events: events.sort((a, b) => a.order - b.order),
+        registries,
         isPreview: !website.isPublished && isOwner,
       });
     } catch (error) {

@@ -3,9 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, MapPin, Calendar, Clock, Navigation, Info, Hotel, HelpCircle, Camera } from "lucide-react";
+import { Loader2, MapPin, Calendar, Clock, Navigation, Info, Hotel, HelpCircle, Camera, Gift, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
-import type { WeddingWebsite, Wedding, Event } from "@shared/schema";
+import type { WeddingWebsite, Wedding, Event, WeddingRegistry, RegistryRetailer } from "@shared/schema";
+import { SiAmazon, SiTarget, SiWalmart, SiEtsy } from "react-icons/si";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ReactMarkdown from "react-markdown";
 import { GuestChatbot } from "@/components/GuestChatbot";
@@ -14,8 +15,19 @@ interface PublicWeddingData {
   website: WeddingWebsite;
   wedding: Wedding;
   events: Event[];
+  registries: (WeddingRegistry & { retailer?: RegistryRetailer })[];
   isPreview?: boolean;
 }
+
+const getRetailerIcon = (slug: string) => {
+  switch (slug) {
+    case "amazon": return <SiAmazon className="w-5 h-5" />;
+    case "target": return <SiTarget className="w-5 h-5" />;
+    case "walmart": return <SiWalmart className="w-5 h-5" />;
+    case "etsy": return <SiEtsy className="w-5 h-5" />;
+    default: return <Gift className="w-5 h-5" />;
+  }
+};
 
 export default function GuestWebsite() {
   const params = useParams();
@@ -48,7 +60,7 @@ export default function GuestWebsite() {
     );
   }
 
-  const { website, wedding, events, isPreview } = data;
+  const { website, wedding, events, registries = [], isPreview } = data;
   const primaryColor = website.primaryColor || "#f97316";
 
   return (
@@ -206,6 +218,48 @@ export default function GuestWebsite() {
             ))}
           </CardContent>
         </Card>
+
+        {/* Gift Registries */}
+        {registries.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Gift className="w-5 h-5" />
+                Gift Registry
+              </CardTitle>
+              <CardDescription>
+                Browse our registries to find the perfect gift
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {registries.map((registry) => (
+                  <a
+                    key={registry.id}
+                    href={registry.registryUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-4 p-4 rounded-lg border hover-elevate transition-all group"
+                    data-testid={`link-registry-${registry.id}`}
+                  >
+                    <div className="flex-shrink-0 w-12 h-12 rounded-full bg-muted flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                      {registry.retailer ? getRetailerIcon(registry.retailer.slug) : <Gift className="w-6 h-6" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium">
+                        {registry.retailer?.name || registry.customRetailerName || "Gift Registry"}
+                      </p>
+                      {registry.notes && (
+                        <p className="text-sm text-muted-foreground truncate">{registry.notes}</p>
+                      )}
+                    </div>
+                    <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-primary flex-shrink-0" />
+                  </a>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Additional Information Tabs */}
         {(website.travelInfo || website.accommodationInfo || website.thingsToDoInfo || website.faqInfo) && (
