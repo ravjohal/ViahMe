@@ -29,6 +29,13 @@ Key architectural decisions and features include:
   - **Planning Snapshot API**: `/api/weddings/:id/guest-planning-snapshot` endpoint aggregates all planning data server-side for accurate analysis
   - Note: "Source" concept removed - suggestions now come directly from team members via the permission-based collaboration system
 - **Communication & Collaboration**: Messaging system for couple-vendor communication, review system, document storage, and team collaboration with granular role-based access control and activity logging.
+- **Persistent AI Planner Chatbot**: Floating AI assistant available throughout the app for couples:
+  - **Mobile-First Design**: Full-screen modal on mobile, floating card on desktop
+  - **Safe Area Support**: Handles notches and keyboard safe areas on mobile devices
+  - **Wedding Context**: Automatically includes tradition, date, budget, and guest count for personalized advice
+  - **Quick Prompts**: Suggested topics for common planning questions (timeline, guests, budget)
+  - **Markdown Responses**: Rich formatting for AI responses with proper styling
+  - **Non-Conflicting**: Positioned above mobile bottom navigation, hidden on guest-facing and auth pages
 - **AI-Powered Message Suggestions**: Gemini LLM integration for intelligent message drafting:
   - **Vendor Reply Suggestions**: AI generates 3 culturally-aware response options for vendors replying to couple inquiries
   - **Couple Booking Suggestions**: AI helps couples craft effective vendor booking request messages
