@@ -620,3 +620,190 @@ Return as a JSON array of 3 task title strings. Be specific and culturally appro
     return [];
   }
 }
+
+// ============================================================================
+// WEBSITE CONTENT SUGGESTIONS - AI-powered content for wedding websites
+// ============================================================================
+
+const WEBSITE_CONTENT_PROMPT = `You are an expert content writer for wedding websites on Viah.me, a South Asian wedding management platform. You help couples create beautiful, culturally-appropriate content for their wedding websites.
+
+Your expertise covers:
+1. South Asian wedding traditions (Sikh, Hindu, Muslim, Gujarati, South Indian, Mixed/Fusion)
+2. Multi-day celebration structures and ceremonies
+3. Cultural nuances and family dynamics
+4. Travel and logistics for destination weddings
+5. Dress code and etiquette for different ceremonies
+
+Writing style:
+- Warm, welcoming, and romantic
+- Culturally sensitive and knowledgeable
+- Informative but concise
+- Personal and heartfelt
+- Appropriate for all generations of guests`;
+
+export type WebsiteSectionType = 'welcome' | 'travel' | 'accommodation' | 'faq';
+
+export interface WebsiteContentRequest {
+  section: WebsiteSectionType;
+  tradition: string;
+  partner1Name?: string;
+  partner2Name?: string;
+  weddingDate?: string;
+  city?: string;
+  events?: Array<{ name: string; date?: string; venue?: string; location?: string }>;
+  additionalContext?: string;
+}
+
+export interface FAQItem {
+  question: string;
+  answer: string;
+}
+
+export async function generateWebsiteContentSuggestions(
+  request: WebsiteContentRequest
+): Promise<string | FAQItem[]> {
+  const { section, tradition, partner1Name, partner2Name, weddingDate, city, events, additionalContext } = request;
+  
+  const coupleName = partner1Name && partner2Name 
+    ? `${partner1Name} & ${partner2Name}` 
+    : 'the couple';
+  
+  const eventsList = events?.map(e => 
+    `- ${e.name}${e.date ? ` on ${new Date(e.date).toLocaleDateString()}` : ''}${e.venue ? ` at ${e.venue}` : ''}${e.location ? ` in ${e.location}` : ''}`
+  ).join('\n') || 'Events to be announced';
+
+  let prompt = '';
+  let responseFormat = 'text';
+
+  switch (section) {
+    case 'welcome':
+      prompt = `Generate a warm, heartfelt welcome message for ${coupleName}'s ${tradition} wedding website.
+
+Wedding Details:
+- Tradition: ${tradition}
+${weddingDate ? `- Wedding Date: ${new Date(weddingDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}` : ''}
+${city ? `- Location: ${city}` : ''}
+${additionalContext ? `- Additional Context: ${additionalContext}` : ''}
+
+Planned Events:
+${eventsList}
+
+Generate a welcome message that:
+1. Warmly welcomes guests to celebrate
+2. Expresses excitement about the upcoming wedding
+3. Briefly mentions the significance of the ${tradition} tradition
+4. Sets a joyful, celebratory tone
+5. Is 2-3 paragraphs long
+
+Do NOT include a title - just the message content.`;
+      break;
+
+    case 'travel':
+      prompt = `Generate helpful travel information for guests attending ${coupleName}'s ${tradition} wedding.
+
+Wedding Details:
+- Tradition: ${tradition}
+${city ? `- Wedding City: ${city}` : '- Location: To be announced'}
+${weddingDate ? `- Wedding Date: ${new Date(weddingDate).toLocaleDateString()}` : ''}
+${additionalContext ? `- Additional Context: ${additionalContext}` : ''}
+
+Planned Events:
+${eventsList}
+
+Generate travel information that includes:
+1. Recommended airports and approximate distances to venue area
+2. Ground transportation options (rental cars, rideshare, shuttles)
+3. Parking information if applicable
+4. Weather considerations for the time of year
+5. Any tips specific to ${city || 'the area'}
+
+Format as clear, helpful paragraphs with section headers using **bold**.
+Keep it practical and guest-friendly.`;
+      break;
+
+    case 'accommodation':
+      prompt = `Generate accommodation recommendations for guests attending ${coupleName}'s ${tradition} wedding.
+
+Wedding Details:
+- Tradition: ${tradition}
+${city ? `- Wedding City: ${city}` : '- Location: To be announced'}
+${weddingDate ? `- Wedding Date: ${new Date(weddingDate).toLocaleDateString()}` : ''}
+${additionalContext ? `- Additional Context: ${additionalContext}` : ''}
+
+Planned Events:
+${eventsList}
+
+Generate accommodation suggestions that:
+1. Recommend looking for hotels near the venue area
+2. Suggest different price ranges (budget, mid-range, luxury)
+3. Mention booking early due to wedding blocks
+4. Include tips for group bookings
+5. Mention Airbnb/VRBO as alternatives for families
+
+Format as clear paragraphs with section headers using **bold**.
+Note: Since you don't have specific hotel names, give general guidance about what to look for and suggest the couple will share specific recommendations.`;
+      break;
+
+    case 'faq':
+      responseFormat = 'json';
+      prompt = `Generate frequently asked questions and answers for ${coupleName}'s ${tradition} wedding website.
+
+Wedding Details:
+- Tradition: ${tradition}
+${city ? `- Wedding City: ${city}` : ''}
+${weddingDate ? `- Wedding Date: ${new Date(weddingDate).toLocaleDateString()}` : ''}
+${additionalContext ? `- Additional Context: ${additionalContext}` : ''}
+
+Planned Events:
+${eventsList}
+
+Generate 8-10 FAQs that guests commonly ask about ${tradition} weddings, including:
+1. Dress code expectations for different ceremonies (mention specific attire like lehengas, sarees, sherwanis, etc.)
+2. What to expect at specific ceremonies (Mehndi, Sangeet, main ceremony, reception, etc.)
+3. Timing and punctuality expectations
+4. Gift giving etiquette
+5. Photography policies
+6. Plus-one and kids policies (keep generic - say "please check your invitation")
+7. Food and dietary accommodations
+8. General cultural etiquette tips
+
+Return as a JSON array of objects with "question" and "answer" fields.
+Make answers warm, informative, and culturally appropriate.`;
+      break;
+  }
+
+  try {
+    const config: any = {
+      systemInstruction: WEBSITE_CONTENT_PROMPT,
+    };
+    
+    if (responseFormat === 'json') {
+      config.responseMimeType = "application/json";
+    }
+
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      config,
+      contents: prompt,
+    });
+
+    const text = response.text || '';
+    
+    if (section === 'faq') {
+      try {
+        const faqs = JSON.parse(text);
+        return faqs.map((faq: any) => ({
+          question: String(faq.question || '').slice(0, 200),
+          answer: String(faq.answer || '').slice(0, 500),
+        }));
+      } catch {
+        return [];
+      }
+    }
+    
+    return text;
+  } catch (error) {
+    console.error(`Error generating ${section} content:`, error);
+    throw new Error(`Failed to generate ${section} content. Please try again.`);
+  }
+}

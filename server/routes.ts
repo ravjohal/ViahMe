@@ -3576,6 +3576,73 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
     }
   });
 
+  // Website content suggestions - AI-powered content for wedding websites
+  app.post("/api/ai/website-suggestions", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      if (!authReq.session.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const user = await storage.getUser(authReq.session.userId);
+      if (!user || user.role !== 'couple') {
+        return res.status(403).json({ error: "Only couples can access this endpoint" });
+      }
+
+      const { weddingId, section, additionalContext } = req.body;
+      
+      if (!weddingId || !section) {
+        return res.status(400).json({ 
+          error: "Missing required fields",
+          message: "weddingId and section are required" 
+        });
+      }
+
+      const validSections = ['welcome', 'travel', 'accommodation', 'faq'];
+      if (!validSections.includes(section)) {
+        return res.status(400).json({ 
+          error: "Invalid section",
+          message: `section must be one of: ${validSections.join(', ')}` 
+        });
+      }
+
+      const wedding = await storage.getWedding(weddingId);
+      if (!wedding) {
+        return res.status(404).json({ error: "Wedding not found" });
+      }
+
+      const events = await storage.getEventsByWedding(weddingId);
+
+      const { generateWebsiteContentSuggestions } = await import('./ai/gemini');
+      
+      const eventData = events.map(e => ({
+        name: e.name,
+        date: e.date?.toString(),
+        venue: e.venue || undefined,
+        location: e.location || undefined,
+      }));
+
+      const content = await generateWebsiteContentSuggestions({
+        section: section as 'welcome' | 'travel' | 'accommodation' | 'faq',
+        tradition: wedding.tradition || 'General',
+        partner1Name: wedding.partner1Name || undefined,
+        partner2Name: wedding.partner2Name || undefined,
+        weddingDate: wedding.weddingDate?.toString(),
+        city: wedding.city || undefined,
+        events: eventData,
+        additionalContext: additionalContext?.slice(0, 500),
+      });
+
+      res.json({ content, section });
+    } catch (error) {
+      console.error("Error generating website content:", error);
+      res.status(500).json({ 
+        error: "Failed to generate content",
+        message: error instanceof Error ? error.message : "Please try again later"
+      });
+    }
+  });
+
   // ============================================================================
   // CONTRACT SIGNATURES - E-signature functionality
   // ============================================================================
