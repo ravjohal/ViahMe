@@ -1092,63 +1092,6 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                       );
                     })()}
 
-                    {/* Budget Contribution Question */}
-                    <FormField
-                      control={form.control}
-                      name="budgetContribution"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-lg font-semibold tracking-wide" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-                            Who is contributing to the budget?
-                          </FormLabel>
-                          <p className="text-sm text-muted-foreground mb-2">
-                            This helps us prioritize cost-saving tips and vendor recommendations
-                          </p>
-                          <Select onValueChange={field.onChange} value={field.value || "both_families"}>
-                            <FormControl>
-                              <SelectTrigger className="h-12" data-testid="select-budget-contribution">
-                                <SelectValue placeholder="Select who's paying" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="couple_only" data-testid="option-couple-only">
-                                <div className="flex flex-col">
-                                  <span className="font-medium">Couple Only (Self-Funded)</span>
-                                  <span className="text-xs text-muted-foreground">We'll prioritize DIY tips & negotiation strategies</span>
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="both_families" data-testid="option-both-families">
-                                <div className="flex flex-col">
-                                  <span className="font-medium">Both Families</span>
-                                  <span className="text-xs text-muted-foreground">Traditional split with family contributions</span>
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="mix" data-testid="option-mix">
-                                <div className="flex flex-col">
-                                  <span className="font-medium">Mix of Couple + Family</span>
-                                  <span className="text-xs text-muted-foreground">Partial family support with couple managing</span>
-                                </div>
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {/* Self-Funded Tips */}
-                    {form.watch("budgetContribution") === "couple_only" && (
-                      <div className="p-4 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border border-blue-200 dark:border-blue-800">
-                        <h4 className="font-semibold text-blue-900 dark:text-blue-100 text-sm mb-2">Self-Funded Wedding Tips</h4>
-                        <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
-                          <li>• Consider used decor marketplaces (save 40-60%)</li>
-                          <li>• Negotiate vendor packages and service fees</li>
-                          <li>• Book off-peak dates for better rates</li>
-                          <li>• DIY-friendly venues let you choose affordable caterers</li>
-                        </ul>
-                      </div>
-                    )}
-
                     <FormField
                       control={form.control}
                       name="totalBudget"

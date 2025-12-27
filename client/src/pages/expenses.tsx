@@ -14,8 +14,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Trash2, Pencil, DollarSign, Users, ArrowRightLeft, Check, Receipt } from "lucide-react";
-import type { Expense, ExpenseSplit, Event, User } from "@shared/schema";
+import { Plus, Trash2, Pencil, DollarSign, Users, ArrowRightLeft, Check, Receipt, Share2, Copy } from "lucide-react";
+import type { Expense, ExpenseSplit, Event, Wedding } from "@shared/schema";
 
 type ExpenseWithSplits = Expense & { splits: ExpenseSplit[] };
 type SettlementBalance = Record<string, { name: string; paid: number; owes: number; balance: number }>;
@@ -30,12 +30,20 @@ export default function Expenses() {
     amount: "",
     eventId: "",
     splitType: "equal" as "equal" | "percentage" | "custom" | "full",
+    paidById: "",
     notes: "",
     expenseDate: new Date().toISOString().split("T")[0],
   });
   const [splitAmounts, setSplitAmounts] = useState<Record<string, string>>({});
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
 
-  const weddingId = user?.activeWeddingId;
+  const { data: weddings = [] } = useQuery<Wedding[]>({
+    queryKey: ["/api/weddings"],
+    enabled: !!user,
+  });
+
+  const wedding = weddings[0];
+  const weddingId = wedding?.id;
 
   const { data: expenses = [], isLoading: expensesLoading } = useQuery<ExpenseWithSplits[]>({
     queryKey: ["/api/expenses", weddingId],
@@ -57,13 +65,8 @@ export default function Expenses() {
     enabled: !!weddingId,
   });
 
-  const { data: wedding } = useQuery<any>({
-    queryKey: ["/api/weddings", weddingId],
-    enabled: !!weddingId,
-  });
-
   const teamMembers = [
-    ...(user ? [{ id: user.id, name: user.name || user.email }] : []),
+    ...(user ? [{ id: user.id, name: user.email }] : []),
     ...(wedding?.partner1Name ? [{ id: "partner1", name: wedding.partner1Name }] : []),
     ...(wedding?.partner2Name ? [{ id: "partner2", name: wedding.partner2Name }] : []),
     ...collaborators.map((c: any) => ({ id: c.userId, name: c.user?.name || c.user?.email || "Team Member" })),
@@ -73,7 +76,7 @@ export default function Expenses() {
 
   const createExpenseMutation = useMutation({
     mutationFn: async (data: any) => {
-      return apiRequest("/api/expenses", { method: "POST", body: JSON.stringify(data) });
+      return apiRequest("POST", "/api/expenses", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/expenses", weddingId] });
@@ -88,7 +91,7 @@ export default function Expenses() {
 
   const updateExpenseMutation = useMutation({
     mutationFn: async ({ id, ...data }: any) => {
-      return apiRequest(`/api/expenses/${id}`, { method: "PATCH", body: JSON.stringify(data) });
+      return apiRequest("PATCH", `/api/expenses/${id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/expenses", weddingId] });
@@ -103,7 +106,7 @@ export default function Expenses() {
 
   const deleteExpenseMutation = useMutation({
     mutationFn: async (id: string) => {
-      return apiRequest(`/api/expenses/${id}`, { method: "DELETE" });
+      return apiRequest("DELETE", `/api/expenses/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/expenses", weddingId] });
@@ -116,10 +119,7 @@ export default function Expenses() {
 
   const markSplitPaidMutation = useMutation({
     mutationFn: async ({ splitId, isPaid }: { splitId: string; isPaid: boolean }) => {
-      return apiRequest(`/api/expense-splits/${splitId}`, {
-        method: "PATCH",
-        body: JSON.stringify({ isPaid, paidAt: isPaid ? new Date().toISOString() : null }),
-      });
+      return apiRequest("PATCH", `/api/expense-splits/${splitId}`, { isPaid, paidAt: isPaid ? new Date().toISOString() : null });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/expenses", weddingId] });
@@ -133,6 +133,7 @@ export default function Expenses() {
       amount: "",
       eventId: "",
       splitType: "equal",
+      paidById: user?.id || "",
       notes: "",
       expenseDate: new Date().toISOString().split("T")[0],
     });
@@ -148,12 +149,13 @@ export default function Expenses() {
       return;
     }
 
+    const payerId = formData.paidById || user.id;
     const splits = teamMembers.map((member) => {
       let shareAmount: number;
       if (formData.splitType === "equal") {
         shareAmount = amount / teamMembers.length;
       } else if (formData.splitType === "full") {
-        shareAmount = member.id === user.id ? amount : 0;
+        shareAmount = member.id === payerId ? amount : 0;
       } else {
         shareAmount = parseFloat(splitAmounts[member.id] || "0");
       }
@@ -162,7 +164,7 @@ export default function Expenses() {
         userName: member.name,
         shareAmount: shareAmount.toFixed(2),
         sharePercentage: formData.splitType === "equal" ? Math.round(100 / teamMembers.length) : null,
-        isPaid: member.id === user.id,
+        isPaid: member.id === payerId,
       };
     }).filter((s) => parseFloat(s.shareAmount) > 0);
 
@@ -170,8 +172,8 @@ export default function Expenses() {
       weddingId,
       description: formData.description,
       amount: formData.amount,
-      paidById: user.id,
-      paidByName: user.name || user.email,
+      paidById: payerId,
+      paidByName: teamMembers.find(m => m.id === payerId)?.name || user.email,
       splitType: formData.splitType,
       eventId: formData.eventId || null,
       notes: formData.notes || null,
@@ -193,6 +195,7 @@ export default function Expenses() {
       amount: expense.amount,
       eventId: expense.eventId || "",
       splitType: expense.splitType as any,
+      paidById: expense.paidById || "",
       notes: expense.notes || "",
       expenseDate: expense.expenseDate ? new Date(expense.expenseDate).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
     });
@@ -279,6 +282,19 @@ export default function Expenses() {
                 </Select>
               </div>
               <div>
+                <Label htmlFor="paidBy">Who Paid?</Label>
+                <Select value={formData.paidById} onValueChange={(v) => setFormData({ ...formData, paidById: v })}>
+                  <SelectTrigger data-testid="select-paid-by">
+                    <SelectValue placeholder="Select who paid" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {teamMembers.map((member) => (
+                      <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
                 <Label htmlFor="splitType">Split Type</Label>
                 <Select value={formData.splitType} onValueChange={(v: any) => setFormData({ ...formData, splitType: v })}>
                   <SelectTrigger data-testid="select-split-type">
@@ -287,7 +303,7 @@ export default function Expenses() {
                   <SelectContent>
                     <SelectItem value="equal">Split Equally</SelectItem>
                     <SelectItem value="custom">Custom Amounts</SelectItem>
-                    <SelectItem value="full">I Paid (No Split)</SelectItem>
+                    <SelectItem value="full">Full Amount (No Split)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -381,12 +397,23 @@ export default function Expenses() {
 
       {settlement && Object.keys(settlement).length > 0 && (
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ArrowRightLeft className="h-5 w-5" />
-              Settlement Summary
-            </CardTitle>
-            <CardDescription>Who owes whom based on expenses</CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between gap-4">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <ArrowRightLeft className="h-5 w-5" />
+                Settlement Summary
+              </CardTitle>
+              <CardDescription>Who owes whom based on expenses</CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsShareDialogOpen(true)}
+              data-testid="button-share-settlement"
+            >
+              <Share2 className="h-4 w-4 mr-2" />
+              Share
+            </Button>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -407,6 +434,48 @@ export default function Expenses() {
           </CardContent>
         </Card>
       )}
+
+      {/* Share Settlement Dialog */}
+      <Dialog open={isShareDialogOpen} onOpenChange={setIsShareDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Share Settlement Summary</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="p-4 bg-muted rounded-lg">
+              <p className="font-semibold mb-2">Wedding Expense Summary</p>
+              <p className="text-sm text-muted-foreground mb-3">Total: ${totalExpenses.toLocaleString("en-US", { minimumFractionDigits: 2 })}</p>
+              <div className="space-y-2 text-sm">
+                {settlement && Object.entries(settlement).map(([userId, data]) => (
+                  <div key={userId} className="flex justify-between">
+                    <span>{data.name}</span>
+                    <span className={data.balance >= 0 ? "text-green-600" : "text-red-600"}>
+                      {data.balance >= 0 ? "gets back" : "owes"} ${Math.abs(data.balance).toFixed(2)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                className="flex-1"
+                onClick={() => {
+                  const summaryText = `Wedding Expense Summary\nTotal: $${totalExpenses.toFixed(2)}\n\n` +
+                    Object.entries(settlement || {})
+                      .map(([_, data]) => `${data.name}: ${data.balance >= 0 ? "gets back" : "owes"} $${Math.abs(data.balance).toFixed(2)}`)
+                      .join("\n");
+                  navigator.clipboard.writeText(summaryText);
+                  toast({ title: "Copied to clipboard!" });
+                }}
+                data-testid="button-copy-settlement"
+              >
+                <Copy className="h-4 w-4 mr-2" />
+                Copy to Clipboard
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Card>
         <CardHeader>
