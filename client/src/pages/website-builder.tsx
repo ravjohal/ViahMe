@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { Loader2, ExternalLink, Globe, Copy, Check, Sparkles, Wand2 } from "lucide-react";
+import { Loader2, ExternalLink, Globe, Copy, Check, Sparkles, Wand2, Eye, Info } from "lucide-react";
 import type { WeddingWebsite, InsertWeddingWebsite, Wedding } from "@shared/schema";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
@@ -260,31 +260,39 @@ export default function WebsiteBuilder() {
             </CardHeader>
             <CardContent className="space-y-4">
               {website && (
-                <div className="flex items-center justify-between p-3 bg-muted rounded-lg mb-4">
-                  <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <Globe className="w-4 h-4 text-muted-foreground shrink-0" />
-                    <a 
-                      href={`/wedding/${website.slug}`} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-sm font-medium text-primary hover:underline truncate"
-                      data-testid="link-website-url"
+                <div className="space-y-2 mb-4">
+                  <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <Globe className="w-4 h-4 text-muted-foreground shrink-0" />
+                      <a 
+                        href={`/wedding/${website.slug}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-sm font-medium text-primary hover:underline truncate"
+                        data-testid="link-website-url"
+                      >
+                        {window.location.origin}/wedding/{website.slug}
+                      </a>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      asChild
+                      data-testid="button-open-website"
                     >
-                      {window.location.origin}/wedding/{website.slug}
-                    </a>
+                      <a href={`/wedding/${website.slug}`} target="_blank" rel="noopener noreferrer">
+                        <Eye className="w-4 h-4 mr-2" />
+                        Preview
+                      </a>
+                    </Button>
                   </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    asChild
-                    data-testid="button-open-website"
-                  >
-                    <a href={`/wedding/${website.slug}`} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Open
-                    </a>
-                  </Button>
+                  {!website.isPublished && (
+                    <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg text-sm text-amber-700 dark:text-amber-300" data-testid="unpublished-notice">
+                      <Info className="w-4 h-4 shrink-0" />
+                      <span>Your website is not published yet. Only you can see it. Click "Publish Website" above when ready to share with guests.</span>
+                    </div>
+                  )}
                 </div>
               )}
 
