@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -215,10 +215,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
       guestCountEstimate: "300",
       ceremonyGuestCount: "",
       receptionGuestCount: "",
-      customEvents: [
-        { ceremonyId: "", customName: "", guestCount: "" },
-        { ceremonyId: "", customName: "", guestCount: "" },
-      ],
+      customEvents: [],
       autoCreateCeremonies: true,
       totalBudget: "50000",
       budgetContribution: "both_families",
@@ -243,6 +240,21 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
     form.setValue("tradition", value as any);
     form.setValue("subTradition", null);
     form.setValue("subTraditions", []);
+    // Reset ceremonies to defaults for the new tradition only if events are empty or all default
+    const currentEvents = form.getValues("customEvents") || [];
+    const hasUserEdits = currentEvents.some(e => 
+      (e.guestCount && e.guestCount !== "") || 
+      (e.ceremonyId === "custom" && e.customName)
+    );
+    if (!hasUserEdits) {
+      const defaultCeremonyIds = getDefaultCeremoniesForTradition(value);
+      const defaultEvents = defaultCeremonyIds.map(id => ({
+        ceremonyId: id,
+        customName: "",
+        guestCount: "",
+      }));
+      form.setValue("customEvents", defaultEvents);
+    }
   };
 
   const handleSubTraditionMultiSelect = (subValue: string, checked: boolean) => {
@@ -263,6 +275,22 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
     const tradition = form.watch("tradition") || "general";
     return getCeremoniesForTradition(tradition);
   }, [selectedMainTradition]);
+
+  // Initialize default ceremonies on mount only
+  useEffect(() => {
+    const currentEvents = form.getValues("customEvents") || [];
+    // Only set defaults if no events exist
+    if (currentEvents.length === 0) {
+      const tradition = form.getValues("tradition") || "sikh";
+      const defaultCeremonyIds = getDefaultCeremoniesForTradition(tradition);
+      const defaultEvents = defaultCeremonyIds.map(id => ({
+        ceremonyId: id,
+        customName: "",
+        guestCount: "",
+      }));
+      form.setValue("customEvents", defaultEvents);
+    }
+  }, []); // Run only on mount
 
   const handleAddEvent = () => {
     const current = form.getValues("customEvents") || [];
@@ -882,94 +910,70 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
 
                 {currentStep === 5 && (
                   <div className="space-y-6">
-                    {/* Dynamic Budget Calculator Based on Events */}
+                    {/* Dynamic Budget Calculator Based on Events - Uses shared ceremonies catalog */}
                     {(() => {
-                      // Cost per guest per event type (low - high range)
-                      const eventCostPerGuest: Record<string, { low: number; high: number; defaultGuests: number; displayName: string }> = {
-                        "wedding ceremony": { low: 80, high: 150, defaultGuests: 200, displayName: "Wedding Ceremony" },
-                        "reception": { low: 100, high: 200, defaultGuests: 300, displayName: "Reception" },
-                        "sangeet": { low: 60, high: 120, defaultGuests: 150, displayName: "Sangeet" },
-                        "mehndi": { low: 40, high: 80, defaultGuests: 100, displayName: "Mehndi" },
-                        "haldi": { low: 30, high: 60, defaultGuests: 75, displayName: "Haldi" },
-                        "baraat": { low: 20, high: 40, defaultGuests: 100, displayName: "Baraat" },
-                        "garba": { low: 50, high: 100, defaultGuests: 200, displayName: "Garba" },
-                        "pithi": { low: 30, high: 60, defaultGuests: 75, displayName: "Pithi" },
-                        "nikah": { low: 60, high: 120, defaultGuests: 150, displayName: "Nikah" },
-                        "walima": { low: 80, high: 150, defaultGuests: 250, displayName: "Walima" },
-                        "dholki": { low: 40, high: 80, defaultGuests: 80, displayName: "Dholki" },
-                        "anand karaj": { low: 50, high: 100, defaultGuests: 200, displayName: "Anand Karaj" },
-                        "muhurtham": { low: 60, high: 120, defaultGuests: 150, displayName: "Muhurtham" },
-                        "cocktail": { low: 50, high: 100, defaultGuests: 150, displayName: "Cocktail Hour" },
-                        "rehearsal dinner": { low: 60, high: 120, defaultGuests: 50, displayName: "Rehearsal Dinner" },
-                      };
-
-                      // Traditional ceremonies by tradition
-                      const traditionCeremonies: Record<string, string[]> = {
-                        "hindu": ["mehndi", "sangeet", "haldi", "baraat", "wedding ceremony", "reception"],
-                        "sikh": ["mehndi", "sangeet", "anand karaj", "reception"],
-                        "muslim": ["mehndi", "dholki", "nikah", "walima"],
-                        "gujarati": ["pithi", "garba", "mehndi", "wedding ceremony", "reception"],
-                        "south_indian": ["mehndi", "sangeet", "muhurtham", "reception"],
-                        "mixed": ["mehndi", "sangeet", "wedding ceremony", "reception"],
-                        "general": ["rehearsal dinner", "wedding ceremony", "reception"],
-                      };
-
-                      const getEventCost = (eventName: string) => {
-                        const normalized = eventName.toLowerCase().trim();
-                        for (const [key, value] of Object.entries(eventCostPerGuest)) {
-                          if (normalized.includes(key) || key.includes(normalized)) {
-                            return { ...value, key };
-                          }
-                        }
-                        return { low: 50, high: 100, defaultGuests: 150, displayName: eventName, key: "" };
-                      };
-
-                      const events = customEvents.filter(e => e.name.trim() !== "");
+                      // Include all events with a ceremonyId selected (excluding empty/unselected ones)
+                      const validEvents = customEvents.filter(e => 
+                        e.ceremonyId && e.ceremonyId !== ""
+                      );
+                      
                       let totalLow = 0;
                       let totalHigh = 0;
-                      const chosenEventKeys = new Set<string>();
+                      const chosenCeremonyIds = new Set<string>();
 
-                      const eventBreakdown = events.map(event => {
-                        const cost = getEventCost(event.name);
-                        if (cost.key) chosenEventKeys.add(cost.key);
+                      const eventBreakdown = validEvents.map(event => {
+                        let ceremony: CeremonyDefinition | undefined;
+                        let displayName = "";
+                        
+                        if (event.ceremonyId && event.ceremonyId !== "custom") {
+                          ceremony = getCeremonyById(event.ceremonyId);
+                          chosenCeremonyIds.add(event.ceremonyId);
+                          displayName = ceremony?.name || event.ceremonyId;
+                        } else if (event.ceremonyId === "custom" && event.customName) {
+                          displayName = event.customName;
+                        }
+
+                        const costLow = ceremony?.costPerGuestLow || 50;
+                        const costHigh = ceremony?.costPerGuestHigh || 100;
+                        const defaultGuests = ceremony?.defaultGuests || 150;
+                        
                         const guestCount = event.guestCount && parseInt(event.guestCount) > 0 
                           ? parseInt(event.guestCount) 
-                          : cost.defaultGuests;
-                        const lowCost = cost.low * guestCount;
-                        const highCost = cost.high * guestCount;
+                          : defaultGuests;
+                        const lowCost = costLow * guestCount;
+                        const highCost = costHigh * guestCount;
                         totalLow += lowCost;
                         totalHigh += highCost;
+                        
                         return {
-                          name: event.name,
+                          name: displayName,
                           guests: guestCount,
                           isDefault: !event.guestCount || parseInt(event.guestCount) === 0,
-                          costPerGuestLow: cost.low,
-                          costPerGuestHigh: cost.high,
+                          costPerGuestLow: costLow,
+                          costPerGuestHigh: costHigh,
                           totalLow: lowCost,
                           totalHigh: highCost,
                         };
                       });
 
-                      // Find ceremonies not chosen based on tradition
+                      // Find ceremonies not chosen based on tradition (using shared catalog)
                       const selectedTradition = form.watch("tradition") || "general";
-                      const traditionalEvents = traditionCeremonies[selectedTradition] || traditionCeremonies["general"];
-                      const unchosenCeremonies = traditionalEvents
-                        .filter(key => !chosenEventKeys.has(key))
-                        .map(key => {
-                          const cost = eventCostPerGuest[key];
-                          if (!cost) return null;
-                          const lowCost = cost.low * cost.defaultGuests;
-                          const highCost = cost.high * cost.defaultGuests;
+                      const traditionalCeremonies = getCeremoniesForTradition(selectedTradition);
+                      const unchosenCeremonies = traditionalCeremonies
+                        .filter(c => !chosenCeremonyIds.has(c.id))
+                        .map(ceremony => {
+                          const lowCost = ceremony.costPerGuestLow * ceremony.defaultGuests;
+                          const highCost = ceremony.costPerGuestHigh * ceremony.defaultGuests;
                           return {
-                            name: cost.displayName,
-                            guests: cost.defaultGuests,
-                            costPerGuestLow: cost.low,
-                            costPerGuestHigh: cost.high,
+                            id: ceremony.id,
+                            name: ceremony.name,
+                            guests: ceremony.defaultGuests,
+                            costPerGuestLow: ceremony.costPerGuestLow,
+                            costPerGuestHigh: ceremony.costPerGuestHigh,
                             totalLow: lowCost,
                             totalHigh: highCost,
                           };
-                        })
-                        .filter(Boolean);
+                        });
 
                       // Auto-set budget to minimum total if not already set
                       const currentBudget = form.watch("totalBudget");
