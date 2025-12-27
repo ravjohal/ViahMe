@@ -24,32 +24,26 @@ export interface NavSection {
 
 export const COUPLE_NAV_SECTIONS: NavSection[] = [
   {
+    id: "main",
+    label: "Main Navigation",
+    items: [
+      { path: "/dashboard", label: "Dashboard", icon: Home, priority: 1, description: "Your wedding overview" },
+      { path: "/budget", label: "Budget", icon: DollarSign, permission: "budget", priority: 2, description: "Track spending" },
+      { path: "/timeline", label: "Timeline", icon: Clock, permission: "timeline", priority: 3, description: "Your schedule" },
+      { path: "/vendors", label: "Vendors", icon: UserCircle, permission: "vendors", priority: 4, description: "Find services" },
+      { path: "/guests", label: "Guests", icon: Users, permission: "guests", priority: 5, description: "Manage guest list" },
+      { path: "/tasks", label: "Tasks", icon: CheckSquare, permission: "tasks", priority: 6, description: "Things to do" },
+      { path: "/ritual-control", label: "Live Control", icon: Radio, permission: "concierge", priority: 7, description: "Day-of coordination" },
+    ],
+  },
+  {
     id: "planning",
     label: "Plan Your Wedding",
     items: [
-      { path: "/dashboard", label: "Dashboard", icon: Home, priority: 1, description: "Your wedding overview" },
       { path: "/ai-planner", label: "AI Planner", icon: Bot, permission: "ai_planner", description: "Smart planning assistant" },
-      { path: "/timeline", label: "Timeline", icon: Clock, permission: "timeline", priority: 3, description: "Your schedule" },
-      { path: "/tasks", label: "Tasks", icon: CheckSquare, permission: "tasks", description: "Things to do" },
-      { path: "/ritual-control", label: "Live Control", icon: Radio, permission: "concierge", description: "Day-of coordination" },
-    ],
-  },
-  {
-    id: "people",
-    label: "People & Vendors",
-    items: [
-      { path: "/vendors", label: "Vendors", icon: UserCircle, permission: "vendors", priority: 2, description: "Find services" },
-      { path: "/guests", label: "Guests", icon: Users, permission: "guests", description: "Manage guest list" },
-      { path: "/collaborators", label: "Team", icon: UsersRound, permission: "collaborators", description: "Family helpers" },
-    ],
-  },
-  {
-    id: "money",
-    label: "Budget & Contracts",
-    items: [
-      { path: "/budget", label: "Budget", icon: DollarSign, permission: "budget", description: "Track spending" },
       { path: "/expenses", label: "Expenses", icon: Wallet, permission: "budget", description: "Split costs" },
       { path: "/contracts", label: "Contracts", icon: FileText, permission: "contracts", description: "Vendor agreements" },
+      { path: "/collaborators", label: "Team", icon: UsersRound, permission: "collaborators", description: "Family helpers" },
     ],
   },
   {
@@ -66,7 +60,7 @@ export const COUPLE_NAV_SECTIONS: NavSection[] = [
     id: "communication",
     label: "Messages & Invites",
     items: [
-      { path: "/messages", label: "Messages", icon: MessageSquare, priority: 4, description: "Chat with vendors" },
+      { path: "/messages", label: "Messages", icon: MessageSquare, description: "Chat with vendors" },
       { path: "/invitations", label: "Invitations", icon: ShoppingBag, permission: "invitations", description: "Order cards" },
     ],
   },
