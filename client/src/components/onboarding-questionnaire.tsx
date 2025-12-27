@@ -838,41 +838,53 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                     {/* Dynamic Budget Calculator Based on Events */}
                     {(() => {
                       // Cost per guest per event type (low - high range)
-                      const eventCostPerGuest: Record<string, { low: number; high: number; defaultGuests: number }> = {
-                        "wedding ceremony": { low: 80, high: 150, defaultGuests: 200 },
-                        "reception": { low: 100, high: 200, defaultGuests: 300 },
-                        "sangeet": { low: 60, high: 120, defaultGuests: 150 },
-                        "mehndi": { low: 40, high: 80, defaultGuests: 100 },
-                        "haldi": { low: 30, high: 60, defaultGuests: 75 },
-                        "baraat": { low: 20, high: 40, defaultGuests: 100 },
-                        "garba": { low: 50, high: 100, defaultGuests: 200 },
-                        "pithi": { low: 30, high: 60, defaultGuests: 75 },
-                        "nikah": { low: 60, high: 120, defaultGuests: 150 },
-                        "walima": { low: 80, high: 150, defaultGuests: 250 },
-                        "dholki": { low: 40, high: 80, defaultGuests: 80 },
-                        "anand karaj": { low: 50, high: 100, defaultGuests: 200 },
-                        "muhurtham": { low: 60, high: 120, defaultGuests: 150 },
-                        "cocktail": { low: 50, high: 100, defaultGuests: 150 },
-                        "rehearsal dinner": { low: 60, high: 120, defaultGuests: 50 },
+                      const eventCostPerGuest: Record<string, { low: number; high: number; defaultGuests: number; displayName: string }> = {
+                        "wedding ceremony": { low: 80, high: 150, defaultGuests: 200, displayName: "Wedding Ceremony" },
+                        "reception": { low: 100, high: 200, defaultGuests: 300, displayName: "Reception" },
+                        "sangeet": { low: 60, high: 120, defaultGuests: 150, displayName: "Sangeet" },
+                        "mehndi": { low: 40, high: 80, defaultGuests: 100, displayName: "Mehndi" },
+                        "haldi": { low: 30, high: 60, defaultGuests: 75, displayName: "Haldi" },
+                        "baraat": { low: 20, high: 40, defaultGuests: 100, displayName: "Baraat" },
+                        "garba": { low: 50, high: 100, defaultGuests: 200, displayName: "Garba" },
+                        "pithi": { low: 30, high: 60, defaultGuests: 75, displayName: "Pithi" },
+                        "nikah": { low: 60, high: 120, defaultGuests: 150, displayName: "Nikah" },
+                        "walima": { low: 80, high: 150, defaultGuests: 250, displayName: "Walima" },
+                        "dholki": { low: 40, high: 80, defaultGuests: 80, displayName: "Dholki" },
+                        "anand karaj": { low: 50, high: 100, defaultGuests: 200, displayName: "Anand Karaj" },
+                        "muhurtham": { low: 60, high: 120, defaultGuests: 150, displayName: "Muhurtham" },
+                        "cocktail": { low: 50, high: 100, defaultGuests: 150, displayName: "Cocktail Hour" },
+                        "rehearsal dinner": { low: 60, high: 120, defaultGuests: 50, displayName: "Rehearsal Dinner" },
+                      };
+
+                      // Traditional ceremonies by tradition
+                      const traditionCeremonies: Record<string, string[]> = {
+                        "hindu": ["mehndi", "sangeet", "haldi", "baraat", "wedding ceremony", "reception"],
+                        "sikh": ["mehndi", "sangeet", "anand karaj", "reception"],
+                        "muslim": ["mehndi", "dholki", "nikah", "walima"],
+                        "gujarati": ["pithi", "garba", "mehndi", "wedding ceremony", "reception"],
+                        "south_indian": ["mehndi", "sangeet", "muhurtham", "reception"],
+                        "mixed": ["mehndi", "sangeet", "wedding ceremony", "reception"],
+                        "general": ["rehearsal dinner", "wedding ceremony", "reception"],
                       };
 
                       const getEventCost = (eventName: string) => {
                         const normalized = eventName.toLowerCase().trim();
                         for (const [key, value] of Object.entries(eventCostPerGuest)) {
                           if (normalized.includes(key) || key.includes(normalized)) {
-                            return value;
+                            return { ...value, key };
                           }
                         }
-                        // Default for unknown events
-                        return { low: 50, high: 100, defaultGuests: 150 };
+                        return { low: 50, high: 100, defaultGuests: 150, displayName: eventName, key: "" };
                       };
 
                       const events = customEvents.filter(e => e.name.trim() !== "");
                       let totalLow = 0;
                       let totalHigh = 0;
+                      const chosenEventKeys = new Set<string>();
 
                       const eventBreakdown = events.map(event => {
                         const cost = getEventCost(event.name);
+                        if (cost.key) chosenEventKeys.add(cost.key);
                         const guestCount = event.guestCount && parseInt(event.guestCount) > 0 
                           ? parseInt(event.guestCount) 
                           : cost.defaultGuests;
@@ -890,6 +902,35 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                           totalHigh: highCost,
                         };
                       });
+
+                      // Find ceremonies not chosen based on tradition
+                      const selectedTradition = form.watch("tradition") || "general";
+                      const traditionalEvents = traditionCeremonies[selectedTradition] || traditionCeremonies["general"];
+                      const unchosenCeremonies = traditionalEvents
+                        .filter(key => !chosenEventKeys.has(key))
+                        .map(key => {
+                          const cost = eventCostPerGuest[key];
+                          if (!cost) return null;
+                          const lowCost = cost.low * cost.defaultGuests;
+                          const highCost = cost.high * cost.defaultGuests;
+                          return {
+                            name: cost.displayName,
+                            guests: cost.defaultGuests,
+                            costPerGuestLow: cost.low,
+                            costPerGuestHigh: cost.high,
+                            totalLow: lowCost,
+                            totalHigh: highCost,
+                          };
+                        })
+                        .filter(Boolean);
+
+                      // Auto-set budget to minimum total if not already set
+                      const currentBudget = form.watch("totalBudget");
+                      if (totalLow > 0 && (!currentBudget || currentBudget === "")) {
+                        setTimeout(() => {
+                          form.setValue("totalBudget", totalLow.toString());
+                        }, 0);
+                      }
 
                       return (
                         <div className="p-4 rounded-lg bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 border border-emerald-200 dark:border-emerald-800">
@@ -942,6 +983,38 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                             <p className="text-sm text-emerald-700 dark:text-emerald-300 italic">
                               Add events in the previous step to see a budget breakdown.
                             </p>
+                          )}
+
+                          {/* Other ceremonies you might consider */}
+                          {unchosenCeremonies.length > 0 && (
+                            <div className="mt-4 pt-4 border-t border-emerald-200 dark:border-emerald-700">
+                              <h5 className="text-sm font-semibold text-emerald-800 dark:text-emerald-200 mb-2">
+                                Other traditional ceremonies you might consider:
+                              </h5>
+                              <div className="space-y-1.5">
+                                {unchosenCeremonies.map((ceremony: any, idx: number) => (
+                                  <div key={idx} className="flex items-center justify-between p-2 bg-emerald-50/50 dark:bg-emerald-900/20 rounded border border-dashed border-emerald-200 dark:border-emerald-700">
+                                    <div className="flex-1">
+                                      <span className="text-sm text-emerald-700 dark:text-emerald-300">{ceremony.name}</span>
+                                      <span className="text-xs text-emerald-500 dark:text-emerald-500 ml-2">
+                                        (~{ceremony.guests} guests typical)
+                                      </span>
+                                    </div>
+                                    <div className="text-right">
+                                      <span className="text-xs text-emerald-500 dark:text-emerald-500 block">
+                                        ${ceremony.costPerGuestLow}-${ceremony.costPerGuestHigh}/guest
+                                      </span>
+                                      <span className="text-sm text-emerald-600 dark:text-emerald-400">
+                                        +${ceremony.totalLow.toLocaleString()} - ${ceremony.totalHigh.toLocaleString()}
+                                      </span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                              <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-2 italic">
+                                You can add these ceremonies in the Events step if you'd like to include them.
+                              </p>
+                            </div>
                           )}
                         </div>
                       );
