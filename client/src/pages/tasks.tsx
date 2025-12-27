@@ -985,33 +985,10 @@ export default function TasksPage() {
                                   initialFocus
                                 />
                                 <div className="p-3 border-t space-y-2">
-                                  <Select
-                                    value={task.reminderMethod || "email"}
-                                    disabled={reminderMutation.isPending}
-                                    onValueChange={(value) => reminderMutation.mutate({
-                                      id: task.id,
-                                      data: { reminderMethod: value }
-                                    })}
-                                  >
-                                    <SelectTrigger className="h-8 text-xs" data-testid={`select-reminder-method-${task.id}`}>
-                                      <SelectValue placeholder="Notify via..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="email">
-                                        <div className="flex items-center gap-1">
-                                          <Mail className="w-3 h-3" />
-                                          Email
-                                        </div>
-                                      </SelectItem>
-                                      <SelectItem value="sms">
-                                        <div className="flex items-center gap-1">
-                                          <MessageSquare className="w-3 h-3" />
-                                          SMS
-                                        </div>
-                                      </SelectItem>
-                                      <SelectItem value="both">Both</SelectItem>
-                                    </SelectContent>
-                                  </Select>
+                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    <Mail className="w-3 h-3" />
+                                    <span>Reminder via Email</span>
+                                  </div>
                                   {task.reminderEnabled && (
                                     <Button
                                       variant="ghost"
