@@ -31,7 +31,7 @@ const questionnaireSchema = z.object({
   partnerNewToTraditions: z.boolean().optional(),
 });
 
-import { Flame, Moon, Sparkles, Music, Flower2, Church, Leaf, Sun, Heart, Star } from "lucide-react";
+import { Flame, Moon, Sparkles, Flower2, Church, Leaf, Heart, Star, BookOpen, Palette } from "lucide-react";
 
 // Visual tradition cards with descriptions and vibes
 const TRADITION_CARDS = [
@@ -41,7 +41,7 @@ const TRADITION_CARDS = [
     description: "Anand Karaj at the Gurdwara",
     vibe: "Sacred ceremony around the Guru Granth Sahib with Lavaan",
     color: "from-orange-400 to-amber-500",
-    Icon: Sun,
+    Icon: BookOpen,
   },
   { 
     value: "hindu", 
@@ -65,7 +65,7 @@ const TRADITION_CARDS = [
     description: "Garba, Pithi, and colorful celebrations",
     vibe: "Vibrant pre-wedding festivities with Dandiya nights",
     color: "from-yellow-400 to-orange-500",
-    Icon: Music,
+    Icon: Palette,
   },
   { 
     value: "south_indian", 
@@ -494,60 +494,6 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                           </FormItem>
                         )}
                       />
-                    )}
-
-                    {/* Tradition Cost Tips */}
-                    {selectedMainTradition && selectedMainTradition !== "other" && (
-                      <div className="p-4 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200">
-                        <div className="flex items-start gap-3">
-                          <div className="p-1.5 rounded-full bg-blue-100">
-                            <Info className="w-4 h-4 text-blue-600" />
-                          </div>
-                          <div className="space-y-2">
-                            <h4 className="font-semibold text-blue-900 text-sm">Cost-Saving Tips for {selectedMainTradition === "sikh" ? "Sikh" : selectedMainTradition === "hindu" ? "Hindu" : selectedMainTradition === "muslim" ? "Muslim" : selectedMainTradition === "gujarati" ? "Gujarati" : selectedMainTradition === "south_indian" ? "South Indian" : selectedMainTradition === "christian" ? "Christian" : selectedMainTradition === "jain" ? "Jain" : selectedMainTradition === "parsi" ? "Parsi" : "Mixed"} Weddings</h4>
-                            {selectedMainTradition === "sikh" && (
-                              <p className="text-sm text-blue-700">
-                                <span className="font-medium">Gurdwara ceremonies</span> are often free or donation-based, saving $5,000-$15,000 compared to hotel ballroom ceremonies. Many Gurdwaras also provide langar (community meal) which can reduce catering costs.
-                              </p>
-                            )}
-                            {selectedMainTradition === "hindu" && (
-                              <p className="text-sm text-blue-700">
-                                <span className="font-medium">Temple ceremonies</span> can save $3,000-$8,000 compared to venues. Consider combining Sangeet and Mehndi to reduce venue costs. Off-peak muhurat dates often have lower vendor rates.
-                              </p>
-                            )}
-                            {selectedMainTradition === "muslim" && (
-                              <p className="text-sm text-blue-700">
-                                <span className="font-medium">Mosque ceremonies</span> are typically low-cost or donation-based. Combining Mehndi with Dholki can save on venue rentals. Halal caterers with DIY-friendly venues often offer better rates.
-                              </p>
-                            )}
-                            {selectedMainTradition === "gujarati" && (
-                              <p className="text-sm text-blue-700">
-                                <span className="font-medium">Community halls</span> in Gujarati areas often offer cultural discounts. Consider hosting Garba at a community center vs. hotel to save 40-50% on venue costs.
-                              </p>
-                            )}
-                            {selectedMainTradition === "south_indian" && (
-                              <p className="text-sm text-blue-700">
-                                <span className="font-medium">Temple weddings</span> are traditionally simpler and cost-effective. Morning ceremonies allow for lunch receptions (vs. dinner) which can save 20-30% on catering.
-                              </p>
-                            )}
-                            {selectedMainTradition === "christian" && (
-                              <p className="text-sm text-blue-700">
-                                <span className="font-medium">Church ceremonies</span> often have lower venue costs than hotels. Many parishes offer reception halls at discounted rates for members.
-                              </p>
-                            )}
-                            {(selectedMainTradition === "jain" || selectedMainTradition === "parsi") && (
-                              <p className="text-sm text-blue-700">
-                                <span className="font-medium">Community centers</span> often provide preferred rates. Traditional daytime ceremonies can reduce catering and lighting costs significantly.
-                              </p>
-                            )}
-                            {selectedMainTradition === "mixed" && (
-                              <p className="text-sm text-blue-700">
-                                <span className="font-medium">Combine ceremonies strategically</span> - a single multi-faith ceremony can save $10,000+ vs. separate events. Consider a neutral venue that honors both traditions.
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
                     )}
 
                     {selectedMainTradition === "mixed" && availableSubTraditions.length > 0 && (
