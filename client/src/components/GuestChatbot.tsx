@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageCircle, Send, X, Loader2, Sparkles } from "lucide-react";
@@ -25,14 +24,29 @@ export function GuestChatbot({ slug, coupleName }: GuestChatbotProps) {
 
   useEffect(() => {
     if (scrollAreaRef.current) {
-      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+      const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      if (scrollContainer) {
+        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+      }
     }
   }, [messages]);
 
   useEffect(() => {
     if (isOpen && inputRef.current) {
-      inputRef.current.focus();
+      setTimeout(() => inputRef.current?.focus(), 100);
     }
+  }, [isOpen]);
+
+  // Prevent body scroll when chat is open on mobile
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, [isOpen]);
 
   const sendMessage = async () => {
@@ -81,7 +95,7 @@ export function GuestChatbot({ slug, coupleName }: GuestChatbotProps) {
       <Button
         onClick={() => setIsOpen(true)}
         size="lg"
-        className="fixed bottom-6 right-6 rounded-full h-14 w-14 shadow-lg z-50"
+        className="fixed bottom-4 right-4 md:bottom-6 md:right-6 rounded-full h-14 w-14 shadow-lg z-50"
         data-testid="button-open-chat"
       >
         <MessageCircle className="h-6 w-6" />
@@ -90,30 +104,68 @@ export function GuestChatbot({ slug, coupleName }: GuestChatbotProps) {
   }
 
   return (
-    <Card className="fixed bottom-6 right-6 w-[360px] max-w-[calc(100vw-48px)] shadow-xl z-50 flex flex-col" style={{ maxHeight: "500px" }}>
-      <CardHeader className="flex flex-row items-center justify-between gap-2 py-3 px-4 border-b">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Sparkles className="h-4 w-4 text-primary" />
-          Wedding Assistant
-        </CardTitle>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setIsOpen(false)}
-          className="h-8 w-8"
-          data-testid="button-close-chat"
-        >
-          <X className="h-4 w-4" />
-        </Button>
-      </CardHeader>
-      <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
+    <>
+      {/* Backdrop for mobile */}
+      <div 
+        className="fixed inset-0 bg-black/50 z-40 md:hidden"
+        onClick={() => setIsOpen(false)}
+      />
+      
+      {/* Chat container - full screen on mobile, card on desktop */}
+      <div 
+        className="fixed z-50 bg-background flex flex-col
+          inset-0 md:inset-auto
+          md:bottom-6 md:right-6 
+          md:w-[380px] md:max-w-[calc(100vw-48px)] 
+          md:h-[500px] md:max-h-[80vh]
+          md:rounded-lg md:shadow-xl md:border"
+        style={{
+          paddingTop: 'env(safe-area-inset-top, 0px)',
+          paddingLeft: 'env(safe-area-inset-left, 0px)',
+          paddingRight: 'env(safe-area-inset-right, 0px)',
+        }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between gap-2 py-3 px-4 border-b shrink-0 bg-background min-h-[52px]">
+          <div className="flex items-center gap-2 text-base font-semibold">
+            <Sparkles className="h-5 w-5 text-primary" />
+            Wedding Assistant
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsOpen(false)}
+            data-testid="button-close-chat"
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
+        
+        {/* Messages area */}
         <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
           {messages.length === 0 ? (
-            <div className="text-center text-muted-foreground text-sm py-8">
-              <Sparkles className="h-8 w-8 mx-auto mb-3 text-primary/50" />
-              <p className="font-medium mb-2">Hi there!</p>
-              <p>I'm here to help answer your questions about {coupleName ? `${coupleName}'s` : "this"} wedding.</p>
-              <p className="mt-2 text-xs">Ask about dress code, events, travel, and more!</p>
+            <div className="text-center text-muted-foreground py-8 px-4">
+              <Sparkles className="h-10 w-10 mx-auto mb-4 text-primary/50" />
+              <p className="font-medium text-base mb-2">Hi there!</p>
+              <p className="text-sm">I'm here to help answer your questions about {coupleName ? `${coupleName}'s` : "this"} wedding.</p>
+              <p className="mt-3 text-xs">Ask about dress code, events, travel, and more!</p>
+              <div className="mt-6 flex flex-wrap justify-center gap-2">
+                {["What should I wear?", "When is the ceremony?", "Where should I stay?"].map((q) => (
+                  <Button
+                    key={q}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs"
+                    onClick={() => {
+                      setInput(q);
+                      setTimeout(() => inputRef.current?.focus(), 100);
+                    }}
+                    data-testid={`quick-question-${q.slice(0, 10)}`}
+                  >
+                    {q}
+                  </Button>
+                ))}
+              </div>
             </div>
           ) : (
             <div className="space-y-4">
@@ -124,7 +176,7 @@ export function GuestChatbot({ slug, coupleName }: GuestChatbotProps) {
                   data-testid={`chat-message-${i}`}
                 >
                   <div
-                    className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
+                    className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
                       msg.role === "user"
                         ? "bg-primary text-primary-foreground"
                         : "bg-muted"
@@ -136,15 +188,22 @@ export function GuestChatbot({ slug, coupleName }: GuestChatbotProps) {
               ))}
               {isLoading && (
                 <div className="flex justify-start">
-                  <div className="bg-muted rounded-lg px-3 py-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                  <div className="bg-muted rounded-2xl px-4 py-3">
+                    <Loader2 className="h-5 w-5 animate-spin" />
                   </div>
                 </div>
               )}
             </div>
           )}
         </ScrollArea>
-        <div className="p-3 border-t flex gap-2">
+        
+        {/* Input area - sticky at bottom with safe area padding */}
+        <div 
+          className="p-3 border-t flex gap-2 shrink-0 bg-background"
+          style={{
+            paddingBottom: 'max(12px, env(safe-area-inset-bottom, 12px))',
+          }}
+        >
           <Input
             ref={inputRef}
             value={input}
@@ -152,19 +211,20 @@ export function GuestChatbot({ slug, coupleName }: GuestChatbotProps) {
             onKeyPress={handleKeyPress}
             placeholder="Ask a question..."
             disabled={isLoading}
-            className="flex-1"
+            className="flex-1 h-11 text-base"
             data-testid="input-chat-message"
           />
           <Button
             onClick={sendMessage}
             disabled={!input.trim() || isLoading}
             size="icon"
+            className="h-11 w-11 shrink-0"
             data-testid="button-send-message"
           >
-            <Send className="h-4 w-4" />
+            <Send className="h-5 w-5" />
           </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </>
   );
 }

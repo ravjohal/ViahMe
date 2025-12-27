@@ -59,9 +59,9 @@ export default function GuestWebsite() {
           Preview Mode - This website is not published yet. Only you can see this.
         </div>
       )}
-      {/* Hero Section */}
+      {/* Hero Section - responsive height for mobile */}
       <div
-        className="relative h-96 flex items-center justify-center text-white"
+        className="relative min-h-[280px] md:min-h-[384px] flex items-center justify-center text-white py-12 md:py-16"
         style={{
           background: website.couplePhotoUrl
             ? `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url(${website.couplePhotoUrl})`
@@ -73,23 +73,23 @@ export default function GuestWebsite() {
         }}
         data-testid="hero-section"
       >
-        <div className="text-center space-y-4 px-4">
-          <h1 className="text-5xl md:text-6xl font-display font-bold" data-testid="text-wedding-title">
+        <div className="text-center space-y-3 md:space-y-4 px-6">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold leading-tight" data-testid="text-wedding-title">
             {website.welcomeTitle || "Our Wedding"}
           </h1>
           {wedding.weddingDate && (
-            <p className="text-xl md:text-2xl" data-testid="text-wedding-date">
+            <p className="text-lg sm:text-xl md:text-2xl" data-testid="text-wedding-date">
               {format(new Date(wedding.weddingDate), "MMMM d, yyyy")}
             </p>
           )}
-          <p className="text-lg md:text-xl" data-testid="text-wedding-location">
+          <p className="text-base sm:text-lg md:text-xl" data-testid="text-wedding-location">
             {wedding.location}
           </p>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-12 max-w-4xl">
+      <div className="container mx-auto px-4 sm:px-6 py-8 md:py-12 max-w-4xl">
         {/* Welcome Message */}
         {website.welcomeMessage && (
           <Card className="mb-8">
@@ -190,9 +190,8 @@ export default function GuestWebsite() {
                     {event.mapUrl && (
                       <Button
                         variant="outline"
-                        size="sm"
                         asChild
-                        className="mt-2"
+                        className="mt-3 w-full sm:w-auto"
                         data-testid={`button-view-map-${event.id}`}
                       >
                         <a href={event.mapUrl} target="_blank" rel="noopener noreferrer">
@@ -216,11 +215,11 @@ export default function GuestWebsite() {
             </CardHeader>
             <CardContent>
               <Tabs defaultValue={website.travelInfo ? "travel" : website.accommodationInfo ? "accommodation" : website.thingsToDoInfo ? "todo" : "faq"}>
-                <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
-                  {website.travelInfo && <TabsTrigger value="travel">Travel</TabsTrigger>}
-                  {website.accommodationInfo && <TabsTrigger value="accommodation">Accommodation</TabsTrigger>}
-                  {website.thingsToDoInfo && <TabsTrigger value="todo">Things to Do</TabsTrigger>}
-                  {website.faqInfo && <TabsTrigger value="faq">FAQ</TabsTrigger>}
+                <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto gap-1 p-1">
+                  {website.travelInfo && <TabsTrigger value="travel" className="py-2.5 text-sm">Travel</TabsTrigger>}
+                  {website.accommodationInfo && <TabsTrigger value="accommodation" className="py-2.5 text-sm">Stay</TabsTrigger>}
+                  {website.thingsToDoInfo && <TabsTrigger value="todo" className="py-2.5 text-sm">To Do</TabsTrigger>}
+                  {website.faqInfo && <TabsTrigger value="faq" className="py-2.5 text-sm">FAQ</TabsTrigger>}
                 </TabsList>
 
                 {website.travelInfo && (
