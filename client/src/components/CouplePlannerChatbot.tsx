@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -110,28 +111,24 @@ export function CouplePlannerChatbot() {
     }
   };
 
-  if (!isOpen) {
-    return (
-      <Button
-        onClick={() => setIsOpen(true)}
-        size="lg"
-        className="fixed bottom-24 right-4 md:bottom-6 md:right-6 rounded-full h-14 w-14 shadow-xl z-[9999] bg-gradient-to-br from-primary to-primary/80 animate-pulse hover:animate-none hover:scale-110 transition-transform"
-        data-testid="button-open-ai-planner"
-      >
-        <Sparkles className="h-6 w-6" />
-      </Button>
-    );
-  }
-
-  return (
+  const chatbotContent = !isOpen ? (
+    <Button
+      onClick={() => setIsOpen(true)}
+      size="lg"
+      className="fixed bottom-24 right-4 md:bottom-6 md:right-6 rounded-full h-14 w-14 shadow-xl z-[9999] bg-gradient-to-br from-primary to-primary/80 animate-pulse hover:animate-none hover:scale-110 transition-transform"
+      data-testid="button-open-ai-planner"
+    >
+      <Sparkles className="h-6 w-6" />
+    </Button>
+  ) : (
     <>
       <div 
-        className="fixed inset-0 bg-black/50 z-40 md:hidden"
+        className="fixed inset-0 bg-black/50 z-[9998] md:hidden"
         onClick={() => setIsOpen(false)}
       />
       
       <div 
-        className="fixed z-50 bg-background flex flex-col
+        className="fixed z-[9999] bg-background flex flex-col
           inset-0 md:inset-auto
           md:bottom-6 md:right-6 
           md:w-[420px] md:max-w-[calc(100vw-48px)] 
@@ -278,4 +275,6 @@ export function CouplePlannerChatbot() {
       </div>
     </>
   );
+
+  return createPortal(chatbotContent, document.body);
 }
