@@ -313,7 +313,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
     const current = form.getValues("customEvents") || [];
     // Find an unselected ceremony from the catalog to suggest
     const selectedIds = new Set(current.map(e => e.ceremonyId));
-    const unselected = traditionCeremonies.find(c => !selectedIds.has(c.id));
+    const unselected = availableCeremonies.find(c => !selectedIds.has(c.id));
     const defaultCeremonyId = unselected?.id || "";
     form.setValue("customEvents", [...current, { ceremonyId: defaultCeremonyId, customName: "", guestCount: "" }]);
   };
