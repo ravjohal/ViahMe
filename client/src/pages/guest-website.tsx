@@ -12,6 +12,7 @@ interface PublicWeddingData {
   website: WeddingWebsite;
   wedding: Wedding;
   events: Event[];
+  isPreview?: boolean;
 }
 
 export default function GuestWebsite() {
@@ -45,11 +46,17 @@ export default function GuestWebsite() {
     );
   }
 
-  const { website, wedding, events } = data;
+  const { website, wedding, events, isPreview } = data;
   const primaryColor = website.primaryColor || "#f97316";
 
   return (
     <div className="min-h-screen">
+      {/* Preview Banner */}
+      {isPreview && (
+        <div className="bg-amber-500 text-white text-center py-2 px-4 text-sm font-medium" data-testid="preview-banner">
+          Preview Mode - This website is not published yet. Only you can see this.
+        </div>
+      )}
       {/* Hero Section */}
       <div
         className="relative h-96 flex items-center justify-center text-white"

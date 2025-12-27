@@ -5535,13 +5535,22 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   app.get("/api/public/wedding/:slug", async (req, res) => {
     try {
       const website = await storage.getWeddingWebsiteBySlug(req.params.slug);
-      if (!website || !website.isPublished) {
-        return res.status(404).json({ error: "Wedding not found or not published" });
+      if (!website) {
+        return res.status(404).json({ error: "Wedding website not found" });
       }
 
       const wedding = await storage.getWedding(website.weddingId);
       if (!wedding) {
         return res.status(404).json({ error: "Wedding not found" });
+      }
+
+      // Check if user is owner (allow preview even when unpublished)
+      const authReq = req as AuthenticatedRequest;
+      const isOwner = authReq.session?.userId === wedding.userId;
+      
+      // If not published and not owner, deny access
+      if (!website.isPublished && !isOwner) {
+        return res.status(404).json({ error: "This wedding website hasn't been published yet" });
       }
 
       const events = await storage.getEventsByWedding(website.weddingId);
@@ -5550,6 +5559,7 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
         website,
         wedding,
         events: events.sort((a, b) => a.order - b.order),
+        isPreview: !website.isPublished && isOwner,
       });
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch wedding data" });
