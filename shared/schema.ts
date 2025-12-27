@@ -119,6 +119,8 @@ export const events = pgTable("events", {
   directions: text("directions"), // Driving/transit directions
   mapUrl: text("map_url"), // Google Maps link
   parkingInfo: text("parking_info"), // Parking instructions
+  // Livestream integration
+  livestreamUrl: text("livestream_url"), // YouTube live stream URL for remote guests
 });
 
 export const insertEventSchema = createInsertSchema(events).omit({

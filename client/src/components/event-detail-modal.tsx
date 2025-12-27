@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar, Clock, MapPin, Users, DollarSign, Tag, CheckCircle2, Plus, Save } from "lucide-react";
+import { Calendar, Clock, MapPin, Users, DollarSign, Tag, CheckCircle2, Plus, Save, Video } from "lucide-react";
 import { format } from "date-fns";
 import type { Event, BudgetCategory, EventCostItem, Task, InsertTask } from "@shared/schema";
 import { useMutation } from "@tanstack/react-query";
@@ -93,6 +93,7 @@ export function EventDetailModal({
   const [eventCostPerHead, setEventCostPerHead] = useState("");
   const [eventVenueCapacity, setEventVenueCapacity] = useState("");
   const [eventType, setEventType] = useState("custom");
+  const [eventLivestreamUrl, setEventLivestreamUrl] = useState("");
   
   // Task form state
   const [showNewTaskForm, setShowNewTaskForm] = useState(false);
@@ -123,6 +124,7 @@ export function EventDetailModal({
       setEventCostPerHead(event.costPerHead || "");
       setEventVenueCapacity(event.venueCapacity?.toString() || "");
       setEventType(event.type || "custom");
+      setEventLivestreamUrl(event.livestreamUrl || "");
     }
   }, [event]);
 
@@ -199,6 +201,7 @@ export function EventDetailModal({
       costPerHead: eventCostPerHead || undefined,
       venueCapacity: eventVenueCapacity ? parseInt(eventVenueCapacity) : undefined,
       type: eventType,
+      livestreamUrl: eventLivestreamUrl || undefined,
     } as Partial<Event>);
   };
 
@@ -347,6 +350,24 @@ export function EventDetailModal({
                   className="mt-1"
                   data-testid="input-event-cost-per-head"
                 />
+              </div>
+
+              <div className="col-span-2">
+                <Label htmlFor="event-livestream" className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                  <Video className="w-3 h-3" /> YouTube Livestream
+                </Label>
+                <Input
+                  id="event-livestream"
+                  type="url"
+                  value={eventLivestreamUrl}
+                  onChange={(e) => setEventLivestreamUrl(e.target.value)}
+                  placeholder="https://youtube.com/watch?v=... or https://youtube.com/live/..."
+                  className="mt-1"
+                  data-testid="input-event-livestream"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Add a YouTube link for guests who can't attend in person
+                </p>
               </div>
             </div>
           </div>
