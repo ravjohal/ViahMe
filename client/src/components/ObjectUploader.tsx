@@ -7,7 +7,11 @@ import type { UppyFile } from "@uppy/core";
 import AwsS3 from "@uppy/aws-s3";
 import type { UploadResult } from "@uppy/core";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+
+// Import Uppy styles
+import "@uppy/core/css/style.min.css";
+import "@uppy/dashboard/css/style.min.css";
 
 interface ObjectUploaderProps {
   maxNumberOfFiles?: number;
@@ -84,7 +88,8 @@ export function ObjectUploader({
 
       <Dialog open={showModal} onOpenChange={setShowModal}>
         <DialogContent className="max-w-4xl">
-          <div ref={containerRef} />
+          <DialogTitle className="sr-only">Upload Files</DialogTitle>
+          <div ref={containerRef} className="min-h-[400px]" />
         </DialogContent>
       </Dialog>
     </div>
