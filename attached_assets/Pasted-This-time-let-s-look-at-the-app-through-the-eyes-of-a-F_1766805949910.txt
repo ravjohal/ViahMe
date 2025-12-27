@@ -1,0 +1,55 @@
+This time, let’s look at the app through the eyes of a Fusion Couple—specifically, a South Indian Hindu bride and a Caucasian-American groom (or vice-versa). They are self-funding the wedding and are terrified of "Cultural Misunderstandings" and "Scope Creep."
+
+Here is their perspective on the Viah Me onboarding experience:
+
+1. The "Intercultural" First Impression
+The Good:
+
+The "Role" Selection: They liked that "Planner" was an option. Even though they are DIY, they might hire a "Day-of Coordinator" later, and it’s nice the app recognizes that roles vary.
+
+Progressive Progress Bar: For a couple juggling two different cultural worlds, seeing the step-by-step progress made the daunting task of "planning an Indian wedding" feel manageable.
+
+Professional Aesthetic: The groom (who isn't Desi) felt the app was accessible and didn't feel "exclusive" or "unreachable"—it felt like a modern tech tool.
+
+The "Frustrating" Parts:
+
+The "Mixed" Dead-End: When they selected "Mixed," the app didn't ask what they were mixing. They felt like they were being pushed into a "General" bucket, when they specifically needed to know how to merge a Muhurtham with a Western Ring Exchange.
+
+The "One-Size-Fits-All" Guest Count: They are having a 150-person traditional ceremony but a 400-person "Big Party" Reception. The onboarding only lets them put in one number, which makes the budget calculation feel inaccurate for their specific needs.
+
+2. Strategic Improvements for the "Fusion & DIY" User
+A. The "Culture Bridge" Feature
+The non-Desi partner often feels like a guest at their own wedding.
+
+Improvement: In the "Role" or "Tradition" section, add a checkbox: "Is one partner new to these traditions?" * The Result: If checked, the app should auto-generate "cheat sheets" or "email templates" they can send to the non-Desi side of the family to explain dress codes, ceremony length, and etiquette.
+
+B. Event-Specific Guest Scaling
+South Asian weddings are rarely one guest count for every event.
+
+Improvement: In Step 4 (Location & Scale), allow users to add "Sub-Events."
+
+DIY Value: "Ceremony: 150 guests | Reception: 400 guests." This prevents the app from over-estimating the cost of the expensive South Indian lunch while under-estimating the open bar at the reception.
+
+C. The "Self-Funded" Budget Mode
+DIY couples aren't just looking for a total; they are looking for cash-flow management.
+
+Improvement: Add a question: "Who is contributing to the budget?" (e.g., "Couple Only," "Both Families," "Mix").
+
+DIY Value: If they select "Couple Only," the app should prioritize tasks like "Used Decor Marketplace" or "Negotiating Service Fees" over high-end floral vendors.
+
+D. Visualizing the "Tradition" Selection
+The couple found the text-based dropdowns a bit dry.
+
+Improvement: Instead of just a dropdown, use Visual Cards with brief descriptions of the ceremony vibes.
+
+Example: A card for "Sikh Wedding" shows a Gurdwara; a card for "South Indian" shows a Kanjeevaram saree. This helps the partner who isn't familiar with the terms visualize what they are choosing.
+
+3. Technical Recommendations for the App
+Validation Feedback: When the user skips an optional field (like Budget), add a small "Smart Tip" pop-up: "No worries! We've set a placeholder budget of $60,000 based on your 300-guest count to get you started."
+
+The "Metro Area" Trap: For a couple in Vancouver or Dallas (huge hubs), seeing only NYC/SF/LA makes them feel the app isn't "for them" yet.
+
+Fix: Use a "Detect my location" or a more exhaustive list of the top 15 Desi-heavy cities in North America.
+
+The Verdict
+This couple would use Viah Me as their "Translator." They want the app to tell them what they need to do so they don't have to rely on 20 different WhatsApp groups with their relatives. If the app adds Fusion Logic (blending two traditions), it would be an absolute game-changer for the diaspora market.
