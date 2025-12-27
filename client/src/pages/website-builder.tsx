@@ -132,7 +132,7 @@ export default function WebsiteBuilder() {
       if (section === 'faq' && Array.isArray(data.content)) {
         const faqText = data.content
           .map((item: { question: string; answer: string }) => 
-            `**Q: ${item.question}**\n${item.answer}`
+            `Q: ${item.question}\nA: ${item.answer}`
           )
           .join('\n\n');
         form.setValue('faqInfo', faqText);
@@ -563,7 +563,7 @@ export default function WebsiteBuilder() {
                             data-testid="input-faq-info"
                           />
                         </FormControl>
-                        <FormDescription>Use **Q: Question** format for questions. AI suggestions will be formatted this way automatically.</FormDescription>
+                        <FormDescription>Use Q: and A: format for questions and answers. AI suggestions will be formatted this way automatically.</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}

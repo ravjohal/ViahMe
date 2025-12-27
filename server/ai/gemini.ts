@@ -717,7 +717,8 @@ Generate travel information that includes:
 4. Weather considerations for the time of year
 5. Any tips specific to ${city || 'the area'}
 
-Format as clear, helpful paragraphs with section headers using **bold**.
+Write in plain text without any markdown formatting (no asterisks, no bold, no headers).
+Use simple line breaks between sections.
 Keep it practical and guest-friendly.`;
       break;
 
@@ -740,7 +741,8 @@ Generate accommodation suggestions that:
 4. Include tips for group bookings
 5. Mention Airbnb/VRBO as alternatives for families
 
-Format as clear paragraphs with section headers using **bold**.
+Write in plain text without any markdown formatting (no asterisks, no bold, no headers).
+Use simple line breaks between sections.
 Note: Since you don't have specific hotel names, give general guidance about what to look for and suggest the couple will share specific recommendations.`;
       break;
 
@@ -768,7 +770,8 @@ Generate 8-10 FAQs that guests commonly ask about ${tradition} weddings, includi
 8. General cultural etiquette tips
 
 Return as a JSON array of objects with "question" and "answer" fields.
-Make answers warm, informative, and culturally appropriate.`;
+Make answers warm, informative, and culturally appropriate.
+Write in plain conversational English without any markdown formatting.`;
       break;
   }
 
