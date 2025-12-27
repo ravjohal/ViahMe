@@ -163,6 +163,7 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
       
       res.json(Array.from(weddingMap.values()));
     } catch (error) {
+      console.error("Error fetching weddings:", error);
       res.status(500).json({ error: "Failed to fetch weddings" });
     }
   });
@@ -335,6 +336,7 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
             category: template.category,
             priority: template.priority || 'medium',
             dueDate: dueDate,
+            phase: template.phase,
             completed: false,
             isAiRecommended: true,
             aiCategory: template.ceremony || template.category,

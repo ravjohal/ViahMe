@@ -607,6 +607,7 @@ export const tasks = pgTable("tasks", {
   completed: boolean("completed").default(false),
   priority: text("priority").default('medium'), // 'high' | 'medium' | 'low'
   category: text("category"),
+  phase: text("phase"), // 'vision' | 'curation' | 'logistics' | 'home_stretch'
   assignedToId: varchar("assigned_to_id"), // Team member user ID
   assignedToName: text("assigned_to_name"), // Cached name for display
   reminderEnabled: boolean("reminder_enabled").default(false),

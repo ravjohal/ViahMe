@@ -1,3 +1,5 @@
+export type TaskPhase = 'vision' | 'curation' | 'logistics' | 'home_stretch';
+
 export interface TaskTemplate {
   id: string;
   task: string;
@@ -6,7 +8,39 @@ export interface TaskTemplate {
   ceremony?: string;
   priority?: 'high' | 'medium' | 'low';
   daysBeforeWedding?: number;
+  phase?: TaskPhase;
 }
+
+export function getPhaseFromDays(daysBeforeWedding: number | undefined): TaskPhase {
+  if (!daysBeforeWedding) return 'logistics';
+  if (daysBeforeWedding >= 365) return 'vision';        // 12+ months
+  if (daysBeforeWedding >= 180) return 'curation';      // 6-12 months
+  if (daysBeforeWedding >= 30) return 'logistics';      // 1-6 months
+  return 'home_stretch';                                 // < 1 month
+}
+
+export const PHASE_INFO: Record<TaskPhase, { title: string; description: string; order: number }> = {
+  vision: { 
+    title: "The Vision Phase", 
+    description: "12+ months out: Set the foundation with guest list, budget, and venue",
+    order: 1 
+  },
+  curation: { 
+    title: "The Curation Phase", 
+    description: "6-9 months out: Book tradition-specific vendors, attire, photographer",
+    order: 2 
+  },
+  logistics: { 
+    title: "The Logistics Phase", 
+    description: "3 months out: Handle invitations, marriage license, hotel blocks",
+    order: 3 
+  },
+  home_stretch: { 
+    title: "The Home Stretch", 
+    description: "1 month out: Finalize seating charts, welcome bags, final fittings",
+    order: 4 
+  },
+};
 
 export const HINDU_TASKS: TaskTemplate[] = [
   { id: "H01", task: "Book Mandap and Decorator", category: "Decor", description: "Ensure the Mandap allows for a small sacred fire (Havan).", ceremony: "Wedding Ceremony", priority: "high", daysBeforeWedding: 180 },
@@ -199,26 +233,46 @@ export const PARSI_TASKS: TaskTemplate[] = [
 ];
 
 export const GENERAL_WEDDING_TASKS: TaskTemplate[] = [
-  { id: "GEN01", task: "Set Wedding Budget", category: "Planning", description: "Establish overall budget and allocate to categories.", priority: "high", daysBeforeWedding: 365 },
-  { id: "GEN02", task: "Create Guest List", category: "Guests", description: "Compile initial guest list with addresses.", priority: "high", daysBeforeWedding: 300 },
-  { id: "GEN03", task: "Book Wedding Venue", category: "Venue", description: "Research and reserve ceremony/reception venue.", ceremony: "Wedding Ceremony", priority: "high", daysBeforeWedding: 300 },
-  { id: "GEN04", task: "Hire Wedding Photographer", category: "Photography", description: "Book professional photographer and videographer.", priority: "high", daysBeforeWedding: 240 },
-  { id: "GEN05", task: "Book Wedding Caterer", category: "Food", description: "Select caterer and plan menu.", priority: "high", daysBeforeWedding: 180 },
-  { id: "GEN06", task: "Order Wedding Invitations", category: "Stationery", description: "Design and order wedding invitations.", priority: "high", daysBeforeWedding: 150 },
-  { id: "GEN07", task: "Book Florist/Decorator", category: "Decor", description: "Hire decorator for venue and flowers.", priority: "high", daysBeforeWedding: 180 },
-  { id: "GEN08", task: "Hire DJ/Music", category: "Entertainment", description: "Book entertainment for reception.", ceremony: "Reception", priority: "high", daysBeforeWedding: 150 },
-  { id: "GEN09", task: "Purchase Wedding Attire", category: "Attire", description: "Shop for wedding outfits for couple.", priority: "high", daysBeforeWedding: 180 },
-  { id: "GEN10", task: "Book Hair and Makeup Artist", category: "Beauty", description: "Hire professionals for wedding day styling.", priority: "high", daysBeforeWedding: 120 },
-  { id: "GEN11", task: "Arrange Transportation", category: "Logistics", description: "Book cars for wedding party and guests.", priority: "medium", daysBeforeWedding: 90 },
-  { id: "GEN12", task: "Plan Honeymoon", category: "Travel", description: "Research and book honeymoon destination.", priority: "medium", daysBeforeWedding: 180 },
-  { id: "GEN13", task: "Apply for Marriage License", category: "Legal", description: "Complete legal paperwork.", priority: "high", daysBeforeWedding: 30 },
-  { id: "GEN14", task: "Send Wedding Invitations", category: "Stationery", description: "Mail out all wedding invitations.", priority: "high", daysBeforeWedding: 60 },
-  { id: "GEN15", task: "Finalize Guest Count", category: "Guests", description: "Confirm RSVPs and final headcount.", priority: "high", daysBeforeWedding: 14 },
-  { id: "GEN16", task: "Create Seating Chart", category: "Planning", description: "Assign guests to tables.", priority: "medium", daysBeforeWedding: 14 },
-  { id: "GEN17", task: "Plan Rehearsal Dinner", category: "Planning", description: "Organize dinner for wedding party.", priority: "medium", daysBeforeWedding: 60 },
-  { id: "GEN18", task: "Final Dress Fitting", category: "Attire", description: "Complete final alterations.", priority: "high", daysBeforeWedding: 14 },
-  { id: "GEN19", task: "Confirm All Vendors", category: "Planning", description: "Reconfirm all vendor bookings.", priority: "high", daysBeforeWedding: 7 },
-  { id: "GEN20", task: "Prepare Wedding Day Timeline", category: "Planning", description: "Create detailed schedule for the day.", priority: "high", daysBeforeWedding: 7 },
+  // Vision Phase (12+ months / 365+ days)
+  { id: "GL01", task: "Finalize Guest List", category: "Planning", description: "Consolidate contacts from both families for all events.", priority: "high", daysBeforeWedding: 365, phase: "vision" },
+  { id: "GEN01", task: "Set Wedding Budget", category: "Planning", description: "Establish overall budget and allocate to categories.", priority: "high", daysBeforeWedding: 365, phase: "vision" },
+  { id: "GEN02", task: "Book Wedding Venue", category: "Venue", description: "Research and reserve ceremony/reception venue.", ceremony: "Wedding Ceremony", priority: "high", daysBeforeWedding: 300, phase: "vision" },
+  { id: "GL02", task: "Secure Wedding Insurance", category: "Legal", description: "Protect your investment; many US/Canada venues require this.", priority: "high", daysBeforeWedding: 300, phase: "vision" },
+  
+  // Curation Phase (6-9 months / 180-270 days)
+  { id: "GL03", task: "Book Lead Photographer", category: "Vendors", description: "Ensure they have experience with South Asian lighting and colors.", priority: "high", daysBeforeWedding: 240, phase: "curation" },
+  { id: "GL04", task: "Book Videographer", category: "Vendors", description: "Decide on cinematic highlight film vs. documentary style.", priority: "high", daysBeforeWedding: 240, phase: "curation" },
+  { id: "GL05", task: "Launch Wedding Website", category: "Digital", description: "Include dress codes for different events (e.g., 'Indian Festive').", priority: "medium", daysBeforeWedding: 210, phase: "curation" },
+  { id: "GL06", task: "Send Save the Dates", category: "Communications", description: "Crucial for Desi weddings where guests travel from overseas.", priority: "high", daysBeforeWedding: 210, phase: "curation" },
+  { id: "GEN03", task: "Book Wedding Caterer", category: "Food", description: "Select caterer and plan menu.", priority: "high", daysBeforeWedding: 180, phase: "curation" },
+  { id: "GEN04", task: "Book Florist/Decorator", category: "Decor", description: "Hire decorator for venue and flowers.", priority: "high", daysBeforeWedding: 180, phase: "curation" },
+  { id: "GEN05", task: "Purchase Wedding Attire", category: "Attire", description: "Shop for wedding outfits for couple (plan India trips if needed).", priority: "high", daysBeforeWedding: 180, phase: "curation" },
+  { id: "GL08", task: "Hire Lead Makeup & Hair Artist", category: "Beauty", description: "Schedule trials for multiple looks (Ceremony vs. Reception).", priority: "high", daysBeforeWedding: 150, phase: "curation" },
+  { id: "GEN06", task: "Hire DJ and MC", category: "Entertainment", description: "Ensure they can handle bilingual announcements if needed.", priority: "high", daysBeforeWedding: 150, phase: "curation" },
+  { id: "GL10", task: "Select Wedding Registry", category: "Planning", description: "Mix traditional items with cash/honeymoon funds.", priority: "medium", daysBeforeWedding: 150, phase: "curation" },
+  { id: "GL12", task: "Book Sound & Lighting", category: "Production", description: "Often separate from DJ for large ballroom events.", priority: "medium", daysBeforeWedding: 120, phase: "curation" },
+  { id: "GL19", task: "First Dance Lessons", category: "Entertainment", description: "Choreograph your debut as a couple.", priority: "medium", daysBeforeWedding: 120, phase: "curation" },
+  { id: "GL24", task: "Purchase Wedding Rings", category: "Jewelry", description: "Ensure sizing is done at least 2 months out.", priority: "high", daysBeforeWedding: 90, phase: "curation" },
+  
+  // Logistics Phase (1-3 months / 30-90 days)
+  { id: "GL07", task: "Book Hotel Room Blocks", category: "Logistics", description: "Secure discounted rates for out-of-town guests.", priority: "high", daysBeforeWedding: 90, phase: "logistics" },
+  { id: "GL11", task: "Order Physical Invitations", category: "Communications", description: "Desi weddings often require multi-page inserts for various events.", priority: "high", daysBeforeWedding: 90, phase: "logistics" },
+  { id: "GL15", task: "Arrange Transportation/Shuttles", category: "Logistics", description: "Move guests between hotel, temple/church, and reception.", priority: "medium", daysBeforeWedding: 75, phase: "logistics" },
+  { id: "GEN07", task: "Plan Rehearsal Dinner / Welcome Party", category: "Events", description: "The 'icebreaker' event for guests arriving early.", priority: "medium", daysBeforeWedding: 60, phase: "logistics" },
+  { id: "GL14", task: "Finalize Reception Menu", category: "Food", description: "Balance heavy traditional dishes with lighter fusion options.", priority: "high", daysBeforeWedding: 60, phase: "logistics" },
+  { id: "GL23", task: "Plan Honeymoon Logistics", category: "Post-Wedding", description: "Passports, visas, and flight bookings.", priority: "medium", daysBeforeWedding: 60, phase: "logistics" },
+  { id: "GL09", task: "Apply for Marriage License", category: "Legal", description: "Check local county/province residency requirements and expiry.", priority: "high", daysBeforeWedding: 45, phase: "logistics" },
+  { id: "GL22", task: "Order Reception Party Favors", category: "Gifts", description: "Personalized mementos for guests to take home.", priority: "low", daysBeforeWedding: 45, phase: "logistics" },
+  
+  // Home Stretch (< 1 month / < 30 days)
+  { id: "GL16", task: "Draft Seating Chart", category: "Planning", description: "Navigate complex family dynamics early!", priority: "high", daysBeforeWedding: 21, phase: "home_stretch" },
+  { id: "GL21", task: "Final Headcount for Caterer", category: "Food", description: "Confirm numbers 2-4 weeks prior to the first event.", priority: "high", daysBeforeWedding: 21, phase: "home_stretch" },
+  { id: "GEN08", task: "Final Dress Fitting", category: "Attire", description: "Complete final alterations.", priority: "high", daysBeforeWedding: 14, phase: "home_stretch" },
+  { id: "GL17", task: "Assemble Welcome Bags", category: "Guest Experience", description: "Include bottled water, Tylenol, and Indian snacks (Bhujia/Parle-G).", priority: "medium", daysBeforeWedding: 14, phase: "home_stretch" },
+  { id: "GL20", task: "Prepare Vendor Tips/Gratuity", category: "Budget", description: "Organize cash envelopes for the day-of.", priority: "medium", daysBeforeWedding: 7, phase: "home_stretch" },
+  { id: "GEN09", task: "Confirm All Vendors", category: "Planning", description: "Reconfirm all vendor bookings.", priority: "high", daysBeforeWedding: 7, phase: "home_stretch" },
+  { id: "GEN10", task: "Prepare Wedding Day Timeline", category: "Planning", description: "Create detailed schedule for the day.", priority: "high", daysBeforeWedding: 7, phase: "home_stretch" },
+  { id: "GL25", task: "Pack Emergency Kit", category: "Planning", description: "Safety pins, stain remover, mints, and double-sided tape.", priority: "medium", daysBeforeWedding: 3, phase: "home_stretch" },
 ];
 
 export function getTasksForTradition(tradition: string): TaskTemplate[] {
@@ -256,7 +310,13 @@ export function getTasksForTradition(tradition: string): TaskTemplate[] {
       traditionSpecificTasks = [];
   }
 
-  const allTasks = [...generalTasks, ...traditionSpecificTasks];
+  // Assign phases to tradition-specific tasks based on daysBeforeWedding
+  const tasksWithPhases = traditionSpecificTasks.map(task => ({
+    ...task,
+    phase: task.phase || getPhaseFromDays(task.daysBeforeWedding)
+  }));
+
+  const allTasks = [...generalTasks, ...tasksWithPhases];
   
   allTasks.sort((a, b) => (b.daysBeforeWedding || 0) - (a.daysBeforeWedding || 0));
   
