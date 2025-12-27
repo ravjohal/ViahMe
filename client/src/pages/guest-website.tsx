@@ -7,6 +7,7 @@ import { Loader2, MapPin, Calendar, Clock, Navigation, Info, Hotel, HelpCircle }
 import { format } from "date-fns";
 import type { WeddingWebsite, Wedding, Event } from "@shared/schema";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ReactMarkdown from "react-markdown";
 
 interface PublicWeddingData {
   website: WeddingWebsite;
@@ -225,9 +226,9 @@ export default function GuestWebsite() {
                       <Navigation className="w-5 h-5" />
                       <h3 className="font-semibold">Travel Information</h3>
                     </div>
-                    <p className="leading-relaxed whitespace-pre-wrap text-sm" data-testid="text-travel-info">
-                      {website.travelInfo}
-                    </p>
+                    <div className="prose prose-sm dark:prose-invert max-w-none" data-testid="text-travel-info">
+                      <ReactMarkdown>{website.travelInfo}</ReactMarkdown>
+                    </div>
                   </TabsContent>
                 )}
 
@@ -237,9 +238,9 @@ export default function GuestWebsite() {
                       <Hotel className="w-5 h-5" />
                       <h3 className="font-semibold">Where to Stay</h3>
                     </div>
-                    <p className="leading-relaxed whitespace-pre-wrap text-sm" data-testid="text-accommodation-info">
-                      {website.accommodationInfo}
-                    </p>
+                    <div className="prose prose-sm dark:prose-invert max-w-none" data-testid="text-accommodation-info">
+                      <ReactMarkdown>{website.accommodationInfo}</ReactMarkdown>
+                    </div>
                   </TabsContent>
                 )}
 
@@ -249,9 +250,9 @@ export default function GuestWebsite() {
                       <MapPin className="w-5 h-5" />
                       <h3 className="font-semibold">Things to Do</h3>
                     </div>
-                    <p className="leading-relaxed whitespace-pre-wrap text-sm" data-testid="text-things-to-do-info">
-                      {website.thingsToDoInfo}
-                    </p>
+                    <div className="prose prose-sm dark:prose-invert max-w-none" data-testid="text-things-to-do-info">
+                      <ReactMarkdown>{website.thingsToDoInfo}</ReactMarkdown>
+                    </div>
                   </TabsContent>
                 )}
 
@@ -261,9 +262,9 @@ export default function GuestWebsite() {
                       <HelpCircle className="w-5 h-5" />
                       <h3 className="font-semibold">Frequently Asked Questions</h3>
                     </div>
-                    <p className="leading-relaxed whitespace-pre-wrap text-sm" data-testid="text-faq-info">
-                      {website.faqInfo}
-                    </p>
+                    <div className="prose prose-sm dark:prose-invert max-w-none" data-testid="text-faq-info">
+                      <ReactMarkdown>{website.faqInfo}</ReactMarkdown>
+                    </div>
                   </TabsContent>
                 )}
               </Tabs>
