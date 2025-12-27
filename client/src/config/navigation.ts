@@ -68,7 +68,7 @@ export const COUPLE_NAV_SECTIONS: NavSection[] = [
     id: "extras",
     label: "More Tools",
     items: [
-      { path: "/shopping", label: "Shopping", icon: Package, permission: "shopping", description: "Shopping list" },
+      { path: "/shopping", label: "Shopping List", icon: Package, permission: "shopping", description: "Shopping list" },
       { path: "/cultural-info", label: "Cultural Info", icon: BookOpen, description: "Learn traditions" },
     ],
   },
