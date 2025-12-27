@@ -1180,6 +1180,8 @@ export const weddingWebsites = pgTable("wedding_websites", {
   slug: text("slug").notNull().unique(), // Unique URL slug (e.g., "sarah-and-raj-2024")
   isPublished: boolean("is_published").default(false),
   heroImageUrl: text("hero_image_url"),
+  couplePhotoUrl: text("couple_photo_url"), // Main couple photo displayed prominently
+  galleryPhotos: text("gallery_photos").array(), // Array of photo URLs for gallery section
   welcomeTitle: text("welcome_title"), // e.g., "Sarah & Raj"
   welcomeMessage: text("welcome_message"), // Couple's welcome message to guests
   coupleStory: text("couple_story"), // How we met story

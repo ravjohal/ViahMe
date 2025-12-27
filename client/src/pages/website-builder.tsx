@@ -10,7 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { Loader2, ExternalLink, Globe, Copy, Check, Sparkles, Wand2, Eye, Info } from "lucide-react";
+import { Loader2, ExternalLink, Globe, Copy, Check, Sparkles, Wand2, Eye, Info, Upload, ImagePlus, Trash2 } from "lucide-react";
+import { ObjectUploader } from "@/components/ObjectUploader";
 import type { WeddingWebsite, InsertWeddingWebsite, Wedding } from "@shared/schema";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
@@ -33,8 +34,9 @@ type WebsiteFormData = z.infer<typeof websiteFormSchema>;
 export default function WebsiteBuilder() {
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
-
   const [generatingSection, setGeneratingSection] = useState<string | null>(null);
+  const [couplePhotoUrl, setCouplePhotoUrl] = useState<string | null>(null);
+  const [galleryPhotos, setGalleryPhotos] = useState<string[]>([]);
 
   // Get current wedding (for MVP, use most recent wedding)
   const { data: weddings } = useQuery<Wedding[]>({
@@ -53,6 +55,22 @@ export default function WebsiteBuilder() {
     queryKey: [`/api/wedding-websites/wedding/${weddingId}`],
     enabled: !!weddingId,
   });
+
+  // Sync photo state with website data
+  useState(() => {
+    if (website) {
+      setCouplePhotoUrl(website.couplePhotoUrl || null);
+      setGalleryPhotos(website.galleryPhotos || []);
+    }
+  });
+
+  // Update photo state when website changes
+  if (website && couplePhotoUrl === null && website.couplePhotoUrl) {
+    setCouplePhotoUrl(website.couplePhotoUrl);
+  }
+  if (website && galleryPhotos.length === 0 && website.galleryPhotos?.length) {
+    setGalleryPhotos(website.galleryPhotos);
+  }
 
   const form = useForm<WebsiteFormData>({
     resolver: zodResolver(websiteFormSchema),
@@ -104,6 +122,44 @@ export default function WebsiteBuilder() {
       toast({ title: "Failed to update website", variant: "destructive" });
     },
   });
+
+  const updatePhotos = useMutation({
+    mutationFn: async (data: { couplePhotoUrl?: string | null; galleryPhotos?: string[] }) => {
+      return await apiRequest("PATCH", `/api/wedding-websites/${website?.id}`, data);
+    },
+    onSuccess: () => {
+      toast({ title: "Photos updated!" });
+      queryClient.invalidateQueries({ queryKey: [`/api/wedding-websites/wedding/${weddingId}`] });
+    },
+    onError: () => {
+      toast({ title: "Failed to update photos", variant: "destructive" });
+    },
+  });
+
+  const handleCouplePhotoUpload = (urls: string[]) => {
+    if (urls.length > 0) {
+      const newUrl = urls[0];
+      setCouplePhotoUrl(newUrl);
+      updatePhotos.mutate({ couplePhotoUrl: newUrl });
+    }
+  };
+
+  const handleGalleryPhotoUpload = (urls: string[]) => {
+    const newGallery = [...galleryPhotos, ...urls];
+    setGalleryPhotos(newGallery);
+    updatePhotos.mutate({ galleryPhotos: newGallery });
+  };
+
+  const handleRemoveGalleryPhoto = (index: number) => {
+    const newGallery = galleryPhotos.filter((_, i) => i !== index);
+    setGalleryPhotos(newGallery);
+    updatePhotos.mutate({ galleryPhotos: newGallery });
+  };
+
+  const handleRemoveCouplePhoto = () => {
+    setCouplePhotoUrl(null);
+    updatePhotos.mutate({ couplePhotoUrl: null });
+  };
 
   const togglePublish = useMutation({
     mutationFn: async (isPublished: boolean) => {
@@ -334,13 +390,143 @@ export default function WebsiteBuilder() {
             </CardContent>
           </Card>
 
-          <Tabs defaultValue="welcome" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+          <Tabs defaultValue="photos" className="w-full">
+            <TabsList className="grid w-full grid-cols-5">
+              <TabsTrigger value="photos">Photos</TabsTrigger>
               <TabsTrigger value="welcome">Welcome</TabsTrigger>
               <TabsTrigger value="travel">Travel</TabsTrigger>
               <TabsTrigger value="accommodation">Accommodation</TabsTrigger>
               <TabsTrigger value="faq">FAQ</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="photos" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ImagePlus className="w-5 h-5" />
+                    Your Couple Photo
+                  </CardTitle>
+                  <CardDescription>
+                    Upload a beautiful photo of you both - this will be displayed prominently on your wedding website
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {couplePhotoUrl ? (
+                    <div className="relative">
+                      <img
+                        src={couplePhotoUrl}
+                        alt="Couple photo"
+                        className="w-full max-w-md h-64 object-cover rounded-lg mx-auto"
+                        data-testid="img-couple-photo"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-2 right-2"
+                        onClick={handleRemoveCouplePhoto}
+                        data-testid="button-remove-couple-photo"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="border-2 border-dashed rounded-xl p-8 text-center">
+                      <ObjectUploader
+                        maxNumberOfFiles={1}
+                        onGetUploadParameters={async () => {
+                          const response = await fetch('/api/documents/upload-url');
+                          const { url } = await response.json();
+                          return { method: 'PUT' as const, url };
+                        }}
+                        onComplete={(result) => {
+                          const urls = (result.successful || []).map((file: any) => {
+                            const url = new URL(file.uploadURL);
+                            return `${url.origin}${url.pathname}`;
+                          });
+                          handleCouplePhotoUpload(urls);
+                        }}
+                        buttonClassName="w-full"
+                      >
+                        <div className="flex flex-col items-center gap-2">
+                          <Upload className="w-8 h-8 text-muted-foreground" />
+                          <span>Upload your couple photo</span>
+                        </div>
+                      </ObjectUploader>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ImagePlus className="w-5 h-5" />
+                    Photo Gallery
+                  </CardTitle>
+                  <CardDescription>
+                    Add more photos to create a beautiful gallery for your guests to enjoy
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="border-2 border-dashed rounded-xl p-6 text-center">
+                    <ObjectUploader
+                      maxNumberOfFiles={10}
+                      onGetUploadParameters={async () => {
+                        const response = await fetch('/api/documents/upload-url');
+                        const { url } = await response.json();
+                        return { method: 'PUT' as const, url };
+                      }}
+                      onComplete={(result) => {
+                        const urls = (result.successful || []).map((file: any) => {
+                          const url = new URL(file.uploadURL);
+                          return `${url.origin}${url.pathname}`;
+                        });
+                        handleGalleryPhotoUpload(urls);
+                      }}
+                      buttonClassName="w-full"
+                    >
+                      <div className="flex flex-col items-center gap-2">
+                        <Upload className="w-8 h-8 text-muted-foreground" />
+                        <span>Add photos to gallery</span>
+                        <span className="text-xs text-muted-foreground">Upload up to 10 photos at once</span>
+                      </div>
+                    </ObjectUploader>
+                  </div>
+
+                  {galleryPhotos.length > 0 && (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {galleryPhotos.map((photo, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={photo}
+                            alt={`Gallery photo ${index + 1}`}
+                            className="w-full h-32 object-cover rounded-lg"
+                            data-testid={`img-gallery-photo-${index}`}
+                          />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            className="absolute top-1 right-1 w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => handleRemoveGalleryPhoto(index)}
+                            data-testid={`button-remove-gallery-photo-${index}`}
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {galleryPhotos.length === 0 && (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      No gallery photos yet. Upload some to share with your guests!
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
 
             <TabsContent value="welcome" className="space-y-4">
               <Card>
