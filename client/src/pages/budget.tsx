@@ -9,16 +9,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { Slider } from "@/components/ui/slider";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertBudgetCategorySchema, type Wedding, type BudgetCategory } from "@shared/schema";
+import { insertBudgetCategorySchema, type Wedding, type BudgetCategory, type Event } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import { DollarSign, Edit2, Trash2, Plus, CheckCircle2, AlertCircle, TrendingUp, HelpCircle, PiggyBank, FolderPlus, PieChart, BarChart3, Check, X, Users, Calculator } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { MultiCeremonySavingsCalculator } from "@/components/multi-ceremony-savings-calculator";
 
 const budgetFormSchema = insertBudgetCategorySchema.extend({
   allocatedAmount: z.string().transform((val) => val),
@@ -59,7 +59,6 @@ export default function Budget() {
   const [useCustomCategory, setUseCustomCategory] = useState(false);
   const [quickEditId, setQuickEditId] = useState<string | null>(null);
   const [quickEditValue, setQuickEditValue] = useState("");
-  const [guestSliderValue, setGuestSliderValue] = useState<number>(300);
 
   const { data: weddings, isLoading: weddingsLoading } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
@@ -81,6 +80,11 @@ export default function Budget() {
     itemCount: number;
   }>({
     queryKey: ["/api/weddings", wedding?.id, "cost-summary"],
+    enabled: !!wedding?.id,
+  });
+
+  const { data: events = [] } = useQuery<Event[]>({
+    queryKey: ["/api/events", wedding?.id],
     enabled: !!wedding?.id,
   });
 
@@ -495,90 +499,10 @@ export default function Budget() {
             </Card>
           </div>
 
-          {/* Budget vs Guest Count Calculator */}
-          <Card className="p-6 border-dashed bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-blue-200 dark:border-blue-800">
-            <div className="flex items-start gap-4">
-              <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900/30 shrink-0">
-                <Calculator className="w-5 h-5 text-blue-600" />
-              </div>
-              <div className="flex-1 space-y-4">
-                <div>
-                  <h3 className="font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">
-                    Guest Count Savings Calculator
-                    <Badge variant="outline" className="text-xs">Cost-Saving Tool</Badge>
-                  </h3>
-                  <p className="text-sm text-blue-700 dark:text-blue-300">
-                    See how adjusting your guest count affects your budget. Use this to have "the conversation" with family.
-                  </p>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-sm text-blue-800 dark:text-blue-200">Guest Count</Label>
-                        <span className="text-2xl font-bold text-blue-900 dark:text-blue-100">{guestSliderValue}</span>
-                      </div>
-                      <Slider
-                        value={[guestSliderValue]}
-                        onValueChange={(val) => setGuestSliderValue(val[0])}
-                        min={50}
-                        max={500}
-                        step={10}
-                        className="w-full"
-                        data-testid="slider-guest-count"
-                      />
-                      <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>50</span>
-                        <span>500</span>
-                      </div>
-                    </div>
-
-                    <div className="p-4 rounded-lg bg-white/60 dark:bg-gray-800/40 border">
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Cost per guest (avg $200)</span>
-                          <span className="font-mono">${(guestSliderValue * 200).toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">+ Hidden costs (15%)</span>
-                          <span className="font-mono">${(guestSliderValue * 200 * 0.15).toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between font-semibold pt-2 border-t">
-                          <span>Estimated Total</span>
-                          <span className="text-blue-700 dark:text-blue-300">${(guestSliderValue * 230).toLocaleString()}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <h4 className="font-medium text-blue-800 dark:text-blue-200 text-sm flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4" />
-                      Potential Savings
-                    </h4>
-                    <div className="space-y-2">
-                      {[50, 75, 100].map((reduction) => {
-                        const savings = reduction * 230;
-                        return (
-                          <div key={reduction} className="flex items-center justify-between p-3 rounded-lg bg-white/60 dark:bg-gray-800/40 border text-sm">
-                            <div className="flex items-center gap-2">
-                              <Users className="w-4 h-4 text-muted-foreground" />
-                              <span>Cut {reduction} guests</span>
-                            </div>
-                            <span className="font-bold text-green-600">Save ${savings.toLocaleString()}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <p className="text-xs text-blue-600 dark:text-blue-400 italic">
-                      Tip: Cutting 50 guests could pay for your honeymoon!
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Card>
+          {/* Multi-Ceremony Guest Savings Calculator */}
+          {events.length > 0 && (
+            <MultiCeremonySavingsCalculator events={events} />
+          )}
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             {/* Tab 1: Set Budget */}
