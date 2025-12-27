@@ -310,12 +310,20 @@ export default function GuestWebsite() {
         <div className="container mx-auto px-4 text-center">
           <p className="text-sm text-muted-foreground">We can't wait to celebrate with you!</p>
           <div className="mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
-            <span>Made with ❤️ on</span>
-            <img 
-              src={new URL("@assets/viah-logo_1763669612969.png", import.meta.url).href}
-              alt="Viah.me"
-              className="h-12 w-auto inline-block object-contain"
-            />
+            <span>Made with love on</span>
+            <a 
+              href="https://viah.me" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="hover:opacity-80 transition-opacity"
+              data-testid="link-viah-home"
+            >
+              <img 
+                src={new URL("@assets/viah-logo_1763669612969.png", import.meta.url).href}
+                alt="Viah.me"
+                className="h-12 w-auto inline-block object-contain"
+              />
+            </a>
           </div>
         </div>
       </div>
