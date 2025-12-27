@@ -1,0 +1,39 @@
+how do other wedding planning apps handle guest lists when it comes to brides side and grooms side. Typically, in south asian weddings, we handle them differently and separately with help of family and then come a consensus together.
+
+Viah Me
+Custom Gem
+This is the "million-dollar question" in South Asian wedding planning. In Western weddings, the couple usually builds one list together. In Indian weddings, you essentially have three separate lists (Bride’s side, Groom’s side, and Couple’s friends) that eventually need to merge into one master database.
+
+Most standard wedding apps (Zola, The Knot, Joy) don't have a "Side A vs. Side B" button by default, but there are specific workflows and tools designed to handle this "consensus" process without the couple losing their minds.
+
+1. The "Tagging & Labeling" Strategy
+Most major platforms (especially Joy and Zola) use a "one big bucket" approach with heavy Tagging.
+
+How it works: You import everyone into one list but assign a "Tag" or "Label" to every guest (e.g., Bride Family, Groom Family, Couple Friends).
+
+The Benefit: This allows you to filter the list instantly. If the Groom’s parents ask, "How many people are on our side?" you simply filter by the Groom Family tag and give them the count.
+
+Consensus Phase: You can use a "Status" field (like Pending or Maybe) for names that haven't been approved yet.
+
+2. Collaborative Access (With Limits)
+South Asian couples often struggle with giving parents access to the wedding app because they fear a parent might accidentally delete something or invite a distant relative without asking.
+
+The "Guest Collector" Link: This is the most popular feature for Indian weddings. Platforms like Zola or The Knot provide a unique link you can send to your parents via WhatsApp. They fill out their friends' names and addresses, and those names populate a "Draft" area for the couple to review and approve before they officially join the guest list.
+
+Shared Admin Roles: Apps like Joy allow you to add "Collaborators." You can give your sister or a tech-savvy cousin "Editor" access to help manage the list while keeping your parents in a "View Only" or "Link Collector" role.
+
+3. Dedicated South Asian Planning Apps
+There are specialized platforms that understand the "side-based" nature of our weddings:
+
+WeddingWire India / WedMeGood: These platforms often have guest list managers that come pre-loaded with categories like "Bride’s Family" and "Groom’s Family" as primary headers.
+
+BollyWeds: This is a US-based platform specifically for South Asian weddings that uses AI and multi-user syncing. It’s built for the "consensus" model where multiple family members can update the same dashboard in real-time.
+
+4. The "Excel-to-App" Workflow (The Most Common Method)
+Because the "consensus" phase is often messy and involves a lot of debate, many North American couples use this 3-step workflow:
+
+Drafting: Create a Google Sheet with three tabs: Bride's Side, Groom's Side, and Joint.
+
+The Negotiation: Both families edit their respective tabs until the "Grand Total" matches the venue capacity and budget.
+
+The Import: Once the list is "frozen," you export it as a CSV and upload it to your wedding website platform (like Joy) for RSVP tracking and communication.
