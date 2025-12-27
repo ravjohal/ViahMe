@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, MapPin, Calendar, Clock, Navigation, Info, Hotel, HelpCircle } from "lucide-react";
+import { Loader2, MapPin, Calendar, Clock, Navigation, Info, Hotel, HelpCircle, Camera } from "lucide-react";
 import { format } from "date-fns";
 import type { WeddingWebsite, Wedding, Event } from "@shared/schema";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -62,7 +62,9 @@ export default function GuestWebsite() {
       <div
         className="relative h-96 flex items-center justify-center text-white"
         style={{
-          background: website.heroImageUrl
+          background: website.couplePhotoUrl
+            ? `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url(${website.couplePhotoUrl})`
+            : website.heroImageUrl
             ? `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url(${website.heroImageUrl})`
             : `linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd)`,
           backgroundSize: "cover",
@@ -268,6 +270,36 @@ export default function GuestWebsite() {
                   </TabsContent>
                 )}
               </Tabs>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Photo Gallery */}
+        {website.galleryPhotos && website.galleryPhotos.length > 0 && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Camera className="w-5 h-5" />
+                Photo Gallery
+              </CardTitle>
+              <CardDescription>Moments from our journey together</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {website.galleryPhotos.map((photo, index) => (
+                  <div
+                    key={index}
+                    className="relative overflow-hidden rounded-lg aspect-square group"
+                    data-testid={`gallery-photo-${index}`}
+                  >
+                    <img
+                      src={photo}
+                      alt={`Gallery photo ${index + 1}`}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
         )}

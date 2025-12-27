@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -56,21 +56,13 @@ export default function WebsiteBuilder() {
     enabled: !!weddingId,
   });
 
-  // Sync photo state with website data
-  useState(() => {
+  // Sync photo state with website data when it loads
+  useEffect(() => {
     if (website) {
       setCouplePhotoUrl(website.couplePhotoUrl || null);
       setGalleryPhotos(website.galleryPhotos || []);
     }
-  });
-
-  // Update photo state when website changes
-  if (website && couplePhotoUrl === null && website.couplePhotoUrl) {
-    setCouplePhotoUrl(website.couplePhotoUrl);
-  }
-  if (website && galleryPhotos.length === 0 && website.galleryPhotos?.length) {
-    setGalleryPhotos(website.galleryPhotos);
-  }
+  }, [website?.id]);
 
   const form = useForm<WebsiteFormData>({
     resolver: zodResolver(websiteFormSchema),
