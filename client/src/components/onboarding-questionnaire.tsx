@@ -1105,23 +1105,6 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                       )}
                     />
 
-                    {/* Hidden Costs Warning */}
-                    <div className="p-4 rounded-lg bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200">
-                      <div className="flex items-start gap-3">
-                        <div className="p-1.5 rounded-full bg-amber-100">
-                          <Info className="w-4 h-4 text-amber-600" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-amber-900 text-sm mb-1">Don't Forget Hidden Costs!</h4>
-                          <p className="text-sm text-amber-700">
-                            Set aside <span className="font-bold">15%</span> of your budget for hidden costs like service charges (often 22%), taxes, tips, and last-minute additions.
-                          </p>
-                          <p className="text-xs text-amber-600 mt-1 italic">
-                            A $50,000 wedding may actually cost ~$57,500 after these fees
-                          </p>
-                        </div>
-                      </div>
-                    </div>
                   </div>
                 )}
               </form>
