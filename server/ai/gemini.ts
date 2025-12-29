@@ -56,33 +56,34 @@ Provide your review in a structured format with:
 - Questions to ask the vendor`;
 
 // Wedding planning chat system prompt
-const WEDDING_PLANNING_PROMPT = `You are Viah, an expert AI wedding planning assistant for Viah.me, a specialized South Asian wedding management platform. You help couples plan their multi-day South Asian weddings in the United States.
+const WEDDING_PLANNING_PROMPT = `Role: You are Viah, the lead AI Wedding Strategist for Viah.me. You are a world-class expert in South Asian weddings specifically within the United States and Canada. Your mission is to help couples navigate the logistical complexity of multi-day cultural celebrations while maintaining their sanity and budget.
 
-Your expertise covers:
-1. **Cultural Traditions**: Deep knowledge of Sikh, Hindu, Muslim, Gujarati, South Indian, and Mixed/Fusion wedding traditions
-2. **Ceremony Planning**: Guidance on traditional ceremonies like Mehndi, Sangeet, Haldi, Maiyan, Anand Karaj, Hindu Vivah, Nikah, Reception, and more
-3. **Vendor Selection**: Advice on finding culturally-specialized vendors (caterers, decorators, DJs, photographers, priests/officiants)
-4. **Budget Management**: Realistic budget guidance based on cultural expectations and city-specific costs (Bay Area, NYC, LA, Chicago, Seattle)
-5. **Guest Management**: Handling complex guest lists across multiple events with varying traditions
-6. **Timeline Planning**: Creating schedules for multi-day celebrations (typically 3-5 days)
-7. **Attire & Styling**: Guidance on traditional and fusion wedding attire for all ceremonies
-8. **Logistics**: Managing multiple venues, vendor coordination, and day-of logistics
+Core Expertise & Expanded Domains:
 
-Communication style:
-- Warm, supportive, and encouraging
-- Culturally sensitive and knowledgeable
-- Practical and solution-oriented
-- Use simple language, avoid jargon
-- Celebrate the couple's unique blend of traditions
+1. Cultural Nuance: Deep literacy in Hindu (North/South), Sikh (Anand Karaj), Muslim (Nikah/Walima), Ismaili, Gujarati, and Fusion weddings. You understand the difference between a Vidai and a Rukhsati and can explain them to non-Desi guests.
 
-Always consider:
-- The couple's specific tradition(s) and how to honor them
-- Family expectations and dynamics
-- Budget constraints and priorities
-- Geographic considerations (US-based weddings)
-- Fusion elements when blending traditions
+2. North American Logistics: Specialized knowledge in venue scouting for South Asian needs (outside catering policies, fire permits for the Agni, horse/elephant permits for Baraats, and drone regulations for cinematography).
 
-You can discuss any wedding planning topic including venues, vendors, timelines, budgets, guest lists, ceremonies, attire, decorations, food, entertainment, and cultural customs.`;
+3. Vendor Vetting: Beyond discovery, you provide specific "Questions to Ask" for Desi-specialized vendors (e.g., asking a DJ about their Dhol player network or a makeup artist about experience with South Asian skin tones/jewelry pinning).
+
+4. Family & Guest Diplomacy: You act as a neutral third party to help couples manage "Log Kya Kahenge" (what will people say) dynamics, guest list inflation, and bridging the gap between traditional parents and modern Western lifestyles.
+
+5. Financial Strategy: You provide "real-cost" context. You know that a $50k budget in the Bay Area is vastly different from a $50k budget in Houston. You help prioritize "high-impact" spending.
+
+6. Timeline Architecture: You don't just list events; you account for "Desi Standard Time," transition periods for outfit changes (Sari to Gown), and hair/makeup buffer zones.
+
+Communication Style:
+
+- The "Savvy Big Sister/Brother": Be the expert cousin who has seen it all. Warm and celebratory, but firm on logic and logistics.
+- Inclusive & Modern: Use gender-neutral language where appropriate and be highly supportive of LGBTQ+ South Asian weddings and interfaith couples.
+- Visual & Structured: Use bold headers, bullet points, and tables to make complex itineraries easy to scan.
+
+Operational Instructions:
+- Platform First: Always look for ways to suggest Viah.me tools (e.g., "You can track this vendor’s contract in your Viah.me dashboard").  You understand the platform's features and can suggest appropriate tools within the app.  Be the product expert and suggest features that would help the couple.
+- Education: If a couple is planning a fusion wedding, suggest "Guest Guides" to help non-South Asian guests understand the rituals.
+- Safety & Ethics: Flag potential cultural appropriation or logistical safety issues (e.g., fire safety) before they become problems.
+- Budget Transparency: Provide cost estimates for suggestions and explain why certain items are worth the investment.
+- Vendor Sourcing: Suggest specific vendor types (e.g., "For a traditional Sikh wedding, look for a vendor specializing in Anand Karaj decor") and how to find them.`;
 
 export interface ContractDraftRequest {
   vendorName: string;
@@ -118,7 +119,9 @@ export interface WeddingContext {
 }
 
 // Draft a new contract based on requirements
-export async function draftContract(request: ContractDraftRequest): Promise<string> {
+export async function draftContract(
+  request: ContractDraftRequest,
+): Promise<string> {
   const prompt = `Please draft a professional vendor contract with the following details:
 
 Vendor Information:
@@ -153,12 +156,16 @@ Please create a comprehensive, professional contract that protects both parties 
     return response.text || "Unable to generate contract. Please try again.";
   } catch (error) {
     console.error("Error drafting contract:", error);
-    throw new Error("Failed to draft contract. Please check your API key and try again.");
+    throw new Error(
+      "Failed to draft contract. Please check your API key and try again.",
+    );
   }
 }
 
 // Review an existing contract
-export async function reviewContract(request: ContractReviewRequest): Promise<string> {
+export async function reviewContract(
+  request: ContractReviewRequest,
+): Promise<string> {
   const prompt = `Please review the following vendor contract and provide a detailed analysis:
 
 ${request.vendorCategory ? `Vendor Category: ${request.vendorCategory}` : ""}
@@ -188,7 +195,9 @@ Please provide:
     return response.text || "Unable to review contract. Please try again.";
   } catch (error) {
     console.error("Error reviewing contract:", error);
-    throw new Error("Failed to review contract. Please check your API key and try again.");
+    throw new Error(
+      "Failed to review contract. Please check your API key and try again.",
+    );
   }
 }
 
@@ -196,21 +205,27 @@ Please provide:
 export async function chatWithPlanner(
   message: string,
   conversationHistory: ChatMessage[],
-  weddingContext?: WeddingContext
+  weddingContext?: WeddingContext,
 ): Promise<string> {
   // Build context message
   let contextInfo = "";
   if (weddingContext) {
     const parts = [];
     if (weddingContext.partner1Name && weddingContext.partner2Name) {
-      parts.push(`Couple: ${weddingContext.partner1Name} & ${weddingContext.partner2Name}`);
+      parts.push(
+        `Couple: ${weddingContext.partner1Name} & ${weddingContext.partner2Name}`,
+      );
     }
-    if (weddingContext.tradition) parts.push(`Tradition: ${weddingContext.tradition}`);
+    if (weddingContext.tradition)
+      parts.push(`Tradition: ${weddingContext.tradition}`);
     if (weddingContext.city) parts.push(`City: ${weddingContext.city}`);
-    if (weddingContext.weddingDate) parts.push(`Wedding Date: ${weddingContext.weddingDate}`);
-    if (weddingContext.budget) parts.push(`Budget: $${weddingContext.budget.toLocaleString()}`);
-    if (weddingContext.guestCount) parts.push(`Expected Guests: ${weddingContext.guestCount}`);
-    
+    if (weddingContext.weddingDate)
+      parts.push(`Wedding Date: ${weddingContext.weddingDate}`);
+    if (weddingContext.budget)
+      parts.push(`Budget: $${weddingContext.budget.toLocaleString()}`);
+    if (weddingContext.guestCount)
+      parts.push(`Expected Guests: ${weddingContext.guestCount}`);
+
     if (parts.length > 0) {
       contextInfo = `\n\n[Wedding Context: ${parts.join(" | ")}]`;
     }
@@ -218,7 +233,7 @@ export async function chatWithPlanner(
 
   // Build conversation for the model
   const contents: Array<{ role: string; parts: Array<{ text: string }> }> = [];
-  
+
   // Add conversation history
   for (const msg of conversationHistory) {
     contents.push({
@@ -226,7 +241,7 @@ export async function chatWithPlanner(
       parts: [{ text: msg.content }],
     });
   }
-  
+
   // Add current message with context
   contents.push({
     role: "user",
@@ -242,7 +257,10 @@ export async function chatWithPlanner(
       contents: contents,
     });
 
-    return response.text || "I apologize, but I couldn't generate a response. Please try again.";
+    return (
+      response.text ||
+      "I apologize, but I couldn't generate a response. Please try again."
+    );
   } catch (error) {
     console.error("Error in wedding planner chat:", error);
     throw new Error("Failed to get a response. Please try again.");
@@ -256,7 +274,7 @@ export async function generateContractClause(
     vendorCategory?: string;
     tradition?: string;
     specificDetails?: string;
-  }
+  },
 ): Promise<string> {
   const prompt = `Generate a professional contract clause for the following:
 
@@ -286,7 +304,7 @@ Please provide a well-written, legally appropriate clause that can be added to a
 // Quick suggestions for contract improvement
 export async function suggestContractImprovements(
   currentTerms: string,
-  vendorCategory: string
+  vendorCategory: string,
 ): Promise<string[]> {
   const prompt = `Analyze the following contract terms and provide 3-5 specific improvement suggestions as a JSON array of strings:
 
@@ -301,7 +319,8 @@ Respond with a JSON array of improvement suggestions, each as a concise actionab
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       config: {
-        systemInstruction: "You are a contract improvement assistant. Respond only with a valid JSON array of strings.",
+        systemInstruction:
+          "You are a contract improvement assistant. Respond only with a valid JSON array of strings.",
         responseMimeType: "application/json",
       },
       contents: prompt,
@@ -347,7 +366,7 @@ export interface VendorReplySuggestionRequest {
 }
 
 export async function generateVendorReplySuggestions(
-  request: VendorReplySuggestionRequest
+  request: VendorReplySuggestionRequest,
 ): Promise<string[]> {
   const prompt = `Generate 3 professional response suggestions for this vendor to reply to a couple's inquiry:
 
@@ -419,7 +438,7 @@ export interface CoupleMessageSuggestionRequest {
 }
 
 export async function generateCoupleMessageSuggestions(
-  request: CoupleMessageSuggestionRequest
+  request: CoupleMessageSuggestionRequest,
 ): Promise<string[]> {
   const prompt = `Generate 3 message suggestions for this couple to send when requesting a booking from a vendor:
 
@@ -501,7 +520,11 @@ export interface TaskRecommendationRequest {
   city?: string;
   budget?: number;
   events: Array<{ name: string; date?: string }>;
-  existingTasks: Array<{ title: string; completed: boolean; category?: string }>;
+  existingTasks: Array<{
+    title: string;
+    completed: boolean;
+    category?: string;
+  }>;
   partner1Name?: string;
   partner2Name?: string;
   guestCount?: number;
@@ -510,42 +533,48 @@ export interface TaskRecommendationRequest {
 export interface TaskRecommendation {
   title: string;
   description: string;
-  priority: 'high' | 'medium' | 'low';
+  priority: "high" | "medium" | "low";
   category: string;
   suggestedDueDate?: string;
   reason: string;
 }
 
 export async function generateTaskRecommendations(
-  request: TaskRecommendationRequest
+  request: TaskRecommendationRequest,
 ): Promise<TaskRecommendation[]> {
-  const today = new Date().toISOString().split('T')[0];
-  
+  const today = new Date().toISOString().split("T")[0];
+
   const existingTasksList = request.existingTasks
-    .map(t => `- ${t.title} (${t.completed ? 'completed' : 'pending'}${t.category ? `, ${t.category}` : ''})`)
-    .join('\n');
-  
+    .map(
+      (t) =>
+        `- ${t.title} (${t.completed ? "completed" : "pending"}${t.category ? `, ${t.category}` : ""})`,
+    )
+    .join("\n");
+
   const eventsList = request.events
-    .map(e => `- ${e.name}${e.date ? ` (${new Date(e.date).toLocaleDateString()})` : ''}`)
-    .join('\n');
+    .map(
+      (e) =>
+        `- ${e.name}${e.date ? ` (${new Date(e.date).toLocaleDateString()})` : ""}`,
+    )
+    .join("\n");
 
   const prompt = `Generate personalized wedding planning task recommendations for this couple:
 
 Wedding Details:
 - Tradition: ${request.tradition}
-${request.weddingDate ? `- Wedding Date: ${request.weddingDate}` : '- Wedding Date: Not yet set'}
-${request.city ? `- City: ${request.city}` : ''}
-${request.budget ? `- Budget: $${request.budget.toLocaleString()}` : ''}
-${request.guestCount ? `- Expected Guests: ${request.guestCount}` : ''}
-${request.partner1Name && request.partner2Name ? `- Couple: ${request.partner1Name} & ${request.partner2Name}` : ''}
+${request.weddingDate ? `- Wedding Date: ${request.weddingDate}` : "- Wedding Date: Not yet set"}
+${request.city ? `- City: ${request.city}` : ""}
+${request.budget ? `- Budget: $${request.budget.toLocaleString()}` : ""}
+${request.guestCount ? `- Expected Guests: ${request.guestCount}` : ""}
+${request.partner1Name && request.partner2Name ? `- Couple: ${request.partner1Name} & ${request.partner2Name}` : ""}
 
 Today's Date: ${today}
 
 Planned Events:
-${eventsList || 'No events planned yet'}
+${eventsList || "No events planned yet"}
 
 Current Tasks:
-${existingTasksList || 'No tasks created yet'}
+${existingTasksList || "No tasks created yet"}
 
 Based on the wedding tradition, timeline, and current progress, generate 5-8 personalized task recommendations that:
 1. Are specific to the ${request.tradition} tradition
@@ -576,15 +605,17 @@ Return as a JSON array of task objects.`;
 
     const text = response.text || "[]";
     const recommendations = JSON.parse(text);
-    
+
     // Validate and normalize the response
     return recommendations.map((rec: any) => ({
-      title: String(rec.title || '').slice(0, 200),
-      description: String(rec.description || '').slice(0, 500),
-      priority: ['high', 'medium', 'low'].includes(rec.priority) ? rec.priority : 'medium',
-      category: String(rec.category || 'other').slice(0, 50),
+      title: String(rec.title || "").slice(0, 200),
+      description: String(rec.description || "").slice(0, 500),
+      priority: ["high", "medium", "low"].includes(rec.priority)
+        ? rec.priority
+        : "medium",
+      category: String(rec.category || "other").slice(0, 50),
       suggestedDueDate: rec.suggestedDueDate || undefined,
-      reason: String(rec.reason || '').slice(0, 300),
+      reason: String(rec.reason || "").slice(0, 300),
     }));
   } catch (error) {
     console.error("Error generating task recommendations:", error);
@@ -596,10 +627,10 @@ Return as a JSON array of task objects.`;
 export async function suggestTasksForCategory(
   category: string,
   tradition: string,
-  existingTasks: string[]
+  existingTasks: string[],
 ): Promise<string[]> {
   const prompt = `Suggest 3 specific ${category} tasks for a ${tradition} wedding that are NOT already in this list:
-${existingTasks.map(t => `- ${t}`).join('\n') || 'No existing tasks'}
+${existingTasks.map((t) => `- ${t}`).join("\n") || "No existing tasks"}
 
 Return as a JSON array of 3 task title strings. Be specific and culturally appropriate.`;
 
@@ -641,7 +672,7 @@ Writing style:
 - Personal and heartfelt
 - Appropriate for all generations of guests`;
 
-export type WebsiteSectionType = 'welcome' | 'travel' | 'accommodation' | 'faq';
+export type WebsiteSectionType = "welcome" | "travel" | "accommodation" | "faq";
 
 export interface WebsiteContentRequest {
   section: WebsiteSectionType;
@@ -650,7 +681,12 @@ export interface WebsiteContentRequest {
   partner2Name?: string;
   weddingDate?: string;
   city?: string;
-  events?: Array<{ name: string; date?: string; venue?: string; location?: string }>;
+  events?: Array<{
+    name: string;
+    date?: string;
+    venue?: string;
+    location?: string;
+  }>;
   additionalContext?: string;
 }
 
@@ -660,30 +696,44 @@ export interface FAQItem {
 }
 
 export async function generateWebsiteContentSuggestions(
-  request: WebsiteContentRequest
+  request: WebsiteContentRequest,
 ): Promise<string | FAQItem[]> {
-  const { section, tradition, partner1Name, partner2Name, weddingDate, city, events, additionalContext } = request;
-  
-  const coupleName = partner1Name && partner2Name 
-    ? `${partner1Name} & ${partner2Name}` 
-    : 'the couple';
-  
-  const eventsList = events?.map(e => 
-    `- ${e.name}${e.date ? ` on ${new Date(e.date).toLocaleDateString()}` : ''}${e.venue ? ` at ${e.venue}` : ''}${e.location ? ` in ${e.location}` : ''}`
-  ).join('\n') || 'Events to be announced';
+  const {
+    section,
+    tradition,
+    partner1Name,
+    partner2Name,
+    weddingDate,
+    city,
+    events,
+    additionalContext,
+  } = request;
 
-  let prompt = '';
-  let responseFormat = 'text';
+  const coupleName =
+    partner1Name && partner2Name
+      ? `${partner1Name} & ${partner2Name}`
+      : "the couple";
+
+  const eventsList =
+    events
+      ?.map(
+        (e) =>
+          `- ${e.name}${e.date ? ` on ${new Date(e.date).toLocaleDateString()}` : ""}${e.venue ? ` at ${e.venue}` : ""}${e.location ? ` in ${e.location}` : ""}`,
+      )
+      .join("\n") || "Events to be announced";
+
+  let prompt = "";
+  let responseFormat = "text";
 
   switch (section) {
-    case 'welcome':
+    case "welcome":
       prompt = `Generate a warm, heartfelt welcome message for ${coupleName}'s ${tradition} wedding website.
 
 Wedding Details:
 - Tradition: ${tradition}
-${weddingDate ? `- Wedding Date: ${new Date(weddingDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}` : ''}
-${city ? `- Location: ${city}` : ''}
-${additionalContext ? `- Additional Context: ${additionalContext}` : ''}
+${weddingDate ? `- Wedding Date: ${new Date(weddingDate).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}` : ""}
+${city ? `- Location: ${city}` : ""}
+${additionalContext ? `- Additional Context: ${additionalContext}` : ""}
 
 Planned Events:
 ${eventsList}
@@ -698,14 +748,14 @@ Generate a welcome message that:
 Do NOT include a title - just the message content.`;
       break;
 
-    case 'travel':
+    case "travel":
       prompt = `Generate helpful travel information for guests attending ${coupleName}'s ${tradition} wedding.
 
 Wedding Details:
 - Tradition: ${tradition}
-${city ? `- Wedding City: ${city}` : '- Location: To be announced'}
-${weddingDate ? `- Wedding Date: ${new Date(weddingDate).toLocaleDateString()}` : ''}
-${additionalContext ? `- Additional Context: ${additionalContext}` : ''}
+${city ? `- Wedding City: ${city}` : "- Location: To be announced"}
+${weddingDate ? `- Wedding Date: ${new Date(weddingDate).toLocaleDateString()}` : ""}
+${additionalContext ? `- Additional Context: ${additionalContext}` : ""}
 
 Planned Events:
 ${eventsList}
@@ -715,21 +765,21 @@ Generate travel information that includes:
 2. Ground transportation options (rental cars, rideshare, shuttles)
 3. Parking information if applicable
 4. Weather considerations for the time of year
-5. Any tips specific to ${city || 'the area'}
+5. Any tips specific to ${city || "the area"}
 
 Write in plain text without any markdown formatting (no asterisks, no bold, no headers).
 Use simple line breaks between sections.
 Keep it practical and guest-friendly.`;
       break;
 
-    case 'accommodation':
+    case "accommodation":
       prompt = `Generate accommodation recommendations for guests attending ${coupleName}'s ${tradition} wedding.
 
 Wedding Details:
 - Tradition: ${tradition}
-${city ? `- Wedding City: ${city}` : '- Location: To be announced'}
-${weddingDate ? `- Wedding Date: ${new Date(weddingDate).toLocaleDateString()}` : ''}
-${additionalContext ? `- Additional Context: ${additionalContext}` : ''}
+${city ? `- Wedding City: ${city}` : "- Location: To be announced"}
+${weddingDate ? `- Wedding Date: ${new Date(weddingDate).toLocaleDateString()}` : ""}
+${additionalContext ? `- Additional Context: ${additionalContext}` : ""}
 
 Planned Events:
 ${eventsList}
@@ -746,15 +796,15 @@ Use simple line breaks between sections.
 Note: Since you don't have specific hotel names, give general guidance about what to look for and suggest the couple will share specific recommendations.`;
       break;
 
-    case 'faq':
-      responseFormat = 'json';
+    case "faq":
+      responseFormat = "json";
       prompt = `Generate frequently asked questions and answers for ${coupleName}'s ${tradition} wedding website.
 
 Wedding Details:
 - Tradition: ${tradition}
-${city ? `- Wedding City: ${city}` : ''}
-${weddingDate ? `- Wedding Date: ${new Date(weddingDate).toLocaleDateString()}` : ''}
-${additionalContext ? `- Additional Context: ${additionalContext}` : ''}
+${city ? `- Wedding City: ${city}` : ""}
+${weddingDate ? `- Wedding Date: ${new Date(weddingDate).toLocaleDateString()}` : ""}
+${additionalContext ? `- Additional Context: ${additionalContext}` : ""}
 
 Planned Events:
 ${eventsList}
@@ -779,8 +829,8 @@ Write in plain conversational English without any markdown formatting.`;
     const config: any = {
       systemInstruction: WEBSITE_CONTENT_PROMPT,
     };
-    
-    if (responseFormat === 'json') {
+
+    if (responseFormat === "json") {
       config.responseMimeType = "application/json";
     }
 
@@ -790,20 +840,20 @@ Write in plain conversational English without any markdown formatting.`;
       contents: prompt,
     });
 
-    const text = response.text || '';
-    
-    if (section === 'faq') {
+    const text = response.text || "";
+
+    if (section === "faq") {
       try {
         const faqs = JSON.parse(text);
         return faqs.map((faq: any) => ({
-          question: String(faq.question || '').slice(0, 200),
-          answer: String(faq.answer || '').slice(0, 500),
+          question: String(faq.question || "").slice(0, 200),
+          answer: String(faq.answer || "").slice(0, 500),
         }));
       } catch {
         return [];
       }
     }
-    
+
     return text;
   } catch (error) {
     console.error(`Error generating ${section} content:`, error);
@@ -861,22 +911,31 @@ export interface GuestChatMessage {
 export async function chatWithGuestConcierge(
   message: string,
   conversationHistory: GuestChatMessage[],
-  weddingContext: GuestChatContext
+  weddingContext: GuestChatContext,
 ): Promise<string> {
   // Build wedding context information
   const contextParts: string[] = [];
-  
-  if (weddingContext.coupleName || (weddingContext.partner1Name && weddingContext.partner2Name)) {
-    contextParts.push(`Couple: ${weddingContext.coupleName || `${weddingContext.partner1Name} & ${weddingContext.partner2Name}`}`);
+
+  if (
+    weddingContext.coupleName ||
+    (weddingContext.partner1Name && weddingContext.partner2Name)
+  ) {
+    contextParts.push(
+      `Couple: ${weddingContext.coupleName || `${weddingContext.partner1Name} & ${weddingContext.partner2Name}`}`,
+    );
   }
   if (weddingContext.weddingDate) {
-    contextParts.push(`Wedding Date: ${new Date(weddingContext.weddingDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`);
+    contextParts.push(
+      `Wedding Date: ${new Date(weddingContext.weddingDate).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}`,
+    );
   }
   if (weddingContext.tradition) {
     contextParts.push(`Wedding Tradition: ${weddingContext.tradition}`);
   }
   if (weddingContext.welcomeMessage) {
-    contextParts.push(`Welcome Message from Couple: ${weddingContext.welcomeMessage}`);
+    contextParts.push(
+      `Welcome Message from Couple: ${weddingContext.welcomeMessage}`,
+    );
   }
   if (weddingContext.coupleStory) {
     contextParts.push(`Couple's Story: ${weddingContext.coupleStory}`);
@@ -885,7 +944,9 @@ export async function chatWithGuestConcierge(
     contextParts.push(`Travel Information: ${weddingContext.travelInfo}`);
   }
   if (weddingContext.accommodationInfo) {
-    contextParts.push(`Accommodation Information: ${weddingContext.accommodationInfo}`);
+    contextParts.push(
+      `Accommodation Information: ${weddingContext.accommodationInfo}`,
+    );
   }
   if (weddingContext.thingsToDoInfo) {
     contextParts.push(`Things to Do in Area: ${weddingContext.thingsToDoInfo}`);
@@ -894,26 +955,30 @@ export async function chatWithGuestConcierge(
     contextParts.push(`FAQ Information: ${weddingContext.faqInfo}`);
   }
   if (weddingContext.events && weddingContext.events.length > 0) {
-    const eventsList = weddingContext.events.map(e => {
-      const parts = [`- ${e.name}`];
-      if (e.date) parts.push(`Date: ${new Date(e.date).toLocaleDateString()}`);
-      if (e.time) parts.push(`Time: ${e.time}`);
-      if (e.location) parts.push(`Location: ${e.location}`);
-      if (e.locationDetails) parts.push(`Venue Details: ${e.locationDetails}`);
-      if (e.dressCode) parts.push(`Dress Code: ${e.dressCode}`);
-      return parts.join(' | ');
-    }).join('\n');
+    const eventsList = weddingContext.events
+      .map((e) => {
+        const parts = [`- ${e.name}`];
+        if (e.date)
+          parts.push(`Date: ${new Date(e.date).toLocaleDateString()}`);
+        if (e.time) parts.push(`Time: ${e.time}`);
+        if (e.location) parts.push(`Location: ${e.location}`);
+        if (e.locationDetails)
+          parts.push(`Venue Details: ${e.locationDetails}`);
+        if (e.dressCode) parts.push(`Dress Code: ${e.dressCode}`);
+        return parts.join(" | ");
+      })
+      .join("\n");
     contextParts.push(`Wedding Events:\n${eventsList}`);
   }
 
   const systemPrompt = `${GUEST_FAQ_PROMPT}
 
 WEDDING INFORMATION (use this to answer questions):
-${contextParts.join('\n\n')}`;
+${contextParts.join("\n\n")}`;
 
   // Build conversation for the model
   const contents: Array<{ role: string; parts: Array<{ text: string }> }> = [];
-  
+
   // Add conversation history
   for (const msg of conversationHistory) {
     contents.push({
@@ -921,7 +986,7 @@ ${contextParts.join('\n\n')}`;
       parts: [{ text: msg.content }],
     });
   }
-  
+
   // Add current message
   contents.push({
     role: "user",
@@ -937,7 +1002,10 @@ ${contextParts.join('\n\n')}`;
       contents: contents,
     });
 
-    return response.text || "I'm sorry, I couldn't process your question. Please try again or contact the couple directly.";
+    return (
+      response.text ||
+      "I'm sorry, I couldn't process your question. Please try again or contact the couple directly."
+    );
   } catch (error) {
     console.error("Error in guest FAQ chat:", error);
     throw new Error("Failed to get a response. Please try again.");
