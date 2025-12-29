@@ -112,14 +112,22 @@ export function CouplePlannerChatbot() {
   };
 
   const chatbotContent = !isOpen ? (
-    <Button
-      onClick={() => setIsOpen(true)}
-      size="lg"
-      className="fixed bottom-24 right-4 md:bottom-6 md:right-6 rounded-full h-14 w-14 shadow-xl z-[9999] bg-gradient-to-br from-primary to-primary/80 animate-pulse hover:animate-none hover:scale-110 transition-transform"
-      data-testid="button-open-ai-planner"
+    <div 
+      className="fixed z-[9999]"
+      style={{
+        bottom: '96px',
+        right: '16px',
+      }}
     >
-      <Sparkles className="h-6 w-6" />
-    </Button>
+      <Button
+        onClick={() => setIsOpen(true)}
+        size="lg"
+        className="rounded-full h-14 w-14 shadow-xl bg-gradient-to-br from-primary to-primary/80 animate-pulse hover:animate-none hover:scale-110 transition-transform"
+        data-testid="button-open-ai-planner"
+      >
+        <Sparkles className="h-6 w-6" />
+      </Button>
+    </div>
   ) : (
     <>
       <div 
