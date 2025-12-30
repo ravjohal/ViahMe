@@ -52,6 +52,7 @@ interface VendorDetailModalProps {
   open: boolean;
   onClose: () => void;
   onBookRequest: (vendorId: string, eventIds: string[], notes: string) => void;
+  onOfflineBooking?: (vendorId: string, eventIds: string[], notes: string) => void;
   isAuthenticated?: boolean;
   onAuthRequired?: () => void;
   weddingId?: string;
@@ -74,6 +75,7 @@ export function VendorDetailModal({
   open,
   onClose,
   onBookRequest,
+  onOfflineBooking,
   isAuthenticated = true,
   onAuthRequired,
   weddingId,
@@ -85,6 +87,7 @@ export function VendorDetailModal({
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
   const [notes, setNotes] = useState("");
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const [offlineBookingMode, setOfflineBookingMode] = useState(false);
   
   // AI suggestion state
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
@@ -943,8 +946,101 @@ export function VendorDetailModal({
           <Separator />
 
           <div className="pt-6">
-            <h3 className="font-semibold text-lg mb-4">Request Booking</h3>
-            {!isAuthenticated ? (
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-lg">
+                {offlineBookingMode ? "Mark as Booked Offline" : "Request Booking"}
+              </h3>
+              {isAuthenticated && onOfflineBooking && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setOfflineBookingMode(!offlineBookingMode);
+                    setSelectedEvents([]);
+                    setNotes("");
+                  }}
+                  className="text-xs"
+                  data-testid="button-toggle-offline-booking"
+                >
+                  {offlineBookingMode ? "Request Booking Instead" : "Already Booked Offline?"}
+                </Button>
+              )}
+            </div>
+            
+            {offlineBookingMode && isAuthenticated && onOfflineBooking ? (
+              <div className="space-y-4">
+                <div className="p-4 rounded-lg bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800">
+                  <p className="text-sm text-emerald-800 dark:text-emerald-200">
+                    Use this if you've already booked this vendor outside the app. This will add them to your vendor list and associate them with your selected events.
+                  </p>
+                </div>
+                
+                <div>
+                  <Label className="text-base mb-3 block">
+                    Which events did you book them for? ({selectedEvents.length} selected)
+                  </Label>
+                  <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded-lg p-3">
+                    {events.length > 0 ? (
+                      events.map((event) => (
+                        <div 
+                          key={event.id} 
+                          className="flex items-center space-x-3 hover-elevate p-2 rounded-md"
+                          data-testid={`offline-event-checkbox-${event.id}`}
+                        >
+                          <Checkbox
+                            id={`offline-event-${event.id}`}
+                            checked={selectedEvents.includes(event.id)}
+                            onCheckedChange={() => handleEventToggle(event.id)}
+                          />
+                          <label
+                            htmlFor={`offline-event-${event.id}`}
+                            className="flex-1 text-sm font-medium cursor-pointer"
+                          >
+                            {event.name} {event.date && `- ${new Date(event.date).toLocaleDateString()}`}
+                          </label>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        No events created yet. Add events to your wedding first.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="offline-notes" className="text-base mb-2 block">
+                    Notes (Optional)
+                  </Label>
+                  <Textarea
+                    id="offline-notes"
+                    placeholder="Add any notes about the booking (price agreed, contact info, etc.)..."
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    rows={3}
+                    data-testid="textarea-offline-notes"
+                  />
+                </div>
+
+                <Button
+                  onClick={() => {
+                    if (vendor && selectedEvents.length > 0) {
+                      onOfflineBooking(vendor.id, selectedEvents, notes);
+                      setSelectedEvents([]);
+                      setNotes("");
+                      setOfflineBookingMode(false);
+                      onClose();
+                    }
+                  }}
+                  disabled={selectedEvents.length === 0}
+                  className="w-full bg-emerald-600 hover:bg-emerald-700"
+                  data-testid="button-confirm-offline-booking"
+                >
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  Mark as Booked for {selectedEvents.length} {selectedEvents.length === 1 ? 'Event' : 'Events'}
+                </Button>
+              </div>
+            ) : !isAuthenticated ? (
               <div className="p-6 rounded-lg border bg-muted/20 text-center space-y-4">
                 <p className="text-base text-muted-foreground">
                   Create a free account to book vendors and start planning your dream wedding.
