@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Filter, SlidersHorizontal, GitCompare, X, Info, MapPin } from "lucide-react";
+import { Search, Filter, SlidersHorizontal, GitCompare, X, Info, MapPin, Plus } from "lucide-react";
 import type { Vendor, Wedding } from "@shared/schema";
 import { VendorCard } from "./vendor-card";
 import { VendorCategoryGuide } from "./vendor-category-guide";
@@ -24,6 +24,7 @@ interface VendorDirectoryProps {
   comparisonVendors?: Vendor[];
   onOpenComparison?: () => void;
   isLoggedIn?: boolean;
+  onSubmitVendor?: () => void;
 }
 
 // Map budget amounts to price range tiers
@@ -186,6 +187,7 @@ export function VendorDirectory({
   comparisonVendors = [],
   onOpenComparison,
   isLoggedIn = true,
+  onSubmitVendor,
 }: VendorDirectoryProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -289,13 +291,26 @@ export function VendorDirectory({
 
   return (
     <div className="space-y-6">
-      <div className="mb-8">
-        <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-600 bg-clip-text text-transparent mb-2" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-          Vendor Directory
-        </h1>
-        <p className="text-lg font-semibold bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-          Discover culturally-specialized service providers
-        </p>
+      <div className="mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+        <div>
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-600 bg-clip-text text-transparent mb-2" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+            Vendor Directory
+          </h1>
+          <p className="text-lg font-semibold bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+            Discover culturally-specialized service providers
+          </p>
+        </div>
+        {isLoggedIn && onSubmitVendor && (
+          <Button
+            variant="outline"
+            onClick={onSubmitVendor}
+            className="whitespace-nowrap"
+            data-testid="button-submit-vendor"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add a Vendor
+          </Button>
+        )}
       </div>
 
       <Card className="p-6">

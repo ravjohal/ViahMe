@@ -297,9 +297,26 @@ export const insertVendorSchema = createInsertSchema(vendors).omit({
   preferredWeddingTraditions: z.array(z.enum(['sikh', 'hindu', 'muslim', 'gujarati', 'south_indian', 'mixed', 'general'])).optional(),
   priceRange: z.enum(['$', '$$', '$$$', '$$$$']),
   claimed: z.boolean().optional(),
-  source: z.enum(['manual', 'google_places']).optional(),
+  source: z.enum(['manual', 'google_places', 'couple_submitted']).optional(),
+  createdByUserType: z.enum(['vendor', 'couple', 'system']).optional(),
   optedOutOfNotifications: z.boolean().optional(),
 });
+
+export const coupleSubmitVendorSchema = z.object({
+  name: z.string().min(2, "Business name must be at least 2 characters"),
+  categories: z.array(z.enum(VENDOR_CATEGORIES)).min(1, "Select at least one category"),
+  city: z.enum(['San Francisco Bay Area', 'New York City', 'Los Angeles', 'Chicago', 'Seattle']),
+  location: z.string().min(1, "Address/Location is required"),
+  priceRange: z.enum(['$', '$$', '$$$', '$$$$']),
+  culturalSpecialties: z.array(z.string()).optional(),
+  description: z.string().optional(),
+  email: z.string().email().optional().or(z.literal("")),
+  phone: z.string().optional().transform(val => val?.replace(/\D/g, '') || null),
+  website: z.string().url().optional().or(z.literal("")),
+  instagram: z.string().optional().transform(val => val?.replace(/^@/, '') || null),
+});
+
+export type CoupleSubmitVendor = z.infer<typeof coupleSubmitVendorSchema>;
 
 export type InsertVendor = z.infer<typeof insertVendorSchema>;
 export type Vendor = typeof vendors.$inferSelect;

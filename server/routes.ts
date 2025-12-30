@@ -54,6 +54,8 @@ import {
   insertLeadNurtureSequenceSchema,
   insertLeadNurtureStepSchema,
   insertLeadActivityLogSchema,
+  coupleSubmitVendorSchema,
+  type InsertVendor,
   type VendorLead,
 } from "@shared/schema";
 import { seedVendors, seedBudgetBenchmarks } from "./seed-data";
@@ -1441,51 +1443,48 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
         return res.status(403).json({ error: "Only couples can submit vendor profiles" });
       }
       
-      const { 
-        name, 
-        categories, 
-        city, 
-        location, 
-        priceRange, 
-        culturalSpecialties, 
-        description, 
-        email, 
-        phone, 
-        website, 
-        instagram 
-      } = req.body;
+      // Validate using the couple submit schema (includes normalization)
+      const validatedData = coupleSubmitVendorSchema.parse(req.body);
       
-      // Validate required fields
-      if (!name || !categories?.length || !city || !location || !priceRange) {
-        return res.status(400).json({ error: "Missing required fields" });
-      }
-      
-      // Create vendor with couple-submitted metadata
-      const vendorData = {
-        name,
-        categories,
-        city,
-        location,
-        priceRange,
-        culturalSpecialties: culturalSpecialties || [],
-        description: description || null,
-        email: email || null,
-        phone: phone || null,
-        website: website || null,
-        instagram: instagram || null,
-        // Couple-submitted vendors need approval
-        approvalStatus: "pending" as const,
+      // Create vendor with couple-submitted metadata and proper defaults
+      const vendorData: InsertVendor = {
+        name: validatedData.name,
+        categories: validatedData.categories,
+        city: validatedData.city,
+        location: validatedData.location,
+        priceRange: validatedData.priceRange,
+        culturalSpecialties: validatedData.culturalSpecialties || [],
+        description: validatedData.description || null,
+        email: validatedData.email || null,
+        phone: validatedData.phone,
+        website: validatedData.website || null,
+        instagram: validatedData.instagram,
+        // Defaults for couple-submitted vendors
         isPublished: false,
-        claimed: false, // Unclaimed - vendor can claim later
-        source: "couple_submitted" as const,
+        claimed: false,
+        source: "couple_submitted",
         createdByUserId: req.user.id,
-        createdByUserType: "couple" as const,
+        createdByUserType: "couple",
+        calendarShared: false,
+        calendarSource: "local",
+        featured: false,
       };
       
+      // Use storage.createVendor which handles all defaults properly
+      // Then update approval status separately (since it's omitted from insert schema)
       const vendor = await storage.createVendor(vendorData);
-      res.json({ message: "Vendor submitted for review", vendor });
+      
+      // Update vendor to set pending approval status
+      const updatedVendor = await storage.updateVendor(vendor.id, {
+        approvalStatus: "pending",
+      });
+      
+      res.json({ message: "Vendor submitted for review", vendor: updatedVendor });
     } catch (error) {
       console.error("Error submitting vendor:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Validation failed", details: error.errors });
+      }
       res.status(500).json({ error: "Failed to submit vendor" });
     }
   });

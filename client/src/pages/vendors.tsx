@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { VendorDirectory } from "@/components/vendor-directory";
 import { VendorDetailModal } from "@/components/vendor-detail-modal";
 import { VendorComparisonModal } from "@/components/vendor-comparison-modal";
+import { SubmitVendorModal } from "@/components/submit-vendor-modal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLocation, useSearch } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -19,6 +20,7 @@ export default function Vendors() {
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
   const [comparisonVendors, setComparisonVendors] = useState<Vendor[]>([]);
   const [showComparison, setShowComparison] = useState(false);
+  const [showSubmitVendor, setShowSubmitVendor] = useState(false);
   const [previewHandled, setPreviewHandled] = useState(false);
 
   // Only fetch weddings if user is authenticated
@@ -237,6 +239,7 @@ export default function Vendors() {
           comparisonVendors={comparisonVendors}
           onOpenComparison={() => setShowComparison(true)}
           isLoggedIn={!!user}
+          onSubmitVendor={() => setShowSubmitVendor(true)}
         />
       </main>
 
@@ -268,6 +271,11 @@ export default function Vendors() {
         onOpenChange={setShowComparison}
         onRemoveVendor={handleRemoveFromComparison}
         onClearAll={handleClearComparison}
+      />
+
+      <SubmitVendorModal
+        open={showSubmitVendor}
+        onOpenChange={setShowSubmitVendor}
       />
     </div>
   );
