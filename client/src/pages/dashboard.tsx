@@ -808,10 +808,60 @@ export default function Dashboard() {
                     </div>
                   </Card>
                 )}
+
+                {/* Event Timeline */}
+                {hasEvents && (
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-xl font-semibold">Event Timeline</h2>
+                      <Button variant="ghost" onClick={() => setLocation("/timeline")}>
+                        View All
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </Button>
+                    </div>
+                    {eventsLoading ? (
+                      <Card className="p-4">
+                        <Skeleton className="h-20 w-full" />
+                      </Card>
+                    ) : (
+                      <Card className="divide-y" data-testid="event-timeline">
+                        {events.slice(0, 5).map((event) => (
+                          <button
+                            key={event.id}
+                            onClick={() => setSelectedEvent(event)}
+                            className="w-full flex items-center gap-3 p-3 hover-elevate text-left transition-all"
+                            data-testid={`timeline-event-${event.id}`}
+                          >
+                            <div className="w-12 text-center flex-shrink-0">
+                              {event.date ? (
+                                <>
+                                  <p className="text-xs text-muted-foreground uppercase">
+                                    {new Date(event.date).toLocaleDateString('en-US', { month: 'short' })}
+                                  </p>
+                                  <p className="text-lg font-bold">
+                                    {new Date(event.date).getDate()}
+                                  </p>
+                                </>
+                              ) : (
+                                <Calendar className="w-5 h-5 mx-auto text-muted-foreground" />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium truncate">{event.name}</p>
+                              <p className="text-sm text-muted-foreground truncate">
+                                {event.time || event.location || 'No details yet'}
+                              </p>
+                            </div>
+                          </button>
+                        ))}
+                      </Card>
+                    )}
+                  </div>
+                )}
               </div>
 
-              {/* Overview Sidebar - Days to Wedding, At a Glance, Next Up */}
-              <aside className="mt-8 lg:mt-0 lg:sticky lg:top-6 space-y-6">
+              {/* Overview Sidebar - Days to Wedding, At a Glance */}
+              <aside className="hidden lg:block lg:mt-0 lg:sticky lg:top-6 space-y-6">
                 {/* Days to Wedding Countdown */}
                 {wedding.weddingDate && (
                   <Card className="p-4 bg-gradient-to-br from-orange-100 to-pink-100 dark:from-orange-900/40 dark:to-pink-900/40 border-orange-300 dark:border-orange-700">
@@ -950,62 +1000,6 @@ export default function Dashboard() {
                     </Card>
                   </div>
                 </div>
-
-                {/* Upcoming Events - Limited to 3 with View All */}
-                {hasEvents && (
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <h2 className="text-lg font-semibold">Next Up</h2>
-                    </div>
-                    {eventsLoading ? (
-                      <Card className="p-4">
-                        <Skeleton className="h-20 w-full" />
-                      </Card>
-                    ) : (
-                      <Card className="divide-y" data-testid="compact-timeline">
-                        {events.slice(0, 3).map((event) => (
-                          <button
-                            key={event.id}
-                            onClick={() => setSelectedEvent(event)}
-                            className="w-full flex items-center gap-2 p-2.5 hover-elevate text-left transition-all"
-                            data-testid={`compact-event-${event.id}`}
-                          >
-                            <div className="w-10 text-center flex-shrink-0">
-                              {event.date ? (
-                                <>
-                                  <p className="text-[10px] text-muted-foreground uppercase">
-                                    {new Date(event.date).toLocaleDateString('en-US', { month: 'short' })}
-                                  </p>
-                                  <p className="text-base font-bold">
-                                    {new Date(event.date).getDate()}
-                                  </p>
-                                </>
-                              ) : (
-                                <Calendar className="w-4 h-4 mx-auto text-muted-foreground" />
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate">{event.name}</p>
-                              <p className="text-xs text-muted-foreground truncate">
-                                {event.time || event.location || 'No details yet'}
-                              </p>
-                            </div>
-                          </button>
-                        ))}
-                        {events.length > 3 && (
-                          <button
-                            onClick={() => setLocation("/timeline")}
-                            className="w-full flex items-center justify-center gap-2 p-3 hover-elevate text-sm font-medium text-orange-600 dark:text-orange-400"
-                            data-testid="link-view-all-events"
-                          >
-                            View All {events.length} Events
-                            <ArrowRight className="w-4 h-4" />
-                          </button>
-                        )}
-                      </Card>
-                    )}
-                  </div>
-                )}
               </aside>
             </div>
           </TabsContent>
