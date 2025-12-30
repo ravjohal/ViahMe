@@ -35,16 +35,7 @@ export function BudgetDashboard({ categories, totalBudget }: BudgetDashboardProp
   const budgetPercentage = total > 0 ? (totalSpent / total) * 100 : 0;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="font-display text-2xl font-bold text-foreground mb-1">
-          Budget Overview
-        </h2>
-        <p className="text-muted-foreground">
-          Track your wedding expenses
-        </p>
-      </div>
-
+    <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="p-6">
           <div className="flex items-center gap-3 mb-2">
