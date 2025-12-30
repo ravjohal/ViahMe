@@ -959,15 +959,11 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Upcoming Events */}
+            {/* Upcoming Events - Limited to 3 with View All */}
             {hasEvents && (
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-lg font-semibold">Upcoming</h2>
-                  <Button variant="ghost" size="sm" onClick={() => setLocation("/timeline")}>
-                    All ({events.length})
-                    <ArrowRight className="w-3 h-3 ml-1" />
-                  </Button>
+                  <h2 className="text-lg font-semibold">Next Up</h2>
                 </div>
                 {eventsLoading ? (
                   <Card className="p-4">
@@ -975,7 +971,7 @@ export default function Dashboard() {
                   </Card>
                 ) : (
                   <Card className="divide-y" data-testid="compact-timeline">
-                    {events.slice(0, 4).map((event) => (
+                    {events.slice(0, 3).map((event) => (
                       <button
                         key={event.id}
                         onClick={() => setSelectedEvent(event)}
@@ -1004,6 +1000,16 @@ export default function Dashboard() {
                         </div>
                       </button>
                     ))}
+                    {events.length > 3 && (
+                      <button
+                        onClick={() => setLocation("/timeline")}
+                        className="w-full flex items-center justify-center gap-2 p-3 hover-elevate text-sm font-medium text-orange-600 dark:text-orange-400"
+                        data-testid="link-view-all-events"
+                      >
+                        View All {events.length} Events
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
+                    )}
                   </Card>
                 )}
               </div>
