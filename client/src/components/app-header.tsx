@@ -181,15 +181,15 @@ export function AppHeader() {
             {/* Countdown Timer */}
             {daysUntilWedding !== null && daysUntilWedding >= 0 && (
               <div
-                className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20"
+                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-primary/10 border border-primary/20"
                 data-testid="countdown-timer"
               >
-                <Calendar className="w-4 h-4 text-primary" />
-                <div className="flex items-center gap-1.5">
-                  <span className="font-mono text-xl font-bold text-primary">
+                <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+                <div className="flex items-center gap-1 sm:gap-1.5">
+                  <span className="font-mono text-base sm:text-xl font-bold text-primary">
                     {daysUntilWedding}
                   </span>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-[10px] sm:text-xs text-muted-foreground">
                     {daysUntilWedding === 1 ? "day" : "days"}
                   </span>
                 </div>
