@@ -110,13 +110,14 @@ export default function Budget() {
 
   const createMutation = useMutation({
     mutationFn: async (data: BudgetFormData) => {
-      return await apiRequest("POST", "/api/budget-categories", {
+      const response = await apiRequest("POST", "/api/budget-categories", {
         ...data,
         allocatedAmount: data.allocatedAmount,
         spentAmount: data.spentAmount || "0",
       });
+      return await response.json() as BudgetCategory;
     },
-    onSuccess: () => {
+    onSuccess: async (newCategory: BudgetCategory) => {
       queryClient.invalidateQueries({ queryKey: ["/api/budget-categories", wedding?.id] });
       setDialogOpen(false);
       form.reset();
@@ -124,6 +125,28 @@ export default function Budget() {
         title: "Category added",
         description: "Your category is ready to track expenses",
       });
+      
+      // Fetch and save AI estimate in background for the new category
+      if (wedding?.location && newCategory.category) {
+        try {
+          const response = await apiRequest("POST", "/api/budget-categories/estimate", {
+            category: newCategory.category,
+            city: wedding.location,
+            tradition: wedding.tradition || undefined,
+            guestCount: wedding.guestCountEstimate || undefined,
+          });
+          const estimate = await response.json();
+          if (estimate.hasEstimate) {
+            await apiRequest("PATCH", `/api/budget-categories/${newCategory.id}`, {
+              aiEstimate: estimate,
+              lastEstimatedAt: new Date().toISOString(),
+            });
+            queryClient.invalidateQueries({ queryKey: ["/api/budget-categories", wedding?.id] });
+          }
+        } catch (error) {
+          console.error("Failed to fetch AI estimate for new category:", error);
+        }
+      }
     },
     onError: () => {
       toast({
@@ -280,21 +303,30 @@ export default function Budget() {
     }
   }, [wedding?.id, wedding?.totalBudget, form]);
 
-  const fetchAIEstimate = async (categoryName: string) => {
-    if (!wedding?.location || !categoryName) return;
+  const fetchAndSaveAIEstimate = async (category: BudgetCategory) => {
+    if (!wedding?.location || !category.category) return;
     
     setAiEstimateLoading(true);
-    setAiEstimate(null);
     
     try {
       const response = await apiRequest("POST", "/api/budget-categories/estimate", {
-        category: categoryName,
+        category: category.category,
         city: wedding.location,
         tradition: wedding.tradition || undefined,
         guestCount: wedding.guestCountEstimate || undefined,
       });
-      const data = await response.json();
-      setAiEstimate(data as AIBudgetEstimate);
+      const data = await response.json() as AIBudgetEstimate;
+      setAiEstimate(data);
+      
+      // Save the estimate to the category so we don't fetch again
+      if (data.hasEstimate) {
+        await apiRequest("PATCH", `/api/budget-categories/${category.id}`, {
+          aiEstimate: data,
+          lastEstimatedAt: new Date().toISOString(),
+        });
+        // Invalidate cache to reflect the saved estimate
+        queryClient.invalidateQueries({ queryKey: ["/api/budget-categories", wedding.id] });
+      }
     } catch (error) {
       console.error("Failed to fetch AI estimate:", error);
       setAiEstimate({ lowEstimate: 0, highEstimate: 0, averageEstimate: 0, notes: "", hasEstimate: false });
@@ -321,7 +353,17 @@ export default function Budget() {
     setEditingCategory(category);
     setUseCustomCategory(false);
     setCustomCategoryInput("");
-    setAiEstimate(null);
+    
+    // Check if we already have a cached AI estimate
+    const cachedEstimate = category.aiEstimate as AIBudgetEstimate | null;
+    if (cachedEstimate?.hasEstimate) {
+      setAiEstimate(cachedEstimate);
+    } else {
+      setAiEstimate(null);
+      // Fetch from AI and save it
+      fetchAndSaveAIEstimate(category);
+    }
+    
     form.reset({
       category: category.category as any,
       allocatedAmount: category.allocatedAmount.toString(),
@@ -329,7 +371,6 @@ export default function Budget() {
       weddingId: category.weddingId,
     });
     setDialogOpen(true);
-    fetchAIEstimate(category.category);
   };
 
   const handleSubmit = (data: BudgetFormData) => {
