@@ -630,64 +630,11 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Financial Insights - Grouped together */}
         {/* Ceremony Cost Breakdown */}
         {events.length > 0 && (
-          <div className="mb-8">
+          <div className="mb-6">
             <CeremonyCostBreakdown events={events} />
-          </div>
-        )}
-
-        {/* Compact Timeline Preview */}
-        {hasEvents && (
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">Upcoming Events</h2>
-              <Button variant="ghost" onClick={() => setLocation("/timeline")}>
-                View All ({events.length})
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </div>
-            {eventsLoading ? (
-              <Card className="p-4">
-                <Skeleton className="h-20 w-full" />
-              </Card>
-            ) : (
-              <Card className="divide-y" data-testid="compact-timeline">
-                {events.slice(0, 5).map((event) => (
-                  <button
-                    key={event.id}
-                    onClick={() => setSelectedEvent(event)}
-                    className="w-full flex items-center gap-3 p-3 hover-elevate text-left transition-all"
-                    data-testid={`compact-event-${event.id}`}
-                  >
-                    <div className="w-12 text-center flex-shrink-0">
-                      {event.date ? (
-                        <>
-                          <p className="text-xs text-muted-foreground uppercase">
-                            {new Date(event.date).toLocaleDateString('en-US', { month: 'short' })}
-                          </p>
-                          <p className="text-lg font-bold">
-                            {new Date(event.date).getDate()}
-                          </p>
-                        </>
-                      ) : (
-                        <Calendar className="w-5 h-5 mx-auto text-muted-foreground" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{event.name}</p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {[
-                          event.time,
-                          event.location,
-                          event.guestCount ? `${event.guestCount} guests` : null
-                        ].filter(Boolean).join(' · ') || 'No details yet'}
-                      </p>
-                    </div>
-                  </button>
-                ))}
-              </Card>
-            )}
           </div>
         )}
 
@@ -753,6 +700,60 @@ export default function Dashboard() {
             </Button>
           </div>
         </Card>
+
+        {/* Compact Timeline Preview - Moved after financial sections */}
+        {hasEvents && (
+          <div className="mt-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">Upcoming Events</h2>
+              <Button variant="ghost" onClick={() => setLocation("/timeline")}>
+                View All ({events.length})
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+            {eventsLoading ? (
+              <Card className="p-4">
+                <Skeleton className="h-20 w-full" />
+              </Card>
+            ) : (
+              <Card className="divide-y" data-testid="compact-timeline">
+                {events.slice(0, 5).map((event) => (
+                  <button
+                    key={event.id}
+                    onClick={() => setSelectedEvent(event)}
+                    className="w-full flex items-center gap-3 p-3 hover-elevate text-left transition-all"
+                    data-testid={`compact-event-${event.id}`}
+                  >
+                    <div className="w-12 text-center flex-shrink-0">
+                      {event.date ? (
+                        <>
+                          <p className="text-xs text-muted-foreground uppercase">
+                            {new Date(event.date).toLocaleDateString('en-US', { month: 'short' })}
+                          </p>
+                          <p className="text-lg font-bold">
+                            {new Date(event.date).getDate()}
+                          </p>
+                        </>
+                      ) : (
+                        <Calendar className="w-5 h-5 mx-auto text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{event.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {[
+                          event.time,
+                          event.location,
+                          event.guestCount ? `${event.guestCount} guests` : null
+                        ].filter(Boolean).join(' · ') || 'No details yet'}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </Card>
+            )}
+          </div>
+        )}
       </main>
 
       <WelcomeTour weddingTradition={wedding.tradition} />
