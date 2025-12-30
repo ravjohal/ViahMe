@@ -384,6 +384,7 @@ export const bookings = pgTable("bookings", {
   requestedDate: timestamp("requested_date"), // The date couple is requesting for the service
   timeSlot: text("time_slot"), // 'morning' | 'afternoon' | 'evening' | 'full_day'
   status: text("status").notNull().default('pending'), // 'pending' | 'confirmed' | 'declined' | 'cancelled'
+  bookingSource: text("booking_source").notNull().default('platform'), // 'platform' | 'offline' - where the booking was made
   requestDate: timestamp("request_date").notNull().defaultNow(),
   confirmedDate: timestamp("confirmed_date"),
   declinedDate: timestamp("declined_date"),
@@ -410,6 +411,7 @@ export const insertBookingSchema = createInsertSchema(bookings).omit({
   depositPaidDate: true,
 }).extend({
   status: z.enum(['pending', 'confirmed', 'declined', 'cancelled']).optional(),
+  bookingSource: z.enum(['platform', 'offline']).optional(),
   timeSlot: z.enum(['morning', 'afternoon', 'evening', 'full_day']).optional(),
   requestedDate: z.coerce.date().optional(),
   depositAmount: z.string().optional(),
