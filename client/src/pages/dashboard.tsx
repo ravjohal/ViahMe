@@ -661,49 +661,9 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Helpful Links */}
-        <Card className="p-6 bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-orange-950/20 dark:via-pink-950/20 dark:to-purple-950/20 border-orange-200 dark:border-orange-800">
-          <h3 className="text-lg font-semibold mb-4">More to Explore</h3>
-          <div className="grid md:grid-cols-3 gap-4">
-            <Button
-              variant="outline"
-              className="justify-start h-auto py-3 px-4"
-              onClick={() => setLocation("/photo-gallery")}
-            >
-              <Camera className="w-5 h-5 mr-3 text-amber-600" />
-              <div className="text-left">
-                <p className="font-medium">Photo Gallery</p>
-                <p className="text-xs text-muted-foreground">Inspiration & event photos</p>
-              </div>
-            </Button>
-            <Button
-              variant="outline"
-              className="justify-start h-auto py-3 px-4"
-              onClick={() => setLocation("/cultural-info")}
-            >
-              <Sparkles className="w-5 h-5 mr-3 text-purple-600" />
-              <div className="text-left">
-                <p className="font-medium">Cultural Guide</p>
-                <p className="text-xs text-muted-foreground">Traditions & ceremonies</p>
-              </div>
-            </Button>
-            <Button
-              variant="outline"
-              className="justify-start h-auto py-3 px-4"
-              onClick={() => setLocation("/shopping")}
-            >
-              <Briefcase className="w-5 h-5 mr-3 text-pink-600" />
-              <div className="text-left">
-                <p className="font-medium">Shopping Tracker</p>
-                <p className="text-xs text-muted-foreground">Attire & accessories</p>
-              </div>
-            </Button>
-          </div>
-        </Card>
-
-        {/* Compact Timeline Preview - Moved after financial sections */}
+        {/* Compact Timeline Preview - Right after financial sections */}
         {hasEvents && (
-          <div className="mt-8">
+          <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold">Upcoming Events</h2>
               <Button variant="ghost" onClick={() => setLocation("/timeline")}>
@@ -754,6 +714,46 @@ export default function Dashboard() {
             )}
           </div>
         )}
+
+        {/* Helpful Links - Footer section */}
+        <Card className="p-6 bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-orange-950/20 dark:via-pink-950/20 dark:to-purple-950/20 border-orange-200 dark:border-orange-800">
+          <h3 className="text-lg font-semibold mb-4">More to Explore</h3>
+          <div className="grid md:grid-cols-3 gap-4">
+            <Button
+              variant="outline"
+              className="justify-start h-auto py-3 px-4"
+              onClick={() => setLocation("/photo-gallery")}
+            >
+              <Camera className="w-5 h-5 mr-3 text-amber-600" />
+              <div className="text-left">
+                <p className="font-medium">Photo Gallery</p>
+                <p className="text-xs text-muted-foreground">Inspiration & event photos</p>
+              </div>
+            </Button>
+            <Button
+              variant="outline"
+              className="justify-start h-auto py-3 px-4"
+              onClick={() => setLocation("/cultural-info")}
+            >
+              <Sparkles className="w-5 h-5 mr-3 text-purple-600" />
+              <div className="text-left">
+                <p className="font-medium">Cultural Guide</p>
+                <p className="text-xs text-muted-foreground">Traditions & ceremonies</p>
+              </div>
+            </Button>
+            <Button
+              variant="outline"
+              className="justify-start h-auto py-3 px-4"
+              onClick={() => setLocation("/shopping")}
+            >
+              <Briefcase className="w-5 h-5 mr-3 text-pink-600" />
+              <div className="text-left">
+                <p className="font-medium">Shopping Tracker</p>
+                <p className="text-xs text-muted-foreground">Attire & accessories</p>
+              </div>
+            </Button>
+          </div>
+        </Card>
       </main>
 
       <WelcomeTour weddingTradition={wedding.tradition} />
