@@ -123,6 +123,49 @@ export default function Vendors() {
     },
   });
 
+  const offlineBookingMutation = useMutation({
+    mutationFn: async (data: {
+      vendorId: string;
+      eventIds: string[];
+      notes: string;
+    }) => {
+      if (!user || user.role !== "couple") {
+        throw new Error("Authentication required");
+      }
+      
+      if (!wedding) {
+        throw new Error("No wedding found");
+      }
+
+      const bookingPromises = data.eventIds.map(eventId =>
+        apiRequest("POST", "/api/bookings", {
+          weddingId: wedding.id,
+          vendorId: data.vendorId,
+          eventId: eventId,
+          coupleNotes: data.notes,
+          status: "confirmed",
+          bookingSource: "offline",
+        })
+      );
+      return Promise.all(bookingPromises);
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/bookings"] });
+      const eventCount = variables.eventIds.length;
+      toast({
+        title: "Vendor Marked as Booked",
+        description: `${eventCount} ${eventCount === 1 ? 'event' : 'events'} marked as booked with this vendor.`,
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to save offline booking. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleAddToComparison = (vendor: Vendor) => {
     if (comparisonVendors.find(v => v.id === vendor.id)) {
       setComparisonVendors(comparisonVendors.filter(v => v.id !== vendor.id));
@@ -204,6 +247,9 @@ export default function Vendors() {
         onClose={() => setSelectedVendor(null)}
         onBookRequest={(vendorId, eventIds, notes) => {
           bookingMutation.mutate({ vendorId, eventIds, notes });
+        }}
+        onOfflineBooking={(vendorId, eventIds, notes) => {
+          offlineBookingMutation.mutate({ vendorId, eventIds, notes });
         }}
         isAuthenticated={!!user && user.role === "couple"}
         onAuthRequired={() => setLocation("/onboarding")}
