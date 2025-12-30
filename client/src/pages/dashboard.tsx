@@ -757,27 +757,28 @@ export default function Dashboard() {
 
           {/* Sidebar - Stats & Events (sticky on desktop) */}
           <aside className="mt-8 lg:mt-0 lg:sticky lg:top-6 space-y-6">
-            {/* Next Step CTA - Visible while scrolling */}
-            {nextStep && (
+            {/* Days to Wedding Countdown */}
+            {wedding.weddingDate && (
               <Card className="p-4 bg-gradient-to-br from-orange-100 to-pink-100 dark:from-orange-900/40 dark:to-pink-900/40 border-orange-300 dark:border-orange-700">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center flex-shrink-0">
-                    <span className="text-white font-bold text-sm">{nextStep.number}</span>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+                    <Heart className="w-6 h-6 text-white" />
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold truncate">{nextStep.title}</p>
-                    <p className="text-xs text-muted-foreground truncate">{nextStep.description}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-2xl font-bold text-orange-600 dark:text-orange-400" data-testid="text-days-to-wedding">
+                      {(() => {
+                        const weddingDate = new Date(wedding.weddingDate!);
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        weddingDate.setHours(0, 0, 0, 0);
+                        const diffTime = weddingDate.getTime() - today.getTime();
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        return diffDays > 0 ? diffDays : 0;
+                      })()}
+                    </p>
+                    <p className="text-sm text-muted-foreground">days until your wedding</p>
                   </div>
                 </div>
-                <Button
-                  size="sm"
-                  onClick={() => setLocation(nextStep.path)}
-                  className="w-full bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white"
-                  data-testid="sidebar-next-step"
-                >
-                  Continue
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
               </Card>
             )}
 
