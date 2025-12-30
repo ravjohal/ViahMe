@@ -516,244 +516,272 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        {/* Quick Stats Grid - Moved higher for better visibility */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">At a Glance</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            <Card 
-              className="p-4 hover-elevate cursor-pointer border-orange-200 dark:border-orange-800" 
-              onClick={() => setLocation("/timeline")}
-              data-testid="stat-card-events"
-            >
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-900/30">
-                  <Calendar className="w-5 h-5 text-orange-600" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Events</p>
-                  <p className="font-mono text-xl font-bold" data-testid="stat-events-count">
-                    {events.length}
-                  </p>
-                </div>
+        {/* Two-Column Layout: Main (financial) + Sidebar (stats/events) */}
+        <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-6 lg:items-start">
+          {/* Main Column - Financial Insights */}
+          <div className="space-y-6">
+            {/* Ceremony Cost Breakdown */}
+            {events.length > 0 && (
+              <div>
+                <CeremonyCostBreakdown events={events} />
               </div>
-            </Card>
-
-            <Card 
-              className="p-4 hover-elevate cursor-pointer border-emerald-200 dark:border-emerald-800" 
-              onClick={() => setLocation("/budget")}
-              data-testid="stat-card-budget"
-            >
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/30">
-                  <DollarSign className="w-5 h-5 text-emerald-600" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Budget</p>
-                  <p className="font-mono text-lg font-bold">
-                    ${totalBudget > 0 ? (totalBudget / 1000).toFixed(0) + 'k' : '0'}
-                  </p>
-                </div>
-              </div>
-            </Card>
-
-            <Card 
-              className="p-4 hover-elevate cursor-pointer border-blue-200 dark:border-blue-800" 
-              onClick={() => setLocation("/vendors")}
-              data-testid="stat-card-vendors"
-            >
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
-                  <Briefcase className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Vendors</p>
-                  <p className="font-mono text-xl font-bold" data-testid="stat-vendors-count">
-                    {bookings.length}
-                  </p>
-                </div>
-              </div>
-            </Card>
-
-            <Card 
-              className="p-4 hover-elevate cursor-pointer border-pink-200 dark:border-pink-800" 
-              onClick={() => setLocation("/guests")}
-              data-testid="stat-card-guests"
-            >
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-pink-100 dark:bg-pink-900/30">
-                  <Users className="w-5 h-5 text-pink-600" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Guests</p>
-                  <p className="font-mono text-xl font-bold" data-testid="stat-guests-count">
-                    {guests.length || wedding.guestCountEstimate || 0}
-                  </p>
-                </div>
-              </div>
-            </Card>
-
-            <Card 
-              className="p-4 hover-elevate cursor-pointer border-purple-200 dark:border-purple-800" 
-              onClick={() => setLocation("/contracts")}
-              data-testid="stat-card-contracts"
-            >
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30">
-                  <FileText className="w-5 h-5 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Contracts</p>
-                  <p className="font-mono text-xl font-bold" data-testid="stat-contracts-count">
-                    {contracts.length}
-                  </p>
-                </div>
-              </div>
-            </Card>
-
-            <Card 
-              className="p-4 hover-elevate cursor-pointer border-amber-200 dark:border-amber-800" 
-              onClick={() => setLocation("/collaborators")}
-              data-testid="stat-card-team"
-            >
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30">
-                  <UserPlus className="w-5 h-5 text-amber-600" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Team</p>
-                  <p className="font-mono text-xl font-bold">
-                    Manage
-                  </p>
-                </div>
-              </div>
-            </Card>
-          </div>
-        </div>
-
-        {/* Financial Insights - Grouped together */}
-        {/* Ceremony Cost Breakdown */}
-        {events.length > 0 && (
-          <div className="mb-6">
-            <CeremonyCostBreakdown events={events} />
-          </div>
-        )}
-
-        {/* Budget Preview */}
-        {hasBudget && hasCategories && (
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">Budget Overview</h2>
-              <Button variant="ghost" onClick={() => setLocation("/budget")}>
-                View Details
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </div>
-            {budgetLoading ? (
-              <Card className="p-6">
-                <Skeleton className="h-32 w-full" />
-              </Card>
-            ) : (
-              <BudgetDashboard
-                categories={budgetCategories}
-                totalBudget={wedding.totalBudget || "0"}
-              />
             )}
-          </div>
-        )}
 
-        {/* Compact Timeline Preview - Right after financial sections */}
-        {hasEvents && (
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">Upcoming Events</h2>
-              <Button variant="ghost" onClick={() => setLocation("/timeline")}>
-                View All ({events.length})
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </div>
-            {eventsLoading ? (
-              <Card className="p-4">
-                <Skeleton className="h-20 w-full" />
+            {/* Budget Preview */}
+            {hasBudget && hasCategories && (
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold">Budget Overview</h2>
+                  <Button variant="ghost" onClick={() => setLocation("/budget")}>
+                    View Details
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
+                {budgetLoading ? (
+                  <Card className="p-6">
+                    <Skeleton className="h-32 w-full" />
+                  </Card>
+                ) : (
+                  <BudgetDashboard
+                    categories={budgetCategories}
+                    totalBudget={wedding.totalBudget || "0"}
+                  />
+                )}
+              </div>
+            )}
+
+            {/* Helpful Links - Footer section */}
+            <Card className="p-6 bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-orange-950/20 dark:via-pink-950/20 dark:to-purple-950/20 border-orange-200 dark:border-orange-800">
+              <h3 className="text-lg font-semibold mb-4">More to Explore</h3>
+              <div className="grid md:grid-cols-3 gap-4">
+                <Button
+                  variant="outline"
+                  className="justify-start h-auto py-3 px-4"
+                  onClick={() => setLocation("/photo-gallery")}
+                >
+                  <Camera className="w-5 h-5 mr-3 text-amber-600" />
+                  <div className="text-left">
+                    <p className="font-medium">Photo Gallery</p>
+                    <p className="text-xs text-muted-foreground">Inspiration & event photos</p>
+                  </div>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="justify-start h-auto py-3 px-4"
+                  onClick={() => setLocation("/cultural-info")}
+                >
+                  <Sparkles className="w-5 h-5 mr-3 text-purple-600" />
+                  <div className="text-left">
+                    <p className="font-medium">Cultural Guide</p>
+                    <p className="text-xs text-muted-foreground">Traditions & ceremonies</p>
+                  </div>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="justify-start h-auto py-3 px-4"
+                  onClick={() => setLocation("/shopping")}
+                >
+                  <Briefcase className="w-5 h-5 mr-3 text-pink-600" />
+                  <div className="text-left">
+                    <p className="font-medium">Shopping Tracker</p>
+                    <p className="text-xs text-muted-foreground">Attire & accessories</p>
+                  </div>
+                </Button>
+              </div>
+            </Card>
+          </div>
+
+          {/* Sidebar - Stats & Events (sticky on desktop) */}
+          <aside className="mt-8 lg:mt-0 lg:sticky lg:top-6 space-y-6">
+            {/* Next Step CTA - Visible while scrolling */}
+            {nextStep && (
+              <Card className="p-4 bg-gradient-to-br from-orange-100 to-pink-100 dark:from-orange-900/40 dark:to-pink-900/40 border-orange-300 dark:border-orange-700">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+                    <span className="text-white font-bold text-sm">{nextStep.number}</span>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold truncate">{nextStep.title}</p>
+                    <p className="text-xs text-muted-foreground truncate">{nextStep.description}</p>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  onClick={() => setLocation(nextStep.path)}
+                  className="w-full bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white"
+                  data-testid="sidebar-next-step"
+                >
+                  Continue
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
               </Card>
-            ) : (
-              <Card className="divide-y" data-testid="compact-timeline">
-                {events.slice(0, 5).map((event) => (
-                  <button
-                    key={event.id}
-                    onClick={() => setSelectedEvent(event)}
-                    className="w-full flex items-center gap-3 p-3 hover-elevate text-left transition-all"
-                    data-testid={`compact-event-${event.id}`}
-                  >
-                    <div className="w-12 text-center flex-shrink-0">
-                      {event.date ? (
-                        <>
-                          <p className="text-xs text-muted-foreground uppercase">
-                            {new Date(event.date).toLocaleDateString('en-US', { month: 'short' })}
-                          </p>
-                          <p className="text-lg font-bold">
-                            {new Date(event.date).getDate()}
-                          </p>
-                        </>
-                      ) : (
-                        <Calendar className="w-5 h-5 mx-auto text-muted-foreground" />
-                      )}
+            )}
+
+            {/* At a Glance Stats */}
+            <div>
+              <h2 className="text-lg font-semibold mb-3">At a Glance</h2>
+              <div className="grid grid-cols-2 gap-3">
+                <Card 
+                  className="p-3 hover-elevate cursor-pointer border-orange-200 dark:border-orange-800" 
+                  onClick={() => setLocation("/timeline")}
+                  data-testid="stat-card-events"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-orange-100 dark:bg-orange-900/30">
+                      <Calendar className="w-4 h-4 text-orange-600" />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{event.name}</p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {[
-                          event.time,
-                          event.location,
-                          event.guestCount ? `${event.guestCount} guests` : null
-                        ].filter(Boolean).join(' · ') || 'No details yet'}
+                    <div>
+                      <p className="text-xs text-muted-foreground">Events</p>
+                      <p className="font-mono text-lg font-bold" data-testid="stat-events-count">
+                        {events.length}
                       </p>
                     </div>
-                  </button>
-                ))}
-              </Card>
-            )}
-          </div>
-        )}
+                  </div>
+                </Card>
 
-        {/* Helpful Links - Footer section */}
-        <Card className="p-6 bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-orange-950/20 dark:via-pink-950/20 dark:to-purple-950/20 border-orange-200 dark:border-orange-800">
-          <h3 className="text-lg font-semibold mb-4">More to Explore</h3>
-          <div className="grid md:grid-cols-3 gap-4">
-            <Button
-              variant="outline"
-              className="justify-start h-auto py-3 px-4"
-              onClick={() => setLocation("/photo-gallery")}
-            >
-              <Camera className="w-5 h-5 mr-3 text-amber-600" />
-              <div className="text-left">
-                <p className="font-medium">Photo Gallery</p>
-                <p className="text-xs text-muted-foreground">Inspiration & event photos</p>
+                <Card 
+                  className="p-3 hover-elevate cursor-pointer border-emerald-200 dark:border-emerald-800" 
+                  onClick={() => setLocation("/budget")}
+                  data-testid="stat-card-budget"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/30">
+                      <DollarSign className="w-4 h-4 text-emerald-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Budget</p>
+                      <p className="font-mono text-lg font-bold">
+                        ${totalBudget > 0 ? (totalBudget / 1000).toFixed(0) + 'k' : '0'}
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+
+                <Card 
+                  className="p-3 hover-elevate cursor-pointer border-blue-200 dark:border-blue-800" 
+                  onClick={() => setLocation("/vendors")}
+                  data-testid="stat-card-vendors"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                      <Briefcase className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Vendors</p>
+                      <p className="font-mono text-lg font-bold" data-testid="stat-vendors-count">
+                        {bookings.length}
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+
+                <Card 
+                  className="p-3 hover-elevate cursor-pointer border-pink-200 dark:border-pink-800" 
+                  onClick={() => setLocation("/guests")}
+                  data-testid="stat-card-guests"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-pink-100 dark:bg-pink-900/30">
+                      <Users className="w-4 h-4 text-pink-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Guests</p>
+                      <p className="font-mono text-lg font-bold" data-testid="stat-guests-count">
+                        {guests.length || wedding.guestCountEstimate || 0}
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+
+                <Card 
+                  className="p-3 hover-elevate cursor-pointer border-purple-200 dark:border-purple-800" 
+                  onClick={() => setLocation("/contracts")}
+                  data-testid="stat-card-contracts"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-purple-100 dark:bg-purple-900/30">
+                      <FileText className="w-4 h-4 text-purple-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Contracts</p>
+                      <p className="font-mono text-lg font-bold" data-testid="stat-contracts-count">
+                        {contracts.length}
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+
+                <Card 
+                  className="p-3 hover-elevate cursor-pointer border-amber-200 dark:border-amber-800" 
+                  onClick={() => setLocation("/collaborators")}
+                  data-testid="stat-card-team"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-amber-100 dark:bg-amber-900/30">
+                      <UserPlus className="w-4 h-4 text-amber-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Team</p>
+                      <p className="font-mono text-lg font-bold">
+                        Manage
+                      </p>
+                    </div>
+                  </div>
+                </Card>
               </div>
-            </Button>
-            <Button
-              variant="outline"
-              className="justify-start h-auto py-3 px-4"
-              onClick={() => setLocation("/cultural-info")}
-            >
-              <Sparkles className="w-5 h-5 mr-3 text-purple-600" />
-              <div className="text-left">
-                <p className="font-medium">Cultural Guide</p>
-                <p className="text-xs text-muted-foreground">Traditions & ceremonies</p>
+            </div>
+
+            {/* Upcoming Events */}
+            {hasEvents && (
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-lg font-semibold">Upcoming</h2>
+                  <Button variant="ghost" size="sm" onClick={() => setLocation("/timeline")}>
+                    All ({events.length})
+                    <ArrowRight className="w-3 h-3 ml-1" />
+                  </Button>
+                </div>
+                {eventsLoading ? (
+                  <Card className="p-4">
+                    <Skeleton className="h-20 w-full" />
+                  </Card>
+                ) : (
+                  <Card className="divide-y" data-testid="compact-timeline">
+                    {events.slice(0, 4).map((event) => (
+                      <button
+                        key={event.id}
+                        onClick={() => setSelectedEvent(event)}
+                        className="w-full flex items-center gap-2 p-2.5 hover-elevate text-left transition-all"
+                        data-testid={`compact-event-${event.id}`}
+                      >
+                        <div className="w-10 text-center flex-shrink-0">
+                          {event.date ? (
+                            <>
+                              <p className="text-[10px] text-muted-foreground uppercase">
+                                {new Date(event.date).toLocaleDateString('en-US', { month: 'short' })}
+                              </p>
+                              <p className="text-base font-bold">
+                                {new Date(event.date).getDate()}
+                              </p>
+                            </>
+                          ) : (
+                            <Calendar className="w-4 h-4 mx-auto text-muted-foreground" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{event.name}</p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {event.time || event.location || 'No details yet'}
+                          </p>
+                        </div>
+                      </button>
+                    ))}
+                  </Card>
+                )}
               </div>
-            </Button>
-            <Button
-              variant="outline"
-              className="justify-start h-auto py-3 px-4"
-              onClick={() => setLocation("/shopping")}
-            >
-              <Briefcase className="w-5 h-5 mr-3 text-pink-600" />
-              <div className="text-left">
-                <p className="font-medium">Shopping Tracker</p>
-                <p className="text-xs text-muted-foreground">Attire & accessories</p>
-              </div>
-            </Button>
-          </div>
-        </Card>
+            )}
+          </aside>
+        </div>
       </main>
 
       <WelcomeTour weddingTradition={wedding.tradition} />
