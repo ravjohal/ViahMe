@@ -768,7 +768,7 @@ export default function Dashboard() {
         </div>
 
         {/* More to Explore */}
-        <Card className="p-6 bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-orange-950/20 dark:via-pink-950/20 dark:to-purple-950/20 border-orange-200 dark:border-orange-800">
+        <Card className="p-6 mt-8 bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-orange-950/20 dark:via-pink-950/20 dark:to-purple-950/20 border-orange-200 dark:border-orange-800">
           <h3 className="text-lg font-semibold mb-4">More to Explore</h3>
           <div className="grid md:grid-cols-3 gap-4">
             <Button
