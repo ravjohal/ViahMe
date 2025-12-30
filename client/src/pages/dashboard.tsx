@@ -10,8 +10,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, DollarSign, Users, Briefcase, FileText, Camera, CheckCircle2, ArrowRight, Sparkles, UserPlus, Heart, Clock, Bot, CheckSquare, Globe, Package, Music, Image, MessageSquare, Radio, ShoppingBag, TrendingUp, Lock, ChevronDown, ChevronUp, Map } from "lucide-react";
+import { Calendar, DollarSign, Users, Briefcase, FileText, Camera, CheckCircle2, ArrowRight, Sparkles, UserPlus, Heart, Clock, Bot, CheckSquare, Globe, Package, Music, Image, MessageSquare, Radio, ShoppingBag, ChevronDown, ChevronUp, Map } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CEREMONY_COST_BREAKDOWNS, CEREMONY_CATALOG, calculateCeremonyTotalRange } from "@shared/ceremonies";
 import { useLocation } from "wouter";
@@ -217,8 +216,7 @@ export default function Dashboard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [activeTab, setActiveTab] = useState("overview");
-  const [showRoadmap, setShowRoadmap] = useState(false);
+    const [showRoadmap, setShowRoadmap] = useState(false);
   const { isOwner, isLoading: permissionsLoading, weddingId } = usePermissions();
 
   const { data: weddings, isLoading: weddingsLoading } = useQuery<Wedding[]>({
@@ -507,7 +505,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <main className="container mx-auto px-6 py-8 pb-24 lg:pb-8 max-w-6xl">
+      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-4xl">
         {/* Welcome Header */}
         <div className="mb-6">
           <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-600 via-pink-600 to-purple-600 bg-clip-text text-transparent mb-2" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
@@ -518,26 +516,10 @@ export default function Dashboard() {
           </p>
         </div>
 
-        {/* TOP BREAD: Mobile At a Glance Stats (visible only on mobile) */}
-        <div className="lg:hidden mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold">At a Glance</h2>
-            {wedding.weddingDate && (
-              <Badge variant="secondary" className="bg-gradient-to-r from-orange-100 to-pink-100 dark:from-orange-900/40 dark:to-pink-900/40 text-orange-700 dark:text-orange-300 border-orange-300 dark:border-orange-700">
-                <Heart className="w-3 h-3 mr-1" />
-                {(() => {
-                  const weddingDate = new Date(wedding.weddingDate!);
-                  const today = new Date();
-                  today.setHours(0, 0, 0, 0);
-                  weddingDate.setHours(0, 0, 0, 0);
-                  const diffTime = weddingDate.getTime() - today.getTime();
-                  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                  return diffDays > 0 ? `${diffDays} days` : 'Today!';
-                })()}
-              </Badge>
-            )}
-          </div>
-          <div className="grid grid-cols-4 gap-2">
+        {/* At a Glance Stats - Mobile First */}
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold mb-3">At a Glance</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
             <Card 
               className="p-2 hover-elevate cursor-pointer text-center" 
               onClick={() => setLocation("/timeline")}
@@ -668,488 +650,107 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        {/* BOTTOM BREAD: Mobile/Tablet Bottom Tab Navigation (visible up to lg) */}
-        <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-background border-t border-border shadow-lg pb-[env(safe-area-inset-bottom)]" data-testid="mobile-bottom-tabs">
-          <div className="flex">
-            <button
-              onClick={() => setActiveTab("overview")}
-              className={`flex-1 flex flex-col items-center py-3 px-4 transition-colors ${
-                activeTab === "overview" 
-                  ? "text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/30" 
-                  : "text-muted-foreground"
-              }`}
-              data-testid="mobile-tab-overview"
-            >
-              <Sparkles className="w-5 h-5 mb-1" />
-              <span className="text-xs font-medium">Overview</span>
-            </button>
-            {budgetConfirmed ? (
-              <button
-                onClick={() => setActiveTab("costs")}
-                className={`flex-1 flex flex-col items-center py-3 px-4 transition-colors ${
-                  activeTab === "costs" 
-                    ? "text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/30" 
-                    : "text-muted-foreground"
-                }`}
-                data-testid="mobile-tab-costs"
-              >
-                <TrendingUp className="w-5 h-5 mb-1" />
-                <span className="text-xs font-medium">Budget & Costs</span>
-              </button>
-            ) : (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    disabled
-                    className="flex-1 flex flex-col items-center py-3 px-4 text-muted-foreground/50 cursor-not-allowed"
-                    data-testid="mobile-tab-costs-locked"
-                  >
-                    <Lock className="w-5 h-5 mb-1" />
-                    <span className="text-xs font-medium">Budget & Costs</span>
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="top">
-                  <p>Unlock after confirming budget</p>
-                </TooltipContent>
-              </Tooltip>
-            )}
-          </div>
+        {/* Main Dashboard Content - Mobile First Single View */}
+        <div className="space-y-6">
+          {/* Budget Preview (only shown if budget confirmed) */}
+          {hasBudget && hasCategories && budgetConfirmed && (
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg md:text-xl font-semibold">Budget Overview</h2>
+                <Button variant="ghost" size="sm" onClick={() => setLocation("/budget")}>
+                  View Details
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+              {budgetLoading ? (
+                <Card className="p-4 md:p-6">
+                  <Skeleton className="h-32 w-full" />
+                </Card>
+              ) : (
+                <BudgetDashboard
+                  categories={budgetCategories}
+                  totalBudget={wedding.totalBudget || "0"}
+                />
+              )}
+            </div>
+          )}
+
+          {/* Prompt to confirm budget if not done yet */}
+          {(!budgetConfirmed) && (
+            <Card className="p-4 md:p-6 border-dashed border-2 border-orange-300 dark:border-orange-700 bg-orange-50/50 dark:bg-orange-950/20">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <div className="p-3 rounded-full bg-orange-100 dark:bg-orange-900/30 flex-shrink-0">
+                  <DollarSign className="w-6 h-6 text-orange-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold">Confirm Your Budget First</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Complete Step 1 to unlock detailed ceremony cost estimates.
+                  </p>
+                </div>
+                <Button 
+                  onClick={() => setLocation("/budget")}
+                  className="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white"
+                  data-testid="button-confirm-budget"
+                >
+                  Confirm Budget
+                </Button>
+              </div>
+            </Card>
+          )}
+
+          {/* Event Timeline */}
+          {hasEvents && (
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg md:text-xl font-semibold">Event Timeline</h2>
+                <Button variant="ghost" size="sm" onClick={() => setLocation("/timeline")}>
+                  View All
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+              {eventsLoading ? (
+                <Card className="p-4">
+                  <Skeleton className="h-20 w-full" />
+                </Card>
+              ) : (
+                <Card className="divide-y" data-testid="event-timeline">
+                  {events.slice(0, 5).map((event) => (
+                    <button
+                      key={event.id}
+                      onClick={() => setSelectedEvent(event)}
+                      className="w-full flex items-center gap-3 p-3 hover-elevate text-left transition-all"
+                      data-testid={`timeline-event-${event.id}`}
+                    >
+                      <div className="w-12 text-center flex-shrink-0">
+                        {event.date ? (
+                          <>
+                            <p className="text-xs text-muted-foreground uppercase">
+                              {new Date(event.date).toLocaleDateString('en-US', { month: 'short' })}
+                            </p>
+                            <p className="text-lg font-bold">
+                              {new Date(event.date).getDate()}
+                            </p>
+                          </>
+                        ) : (
+                          <Calendar className="w-5 h-5 mx-auto text-muted-foreground" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{event.name}</p>
+                        <p className="text-sm text-muted-foreground truncate">
+                          {event.time || event.location || 'No details yet'}
+                        </p>
+                      </div>
+                    </button>
+                  ))}
+                </Card>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Tabs Navigation - Desktop only for TabsList, mobile uses bottom nav above */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-8">
-          {/* Desktop TabsList - hidden on mobile */}
-          <TabsList className="mb-6 h-auto p-1 bg-muted/50 rounded-lg hidden lg:inline-flex">
-            <TabsTrigger 
-              value="overview" 
-              data-testid="tab-overview"
-              className="px-6 py-3 text-base font-semibold data-[state=active]:bg-background data-[state=active]:shadow-sm"
-            >
-              Overview
-            </TabsTrigger>
-            {!budgetConfirmed ? (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span>
-                    <TabsTrigger 
-                      value="costs" 
-                      data-testid="tab-costs" 
-                      disabled
-                      className="px-6 py-3 text-base font-semibold opacity-50 cursor-not-allowed"
-                    >
-                      <Lock className="w-4 h-4 mr-2" />
-                      Budget & Costs
-                    </TabsTrigger>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Unlock this after confirming your budget</p>
-                </TooltipContent>
-              </Tooltip>
-            ) : (
-              <TabsTrigger 
-                value="costs" 
-                data-testid="tab-costs"
-                className="px-6 py-3 text-base font-semibold data-[state=active]:bg-background data-[state=active]:shadow-sm"
-              >
-                Budget & Costs
-              </TabsTrigger>
-            )}
-          </TabsList>
-
-          {/* Overview Tab - Two Column Layout */}
-          <TabsContent value="overview" className="mt-0">
-            <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-6 lg:items-start">
-              {/* Main Content */}
-              <div className="space-y-6">
-                {/* Budget Preview (only shown if budget confirmed) */}
-                {hasBudget && hasCategories && budgetConfirmed && (
-                  <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-xl font-semibold">Budget Overview</h2>
-                      <Button variant="ghost" onClick={() => setLocation("/budget")}>
-                        View Details
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </Button>
-                    </div>
-                    {budgetLoading ? (
-                      <Card className="p-6">
-                        <Skeleton className="h-32 w-full" />
-                      </Card>
-                    ) : (
-                      <BudgetDashboard
-                        categories={budgetCategories}
-                        totalBudget={wedding.totalBudget || "0"}
-                      />
-                    )}
-                  </div>
-                )}
-
-                {/* Prompt to confirm budget if not done yet */}
-                {(!budgetConfirmed) && (
-                  <Card className="p-6 border-dashed border-2 border-orange-300 dark:border-orange-700 bg-orange-50/50 dark:bg-orange-950/20">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 rounded-full bg-orange-100 dark:bg-orange-900/30">
-                        <DollarSign className="w-6 h-6 text-orange-600" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold">Confirm Your Budget First</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Complete Step 1 to unlock detailed ceremony cost estimates and financial planning tools.
-                        </p>
-                      </div>
-                      <Button 
-                        onClick={() => setLocation("/budget")}
-                        className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white"
-                        data-testid="button-confirm-budget"
-                      >
-                        Confirm Budget
-                      </Button>
-                    </div>
-                  </Card>
-                )}
-
-                {/* Event Timeline */}
-                {hasEvents && (
-                  <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-xl font-semibold">Event Timeline</h2>
-                      <Button variant="ghost" onClick={() => setLocation("/timeline")}>
-                        View All
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </Button>
-                    </div>
-                    {eventsLoading ? (
-                      <Card className="p-4">
-                        <Skeleton className="h-20 w-full" />
-                      </Card>
-                    ) : (
-                      <Card className="divide-y" data-testid="event-timeline">
-                        {events.slice(0, 5).map((event) => (
-                          <button
-                            key={event.id}
-                            onClick={() => setSelectedEvent(event)}
-                            className="w-full flex items-center gap-3 p-3 hover-elevate text-left transition-all"
-                            data-testid={`timeline-event-${event.id}`}
-                          >
-                            <div className="w-12 text-center flex-shrink-0">
-                              {event.date ? (
-                                <>
-                                  <p className="text-xs text-muted-foreground uppercase">
-                                    {new Date(event.date).toLocaleDateString('en-US', { month: 'short' })}
-                                  </p>
-                                  <p className="text-lg font-bold">
-                                    {new Date(event.date).getDate()}
-                                  </p>
-                                </>
-                              ) : (
-                                <Calendar className="w-5 h-5 mx-auto text-muted-foreground" />
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium truncate">{event.name}</p>
-                              <p className="text-sm text-muted-foreground truncate">
-                                {event.time || event.location || 'No details yet'}
-                              </p>
-                            </div>
-                          </button>
-                        ))}
-                      </Card>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Overview Sidebar - Days to Wedding, At a Glance */}
-              <aside className="hidden lg:block lg:mt-0 lg:sticky lg:top-6 space-y-6">
-                {/* Days to Wedding Countdown */}
-                {wedding.weddingDate && (
-                  <Card className="p-4 bg-gradient-to-br from-orange-100 to-pink-100 dark:from-orange-900/40 dark:to-pink-900/40 border-orange-300 dark:border-orange-700">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center flex-shrink-0">
-                        <Heart className="w-6 h-6 text-white" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-2xl font-bold text-orange-600 dark:text-orange-400" data-testid="text-days-to-wedding">
-                          {(() => {
-                            const weddingDate = new Date(wedding.weddingDate!);
-                            const today = new Date();
-                            today.setHours(0, 0, 0, 0);
-                            weddingDate.setHours(0, 0, 0, 0);
-                            const diffTime = weddingDate.getTime() - today.getTime();
-                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                            return diffDays > 0 ? diffDays : 0;
-                          })()}
-                        </p>
-                        <p className="text-sm text-muted-foreground">days until your wedding</p>
-                      </div>
-                    </div>
-                  </Card>
-                )}
-
-                {/* At a Glance Stats */}
-                <div>
-                  <h2 className="text-lg font-semibold mb-3">At a Glance</h2>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Card 
-                      className="p-3 hover-elevate cursor-pointer border-orange-200 dark:border-orange-800" 
-                      onClick={() => setLocation("/timeline")}
-                      data-testid="stat-card-events"
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="p-1.5 rounded-lg bg-orange-100 dark:bg-orange-900/30">
-                          <Calendar className="w-4 h-4 text-orange-600" />
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">Events</p>
-                          <p className="font-mono text-lg font-bold" data-testid="stat-events-count">
-                            {events.length}
-                          </p>
-                        </div>
-                      </div>
-                    </Card>
-
-                    <Card 
-                      className="p-3 hover-elevate cursor-pointer border-emerald-200 dark:border-emerald-800" 
-                      onClick={() => setLocation("/budget")}
-                      data-testid="stat-card-budget"
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/30">
-                          <DollarSign className="w-4 h-4 text-emerald-600" />
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">Budget</p>
-                          <p className="font-mono text-lg font-bold">
-                            ${totalBudget > 0 ? (totalBudget / 1000).toFixed(0) + 'k' : '0'}
-                          </p>
-                        </div>
-                      </div>
-                    </Card>
-
-                    <Card 
-                      className="p-3 hover-elevate cursor-pointer border-blue-200 dark:border-blue-800" 
-                      onClick={() => setLocation("/vendors")}
-                      data-testid="stat-card-vendors"
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="p-1.5 rounded-lg bg-blue-100 dark:bg-blue-900/30">
-                          <Briefcase className="w-4 h-4 text-blue-600" />
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">Vendors</p>
-                          <p className="font-mono text-lg font-bold" data-testid="stat-vendors-count">
-                            {bookings.length}
-                          </p>
-                        </div>
-                      </div>
-                    </Card>
-
-                    <Card 
-                      className="p-3 hover-elevate cursor-pointer border-pink-200 dark:border-pink-800" 
-                      onClick={() => setLocation("/guests")}
-                      data-testid="stat-card-guests"
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="p-1.5 rounded-lg bg-pink-100 dark:bg-pink-900/30">
-                          <Users className="w-4 h-4 text-pink-600" />
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">Guests</p>
-                          <p className="font-mono text-lg font-bold" data-testid="stat-guests-count">
-                            {guests.length || wedding.guestCountEstimate || 0}
-                          </p>
-                        </div>
-                      </div>
-                    </Card>
-
-                    <Card 
-                      className="p-3 hover-elevate cursor-pointer border-purple-200 dark:border-purple-800" 
-                      onClick={() => setLocation("/contracts")}
-                      data-testid="stat-card-contracts"
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="p-1.5 rounded-lg bg-purple-100 dark:bg-purple-900/30">
-                          <FileText className="w-4 h-4 text-purple-600" />
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">Contracts</p>
-                          <p className="font-mono text-lg font-bold" data-testid="stat-contracts-count">
-                            {contracts.length}
-                          </p>
-                        </div>
-                      </div>
-                    </Card>
-
-                    <Card 
-                      className="p-3 hover-elevate cursor-pointer border-amber-200 dark:border-amber-800" 
-                      onClick={() => setLocation("/collaborators")}
-                      data-testid="stat-card-team"
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="p-1.5 rounded-lg bg-amber-100 dark:bg-amber-900/30">
-                          <UserPlus className="w-4 h-4 text-amber-600" />
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">Team</p>
-                          <p className="font-mono text-lg font-bold">
-                            Manage
-                          </p>
-                        </div>
-                      </div>
-                    </Card>
-                  </div>
-                </div>
-              </aside>
-            </div>
-          </TabsContent>
-
-          {/* Budget & Costs Tab - Two Column Layout */}
-          <TabsContent value="costs" className="mt-0">
-            <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-6 lg:items-start">
-              {/* Main Content */}
-              <div className="space-y-6">
-                {/* Ceremony Cost Breakdown - Only shown if ceremony breakdowns exist */}
-                {hasCeremonyBreakdowns && (
-                  <div>
-                    <CeremonyCostBreakdown events={events} />
-                  </div>
-                )}
-                
-                {/* Message when no ceremony breakdowns available */}
-                {!hasCeremonyBreakdowns && (
-                  <Card className="p-6 border-dashed border-2 border-muted">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 rounded-full bg-muted">
-                        <Calendar className="w-6 h-6 text-muted-foreground" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold">No Ceremony Estimates Yet</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Add events to your timeline to see detailed ceremony cost breakdowns.
-                        </p>
-                      </div>
-                      <Button 
-                        variant="outline"
-                        onClick={() => setLocation("/timeline")}
-                      >
-                        Add Events
-                      </Button>
-                    </div>
-                  </Card>
-                )}
-
-                {/* Budget Allocation */}
-                {hasBudget && hasCategories && budgetConfirmed && (
-                  <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-xl font-semibold">Budget Allocation</h2>
-                      <Button variant="ghost" onClick={() => setLocation("/budget")}>
-                        Manage Budget
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </Button>
-                    </div>
-                    {budgetLoading ? (
-                      <Card className="p-6">
-                        <Skeleton className="h-32 w-full" />
-                      </Card>
-                    ) : (
-                      <BudgetDashboard
-                        categories={budgetCategories}
-                        totalBudget={wedding.totalBudget || "0"}
-                      />
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Budget & Costs Sidebar - Days to Wedding + Budget Health */}
-              <aside className="mt-8 lg:mt-0 lg:sticky lg:top-6 space-y-6">
-                {/* Days to Wedding Countdown */}
-                {wedding.weddingDate && (
-                  <Card className="p-4 bg-gradient-to-br from-orange-100 to-pink-100 dark:from-orange-900/40 dark:to-pink-900/40 border-orange-300 dark:border-orange-700">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center flex-shrink-0">
-                        <Heart className="w-6 h-6 text-white" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-2xl font-bold text-orange-600 dark:text-orange-400" data-testid="text-days-to-wedding-costs">
-                          {(() => {
-                            const weddingDate = new Date(wedding.weddingDate!);
-                            const today = new Date();
-                            today.setHours(0, 0, 0, 0);
-                            weddingDate.setHours(0, 0, 0, 0);
-                            const diffTime = weddingDate.getTime() - today.getTime();
-                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                            return diffDays > 0 ? diffDays : 0;
-                          })()}
-                        </p>
-                        <p className="text-sm text-muted-foreground">days until your wedding</p>
-                      </div>
-                    </div>
-                  </Card>
-                )}
-
-                {/* Budget Health Card */}
-                <div>
-                  <h2 className="text-lg font-semibold mb-3">Budget Health</h2>
-                  <Card 
-                    className="p-4 border-orange-200 dark:border-orange-800 bg-gradient-to-br from-orange-50 to-pink-50 dark:from-orange-950/30 dark:to-pink-950/30"
-                    data-testid="budget-health-card"
-                  >
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-900/30">
-                          <TrendingUp className="w-5 h-5 text-orange-600" />
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground">Estimated Total</p>
-                          {hasCeremonyBreakdowns ? (
-                            <p className="font-mono text-xl font-bold text-orange-600 dark:text-orange-400">
-                              {formatEstimate(estimateTotalLow)} – {formatEstimate(estimateTotalHigh)}
-                            </p>
-                          ) : (
-                            <p className="text-sm text-muted-foreground">Add events to see estimates</p>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/30">
-                          <DollarSign className="w-5 h-5 text-emerald-600" />
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground">Your Budget</p>
-                          <p className="font-mono text-xl font-bold text-emerald-600 dark:text-emerald-400">
-                            ${totalBudget > 0 ? totalBudget.toLocaleString() : '0'}
-                          </p>
-                        </div>
-                      </div>
-
-                      {hasCeremonyBreakdowns && totalBudget > 0 && (
-                        <div className="pt-3 border-t border-orange-200 dark:border-orange-700">
-                          {totalBudget >= estimateTotalLow ? (
-                            <p className="text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
-                              <CheckCircle2 className="w-4 h-4" />
-                              Budget looks healthy for your plans
-                            </p>
-                          ) : (
-                            <p className="text-sm text-amber-600 dark:text-amber-400 flex items-center gap-2">
-                              <TrendingUp className="w-4 h-4" />
-                              Estimates exceed budget by {formatEstimate(estimateTotalLow - totalBudget)}
-                            </p>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </Card>
-                </div>
-              </aside>
-            </div>
-          </TabsContent>
-        </Tabs>
-
-        {/* More to Explore - Outside of Tabs */}
+        {/* More to Explore */}
         <Card className="p-6 bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-orange-950/20 dark:via-pink-950/20 dark:to-purple-950/20 border-orange-200 dark:border-orange-800">
           <h3 className="text-lg font-semibold mb-4">More to Explore</h3>
           <div className="grid md:grid-cols-3 gap-4">
