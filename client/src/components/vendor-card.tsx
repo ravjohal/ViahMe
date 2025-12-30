@@ -228,7 +228,7 @@ export function VendorCard({
           {isLoggedIn && (
             <>
               {/* Claimed vendor: Show Request Booking */}
-              {vendor.claimed && (
+              {vendor.claimed ? (
                 <Button
                   className="w-full"
                   onClick={(e) => {
@@ -239,8 +239,19 @@ export function VendorCard({
                 >
                   Request Booking
                 </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSelect?.(vendor);
+                  }}
+                  data-testid={`button-view-details-${vendor.id}`}
+                >
+                  View Details
+                </Button>
               )}
-              {/* Unclaimed vendor with no contact: only compare available (handled below) */}
             </>
           )}
 
