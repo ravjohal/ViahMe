@@ -2108,6 +2108,35 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
     }
   });
 
+  app.post("/api/budget-categories/estimate", async (req, res) => {
+    try {
+      const { category, city, tradition, guestCount } = req.body;
+      
+      if (!category || !city) {
+        return res.status(400).json({ error: "Category and city are required" });
+      }
+
+      const { getBudgetCategoryEstimate } = await import('./ai/gemini');
+      const estimate = await getBudgetCategoryEstimate({
+        category,
+        city,
+        tradition,
+        guestCount,
+      });
+
+      res.json(estimate);
+    } catch (error) {
+      console.error("Error getting budget estimate:", error);
+      res.status(500).json({ 
+        lowEstimate: 0,
+        highEstimate: 0,
+        averageEstimate: 0,
+        notes: "",
+        hasEstimate: false,
+      });
+    }
+  });
+
   // ============================================================================
   // EXPENSES - Shared expense tracking for couples
   // ============================================================================

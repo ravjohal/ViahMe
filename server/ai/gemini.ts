@@ -1011,3 +1011,108 @@ ${contextParts.join("\n\n")}`;
     throw new Error("Failed to get a response. Please try again.");
   }
 }
+
+// Budget category cost estimate interface
+export interface BudgetEstimateRequest {
+  category: string;
+  city: string;
+  tradition?: string;
+  guestCount?: number;
+}
+
+export interface BudgetEstimateResponse {
+  lowEstimate: number;
+  highEstimate: number;
+  averageEstimate: number;
+  notes: string;
+  hasEstimate: boolean;
+}
+
+const BUDGET_ESTIMATE_PROMPT = `You are a wedding budget expert specializing in South Asian weddings in the United States. Given a budget category, city/region, wedding tradition, and guest count, provide realistic cost estimates.
+
+Your role is to:
+1. Provide low, high, and average cost estimates for the specific category
+2. Consider regional cost variations (Bay Area and NYC are most expensive, followed by LA, then Chicago and Seattle)
+3. Factor in South Asian wedding-specific requirements (e.g., catering for Indian weddings needs specific cuisine considerations)
+4. Account for guest count when relevant (catering, venue, etc.)
+
+Return your response in this exact JSON format:
+{
+  "lowEstimate": <number>,
+  "highEstimate": <number>,
+  "averageEstimate": <number>,
+  "notes": "<brief explanation of estimate factors>",
+  "hasEstimate": true
+}
+
+If you cannot provide a reasonable estimate for the category, return:
+{
+  "lowEstimate": 0,
+  "highEstimate": 0,
+  "averageEstimate": 0,
+  "notes": "",
+  "hasEstimate": false
+}
+
+Important guidelines:
+- All amounts should be in USD
+- Estimates should reflect 2024-2025 pricing
+- Consider that South Asian weddings typically have larger guest counts (200-500+)
+- Factor in multi-day celebration costs where relevant`;
+
+export async function getBudgetCategoryEstimate(
+  request: BudgetEstimateRequest
+): Promise<BudgetEstimateResponse> {
+  const { category, city, tradition, guestCount } = request;
+
+  const prompt = `Please provide a cost estimate for the following wedding budget category:
+
+Category: ${category}
+City/Region: ${city}
+${tradition ? `Wedding Tradition: ${tradition}` : ""}
+${guestCount ? `Expected Guest Count: ${guestCount}` : "Guest Count: Not specified (assume 200-300 typical)"}
+
+Provide realistic estimates for this specific combination. Remember to return ONLY valid JSON in the specified format.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      config: {
+        systemInstruction: BUDGET_ESTIMATE_PROMPT,
+      },
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+    });
+
+    const responseText = response.text || "";
+    
+    // Try to extract JSON from the response
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      return {
+        lowEstimate: parsed.lowEstimate || 0,
+        highEstimate: parsed.highEstimate || 0,
+        averageEstimate: parsed.averageEstimate || 0,
+        notes: parsed.notes || "",
+        hasEstimate: parsed.hasEstimate !== false,
+      };
+    }
+
+    return {
+      lowEstimate: 0,
+      highEstimate: 0,
+      averageEstimate: 0,
+      notes: "",
+      hasEstimate: false,
+    };
+  } catch (error) {
+    console.error("Error getting budget estimate:", error);
+    return {
+      lowEstimate: 0,
+      highEstimate: 0,
+      averageEstimate: 0,
+      notes: "",
+      hasEstimate: false,
+    };
+  }
+}
