@@ -544,7 +544,7 @@ export default function Dashboard() {
                   className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white"
                   data-testid="button-next-step"
                 >
-                  Let's Go
+                  {nextStep.title}
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               )}
