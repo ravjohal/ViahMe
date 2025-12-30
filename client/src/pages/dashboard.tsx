@@ -437,123 +437,82 @@ export default function Dashboard() {
           </p>
         </div>
 
-        {/* Progress Overview */}
-        <Card className="p-6 mb-8 bg-gradient-to-r from-orange-50 via-pink-50 to-purple-50 dark:from-orange-950/20 dark:via-pink-950/20 dark:to-purple-950/20 border-orange-200 dark:border-orange-800">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center">
-                <Sparkles className="w-7 h-7 text-white" />
+        {/* Consolidated Onboarding Widget */}
+        <Card className="p-6 mb-8 bg-gradient-to-r from-orange-50 via-pink-50 to-purple-50 dark:from-orange-950/20 dark:via-pink-950/20 dark:to-purple-950/20 border-orange-200 dark:border-orange-800" data-testid="onboarding-widget">
+          <div className="space-y-4">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center">
+                  <Sparkles className="w-7 h-7 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold">
+                    {completedSteps === steps.length 
+                      ? "All Set!" 
+                      : nextStep?.title || "Getting Started"}
+                  </h2>
+                  <p className="text-muted-foreground">
+                    {completedSteps === steps.length 
+                      ? "You've completed all the basics!" 
+                      : nextStep?.description || `${completedSteps} of ${steps.length} steps completed`}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-xl font-semibold">Getting Started</h2>
-                <p className="text-muted-foreground">
-                  {completedSteps === steps.length 
-                    ? "You've completed all the basics!" 
-                    : `${completedSteps} of ${steps.length} steps completed`}
-                </p>
-              </div>
+              {nextStep && (
+                <Button
+                  size="lg"
+                  onClick={() => setLocation(nextStep.path)}
+                  className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white"
+                  data-testid="button-next-step"
+                >
+                  Let's Go
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+              )}
             </div>
-            <div className="flex-1 max-w-xs">
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-muted-foreground">Progress</span>
-                <span className="font-semibold">{Math.round(progressPercent)}%</span>
-              </div>
-              <Progress value={progressPercent} className="h-3" />
+            
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {steps.map((step) => {
+                const isActive = step === nextStep;
+                return (
+                  <button
+                    key={step.id}
+                    onClick={() => setLocation(step.path)}
+                    className={`flex items-center gap-2 p-2 rounded-lg transition-all hover-elevate ${
+                      step.completed 
+                        ? "bg-emerald-100 dark:bg-emerald-900/30" 
+                        : isActive 
+                          ? "bg-orange-100 dark:bg-orange-900/30 ring-2 ring-orange-400" 
+                          : "bg-muted/50"
+                    }`}
+                    data-testid={`step-button-${step.id}`}
+                  >
+                    {step.completed ? (
+                      <div className="bg-emerald-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0">
+                        <CheckCircle2 className="w-4 h-4" />
+                      </div>
+                    ) : (
+                      <div className={`${getStepColors(step, isActive).circle} text-white rounded-full w-6 h-6 flex items-center justify-center font-bold text-xs flex-shrink-0`}>
+                        {step.number}
+                      </div>
+                    )}
+                    <span className={`text-sm font-medium truncate ${step.completed ? 'text-muted-foreground' : ''}`}>
+                      {step.title}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
+            
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">{completedSteps} of {steps.length} completed</span>
+              <span className="font-semibold text-orange-600">{Math.round(progressPercent)}%</span>
+            </div>
+            <Progress value={progressPercent} className="h-2" />
           </div>
         </Card>
 
-        {/* Step-by-Step Guide - Same design as Team/Budget */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Your Planning Roadmap</h2>
-          <div className="grid md:grid-cols-4 gap-4">
-            {steps.map((step) => {
-              const colors = getStepColors(step, step === nextStep);
-              const isNextStep = step === nextStep;
-              
-              return (
-                <Card 
-                  key={step.id}
-                  className={`p-6 transition-all hover-elevate cursor-pointer ${
-                    step.completed 
-                      ? "bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900/40 dark:to-gray-800/40 border-gray-300 dark:border-gray-700"
-                      : isNextStep 
-                        ? colors.active 
-                        : colors.inactive
-                  }`}
-                  onClick={() => setLocation(step.path)}
-                  data-testid={`step-card-${step.id}`}
-                >
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 mb-2">
-                      {step.completed ? (
-                        <div className="bg-emerald-500 text-white rounded-full w-8 h-8 flex items-center justify-center">
-                          <CheckCircle2 className="w-5 h-5" />
-                        </div>
-                      ) : (
-                        <div className={`${colors.circle} text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm`}>
-                          {step.number}
-                        </div>
-                      )}
-                      <span className={`font-semibold ${step.completed ? 'text-muted-foreground' : ''}`}>
-                        {step.title}
-                      </span>
-                    </div>
-                    <p className={`text-sm ml-10 ${step.completed ? 'text-muted-foreground/70' : 'text-muted-foreground'}`}>
-                      {step.description}
-                    </p>
-                    {step.completed && (
-                      <Badge variant="secondary" className="ml-10 mt-2">Done</Badge>
-                    )}
-                    {isNextStep && !step.completed && (
-                      <div className="ml-10 mt-2">
-                        <Badge className="bg-gradient-to-r from-orange-500 to-pink-500 text-white">
-                          Start Here
-                        </Badge>
-                      </div>
-                    )}
-                  </div>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Next Step Call-to-Action */}
-        {nextStep && (
-          <Card className="p-6 mb-8 border-2 border-dashed border-primary/30 bg-primary/5">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 rounded-full ${getStepColors(nextStep, true).circle} flex items-center justify-center text-white font-bold text-lg`}>
-                  {nextStep.number}
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Your next step</p>
-                  <h3 className="text-xl font-semibold">{nextStep.title}</h3>
-                  <p className="text-muted-foreground">{nextStep.description}</p>
-                </div>
-              </div>
-              <Button
-                size="lg"
-                onClick={() => setLocation(nextStep.path)}
-                className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white"
-                data-testid="button-next-step"
-              >
-                Let's Go
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-            </div>
-          </Card>
-        )}
-
-        {/* Ceremony Cost Breakdown */}
-        {events.length > 0 && (
-          <div className="mb-8">
-            <CeremonyCostBreakdown events={events} />
-          </div>
-        )}
-
-        {/* Quick Stats Grid */}
+        {/* Quick Stats Grid - Moved higher for better visibility */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold mb-4">At a Glance</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -666,6 +625,13 @@ export default function Dashboard() {
             </Card>
           </div>
         </div>
+
+        {/* Ceremony Cost Breakdown */}
+        {events.length > 0 && (
+          <div className="mb-8">
+            <CeremonyCostBreakdown events={events} />
+          </div>
+        )}
 
         {/* Timeline Preview */}
         {hasEvents && (

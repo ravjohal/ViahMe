@@ -124,11 +124,11 @@ export function CouplePlannerChatbot() {
     >
       <Button
         onClick={() => setIsOpen(true)}
-        size="lg"
-        className="rounded-full h-14 w-14 shadow-xl bg-gradient-to-br from-primary to-primary/80 animate-pulse hover:animate-none hover:scale-110 transition-transform"
+        className="rounded-full h-12 px-4 shadow-xl bg-gradient-to-br from-primary to-primary/80 animate-pulse hover:animate-none hover:scale-105 transition-transform gap-2"
         data-testid="button-open-ai-planner"
       >
-        <Sparkles className="h-6 w-6" />
+        <Sparkles className="h-5 w-5" />
+        <span className="font-medium">AI Planner</span>
       </Button>
     </div>
   ) : (

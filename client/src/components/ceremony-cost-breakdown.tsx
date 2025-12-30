@@ -225,6 +225,17 @@ export function CeremonyCostBreakdown({ events, className = "" }: CeremonyCostBr
           <h2 className="text-xl font-semibold flex items-center gap-2">
             <DollarSign className="w-5 h-5 text-orange-600" />
             Ceremony Cost Estimates
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Info className="w-4 h-4 text-muted-foreground cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-[300px]">
+                <p className="text-xs font-medium mb-1">Why the range?</p>
+                <p className="text-xs text-muted-foreground">
+                  Costs vary based on vendor tier (budget vs. luxury), guest count, venue location, and customization level. The low end assumes standard vendors; the high end reflects premium services in major metros like Bay Area or NYC.
+                </p>
+              </TooltipContent>
+            </Tooltip>
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
             Expand each event to see detailed vendor category breakdowns
