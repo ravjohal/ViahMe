@@ -676,21 +676,14 @@ export default function Dashboard() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{event.name}</p>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        {event.time && <span>{event.time}</span>}
-                        {event.location && (
-                          <>
-                            {event.time && <span>·</span>}
-                            <span className="truncate">{event.location}</span>
-                          </>
-                        )}
-                      </div>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {[
+                          event.time,
+                          event.location,
+                          event.guestCount ? `${event.guestCount} guests` : null
+                        ].filter(Boolean).join(' · ') || 'No details yet'}
+                      </p>
                     </div>
-                    {event.guestCount && (
-                      <Badge variant="secondary" className="flex-shrink-0">
-                        {event.guestCount}
-                      </Badge>
-                    )}
                   </button>
                 ))}
               </Card>
