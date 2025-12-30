@@ -64,6 +64,7 @@ import VendorPortfolio from "@/pages/vendor-portfolio";
 import VendorLeads from "@/pages/vendor-leads";
 import Expenses from "@/pages/expenses";
 import GuestCollector from "@/pages/guest-collector";
+import CostBreakdown from "@/pages/cost-breakdown";
 import { VendorRoute } from "@/components/VendorRoute";
 import { CoupleRoute } from "@/components/CoupleRoute";
 import { CouplePlannerChatbot } from "@/components/CouplePlannerChatbot";
@@ -93,6 +94,7 @@ function Router() {
       
       {/* Dashboard - no specific permission, just authentication */}
       <Route path="/dashboard" component={Dashboard} />
+      <Route path="/cost-breakdown" component={CostBreakdown} />
       <Route path="/vendor-dashboard">
         <VendorRoute>
           <VendorDashboard />

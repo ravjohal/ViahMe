@@ -667,11 +667,27 @@ export default function Dashboard() {
                   <Skeleton className="h-32 w-full" />
                 </Card>
               ) : (
-                <BudgetDashboard
-                  categories={budgetCategories}
-                  totalBudget={wedding.totalBudget || "0"}
-                  onNavigate={() => setLocation("/budget")}
-                />
+                <>
+                  <BudgetDashboard
+                    categories={budgetCategories}
+                    totalBudget={wedding.totalBudget || "0"}
+                    onNavigate={() => setLocation("/budget")}
+                  />
+                  {hasCeremonyBreakdowns && (
+                    <div className="mt-3 text-center">
+                      <Button 
+                        variant="link" 
+                        size="sm" 
+                        onClick={() => setLocation("/cost-breakdown")}
+                        className="text-primary"
+                        data-testid="link-cost-breakdown"
+                      >
+                        <Sparkles className="w-3 h-3 mr-1" />
+                        See full cost breakdown ({formatEstimate(estimateTotalLow)} - {formatEstimate(estimateTotalHigh)} estimated)
+                      </Button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}
