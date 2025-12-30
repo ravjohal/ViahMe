@@ -28,36 +28,35 @@ export async function requireAuth(
       return;
     }
 
-    // If email verification is required, check it here
-    if (enforceEmailVerification) {
-      try {
-        const user = await storage.getUser(req.session.userId);
-        
-        if (!user) {
-          req.session.destroy((err) => {
-            if (err) console.error("Session destroy error:", err);
-          });
-          res.status(401).json({ error: "User not found. Please log in again." });
-          return;
-        }
-
-        if (!user.emailVerified) {
-          res.status(403).json({ 
-            error: "Email verification required",
-            message: "Please verify your email address to access this resource"
-          });
-          return;
-        }
-
-        req.user = user;
-      } catch (error) {
-        console.error("Auth verification error:", error);
+    // Always fetch user to populate req.user
+    try {
+      const user = await storage.getUser(req.session.userId);
+      
+      if (!user) {
         req.session.destroy((err) => {
           if (err) console.error("Session destroy error:", err);
         });
-        res.status(500).json({ error: "Authentication error. Please log in again." });
+        res.status(401).json({ error: "User not found. Please log in again." });
         return;
       }
+
+      // If email verification is required, check it here
+      if (enforceEmailVerification && !user.emailVerified) {
+        res.status(403).json({ 
+          error: "Email verification required",
+          message: "Please verify your email address to access this resource"
+        });
+        return;
+      }
+
+      req.user = user;
+    } catch (error) {
+      console.error("Auth verification error:", error);
+      req.session.destroy((err) => {
+        if (err) console.error("Session destroy error:", err);
+      });
+      res.status(500).json({ error: "Authentication error. Please log in again." });
+      return;
     }
 
     next();
