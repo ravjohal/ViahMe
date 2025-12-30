@@ -287,12 +287,13 @@ export default function Budget() {
     setAiEstimate(null);
     
     try {
-      const data = await apiRequest("POST", "/api/budget-categories/estimate", {
+      const response = await apiRequest("POST", "/api/budget-categories/estimate", {
         category: categoryName,
         city: wedding.location,
         tradition: wedding.tradition || undefined,
         guestCount: wedding.guestCountEstimate || undefined,
       });
+      const data = await response.json();
       setAiEstimate(data as AIBudgetEstimate);
     } catch (error) {
       console.error("Failed to fetch AI estimate:", error);
