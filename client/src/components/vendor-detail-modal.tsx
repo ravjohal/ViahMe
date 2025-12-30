@@ -941,11 +941,94 @@ export function VendorDetailModal({
             )}
           </Tabs>
 
-          {vendor.claimed && (
+          {/* Booking section - different for claimed vs unclaimed vendors */}
           <>
           <Separator />
 
           <div className="pt-6">
+            {/* For UNCLAIMED vendors - show only offline booking option */}
+            {!vendor.claimed && isAuthenticated && onOfflineBooking && (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold text-lg">Mark as Booked</h3>
+                </div>
+                <div className="p-4 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 mb-4">
+                  <p className="text-sm text-amber-800 dark:text-amber-200">
+                    This vendor hasn't claimed their profile yet, so you can't request a booking through the app. 
+                    If you've already contacted and booked them directly, you can mark them as booked to track them in your wedding plan.
+                  </p>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-base mb-3 block">
+                      Which events did you book them for? ({selectedEvents.length} selected)
+                    </Label>
+                    <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded-lg p-3">
+                      {events.length > 0 ? (
+                        events.map((event) => (
+                          <div 
+                            key={event.id} 
+                            className="flex items-center space-x-3 hover-elevate p-2 rounded-md"
+                            data-testid={`unclaimed-offline-event-${event.id}`}
+                          >
+                            <Checkbox
+                              id={`unclaimed-offline-event-${event.id}`}
+                              checked={selectedEvents.includes(event.id)}
+                              onCheckedChange={() => handleEventToggle(event.id)}
+                            />
+                            <label
+                              htmlFor={`unclaimed-offline-event-${event.id}`}
+                              className="flex-1 text-sm font-medium cursor-pointer"
+                            >
+                              {event.name} {event.date && `- ${new Date(event.date).toLocaleDateString()}`}
+                            </label>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-sm text-muted-foreground text-center py-4">
+                          No events created yet. Add events to your wedding first.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="unclaimed-offline-notes" className="text-base mb-2 block">
+                      Notes (Optional)
+                    </Label>
+                    <Textarea
+                      id="unclaimed-offline-notes"
+                      placeholder="Add any notes about the booking (price agreed, contact info, etc.)..."
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      rows={3}
+                      data-testid="textarea-unclaimed-offline-notes"
+                    />
+                  </div>
+
+                  <Button
+                    onClick={() => {
+                      if (vendor && selectedEvents.length > 0) {
+                        onOfflineBooking(vendor.id, selectedEvents, notes);
+                        setSelectedEvents([]);
+                        setNotes("");
+                        onClose();
+                      }
+                    }}
+                    disabled={selectedEvents.length === 0}
+                    className="w-full bg-emerald-600 hover:bg-emerald-700"
+                    data-testid="button-confirm-unclaimed-offline-booking"
+                  >
+                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                    Mark as Booked for {selectedEvents.length} {selectedEvents.length === 1 ? 'Event' : 'Events'}
+                  </Button>
+                </div>
+              </>
+            )}
+
+            {/* For CLAIMED vendors - show both options with toggle */}
+            {vendor.claimed && (
+            <>
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-lg">
                 {offlineBookingMode ? "Mark as Booked Offline" : "Request Booking"}
@@ -1145,9 +1228,11 @@ export function VendorDetailModal({
                 </Button>
               </div>
             )}
+            </>
+            )}
           </div>
           </>
-          )}
+          
         </div>
 
         {/* Booking Request Dialog */}

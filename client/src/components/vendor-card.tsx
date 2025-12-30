@@ -241,7 +241,7 @@ export function VendorCard({
                 </Button>
               ) : (
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   className="w-full"
                   onClick={(e) => {
                     e.stopPropagation();
