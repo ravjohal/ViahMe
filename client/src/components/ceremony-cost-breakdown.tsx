@@ -87,13 +87,13 @@ function CostCategoryRow({ item, guestCount }: { item: CostCategory; guestCount:
   }
   
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between py-2 border-b border-border/50 last:border-0 gap-1 sm:gap-4">
-      <div className="flex items-center gap-2 flex-1 min-w-0">
-        <span className="text-sm font-medium truncate">{item.category}</span>
+    <div className="grid grid-cols-[1fr_auto] sm:grid-cols-[minmax(0,1fr)_auto_auto] items-start sm:items-center gap-x-3 gap-y-1 py-2 border-b border-border/50 last:border-0">
+      <div className="flex items-start gap-2 min-w-0">
+        <span className="text-sm font-medium leading-tight">{item.category}</span>
         {item.notes && (
           <Tooltip>
             <TooltipTrigger asChild>
-              <Info className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 cursor-help" />
+              <Info className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 cursor-help mt-0.5" />
             </TooltipTrigger>
             <TooltipContent side="top" className="max-w-[250px]">
               <p className="text-xs">{item.notes}</p>
@@ -101,14 +101,12 @@ function CostCategoryRow({ item, guestCount }: { item: CostCategory; guestCount:
           </Tooltip>
         )}
       </div>
-      <div className="flex items-center gap-2 justify-between sm:justify-end">
-        <Badge variant="outline" className="text-xs whitespace-nowrap">
-          {unitLabel}
-        </Badge>
-        <span className="text-sm font-semibold text-orange-600 dark:text-orange-400 whitespace-nowrap">
-          {formatCurrency(displayLow)} - {formatCurrency(displayHigh)}
-        </span>
-      </div>
+      <Badge variant="outline" className="text-xs whitespace-nowrap hidden sm:inline-flex">
+        {unitLabel}
+      </Badge>
+      <span className="text-sm font-semibold text-orange-600 dark:text-orange-400 whitespace-nowrap text-right">
+        {formatCurrency(displayLow)} - {formatCurrency(displayHigh)}
+      </span>
     </div>
   );
 }
