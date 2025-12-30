@@ -208,8 +208,10 @@ export const vendors = pgTable("vendors", {
   yelpBusinessId: text("yelp_business_id"), // Yelp business ID for fetching external reviews
   googlePlaceId: text("google_place_id"), // Google Place ID for fetching external reviews
   // Ghost Profile / Claim Your Profile fields
-  claimed: boolean("claimed").notNull().default(true), // false = ghost profile from Google Places, true = vendor-owned
-  source: text("source").notNull().default('manual'), // 'manual' | 'google_places' - how the profile was created
+  claimed: boolean("claimed").notNull().default(true), // false = ghost profile from Google Places/couple-submitted, true = vendor-owned
+  source: text("source").notNull().default('manual'), // 'manual' | 'google_places' | 'couple_submitted' - how the profile was created
+  createdByUserId: varchar("created_by_user_id"), // User ID of who created this profile (vendor or couple)
+  createdByUserType: text("created_by_user_type"), // 'vendor' | 'couple' - indicates who created the profile
   claimToken: text("claim_token"), // Token sent to vendor to claim their profile
   claimTokenExpires: timestamp("claim_token_expires"), // When the claim token expires
   notifyCooldownUntil: timestamp("notify_cooldown_until"), // Don't send another notification until this time
