@@ -592,242 +592,401 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        {/* Two-Column Layout: Main (tabbed content) + Sidebar (stats/events) */}
-        <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-6 lg:items-start">
-          {/* Main Column - Tabbed Content */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="mb-6 h-auto p-1 bg-muted/50 rounded-lg">
+        {/* Tabs Navigation */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-8">
+          <TabsList className="mb-6 h-auto p-1 bg-muted/50 rounded-lg">
+            <TabsTrigger 
+              value="overview" 
+              data-testid="tab-overview"
+              className="px-6 py-3 text-base font-semibold data-[state=active]:bg-background data-[state=active]:shadow-sm"
+            >
+              Overview
+            </TabsTrigger>
+            {!budgetConfirmed ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span>
+                    <TabsTrigger 
+                      value="costs" 
+                      data-testid="tab-costs" 
+                      disabled
+                      className="px-6 py-3 text-base font-semibold opacity-50 cursor-not-allowed"
+                    >
+                      <Lock className="w-4 h-4 mr-2" />
+                      Budget & Costs
+                    </TabsTrigger>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Unlock this after confirming your budget</p>
+                </TooltipContent>
+              </Tooltip>
+            ) : (
               <TabsTrigger 
-                value="overview" 
-                data-testid="tab-overview"
+                value="costs" 
+                data-testid="tab-costs"
                 className="px-6 py-3 text-base font-semibold data-[state=active]:bg-background data-[state=active]:shadow-sm"
               >
-                Overview
+                Budget & Costs
               </TabsTrigger>
-              {!budgetConfirmed ? (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span>
-                      <TabsTrigger 
-                        value="costs" 
-                        data-testid="tab-costs" 
-                        disabled
-                        className="px-6 py-3 text-base font-semibold opacity-50 cursor-not-allowed"
-                      >
-                        <Lock className="w-4 h-4 mr-2" />
-                        Financial Strategy
-                      </TabsTrigger>
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Unlock this after confirming your budget</p>
-                  </TooltipContent>
-                </Tooltip>
-              ) : (
-                <TabsTrigger 
-                  value="costs" 
-                  data-testid="tab-costs"
-                  className="px-6 py-3 text-base font-semibold data-[state=active]:bg-background data-[state=active]:shadow-sm"
-                >
-                  Financial Strategy
-                </TabsTrigger>
-              )}
-            </TabsList>
-
-            {/* Overview Tab - Quick Actions & Links */}
-            <TabsContent value="overview" className="space-y-6 mt-0">
-              {/* Budget Preview (only shown if budget confirmed) */}
-              {hasBudget && hasCategories && budgetConfirmed && (
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-semibold">Budget Overview</h2>
-                    <Button variant="ghost" onClick={() => setLocation("/budget")}>
-                      View Details
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </div>
-                  {budgetLoading ? (
-                    <Card className="p-6">
-                      <Skeleton className="h-32 w-full" />
-                    </Card>
-                  ) : (
-                    <BudgetDashboard
-                      categories={budgetCategories}
-                      totalBudget={wedding.totalBudget || "0"}
-                    />
-                  )}
-                </div>
-              )}
-
-              {/* Prompt to confirm budget if not done yet */}
-              {(!budgetConfirmed) && (
-                <Card className="p-6 border-dashed border-2 border-orange-300 dark:border-orange-700 bg-orange-50/50 dark:bg-orange-950/20">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-full bg-orange-100 dark:bg-orange-900/30">
-                      <DollarSign className="w-6 h-6 text-orange-600" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold">Confirm Your Budget First</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Complete Step 1 to unlock detailed ceremony cost estimates and financial planning tools.
-                      </p>
-                    </div>
-                    <Button 
-                      onClick={() => setLocation("/budget")}
-                      className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white"
-                      data-testid="button-confirm-budget"
-                    >
-                      Confirm Budget
-                    </Button>
-                  </div>
-                </Card>
-              )}
-
-              {/* Helpful Links - Footer section */}
-              <Card className="p-6 bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-orange-950/20 dark:via-pink-950/20 dark:to-purple-950/20 border-orange-200 dark:border-orange-800">
-                <h3 className="text-lg font-semibold mb-4">More to Explore</h3>
-                <div className="grid md:grid-cols-3 gap-4">
-                  <Button
-                    variant="outline"
-                    className="justify-start h-auto py-3 px-4"
-                    onClick={() => setLocation("/photo-gallery")}
-                  >
-                    <Camera className="w-5 h-5 mr-3 text-amber-600" />
-                    <div className="text-left">
-                      <p className="font-medium">Photo Gallery</p>
-                      <p className="text-xs text-muted-foreground">Inspiration & event photos</p>
-                    </div>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="justify-start h-auto py-3 px-4"
-                    onClick={() => setLocation("/cultural-info")}
-                  >
-                    <Sparkles className="w-5 h-5 mr-3 text-purple-600" />
-                    <div className="text-left">
-                      <p className="font-medium">Cultural Guide</p>
-                      <p className="text-xs text-muted-foreground">Traditions & ceremonies</p>
-                    </div>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="justify-start h-auto py-3 px-4"
-                    onClick={() => setLocation("/shopping")}
-                  >
-                    <Briefcase className="w-5 h-5 mr-3 text-pink-600" />
-                    <div className="text-left">
-                      <p className="font-medium">Shopping Tracker</p>
-                      <p className="text-xs text-muted-foreground">Attire & accessories</p>
-                    </div>
-                  </Button>
-                </div>
-              </Card>
-            </TabsContent>
-
-            {/* Financial Strategy Tab - Detailed Cost Breakdowns */}
-            <TabsContent value="costs" className="space-y-6 mt-0">
-              {/* Ceremony Cost Breakdown - Only shown if ceremony breakdowns exist */}
-              {hasCeremonyBreakdowns && (
-                <div>
-                  <CeremonyCostBreakdown events={events} />
-                </div>
-              )}
-              
-              {/* Message when no ceremony breakdowns available */}
-              {!hasCeremonyBreakdowns && (
-                <Card className="p-6 border-dashed border-2 border-muted">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-full bg-muted">
-                      <Calendar className="w-6 h-6 text-muted-foreground" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold">No Ceremony Estimates Yet</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Add events to your timeline to see detailed ceremony cost breakdowns.
-                      </p>
-                    </div>
-                    <Button 
-                      variant="outline"
-                      onClick={() => setLocation("/timeline")}
-                    >
-                      Add Events
-                    </Button>
-                  </div>
-                </Card>
-              )}
-
-              {/* Budget Preview in costs tab too */}
-              {hasBudget && hasCategories && budgetConfirmed && (
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-semibold">Budget Allocation</h2>
-                    <Button variant="ghost" onClick={() => setLocation("/budget")}>
-                      Manage Budget
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </div>
-                  {budgetLoading ? (
-                    <Card className="p-6">
-                      <Skeleton className="h-32 w-full" />
-                    </Card>
-                  ) : (
-                    <BudgetDashboard
-                      categories={budgetCategories}
-                      totalBudget={wedding.totalBudget || "0"}
-                    />
-                  )}
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-
-          {/* Sidebar - Stats & Events (sticky on desktop) */}
-          <aside className="mt-8 lg:mt-0 lg:sticky lg:top-6 space-y-6">
-            {/* Days to Wedding Countdown */}
-            {wedding.weddingDate && (
-              <Card className="p-4 bg-gradient-to-br from-orange-100 to-pink-100 dark:from-orange-900/40 dark:to-pink-900/40 border-orange-300 dark:border-orange-700">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center flex-shrink-0">
-                    <Heart className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-2xl font-bold text-orange-600 dark:text-orange-400" data-testid="text-days-to-wedding">
-                      {(() => {
-                        const weddingDate = new Date(wedding.weddingDate!);
-                        const today = new Date();
-                        today.setHours(0, 0, 0, 0);
-                        weddingDate.setHours(0, 0, 0, 0);
-                        const diffTime = weddingDate.getTime() - today.getTime();
-                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                        return diffDays > 0 ? diffDays : 0;
-                      })()}
-                    </p>
-                    <p className="text-sm text-muted-foreground">days until your wedding</p>
-                  </div>
-                </div>
-              </Card>
             )}
+          </TabsList>
 
-            {/* At a Glance Stats */}
-            <div>
-              <h2 className="text-lg font-semibold mb-3">At a Glance</h2>
-              <div className="grid grid-cols-2 gap-3">
-                {/* Budget Health Card - Estimated Total (only after budget confirmed) */}
-                {hasEstimates && (
-                  <Card 
-                    className="col-span-2 p-3 hover-elevate cursor-pointer border-orange-200 dark:border-orange-800 bg-gradient-to-br from-orange-50 to-pink-50 dark:from-orange-950/30 dark:to-pink-950/30"
-                    onClick={() => setActiveTab("costs")}
-                    data-testid="stat-card-estimated-total"
-                  >
-                    <div className="flex items-center justify-between">
+          {/* Overview Tab - Two Column Layout */}
+          <TabsContent value="overview" className="mt-0">
+            <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-6 lg:items-start">
+              {/* Main Content */}
+              <div className="space-y-6">
+                {/* Budget Preview (only shown if budget confirmed) */}
+                {hasBudget && hasCategories && budgetConfirmed && (
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-xl font-semibold">Budget Overview</h2>
+                      <Button variant="ghost" onClick={() => setLocation("/budget")}>
+                        View Details
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </Button>
+                    </div>
+                    {budgetLoading ? (
+                      <Card className="p-6">
+                        <Skeleton className="h-32 w-full" />
+                      </Card>
+                    ) : (
+                      <BudgetDashboard
+                        categories={budgetCategories}
+                        totalBudget={wedding.totalBudget || "0"}
+                      />
+                    )}
+                  </div>
+                )}
+
+                {/* Prompt to confirm budget if not done yet */}
+                {(!budgetConfirmed) && (
+                  <Card className="p-6 border-dashed border-2 border-orange-300 dark:border-orange-700 bg-orange-50/50 dark:bg-orange-950/20">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 rounded-full bg-orange-100 dark:bg-orange-900/30">
+                        <DollarSign className="w-6 h-6 text-orange-600" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold">Confirm Your Budget First</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Complete Step 1 to unlock detailed ceremony cost estimates and financial planning tools.
+                        </p>
+                      </div>
+                      <Button 
+                        onClick={() => setLocation("/budget")}
+                        className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white"
+                        data-testid="button-confirm-budget"
+                      >
+                        Confirm Budget
+                      </Button>
+                    </div>
+                  </Card>
+                )}
+              </div>
+
+              {/* Overview Sidebar - Days to Wedding, At a Glance, Next Up */}
+              <aside className="mt-8 lg:mt-0 lg:sticky lg:top-6 space-y-6">
+                {/* Days to Wedding Countdown */}
+                {wedding.weddingDate && (
+                  <Card className="p-4 bg-gradient-to-br from-orange-100 to-pink-100 dark:from-orange-900/40 dark:to-pink-900/40 border-orange-300 dark:border-orange-700">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+                        <Heart className="w-6 h-6 text-white" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-2xl font-bold text-orange-600 dark:text-orange-400" data-testid="text-days-to-wedding">
+                          {(() => {
+                            const weddingDate = new Date(wedding.weddingDate!);
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+                            weddingDate.setHours(0, 0, 0, 0);
+                            const diffTime = weddingDate.getTime() - today.getTime();
+                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                            return diffDays > 0 ? diffDays : 0;
+                          })()}
+                        </p>
+                        <p className="text-sm text-muted-foreground">days until your wedding</p>
+                      </div>
+                    </div>
+                  </Card>
+                )}
+
+                {/* At a Glance Stats */}
+                <div>
+                  <h2 className="text-lg font-semibold mb-3">At a Glance</h2>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Card 
+                      className="p-3 hover-elevate cursor-pointer border-orange-200 dark:border-orange-800" 
+                      onClick={() => setLocation("/timeline")}
+                      data-testid="stat-card-events"
+                    >
                       <div className="flex items-center gap-2">
                         <div className="p-1.5 rounded-lg bg-orange-100 dark:bg-orange-900/30">
-                          <TrendingUp className="w-4 h-4 text-orange-600" />
+                          <Calendar className="w-4 h-4 text-orange-600" />
                         </div>
                         <div>
-                          <p className="text-xs text-muted-foreground">Estimated Total</p>
+                          <p className="text-xs text-muted-foreground">Events</p>
+                          <p className="font-mono text-lg font-bold" data-testid="stat-events-count">
+                            {events.length}
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+
+                    <Card 
+                      className="p-3 hover-elevate cursor-pointer border-emerald-200 dark:border-emerald-800" 
+                      onClick={() => setLocation("/budget")}
+                      data-testid="stat-card-budget"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/30">
+                          <DollarSign className="w-4 h-4 text-emerald-600" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Budget</p>
+                          <p className="font-mono text-lg font-bold">
+                            ${totalBudget > 0 ? (totalBudget / 1000).toFixed(0) + 'k' : '0'}
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+
+                    <Card 
+                      className="p-3 hover-elevate cursor-pointer border-blue-200 dark:border-blue-800" 
+                      onClick={() => setLocation("/vendors")}
+                      data-testid="stat-card-vendors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                          <Briefcase className="w-4 h-4 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Vendors</p>
+                          <p className="font-mono text-lg font-bold" data-testid="stat-vendors-count">
+                            {bookings.length}
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+
+                    <Card 
+                      className="p-3 hover-elevate cursor-pointer border-pink-200 dark:border-pink-800" 
+                      onClick={() => setLocation("/guests")}
+                      data-testid="stat-card-guests"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 rounded-lg bg-pink-100 dark:bg-pink-900/30">
+                          <Users className="w-4 h-4 text-pink-600" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Guests</p>
+                          <p className="font-mono text-lg font-bold" data-testid="stat-guests-count">
+                            {guests.length || wedding.guestCountEstimate || 0}
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+
+                    <Card 
+                      className="p-3 hover-elevate cursor-pointer border-purple-200 dark:border-purple-800" 
+                      onClick={() => setLocation("/contracts")}
+                      data-testid="stat-card-contracts"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 rounded-lg bg-purple-100 dark:bg-purple-900/30">
+                          <FileText className="w-4 h-4 text-purple-600" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Contracts</p>
+                          <p className="font-mono text-lg font-bold" data-testid="stat-contracts-count">
+                            {contracts.length}
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+
+                    <Card 
+                      className="p-3 hover-elevate cursor-pointer border-amber-200 dark:border-amber-800" 
+                      onClick={() => setLocation("/collaborators")}
+                      data-testid="stat-card-team"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 rounded-lg bg-amber-100 dark:bg-amber-900/30">
+                          <UserPlus className="w-4 h-4 text-amber-600" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Team</p>
+                          <p className="font-mono text-lg font-bold">
+                            Manage
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+                  </div>
+                </div>
+
+                {/* Upcoming Events - Limited to 3 with View All */}
+                {hasEvents && (
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <h2 className="text-lg font-semibold">Next Up</h2>
+                    </div>
+                    {eventsLoading ? (
+                      <Card className="p-4">
+                        <Skeleton className="h-20 w-full" />
+                      </Card>
+                    ) : (
+                      <Card className="divide-y" data-testid="compact-timeline">
+                        {events.slice(0, 3).map((event) => (
+                          <button
+                            key={event.id}
+                            onClick={() => setSelectedEvent(event)}
+                            className="w-full flex items-center gap-2 p-2.5 hover-elevate text-left transition-all"
+                            data-testid={`compact-event-${event.id}`}
+                          >
+                            <div className="w-10 text-center flex-shrink-0">
+                              {event.date ? (
+                                <>
+                                  <p className="text-[10px] text-muted-foreground uppercase">
+                                    {new Date(event.date).toLocaleDateString('en-US', { month: 'short' })}
+                                  </p>
+                                  <p className="text-base font-bold">
+                                    {new Date(event.date).getDate()}
+                                  </p>
+                                </>
+                              ) : (
+                                <Calendar className="w-4 h-4 mx-auto text-muted-foreground" />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">{event.name}</p>
+                              <p className="text-xs text-muted-foreground truncate">
+                                {event.time || event.location || 'No details yet'}
+                              </p>
+                            </div>
+                          </button>
+                        ))}
+                        {events.length > 3 && (
+                          <button
+                            onClick={() => setLocation("/timeline")}
+                            className="w-full flex items-center justify-center gap-2 p-3 hover-elevate text-sm font-medium text-orange-600 dark:text-orange-400"
+                            data-testid="link-view-all-events"
+                          >
+                            View All {events.length} Events
+                            <ArrowRight className="w-4 h-4" />
+                          </button>
+                        )}
+                      </Card>
+                    )}
+                  </div>
+                )}
+              </aside>
+            </div>
+          </TabsContent>
+
+          {/* Budget & Costs Tab - Two Column Layout */}
+          <TabsContent value="costs" className="mt-0">
+            <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-6 lg:items-start">
+              {/* Main Content */}
+              <div className="space-y-6">
+                {/* Ceremony Cost Breakdown - Only shown if ceremony breakdowns exist */}
+                {hasCeremonyBreakdowns && (
+                  <div>
+                    <CeremonyCostBreakdown events={events} />
+                  </div>
+                )}
+                
+                {/* Message when no ceremony breakdowns available */}
+                {!hasCeremonyBreakdowns && (
+                  <Card className="p-6 border-dashed border-2 border-muted">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 rounded-full bg-muted">
+                        <Calendar className="w-6 h-6 text-muted-foreground" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold">No Ceremony Estimates Yet</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Add events to your timeline to see detailed ceremony cost breakdowns.
+                        </p>
+                      </div>
+                      <Button 
+                        variant="outline"
+                        onClick={() => setLocation("/timeline")}
+                      >
+                        Add Events
+                      </Button>
+                    </div>
+                  </Card>
+                )}
+
+                {/* Budget Allocation */}
+                {hasBudget && hasCategories && budgetConfirmed && (
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-xl font-semibold">Budget Allocation</h2>
+                      <Button variant="ghost" onClick={() => setLocation("/budget")}>
+                        Manage Budget
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </Button>
+                    </div>
+                    {budgetLoading ? (
+                      <Card className="p-6">
+                        <Skeleton className="h-32 w-full" />
+                      </Card>
+                    ) : (
+                      <BudgetDashboard
+                        categories={budgetCategories}
+                        totalBudget={wedding.totalBudget || "0"}
+                      />
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Budget & Costs Sidebar - Days to Wedding + Budget Health */}
+              <aside className="mt-8 lg:mt-0 lg:sticky lg:top-6 space-y-6">
+                {/* Days to Wedding Countdown */}
+                {wedding.weddingDate && (
+                  <Card className="p-4 bg-gradient-to-br from-orange-100 to-pink-100 dark:from-orange-900/40 dark:to-pink-900/40 border-orange-300 dark:border-orange-700">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+                        <Heart className="w-6 h-6 text-white" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-2xl font-bold text-orange-600 dark:text-orange-400" data-testid="text-days-to-wedding-costs">
+                          {(() => {
+                            const weddingDate = new Date(wedding.weddingDate!);
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+                            weddingDate.setHours(0, 0, 0, 0);
+                            const diffTime = weddingDate.getTime() - today.getTime();
+                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                            return diffDays > 0 ? diffDays : 0;
+                          })()}
+                        </p>
+                        <p className="text-sm text-muted-foreground">days until your wedding</p>
+                      </div>
+                    </div>
+                  </Card>
+                )}
+
+                {/* Budget Health Card */}
+                <div>
+                  <h2 className="text-lg font-semibold mb-3">Budget Health</h2>
+                  <Card 
+                    className="p-4 border-orange-200 dark:border-orange-800 bg-gradient-to-br from-orange-50 to-pink-50 dark:from-orange-950/30 dark:to-pink-950/30"
+                    data-testid="budget-health-card"
+                  >
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-900/30">
+                          <TrendingUp className="w-5 h-5 text-orange-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Estimated Total</p>
                           {hasCeremonyBreakdowns ? (
-                            <p className="font-mono text-lg font-bold text-orange-600 dark:text-orange-400">
+                            <p className="font-mono text-xl font-bold text-orange-600 dark:text-orange-400">
                               {formatEstimate(estimateTotalLow)} – {formatEstimate(estimateTotalHigh)}
                             </p>
                           ) : (
@@ -835,187 +994,81 @@ export default function Dashboard() {
                           )}
                         </div>
                       </div>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="text-xs text-orange-600 dark:text-orange-400"
-                        onClick={(e) => { e.stopPropagation(); setActiveTab("costs"); }}
-                        data-testid="link-view-breakdown"
-                      >
-                        {hasCeremonyBreakdowns ? "View Breakdown" : "View Strategy"}
-                        <ArrowRight className="w-3 h-3 ml-1" />
-                      </Button>
-                    </div>
-                  </Card>
-                )}
-
-                <Card 
-                  className="p-3 hover-elevate cursor-pointer border-orange-200 dark:border-orange-800" 
-                  onClick={() => setLocation("/timeline")}
-                  data-testid="stat-card-events"
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="p-1.5 rounded-lg bg-orange-100 dark:bg-orange-900/30">
-                      <Calendar className="w-4 h-4 text-orange-600" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Events</p>
-                      <p className="font-mono text-lg font-bold" data-testid="stat-events-count">
-                        {events.length}
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-
-                <Card 
-                  className="p-3 hover-elevate cursor-pointer border-emerald-200 dark:border-emerald-800" 
-                  onClick={() => setLocation("/budget")}
-                  data-testid="stat-card-budget"
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/30">
-                      <DollarSign className="w-4 h-4 text-emerald-600" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Budget</p>
-                      <p className="font-mono text-lg font-bold">
-                        ${totalBudget > 0 ? (totalBudget / 1000).toFixed(0) + 'k' : '0'}
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-
-                <Card 
-                  className="p-3 hover-elevate cursor-pointer border-blue-200 dark:border-blue-800" 
-                  onClick={() => setLocation("/vendors")}
-                  data-testid="stat-card-vendors"
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="p-1.5 rounded-lg bg-blue-100 dark:bg-blue-900/30">
-                      <Briefcase className="w-4 h-4 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Vendors</p>
-                      <p className="font-mono text-lg font-bold" data-testid="stat-vendors-count">
-                        {bookings.length}
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-
-                <Card 
-                  className="p-3 hover-elevate cursor-pointer border-pink-200 dark:border-pink-800" 
-                  onClick={() => setLocation("/guests")}
-                  data-testid="stat-card-guests"
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="p-1.5 rounded-lg bg-pink-100 dark:bg-pink-900/30">
-                      <Users className="w-4 h-4 text-pink-600" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Guests</p>
-                      <p className="font-mono text-lg font-bold" data-testid="stat-guests-count">
-                        {guests.length || wedding.guestCountEstimate || 0}
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-
-                <Card 
-                  className="p-3 hover-elevate cursor-pointer border-purple-200 dark:border-purple-800" 
-                  onClick={() => setLocation("/contracts")}
-                  data-testid="stat-card-contracts"
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="p-1.5 rounded-lg bg-purple-100 dark:bg-purple-900/30">
-                      <FileText className="w-4 h-4 text-purple-600" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Contracts</p>
-                      <p className="font-mono text-lg font-bold" data-testid="stat-contracts-count">
-                        {contracts.length}
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-
-                <Card 
-                  className="p-3 hover-elevate cursor-pointer border-amber-200 dark:border-amber-800" 
-                  onClick={() => setLocation("/collaborators")}
-                  data-testid="stat-card-team"
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="p-1.5 rounded-lg bg-amber-100 dark:bg-amber-900/30">
-                      <UserPlus className="w-4 h-4 text-amber-600" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Team</p>
-                      <p className="font-mono text-lg font-bold">
-                        Manage
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-              </div>
-            </div>
-
-            {/* Upcoming Events - Limited to 3 with View All */}
-            {hasEvents && (
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-lg font-semibold">Next Up</h2>
-                </div>
-                {eventsLoading ? (
-                  <Card className="p-4">
-                    <Skeleton className="h-20 w-full" />
-                  </Card>
-                ) : (
-                  <Card className="divide-y" data-testid="compact-timeline">
-                    {events.slice(0, 3).map((event) => (
-                      <button
-                        key={event.id}
-                        onClick={() => setSelectedEvent(event)}
-                        className="w-full flex items-center gap-2 p-2.5 hover-elevate text-left transition-all"
-                        data-testid={`compact-event-${event.id}`}
-                      >
-                        <div className="w-10 text-center flex-shrink-0">
-                          {event.date ? (
-                            <>
-                              <p className="text-[10px] text-muted-foreground uppercase">
-                                {new Date(event.date).toLocaleDateString('en-US', { month: 'short' })}
-                              </p>
-                              <p className="text-base font-bold">
-                                {new Date(event.date).getDate()}
-                              </p>
-                            </>
-                          ) : (
-                            <Calendar className="w-4 h-4 mx-auto text-muted-foreground" />
-                          )}
+                      
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/30">
+                          <DollarSign className="w-5 h-5 text-emerald-600" />
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{event.name}</p>
-                          <p className="text-xs text-muted-foreground truncate">
-                            {event.time || event.location || 'No details yet'}
+                        <div>
+                          <p className="text-sm text-muted-foreground">Your Budget</p>
+                          <p className="font-mono text-xl font-bold text-emerald-600 dark:text-emerald-400">
+                            ${totalBudget > 0 ? totalBudget.toLocaleString() : '0'}
                           </p>
                         </div>
-                      </button>
-                    ))}
-                    {events.length > 3 && (
-                      <button
-                        onClick={() => setLocation("/timeline")}
-                        className="w-full flex items-center justify-center gap-2 p-3 hover-elevate text-sm font-medium text-orange-600 dark:text-orange-400"
-                        data-testid="link-view-all-events"
-                      >
-                        View All {events.length} Events
-                        <ArrowRight className="w-4 h-4" />
-                      </button>
-                    )}
+                      </div>
+
+                      {hasCeremonyBreakdowns && totalBudget > 0 && (
+                        <div className="pt-3 border-t border-orange-200 dark:border-orange-700">
+                          {totalBudget >= estimateTotalLow ? (
+                            <p className="text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
+                              <CheckCircle2 className="w-4 h-4" />
+                              Budget looks healthy for your plans
+                            </p>
+                          ) : (
+                            <p className="text-sm text-amber-600 dark:text-amber-400 flex items-center gap-2">
+                              <TrendingUp className="w-4 h-4" />
+                              Estimates exceed budget by {formatEstimate(estimateTotalLow - totalBudget)}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </Card>
-                )}
+                </div>
+              </aside>
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        {/* More to Explore - Outside of Tabs */}
+        <Card className="p-6 bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-orange-950/20 dark:via-pink-950/20 dark:to-purple-950/20 border-orange-200 dark:border-orange-800">
+          <h3 className="text-lg font-semibold mb-4">More to Explore</h3>
+          <div className="grid md:grid-cols-3 gap-4">
+            <Button
+              variant="outline"
+              className="justify-start h-auto py-3 px-4"
+              onClick={() => setLocation("/photo-gallery")}
+            >
+              <Camera className="w-5 h-5 mr-3 text-amber-600" />
+              <div className="text-left">
+                <p className="font-medium">Photo Gallery</p>
+                <p className="text-xs text-muted-foreground">Inspiration & event photos</p>
               </div>
-            )}
-          </aside>
-        </div>
+            </Button>
+            <Button
+              variant="outline"
+              className="justify-start h-auto py-3 px-4"
+              onClick={() => setLocation("/cultural-info")}
+            >
+              <Sparkles className="w-5 h-5 mr-3 text-purple-600" />
+              <div className="text-left">
+                <p className="font-medium">Cultural Guide</p>
+                <p className="text-xs text-muted-foreground">Traditions & ceremonies</p>
+              </div>
+            </Button>
+            <Button
+              variant="outline"
+              className="justify-start h-auto py-3 px-4"
+              onClick={() => setLocation("/shopping")}
+            >
+              <Briefcase className="w-5 h-5 mr-3 text-pink-600" />
+              <div className="text-left">
+                <p className="font-medium">Shopping Tracker</p>
+                <p className="text-xs text-muted-foreground">Attire & accessories</p>
+              </div>
+            </Button>
+          </div>
+        </Card>
       </main>
 
       <WelcomeTour weddingTradition={wedding.tradition} />
