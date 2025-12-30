@@ -45,6 +45,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertEventSchema } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { CEREMONY_COST_BREAKDOWNS, CEREMONY_CATALOG, calculateCeremonyTotalRange } from "@shared/ceremonies";
 
 const COST_PRESETS = [
   { name: "Catering", type: "per_head" as const, defaultCategory: "catering" },
@@ -458,6 +459,7 @@ export default function TimelinePage() {
   const [activeEventId, setActiveEventId] = useState<string | null>(null);
   const [addDayDialogOpen, setAddDayDialogOpen] = useState(false);
   const [newDayDate, setNewDayDate] = useState("");
+  const [showCostEstimates, setShowCostEstimates] = useState(false);
   
   const [wizardOpen, setWizardOpen] = useState(false);
   const [wizardStep, setWizardStep] = useState(1);
@@ -932,6 +934,73 @@ export default function TimelinePage() {
     return { totalGuests, venues, estimatedCost };
   };
 
+  const getCeremonyIdFromEvent = (event: Event): string | null => {
+    if ((event as any).ceremonyId && CEREMONY_COST_BREAKDOWNS[(event as any).ceremonyId]) {
+      return (event as any).ceremonyId;
+    }
+    const eventType = event.type?.toLowerCase() || "";
+    const eventName = event.name?.toLowerCase() || "";
+    const mappings: Record<string, string[]> = {
+      hindu_mehndi: ["mehndi", "henna"],
+      hindu_sangeet: ["sangeet", "lady sangeet"],
+      hindu_haldi: ["haldi", "maiyan"],
+      hindu_baraat: ["baraat"],
+      hindu_wedding: ["hindu wedding", "wedding ceremony"],
+      reception: ["reception"],
+      sikh_anand_karaj: ["anand karaj", "anand_karaj"],
+      muslim_nikah: ["nikah"],
+      muslim_walima: ["walima"],
+      muslim_dholki: ["dholki"],
+      gujarati_pithi: ["pithi"],
+      gujarati_garba: ["garba"],
+      gujarati_wedding: ["gujarati wedding"],
+      south_indian_muhurtham: ["muhurtham"],
+      general_wedding: ["general wedding", "western wedding"],
+      rehearsal_dinner: ["rehearsal dinner", "rehearsal"],
+      cocktail_hour: ["cocktail hour", "cocktail"],
+    };
+    for (const [ceremonyId, keywords] of Object.entries(mappings)) {
+      if (keywords.some(kw => eventName.includes(kw) || eventType.includes(kw))) {
+        return ceremonyId;
+      }
+    }
+    if (CEREMONY_COST_BREAKDOWNS[eventType]) {
+      return eventType;
+    }
+    return null;
+  };
+
+  const eventsWithBreakdowns = events.filter(event => {
+    const ceremonyId = getCeremonyIdFromEvent(event);
+    return ceremonyId && CEREMONY_COST_BREAKDOWNS[ceremonyId];
+  });
+
+  const getCeremonyEstimate = (event: Event) => {
+    const ceremonyId = getCeremonyIdFromEvent(event);
+    if (!ceremonyId) return null;
+    const ceremony = CEREMONY_CATALOG.find(c => c.id === ceremonyId);
+    const guestCount = event.guestCount || ceremony?.defaultGuests || 100;
+    const range = calculateCeremonyTotalRange(ceremonyId, guestCount);
+    return { low: range.low, high: range.high, guestCount, ceremonyName: ceremony?.name || event.name };
+  };
+
+  const totalEstimateLow = eventsWithBreakdowns.reduce((sum, event) => {
+    const estimate = getCeremonyEstimate(event);
+    return sum + (estimate?.low || 0);
+  }, 0);
+
+  const totalEstimateHigh = eventsWithBreakdowns.reduce((sum, event) => {
+    const estimate = getCeremonyEstimate(event);
+    return sum + (estimate?.high || 0);
+  }, 0);
+
+  const formatEstimate = (amount: number): string => {
+    if (amount >= 1000) {
+      return `$${(amount / 1000).toFixed(amount % 1000 === 0 ? 0 : 1)}k`;
+    }
+    return `$${amount.toLocaleString()}`;
+  };
+
   if (weddingsLoading) {
     return (
       <div className="container mx-auto px-6 py-8">
@@ -993,6 +1062,72 @@ export default function TimelinePage() {
             </Button>
           </div>
         </Card>
+      )}
+
+      {/* Ceremony Cost Estimates - collapsible */}
+      {eventsWithBreakdowns.length > 0 && (
+        <Collapsible open={showCostEstimates} onOpenChange={setShowCostEstimates} className="mb-6">
+          <Card className="overflow-hidden">
+            <CollapsibleTrigger asChild>
+              <button
+                className="w-full p-4 flex items-center justify-between hover-elevate"
+                data-testid="toggle-cost-estimates"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
+                    <DollarSign className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="font-semibold">Ceremony Cost Estimates</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {formatEstimate(totalEstimateLow)} - {formatEstimate(totalEstimateHigh)} total across {eventsWithBreakdowns.length} events
+                    </p>
+                  </div>
+                </div>
+                {showCostEstimates ? (
+                  <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                ) : (
+                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                )}
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="px-4 pb-4 space-y-3 border-t">
+                <p className="text-xs text-muted-foreground pt-3">
+                  Based on typical costs for your tradition and guest counts. Actual costs may vary by vendor and location.
+                </p>
+                {eventsWithBreakdowns.map(event => {
+                  const estimate = getCeremonyEstimate(event);
+                  if (!estimate) return null;
+                  const colors = EVENT_COLORS[event.type || "custom"] || EVENT_COLORS.custom;
+                  return (
+                    <div
+                      key={event.id}
+                      className={`flex items-center justify-between p-3 rounded-lg ${colors.bg} border ${colors.border}`}
+                      data-testid={`row-event-estimate-${event.id}`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium" data-testid={`text-event-name-${event.id}`}>{event.name}</span>
+                        <Badge variant="secondary" className="text-xs" data-testid={`badge-guest-count-${event.id}`}>
+                          {estimate.guestCount} guests
+                        </Badge>
+                      </div>
+                      <span className="font-semibold" data-testid={`text-event-estimate-${event.id}`}>
+                        {formatEstimate(estimate.low)} - {formatEstimate(estimate.high)}
+                      </span>
+                    </div>
+                  );
+                })}
+                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg font-semibold" data-testid="row-total-estimate">
+                  <span>Total Estimate</span>
+                  <span className="text-lg" data-testid="text-total-estimate">
+                    {formatEstimate(totalEstimateLow)} - {formatEstimate(totalEstimateHigh)}
+                  </span>
+                </div>
+              </div>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
       )}
 
       <Dialog open={wizardOpen} onOpenChange={(open) => {
