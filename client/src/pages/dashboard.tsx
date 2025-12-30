@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, DollarSign, Users, Briefcase, FileText, Camera, CheckCircle2, ArrowRight, Sparkles, UserPlus, Heart, Clock, Bot, CheckSquare, Globe, Package, Music, Image, MessageSquare, Radio, ShoppingBag, TrendingUp, Lock } from "lucide-react";
+import { Calendar, DollarSign, Users, Briefcase, FileText, Camera, CheckCircle2, ArrowRight, Sparkles, UserPlus, Heart, Clock, Bot, CheckSquare, Globe, Package, Music, Image, MessageSquare, Radio, ShoppingBag, TrendingUp, Lock, ChevronDown, ChevronUp, Map } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CEREMONY_COST_BREAKDOWNS, CEREMONY_CATALOG, calculateCeremonyTotalRange } from "@shared/ceremonies";
 import { useLocation } from "wouter";
@@ -218,6 +218,7 @@ export default function Dashboard() {
   const { toast } = useToast();
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
+  const [showRoadmap, setShowRoadmap] = useState(false);
   const { isOwner, isLoading: permissionsLoading, weddingId } = usePermissions();
 
   const { data: weddings, isLoading: weddingsLoading } = useQuery<Wedding[]>({
@@ -506,10 +507,10 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <main className="container mx-auto px-6 py-8 max-w-6xl">
+      <main className="container mx-auto px-6 py-8 pb-24 lg:pb-8 max-w-6xl">
         {/* Welcome Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-600 via-pink-600 to-purple-600 bg-clip-text text-transparent mb-2" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+        <div className="mb-6">
+          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-600 via-pink-600 to-purple-600 bg-clip-text text-transparent mb-2" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
             Welcome to Your Wedding Dashboard
           </h1>
           <p className="text-muted-foreground">
@@ -517,21 +518,81 @@ export default function Dashboard() {
           </p>
         </div>
 
-        {/* Consolidated Onboarding Widget */}
-        <Card className="p-6 mb-8 bg-gradient-to-r from-orange-50 via-pink-50 to-purple-50 dark:from-orange-950/20 dark:via-pink-950/20 dark:to-purple-950/20 border-orange-200 dark:border-orange-800" data-testid="onboarding-widget">
+        {/* TOP BREAD: Mobile At a Glance Stats (visible only on mobile) */}
+        <div className="lg:hidden mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold">At a Glance</h2>
+            {wedding.weddingDate && (
+              <Badge variant="secondary" className="bg-gradient-to-r from-orange-100 to-pink-100 dark:from-orange-900/40 dark:to-pink-900/40 text-orange-700 dark:text-orange-300 border-orange-300 dark:border-orange-700">
+                <Heart className="w-3 h-3 mr-1" />
+                {(() => {
+                  const weddingDate = new Date(wedding.weddingDate!);
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  weddingDate.setHours(0, 0, 0, 0);
+                  const diffTime = weddingDate.getTime() - today.getTime();
+                  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                  return diffDays > 0 ? `${diffDays} days` : 'Today!';
+                })()}
+              </Badge>
+            )}
+          </div>
+          <div className="grid grid-cols-4 gap-2">
+            <Card 
+              className="p-2 hover-elevate cursor-pointer text-center" 
+              onClick={() => setLocation("/timeline")}
+              data-testid="mobile-stat-events"
+            >
+              <Calendar className="w-4 h-4 mx-auto mb-1 text-orange-600" />
+              <p className="font-mono text-lg font-bold">{events.length}</p>
+              <p className="text-[10px] text-muted-foreground">Events</p>
+            </Card>
+            <Card 
+              className="p-2 hover-elevate cursor-pointer text-center" 
+              onClick={() => setLocation("/budget")}
+              data-testid="mobile-stat-budget"
+            >
+              <DollarSign className="w-4 h-4 mx-auto mb-1 text-emerald-600" />
+              <p className="font-mono text-lg font-bold">${totalBudget > 0 ? (totalBudget / 1000).toFixed(0) + 'k' : '0'}</p>
+              <p className="text-[10px] text-muted-foreground">Budget</p>
+            </Card>
+            <Card 
+              className="p-2 hover-elevate cursor-pointer text-center" 
+              onClick={() => setLocation("/guests")}
+              data-testid="mobile-stat-guests"
+            >
+              <Users className="w-4 h-4 mx-auto mb-1 text-pink-600" />
+              <p className="font-mono text-lg font-bold">{guests.length || wedding.guestCountEstimate || 0}</p>
+              <p className="text-[10px] text-muted-foreground">Guests</p>
+            </Card>
+            <Card 
+              className="p-2 hover-elevate cursor-pointer text-center" 
+              onClick={() => setLocation("/vendors")}
+              data-testid="mobile-stat-vendors"
+            >
+              <Briefcase className="w-4 h-4 mx-auto mb-1 text-blue-600" />
+              <p className="font-mono text-lg font-bold">{bookings.length}</p>
+              <p className="text-[10px] text-muted-foreground">Vendors</p>
+            </Card>
+          </div>
+        </div>
+
+        {/* MIDDLE MEAT: Active Stepper Card */}
+        <Card className="p-4 md:p-6 mb-8 bg-gradient-to-r from-orange-50 via-pink-50 to-purple-50 dark:from-orange-950/20 dark:via-pink-950/20 dark:to-purple-950/20 border-orange-200 dark:border-orange-800" data-testid="onboarding-widget">
           <div className="space-y-4">
+            {/* Current Step - Always visible */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center">
-                  <Sparkles className="w-7 h-7 text-white" />
+                <div className="w-12 md:w-14 h-12 md:h-14 rounded-full bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="w-6 md:w-7 h-6 md:h-7 text-white" />
                 </div>
-                <div>
-                  <h2 className="text-xl font-semibold">
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-lg md:text-xl font-semibold">
                     {completedSteps === steps.length 
                       ? "All Set!" 
                       : nextStep?.title || "Getting Started"}
                   </h2>
-                  <p className="text-muted-foreground">
+                  <p className="text-sm text-muted-foreground">
                     {completedSteps === steps.length 
                       ? "You've completed all the basics!" 
                       : nextStep?.description || `${completedSteps} of ${steps.length} steps completed`}
@@ -542,7 +603,7 @@ export default function Dashboard() {
                 <Button
                   size="lg"
                   onClick={() => setLocation(nextStep.path)}
-                  className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white"
+                  className="w-full md:w-auto bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white"
                   data-testid="button-next-step"
                 >
                   {nextStep.title}
@@ -551,39 +612,54 @@ export default function Dashboard() {
               )}
             </div>
             
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {steps.map((step) => {
-                const isActive = step === nextStep;
-                return (
-                  <button
-                    key={step.id}
-                    onClick={() => setLocation(step.path)}
-                    className={`flex items-center gap-2 p-2 rounded-lg transition-all hover-elevate ${
-                      step.completed 
-                        ? "bg-emerald-100 dark:bg-emerald-900/30" 
-                        : isActive 
-                          ? "bg-orange-100 dark:bg-orange-900/30 ring-2 ring-orange-400" 
-                          : "bg-muted/50"
-                    }`}
-                    data-testid={`step-button-${step.id}`}
-                  >
-                    {step.completed ? (
-                      <div className="bg-emerald-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0">
-                        <CheckCircle2 className="w-4 h-4" />
-                      </div>
-                    ) : (
-                      <div className={`${getStepColors(step, isActive).circle} text-white rounded-full w-6 h-6 flex items-center justify-center font-bold text-xs flex-shrink-0`}>
-                        {step.number}
-                      </div>
-                    )}
-                    <span className={`text-sm font-medium truncate ${step.completed ? 'text-muted-foreground' : ''}`}>
-                      {step.title}
-                    </span>
-                  </button>
-                );
-              })}
+            {/* Mobile: View Roadmap toggle */}
+            <button 
+              onClick={() => setShowRoadmap(!showRoadmap)}
+              className="flex items-center justify-center gap-2 w-full py-2 text-sm font-medium text-orange-600 dark:text-orange-400 lg:hidden hover-elevate rounded-lg"
+              data-testid="button-toggle-roadmap"
+            >
+              <Map className="w-4 h-4" />
+              {showRoadmap ? "Hide Roadmap" : "View Roadmap"}
+              {showRoadmap ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </button>
+            
+            {/* Steps Grid - Hidden on mobile unless showRoadmap is true */}
+            <div className={`${showRoadmap ? 'block' : 'hidden'} lg:block`}>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {steps.map((step) => {
+                  const isActive = step === nextStep;
+                  return (
+                    <button
+                      key={step.id}
+                      onClick={() => setLocation(step.path)}
+                      className={`flex items-center gap-2 p-2 rounded-lg transition-all hover-elevate ${
+                        step.completed 
+                          ? "bg-emerald-100 dark:bg-emerald-900/30" 
+                          : isActive 
+                            ? "bg-orange-100 dark:bg-orange-900/30 ring-2 ring-orange-400" 
+                            : "bg-muted/50"
+                      }`}
+                      data-testid={`step-button-${step.id}`}
+                    >
+                      {step.completed ? (
+                        <div className="bg-emerald-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0">
+                          <CheckCircle2 className="w-4 h-4" />
+                        </div>
+                      ) : (
+                        <div className={`${getStepColors(step, isActive).circle} text-white rounded-full w-6 h-6 flex items-center justify-center font-bold text-xs flex-shrink-0`}>
+                          {step.number}
+                        </div>
+                      )}
+                      <span className={`text-sm font-medium truncate ${step.completed ? 'text-muted-foreground' : ''}`}>
+                        {step.title}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
             
+            {/* Progress bar */}
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">{completedSteps} of {steps.length} completed</span>
               <span className="font-semibold text-orange-600">{Math.round(progressPercent)}%</span>
@@ -592,9 +668,58 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        {/* Tabs Navigation */}
+        {/* BOTTOM BREAD: Mobile/Tablet Bottom Tab Navigation (visible up to lg) */}
+        <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-background border-t border-border shadow-lg pb-[env(safe-area-inset-bottom)]" data-testid="mobile-bottom-tabs">
+          <div className="flex">
+            <button
+              onClick={() => setActiveTab("overview")}
+              className={`flex-1 flex flex-col items-center py-3 px-4 transition-colors ${
+                activeTab === "overview" 
+                  ? "text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/30" 
+                  : "text-muted-foreground"
+              }`}
+              data-testid="mobile-tab-overview"
+            >
+              <Sparkles className="w-5 h-5 mb-1" />
+              <span className="text-xs font-medium">Overview</span>
+            </button>
+            {budgetConfirmed ? (
+              <button
+                onClick={() => setActiveTab("costs")}
+                className={`flex-1 flex flex-col items-center py-3 px-4 transition-colors ${
+                  activeTab === "costs" 
+                    ? "text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/30" 
+                    : "text-muted-foreground"
+                }`}
+                data-testid="mobile-tab-costs"
+              >
+                <TrendingUp className="w-5 h-5 mb-1" />
+                <span className="text-xs font-medium">Budget & Costs</span>
+              </button>
+            ) : (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    disabled
+                    className="flex-1 flex flex-col items-center py-3 px-4 text-muted-foreground/50 cursor-not-allowed"
+                    data-testid="mobile-tab-costs-locked"
+                  >
+                    <Lock className="w-5 h-5 mb-1" />
+                    <span className="text-xs font-medium">Budget & Costs</span>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p>Unlock after confirming budget</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </div>
+        </div>
+
+        {/* Tabs Navigation - Desktop only for TabsList, mobile uses bottom nav above */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-8">
-          <TabsList className="mb-6 h-auto p-1 bg-muted/50 rounded-lg">
+          {/* Desktop TabsList - hidden on mobile */}
+          <TabsList className="mb-6 h-auto p-1 bg-muted/50 rounded-lg hidden lg:inline-flex">
             <TabsTrigger 
               value="overview" 
               data-testid="tab-overview"
