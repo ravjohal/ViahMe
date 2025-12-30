@@ -16,7 +16,7 @@ import { insertBudgetCategorySchema, type Wedding, type BudgetCategory, type Eve
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
-import { DollarSign, Edit2, Trash2, Plus, CheckCircle2, AlertCircle, TrendingUp, HelpCircle, PiggyBank, FolderPlus, PieChart, BarChart3, Check, X, Users, Calculator } from "lucide-react";
+import { DollarSign, Edit2, Trash2, Plus, CheckCircle2, AlertCircle, TrendingUp, HelpCircle, PiggyBank, FolderPlus, PieChart, BarChart3, Check, X, Users, Calculator, Sparkles, Loader2 } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { MultiCeremonySavingsCalculator } from "@/components/multi-ceremony-savings-calculator";
 
@@ -48,6 +48,14 @@ const BUDGET_TO_VENDOR_CATEGORIES: Record<string, string[]> = {
   transportation: ['limo_service', 'horse_rental'],
 };
 
+interface AIBudgetEstimate {
+  lowEstimate: number;
+  highEstimate: number;
+  averageEstimate: number;
+  notes: string;
+  hasEstimate: boolean;
+}
+
 export default function Budget() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -59,6 +67,8 @@ export default function Budget() {
   const [useCustomCategory, setUseCustomCategory] = useState(false);
   const [quickEditId, setQuickEditId] = useState<string | null>(null);
   const [quickEditValue, setQuickEditValue] = useState("");
+  const [aiEstimate, setAiEstimate] = useState<AIBudgetEstimate | null>(null);
+  const [aiEstimateLoading, setAiEstimateLoading] = useState(false);
 
   const { data: weddings, isLoading: weddingsLoading } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
@@ -270,10 +280,33 @@ export default function Budget() {
     }
   }, [wedding?.id, wedding?.totalBudget, form]);
 
+  const fetchAIEstimate = async (categoryName: string) => {
+    if (!wedding?.city || !categoryName) return;
+    
+    setAiEstimateLoading(true);
+    setAiEstimate(null);
+    
+    try {
+      const data = await apiRequest("POST", "/api/budget-categories/estimate", {
+        category: categoryName,
+        city: wedding.city,
+        tradition: wedding.traditions?.[0] || undefined,
+        guestCount: wedding.guestCount || undefined,
+      });
+      setAiEstimate(data as AIBudgetEstimate);
+    } catch (error) {
+      console.error("Failed to fetch AI estimate:", error);
+      setAiEstimate({ lowEstimate: 0, highEstimate: 0, averageEstimate: 0, notes: "", hasEstimate: false });
+    } finally {
+      setAiEstimateLoading(false);
+    }
+  };
+
   const handleAddCategory = () => {
     setEditingCategory(null);
     setUseCustomCategory(true);
     setCustomCategoryInput("");
+    setAiEstimate(null);
     form.reset({
       category: "",
       allocatedAmount: "0",
@@ -287,6 +320,7 @@ export default function Budget() {
     setEditingCategory(category);
     setUseCustomCategory(false);
     setCustomCategoryInput("");
+    setAiEstimate(null);
     form.reset({
       category: category.category as any,
       allocatedAmount: category.allocatedAmount.toString(),
@@ -294,6 +328,7 @@ export default function Budget() {
       weddingId: category.weddingId,
     });
     setDialogOpen(true);
+    fetchAIEstimate(category.category);
   };
 
   const handleSubmit = (data: BudgetFormData) => {
@@ -1007,6 +1042,60 @@ export default function Budget() {
                 />
               </div>
             </div>
+
+            {editingCategory && (
+              <div className="rounded-lg border bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-950/20 dark:to-indigo-950/20 p-4" data-testid="ai-estimate-section">
+                <div className="flex items-center gap-2 mb-3">
+                  <Sparkles className="w-4 h-4 text-purple-600" />
+                  <span className="text-sm font-semibold text-purple-900 dark:text-purple-100">AI Cost Estimate</span>
+                  <Badge variant="secondary" className="text-xs">for {wedding?.city || "your area"}</Badge>
+                </div>
+                
+                {aiEstimateLoading ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground" data-testid="ai-estimate-loading">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Calculating estimate...</span>
+                  </div>
+                ) : aiEstimate?.hasEstimate ? (
+                  <div className="space-y-2" data-testid="ai-estimate-result">
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      <div className="bg-white/50 dark:bg-black/20 rounded p-2">
+                        <p className="text-xs text-muted-foreground">Low</p>
+                        <p className="font-mono font-semibold text-sm">${aiEstimate.lowEstimate.toLocaleString()}</p>
+                      </div>
+                      <div className="bg-white/50 dark:bg-black/20 rounded p-2 ring-2 ring-purple-300 dark:ring-purple-700">
+                        <p className="text-xs text-muted-foreground">Average</p>
+                        <p className="font-mono font-bold text-sm text-purple-700 dark:text-purple-300">${aiEstimate.averageEstimate.toLocaleString()}</p>
+                      </div>
+                      <div className="bg-white/50 dark:bg-black/20 rounded p-2">
+                        <p className="text-xs text-muted-foreground">High</p>
+                        <p className="font-mono font-semibold text-sm">${aiEstimate.highEstimate.toLocaleString()}</p>
+                      </div>
+                    </div>
+                    {aiEstimate.notes && (
+                      <p className="text-xs text-muted-foreground mt-2 italic" data-testid="ai-estimate-notes">
+                        {aiEstimate.notes}
+                      </p>
+                    )}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="w-full mt-2 text-xs"
+                      onClick={() => form.setValue("allocatedAmount", aiEstimate.averageEstimate.toString())}
+                      data-testid="button-use-ai-estimate"
+                    >
+                      <Sparkles className="w-3 h-3 mr-1" />
+                      Use average estimate
+                    </Button>
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground" data-testid="ai-estimate-unavailable">
+                    AI estimate not available for this category
+                  </p>
+                )}
+              </div>
+            )}
 
             <div className="flex gap-2 justify-end pt-2">
               {editingCategory && (
