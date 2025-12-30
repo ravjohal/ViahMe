@@ -544,8 +544,8 @@ export default function Dashboard() {
               data-testid="mobile-stat-guests"
             >
               <Users className="w-4 h-4 mx-auto mb-1 text-pink-600" />
-              <p className="font-mono text-lg font-bold">{guests.length || wedding.guestCountEstimate || 0}</p>
-              <p className="text-[10px] text-muted-foreground">Guests</p>
+              <p className="font-mono text-lg font-bold">{events.reduce((sum, e) => sum + (e.guestCount || 0), 0) || wedding.guestCountEstimate || 0}</p>
+              <p className="text-[10px] text-muted-foreground">Total Attendees</p>
             </Card>
             <Card 
               className="p-2 hover-elevate cursor-pointer text-center" 
@@ -554,7 +554,7 @@ export default function Dashboard() {
             >
               <Briefcase className="w-4 h-4 mx-auto mb-1 text-blue-600" />
               <p className="font-mono text-lg font-bold">{bookings.length}</p>
-              <p className="text-[10px] text-muted-foreground">Vendors</p>
+              <p className="text-[10px] text-muted-foreground">Vendors Booked</p>
             </Card>
           </div>
         </div>
