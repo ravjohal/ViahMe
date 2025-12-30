@@ -194,6 +194,8 @@ export function VendorDirectory({
   const [priceFilter, setPriceFilter] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
   const [showCategoryGuide, setShowCategoryGuide] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const VENDORS_PER_PAGE = 12;
 
   // Calculate available cities first
   const availableCities = useMemo(() => {
@@ -240,6 +242,11 @@ export function VendorDirectory({
   useEffect(() => {
     setShowCategoryGuide(true);
   }, [categoryFilter]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, categoryFilter, priceFilter, cityFilter]);
 
   const filteredVendors = vendors.filter((vendor) => {
     // Get human-readable category label for search
@@ -288,6 +295,12 @@ export function VendorDirectory({
   }, [vendorsWithScores]);
 
   const regularVendors = sortedVendors.filter(v => !recommendedVendors.includes(v));
+
+  // Pagination logic
+  const totalPages = Math.ceil(regularVendors.length / VENDORS_PER_PAGE);
+  const startIndex = (currentPage - 1) * VENDORS_PER_PAGE;
+  const endIndex = startIndex + VENDORS_PER_PAGE;
+  const paginatedVendors = regularVendors.slice(startIndex, endIndex);
 
   return (
     <div className="space-y-6">
@@ -534,18 +547,94 @@ export function VendorDirectory({
             </Button>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {regularVendors.map((vendor) => (
-              <VendorCard
-                key={vendor.id}
-                vendor={vendor}
-                onSelect={onSelectVendor}
-                onAddToComparison={onAddToComparison}
-                isInComparison={comparisonVendors.some(v => v.id === vendor.id)}
-                isLoggedIn={isLoggedIn}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {paginatedVendors.map((vendor) => (
+                <VendorCard
+                  key={vendor.id}
+                  vendor={vendor}
+                  onSelect={onSelectVendor}
+                  onAddToComparison={onAddToComparison}
+                  isInComparison={comparisonVendors.some(v => v.id === vendor.id)}
+                  isLoggedIn={isLoggedIn}
+                />
+              ))}
+            </div>
+            
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 pt-6">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(1)}
+                  disabled={currentPage === 1}
+                  data-testid="button-page-first"
+                >
+                  First
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  data-testid="button-page-prev"
+                >
+                  Previous
+                </Button>
+                
+                <div className="flex items-center gap-1 px-2">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum: number;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={currentPage === pageNum ? "default" : "ghost"}
+                        size="sm"
+                        onClick={() => setCurrentPage(pageNum)}
+                        className="w-9"
+                        data-testid={`button-page-${pageNum}`}
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  })}
+                </div>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  data-testid="button-page-next"
+                >
+                  Next
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(totalPages)}
+                  disabled={currentPage === totalPages}
+                  data-testid="button-page-last"
+                >
+                  Last
+                </Button>
+                
+                <span className="text-sm text-muted-foreground ml-4">
+                  Showing {startIndex + 1}-{Math.min(endIndex, regularVendors.length)} of {regularVendors.length}
+                </span>
+              </div>
+            )}
+          </>
         )}
       </div>
 
