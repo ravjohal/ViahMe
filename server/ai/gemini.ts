@@ -1065,6 +1065,8 @@ export async function getBudgetCategoryEstimate(
 ): Promise<BudgetEstimateResponse> {
   const { category, city, tradition, guestCount } = request;
 
+  console.log("[Gemini Budget] Starting estimate for:", { category, city, tradition, guestCount });
+
   const prompt = `Please provide a cost estimate for the following wedding budget category:
 
 Category: ${category}
@@ -1075,6 +1077,7 @@ ${guestCount ? `Expected Guest Count: ${guestCount}` : "Guest Count: Not specifi
 Provide realistic estimates for this specific combination. Remember to return ONLY valid JSON in the specified format.`;
 
   try {
+    console.log("[Gemini Budget] Calling Gemini API...");
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       config: {
@@ -1084,11 +1087,13 @@ Provide realistic estimates for this specific combination. Remember to return ON
     });
 
     const responseText = response.text || "";
+    console.log("[Gemini Budget] Raw response:", responseText.substring(0, 500));
     
     // Try to extract JSON from the response
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0]);
+      console.log("[Gemini Budget] Parsed result:", parsed);
       return {
         lowEstimate: parsed.lowEstimate || 0,
         highEstimate: parsed.highEstimate || 0,
@@ -1098,6 +1103,7 @@ Provide realistic estimates for this specific combination. Remember to return ON
       };
     }
 
+    console.log("[Gemini Budget] No JSON found in response");
     return {
       lowEstimate: 0,
       highEstimate: 0,
@@ -1106,7 +1112,7 @@ Provide realistic estimates for this specific combination. Remember to return ON
       hasEstimate: false,
     };
   } catch (error) {
-    console.error("Error getting budget estimate:", error);
+    console.error("[Gemini Budget] Error:", error);
     return {
       lowEstimate: 0,
       highEstimate: 0,
