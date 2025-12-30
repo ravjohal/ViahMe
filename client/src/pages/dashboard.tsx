@@ -670,6 +670,7 @@ export default function Dashboard() {
                 <BudgetDashboard
                   categories={budgetCategories}
                   totalBudget={wedding.totalBudget || "0"}
+                  onNavigate={() => setLocation("/budget")}
                 />
               )}
             </div>

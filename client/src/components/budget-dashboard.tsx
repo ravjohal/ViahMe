@@ -7,6 +7,7 @@ import type { BudgetCategory } from "@shared/schema";
 interface BudgetDashboardProps {
   categories: BudgetCategory[];
   totalBudget: string;
+  onNavigate?: () => void;
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -20,7 +21,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   other: "Other Expenses",
 };
 
-export function BudgetDashboard({ categories, totalBudget }: BudgetDashboardProps) {
+export function BudgetDashboard({ categories, totalBudget, onNavigate }: BudgetDashboardProps) {
   const total = parseFloat(totalBudget || "0");
   const totalSpent = categories.reduce(
     (sum, cat) => sum + parseFloat(cat.spentAmount?.toString() || "0"),
@@ -37,7 +38,11 @@ export function BudgetDashboard({ categories, totalBudget }: BudgetDashboardProp
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-6">
+        <Card 
+          className={`p-6 ${onNavigate ? 'cursor-pointer hover-elevate' : ''}`}
+          onClick={onNavigate}
+          data-testid="card-total-budget"
+        >
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 rounded-lg bg-primary/10">
               <DollarSign className="w-5 h-5 text-primary" />
@@ -51,7 +56,11 @@ export function BudgetDashboard({ categories, totalBudget }: BudgetDashboardProp
           </div>
         </Card>
 
-        <Card className="p-6">
+        <Card 
+          className={`p-6 ${onNavigate ? 'cursor-pointer hover-elevate' : ''}`}
+          onClick={onNavigate}
+          data-testid="card-spent"
+        >
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 rounded-lg bg-chart-1/10">
               <TrendingUp className="w-5 h-5 text-chart-1" />
@@ -65,7 +74,11 @@ export function BudgetDashboard({ categories, totalBudget }: BudgetDashboardProp
           </div>
         </Card>
 
-        <Card className="p-6">
+        <Card 
+          className={`p-6 ${onNavigate ? 'cursor-pointer hover-elevate' : ''}`}
+          onClick={onNavigate}
+          data-testid="card-remaining"
+        >
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 rounded-lg bg-chart-2/10">
               <AlertCircle className="w-5 h-5 text-chart-2" />
@@ -99,7 +112,12 @@ export function BudgetDashboard({ categories, totalBudget }: BudgetDashboardProp
             const isOverBudget = spent > allocated;
 
             return (
-              <div key={category.id} className="space-y-2">
+              <button
+                key={category.id}
+                onClick={onNavigate}
+                className={`w-full text-left space-y-2 p-2 -mx-2 rounded-lg ${onNavigate ? 'cursor-pointer hover-elevate' : ''}`}
+                data-testid={`row-category-${category.category}`}
+              >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium">
@@ -124,7 +142,7 @@ export function BudgetDashboard({ categories, totalBudget }: BudgetDashboardProp
                   value={Math.min(percentage, 100)}
                   className={`h-2 ${isOverBudget ? "bg-destructive/20" : ""}`}
                 />
-              </div>
+              </button>
             );
           })}
         </div>
