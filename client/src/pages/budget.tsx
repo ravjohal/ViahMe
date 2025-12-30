@@ -281,7 +281,7 @@ export default function Budget() {
   }, [wedding?.id, wedding?.totalBudget, form]);
 
   const fetchAIEstimate = async (categoryName: string) => {
-    if (!wedding?.city || !categoryName) return;
+    if (!wedding?.location || !categoryName) return;
     
     setAiEstimateLoading(true);
     setAiEstimate(null);
@@ -289,9 +289,9 @@ export default function Budget() {
     try {
       const data = await apiRequest("POST", "/api/budget-categories/estimate", {
         category: categoryName,
-        city: wedding.city,
-        tradition: wedding.traditions?.[0] || undefined,
-        guestCount: wedding.guestCount || undefined,
+        city: wedding.location,
+        tradition: wedding.tradition || undefined,
+        guestCount: wedding.guestCountEstimate || undefined,
       });
       setAiEstimate(data as AIBudgetEstimate);
     } catch (error) {
@@ -1048,7 +1048,7 @@ export default function Budget() {
                 <div className="flex items-center gap-2 mb-3">
                   <Sparkles className="w-4 h-4 text-purple-600" />
                   <span className="text-sm font-semibold text-purple-900 dark:text-purple-100">AI Cost Estimate</span>
-                  <Badge variant="secondary" className="text-xs">for {wedding?.city || "your area"}</Badge>
+                  <Badge variant="secondary" className="text-xs">for {wedding?.location || "your area"}</Badge>
                 </div>
                 
                 {aiEstimateLoading ? (
