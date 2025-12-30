@@ -343,15 +343,15 @@ export default function Dashboard() {
   const budgetConfirmed = wedding.budgetConfirmed === true;
   const eventsConfirmed = wedding.eventsConfirmed === true;
 
-  // Step definitions with completion status
+  // Step definitions - action-focused to differentiate from nav
   const steps = [
     {
       id: "budget",
       number: 1,
-      title: "Review Your Budget",
+      title: budgetConfirmed ? "Budget Set" : "Confirm Budget",
       description: budgetConfirmed 
-        ? "Budget categories confirmed" 
-        : "We've allocated your budget across categories. Review and confirm.",
+        ? "Your budget allocation is locked in" 
+        : "Approve the auto-generated budget split",
       completed: hasBudget && hasCategories && budgetConfirmed,
       inProgress: hasBudget && hasCategories && !budgetConfirmed,
       path: "/budget",
@@ -360,10 +360,10 @@ export default function Dashboard() {
     {
       id: "events",
       number: 2,
-      title: "Review Your Events",
+      title: eventsConfirmed ? "Events Locked" : "Confirm Events",
       description: eventsConfirmed
-        ? "Event timeline confirmed"
-        : "We've created events based on your tradition. Review and confirm.",
+        ? "Your ceremony schedule is set"
+        : "Approve the auto-generated event list",
       completed: hasEvents && eventsConfirmed,
       inProgress: hasEvents && !eventsConfirmed,
       path: "/timeline",
@@ -372,8 +372,10 @@ export default function Dashboard() {
     {
       id: "vendors",
       number: 3,
-      title: "Find Vendors",
-      description: "Browse and book culturally-specialized service providers",
+      title: hasVendors ? "Vendors Booked" : "Book Vendors",
+      description: hasVendors 
+        ? `${bookings.length} vendor${bookings.length > 1 ? 's' : ''} secured`
+        : "Find culturally-specialized providers",
       completed: hasVendors,
       inProgress: false,
       path: "/vendors",
@@ -382,8 +384,10 @@ export default function Dashboard() {
     {
       id: "guests",
       number: 4,
-      title: "Invite Guests",
-      description: "Add your guest list and manage RSVPs",
+      title: hasGuests ? "Guests Added" : "Add Guests",
+      description: hasGuests 
+        ? `${guests.length} guest${guests.length > 1 ? 's' : ''} on the list`
+        : "Import or add your guest list",
       completed: hasGuests,
       inProgress: false,
       path: "/guests",
@@ -633,22 +637,63 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Timeline Preview */}
+        {/* Compact Timeline Preview */}
         {hasEvents && (
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold">Upcoming Events</h2>
               <Button variant="ghost" onClick={() => setLocation("/timeline")}>
-                View All
+                View All ({events.length})
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
             {eventsLoading ? (
-              <Card className="p-6">
-                <Skeleton className="h-32 w-full" />
+              <Card className="p-4">
+                <Skeleton className="h-20 w-full" />
               </Card>
             ) : (
-              <TimelineView events={events.slice(0, 3)} onEditEvent={setSelectedEvent} />
+              <Card className="divide-y" data-testid="compact-timeline">
+                {events.slice(0, 5).map((event) => (
+                  <button
+                    key={event.id}
+                    onClick={() => setSelectedEvent(event)}
+                    className="w-full flex items-center gap-3 p-3 hover-elevate text-left transition-all"
+                    data-testid={`compact-event-${event.id}`}
+                  >
+                    <div className="w-12 text-center flex-shrink-0">
+                      {event.date ? (
+                        <>
+                          <p className="text-xs text-muted-foreground uppercase">
+                            {new Date(event.date).toLocaleDateString('en-US', { month: 'short' })}
+                          </p>
+                          <p className="text-lg font-bold">
+                            {new Date(event.date).getDate()}
+                          </p>
+                        </>
+                      ) : (
+                        <Calendar className="w-5 h-5 mx-auto text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{event.name}</p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        {event.time && <span>{event.time}</span>}
+                        {event.location && (
+                          <>
+                            {event.time && <span>·</span>}
+                            <span className="truncate">{event.location}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    {event.guestCount && (
+                      <Badge variant="secondary" className="flex-shrink-0">
+                        {event.guestCount}
+                      </Badge>
+                    )}
+                  </button>
+                ))}
+              </Card>
             )}
           </div>
         )}
