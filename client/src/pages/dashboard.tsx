@@ -596,8 +596,14 @@ export default function Dashboard() {
         <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-6 lg:items-start">
           {/* Main Column - Tabbed Content */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="mb-4">
-              <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
+            <TabsList className="mb-6 h-auto p-1 bg-muted/50 rounded-lg">
+              <TabsTrigger 
+                value="overview" 
+                data-testid="tab-overview"
+                className="px-6 py-3 text-base font-semibold data-[state=active]:bg-background data-[state=active]:shadow-sm"
+              >
+                Overview
+              </TabsTrigger>
               {!budgetConfirmed ? (
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -606,9 +612,9 @@ export default function Dashboard() {
                         value="costs" 
                         data-testid="tab-costs" 
                         disabled
-                        className="opacity-50 cursor-not-allowed"
+                        className="px-6 py-3 text-base font-semibold opacity-50 cursor-not-allowed"
                       >
-                        <Lock className="w-3 h-3 mr-1" />
+                        <Lock className="w-4 h-4 mr-2" />
                         Financial Strategy
                       </TabsTrigger>
                     </span>
@@ -618,7 +624,11 @@ export default function Dashboard() {
                   </TooltipContent>
                 </Tooltip>
               ) : (
-                <TabsTrigger value="costs" data-testid="tab-costs">
+                <TabsTrigger 
+                  value="costs" 
+                  data-testid="tab-costs"
+                  className="px-6 py-3 text-base font-semibold data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                >
                   Financial Strategy
                 </TabsTrigger>
               )}
