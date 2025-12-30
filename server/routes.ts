@@ -1430,6 +1430,66 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
     }
   });
 
+  // POST: Submit a vendor profile (couple-submitted)
+  app.post("/api/vendors/submit", await requireAuth(storage, false), async (req: AuthRequest, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      if (req.user.role !== "couple") {
+        return res.status(403).json({ error: "Only couples can submit vendor profiles" });
+      }
+      
+      const { 
+        name, 
+        categories, 
+        city, 
+        location, 
+        priceRange, 
+        culturalSpecialties, 
+        description, 
+        email, 
+        phone, 
+        website, 
+        instagram 
+      } = req.body;
+      
+      // Validate required fields
+      if (!name || !categories?.length || !city || !location || !priceRange) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+      
+      // Create vendor with couple-submitted metadata
+      const vendorData = {
+        name,
+        categories,
+        city,
+        location,
+        priceRange,
+        culturalSpecialties: culturalSpecialties || [],
+        description: description || null,
+        email: email || null,
+        phone: phone || null,
+        website: website || null,
+        instagram: instagram || null,
+        // Couple-submitted vendors need approval
+        approvalStatus: "pending" as const,
+        isPublished: false,
+        claimed: false, // Unclaimed - vendor can claim later
+        source: "couple_submitted" as const,
+        createdByUserId: req.user.id,
+        createdByUserType: "couple" as const,
+      };
+      
+      const vendor = await storage.createVendor(vendorData);
+      res.json({ message: "Vendor submitted for review", vendor });
+    } catch (error) {
+      console.error("Error submitting vendor:", error);
+      res.status(500).json({ error: "Failed to submit vendor" });
+    }
+  });
+
   app.patch("/api/vendors/:id", async (req, res) => {
     try {
       // For PATCH updates, allow more flexible validation since seeded vendors may have
