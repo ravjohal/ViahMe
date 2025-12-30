@@ -435,6 +435,8 @@ export const budgetCategories = pgTable("budget_categories", {
   allocatedAmount: decimal("allocated_amount", { precision: 10, scale: 2 }).notNull(),
   spentAmount: decimal("spent_amount", { precision: 10, scale: 2 }).default('0'),
   percentage: integer("percentage"),
+  aiEstimate: jsonb("ai_estimate"),
+  lastEstimatedAt: timestamp("last_estimated_at"),
 });
 
 export const insertBudgetCategorySchema = createInsertSchema(budgetCategories).omit({
@@ -442,6 +444,14 @@ export const insertBudgetCategorySchema = createInsertSchema(budgetCategories).o
 }).extend({
   allocatedAmount: z.string(),
   spentAmount: z.string().optional(),
+  aiEstimate: z.object({
+    lowEstimate: z.number(),
+    highEstimate: z.number(),
+    averageEstimate: z.number(),
+    notes: z.string(),
+    hasEstimate: z.boolean(),
+  }).optional().nullable(),
+  lastEstimatedAt: z.date().optional().nullable(),
 });
 
 export type InsertBudgetCategory = z.infer<typeof insertBudgetCategorySchema>;
