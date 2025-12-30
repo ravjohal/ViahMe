@@ -11,7 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, DollarSign, Users, Briefcase, FileText, Camera, CheckCircle2, ArrowRight, Sparkles, UserPlus, Heart, Clock, Bot, CheckSquare, Globe, Package, Music, Image, MessageSquare, Radio, ShoppingBag, TrendingUp } from "lucide-react";
+import { Calendar, DollarSign, Users, Briefcase, FileText, Camera, CheckCircle2, ArrowRight, Sparkles, UserPlus, Heart, Clock, Bot, CheckSquare, Globe, Package, Music, Image, MessageSquare, Radio, ShoppingBag, TrendingUp, Lock } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CEREMONY_COST_BREAKDOWNS, CEREMONY_CATALOG, calculateCeremonyTotalRange } from "@shared/ceremonies";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -597,15 +598,30 @@ export default function Dashboard() {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="mb-4">
               <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
-              <TabsTrigger 
-                value="costs" 
-                data-testid="tab-costs" 
-                disabled={!budgetConfirmed}
-                className={!budgetConfirmed ? "opacity-50 cursor-not-allowed" : ""}
-              >
-                Financial Strategy
-                {!budgetConfirmed && <span className="ml-1 text-[10px] text-muted-foreground">(Step 1)</span>}
-              </TabsTrigger>
+              {!budgetConfirmed ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span>
+                      <TabsTrigger 
+                        value="costs" 
+                        data-testid="tab-costs" 
+                        disabled
+                        className="opacity-50 cursor-not-allowed"
+                      >
+                        <Lock className="w-3 h-3 mr-1" />
+                        Financial Strategy
+                      </TabsTrigger>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Unlock this after confirming your budget</p>
+                  </TooltipContent>
+                </Tooltip>
+              ) : (
+                <TabsTrigger value="costs" data-testid="tab-costs">
+                  Financial Strategy
+                </TabsTrigger>
+              )}
             </TabsList>
 
             {/* Overview Tab - Quick Actions & Links */}
