@@ -658,6 +658,7 @@ export interface IStorage {
   // Wedding Collaborators
   getWeddingCollaborator(id: string): Promise<WeddingCollaborator | undefined>;
   getWeddingCollaboratorByEmail(weddingId: string, email: string): Promise<WeddingCollaborator | undefined>;
+  isWeddingCollaborator(weddingId: string, email: string): Promise<boolean>;
   getWeddingCollaboratorByToken(token: string): Promise<WeddingCollaborator | undefined>;
   getWeddingCollaboratorsByWedding(weddingId: string): Promise<WeddingCollaborator[]>;
   getWeddingCollaboratorWithDetails(id: string): Promise<CollaboratorWithDetails | undefined>;
@@ -3510,6 +3511,10 @@ export class MemStorage implements IStorage {
   }
   async getWeddingCollaboratorByEmail(weddingId: string, email: string): Promise<WeddingCollaborator | undefined> {
     return undefined;
+  }
+  async isWeddingCollaborator(weddingId: string, email: string): Promise<boolean> {
+    const collaborator = await this.getWeddingCollaboratorByEmail(weddingId, email);
+    return !!collaborator && collaborator.status === 'active';
   }
   async getWeddingCollaboratorByToken(token: string): Promise<WeddingCollaborator | undefined> {
     return undefined;
@@ -7059,6 +7064,11 @@ export class DBStorage implements IStorage {
       ))
       .limit(1);
     return result[0];
+  }
+
+  async isWeddingCollaborator(weddingId: string, email: string): Promise<boolean> {
+    const collaborator = await this.getWeddingCollaboratorByEmail(weddingId, email);
+    return !!collaborator && collaborator.status === 'active';
   }
 
   async getWeddingCollaboratorByToken(token: string): Promise<WeddingCollaborator | undefined> {
