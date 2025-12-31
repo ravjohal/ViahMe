@@ -21,7 +21,7 @@ export default function Vendors() {
   const [, setLocation] = useLocation();
   const searchString = useSearch();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
   const [comparisonVendors, setComparisonVendors] = useState<Vendor[]>([]);
   const [showComparison, setShowComparison] = useState(false);
@@ -243,7 +243,7 @@ export default function Vendors() {
     setShowComparison(false);
   };
 
-  if (vendorsLoading) {
+  if (vendorsLoading || authLoading) {
     return (
       <div className="min-h-screen bg-background">
         {!user && (
