@@ -1,0 +1,86 @@
+1. The "Household-First" Architecture
+Most apps treat every guest as a row. In South Asian weddings, we think in "Families."
+
+The UX Change: Instead of "Add Guest," the primary button is "Add Household."
+
+How it works: You enter "The Sharma Family." Inside that unit, you add "Sunil (Adult), Neeta (Adult), Rohan (12), Maya (5)."
+
+Why it helps: This solves the invitation count immediately. The couple knows they have 400 guests but only need 120 physical invitation cards.
+
+2. The "Address Chase" (Magic Links for Parents)
+Parents usually contribute 60% of the guest list, but they often struggle with spreadsheets.
+
+The "Collector Link": A couple generates a unique "Family Contribution Link" (e.g., viah.me/share/rav-wedding-parents).
+
+The Parent Experience: When they click the link, they see a dead-simple form: "Who are you adding? Names? Phone/WhatsApp? Address?" No login required.
+
+WhatsApp Integration: Include a "Send via WhatsApp" button next to the link. Since 99% of South Asian guest coordination happens on WhatsApp, this meets the users where they are.
+
+3. The "Review Room" (The Staging Area)
+The biggest fear for a bride/groom is their parents adding 100 random people or creating duplicates.
+
+The UI: A "Pending Approval" tab.
+
+The Workflow: * Guests added by magic links don't go to the main list immediately.
+
+They appear in a card-based "Staging Area."
+
+The couple can: Approve, Edit, Reject, or Merge with Existing.
+
+Consultant Tip: Add a "Relationship Tag" (e.g., "Dad's College Friend," "Mom's Side") automatically based on whose link was used.
+
+4. Multi-Event "Logic Checkboxes"
+South Asian weddings are rarely "one size fits all." Some guests are only invited to the Sangeet; others only to the Reception.
+
+The Simplicity: On the household or guest card, have a simple checklist of your events:
+
+[x] Mehndi [x] Sangeet [ ] Haldi [x] Wedding [x] Reception
+
+Smart RSVPs: When the guest logs in to RSVP, the system only shows them the events they are checked for. This prevents the "awkward uncle" from showing up to an intimate Haldi ceremony.
+
+5. "WhatsApp-Friendly" Status Tracking
+Non-tech users don't want to check a dashboard. They want to know "Who hasn't replied?"
+
+The Feature: A "Nudge" button.
+
+The Action: Clicking "Nudge" generates a pre-filled WhatsApp message: "Hi [Name], we’re so excited for the wedding! We haven't seen your RSVP for the Sangeet yet. Could you let us know here? [Link]"
+
+Why it works: It empowers the non-tech-savvy parent to do the follow-up without the couple having to do it all.
+
+6. Technical Implementation Roadmap for ViahMe
+Based on your current codebase, here is how we would modify the schema and components:
+
+A. Schema Update (shared/schema.ts)
+We need to introduce a households table and link guests to it.
+
+TypeScript
+
+// Proposed addition to schema.ts
+export const households = pgTable("households", {
+  id: serial("id").primaryKey(),
+  coupleId: integer("couple_id").notNull(),
+  name: text("name").notNull(), // e.g., "The Johal Family"
+  address: text("address"),
+  city: text("city"),
+  postalCode: text("postal_code"),
+  isDraft: boolean("is_draft").default(true), // For the Staging Area
+  addedBy: text("added_by"), // 'couple' or 'parent_link'
+});
+
+export const guests = pgTable("guests", {
+  // ... existing fields
+  householdId: integer("household_id"),
+  dietaryNotes: text("dietary_notes"),
+  ageCategory: text("age_category"), // Adult, Child, Toddler (Crucial for catering costs)
+});
+B. Component Overhaul
+GuestListManager: Change the view from a flat table to a "Grouped by Household" view.
+
+StagingAreaComponent: A new view in guest-management.tsx that filters for households where isDraft: true.
+
+MagicLinkGenerator: A simple utility in collector-links-manager.tsx that creates a tokenized URL for external data entry.
+
+The Consultant's "Final Touch"
+To make it truly DIY-friendly, include a "ViahMe Guest Assistant" (AI-powered chat) specifically for parents on the contribution page. If they are confused, they can type: "I want to add my sister's kids but I don't know their address," and the AI can reply: "No problem! Just add their names for now and we'll highlight the missing address for the couple to find later."
+
+This approach moves the platform from a "Database Tool" to a "Family Collaboration Hub," which is the heartbeat of every South Asian wedding.
