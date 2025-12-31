@@ -36,6 +36,7 @@ Key architectural decisions and features include:
   - **Quick Prompts**: Suggested topics for common planning questions (timeline, guests, budget)
   - **Markdown Responses**: Rich formatting for AI responses with proper styling
   - **Non-Conflicting**: Positioned above mobile bottom navigation, hidden on guest-facing and auth pages
+  - **Progressive Summarization**: When chat history exceeds 15 messages, older messages are summarized by Gemini to save tokens. Only the summary + last 5 messages are sent to the API, improving response time for long conversations. Implementation in `server/ai/gemini.ts`.
 - **AI-Powered Message Suggestions**: Gemini LLM integration for intelligent message drafting:
   - **Vendor Reply Suggestions**: AI generates 3 culturally-aware response options for vendors replying to couple inquiries
   - **Couple Booking Suggestions**: AI helps couples craft effective vendor booking request messages

@@ -201,7 +201,50 @@ Please provide:
   }
 }
 
-// Wedding planning chat
+// Summarization thresholds for context management
+const HISTORY_THRESHOLD = 15; // Trigger summarization when history exceeds this
+const RECENT_MESSAGES_TO_KEEP = 5; // Keep this many recent messages verbatim
+
+// Summarize older conversation history to save tokens
+async function summarizeConversationHistory(
+  messages: ChatMessage[],
+  weddingContext?: WeddingContext,
+): Promise<string> {
+  const conversationText = messages
+    .map((msg) => `${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}`)
+    .join("\n\n");
+
+  const contextHint = weddingContext
+    ? `This conversation is about planning a ${weddingContext.tradition || ""} wedding${weddingContext.city ? ` in ${weddingContext.city}` : ""}.`
+    : "";
+
+  const prompt = `${contextHint}
+
+Please summarize the following wedding planning conversation history concisely. Capture:
+1. Key decisions made (venues, vendors, dates, budget items)
+2. Important preferences expressed by the couple
+3. Outstanding questions or concerns
+4. Any action items discussed
+
+Conversation:
+${conversationText}
+
+Provide a clear, organized summary that preserves critical context for continuing the conversation.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+    });
+
+    return response.text || "Previous conversation summary unavailable.";
+  } catch (error) {
+    console.error("Error summarizing conversation:", error);
+    return "Previous conversation context available but could not be summarized.";
+  }
+}
+
+// Wedding planning chat with progressive summarization
 export async function chatWithPlanner(
   message: string,
   conversationHistory: ChatMessage[],
@@ -234,12 +277,43 @@ export async function chatWithPlanner(
   // Build conversation for the model
   const contents: Array<{ role: string; parts: Array<{ text: string }> }> = [];
 
-  // Add conversation history
-  for (const msg of conversationHistory) {
+  // Apply summarization strategy if history exceeds threshold
+  if (conversationHistory.length > HISTORY_THRESHOLD) {
+    const olderMessages = conversationHistory.slice(0, -RECENT_MESSAGES_TO_KEEP);
+    const recentMessages = conversationHistory.slice(-RECENT_MESSAGES_TO_KEEP);
+
+    // Summarize older messages
+    const summary = await summarizeConversationHistory(olderMessages, weddingContext);
+
+    // Add summary as context (from user perspective to maintain conversation flow)
     contents.push({
-      role: msg.role === "user" ? "user" : "model",
-      parts: [{ text: msg.content }],
+      role: "user",
+      parts: [{ text: `[Previous conversation summary: ${summary}]` }],
     });
+
+    // Add model acknowledgment to maintain proper turn order
+    contents.push({
+      role: "model",
+      parts: [{ text: "I understand the context from our previous discussion. Let me continue helping you with your wedding planning." }],
+    });
+
+    // Add recent messages verbatim
+    for (const msg of recentMessages) {
+      contents.push({
+        role: msg.role === "user" ? "user" : "model",
+        parts: [{ text: msg.content }],
+      });
+    }
+
+    console.log(`[AI Chat] Summarized ${olderMessages.length} older messages, kept ${recentMessages.length} recent messages`);
+  } else {
+    // Add full conversation history
+    for (const msg of conversationHistory) {
+      contents.push({
+        role: msg.role === "user" ? "user" : "model",
+        parts: [{ text: msg.content }],
+      });
+    }
   }
 
   // Add current message with context
