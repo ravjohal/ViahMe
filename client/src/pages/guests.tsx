@@ -1742,7 +1742,7 @@ export default function Guests() {
                       </div>
                       <div>
                         <p className="font-medium">Excel or CSV works great</p>
-                        <p className="text-muted-foreground">Just include Name, Email, Phone columns</p>
+                        <p className="text-muted-foreground">Include Household Name, Name, Email, Phone columns</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">

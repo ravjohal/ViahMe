@@ -275,27 +275,70 @@ export async function registerGuestRoutes(router: Router, storage: IStorage) {
         return res.status(400).json({ error: "Request body must contain a 'guests' array" });
       }
 
-      if (guestsArray.length > 0) {
-        const weddingId = guestsArray[0].weddingId;
-        const wedding = await storage.getWedding(weddingId);
-        if (!wedding) {
-          return res.status(404).json({ error: "Wedding not found" });
-        }
-        if (wedding.coupleId !== authReq.session.userId) {
-          const roles = await storage.getWeddingRoles(weddingId);
-          const hasAccess = roles.some(role => role.userId === authReq.session.userId);
-          if (!hasAccess) {
-            return res.status(403).json({ error: "Access denied" });
-          }
+      if (guestsArray.length === 0) {
+        return res.json({ success: 0, failed: 0, guests: [], errors: undefined });
+      }
+
+      const weddingId = guestsArray[0].weddingId;
+      const wedding = await storage.getWedding(weddingId);
+      if (!wedding) {
+        return res.status(404).json({ error: "Wedding not found" });
+      }
+      if (wedding.coupleId !== authReq.session.userId) {
+        const roles = await storage.getWeddingRoles(weddingId);
+        const hasAccess = roles.some(role => role.userId === authReq.session.userId);
+        if (!hasAccess) {
+          return res.status(403).json({ error: "Access denied" });
         }
       }
 
       const createdGuests = [];
       const errors = [];
+      const householdMap = new Map<string, string>();
+
+      const existingHouseholds = await storage.getHouseholdsByWedding(weddingId);
+      for (const household of existingHouseholds) {
+        householdMap.set(household.name.toLowerCase(), household.id);
+      }
+
+      const guestCountByHousehold = new Map<string, number>();
+      for (const guest of guestsArray) {
+        const name = guest.householdName?.trim()?.toLowerCase();
+        if (name) {
+          guestCountByHousehold.set(name, (guestCountByHousehold.get(name) || 0) + 1);
+        }
+      }
 
       for (let i = 0; i < guestsArray.length; i++) {
         try {
-          const validatedData = insertGuestSchema.parse(guestsArray[i]);
+          const guestData = guestsArray[i];
+          const householdName = guestData.householdName?.trim();
+          let householdId: string | undefined;
+
+          if (householdName) {
+            const normalizedName = householdName.toLowerCase();
+            if (householdMap.has(normalizedName)) {
+              householdId = householdMap.get(normalizedName);
+            } else {
+              const guestCount = guestCountByHousehold.get(normalizedName) || 1;
+              const household = await storage.createHousehold({
+                weddingId: guestData.weddingId,
+                name: householdName,
+                affiliation: guestData.side || 'mutual',
+                relationshipTier: 'friend',
+                priorityTier: 'nice_to_have',
+                maxCount: guestCount,
+              });
+              householdId = household.id;
+              householdMap.set(normalizedName, household.id);
+            }
+          }
+
+          const { householdName: _, ...guestWithoutHouseholdName } = guestData;
+          const validatedData = insertGuestSchema.parse({
+            ...guestWithoutHouseholdName,
+            householdId,
+          });
           const guest = await storage.createGuest(validatedData);
           createdGuests.push(guest);
         } catch (error) {
