@@ -753,6 +753,84 @@ export type InsertInvitation = z.infer<typeof insertInvitationSchema>;
 export type Invitation = typeof invitations.$inferSelect;
 
 // ============================================================================
+// GUEST COMMUNICATIONS - Tracking all messages sent to guests
+// ============================================================================
+
+export const guestCommunications = pgTable("guest_communications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull().references(() => weddings.id, { onDelete: 'cascade' }),
+  type: text("type").notNull(), // 'invitation' | 'rsvp_reminder' | 'update' | 'thank_you'
+  subject: text("subject").notNull(),
+  message: text("message").notNull(),
+  channel: text("channel").notNull().default('email'), // 'email' | 'sms' | 'both'
+  recipientCount: integer("recipient_count").notNull().default(0),
+  deliveredCount: integer("delivered_count").notNull().default(0),
+  failedCount: integer("failed_count").notNull().default(0),
+  status: text("status").notNull().default('pending'), // 'pending' | 'sending' | 'completed' | 'failed'
+  scheduledAt: timestamp("scheduled_at"), // For scheduled sends
+  sentAt: timestamp("sent_at"), // When actually sent
+  sentById: varchar("sent_by_id").notNull(), // User who sent
+  eventIds: text("event_ids").array(), // Which events this relates to
+  householdIds: text("household_ids").array(), // Which households received this
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => ({
+  weddingIdIdx: index("guest_communications_wedding_id_idx").on(table.weddingId),
+  typeIdx: index("guest_communications_type_idx").on(table.type),
+  statusIdx: index("guest_communications_status_idx").on(table.status),
+}));
+
+export const insertGuestCommunicationSchema = createInsertSchema(guestCommunications).omit({
+  id: true,
+  deliveredCount: true,
+  failedCount: true,
+  status: true,
+  sentAt: true,
+  createdAt: true,
+}).extend({
+  type: z.enum(['invitation', 'rsvp_reminder', 'update', 'thank_you']),
+  channel: z.enum(['email', 'sms', 'both']).optional(),
+  scheduledAt: z.string().optional().transform(val => val ? new Date(val) : undefined),
+  eventIds: z.array(z.string()).optional(),
+  householdIds: z.array(z.string()).optional(),
+});
+
+export type InsertGuestCommunication = z.infer<typeof insertGuestCommunicationSchema>;
+export type GuestCommunication = typeof guestCommunications.$inferSelect;
+
+// Communication Recipients - Individual delivery tracking
+export const communicationRecipients = pgTable("communication_recipients", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  communicationId: varchar("communication_id").notNull().references(() => guestCommunications.id, { onDelete: 'cascade' }),
+  householdId: varchar("household_id").notNull().references(() => households.id, { onDelete: 'cascade' }),
+  email: text("email"),
+  phone: text("phone"),
+  channel: text("channel").notNull(), // 'email' | 'sms'
+  status: text("status").notNull().default('pending'), // 'pending' | 'sent' | 'delivered' | 'failed' | 'opened'
+  errorMessage: text("error_message"),
+  sentAt: timestamp("sent_at"),
+  deliveredAt: timestamp("delivered_at"),
+  openedAt: timestamp("opened_at"),
+}, (table) => ({
+  communicationIdIdx: index("communication_recipients_communication_id_idx").on(table.communicationId),
+  householdIdIdx: index("communication_recipients_household_id_idx").on(table.householdId),
+  statusIdx: index("communication_recipients_status_idx").on(table.status),
+}));
+
+export const insertCommunicationRecipientSchema = createInsertSchema(communicationRecipients).omit({
+  id: true,
+  status: true,
+  errorMessage: true,
+  sentAt: true,
+  deliveredAt: true,
+  openedAt: true,
+}).extend({
+  channel: z.enum(['email', 'sms']),
+});
+
+export type InsertCommunicationRecipient = z.infer<typeof insertCommunicationRecipientSchema>;
+export type CommunicationRecipient = typeof communicationRecipients.$inferSelect;
+
+// ============================================================================
 // TASKS - Checklist management
 // ============================================================================
 
