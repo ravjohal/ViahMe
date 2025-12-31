@@ -48,17 +48,18 @@ function getBudgetTier(totalBudget: string | null | undefined): string[] {
   return ['$$$$'];
 }
 
-// Map wedding location to vendor city format
+// Map wedding location to vendor city format (normalizes variations)
 function normalizeCity(location: string | undefined): string {
   if (!location) return '';
   const loc = location.toLowerCase();
-  if (loc.includes('bay area') || loc.includes('san francisco') || loc.includes('san jose') || loc.includes('oakland')) {
+  // Merge all Bay Area variations: "Bay Area", "SF Bay Area", "San Francisco Bay Area"
+  if (loc.includes('bay area') || loc.includes('san francisco') || loc.includes('san jose') || loc.includes('oakland') || loc === 'sf bay area') {
     return 'San Francisco Bay Area';
   }
   if (loc.includes('new york') || loc.includes('nyc') || loc.includes('manhattan')) {
     return 'New York City';
   }
-  if (loc.includes('los angeles') || loc.includes('la') || loc.includes('socal')) {
+  if (loc.includes('los angeles') || loc === 'la' || loc.includes('socal')) {
     return 'Los Angeles';
   }
   if (loc.includes('chicago')) return 'Chicago';
@@ -223,12 +224,14 @@ export function VendorDirectory({
   const [currentPage, setCurrentPage] = useState(1);
   const VENDORS_PER_PAGE = 12;
 
-  // Calculate available cities first
+  // Calculate available cities first (with normalization to merge duplicates)
   const availableCities = useMemo(() => {
     const citySet = new Set<string>();
     vendors.forEach(vendor => {
       if (vendor.city) {
-        citySet.add(vendor.city);
+        // Normalize city names to merge duplicates like "Bay Area", "SF Bay Area" -> "San Francisco Bay Area"
+        const normalized = normalizeCity(vendor.city);
+        citySet.add(normalized);
       }
     });
     const cities = Array.from(citySet).sort();
@@ -292,7 +295,8 @@ export function VendorDirectory({
 
     const matchesCat = matchesCategory(vendor, categoryFilter);
     const matchesPrice = priceFilter === "all" || vendor.priceRange === priceFilter;
-    const matchesCity = cityFilter === "all" || vendor.city === cityFilter;
+    // Compare normalized city names to handle variations like "Bay Area" vs "San Francisco Bay Area"
+    const matchesCity = cityFilter === "all" || normalizeCity(vendor.city || '') === cityFilter;
     
     // Contact/availability filters
     const hasAnyContact = !!(vendor.phone || vendor.email || vendor.website || vendor.instagram || vendor.facebook || vendor.twitter);
