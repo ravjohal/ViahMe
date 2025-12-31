@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertGuestSchema, insertHouseholdSchema, type Wedding, type Guest, type Event, type Household, type GuestSuggestion, type CutListItem, type EventCostItem } from "@shared/schema";
@@ -1157,6 +1157,14 @@ export default function Guests() {
                 <span className="sm:hidden">List</span>
               </TabsTrigger>
             </TabsList>
+            
+            <Link href="/communication-hub">
+              <Button className="min-h-[48px] gap-2" data-testid="button-send-invites">
+                <Send className="h-5 w-5" />
+                <span className="hidden sm:inline">Send Invites & Track RSVPs</span>
+                <span className="sm:hidden">Send Invites</span>
+              </Button>
+            </Link>
           </div>
 
           {/* Guest List Tab - Current functionality */}
