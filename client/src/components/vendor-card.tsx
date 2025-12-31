@@ -10,7 +10,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Star, MapPin, DollarSign, GitCompare, Check, UserPlus, Briefcase, Mail, Phone, Globe, Instagram, Heart, Calendar, Send, CheckCircle } from "lucide-react";
+import { Star, MapPin, DollarSign, GitCompare, Check, UserPlus, Briefcase, Mail, Phone, Globe, Instagram, Heart, Send, CheckCircle } from "lucide-react";
 import { Link } from "wouter";
 import type { Vendor, Event } from "@shared/schema";
 
@@ -117,194 +117,103 @@ export function VendorCard({
 
   return (
     <Card
-      className="overflow-hidden hover-elevate transition-all group rounded-xl"
+      className="overflow-hidden hover-elevate transition-all group rounded-xl flex flex-col h-full"
       data-testid={`card-vendor-${vendor.id}`}
     >
-      {/* Cover image with gradient overlay */}
-      {vendor.coverImageUrl ? (
-        <div className="relative h-36 overflow-hidden">
-          <img 
-            src={vendor.coverImageUrl} 
-            alt={`${vendor.name} cover`}
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-          {featured && (
-            <div className="absolute top-3 left-3 bg-primary px-3 py-1 rounded-full shadow-md">
-              <span className="text-xs font-semibold text-primary-foreground">RECOMMENDED</span>
-            </div>
-          )}
-          {/* Favorite button */}
-          {isLoggedIn && onToggleFavorite && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-3 right-3 z-10 bg-white/90 hover:bg-white shadow-sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleFavorite(vendor.id);
-              }}
-              data-testid={`button-favorite-${vendor.id}`}
-            >
-              <Heart className={`w-4 h-4 ${isFavorited ? 'fill-red-500 text-red-500' : 'text-muted-foreground'}`} />
-            </Button>
-          )}
-          {/* Rating badge on image */}
-          {reviewCount > 0 && (
-            <div className="absolute bottom-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/95 shadow-sm">
-              <Star className="w-3.5 h-3.5 fill-primary text-primary" />
-              <span className="font-mono font-semibold text-sm text-foreground" data-testid={`text-rating-${vendor.id}`}>
-                {rating.toFixed(1)}
-              </span>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="relative h-24 bg-gradient-to-br from-primary/10 to-primary/5">
-          {featured && (
-            <div className="absolute top-3 left-3 bg-primary px-3 py-1 rounded-full shadow-md">
-              <span className="text-xs font-semibold text-primary-foreground">RECOMMENDED</span>
-            </div>
-          )}
-          {/* Favorite button for no-cover cards */}
-          {isLoggedIn && onToggleFavorite && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-3 right-3 z-10 bg-white/90 hover:bg-white shadow-sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleFavorite(vendor.id);
-              }}
-              data-testid={`button-favorite-${vendor.id}`}
-            >
-              <Heart className={`w-4 h-4 ${isFavorited ? 'fill-red-500 text-red-500' : 'text-muted-foreground'}`} />
-            </Button>
-          )}
-        </div>
-      )}
+      {/* Cover image - fixed height for all cards */}
+      <div className="relative h-32 overflow-hidden flex-shrink-0">
+        {vendor.coverImageUrl ? (
+          <>
+            <img 
+              src={vendor.coverImageUrl} 
+              alt={`${vendor.name} cover`}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+          </>
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-primary/10 to-primary/5" />
+        )}
+        {featured && (
+          <div className="absolute top-2 left-2 bg-primary px-2 py-0.5 rounded-full shadow-md">
+            <span className="text-xs font-semibold text-primary-foreground">RECOMMENDED</span>
+          </div>
+        )}
+        {/* Rating badge on image */}
+        {reviewCount > 0 && (
+          <div className="absolute bottom-2 right-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/95 shadow-sm">
+            <Star className="w-3 h-3 fill-primary text-primary" />
+            <span className="font-mono font-semibold text-xs text-foreground" data-testid={`text-rating-${vendor.id}`}>
+              {rating.toFixed(1)}
+            </span>
+          </div>
+        )}
+      </div>
 
-      <div className="p-5">
+      {/* Content area - flex-grow to fill remaining space */}
+      <div className="p-4 flex flex-col flex-grow">
         {/* Header with logo and name */}
-        <div className="flex items-start gap-3 mb-4">
+        <div className="flex items-start gap-3 mb-3">
           {vendor.logoUrl && (
             <img 
               src={vendor.logoUrl} 
               alt={`${vendor.name} logo`}
-              className="w-14 h-14 object-cover rounded-lg border-2 border-background shadow-sm flex-shrink-0 -mt-8 bg-background"
+              className="w-12 h-12 object-cover rounded-lg border-2 border-background shadow-sm flex-shrink-0 -mt-8 bg-background"
             />
           )}
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-lg text-foreground mb-1 truncate group-hover:text-primary transition-colors">
+            <h3 className="font-semibold text-base text-foreground mb-0.5 truncate group-hover:text-primary transition-colors">
               {vendor.name}
             </h3>
             <div className="flex flex-wrap gap-1">
               {(vendor.categories || []).slice(0, 2).map((cat, idx) => (
-                <span key={idx} className="text-sm text-muted-foreground">
+                <span key={idx} className="text-xs text-muted-foreground">
                   {CATEGORY_LABELS[cat] || cat.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                   {idx < Math.min((vendor.categories?.length || 1), 2) - 1 && <span className="mx-1">·</span>}
                 </span>
               ))}
-              {(vendor.categories?.length || 0) > 2 && (
-                <span className="text-sm text-muted-foreground">+{(vendor.categories?.length || 0) - 2}</span>
-              )}
             </div>
           </div>
-          
-          {/* Rating for cards without cover image */}
-          {!vendor.coverImageUrl && reviewCount > 0 && (
-            <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted">
-              <Star className="w-3.5 h-3.5 fill-primary text-primary" />
-              <span className="font-mono font-semibold text-sm" data-testid={`text-rating-${vendor.id}`}>
-                {rating.toFixed(1)}
-              </span>
-            </div>
-          )}
         </div>
 
-        {/* Description */}
-        {vendor.description && (
-          <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-            {vendor.description}
-          </p>
-        )}
-
-        {/* Location and Price */}
-        <div className="flex items-center gap-4 mb-4 text-sm">
-          <div className="flex items-center gap-1.5 text-muted-foreground">
-            <MapPin className="w-4 h-4" />
-            <span>{vendor.location}</span>
+        {/* Location and Price - always visible */}
+        <div className="flex items-center gap-3 mb-3 text-xs">
+          <div className="flex items-center gap-1 text-muted-foreground">
+            <MapPin className="w-3 h-3" />
+            <span className="truncate">{vendor.location}</span>
           </div>
-          <div className="flex items-center gap-1.5 text-muted-foreground">
-            <DollarSign className="w-4 h-4" />
+          <div className="flex items-center gap-1 text-muted-foreground">
+            <DollarSign className="w-3 h-3" />
             <span className="font-mono font-medium">{vendor.priceRange}</span>
           </div>
         </div>
 
-        {/* Contact Details - only for logged-in users viewing unclaimed vendors */}
-        {isLoggedIn && !vendor.claimed && hasContactDetails && (
-          <div className="mb-4 p-3 bg-muted/50 rounded-lg space-y-2">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Contact Info</p>
-            <div className="grid grid-cols-1 gap-2 text-sm">
-              {vendor.email && (
-                <div className="flex items-center gap-2 text-foreground">
-                  <Mail className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="truncate">{vendor.email}</span>
-                </div>
-              )}
-              {vendor.phone && (
-                <div className="flex items-center gap-2 text-foreground">
-                  <Phone className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span>{vendor.phone}</span>
-                </div>
-              )}
-              {vendor.website && (
-                <div className="flex items-center gap-2 text-foreground">
-                  <Globe className="w-3.5 h-3.5 text-muted-foreground" />
-                  <a href={vendor.website} target="_blank" rel="noopener noreferrer" className="truncate text-primary hover:underline" onClick={(e) => e.stopPropagation()}>
-                    {vendor.website.replace(/^https?:\/\//, '')}
-                  </a>
-                </div>
-              )}
-              {vendor.instagram && (
-                <div className="flex items-center gap-2 text-foreground">
-                  <Instagram className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="truncate">@{vendor.instagram.replace('@', '')}</span>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Cultural Specialties */}
+        {/* Cultural Specialties - compact */}
         {vendor.culturalSpecialties && vendor.culturalSpecialties.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-4">
-            {vendor.culturalSpecialties.slice(0, 3).map((specialty: string) => (
-              <Badge key={specialty} variant="secondary" className="text-xs px-2 py-0.5">
+          <div className="flex flex-wrap gap-1 mb-3">
+            {vendor.culturalSpecialties.slice(0, 2).map((specialty: string) => (
+              <Badge key={specialty} variant="secondary" className="text-xs px-1.5 py-0">
                 {specialty}
               </Badge>
             ))}
-            {vendor.culturalSpecialties.length > 3 && (
-              <Badge variant="outline" className="text-xs px-2 py-0.5">
-                +{vendor.culturalSpecialties.length - 3}
+            {vendor.culturalSpecialties.length > 2 && (
+              <Badge variant="outline" className="text-xs px-1.5 py-0">
+                +{vendor.culturalSpecialties.length - 2}
               </Badge>
             )}
           </div>
         )}
 
-        {/* Review count text */}
-        {reviewCount > 0 ? (
-          <p className="text-xs text-muted-foreground mb-4" data-testid={`text-review-count-${vendor.id}`}>
-            {reviewCount} {reviewCount === 1 ? 'review' : 'reviews'}
-          </p>
-        ) : (
-          <p className="text-xs text-muted-foreground mb-4" data-testid={`text-no-reviews-${vendor.id}`}>
-            No reviews yet
-          </p>
-        )}
+        {/* Review count */}
+        <p className="text-xs text-muted-foreground mb-3" data-testid={reviewCount > 0 ? `text-review-count-${vendor.id}` : `text-no-reviews-${vendor.id}`}>
+          {reviewCount > 0 ? `${reviewCount} ${reviewCount === 1 ? 'review' : 'reviews'}` : 'No reviews yet'}
+        </p>
 
-        {/* Action Buttons */}
-        <div className="space-y-2">
+        {/* Spacer to push buttons to bottom */}
+        <div className="flex-grow" />
+
+        {/* Action Buttons - always at the bottom */}
+        <div className="space-y-2 mt-auto">
           {/* LOGGED IN USER BEHAVIOR */}
           {isLoggedIn && (
             <>
@@ -314,11 +223,12 @@ export function VendorCard({
                   <PopoverTrigger asChild>
                     <Button
                       className="w-full"
+                      size="sm"
                       onClick={(e) => e.stopPropagation()}
                       disabled={isBookingPending}
                       data-testid={`button-request-booking-${vendor.id}`}
                     >
-                      <Send className="w-4 h-4 mr-2" />
+                      <Send className="w-3.5 h-3.5 mr-1.5" />
                       Request Booking
                     </Button>
                   </PopoverTrigger>
@@ -385,11 +295,12 @@ export function VendorCard({
                   <PopoverTrigger asChild>
                     <Button
                       className="w-full"
+                      size="sm"
                       onClick={(e) => e.stopPropagation()}
                       disabled={isBookingPending}
                       data-testid={`button-offline-booking-${vendor.id}`}
                     >
-                      <CheckCircle className="w-4 h-4 mr-2" />
+                      <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
                       Mark as Booked
                     </Button>
                   </PopoverTrigger>
@@ -452,9 +363,10 @@ export function VendorCard({
                 </Popover>
               )}
 
-              {/* View Details button - secondary action */}
+              {/* View Details button */}
               <Button
                 variant="outline"
+                size="sm"
                 className="w-full"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -464,6 +376,52 @@ export function VendorCard({
               >
                 View Details
               </Button>
+
+              {/* Bottom row with favorite and compare */}
+              <div className="flex items-center justify-between pt-1">
+                {/* Favorite button - always visible at bottom */}
+                {onToggleFavorite && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-2"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleFavorite(vendor.id);
+                    }}
+                    data-testid={`button-favorite-${vendor.id}`}
+                  >
+                    <Heart className={`w-4 h-4 mr-1.5 ${isFavorited ? 'fill-red-500 text-red-500' : 'text-muted-foreground'}`} />
+                    <span className="text-xs">{isFavorited ? 'Saved' : 'Save'}</span>
+                  </Button>
+                )}
+
+                {/* Compare button */}
+                {onAddToComparison && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-2"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAddToComparison(vendor);
+                    }}
+                    data-testid={`button-add-compare-${vendor.id}`}
+                  >
+                    {isInComparison ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 mr-1" />
+                        <span className="text-xs">Comparing</span>
+                      </>
+                    ) : (
+                      <>
+                        <GitCompare className="w-3.5 h-3.5 mr-1" />
+                        <span className="text-xs">Compare</span>
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
             </>
           )}
 
@@ -475,9 +433,10 @@ export function VendorCard({
                 <Link href="/onboarding" onClick={(e) => e.stopPropagation()}>
                   <Button
                     className="w-full"
+                    size="sm"
                     data-testid={`button-signup-book-${vendor.id}`}
                   >
-                    <UserPlus className="w-4 h-4 mr-2" />
+                    <UserPlus className="w-3.5 h-3.5 mr-1.5" />
                     Sign Up and Book
                   </Button>
                 </Link>
@@ -488,10 +447,11 @@ export function VendorCard({
                 <Link href="/onboarding" onClick={(e) => e.stopPropagation()}>
                   <Button
                     className="w-full"
+                    size="sm"
                     data-testid={`button-signup-contact-${vendor.id}`}
                   >
-                    <UserPlus className="w-4 h-4 mr-2" />
-                    Sign Up and View Contact Details
+                    <UserPlus className="w-3.5 h-3.5 mr-1.5" />
+                    Sign Up to View Contact
                   </Button>
                 </Link>
               )}
@@ -501,43 +461,44 @@ export function VendorCard({
                 <Link href={`/claim-your-business?vendor=${vendor.id}`} onClick={(e) => e.stopPropagation()}>
                   <Button
                     variant="outline"
+                    size="sm"
                     className="w-full"
                     data-testid={`button-claim-profile-${vendor.id}`}
                   >
-                    <Briefcase className="w-4 h-4 mr-2" />
-                    Claim This Vendor Profile
+                    <Briefcase className="w-3.5 h-3.5 mr-1.5" />
+                    Claim This Profile
                   </Button>
                 </Link>
               )}
-            </>
-          )}
 
-          {/* Compare button - smaller, compact style for all users */}
-          {onAddToComparison && (
-            <div className="flex justify-end pt-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-xs px-3 h-8"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onAddToComparison(vendor);
-                }}
-                data-testid={`button-add-compare-${vendor.id}`}
-              >
-                {isInComparison ? (
-                  <>
-                    <Check className="w-3.5 h-3.5 mr-1.5" />
-                    In Compare
-                  </>
-                ) : (
-                  <>
-                    <GitCompare className="w-3.5 h-3.5 mr-1.5" />
-                    Compare
-                  </>
-                )}
-              </Button>
-            </div>
+              {/* Compare button for non-logged in users */}
+              {onAddToComparison && (
+                <div className="flex justify-end pt-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-2"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAddToComparison(vendor);
+                    }}
+                    data-testid={`button-add-compare-${vendor.id}`}
+                  >
+                    {isInComparison ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 mr-1" />
+                        <span className="text-xs">Comparing</span>
+                      </>
+                    ) : (
+                      <>
+                        <GitCompare className="w-3.5 h-3.5 mr-1" />
+                        <span className="text-xs">Compare</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
