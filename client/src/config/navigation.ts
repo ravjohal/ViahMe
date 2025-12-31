@@ -27,7 +27,7 @@ export const COUPLE_NAV_SECTIONS: NavSection[] = [
     id: "main",
     label: "Main Navigation",
     items: [
-      { path: "/dashboard", label: "Dashboard", icon: Home, priority: 1, description: "Your wedding overview" },
+      { path: "/dashboard", label: "Home", icon: Home, priority: 1, description: "Your wedding overview" },
       { path: "/budget", label: "Budget", icon: DollarSign, permission: "budget", priority: 2, description: "Track spending" },
       { path: "/timeline", label: "Timeline", icon: Clock, permission: "timeline", priority: 3, description: "Your schedule" },
       { path: "/vendors", label: "Vendors", icon: UserCircle, permission: "vendors", priority: 4, description: "Find services" },

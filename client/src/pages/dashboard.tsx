@@ -509,7 +509,7 @@ export default function Dashboard() {
         {/* Welcome Header */}
         <div className="mb-6">
           <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-600 via-pink-600 to-purple-600 bg-clip-text text-transparent mb-2" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-            Welcome to Your Wedding Dashboard
+            Welcome Home
           </h1>
           <p className="text-muted-foreground">
             Plan your beautiful {wedding.tradition} celebration step by step
