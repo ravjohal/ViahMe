@@ -52,7 +52,7 @@ interface VendorDetailModalProps {
   open: boolean;
   onClose: () => void;
   onBookRequest: (vendorId: string, eventIds: string[], notes: string) => void;
-  onOfflineBooking?: (vendorId: string, eventIds: string[], notes: string) => void;
+  onOfflineBooking?: (vendorId: string, eventIds: string[], notes: string, agreedPrice?: string) => void;
   isAuthenticated?: boolean;
   onAuthRequired?: () => void;
   weddingId?: string;
@@ -86,6 +86,7 @@ export function VendorDetailModal({
 }: VendorDetailModalProps) {
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
   const [notes, setNotes] = useState("");
+  const [agreedPrice, setAgreedPrice] = useState("");
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [offlineBookingMode, setOfflineBookingMode] = useState(false);
   
@@ -998,7 +999,7 @@ export function VendorDetailModal({
                     </Label>
                     <Textarea
                       id="unclaimed-offline-notes"
-                      placeholder="Add any notes about the booking (price agreed, contact info, etc.)..."
+                      placeholder="Add any notes about the booking (contact info, etc.)..."
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
                       rows={3}
@@ -1006,12 +1007,38 @@ export function VendorDetailModal({
                     />
                   </div>
 
+                  <div>
+                    <Label htmlFor="unclaimed-agreed-price" className="text-base mb-2 block">
+                      Agreed Price (Optional)
+                    </Label>
+                    <div className="relative">
+                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="unclaimed-agreed-price"
+                        type="text"
+                        inputMode="decimal"
+                        placeholder="0.00"
+                        value={agreedPrice}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/[^0-9.]/g, '');
+                          setAgreedPrice(value);
+                        }}
+                        className="pl-8"
+                        data-testid="input-unclaimed-agreed-price"
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Track the price you agreed on for budget tracking
+                    </p>
+                  </div>
+
                   <Button
                     onClick={() => {
                       if (vendor && selectedEvents.length > 0) {
-                        onOfflineBooking(vendor.id, selectedEvents, notes);
+                        onOfflineBooking(vendor.id, selectedEvents, notes, agreedPrice || undefined);
                         setSelectedEvents([]);
                         setNotes("");
+                        setAgreedPrice("");
                         onClose();
                       }
                     }}
@@ -1097,7 +1124,7 @@ export function VendorDetailModal({
                   </Label>
                   <Textarea
                     id="offline-notes"
-                    placeholder="Add any notes about the booking (price agreed, contact info, etc.)..."
+                    placeholder="Add any notes about the booking (contact info, etc.)..."
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     rows={3}
@@ -1105,12 +1132,38 @@ export function VendorDetailModal({
                   />
                 </div>
 
+                <div>
+                  <Label htmlFor="offline-agreed-price" className="text-base mb-2 block">
+                    Agreed Price (Optional)
+                  </Label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="offline-agreed-price"
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="0.00"
+                      value={agreedPrice}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^0-9.]/g, '');
+                        setAgreedPrice(value);
+                      }}
+                      className="pl-8"
+                      data-testid="input-offline-agreed-price"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Track the price you agreed on for budget tracking
+                  </p>
+                </div>
+
                 <Button
                   onClick={() => {
                     if (vendor && selectedEvents.length > 0) {
-                      onOfflineBooking(vendor.id, selectedEvents, notes);
+                      onOfflineBooking(vendor.id, selectedEvents, notes, agreedPrice || undefined);
                       setSelectedEvents([]);
                       setNotes("");
+                      setAgreedPrice("");
                       setOfflineBookingMode(false);
                       onClose();
                     }

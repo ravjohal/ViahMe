@@ -26,7 +26,7 @@ interface VendorDirectoryProps {
   isLoggedIn?: boolean;
   onSubmitVendor?: () => void;
   events?: Event[];
-  onOfflineBook?: (vendorId: string, eventIds: string[], notes: string) => void;
+  onOfflineBook?: (vendorId: string, eventIds: string[], notes: string, agreedPrice?: string) => void;
   onRequestBooking?: (vendorId: string, eventIds: string[], notes: string) => void;
   favoritedVendorIds?: string[];
   onToggleFavorite?: (vendorId: string) => void;

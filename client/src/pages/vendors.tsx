@@ -203,6 +203,7 @@ export default function Vendors() {
       vendorId: string;
       eventIds: string[];
       notes: string;
+      agreedPrice?: string;
     }) => {
       if (!user || user.role !== "couple") {
         throw new Error("Authentication required");
@@ -222,6 +223,7 @@ export default function Vendors() {
           coupleNotes: data.notes,
           status: "confirmed",
           bookingSource: "offline",
+          estimatedCost: data.agreedPrice || undefined,
         })
       );
       return Promise.all(bookingPromises);
@@ -413,8 +415,8 @@ export default function Vendors() {
                 isLoggedIn={!!user}
                 onSubmitVendor={() => setShowSubmitVendor(true)}
                 events={events}
-                onOfflineBook={(vendorId, eventIds, notes) => {
-                  offlineBookingMutation.mutate({ vendorId, eventIds, notes });
+                onOfflineBook={(vendorId, eventIds, notes, agreedPrice) => {
+                  offlineBookingMutation.mutate({ vendorId, eventIds, notes, agreedPrice });
                 }}
                 onRequestBooking={(vendorId, eventIds, notes) => {
                   bookingMutation.mutate({ vendorId, eventIds, notes });
@@ -650,8 +652,8 @@ export default function Vendors() {
         onBookRequest={(vendorId, eventIds, notes) => {
           bookingMutation.mutate({ vendorId, eventIds, notes });
         }}
-        onOfflineBooking={(vendorId, eventIds, notes) => {
-          offlineBookingMutation.mutate({ vendorId, eventIds, notes });
+        onOfflineBooking={(vendorId, eventIds, notes, agreedPrice) => {
+          offlineBookingMutation.mutate({ vendorId, eventIds, notes, agreedPrice });
         }}
         isAuthenticated={!!user && user.role === "couple"}
         onAuthRequired={() => setLocation("/onboarding")}

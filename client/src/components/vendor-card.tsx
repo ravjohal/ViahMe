@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Popover,
@@ -22,7 +23,7 @@ interface VendorCardProps {
   isInComparison?: boolean;
   isLoggedIn?: boolean;
   events?: Event[];
-  onOfflineBook?: (vendorId: string, eventIds: string[], notes: string) => void;
+  onOfflineBook?: (vendorId: string, eventIds: string[], notes: string, agreedPrice?: string) => void;
   onRequestBooking?: (vendorId: string, eventIds: string[], notes: string) => void;
   isFavorited?: boolean;
   onToggleFavorite?: (vendorId: string) => void;
@@ -75,6 +76,7 @@ export function VendorCard({
 }: VendorCardProps) {
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
   const [bookingNotes, setBookingNotes] = useState("");
+  const [agreedPrice, setAgreedPrice] = useState("");
   const [offlinePopoverOpen, setOfflinePopoverOpen] = useState(false);
   const [requestPopoverOpen, setRequestPopoverOpen] = useState(false);
   
@@ -104,9 +106,10 @@ export function VendorCard({
 
   const handleOfflineBookSubmit = () => {
     if (selectedEvents.length > 0 && onOfflineBook) {
-      onOfflineBook(vendor.id, selectedEvents, bookingNotes);
+      onOfflineBook(vendor.id, selectedEvents, bookingNotes, agreedPrice || undefined);
       setSelectedEvents([]);
       setBookingNotes("");
+      setAgreedPrice("");
       setOfflinePopoverOpen(false);
     }
   };
@@ -375,12 +378,30 @@ export function VendorCard({
                       </div>
 
                       <div className="space-y-2">
+                        <Label className="text-sm font-medium">Agreed Price</Label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                          <Input
+                            type="number"
+                            placeholder="0.00"
+                            value={agreedPrice}
+                            onChange={(e) => setAgreedPrice(e.target.value)}
+                            className="pl-7"
+                            data-testid={`input-agreed-price-${vendor.id}`}
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          This will be used to track your budget and spending.
+                        </p>
+                      </div>
+
+                      <div className="space-y-2">
                         <Label className="text-sm font-medium">Notes (optional)</Label>
                         <Textarea
-                          placeholder="Booking details, price agreed, etc..."
+                          placeholder="Any additional booking details..."
                           value={bookingNotes}
                           onChange={(e) => setBookingNotes(e.target.value)}
-                          className="h-20 resize-none"
+                          className="h-16 resize-none"
                           data-testid={`textarea-offline-notes-${vendor.id}`}
                         />
                       </div>
