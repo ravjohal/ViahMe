@@ -13,9 +13,9 @@ import { useLocation, useSearch } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { Search, CheckCircle, Clock, XCircle, Briefcase, Star, MapPin, Phone, Mail, ExternalLink } from "lucide-react";
+import { Search, CheckCircle, Clock, XCircle, Briefcase, Star, MapPin, Phone, Mail, ExternalLink, Heart } from "lucide-react";
 import logoUrl from "@assets/viah-logo_1763669612969.png";
-import type { Wedding, Vendor, Event, Booking } from "@shared/schema";
+import type { Wedding, Vendor, Event, Booking, VendorFavorite } from "@shared/schema";
 
 export default function Vendors() {
   const [, setLocation] = useLocation();
@@ -30,7 +30,8 @@ export default function Vendors() {
 
   // Parse query params for initial view
   const params = new URLSearchParams(searchString);
-  const initialView = params.get('view') === 'booked' ? 'my-vendors' : 'browse';
+  const viewParam = params.get('view');
+  const initialView = viewParam === 'booked' ? 'booked' : viewParam === 'favorites' ? 'favorites' : 'browse';
   const [activeTab, setActiveTab] = useState(initialView);
 
   // Only fetch weddings if user is authenticated
@@ -55,6 +56,20 @@ export default function Vendors() {
     queryKey: ["/api/bookings", wedding?.id],
     enabled: !!wedding?.id,
   });
+
+  // Fetch favorites for the wedding
+  const { data: favorites = [] } = useQuery<VendorFavorite[]>({
+    queryKey: ["/api/vendor-favorites", wedding?.id],
+    enabled: !!wedding?.id,
+  });
+
+  // Get favorited vendors with their info
+  const favoritedVendors = useMemo(() => {
+    if (!favorites.length || !vendors.length) return [];
+    return favorites
+      .map(fav => vendors.find(v => v.id === fav.vendorId))
+      .filter((v): v is Vendor => v !== undefined);
+  }, [favorites, vendors]);
 
   // Get booked vendors with their booking info
   const bookedVendorsData = useMemo(() => {
@@ -210,6 +225,64 @@ export default function Vendors() {
     },
   });
 
+  // Favorite mutations
+  const addFavoriteMutation = useMutation({
+    mutationFn: async (vendorId: string) => {
+      if (!wedding) throw new Error("No wedding found");
+      return apiRequest("POST", "/api/vendor-favorites", {
+        weddingId: wedding.id,
+        vendorId,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/vendor-favorites", wedding?.id] });
+      toast({
+        title: "Added to Favorites",
+        description: "Vendor has been added to your favorites.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to add to favorites. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const removeFavoriteMutation = useMutation({
+    mutationFn: async (vendorId: string) => {
+      if (!wedding) throw new Error("No wedding found");
+      return apiRequest("DELETE", `/api/vendor-favorites/${wedding.id}/${vendorId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/vendor-favorites", wedding?.id] });
+      toast({
+        title: "Removed from Favorites",
+        description: "Vendor has been removed from your favorites.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to remove from favorites. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const isVendorFavorited = (vendorId: string) => {
+    return favorites.some(fav => fav.vendorId === vendorId);
+  };
+
+  const toggleFavorite = (vendorId: string) => {
+    if (isVendorFavorited(vendorId)) {
+      removeFavoriteMutation.mutate(vendorId);
+    } else {
+      addFavoriteMutation.mutate(vendorId);
+    }
+  };
+
   const handleAddToComparison = (vendor: Vendor) => {
     if (comparisonVendors.find(v => v.id === vendor.id)) {
       setComparisonVendors(comparisonVendors.filter(v => v.id !== vendor.id));
@@ -292,14 +365,18 @@ export default function Vendors() {
       <main className="container mx-auto px-6 py-8">
         {user && user.role === "couple" ? (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="mb-6">
+            <TabsList className="mb-6 flex-wrap">
               <TabsTrigger value="browse" data-testid="tab-browse-vendors">
                 <Search className="w-4 h-4 mr-2" />
-                Browse Vendors
+                Browse
               </TabsTrigger>
-              <TabsTrigger value="my-vendors" data-testid="tab-my-vendors">
+              <TabsTrigger value="favorites" data-testid="tab-favorites">
+                <Heart className="w-4 h-4 mr-2" />
+                Favorites ({favoritedVendors.length})
+              </TabsTrigger>
+              <TabsTrigger value="booked" data-testid="tab-booked-vendors">
                 <Briefcase className="w-4 h-4 mr-2" />
-                My Vendors ({bookedVendorsData.length})
+                Booked ({bookedVendorsData.length})
               </TabsTrigger>
             </TabsList>
 
@@ -317,12 +394,99 @@ export default function Vendors() {
               />
             </TabsContent>
 
-            <TabsContent value="my-vendors">
+            <TabsContent value="favorites">
               <div className="space-y-6">
                 <div>
-                  <h1 className="text-3xl font-bold mb-2">My Vendors</h1>
+                  <h1 className="text-3xl font-bold mb-2">My Favorites</h1>
                   <p className="text-muted-foreground">
-                    Vendors you've booked or requested for your wedding
+                    Vendors you've saved to consider for your wedding
+                  </p>
+                </div>
+
+                {favoritedVendors.length === 0 ? (
+                  <Card className="p-12 text-center">
+                    <Heart className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                    <h3 className="font-semibold text-lg mb-2">No Favorites Yet</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Save vendors you like while browsing to easily find them later
+                    </p>
+                    <Button onClick={() => setActiveTab("browse")} data-testid="button-browse-vendors-from-favorites">
+                      Browse Vendors
+                    </Button>
+                  </Card>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {favoritedVendors.map(vendor => {
+                      const primaryCategory = vendor.categories?.[0] || 'Vendor';
+                      
+                      return (
+                        <Card 
+                          key={vendor.id} 
+                          className="overflow-hidden hover-elevate cursor-pointer"
+                          onClick={() => setSelectedVendor(vendor)}
+                          data-testid={`card-favorite-vendor-${vendor.id}`}
+                        >
+                          <div className="p-4 space-y-3">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-semibold text-lg truncate">{vendor.name}</h3>
+                                <p className="text-sm text-muted-foreground">{primaryCategory}</p>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-red-500"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleFavorite(vendor.id);
+                                }}
+                                data-testid={`button-unfavorite-${vendor.id}`}
+                              >
+                                <Heart className="w-5 h-5 fill-current" />
+                              </Button>
+                            </div>
+
+                            <div className="text-sm text-muted-foreground space-y-1">
+                              {vendor.location && (
+                                <div className="flex items-center gap-2">
+                                  <MapPin className="w-3 h-3" />
+                                  <span className="truncate">{vendor.location}</span>
+                                </div>
+                              )}
+                              {vendor.phone && (
+                                <div className="flex items-center gap-2">
+                                  <Phone className="w-3 h-3" />
+                                  <span>{vendor.phone}</span>
+                                </div>
+                              )}
+                            </div>
+
+                            {vendor.priceRange && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium text-primary">{vendor.priceRange}</span>
+                                {vendor.rating && (
+                                  <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                                    <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                                    {vendor.rating}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="booked">
+              <div className="space-y-6">
+                <div>
+                  <h1 className="text-3xl font-bold mb-2">Booked Vendors</h1>
+                  <p className="text-muted-foreground">
+                    Vendors you've booked for your wedding events
                   </p>
                 </div>
 
@@ -333,7 +497,7 @@ export default function Vendors() {
                     <p className="text-muted-foreground mb-4">
                       Start browsing to find and book vendors for your wedding
                     </p>
-                    <Button onClick={() => setActiveTab("browse")} data-testid="button-browse-vendors">
+                    <Button onClick={() => setActiveTab("browse")} data-testid="button-browse-vendors-from-booked">
                       Browse Vendors
                     </Button>
                   </Card>
