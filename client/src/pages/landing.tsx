@@ -92,6 +92,21 @@ export default function Landing() {
     }
   }, [user, isAuthLoading, setLocation]);
 
+  // Show minimal loading state while checking auth to prevent flash
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <img 
+            src={logoUrl} 
+            alt="Viah.me" 
+            className="h-16 object-contain animate-pulse" 
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
       {/* Header */}
