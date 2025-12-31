@@ -1531,3 +1531,208 @@ Connecting South Asian couples with culturally-specialized vendors
     throw error;
   }
 }
+
+export async function sendUpdateEmail(params: {
+  to: string;
+  householdName: string;
+  subject: string;
+  message: string;
+  weddingName: string;
+}) {
+  const { client, fromEmail } = await getUncachableResendClient();
+  const { to, householdName, subject, message, weddingName } = params;
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+          }
+          .header {
+            background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+            color: white;
+            padding: 30px 20px;
+            border-radius: 8px 8px 0 0;
+            text-align: center;
+          }
+          .content {
+            background: white;
+            padding: 30px;
+            border: 1px solid #e5e7eb;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+          }
+          .footer {
+            text-align: center;
+            padding: 20px;
+            color: #6b7280;
+            font-size: 14px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>Wedding Update</h1>
+        </div>
+        <div class="content">
+          <p>Dear ${householdName},</p>
+          <p>${message.replace(/\n/g, '<br>')}</p>
+          <p style="margin-top: 30px;">With love,<br><strong>${weddingName}</strong></p>
+        </div>
+        <div class="footer">
+          <p>Sent via Viah.me - Your South Asian Wedding Planning Platform</p>
+        </div>
+      </body>
+    </html>
+  `;
+
+  const plaintext = `
+Wedding Update from ${weddingName}
+
+Dear ${householdName},
+
+${message}
+
+With love,
+${weddingName}
+
+---
+Sent via Viah.me
+Your South Asian Wedding Planning Platform
+  `.trim();
+
+  try {
+    const result = await client.emails.send({
+      from: fromEmail,
+      to,
+      subject: `Wedding Update: ${subject}`,
+      html,
+      text: plaintext,
+    });
+    return result;
+  } catch (error) {
+    console.error('Failed to send update email:', error);
+    throw error;
+  }
+}
+
+export async function sendRsvpReminderEmail(params: {
+  to: string;
+  householdName: string;
+  coupleName: string;
+  magicLink: string;
+  weddingDate?: string;
+}) {
+  const { client, fromEmail } = await getUncachableResendClient();
+  const { to, householdName, coupleName, magicLink, weddingDate } = params;
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+          }
+          .header {
+            background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+            color: white;
+            padding: 30px 20px;
+            border-radius: 8px 8px 0 0;
+            text-align: center;
+          }
+          .content {
+            background: white;
+            padding: 30px;
+            border: 1px solid #e5e7eb;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+          }
+          .button {
+            display: inline-block;
+            background: #f97316;
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 20px 0;
+          }
+          .footer {
+            text-align: center;
+            padding: 20px;
+            color: #6b7280;
+            font-size: 14px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>Friendly RSVP Reminder</h1>
+        </div>
+        <div class="content">
+          <p>Dear ${householdName},</p>
+          <p>We hope this message finds you well! We noticed we haven't received your RSVP yet for our wedding${weddingDate ? ` on ${weddingDate}` : ''}.</p>
+          <p>We would love to know if you can join us for this special celebration. Please take a moment to let us know!</p>
+          <div style="text-align: center;">
+            <a href="${magicLink}" class="button">RSVP Now</a>
+          </div>
+          <p>If you have any questions or need to discuss anything, please don't hesitate to reach out.</p>
+          <p style="margin-top: 30px;">With love,<br><strong>${coupleName}</strong></p>
+        </div>
+        <div class="footer">
+          <p>Sent via Viah.me - Your South Asian Wedding Planning Platform</p>
+        </div>
+      </body>
+    </html>
+  `;
+
+  const plaintext = `
+Friendly RSVP Reminder
+
+Dear ${householdName},
+
+We hope this message finds you well! We noticed we haven't received your RSVP yet for our wedding${weddingDate ? ` on ${weddingDate}` : ''}.
+
+We would love to know if you can join us for this special celebration. Please take a moment to let us know!
+
+RSVP here: ${magicLink}
+
+If you have any questions or need to discuss anything, please don't hesitate to reach out.
+
+With love,
+${coupleName}
+
+---
+Sent via Viah.me
+Your South Asian Wedding Planning Platform
+  `.trim();
+
+  try {
+    const result = await client.emails.send({
+      from: fromEmail,
+      to,
+      subject: `RSVP Reminder from ${coupleName}`,
+      html,
+      text: plaintext,
+    });
+    return result;
+  } catch (error) {
+    console.error('Failed to send RSVP reminder email:', error);
+    throw error;
+  }
+}

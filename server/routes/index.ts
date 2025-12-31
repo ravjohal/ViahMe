@@ -8,6 +8,7 @@ import { registerAiRoutes } from "./ai";
 import { registerBudgetRoutes } from "./budget";
 import { registerGuestRoutes } from "./guests";
 import { registerVendorRoutes } from "./vendors";
+import { registerCommunicationRoutes } from "./communications";
 import { seedVendors, seedBudgetBenchmarks } from "../seed-data";
 
 let defaultStorageSeeded = false;
@@ -76,6 +77,10 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   const vendorRouter = Router();
   await registerVendorRoutes(vendorRouter, storage);
   app.use("/api/vendor", vendorRouter);
+
+  const communicationRouter = Router();
+  await registerCommunicationRoutes(communicationRouter, storage);
+  app.use("/api", communicationRouter);
 
   const { registerLegacyRoutes } = await import("../routes-legacy");
   await registerLegacyRoutes(app, storage, { activeViewers, getViewerCount, cleanupStaleViewers });
