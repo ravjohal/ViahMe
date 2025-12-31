@@ -642,7 +642,7 @@ export default function Vendors() {
         coupleName={wedding?.partner1Name && wedding?.partner2Name 
           ? `${wedding.partner1Name} & ${wedding.partner2Name}` 
           : wedding?.partner1Name || undefined}
-        weddingDate={wedding?.weddingDate ? wedding.weddingDate.toISOString() : undefined}
+        weddingDate={wedding?.weddingDate ? (typeof wedding.weddingDate === 'string' ? wedding.weddingDate : wedding.weddingDate.toISOString()) : undefined}
         tradition={wedding?.tradition || undefined}
         city={wedding?.location || undefined}
       />

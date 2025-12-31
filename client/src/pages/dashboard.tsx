@@ -676,7 +676,7 @@ export default function Dashboard() {
                   {hasCeremonyBreakdowns && (
                     <div className="mt-3 text-center">
                       <Button 
-                        variant="link" 
+                        variant="ghost" 
                         size="sm" 
                         onClick={() => setLocation("/cost-breakdown")}
                         className="text-primary"
