@@ -196,6 +196,8 @@ export default function Vendors() {
         throw new Error("No wedding found");
       }
 
+      console.log("Starting offline booking for vendor:", data.vendorId, "events:", data.eventIds);
+
       const bookingPromises = data.eventIds.map(eventId =>
         apiRequest("POST", "/api/bookings", {
           weddingId: wedding.id,
@@ -209,17 +211,20 @@ export default function Vendors() {
       return Promise.all(bookingPromises);
     },
     onSuccess: (_, variables) => {
+      console.log("Offline booking successful for", variables.eventIds.length, "events");
       queryClient.invalidateQueries({ queryKey: ["/api/bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/bookings", wedding?.id] });
       const eventCount = variables.eventIds.length;
       toast({
         title: "Vendor Marked as Booked",
         description: `${eventCount} ${eventCount === 1 ? 'event' : 'events'} marked as booked with this vendor.`,
       });
     },
-    onError: () => {
+    onError: (error: Error) => {
+      console.error("Offline booking failed:", error);
       toast({
         title: "Error",
-        description: "Failed to save offline booking. Please try again.",
+        description: error.message || "Failed to save offline booking. Please try again.",
         variant: "destructive",
       });
     },
