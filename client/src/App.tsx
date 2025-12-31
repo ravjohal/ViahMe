@@ -300,10 +300,13 @@ function AppLayout() {
   const isVendorPage = location.startsWith("/vendor-");
   // Hide header on /vendors page for non-logged-in users (they see logo-only header from vendors.tsx)
   const isPublicVendorsPage = location === "/vendors" && !user;
+  // Hide header on collector pages (guest contributors shouldn't see app navigation)
+  const isCollectorPage = location.startsWith("/collect/");
   const hideHeader = authPages.includes(location) || 
                      location.startsWith("/wedding/") ||
                      isVendorPage ||
-                     isPublicVendorsPage;
+                     isPublicVendorsPage ||
+                     isCollectorPage;
   
   // Show bottom nav on mobile for authenticated users (not on auth pages or vendor pages)
   const showBottomNav = user && !hideHeader && !isVendorPage;

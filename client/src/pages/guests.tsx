@@ -20,7 +20,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useLocation, Link } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertGuestSchema, insertHouseholdSchema, type Wedding, type Guest, type Event, type Household, type GuestSuggestion, type CutListItem, type EventCostItem } from "@shared/schema";
+import { insertGuestSchema, insertHouseholdSchema, type Wedding, type Guest, type Event, type Household, type GuestSuggestion, type CutListItem, type EventCostItem, type GuestCollectorSubmission } from "@shared/schema";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -325,6 +325,12 @@ export default function Guests() {
 
   const { data: suggestionsCount } = useQuery<{ count: number }>({
     queryKey: ["/api/weddings", wedding?.id, "guest-suggestions", "count"],
+    enabled: !!wedding?.id,
+  });
+
+  // Collector submissions - families added via collector links
+  const { data: collectorSubmissions = [], isLoading: collectorLoading } = useQuery<GuestCollectorSubmission[]>({
+    queryKey: ["/api/weddings", wedding?.id, "collector-submissions"],
     enabled: !!wedding?.id,
   });
 
@@ -697,6 +703,37 @@ export default function Guests() {
     },
     onError: () => {
       toast({ title: "Error", description: "Failed to reject suggestion", variant: "destructive" });
+    },
+  });
+
+  // Collector submission mutations
+  const approveCollectorMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiRequest("POST", `/api/collector-submissions/${id}/approve`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "collector-submissions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/households", wedding?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-budget"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-planning-snapshot"] });
+      toast({ title: "Approved", description: "Family has been added to your guest list." });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to approve submission", variant: "destructive" });
+    },
+  });
+
+  const declineCollectorMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiRequest("POST", `/api/collector-submissions/${id}/decline`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "collector-submissions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-planning-snapshot"] });
+      toast({ title: "Declined", description: "Family submission has been declined." });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to decline submission", variant: "destructive" });
     },
   });
 
@@ -1089,6 +1126,9 @@ export default function Guests() {
   // Guest Planning calculations
   const pendingSuggestions = suggestions.filter(s => s.status === "pending");
   const reviewedSuggestions = suggestions.filter(s => s.status !== "pending");
+  const pendingCollectorSubmissions = collectorSubmissions.filter(s => s.status === "pending");
+  const reviewedCollectorSubmissions = collectorSubmissions.filter(s => s.status !== "pending");
+  const totalPendingReviews = pendingSuggestions.length + pendingCollectorSubmissions.length;
 
   const priorityBreakdown = {
     must_invite: households.filter(h => h.priorityTier === "must_invite"),
@@ -1099,7 +1139,7 @@ export default function Guests() {
 
   // Workflow step progress
   const hasGuests = guests.length > 0;
-  const allSuggestionsReviewed = hasGuests && pendingSuggestions.length === 0;
+  const allSuggestionsReviewed = hasGuests && totalPendingReviews === 0;
   const hasBudgetSet = budgetData?.settings?.maxGuestBudget && Number(budgetData.settings.maxGuestBudget) > 0;
 
   // New 3-phase workflow based on user's mental model
@@ -1122,7 +1162,7 @@ export default function Guests() {
       description: "Approve suggestions",
       icon: Inbox,
       isComplete: hasGuests && allSuggestionsReviewed,
-      count: pendingSuggestions.length,
+      count: totalPendingReviews,
     },
     {
       id: "optimize",
@@ -1145,9 +1185,9 @@ export default function Guests() {
                 <ClipboardList className="w-4 h-4" />
                 <span className="hidden sm:inline">Plan & Review</span>
                 <span className="sm:hidden">Plan</span>
-                {pendingSuggestions.length > 0 && (
+                {totalPendingReviews > 0 && (
                   <Badge variant="destructive" className="ml-1 h-5 px-1.5 text-xs">
-                    {pendingSuggestions.length}
+                    {totalPendingReviews}
                   </Badge>
                 )}
               </TabsTrigger>
@@ -1742,10 +1782,10 @@ export default function Guests() {
                           <Button 
                             variant="default"
                             className="min-h-[48px]"
-                            onClick={() => setPlanningTab(pendingSuggestions.length > 0 ? "review" : "optimize")}
+                            onClick={() => setPlanningTab(totalPendingReviews > 0 ? "review" : "optimize")}
                             data-testid="button-continue-planning"
                           >
-                            Continue to {pendingSuggestions.length > 0 ? "Review Family Adds" : "Budget Check"}
+                            Continue to {totalPendingReviews > 0 ? "Review Family Adds" : "Budget Check"}
                             <ArrowRight className="h-4 w-4 ml-2" />
                           </Button>
                         </div>
@@ -1824,9 +1864,15 @@ export default function Guests() {
                           </>
                         ) : (
                           <>
-                            <p className="font-semibold">Review Team Suggestions</p>
+                            <p className="font-semibold">Review Guest Submissions</p>
                             <p className="text-sm text-muted-foreground mt-1">
-                              Your team members have submitted {pendingSuggestions.length} guest suggestion{pendingSuggestions.length !== 1 ? 's' : ''} for you to review. Approve to add to your guest list or decline.
+                              You have {totalPendingReviews} pending submission{totalPendingReviews !== 1 ? 's' : ''} to review
+                              {pendingSuggestions.length > 0 && pendingCollectorSubmissions.length > 0 
+                                ? ` (${pendingSuggestions.length} from team members, ${pendingCollectorSubmissions.length} from collector links)`
+                                : pendingCollectorSubmissions.length > 0 
+                                  ? ' from family members via collector links'
+                                  : ' from team members'
+                              }. Approve to add to your guest list or decline.
                             </p>
                           </>
                         )}
@@ -1931,7 +1977,7 @@ export default function Guests() {
 
                   {reviewedSuggestions.length > 0 && (
                     <div className="mt-6">
-                      <h3 className="text-sm font-medium text-muted-foreground mb-3">Previously Reviewed</h3>
+                      <h3 className="text-sm font-medium text-muted-foreground mb-3">Previously Reviewed Team Suggestions</h3>
                       <ScrollArea className="h-48">
                         <div className="space-y-2">
                           {reviewedSuggestions.map(suggestion => (
@@ -1945,6 +1991,130 @@ export default function Guests() {
                               </div>
                               <Badge variant={suggestion.status === "approved" ? "default" : "destructive"}>
                                 {suggestion.status === "approved" ? "Approved" : "Declined"}
+                              </Badge>
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    </div>
+                  )}
+                </div>
+
+                {/* Collector Link Submissions Section */}
+                <div className="space-y-4 mt-8">
+                  <Separator />
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-lg font-semibold flex items-center gap-2">
+                        <Share2 className="h-5 w-5 text-muted-foreground" />
+                        Family Submissions
+                        {pendingCollectorSubmissions.length > 0 && (
+                          <Badge variant="destructive">{pendingCollectorSubmissions.length}</Badge>
+                        )}
+                      </h2>
+                      <p className="text-sm text-muted-foreground">
+                        Guests added by family members via collector links
+                      </p>
+                    </div>
+                  </div>
+
+                  {collectorLoading ? (
+                    <div className="space-y-3">
+                      {[1, 2, 3].map(i => <Skeleton key={i} className="h-32 w-full" />)}
+                    </div>
+                  ) : pendingCollectorSubmissions.length === 0 ? (
+                    <Card className="border-dashed">
+                      <CardContent className="p-6 text-center">
+                        <CheckCircle2 className="h-12 w-12 mx-auto text-green-500 mb-3" />
+                        <p className="font-medium mb-1">No Pending Family Submissions</p>
+                        <p className="text-sm text-muted-foreground">
+                          When family members add guests via collector links, they'll appear here for your review.
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="space-y-3">
+                      {pendingCollectorSubmissions.map(submission => (
+                        <Card key={submission.id} data-testid={`card-collector-${submission.id}`}>
+                          <CardHeader className="pb-2">
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <CardTitle className="text-base">{submission.householdName || submission.guestName}</CardTitle>
+                                <CardDescription className="flex items-center gap-2 flex-wrap mt-1">
+                                  <Badge variant="secondary" className="text-xs">
+                                    {submission.guestCount || submission.guestNames?.length || 1} {(submission.guestCount || submission.guestNames?.length || 1) === 1 ? "guest" : "guests"}
+                                  </Badge>
+                                  {submission.relationshipTier && (
+                                    <Badge variant="outline" className="text-xs">
+                                      {submission.relationshipTier.replace(/_/g, ' ')}
+                                    </Badge>
+                                  )}
+                                  {submission.submitterName && (
+                                    <Badge variant="outline" className="text-xs">
+                                      added by {submission.submitterName}
+                                    </Badge>
+                                  )}
+                                </CardDescription>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="default"
+                                  onClick={() => approveCollectorMutation.mutate(submission.id)}
+                                  disabled={approveCollectorMutation.isPending}
+                                  data-testid={`button-approve-collector-${submission.id}`}
+                                >
+                                  <CheckCircle2 className="h-4 w-4 mr-1" />
+                                  Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => declineCollectorMutation.mutate(submission.id)}
+                                  disabled={declineCollectorMutation.isPending}
+                                  data-testid={`button-decline-collector-${submission.id}`}
+                                >
+                                  <XCircle className="h-4 w-4 mr-1" />
+                                  Decline
+                                </Button>
+                              </div>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="pt-2">
+                            {submission.guestNames && submission.guestNames.length > 0 && (
+                              <p className="text-sm"><strong>Guests:</strong> {submission.guestNames.join(", ")}</p>
+                            )}
+                            {submission.desiDietaryType && submission.desiDietaryType !== "none" && (
+                              <p className="text-sm"><strong>Dietary:</strong> {submission.desiDietaryType.replace(/_/g, ' ')}</p>
+                            )}
+                            {submission.notes && (
+                              <p className="text-sm text-muted-foreground mt-1">{submission.notes}</p>
+                            )}
+                            {submission.submitterRelation && (
+                              <p className="text-xs text-muted-foreground mt-1">Relationship: {submission.submitterRelation}</p>
+                            )}
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+
+                  {reviewedCollectorSubmissions.length > 0 && (
+                    <div className="mt-6">
+                      <h3 className="text-sm font-medium text-muted-foreground mb-3">Previously Reviewed Family Submissions</h3>
+                      <ScrollArea className="h-48">
+                        <div className="space-y-2">
+                          {reviewedCollectorSubmissions.map(submission => (
+                            <div key={submission.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                              <div>
+                                <p className="font-medium">{submission.householdName || submission.guestName}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {submission.guestCount || submission.guestNames?.length || 1} guests
+                                  {submission.submitterName && ` • added by ${submission.submitterName}`}
+                                </p>
+                              </div>
+                              <Badge variant={submission.status === "approved" ? "default" : "destructive"}>
+                                {submission.status === "approved" ? "Approved" : "Declined"}
                               </Badge>
                             </div>
                           ))}
