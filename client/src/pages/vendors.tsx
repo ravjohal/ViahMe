@@ -97,6 +97,14 @@ export default function Vendors() {
     return Array.from(vendorBookings.values());
   }, [bookings, vendors, events]);
 
+  // Get list of vendor IDs that are confirmed booked
+  const bookedVendorIds = useMemo(() => {
+    return bookings
+      .filter(b => b.status === 'confirmed')
+      .map(b => b.vendorId)
+      .filter((id, index, arr) => arr.indexOf(id) === index);
+  }, [bookings]);
+
   // Handle preview parameter from vendor profile dropdown
   useEffect(() => {
     if (!previewHandled && searchString) {
@@ -406,6 +414,7 @@ export default function Vendors() {
                 favoritedVendorIds={favorites.map(f => f.vendorId)}
                 onToggleFavorite={toggleFavorite}
                 isBookingPending={bookingMutation.isPending || offlineBookingMutation.isPending}
+                bookedVendorIds={bookedVendorIds}
               />
             </TabsContent>
 

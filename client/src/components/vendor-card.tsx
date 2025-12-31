@@ -27,6 +27,7 @@ interface VendorCardProps {
   isFavorited?: boolean;
   onToggleFavorite?: (vendorId: string) => void;
   isBookingPending?: boolean;
+  isBooked?: boolean;
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -70,6 +71,7 @@ export function VendorCard({
   isFavorited = false,
   onToggleFavorite,
   isBookingPending = false,
+  isBooked = false,
 }: VendorCardProps) {
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
   const [bookingNotes, setBookingNotes] = useState("");
@@ -217,8 +219,14 @@ export function VendorCard({
           {/* LOGGED IN USER BEHAVIOR */}
           {isLoggedIn && (
             <>
-              {/* Claimed vendor: Show Request Booking with popover */}
-              {vendor.claimed ? (
+              {/* Show "Booked" status if vendor is already booked */}
+              {isBooked ? (
+                <div className="w-full py-2 px-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-md flex items-center justify-center gap-2" data-testid={`status-booked-${vendor.id}`}>
+                  <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+                  <span className="text-sm font-medium text-green-700 dark:text-green-300">Booked</span>
+                </div>
+              ) : vendor.claimed ? (
+                /* Claimed vendor: Show Request Booking with popover */
                 <Popover open={requestPopoverOpen} onOpenChange={setRequestPopoverOpen}>
                   <PopoverTrigger asChild>
                     <Button

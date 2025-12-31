@@ -31,6 +31,7 @@ interface VendorDirectoryProps {
   favoritedVendorIds?: string[];
   onToggleFavorite?: (vendorId: string) => void;
   isBookingPending?: boolean;
+  bookedVendorIds?: string[];
 }
 
 // Map budget amounts to price range tiers
@@ -200,6 +201,7 @@ export function VendorDirectory({
   favoritedVendorIds = [],
   onToggleFavorite,
   isBookingPending = false,
+  bookedVendorIds = [],
 }: VendorDirectoryProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -533,6 +535,7 @@ export function VendorDirectory({
                 isFavorited={favoritedVendorIds.includes(vendor.id)}
                 onToggleFavorite={onToggleFavorite}
                 isBookingPending={isBookingPending}
+                isBooked={bookedVendorIds.includes(vendor.id)}
               />
             ))}
           </div>
@@ -581,6 +584,7 @@ export function VendorDirectory({
                   isFavorited={favoritedVendorIds.includes(vendor.id)}
                   onToggleFavorite={onToggleFavorite}
                   isBookingPending={isBookingPending}
+                  isBooked={bookedVendorIds.includes(vendor.id)}
                 />
               ))}
             </div>
