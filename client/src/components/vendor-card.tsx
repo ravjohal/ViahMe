@@ -27,7 +27,7 @@ interface VendorCardProps {
   isFavorited?: boolean;
   onToggleFavorite?: (vendorId: string) => void;
   isBookingPending?: boolean;
-  isBooked?: boolean;
+  bookedEventIds?: string[];
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -71,12 +71,15 @@ export function VendorCard({
   isFavorited = false,
   onToggleFavorite,
   isBookingPending = false,
-  isBooked = false,
+  bookedEventIds = [],
 }: VendorCardProps) {
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
   const [bookingNotes, setBookingNotes] = useState("");
   const [offlinePopoverOpen, setOfflinePopoverOpen] = useState(false);
   const [requestPopoverOpen, setRequestPopoverOpen] = useState(false);
+  
+  const hasBookedEvents = bookedEventIds.length > 0;
+  const unbookedEvents = events.filter(e => !bookedEventIds.includes(e.id));
 
   const rating = vendor.rating ? parseFloat(vendor.rating.toString()) : 0;
   const reviewCount = vendor.reviewCount || 0;
@@ -219,31 +222,38 @@ export function VendorCard({
           {/* LOGGED IN USER BEHAVIOR */}
           {isLoggedIn && (
             <>
-              {/* Show "Booked" status if vendor is already booked */}
-              {isBooked ? (
-                <div className="w-full py-2 px-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-md flex items-center justify-center gap-2" data-testid={`status-booked-${vendor.id}`}>
-                  <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
-                  <span className="text-sm font-medium text-green-700 dark:text-green-300">Booked</span>
+              {/* Show booked events indicator if vendor has bookings */}
+              {hasBookedEvents && (
+                <div className="w-full py-1.5 px-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-md flex items-center gap-2" data-testid={`status-booked-${vendor.id}`}>
+                  <CheckCircle className="w-3.5 h-3.5 text-green-600 dark:text-green-400 flex-shrink-0" />
+                  <span className="text-xs font-medium text-green-700 dark:text-green-300">
+                    Booked for {bookedEventIds.length} event{bookedEventIds.length > 1 ? 's' : ''}
+                  </span>
                 </div>
-              ) : vendor.claimed ? (
-                /* Claimed vendor: Show Request Booking with popover */
+              )}
+
+              {/* Claimed vendor: Show Request Booking with popover */}
+              {vendor.claimed ? (
                 <Popover open={requestPopoverOpen} onOpenChange={setRequestPopoverOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       className="w-full"
                       size="sm"
+                      variant={hasBookedEvents ? "outline" : "default"}
                       onClick={(e) => e.stopPropagation()}
-                      disabled={isBookingPending}
+                      disabled={isBookingPending || unbookedEvents.length === 0}
                       data-testid={`button-request-booking-${vendor.id}`}
                     >
                       <Send className="w-3.5 h-3.5 mr-1.5" />
-                      Request Booking
+                      {hasBookedEvents ? "Book More Events" : "Request Booking"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-80" align="start" onClick={(e) => e.stopPropagation()}>
                     <div className="space-y-4">
                       <div>
-                        <h4 className="font-semibold text-sm mb-1">Request Booking</h4>
+                        <h4 className="font-semibold text-sm mb-1">
+                          {hasBookedEvents ? "Book Additional Events" : "Request Booking"}
+                        </h4>
                         <p className="text-xs text-muted-foreground">
                           Send a booking request to {vendor.name}. They will confirm your booking.
                         </p>
@@ -255,22 +265,29 @@ export function VendorCard({
                           <p className="text-xs text-muted-foreground">No events created yet</p>
                         ) : (
                           <div className="space-y-2 max-h-40 overflow-y-auto">
-                            {events.map((event) => (
-                              <div key={event.id} className="flex items-center gap-2">
-                                <Checkbox
-                                  id={`request-event-${event.id}`}
-                                  checked={selectedEvents.includes(event.id)}
-                                  onCheckedChange={() => handleEventToggle(event.id)}
-                                  data-testid={`checkbox-request-event-${event.id}`}
-                                />
-                                <label
-                                  htmlFor={`request-event-${event.id}`}
-                                  className="text-sm cursor-pointer flex-1"
-                                >
-                                  {event.name}
-                                </label>
-                              </div>
-                            ))}
+                            {events.map((event) => {
+                              const isAlreadyBooked = bookedEventIds.includes(event.id);
+                              return (
+                                <div key={event.id} className="flex items-center gap-2">
+                                  <Checkbox
+                                    id={`request-event-${event.id}`}
+                                    checked={isAlreadyBooked || selectedEvents.includes(event.id)}
+                                    onCheckedChange={() => !isAlreadyBooked && handleEventToggle(event.id)}
+                                    disabled={isAlreadyBooked}
+                                    data-testid={`checkbox-request-event-${event.id}`}
+                                  />
+                                  <label
+                                    htmlFor={`request-event-${event.id}`}
+                                    className={`text-sm flex-1 ${isAlreadyBooked ? 'text-muted-foreground' : 'cursor-pointer'}`}
+                                  >
+                                    {event.name}
+                                    {isAlreadyBooked && (
+                                      <span className="ml-1.5 text-xs text-green-600 dark:text-green-400">(booked)</span>
+                                    )}
+                                  </label>
+                                </div>
+                              );
+                            })}
                           </div>
                         )}
                       </div>
@@ -304,18 +321,21 @@ export function VendorCard({
                     <Button
                       className="w-full"
                       size="sm"
+                      variant={hasBookedEvents ? "outline" : "default"}
                       onClick={(e) => e.stopPropagation()}
-                      disabled={isBookingPending}
+                      disabled={isBookingPending || unbookedEvents.length === 0}
                       data-testid={`button-offline-booking-${vendor.id}`}
                     >
                       <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
-                      Mark as Booked
+                      {hasBookedEvents ? "Book More Events" : "Mark as Booked"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-80" align="start" onClick={(e) => e.stopPropagation()}>
                     <div className="space-y-4">
                       <div>
-                        <h4 className="font-semibold text-sm mb-1">Mark as Booked</h4>
+                        <h4 className="font-semibold text-sm mb-1">
+                          {hasBookedEvents ? "Book Additional Events" : "Mark as Booked"}
+                        </h4>
                         <p className="text-xs text-muted-foreground">
                           Already booked {vendor.name} outside the app? Track it here.
                         </p>
@@ -327,22 +347,29 @@ export function VendorCard({
                           <p className="text-xs text-muted-foreground">No events created yet</p>
                         ) : (
                           <div className="space-y-2 max-h-40 overflow-y-auto">
-                            {events.map((event) => (
-                              <div key={event.id} className="flex items-center gap-2">
-                                <Checkbox
-                                  id={`offline-event-${event.id}`}
-                                  checked={selectedEvents.includes(event.id)}
-                                  onCheckedChange={() => handleEventToggle(event.id)}
-                                  data-testid={`checkbox-offline-event-${event.id}`}
-                                />
-                                <label
-                                  htmlFor={`offline-event-${event.id}`}
-                                  className="text-sm cursor-pointer flex-1"
-                                >
-                                  {event.name}
-                                </label>
-                              </div>
-                            ))}
+                            {events.map((event) => {
+                              const isAlreadyBooked = bookedEventIds.includes(event.id);
+                              return (
+                                <div key={event.id} className="flex items-center gap-2">
+                                  <Checkbox
+                                    id={`offline-event-${event.id}`}
+                                    checked={isAlreadyBooked || selectedEvents.includes(event.id)}
+                                    onCheckedChange={() => !isAlreadyBooked && handleEventToggle(event.id)}
+                                    disabled={isAlreadyBooked}
+                                    data-testid={`checkbox-offline-event-${event.id}`}
+                                  />
+                                  <label
+                                    htmlFor={`offline-event-${event.id}`}
+                                    className={`text-sm flex-1 ${isAlreadyBooked ? 'text-muted-foreground' : 'cursor-pointer'}`}
+                                  >
+                                    {event.name}
+                                    {isAlreadyBooked && (
+                                      <span className="ml-1.5 text-xs text-green-600 dark:text-green-400">(booked)</span>
+                                    )}
+                                  </label>
+                                </div>
+                              );
+                            })}
                           </div>
                         )}
                       </div>
