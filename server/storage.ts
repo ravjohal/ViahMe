@@ -159,6 +159,8 @@ import {
   type InsertGuestCollectorLink,
   type GuestCollectorSubmission,
   type InsertGuestCollectorSubmission,
+  type VendorFavorite,
+  type InsertVendorFavorite,
 } from "@shared/schema";
 import { randomUUID, randomBytes } from "crypto";
 import bcrypt from "bcrypt";
@@ -253,6 +255,12 @@ export interface IStorage {
   getBookingsByVendor(vendorId: string): Promise<Booking[]>;
   createBooking(booking: InsertBooking): Promise<Booking>;
   updateBooking(id: string, booking: Partial<InsertBooking>): Promise<Booking | undefined>;
+
+  // Vendor Favorites
+  getVendorFavoritesByWedding(weddingId: string): Promise<VendorFavorite[]>;
+  getVendorFavorite(weddingId: string, vendorId: string): Promise<VendorFavorite | undefined>;
+  addVendorFavorite(favorite: InsertVendorFavorite): Promise<VendorFavorite>;
+  removeVendorFavorite(weddingId: string, vendorId: string): Promise<boolean>;
 
   // Budget Categories
   getBudgetCategory(id: string): Promise<BudgetCategory | undefined>;
@@ -1392,6 +1400,36 @@ export class MemStorage implements IStorage {
     }
     this.bookings.set(id, updated);
     return updated;
+  }
+
+  // Vendor Favorites
+  private vendorFavorites: Map<string, VendorFavorite> = new Map();
+
+  async getVendorFavoritesByWedding(weddingId: string): Promise<VendorFavorite[]> {
+    return Array.from(this.vendorFavorites.values()).filter((f) => f.weddingId === weddingId);
+  }
+
+  async getVendorFavorite(weddingId: string, vendorId: string): Promise<VendorFavorite | undefined> {
+    return Array.from(this.vendorFavorites.values()).find(
+      (f) => f.weddingId === weddingId && f.vendorId === vendorId
+    );
+  }
+
+  async addVendorFavorite(insertFavorite: InsertVendorFavorite): Promise<VendorFavorite> {
+    const id = randomUUID();
+    const favorite: VendorFavorite = {
+      ...insertFavorite,
+      id,
+      createdAt: new Date(),
+    };
+    this.vendorFavorites.set(id, favorite);
+    return favorite;
+  }
+
+  async removeVendorFavorite(weddingId: string, vendorId: string): Promise<boolean> {
+    const favorite = await this.getVendorFavorite(weddingId, vendorId);
+    if (!favorite) return false;
+    return this.vendorFavorites.delete(favorite.id);
   }
 
   // Budget Categories
@@ -4329,6 +4367,41 @@ export class DBStorage implements IStorage {
   async updateBooking(id: string, update: Partial<InsertBooking>): Promise<Booking | undefined> {
     const result = await this.db.update(schema.bookings).set(update).where(eq(schema.bookings.id, id)).returning();
     return result[0];
+  }
+
+  // Vendor Favorites
+  async getVendorFavoritesByWedding(weddingId: string): Promise<VendorFavorite[]> {
+    return await this.db.select().from(schema.vendorFavorites).where(eq(schema.vendorFavorites.weddingId, weddingId));
+  }
+
+  async getVendorFavorite(weddingId: string, vendorId: string): Promise<VendorFavorite | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.vendorFavorites)
+      .where(
+        and(
+          eq(schema.vendorFavorites.weddingId, weddingId),
+          eq(schema.vendorFavorites.vendorId, vendorId)
+        )
+      );
+    return result[0];
+  }
+
+  async addVendorFavorite(insertFavorite: InsertVendorFavorite): Promise<VendorFavorite> {
+    const result = await this.db.insert(schema.vendorFavorites).values(insertFavorite).returning();
+    return result[0];
+  }
+
+  async removeVendorFavorite(weddingId: string, vendorId: string): Promise<boolean> {
+    await this.db
+      .delete(schema.vendorFavorites)
+      .where(
+        and(
+          eq(schema.vendorFavorites.weddingId, weddingId),
+          eq(schema.vendorFavorites.vendorId, vendorId)
+        )
+      );
+    return true;
   }
 
   // Budget Categories
