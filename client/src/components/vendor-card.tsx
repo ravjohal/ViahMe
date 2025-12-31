@@ -139,7 +139,7 @@ export function VendorCard({
             <Button
               variant="ghost"
               size="icon"
-              className="absolute top-3 right-3 bg-white/90 hover:bg-white shadow-sm"
+              className="absolute top-3 right-3 z-10 bg-white/90 hover:bg-white shadow-sm"
               onClick={(e) => {
                 e.stopPropagation();
                 onToggleFavorite(vendor.id);
@@ -171,7 +171,7 @@ export function VendorCard({
             <Button
               variant="ghost"
               size="icon"
-              className="absolute top-3 right-3 bg-white/90 hover:bg-white shadow-sm"
+              className="absolute top-3 right-3 z-10 bg-white/90 hover:bg-white shadow-sm"
               onClick={(e) => {
                 e.stopPropagation();
                 onToggleFavorite(vendor.id);
