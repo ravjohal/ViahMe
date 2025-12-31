@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Search, Filter, SlidersHorizontal, GitCompare, X, Info, MapPin, Plus } from "lucide-react";
-import type { Vendor, Wedding } from "@shared/schema";
+import type { Vendor, Wedding, Event } from "@shared/schema";
 import { VendorCard } from "./vendor-card";
 import { VendorCategoryGuide } from "./vendor-category-guide";
 
@@ -25,6 +25,12 @@ interface VendorDirectoryProps {
   onOpenComparison?: () => void;
   isLoggedIn?: boolean;
   onSubmitVendor?: () => void;
+  events?: Event[];
+  onOfflineBook?: (vendorId: string, eventIds: string[], notes: string) => void;
+  onRequestBooking?: (vendorId: string, eventIds: string[], notes: string) => void;
+  favoritedVendorIds?: string[];
+  onToggleFavorite?: (vendorId: string) => void;
+  isBookingPending?: boolean;
 }
 
 // Map budget amounts to price range tiers
@@ -188,6 +194,12 @@ export function VendorDirectory({
   onOpenComparison,
   isLoggedIn = true,
   onSubmitVendor,
+  events = [],
+  onOfflineBook,
+  onRequestBooking,
+  favoritedVendorIds = [],
+  onToggleFavorite,
+  isBookingPending = false,
 }: VendorDirectoryProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -515,6 +527,12 @@ export function VendorDirectory({
                 onAddToComparison={onAddToComparison}
                 isInComparison={comparisonVendors.some(v => v.id === vendor.id)}
                 isLoggedIn={isLoggedIn}
+                events={events}
+                onOfflineBook={onOfflineBook}
+                onRequestBooking={onRequestBooking}
+                isFavorited={favoritedVendorIds.includes(vendor.id)}
+                onToggleFavorite={onToggleFavorite}
+                isBookingPending={isBookingPending}
               />
             ))}
           </div>
@@ -557,6 +575,12 @@ export function VendorDirectory({
                   onAddToComparison={onAddToComparison}
                   isInComparison={comparisonVendors.some(v => v.id === vendor.id)}
                   isLoggedIn={isLoggedIn}
+                  events={events}
+                  onOfflineBook={onOfflineBook}
+                  onRequestBooking={onRequestBooking}
+                  isFavorited={favoritedVendorIds.includes(vendor.id)}
+                  onToggleFavorite={onToggleFavorite}
+                  isBookingPending={isBookingPending}
                 />
               ))}
             </div>

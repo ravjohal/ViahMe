@@ -1,9 +1,18 @@
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, MapPin, DollarSign, GitCompare, Check, UserPlus, Briefcase, Mail, Phone, Globe, Instagram } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Star, MapPin, DollarSign, GitCompare, Check, UserPlus, Briefcase, Mail, Phone, Globe, Instagram, Heart, Calendar, Send, CheckCircle } from "lucide-react";
 import { Link } from "wouter";
-import type { Vendor } from "@shared/schema";
+import type { Vendor, Event } from "@shared/schema";
 
 interface VendorCardProps {
   vendor: Vendor;
@@ -12,6 +21,12 @@ interface VendorCardProps {
   onAddToComparison?: (vendor: Vendor) => void;
   isInComparison?: boolean;
   isLoggedIn?: boolean;
+  events?: Event[];
+  onOfflineBook?: (vendorId: string, eventIds: string[], notes: string) => void;
+  onRequestBooking?: (vendorId: string, eventIds: string[], notes: string) => void;
+  isFavorited?: boolean;
+  onToggleFavorite?: (vendorId: string) => void;
+  isBookingPending?: boolean;
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -49,11 +64,21 @@ export function VendorCard({
   onAddToComparison,
   isInComparison,
   isLoggedIn = true,
+  events = [],
+  onOfflineBook,
+  onRequestBooking,
+  isFavorited = false,
+  onToggleFavorite,
+  isBookingPending = false,
 }: VendorCardProps) {
+  const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
+  const [bookingNotes, setBookingNotes] = useState("");
+  const [offlinePopoverOpen, setOfflinePopoverOpen] = useState(false);
+  const [requestPopoverOpen, setRequestPopoverOpen] = useState(false);
+
   const rating = vendor.rating ? parseFloat(vendor.rating.toString()) : 0;
   const reviewCount = vendor.reviewCount || 0;
   
-  // Check if vendor has any contact details in the database
   const hasContactDetails = !!(
     vendor.email || 
     vendor.phone || 
@@ -63,6 +88,32 @@ export function VendorCard({
     vendor.twitter ||
     vendor.contact
   );
+
+  const handleEventToggle = (eventId: string) => {
+    setSelectedEvents(prev => 
+      prev.includes(eventId) 
+        ? prev.filter(id => id !== eventId)
+        : [...prev, eventId]
+    );
+  };
+
+  const handleOfflineBookSubmit = () => {
+    if (selectedEvents.length > 0 && onOfflineBook) {
+      onOfflineBook(vendor.id, selectedEvents, bookingNotes);
+      setSelectedEvents([]);
+      setBookingNotes("");
+      setOfflinePopoverOpen(false);
+    }
+  };
+
+  const handleRequestBookingSubmit = () => {
+    if (selectedEvents.length > 0 && onRequestBooking) {
+      onRequestBooking(vendor.id, selectedEvents, bookingNotes);
+      setSelectedEvents([]);
+      setBookingNotes("");
+      setRequestPopoverOpen(false);
+    }
+  };
 
   return (
     <Card
@@ -83,6 +134,21 @@ export function VendorCard({
               <span className="text-xs font-semibold text-primary-foreground">RECOMMENDED</span>
             </div>
           )}
+          {/* Favorite button */}
+          {isLoggedIn && onToggleFavorite && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-3 right-3 bg-white/90 hover:bg-white shadow-sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleFavorite(vendor.id);
+              }}
+              data-testid={`button-favorite-${vendor.id}`}
+            >
+              <Heart className={`w-4 h-4 ${isFavorited ? 'fill-red-500 text-red-500' : 'text-muted-foreground'}`} />
+            </Button>
+          )}
           {/* Rating badge on image */}
           {reviewCount > 0 && (
             <div className="absolute bottom-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/95 shadow-sm">
@@ -99,6 +165,21 @@ export function VendorCard({
             <div className="absolute top-3 left-3 bg-primary px-3 py-1 rounded-full shadow-md">
               <span className="text-xs font-semibold text-primary-foreground">RECOMMENDED</span>
             </div>
+          )}
+          {/* Favorite button for no-cover cards */}
+          {isLoggedIn && onToggleFavorite && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-3 right-3 bg-white/90 hover:bg-white shadow-sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleFavorite(vendor.id);
+              }}
+              data-testid={`button-favorite-${vendor.id}`}
+            >
+              <Heart className={`w-4 h-4 ${isFavorited ? 'fill-red-500 text-red-500' : 'text-muted-foreground'}`} />
+            </Button>
           )}
         </div>
       )}
@@ -148,7 +229,7 @@ export function VendorCard({
           </p>
         )}
 
-        {/* Location and Price - always visible as general info */}
+        {/* Location and Price */}
         <div className="flex items-center gap-4 mb-4 text-sm">
           <div className="flex items-center gap-1.5 text-muted-foreground">
             <MapPin className="w-4 h-4" />
@@ -227,31 +308,162 @@ export function VendorCard({
           {/* LOGGED IN USER BEHAVIOR */}
           {isLoggedIn && (
             <>
-              {/* Claimed vendor: Show Request Booking */}
+              {/* Claimed vendor: Show Request Booking with popover */}
               {vendor.claimed ? (
-                <Button
-                  className="w-full"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onSelect?.(vendor);
-                  }}
-                  data-testid={`button-request-booking-${vendor.id}`}
-                >
-                  Request Booking
-                </Button>
+                <Popover open={requestPopoverOpen} onOpenChange={setRequestPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      className="w-full"
+                      onClick={(e) => e.stopPropagation()}
+                      disabled={isBookingPending}
+                      data-testid={`button-request-booking-${vendor.id}`}
+                    >
+                      <Send className="w-4 h-4 mr-2" />
+                      Request Booking
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80" align="start" onClick={(e) => e.stopPropagation()}>
+                    <div className="space-y-4">
+                      <div>
+                        <h4 className="font-semibold text-sm mb-1">Request Booking</h4>
+                        <p className="text-xs text-muted-foreground">
+                          Send a booking request to {vendor.name}. They will confirm your booking.
+                        </p>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Select Events</Label>
+                        {events.length === 0 ? (
+                          <p className="text-xs text-muted-foreground">No events created yet</p>
+                        ) : (
+                          <div className="space-y-2 max-h-40 overflow-y-auto">
+                            {events.map((event) => (
+                              <div key={event.id} className="flex items-center gap-2">
+                                <Checkbox
+                                  id={`request-event-${event.id}`}
+                                  checked={selectedEvents.includes(event.id)}
+                                  onCheckedChange={() => handleEventToggle(event.id)}
+                                  data-testid={`checkbox-request-event-${event.id}`}
+                                />
+                                <label
+                                  htmlFor={`request-event-${event.id}`}
+                                  className="text-sm cursor-pointer flex-1"
+                                >
+                                  {event.name}
+                                </label>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Notes (optional)</Label>
+                        <Textarea
+                          placeholder="Any special requests or details..."
+                          value={bookingNotes}
+                          onChange={(e) => setBookingNotes(e.target.value)}
+                          className="h-20 resize-none"
+                          data-testid={`textarea-request-notes-${vendor.id}`}
+                        />
+                      </div>
+
+                      <Button
+                        className="w-full"
+                        onClick={handleRequestBookingSubmit}
+                        disabled={selectedEvents.length === 0 || isBookingPending}
+                        data-testid={`button-submit-request-${vendor.id}`}
+                      >
+                        {isBookingPending ? "Sending..." : "Send Request"}
+                      </Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               ) : (
-                <Button
-                  variant="secondary"
-                  className="w-full"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onSelect?.(vendor);
-                  }}
-                  data-testid={`button-view-details-${vendor.id}`}
-                >
-                  View Details
-                </Button>
+                /* Unclaimed vendor: Show Mark as Booked (offline) with popover */
+                <Popover open={offlinePopoverOpen} onOpenChange={setOfflinePopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      className="w-full"
+                      onClick={(e) => e.stopPropagation()}
+                      disabled={isBookingPending}
+                      data-testid={`button-offline-booking-${vendor.id}`}
+                    >
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Mark as Booked
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80" align="start" onClick={(e) => e.stopPropagation()}>
+                    <div className="space-y-4">
+                      <div>
+                        <h4 className="font-semibold text-sm mb-1">Mark as Booked</h4>
+                        <p className="text-xs text-muted-foreground">
+                          Already booked {vendor.name} outside the app? Track it here.
+                        </p>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Select Events</Label>
+                        {events.length === 0 ? (
+                          <p className="text-xs text-muted-foreground">No events created yet</p>
+                        ) : (
+                          <div className="space-y-2 max-h-40 overflow-y-auto">
+                            {events.map((event) => (
+                              <div key={event.id} className="flex items-center gap-2">
+                                <Checkbox
+                                  id={`offline-event-${event.id}`}
+                                  checked={selectedEvents.includes(event.id)}
+                                  onCheckedChange={() => handleEventToggle(event.id)}
+                                  data-testid={`checkbox-offline-event-${event.id}`}
+                                />
+                                <label
+                                  htmlFor={`offline-event-${event.id}`}
+                                  className="text-sm cursor-pointer flex-1"
+                                >
+                                  {event.name}
+                                </label>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Notes (optional)</Label>
+                        <Textarea
+                          placeholder="Booking details, price agreed, etc..."
+                          value={bookingNotes}
+                          onChange={(e) => setBookingNotes(e.target.value)}
+                          className="h-20 resize-none"
+                          data-testid={`textarea-offline-notes-${vendor.id}`}
+                        />
+                      </div>
+
+                      <Button
+                        className="w-full"
+                        onClick={handleOfflineBookSubmit}
+                        disabled={selectedEvents.length === 0 || isBookingPending}
+                        data-testid={`button-submit-offline-${vendor.id}`}
+                      >
+                        {isBookingPending ? "Saving..." : "Save Booking"}
+                      </Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               )}
+
+              {/* View Details button - secondary action */}
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelect?.(vendor);
+                }}
+                data-testid={`button-view-details-${vendor.id}`}
+              >
+                View Details
+              </Button>
             </>
           )}
 

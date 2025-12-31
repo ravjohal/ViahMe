@@ -396,6 +396,16 @@ export default function Vendors() {
                 onOpenComparison={() => setShowComparison(true)}
                 isLoggedIn={!!user}
                 onSubmitVendor={() => setShowSubmitVendor(true)}
+                events={events}
+                onOfflineBook={(vendorId, eventIds, notes) => {
+                  offlineBookingMutation.mutate({ vendorId, eventIds, notes });
+                }}
+                onRequestBooking={(vendorId, eventIds, notes) => {
+                  bookingMutation.mutate({ vendorId, eventIds, notes });
+                }}
+                favoritedVendorIds={favorites.map(f => f.vendorId)}
+                onToggleFavorite={toggleFavorite}
+                isBookingPending={bookingMutation.isPending || offlineBookingMutation.isPending}
               />
             </TabsContent>
 
@@ -610,6 +620,7 @@ export default function Vendors() {
             onOpenComparison={() => setShowComparison(true)}
             isLoggedIn={!!user}
             onSubmitVendor={() => setShowSubmitVendor(true)}
+            events={events}
           />
         )}
       </main>
@@ -628,12 +639,12 @@ export default function Vendors() {
         isAuthenticated={!!user && user.role === "couple"}
         onAuthRequired={() => setLocation("/onboarding")}
         weddingId={wedding?.id}
-        coupleName={wedding?.coupleName1 && wedding?.coupleName2 
-          ? `${wedding.coupleName1} & ${wedding.coupleName2}` 
-          : wedding?.coupleName1 || undefined}
-        weddingDate={wedding?.date || undefined}
+        coupleName={wedding?.partner1Name && wedding?.partner2Name 
+          ? `${wedding.partner1Name} & ${wedding.partner2Name}` 
+          : wedding?.partner1Name || undefined}
+        weddingDate={wedding?.weddingDate ? wedding.weddingDate.toISOString() : undefined}
         tradition={wedding?.tradition || undefined}
-        city={wedding?.city || undefined}
+        city={wedding?.location || undefined}
       />
 
       <VendorComparisonModal
