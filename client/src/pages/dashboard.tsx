@@ -453,7 +453,7 @@ export default function Dashboard() {
         : "Find culturally-specialized providers",
       completed: hasVendors,
       inProgress: false,
-      path: "/vendors",
+      path: hasVendors ? "/vendors?view=booked" : "/vendors",
       color: "blue",
     },
     {
@@ -549,7 +549,7 @@ export default function Dashboard() {
             </Card>
             <Card 
               className="p-2 hover-elevate cursor-pointer text-center" 
-              onClick={() => setLocation("/vendors")}
+              onClick={() => setLocation("/vendors?view=booked")}
               data-testid="mobile-stat-vendors"
             >
               <Briefcase className="w-4 h-4 mx-auto mb-1 text-blue-600" />
