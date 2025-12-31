@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { GuestListManager } from "@/components/guest-list-manager";
 import { GuestImportDialog } from "@/components/guest-import-dialog";
+import { CollectorLinksManager } from "@/components/collector-links-manager";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -60,6 +61,7 @@ import {
   Plus,
   HelpCircle,
   Pencil,
+  Share2,
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import QRCode from "qrcode";
@@ -254,6 +256,7 @@ export default function Guests() {
   
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [collectorLinksDialogOpen, setCollectorLinksDialogOpen] = useState(false);
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
   
@@ -1671,7 +1674,7 @@ export default function Guests() {
                       </p>
                     </div>
 
-                    <div className="grid md:grid-cols-2 gap-4 sm:gap-6 max-w-2xl mx-auto">
+                    <div className="grid md:grid-cols-3 gap-4 sm:gap-6 max-w-4xl mx-auto">
                       <Card className="hover-elevate cursor-pointer" onClick={() => setImportDialogOpen(true)} data-testid="card-import-guests">
                         <CardContent className="p-4 sm:p-6 text-center">
                           <div className="inline-flex p-3 rounded-full bg-blue-100 dark:bg-blue-900/30 mb-3 sm:mb-4">
@@ -1700,6 +1703,22 @@ export default function Guests() {
                           <Button variant="outline" className="w-full min-h-[48px]" data-testid="button-add-manual">
                             <Plus className="w-4 h-4 mr-2" />
                             Add Family
+                          </Button>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="hover-elevate cursor-pointer" onClick={() => setCollectorLinksDialogOpen(true)} data-testid="card-collector-links">
+                        <CardContent className="p-4 sm:p-6 text-center">
+                          <div className="inline-flex p-3 rounded-full bg-purple-100 dark:bg-purple-900/30 mb-3 sm:mb-4">
+                            <Share2 className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600" />
+                          </div>
+                          <h3 className="font-semibold text-base sm:text-lg mb-2">Share with Family</h3>
+                          <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
+                            Let parents/relatives add guests
+                          </p>
+                          <Button variant="outline" className="w-full min-h-[48px]" data-testid="button-collector-links">
+                            <Share2 className="w-4 h-4 mr-2" />
+                            Create Links
                           </Button>
                         </CardContent>
                       </Card>
@@ -2481,6 +2500,22 @@ export default function Guests() {
         events={events}
         onImport={handleBulkImport}
       />
+
+      {/* Collector Links Dialog */}
+      <Dialog open={collectorLinksDialogOpen} onOpenChange={setCollectorLinksDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Share2 className="h-5 w-5 text-primary" />
+              Share with Family Members
+            </DialogTitle>
+            <DialogDescription>
+              Create shareable links for parents, aunties, and uncles to add guest names. They don't need an account - just share the link!
+            </DialogDescription>
+          </DialogHeader>
+          <CollectorLinksManager weddingId={wedding.id} />
+        </DialogContent>
+      </Dialog>
 
       {/* Guest Form Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
