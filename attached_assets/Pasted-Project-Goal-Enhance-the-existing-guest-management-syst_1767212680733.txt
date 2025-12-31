@@ -1,0 +1,45 @@
+Project Goal: Enhance the existing guest management system to handle South Asian wedding social dynamics, specifically focusing on "Dadi-proof" collection and "Consensus-based" triage.
+
+1. Database Schema Enhancements (Modify shared/schema.ts)
+Desi Dietary Enum: Update the dietaryRestrictions field logic (or add a new column dietaryType) to include a specific dropdown for: Strict Vegetarian, Jain (no root veggies), Swaminarayan, Eggless, and Halal.
+
+The "Lifafa" Tracker: Add a giftNotes or lifafaAmount field to the households table to track monetary gifts post-event.
+
+Household Unit: Ensure the guest_collector_submissions table supports "Household-First" entry by allowing one submission to contain multiple guest names (currently it's one name per submission).
+
+2. The "Dadi-Proof" Collector UI (Enhance client/src/pages/guest-collector.tsx)
+The "Stacking" Form: Replace the standard form with a step-by-step wizard:
+
+Step 1: "Family Name" (e.g., The Sharma Family).
+
+Step 2: "Who's coming?" (A simple list of names).
+
+Step 3: "Which Side?" (Large visual buttons for Bride/Groom).
+
+Voice-to-Guest: Add a microphone icon using the Web Speech API. When Grandma says "Add the Malhotra family from London, they are four people, and they need Jain food," use a simple parsing regex or call the existing Gemini API (server/ai/gemini.ts) to pre-fill the form.
+
+A11y: Ensure all buttons are at least 48px tall and use 16pt font for all inputs to accommodate elders.
+
+3. The "Consensus" Triage Dashboard (Enhance client/src/pages/guest-management.tsx)
+The Quota Tracker: Add a visual header showing:
+
+Groom's Side: [Current]/[Limit]
+
+Bride's Side: [Current]/[Limit]
+
+Calculate these using the quotaLimit from the guest_sources table.
+
+Cost Impact Cards: For every pending suggestion, display a calculated "Cost Impact" line: Estimated Cost = (maxCount * defaultCostPerHead) using values from guestBudgetSettings.
+
+Triage Actions: Update the Suggestion Cards to include:
+
+Waitlist (B-List): Map this to a new consensusStatus called waitlisted.
+
+Discuss: Map this to under_discussion to highlight the card in yellow for the couple.
+
+WhatsApp "Ping": Add a button next to each guest that triggers a whatsapp://send deep-link with a pre-filled message: "Hi [Name], we are finalizing our guest list. Could you please confirm the spelling of everyone in the [Household Name]?".
+
+4. Smart Logic: Duplicate Detection
+Backend Check: Create a utility in server/routes.ts that flags new submissions if the householdName or contactEmail matches an existing entry in the households table.
+
+UI Alert: Display a "Potential Duplicate" badge on suggestion cards in the review queue.

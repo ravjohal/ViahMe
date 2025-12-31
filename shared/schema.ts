@@ -563,12 +563,18 @@ export const households = pgTable("households", {
   weddingId: varchar("wedding_id").notNull(),
   name: text("name").notNull(), // e.g., "The Patel Family"
   contactEmail: text("contact_email"), // Primary contact email for invitations (required for sending)
+  contactPhone: text("contact_phone"), // Phone number for SMS/WhatsApp pings
   maxCount: integer("max_count").notNull().default(1), // Total seats allocated (e.g., 4)
   affiliation: text("affiliation").notNull().default("bride"), // "bride" | "groom" | "mutual"
   relationshipTier: text("relationship_tier").notNull().default("friend"), // "immediate_family" | "extended_family" | "friend" | "parents_friend"
   // Priority and source tracking for advanced guest management
   priorityTier: text("priority_tier").notNull().default("should_invite"), // "must_invite" | "should_invite" | "nice_to_have"
   sourceId: varchar("source_id"), // Reference to guest_sources table
+  // Desi dietary preferences for South Asian weddings
+  desiDietaryType: text("desi_dietary_type"), // 'strict_vegetarian' | 'jain' | 'swaminarayan' | 'eggless' | 'halal' | 'none'
+  // Lifafa (monetary gift) tracking post-wedding
+  lifafaAmount: decimal("lifafa_amount", { precision: 10, scale: 2 }), // Monetary gift amount
+  giftNotes: text("gift_notes"), // Notes about gifts received
   magicLinkTokenHash: varchar("magic_link_token_hash").unique(), // HASHED secure token for passwordless access
   magicLinkToken: varchar("magic_link_token"), // Plaintext token for QR/copy functionality
   magicLinkExpires: timestamp("magic_link_expires"), // Token expiration
@@ -581,6 +587,9 @@ export const insertHouseholdSchema = createInsertSchema(households).omit({
   magicLinkToken: true,
   magicLinkExpires: true,
   createdAt: true,
+}).extend({
+  desiDietaryType: z.enum(['strict_vegetarian', 'jain', 'swaminarayan', 'eggless', 'halal', 'none']).nullable().optional(),
+  lifafaAmount: z.string().nullable().optional(),
 });
 
 export type InsertHousehold = z.infer<typeof insertHouseholdSchema>;
@@ -609,7 +618,7 @@ export const guests = pgTable("guests", {
   // Privacy & Consensus fields for South Asian wedding side-based management
   visibility: text("visibility").notNull().default('shared'), // 'private' | 'shared' - private guests hidden from partner until shared
   addedBySide: text("added_by_side"), // 'bride' | 'groom' - which partner added this guest
-  consensusStatus: text("consensus_status").notNull().default('approved'), // 'pending' | 'under_discussion' | 'approved' | 'declined' | 'frozen'
+  consensusStatus: text("consensus_status").notNull().default('approved'), // 'pending' | 'under_discussion' | 'approved' | 'declined' | 'frozen' | 'waitlisted'
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -625,7 +634,7 @@ export const insertGuestSchema = createInsertSchema(guests).omit({
   rsvpStatus: z.enum(['pending', 'confirmed', 'declined']).optional(),
   visibility: z.enum(['private', 'shared']).optional(),
   addedBySide: z.enum(['bride', 'groom']).optional(),
-  consensusStatus: z.enum(['pending', 'under_discussion', 'approved', 'declined', 'frozen']).optional(),
+  consensusStatus: z.enum(['pending', 'under_discussion', 'approved', 'declined', 'frozen', 'waitlisted']).optional(),
 });
 
 export type InsertGuest = z.infer<typeof insertGuestSchema>;
@@ -663,13 +672,19 @@ export const insertGuestCollectorLinkSchema = createInsertSchema(guestCollectorL
 export type InsertGuestCollectorLink = z.infer<typeof insertGuestCollectorLinkSchema>;
 export type GuestCollectorLink = typeof guestCollectorLinks.$inferSelect;
 
-// Guest submissions through collector links
+// Guest submissions through collector links - supports household-first entry
 export const guestCollectorSubmissions = pgTable("guest_collector_submissions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   collectorLinkId: varchar("collector_link_id").notNull().references(() => guestCollectorLinks.id, { onDelete: 'cascade' }),
   weddingId: varchar("wedding_id").notNull(),
   submitterName: text("submitter_name"), // Name of person submitting (optional)
   submitterRelation: text("submitter_relation"), // e.g., "Mother of Bride"
+  // Household-first entry support (Dadi-proof)
+  householdName: text("household_name"), // e.g., "The Sharma Family" - for household-first entry
+  guestNames: text("guest_names").array(), // Array of guest names in the household
+  guestCount: integer("guest_count").default(1), // Number of guests in household
+  desiDietaryType: text("desi_dietary_type"), // 'strict_vegetarian' | 'jain' | 'swaminarayan' | 'eggless' | 'halal' | 'none'
+  // Legacy single guest fields (still supported)
   guestName: text("guest_name").notNull(),
   guestEmail: text("guest_email"),
   guestPhone: text("guest_phone"),
@@ -689,6 +704,9 @@ export const insertGuestCollectorSubmissionSchema = createInsertSchema(guestColl
   createdAt: true,
 }).extend({
   relationshipTier: z.enum(['immediate_family', 'extended_family', 'friend', 'parents_friend']).optional(),
+  desiDietaryType: z.enum(['strict_vegetarian', 'jain', 'swaminarayan', 'eggless', 'halal', 'none']).nullable().optional(),
+  guestNames: z.array(z.string()).nullable().optional(),
+  guestCount: z.number().optional(),
 });
 
 export type InsertGuestCollectorSubmission = z.infer<typeof insertGuestCollectorSubmissionSchema>;
