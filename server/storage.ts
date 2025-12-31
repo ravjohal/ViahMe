@@ -163,6 +163,12 @@ import {
   type InsertVendorFavorite,
   type TaskTemplate,
   taskTemplates,
+  type GuestCommunication,
+  type InsertGuestCommunication,
+  type CommunicationRecipient,
+  type InsertCommunicationRecipient,
+  guestCommunications,
+  communicationRecipients,
 } from "@shared/schema";
 import { randomUUID, randomBytes } from "crypto";
 import bcrypt from "bcrypt";
@@ -878,6 +884,35 @@ export interface IStorage {
   approveVendor(id: string, adminId: string, notes?: string): Promise<Vendor | undefined>;
   rejectVendor(id: string, adminId: string, notes?: string): Promise<Vendor | undefined>;
   getApprovedVendors(): Promise<Vendor[]>;
+
+  // Guest Communications
+  getGuestCommunication(id: string): Promise<GuestCommunication | undefined>;
+  getGuestCommunicationsByWedding(weddingId: string): Promise<GuestCommunication[]>;
+  createGuestCommunication(comm: InsertGuestCommunication): Promise<GuestCommunication>;
+  updateGuestCommunication(id: string, updates: Partial<GuestCommunication>): Promise<GuestCommunication | undefined>;
+  deleteGuestCommunication(id: string): Promise<boolean>;
+  
+  // Communication Recipients
+  getCommunicationRecipient(id: string): Promise<CommunicationRecipient | undefined>;
+  getCommunicationRecipientsByCommunication(communicationId: string): Promise<CommunicationRecipient[]>;
+  createCommunicationRecipient(recipient: InsertCommunicationRecipient): Promise<CommunicationRecipient>;
+  createCommunicationRecipientsBulk(recipients: InsertCommunicationRecipient[]): Promise<CommunicationRecipient[]>;
+  updateCommunicationRecipient(id: string, updates: Partial<CommunicationRecipient>): Promise<CommunicationRecipient | undefined>;
+  
+  // RSVP Statistics
+  getRsvpStatsByWedding(weddingId: string): Promise<{
+    total: number;
+    attending: number;
+    notAttending: number;
+    pending: number;
+    byEvent: Array<{
+      eventId: string;
+      eventName: string;
+      attending: number;
+      notAttending: number;
+      pending: number;
+    }>;
+  }>;
 }
 
 // Guest Planning Snapshot - comprehensive view of all guests and per-event costs
@@ -3926,6 +3961,35 @@ export class MemStorage implements IStorage {
   async getSideStatistics(weddingId: string): Promise<{ bride: { total: number; private: number; shared: number; byStatus: Record<string, number> }; groom: { total: number; private: number; shared: number; byStatus: Record<string, number> }; mutual: { total: number } }> { 
     return { bride: { total: 0, private: 0, shared: 0, byStatus: {} }, groom: { total: 0, private: 0, shared: 0, byStatus: {} }, mutual: { total: 0 } }; 
   }
+
+  // Guest Communications (stubs)
+  async getGuestCommunication(id: string): Promise<GuestCommunication | undefined> { return undefined; }
+  async getGuestCommunicationsByWedding(weddingId: string): Promise<GuestCommunication[]> { return []; }
+  async createGuestCommunication(comm: InsertGuestCommunication): Promise<GuestCommunication> { throw new Error("MemStorage does not support Guest Communications. Use DBStorage."); }
+  async updateGuestCommunication(id: string, updates: Partial<GuestCommunication>): Promise<GuestCommunication | undefined> { throw new Error("MemStorage does not support Guest Communications. Use DBStorage."); }
+  async deleteGuestCommunication(id: string): Promise<boolean> { return false; }
+  
+  // Communication Recipients (stubs)
+  async getCommunicationRecipient(id: string): Promise<CommunicationRecipient | undefined> { return undefined; }
+  async getCommunicationRecipientsByCommunication(communicationId: string): Promise<CommunicationRecipient[]> { return []; }
+  async createCommunicationRecipient(recipient: InsertCommunicationRecipient): Promise<CommunicationRecipient> { throw new Error("MemStorage does not support Communication Recipients. Use DBStorage."); }
+  async createCommunicationRecipientsBulk(recipients: InsertCommunicationRecipient[]): Promise<CommunicationRecipient[]> { throw new Error("MemStorage does not support Communication Recipients. Use DBStorage."); }
+  async updateCommunicationRecipient(id: string, updates: Partial<CommunicationRecipient>): Promise<CommunicationRecipient | undefined> { throw new Error("MemStorage does not support Communication Recipients. Use DBStorage."); }
+  
+  // RSVP Statistics (stubs)
+  async getRsvpStatsByWedding(weddingId: string): Promise<{
+    total: number;
+    attending: number;
+    notAttending: number;
+    pending: number;
+    byEvent: Array<{
+      eventId: string;
+      eventName: string;
+      attending: number;
+      notAttending: number;
+      pending: number;
+    }>;
+  }> { return { total: 0, attending: 0, notAttending: 0, pending: 0, byEvent: [] }; }
 }
 
 import { neon } from "@neondatabase/serverless";
@@ -9165,6 +9229,119 @@ export class DBStorage implements IStorage {
     }
     
     return stats;
+  }
+
+  // Guest Communications
+  async getGuestCommunication(id: string): Promise<GuestCommunication | undefined> {
+    const result = await this.db.select().from(guestCommunications)
+      .where(eq(guestCommunications.id, id));
+    return result[0];
+  }
+
+  async getGuestCommunicationsByWedding(weddingId: string): Promise<GuestCommunication[]> {
+    return await this.db.select().from(guestCommunications)
+      .where(eq(guestCommunications.weddingId, weddingId))
+      .orderBy(sql`${guestCommunications.createdAt} DESC`);
+  }
+
+  async createGuestCommunication(comm: InsertGuestCommunication): Promise<GuestCommunication> {
+    const result = await this.db.insert(guestCommunications).values(comm).returning();
+    return result[0];
+  }
+
+  async updateGuestCommunication(id: string, updates: Partial<GuestCommunication>): Promise<GuestCommunication | undefined> {
+    const result = await this.db.update(guestCommunications)
+      .set(updates)
+      .where(eq(guestCommunications.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteGuestCommunication(id: string): Promise<boolean> {
+    const result = await this.db.delete(guestCommunications)
+      .where(eq(guestCommunications.id, id));
+    return true;
+  }
+
+  // Communication Recipients
+  async getCommunicationRecipient(id: string): Promise<CommunicationRecipient | undefined> {
+    const result = await this.db.select().from(communicationRecipients)
+      .where(eq(communicationRecipients.id, id));
+    return result[0];
+  }
+
+  async getCommunicationRecipientsByCommunication(communicationId: string): Promise<CommunicationRecipient[]> {
+    return await this.db.select().from(communicationRecipients)
+      .where(eq(communicationRecipients.communicationId, communicationId));
+  }
+
+  async createCommunicationRecipient(recipient: InsertCommunicationRecipient): Promise<CommunicationRecipient> {
+    const result = await this.db.insert(communicationRecipients).values(recipient).returning();
+    return result[0];
+  }
+
+  async createCommunicationRecipientsBulk(recipients: InsertCommunicationRecipient[]): Promise<CommunicationRecipient[]> {
+    if (recipients.length === 0) return [];
+    const result = await this.db.insert(communicationRecipients).values(recipients).returning();
+    return result;
+  }
+
+  async updateCommunicationRecipient(id: string, updates: Partial<CommunicationRecipient>): Promise<CommunicationRecipient | undefined> {
+    const result = await this.db.update(communicationRecipients)
+      .set(updates)
+      .where(eq(communicationRecipients.id, id))
+      .returning();
+    return result[0];
+  }
+
+  // RSVP Statistics
+  async getRsvpStatsByWedding(weddingId: string): Promise<{
+    total: number;
+    attending: number;
+    notAttending: number;
+    pending: number;
+    byEvent: Array<{
+      eventId: string;
+      eventName: string;
+      attending: number;
+      notAttending: number;
+      pending: number;
+    }>;
+  }> {
+    // Get all events for this wedding
+    const events = await this.getEventsByWedding(weddingId);
+    
+    // Get all invitations for events in this wedding
+    const allInvitations: Invitation[] = [];
+    for (const event of events) {
+      const invitations = await this.getInvitationsByEvent(event.id);
+      allInvitations.push(...invitations);
+    }
+
+    // Calculate stats
+    const attending = allInvitations.filter(i => i.rsvpStatus === 'attending').length;
+    const notAttending = allInvitations.filter(i => i.rsvpStatus === 'not_attending').length;
+    const pending = allInvitations.filter(i => i.rsvpStatus === 'pending').length;
+
+    // Calculate per-event stats
+    const byEvent = events.map(event => {
+      const eventInvitations = allInvitations.filter(i => i.eventId === event.id);
+      return {
+        eventId: event.id,
+        eventName: event.name,
+        attending: eventInvitations.filter(i => i.rsvpStatus === 'attending').length,
+        notAttending: eventInvitations.filter(i => i.rsvpStatus === 'not_attending').length,
+        pending: eventInvitations.filter(i => i.rsvpStatus === 'pending').length,
+      };
+    });
+
+    return {
+      total: allInvitations.length,
+      attending,
+      notAttending,
+      pending,
+      byEvent,
+    };
   }
 }
 
