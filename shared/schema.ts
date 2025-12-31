@@ -692,18 +692,30 @@ export const guestCollectorSubmissions = pgTable("guest_collector_submissions", 
   householdName: text("household_name"), // e.g., "The Sharma Family" - for household-first entry
   guestNames: text("guest_names").array(), // Array of guest names in the household
   guestCount: integer("guest_count").default(1), // Number of guests in household
-  desiDietaryType: text("desi_dietary_type"), // 'strict_vegetarian' | 'jain' | 'swaminarayan' | 'eggless' | 'halal' | 'none'
+  desiDietaryType: text("desi_dietary_type"), // 'strict_vegetarian' | 'jain' | 'swaminarayan' | 'eggless' | 'halal' | 'none' (legacy household-level)
+  guestDietaryInfo: jsonb("guest_dietary_info"), // Per-guest dietary: [{name: string, dietary: string}]
   // Legacy single guest fields (still supported)
   guestName: text("guest_name").notNull(),
   guestEmail: text("guest_email"),
   guestPhone: text("guest_phone"),
   relationshipTier: text("relationship_tier"), // 'immediate_family' | 'extended_family' | 'friend' | 'parents_friend'
   notes: text("notes"), // Any notes about the guest
+  // Bulk entry support - allows adding multiple households at once
+  isBulkEntry: boolean("is_bulk_entry").default(false), // Whether this was added via bulk entry mode
+  mainContactName: text("main_contact_name"), // For bulk entries: the primary contact for invitations
   status: text("status").notNull().default('pending'), // 'pending' | 'approved' | 'declined'
   reviewedById: varchar("reviewed_by_id"),
   reviewedAt: timestamp("reviewed_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
+
+// Type for per-guest dietary info
+export const guestDietaryInfoSchema = z.array(z.object({
+  name: z.string(),
+  dietary: z.enum(['strict_vegetarian', 'jain', 'swaminarayan', 'eggless', 'halal', 'none']),
+}));
+
+export type GuestDietaryInfo = z.infer<typeof guestDietaryInfoSchema>;
 
 export const insertGuestCollectorSubmissionSchema = createInsertSchema(guestCollectorSubmissions).omit({
   id: true,
@@ -716,6 +728,9 @@ export const insertGuestCollectorSubmissionSchema = createInsertSchema(guestColl
   desiDietaryType: z.enum(['strict_vegetarian', 'jain', 'swaminarayan', 'eggless', 'halal', 'none']).nullable().optional(),
   guestNames: z.array(z.string()).nullable().optional(),
   guestCount: z.number().optional(),
+  guestDietaryInfo: guestDietaryInfoSchema.nullable().optional(),
+  isBulkEntry: z.boolean().optional(),
+  mainContactName: z.string().nullable().optional(),
 });
 
 export type InsertGuestCollectorSubmission = z.infer<typeof insertGuestCollectorSubmissionSchema>;
