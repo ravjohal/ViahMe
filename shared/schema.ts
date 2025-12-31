@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, decimal, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, decimal, boolean, timestamp, jsonb, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -228,7 +228,11 @@ export const vendors = pgTable("vendors", {
   approvalNotes: text("approval_notes"), // Admin notes for approval/rejection
   approvedBy: varchar("approved_by"), // Admin user ID who approved/rejected
   approvedAt: timestamp("approved_at"), // When the vendor was approved/rejected
-});
+}, (table) => ({
+  nameIdx: index("vendors_name_idx").on(table.name),
+  userIdIdx: index("vendors_user_id_idx").on(table.userId),
+  cityIdx: index("vendors_city_idx").on(table.city),
+}));
 
 export const VENDOR_CATEGORIES = [
   'makeup_artist',
@@ -475,7 +479,9 @@ export const budgetCategories = pgTable("budget_categories", {
   percentage: integer("percentage"),
   aiEstimate: jsonb("ai_estimate"),
   lastEstimatedAt: timestamp("last_estimated_at"),
-});
+}, (table) => ({
+  weddingIdIdx: index("budget_categories_wedding_id_idx").on(table.weddingId),
+}));
 
 export const insertBudgetCategorySchema = createInsertSchema(budgetCategories).omit({
   id: true,
@@ -620,7 +626,10 @@ export const guests = pgTable("guests", {
   addedBySide: text("added_by_side"), // 'bride' | 'groom' - which partner added this guest
   consensusStatus: text("consensus_status").notNull().default('approved'), // 'pending' | 'under_discussion' | 'approved' | 'declined' | 'frozen' | 'waitlisted'
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (table) => ({
+  weddingIdIdx: index("guests_wedding_id_idx").on(table.weddingId),
+  householdIdIdx: index("guests_household_id_idx").on(table.householdId),
+}));
 
 export const insertGuestSchema = createInsertSchema(guests).omit({
   id: true,
@@ -772,7 +781,11 @@ export const tasks = pgTable("tasks", {
   aiReason: text("ai_reason"), // Why AI recommended this task
   aiCategory: text("ai_category"), // AI categorization (e.g., 'vendor', 'venue', 'attire', 'ceremony')
   dismissed: boolean("dismissed").default(false), // If user dismissed the AI recommendation
-});
+}, (table) => ({
+  weddingIdIdx: index("tasks_wedding_id_idx").on(table.weddingId),
+  eventIdIdx: index("tasks_event_id_idx").on(table.eventId),
+  assignedToIdIdx: index("tasks_assigned_to_id_idx").on(table.assignedToId),
+}));
 
 export const insertTaskSchema = createInsertSchema(tasks).omit({
   id: true,
@@ -2716,7 +2729,10 @@ export const vendorLeads = pgTable("vendor_leads", {
   
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+}, (table) => ({
+  vendorIdIdx: index("vendor_leads_vendor_id_idx").on(table.vendorId),
+  weddingIdIdx: index("vendor_leads_wedding_id_idx").on(table.weddingId),
+}));
 
 export const insertVendorLeadSchema = createInsertSchema(vendorLeads).omit({
   id: true,
