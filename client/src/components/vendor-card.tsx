@@ -11,7 +11,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Star, MapPin, DollarSign, GitCompare, Check, UserPlus, Briefcase, Mail, Phone, Globe, Instagram, Heart, Send, CheckCircle } from "lucide-react";
+import { Star, MapPin, DollarSign, GitCompare, Check, UserPlus, Briefcase, Mail, Phone, Globe, Heart, Send, CheckCircle } from "lucide-react";
+import { SiInstagram, SiFacebook, SiX } from "react-icons/si";
 import { Link } from "wouter";
 import type { Vendor, Event } from "@shared/schema";
 
@@ -216,6 +217,112 @@ export function VendorCard({
         <p className="text-xs text-muted-foreground mb-3" data-testid={reviewCount > 0 ? `text-review-count-${vendor.id}` : `text-no-reviews-${vendor.id}`}>
           {reviewCount > 0 ? `${reviewCount} ${reviewCount === 1 ? 'review' : 'reviews'}` : 'No reviews yet'}
         </p>
+
+        {/* Contact Info - only for logged in users, show all fields for consistent sizing */}
+        {isLoggedIn && (
+          <div className="space-y-1.5 mb-3 text-xs border-t pt-3" data-testid={`contact-section-${vendor.id}`}>
+            <div className="flex items-center gap-2">
+              <Phone className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+              {vendor.phone ? (
+                <a 
+                  href={`tel:${vendor.phone}`} 
+                  className="text-foreground hover:text-primary truncate"
+                  onClick={(e) => e.stopPropagation()}
+                  data-testid={`link-phone-${vendor.id}`}
+                >
+                  {vendor.phone}
+                </a>
+              ) : (
+                <span className="text-muted-foreground italic">Not provided</span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Mail className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+              {vendor.email ? (
+                <a 
+                  href={`mailto:${vendor.email}`} 
+                  className="text-foreground hover:text-primary truncate"
+                  onClick={(e) => e.stopPropagation()}
+                  data-testid={`link-email-${vendor.id}`}
+                >
+                  {vendor.email}
+                </a>
+              ) : (
+                <span className="text-muted-foreground italic">Not provided</span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Globe className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+              {vendor.website ? (
+                <a 
+                  href={vendor.website.startsWith('http') ? vendor.website : `https://${vendor.website}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-foreground hover:text-primary truncate"
+                  onClick={(e) => e.stopPropagation()}
+                  data-testid={`link-website-${vendor.id}`}
+                >
+                  {vendor.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                </a>
+              ) : (
+                <span className="text-muted-foreground italic">Not provided</span>
+              )}
+            </div>
+            <div className="flex items-center gap-3 pt-1">
+              <div className="flex items-center gap-1.5">
+                <SiInstagram className="w-3 h-3 text-muted-foreground" />
+                {vendor.instagram ? (
+                  <a 
+                    href={`https://instagram.com/${vendor.instagram.replace('@', '')}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-foreground hover:text-primary"
+                    onClick={(e) => e.stopPropagation()}
+                    data-testid={`link-instagram-${vendor.id}`}
+                  >
+                    @{vendor.instagram.replace('@', '')}
+                  </a>
+                ) : (
+                  <span className="text-muted-foreground italic">-</span>
+                )}
+              </div>
+              <div className="flex items-center gap-1.5">
+                <SiFacebook className="w-3 h-3 text-muted-foreground" />
+                {vendor.facebook ? (
+                  <a 
+                    href={vendor.facebook.startsWith('http') ? vendor.facebook : `https://facebook.com/${vendor.facebook}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-foreground hover:text-primary truncate max-w-[60px]"
+                    onClick={(e) => e.stopPropagation()}
+                    data-testid={`link-facebook-${vendor.id}`}
+                  >
+                    FB
+                  </a>
+                ) : (
+                  <span className="text-muted-foreground italic">-</span>
+                )}
+              </div>
+              <div className="flex items-center gap-1.5">
+                <SiX className="w-3 h-3 text-muted-foreground" />
+                {vendor.twitter ? (
+                  <a 
+                    href={`https://x.com/${vendor.twitter.replace('@', '')}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-foreground hover:text-primary"
+                    onClick={(e) => e.stopPropagation()}
+                    data-testid={`link-twitter-${vendor.id}`}
+                  >
+                    @{vendor.twitter.replace('@', '')}
+                  </a>
+                ) : (
+                  <span className="text-muted-foreground italic">-</span>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Spacer to push buttons to bottom */}
         <div className="flex-grow" />

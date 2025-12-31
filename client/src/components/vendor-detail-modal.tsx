@@ -9,7 +9,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,16 +29,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { Star, MapPin, DollarSign, Phone, Mail, Send, StarIcon, AlertCircle, ExternalLink, Calendar, CheckCircle2, XCircle, Building2, ShieldCheck, FileText, Sparkles, Globe, User } from "lucide-react";
+import { Star, MapPin, DollarSign, Phone, Mail, StarIcon, AlertCircle, ExternalLink, Calendar, Building2, ShieldCheck, Globe, User } from "lucide-react";
 import { SiInstagram, SiFacebook, SiX } from "react-icons/si";
-import { Input } from "@/components/ui/input";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -51,8 +48,6 @@ interface VendorDetailModalProps {
   events: Event[];
   open: boolean;
   onClose: () => void;
-  onBookRequest: (vendorId: string, eventIds: string[], notes: string) => void;
-  onOfflineBooking?: (vendorId: string, eventIds: string[], notes: string, agreedPrice?: string) => void;
   isAuthenticated?: boolean;
   onAuthRequired?: () => void;
   weddingId?: string;
@@ -74,8 +69,6 @@ export function VendorDetailModal({
   events,
   open,
   onClose,
-  onBookRequest,
-  onOfflineBooking,
   isAuthenticated = true,
   onAuthRequired,
   weddingId,
@@ -84,15 +77,7 @@ export function VendorDetailModal({
   tradition,
   city,
 }: VendorDetailModalProps) {
-  const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
-  const [notes, setNotes] = useState("");
-  const [agreedPrice, setAgreedPrice] = useState("");
   const [showReviewForm, setShowReviewForm] = useState(false);
-  const [offlineBookingMode, setOfflineBookingMode] = useState(false);
-  
-  // AI suggestion state
-  const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
-  const [aiSuggestionsLoading, setAiSuggestionsLoading] = useState(false);
   const [reviewError, setReviewError] = useState<string | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -100,10 +85,6 @@ export function VendorDetailModal({
   // Availability calendar state
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState<'morning' | 'afternoon' | 'evening' | 'full_day'>('full_day');
-  const [selectedEventForBooking, setSelectedEventForBooking] = useState<string>('');
-  const [calendarBookingNotes, setCalendarBookingNotes] = useState<string>('');
   
   // Quote request state
   const [quoteDialogOpen, setQuoteDialogOpen] = useState(false);
@@ -111,7 +92,6 @@ export function VendorDetailModal({
   const [quoteBudgetRange, setQuoteBudgetRange] = useState<string>('');
   const [quoteNotes, setQuoteNotes] = useState<string>('');
   const [quoteConfirmStep, setQuoteConfirmStep] = useState<boolean>(false);
-  const [bookingConfirmDialogOpen, setBookingConfirmDialogOpen] = useState<boolean>(false);
 
   const reviewForm = useForm<ReviewFormValues>({
     resolver: zodResolver(reviewFormSchema),
@@ -186,80 +166,6 @@ export function VendorDetailModal({
       return response.json();
     },
     enabled: !!vendor?.id && open && vendor?.calendarShared === true,
-  });
-
-  // Check conflicts mutation
-  const checkConflictsMutation = useMutation<
-    { hasConflicts: boolean },
-    Error,
-    { vendorId: string; date: Date; timeSlot: string }
-  >({
-    mutationFn: async (data: { vendorId: string; date: Date; timeSlot: string }) => {
-      const response = await apiRequest('POST', '/api/vendor-availability/check-conflicts', {
-        vendorId: data.vendorId,
-        date: data.date.toISOString(),
-        timeSlot: data.timeSlot,
-      });
-      return await response.json();
-    },
-  });
-
-  // Create booking request mutation - creates actual Booking record for vendor approval
-  const createBookingMutation = useMutation({
-    mutationFn: async (data: {
-      vendorId: string;
-      date: Date;
-      timeSlot: string;
-      eventId?: string;
-      coupleNotes?: string;
-    }) => {
-      if (!weddingId) throw new Error("Wedding ID is required to create a booking");
-      
-      // Create a Booking record with pending status (requires vendor confirmation)
-      const bookingResponse = await apiRequest('POST', '/api/bookings', {
-        weddingId: weddingId,
-        vendorId: data.vendorId,
-        eventId: data.eventId || null,
-        requestedDate: data.date.toISOString(),
-        timeSlot: data.timeSlot,
-        status: 'pending',
-        coupleNotes: data.coupleNotes || null,
-      });
-      
-      // Also create a vendor availability entry to block the slot as "pending"
-      await apiRequest('POST', '/api/vendor-availability', {
-        vendorId: data.vendorId,
-        date: data.date.toISOString(),
-        timeSlot: data.timeSlot,
-        status: 'pending',
-        weddingId: weddingId,
-        eventId: data.eventId || null,
-      });
-      
-      return bookingResponse;
-    },
-    onSuccess: (_data, variables) => {
-      // Invalidate all relevant queries
-      queryClient.invalidateQueries({ 
-        queryKey: ['/api/vendor-availability/vendor', variables.vendorId, 'range'],
-        exact: false
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/bookings'] });
-      setBookingDialogOpen(false);
-      setSelectedDate(undefined);
-      setCalendarBookingNotes('');
-      toast({
-        title: "Booking request sent!",
-        description: `Your booking request for ${selectedDate ? format(selectedDate, 'MMMM d, yyyy') : 'the selected date'} has been sent to the vendor. They will confirm or suggest alternative dates.`,
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Request failed",
-        description: error.message || "Failed to send booking request. Please try again.",
-        variant: "destructive",
-      });
-    },
   });
 
   // Claim profile mutation - MUST be called before any early returns
@@ -341,63 +247,6 @@ export function VendorDetailModal({
     addReviewMutation.mutate(data);
   };
 
-  const handleSubmit = () => {
-    if (selectedEvents.length === 0) return;
-    onBookRequest(vendor.id, selectedEvents, notes);
-    setSelectedEvents([]);
-    setNotes("");
-    onClose();
-  };
-
-  const handleEventToggle = (eventId: string) => {
-    setSelectedEvents(prev => 
-      prev.includes(eventId)
-        ? prev.filter(id => id !== eventId)
-        : [...prev, eventId]
-    );
-  };
-
-  // AI suggestion handler for booking messages
-  const handleGetAiSuggestions = async () => {
-    if (!vendor) return;
-    
-    setAiSuggestionsLoading(true);
-    setAiSuggestions([]);
-    
-    try {
-      const selectedEventNames = events
-        .filter(e => selectedEvents.includes(e.id))
-        .map(e => e.name)
-        .join(", ");
-      
-      const response = await apiRequest("POST", "/api/ai/couple-message-suggestions", {
-        vendorName: vendor.name,
-        vendorCategory: vendor.categories?.[0] || 'vendor',
-        coupleName: coupleName || "Couple",
-        eventName: selectedEventNames || undefined,
-        eventDate: weddingDate,
-        tradition,
-        city,
-        existingNotes: notes || undefined,
-      });
-      
-      const data = await response.json();
-      if (data.suggestions && Array.isArray(data.suggestions)) {
-        setAiSuggestions(data.suggestions);
-      }
-    } catch (error) {
-      toast({ title: "Failed to get AI suggestions", variant: "destructive" });
-    } finally {
-      setAiSuggestionsLoading(false);
-    }
-  };
-
-  const handleUseAiSuggestion = (suggestion: string) => {
-    setNotes(suggestion);
-    setAiSuggestions([]);
-    toast({ title: "AI suggestion applied to your message" });
-  };
-
   // Quote request handler
   const handleQuoteRequest = () => {
     const selectedEvent = events.find(e => e.id === quoteEventId);
@@ -456,44 +305,6 @@ export function VendorDetailModal({
       backgroundColor: 'hsl(var(--destructive) / 0.2)',
       color: 'hsl(var(--destructive-foreground))',
     },
-  };
-
-  const handleBookVendor = async () => {
-    if (!vendor || !selectedDate) return;
-    
-    if (!weddingId) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to request a booking.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Check for conflicts first
-    const conflictCheck = await checkConflictsMutation.mutateAsync({
-      vendorId: vendor.id,
-      date: selectedDate,
-      timeSlot: selectedTimeSlot,
-    });
-
-    if (conflictCheck.hasConflicts) {
-      toast({
-        title: "Time slot unavailable",
-        description: "This vendor is already booked for the selected time slot.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Create the booking request (vendor will need to confirm)
-    createBookingMutation.mutate({
-      vendorId: vendor.id,
-      date: selectedDate,
-      timeSlot: selectedTimeSlot,
-      eventId: selectedEventForBooking || undefined,
-      coupleNotes: calendarBookingNotes || undefined,
-    });
   };
 
   // Check if this is an unclaimed ghost profile
@@ -941,561 +752,7 @@ export function VendorDetailModal({
             </TabsContent>
             )}
           </Tabs>
-
-          {/* Booking section - different for claimed vs unclaimed vendors */}
-          <>
-          <Separator />
-
-          <div className="pt-6">
-            {/* For UNCLAIMED vendors - show only offline booking option */}
-            {!vendor.claimed && isAuthenticated && onOfflineBooking && (
-              <>
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-lg">Mark as Booked</h3>
-                </div>
-                <div className="p-4 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 mb-4">
-                  <p className="text-sm text-amber-800 dark:text-amber-200">
-                    This vendor hasn't claimed their profile yet, so you can't request a booking through the app. 
-                    If you've already contacted and booked them directly, you can mark them as booked to track them in your wedding plan.
-                  </p>
-                </div>
-                <div className="space-y-4">
-                  <div>
-                    <Label className="text-base mb-3 block">
-                      Which events did you book them for? ({selectedEvents.length} selected)
-                    </Label>
-                    <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded-lg p-3">
-                      {events.length > 0 ? (
-                        events.map((event) => (
-                          <div 
-                            key={event.id} 
-                            className="flex items-center space-x-3 hover-elevate p-2 rounded-md"
-                            data-testid={`unclaimed-offline-event-${event.id}`}
-                          >
-                            <Checkbox
-                              id={`unclaimed-offline-event-${event.id}`}
-                              checked={selectedEvents.includes(event.id)}
-                              onCheckedChange={() => handleEventToggle(event.id)}
-                            />
-                            <label
-                              htmlFor={`unclaimed-offline-event-${event.id}`}
-                              className="flex-1 text-sm font-medium cursor-pointer"
-                            >
-                              {event.name} {event.date && `- ${new Date(event.date).toLocaleDateString()}`}
-                            </label>
-                          </div>
-                        ))
-                      ) : (
-                        <p className="text-sm text-muted-foreground text-center py-4">
-                          No events created yet. Add events to your wedding first.
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="unclaimed-offline-notes" className="text-base mb-2 block">
-                      Notes (Optional)
-                    </Label>
-                    <Textarea
-                      id="unclaimed-offline-notes"
-                      placeholder="Add any notes about the booking (contact info, etc.)..."
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      rows={3}
-                      data-testid="textarea-unclaimed-offline-notes"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="unclaimed-agreed-price" className="text-base mb-2 block">
-                      Agreed Price (Optional)
-                    </Label>
-                    <div className="relative">
-                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="unclaimed-agreed-price"
-                        type="text"
-                        inputMode="decimal"
-                        placeholder="0.00"
-                        value={agreedPrice}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/[^0-9.]/g, '');
-                          setAgreedPrice(value);
-                        }}
-                        className="pl-8"
-                        data-testid="input-unclaimed-agreed-price"
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Track the price you agreed on for budget tracking
-                    </p>
-                  </div>
-
-                  <Button
-                    onClick={() => {
-                      if (vendor && selectedEvents.length > 0) {
-                        onOfflineBooking(vendor.id, selectedEvents, notes, agreedPrice || undefined);
-                        setSelectedEvents([]);
-                        setNotes("");
-                        setAgreedPrice("");
-                        onClose();
-                      }
-                    }}
-                    disabled={selectedEvents.length === 0}
-                    className="w-full bg-emerald-600 hover:bg-emerald-700"
-                    data-testid="button-confirm-unclaimed-offline-booking"
-                  >
-                    <CheckCircle2 className="w-4 h-4 mr-2" />
-                    Mark as Booked for {selectedEvents.length} {selectedEvents.length === 1 ? 'Event' : 'Events'}
-                  </Button>
-                </div>
-              </>
-            )}
-
-            {/* For CLAIMED vendors - show both options with toggle */}
-            {vendor.claimed && (
-            <>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-lg">
-                {offlineBookingMode ? "Mark as Booked Offline" : "Request Booking"}
-              </h3>
-              {isAuthenticated && onOfflineBooking && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setOfflineBookingMode(!offlineBookingMode);
-                    setSelectedEvents([]);
-                    setNotes("");
-                  }}
-                  className="text-xs"
-                  data-testid="button-toggle-offline-booking"
-                >
-                  {offlineBookingMode ? "Request Booking Instead" : "Already Booked Offline?"}
-                </Button>
-              )}
-            </div>
-            
-            {offlineBookingMode && isAuthenticated && onOfflineBooking ? (
-              <div className="space-y-4">
-                <div className="p-4 rounded-lg bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800">
-                  <p className="text-sm text-emerald-800 dark:text-emerald-200">
-                    Use this if you've already booked this vendor outside the app. This will add them to your vendor list and associate them with your selected events.
-                  </p>
-                </div>
-                
-                <div>
-                  <Label className="text-base mb-3 block">
-                    Which events did you book them for? ({selectedEvents.length} selected)
-                  </Label>
-                  <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded-lg p-3">
-                    {events.length > 0 ? (
-                      events.map((event) => (
-                        <div 
-                          key={event.id} 
-                          className="flex items-center space-x-3 hover-elevate p-2 rounded-md"
-                          data-testid={`offline-event-checkbox-${event.id}`}
-                        >
-                          <Checkbox
-                            id={`offline-event-${event.id}`}
-                            checked={selectedEvents.includes(event.id)}
-                            onCheckedChange={() => handleEventToggle(event.id)}
-                          />
-                          <label
-                            htmlFor={`offline-event-${event.id}`}
-                            className="flex-1 text-sm font-medium cursor-pointer"
-                          >
-                            {event.name} {event.date && `- ${new Date(event.date).toLocaleDateString()}`}
-                          </label>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-sm text-muted-foreground text-center py-4">
-                        No events created yet. Add events to your wedding first.
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="offline-notes" className="text-base mb-2 block">
-                    Notes (Optional)
-                  </Label>
-                  <Textarea
-                    id="offline-notes"
-                    placeholder="Add any notes about the booking (contact info, etc.)..."
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    rows={3}
-                    data-testid="textarea-offline-notes"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="offline-agreed-price" className="text-base mb-2 block">
-                    Agreed Price (Optional)
-                  </Label>
-                  <div className="relative">
-                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      id="offline-agreed-price"
-                      type="text"
-                      inputMode="decimal"
-                      placeholder="0.00"
-                      value={agreedPrice}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/[^0-9.]/g, '');
-                        setAgreedPrice(value);
-                      }}
-                      className="pl-8"
-                      data-testid="input-offline-agreed-price"
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Track the price you agreed on for budget tracking
-                  </p>
-                </div>
-
-                <Button
-                  onClick={() => {
-                    if (vendor && selectedEvents.length > 0) {
-                      onOfflineBooking(vendor.id, selectedEvents, notes, agreedPrice || undefined);
-                      setSelectedEvents([]);
-                      setNotes("");
-                      setAgreedPrice("");
-                      setOfflineBookingMode(false);
-                      onClose();
-                    }
-                  }}
-                  disabled={selectedEvents.length === 0}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700"
-                  data-testid="button-confirm-offline-booking"
-                >
-                  <CheckCircle2 className="w-4 h-4 mr-2" />
-                  Mark as Booked for {selectedEvents.length} {selectedEvents.length === 1 ? 'Event' : 'Events'}
-                </Button>
-              </div>
-            ) : !isAuthenticated ? (
-              <div className="p-6 rounded-lg border bg-muted/20 text-center space-y-4">
-                <p className="text-base text-muted-foreground">
-                  Create a free account to book vendors and start planning your dream wedding.
-                </p>
-                <Button
-                  onClick={onAuthRequired}
-                  className="bg-gradient-to-r from-orange-600 to-pink-600 hover:from-orange-700 hover:to-pink-700"
-                  data-testid="button-signup-to-book"
-                >
-                  Sign Up to Book This Vendor
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div>
-                  <Label className="text-base mb-3 block">
-                    Select Events ({selectedEvents.length} selected)
-                  </Label>
-                  <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded-lg p-3">
-                    {events.length > 0 ? (
-                      events.map((event) => (
-                        <div 
-                          key={event.id} 
-                          className="flex items-center space-x-3 hover-elevate p-2 rounded-md"
-                          data-testid={`event-checkbox-${event.id}`}
-                        >
-                          <Checkbox
-                            id={`event-${event.id}`}
-                            checked={selectedEvents.includes(event.id)}
-                            onCheckedChange={() => handleEventToggle(event.id)}
-                          />
-                          <label
-                            htmlFor={`event-${event.id}`}
-                            className="flex-1 text-sm font-medium cursor-pointer"
-                          >
-                            {event.name} {event.date && `- ${new Date(event.date).toLocaleDateString()}`}
-                          </label>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-sm text-muted-foreground text-center py-4">
-                        No events created yet. Add events to your wedding first.
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <Label htmlFor="booking-notes" className="text-base">
-                      Message to Vendor (Optional)
-                    </Label>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleGetAiSuggestions}
-                      disabled={aiSuggestionsLoading}
-                      data-testid="button-ai-suggest-booking"
-                    >
-                      <Sparkles className="h-3 w-3 mr-1" />
-                      {aiSuggestionsLoading ? "Generating..." : "AI Suggest"}
-                    </Button>
-                  </div>
-                  
-                  {aiSuggestions.length > 0 && (
-                    <div className="mb-3 space-y-2">
-                      <Label className="text-xs text-muted-foreground">AI Suggestions - Click to use</Label>
-                      {aiSuggestions.map((suggestion, index) => (
-                        <div
-                          key={index}
-                          className="p-3 bg-primary/5 border border-primary/20 rounded-lg cursor-pointer hover-elevate"
-                          onClick={() => handleUseAiSuggestion(suggestion)}
-                          data-testid={`button-use-ai-suggestion-${index}`}
-                        >
-                          <p className="text-sm line-clamp-3">{suggestion}</p>
-                          <div className="flex items-center gap-1 mt-2 text-xs text-primary">
-                            <Sparkles className="h-3 w-3" />
-                            Click to use this suggestion
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  
-                  <Textarea
-                    id="booking-notes"
-                    placeholder="Tell the vendor about your specific needs, preferences, or questions..."
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    rows={4}
-                    data-testid="textarea-booking-notes"
-                  />
-                </div>
-
-                <Button
-                  onClick={() => setBookingConfirmDialogOpen(true)}
-                  disabled={selectedEvents.length === 0}
-                  className="w-full"
-                  data-testid="button-review-booking"
-                >
-                  Review & Send Request for {selectedEvents.length} {selectedEvents.length === 1 ? 'Event' : 'Events'}
-                </Button>
-              </div>
-            )}
-            </>
-            )}
-          </div>
-          </>
-          
         </div>
-
-        {/* Booking Request Dialog */}
-        <Dialog open={bookingDialogOpen} onOpenChange={setBookingDialogOpen}>
-          <DialogContent data-testid="dialog-booking">
-            <DialogHeader>
-              <DialogTitle>Request Booking with {vendor.name}</DialogTitle>
-              <DialogDescription>
-                Send a booking request for {selectedDate && format(selectedDate, 'MMMM d, yyyy')}. 
-                The vendor will confirm or suggest alternative dates.
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="space-y-4">
-              {checkConflictsMutation.data && (
-                <div className={`p-4 rounded-lg flex items-center gap-2 ${
-                  checkConflictsMutation.data.hasConflicts 
-                    ? 'bg-destructive/10 text-destructive' 
-                    : 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200'
-                }`}>
-                  {checkConflictsMutation.data.hasConflicts ? (
-                    <>
-                      <XCircle className="h-5 w-5" />
-                      <span className="text-sm font-medium">This time slot may be unavailable</span>
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 className="h-5 w-5" />
-                      <span className="text-sm font-medium">This time slot appears available!</span>
-                    </>
-                  )}
-                </div>
-              )}
-
-              <div>
-                <label className="text-sm font-medium mb-2 block">Preferred Time Slot</label>
-                <Select value={selectedTimeSlot} onValueChange={(v: any) => setSelectedTimeSlot(v)}>
-                  <SelectTrigger data-testid="select-timeslot">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="morning">Morning (8am - 12pm)</SelectItem>
-                    <SelectItem value="afternoon">Afternoon (12pm - 5pm)</SelectItem>
-                    <SelectItem value="evening">Evening (5pm - 11pm)</SelectItem>
-                    <SelectItem value="full_day">Full Day</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium mb-2 block">Link to Event (Optional)</label>
-                <Select value={selectedEventForBooking} onValueChange={setSelectedEventForBooking}>
-                  <SelectTrigger data-testid="select-booking-event">
-                    <SelectValue placeholder="Select an event" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {events.map((event) => (
-                      <SelectItem key={event.id} value={event.id}>
-                        {event.name} {event.date && `- ${new Date(event.date).toLocaleDateString()}`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium mb-2 block">Message to Vendor (Optional)</label>
-                <Textarea
-                  placeholder="Tell the vendor about your specific needs, event details, or any questions..."
-                  value={calendarBookingNotes}
-                  onChange={(e) => setCalendarBookingNotes(e.target.value)}
-                  rows={3}
-                  data-testid="textarea-calendar-booking-notes"
-                />
-              </div>
-            </div>
-
-            <DialogFooter className="gap-2">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setBookingDialogOpen(false);
-                  setCalendarBookingNotes('');
-                }}
-                data-testid="button-cancel-booking"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleBookVendor}
-                disabled={createBookingMutation.isPending || !weddingId}
-                data-testid="button-confirm-booking"
-              >
-                <Send className="w-4 h-4 mr-2" />
-                {createBookingMutation.isPending ? 'Sending...' : 'Send Booking Request'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Booking Confirmation Dialog */}
-        <Dialog open={bookingConfirmDialogOpen} onOpenChange={setBookingConfirmDialogOpen}>
-          <DialogContent className="max-w-md max-h-[85vh] flex flex-col p-0" data-testid="dialog-booking-confirmation">
-            <DialogHeader className="shrink-0 px-6 pt-6 pb-4 border-b">
-              <DialogTitle className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-primary" />
-                Confirm Booking Request
-              </DialogTitle>
-              <DialogDescription>
-                Please review the information that will be sent to {vendor.name}.
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="flex-1 overflow-y-auto px-6 py-4">
-              <div className="space-y-4">
-                <div className="p-4 rounded-lg bg-primary/5 border border-primary/20 space-y-4">
-                  <h4 className="font-semibold text-sm flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-primary" />
-                    The following will be sent to the vendor:
-                  </h4>
-                  
-                  <div className="space-y-3 text-sm">
-                    <div className="text-muted-foreground font-medium">
-                      {selectedEvents.length} {selectedEvents.length === 1 ? 'Event' : 'Events'} Selected:
-                    </div>
-                    
-                    {selectedEvents.map((eventId, index) => {
-                      const event = events.find(e => e.id === eventId);
-                      if (!event) return null;
-                      return (
-                        <div 
-                          key={eventId} 
-                          className="p-3 rounded-lg bg-background border space-y-2"
-                          data-testid={`event-summary-${eventId}`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-xs px-2 py-0">
-                              Event {index + 1}
-                            </Badge>
-                            <span className="font-semibold">{event.name}</span>
-                          </div>
-                          
-                          <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs pl-1">
-                            {event.date && (
-                              <div className="flex items-center gap-1">
-                                <Calendar className="w-3 h-3 text-muted-foreground" />
-                                <span className="text-muted-foreground">Date:</span>
-                                <span className="font-medium">{format(new Date(event.date), 'MMM d, yyyy')}</span>
-                              </div>
-                            )}
-                            {event.time && (
-                              <div className="flex items-center gap-1">
-                                <span className="text-muted-foreground">Time:</span>
-                                <span className="font-medium">{event.time}</span>
-                              </div>
-                            )}
-                            {event.location && (
-                              <div className="flex items-center gap-1 col-span-2">
-                                <MapPin className="w-3 h-3 text-muted-foreground" />
-                                <span className="text-muted-foreground">Location:</span>
-                                <span className="font-medium">{event.location}</span>
-                              </div>
-                            )}
-                            {event.guestCount && (
-                              <div className="flex items-center gap-1">
-                                <span className="text-muted-foreground">Guests:</span>
-                                <span className="font-medium">{event.guestCount}</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                    
-                    <Separator className="my-2" />
-                    
-                    <div>
-                      <span className="text-muted-foreground">Your Message:</span>
-                      <p className="font-medium mt-1 p-2 rounded bg-muted/50">{notes || 'No message added'}</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <p className="text-xs text-muted-foreground text-center">
-                  Your contact email will also be shared so the vendor can respond.
-                </p>
-              </div>
-            </div>
-
-            <DialogFooter className="shrink-0 gap-2 px-6 py-4 border-t">
-              <Button
-                variant="outline"
-                onClick={() => setBookingConfirmDialogOpen(false)}
-                data-testid="button-back-booking"
-              >
-                Back to Edit
-              </Button>
-              <Button
-                onClick={() => {
-                  handleSubmit();
-                  setBookingConfirmDialogOpen(false);
-                }}
-                data-testid="button-confirm-send-booking"
-              >
-                <Send className="w-4 h-4 mr-2" />
-                Confirm & Send
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </DialogContent>
     </Dialog>
   );

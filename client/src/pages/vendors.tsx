@@ -649,12 +649,6 @@ export default function Vendors() {
         events={events}
         open={!!selectedVendor}
         onClose={() => setSelectedVendor(null)}
-        onBookRequest={(vendorId, eventIds, notes) => {
-          bookingMutation.mutate({ vendorId, eventIds, notes });
-        }}
-        onOfflineBooking={(vendorId, eventIds, notes, agreedPrice) => {
-          offlineBookingMutation.mutate({ vendorId, eventIds, notes, agreedPrice });
-        }}
         isAuthenticated={!!user && user.role === "couple"}
         onAuthRequired={() => setLocation("/onboarding")}
         weddingId={wedding?.id}
