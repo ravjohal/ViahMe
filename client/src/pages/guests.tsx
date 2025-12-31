@@ -1107,7 +1107,7 @@ export default function Guests() {
   const workflowSteps = [
     {
       id: "add",
-      label: "Add Guests",
+      label: "Add Families",
       description: "Import or add manually",
       icon: UserPlus,
       isComplete: hasGuests,
@@ -1115,16 +1115,16 @@ export default function Guests() {
     },
     {
       id: "review",
-      label: "Review",
-      description: "Team suggestions",
+      label: "Review Family Adds",
+      description: "Approve suggestions",
       icon: Inbox,
       isComplete: hasGuests && allSuggestionsReviewed,
       count: pendingSuggestions.length,
     },
     {
       id: "optimize",
-      label: "Optimize",
-      description: "Budget & capacity",
+      label: "Budget Check",
+      description: "Costs & capacity",
       icon: Target,
       isComplete: hasGuests && hasBudgetSet && !needsCuts,
       count: needsCuts ? 1 : 0,
@@ -1140,7 +1140,8 @@ export default function Guests() {
             <TabsList className="grid grid-cols-2 w-auto">
               <TabsTrigger value="guest-planning" data-testid="tab-guest-planning" className="gap-2">
                 <ClipboardList className="w-4 h-4" />
-                Guest Planning
+                <span className="hidden sm:inline">Plan & Review</span>
+                <span className="sm:hidden">Plan</span>
                 {pendingSuggestions.length > 0 && (
                   <Badge variant="destructive" className="ml-1 h-5 px-1.5 text-xs">
                     {pendingSuggestions.length}
@@ -1149,13 +1150,71 @@ export default function Guests() {
               </TabsTrigger>
               <TabsTrigger value="guest-list" data-testid="tab-guest-list" className="gap-2">
                 <Users className="w-4 h-4" />
-                Guest List
+                <span className="hidden sm:inline">View Guest List</span>
+                <span className="sm:hidden">List</span>
               </TabsTrigger>
             </TabsList>
           </div>
 
           {/* Guest List Tab - Current functionality */}
           <TabsContent value="guest-list" className="space-y-6">
+            {/* Capacity Bar - Same as in planning tab for unified view */}
+            <Card className="border-primary/20">
+              <CardContent className="p-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-5 w-5 text-primary" />
+                      <span className="font-semibold">Capacity Overview</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4 text-sm">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-3 h-3 rounded-full bg-green-500" />
+                      <span className="text-muted-foreground">Confirmed:</span>
+                      <span className="font-semibold">{planningSnapshot?.summary.confirmedSeats || guests.length}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-3 h-3 rounded-full bg-amber-500" />
+                      <span className="text-muted-foreground">Pending:</span>
+                      <span className="font-semibold">{planningSnapshot?.summary.pendingSeats || pendingSuggestions.length}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-3 h-3 rounded-full bg-muted" />
+                      <span className="text-muted-foreground">Budget:</span>
+                      <span className="font-semibold">{budgetData?.capacity.maxGuests || "—"}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="relative h-4 bg-muted rounded-full overflow-hidden">
+                  {(() => {
+                    const maxGuests = budgetData?.capacity.maxGuests || 0;
+                    const confirmed = planningSnapshot?.summary.confirmedSeats || guests.length;
+                    const pending = planningSnapshot?.summary.pendingSeats || pendingSuggestions.length;
+                    if (maxGuests <= 0) return null;
+                    
+                    const confirmedPct = Math.min(Math.max((confirmed / maxGuests) * 100, 0), 100);
+                    const pendingPct = Math.min(Math.max((pending / maxGuests) * 100, 0), 100 - confirmedPct);
+                    
+                    return (
+                      <>
+                        <div className="absolute h-full bg-green-500 transition-all" style={{ width: `${confirmedPct}%` }} />
+                        <div className="absolute h-full bg-amber-500 transition-all" style={{ left: `${confirmedPct}%`, width: `${pendingPct}%` }} />
+                      </>
+                    );
+                  })()}
+                </div>
+                
+                {budgetData?.capacity.maxGuests && budgetData.capacity.maxGuests > 0 && ((planningSnapshot?.summary.confirmedSeats || guests.length) + (planningSnapshot?.summary.pendingSeats || 0)) > budgetData.capacity.maxGuests && (
+                  <div className="flex items-center gap-2 mt-2 text-sm text-destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <span>Over budget by {((planningSnapshot?.summary.confirmedSeats || guests.length) + (planningSnapshot?.summary.pendingSeats || 0)) - budgetData.capacity.maxGuests} guests</span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             <Tabs defaultValue="allocation" className="space-y-6">
               <TabsList>
                 <TabsTrigger value="allocation" data-testid="tab-allocation">
@@ -1497,137 +1556,169 @@ export default function Guests() {
             </Tabs>
           </TabsContent>
 
-          {/* Guest Planning Tab - New integrated functionality */}
+          {/* Guest Planning Tab - Simplified unified experience */}
           <TabsContent value="guest-planning" className="space-y-6">
-            {/* Workflow Overview */}
-            <Card className="bg-gradient-to-r from-orange-50 to-pink-50 dark:from-orange-950/20 dark:to-pink-950/20 border-orange-200 dark:border-orange-800">
+            {/* Capacity Bar - Single consolidated stat display */}
+            <Card className="border-primary/20">
               <CardContent className="p-4">
-                <div className="flex items-center justify-between gap-2 mb-4">
-                  <div className="flex items-center gap-2">
-                    <Lightbulb className="h-4 w-4 text-orange-500" />
-                    <span className="text-sm font-medium">Guest Planning Workflow</span>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-5 w-5 text-primary" />
+                      <span className="font-semibold">Capacity Overview</span>
+                    </div>
+                    {workflowSteps.every(s => s.isComplete) && (
+                      <Badge className="bg-green-500 text-white gap-1">
+                        <Sparkles className="h-3 w-3" />
+                        Ready!
+                      </Badge>
+                    )}
                   </div>
-                  {workflowSteps.every(s => s.isComplete) && (
-                    <Badge className="bg-green-500 text-white gap-1">
-                      <Sparkles className="h-3 w-3" />
-                      All done!
-                    </Badge>
-                  )}
+                  <div className="flex items-center gap-4 text-sm">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-3 h-3 rounded-full bg-green-500" />
+                      <span className="text-muted-foreground">Confirmed:</span>
+                      <span className="font-semibold">{planningSnapshot?.summary.confirmedSeats || guests.length}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-3 h-3 rounded-full bg-amber-500" />
+                      <span className="text-muted-foreground">Pending:</span>
+                      <span className="font-semibold">{planningSnapshot?.summary.pendingSeats || pendingSuggestions.length}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-3 h-3 rounded-full bg-muted" />
+                      <span className="text-muted-foreground">Budget:</span>
+                      <span className="font-semibold">{budgetData?.capacity.maxGuests || "—"}</span>
+                    </div>
+                  </div>
                 </div>
                 
-                <div className="grid grid-cols-3 gap-4">
-                  {workflowSteps.map((step, index) => (
-                    <button
-                      key={step.id}
-                      onClick={() => setPlanningTab(step.id)}
-                      className={`relative flex flex-col items-center p-4 rounded-xl transition-all ${
-                        planningTab === step.id 
-                          ? "bg-white dark:bg-gray-800 shadow-lg ring-2 ring-orange-400" 
-                          : "hover:bg-white/50 dark:hover:bg-gray-800/50"
-                      }`}
-                      data-testid={`workflow-step-${step.id}`}
-                    >
-                      <div className="absolute -top-1 -left-1 w-6 h-6 rounded-full bg-background border-2 border-orange-300 flex items-center justify-center text-xs font-bold text-orange-600">
-                        {index + 1}
-                      </div>
-                      
-                      <div className="mb-2">
-                        {step.isComplete ? (
-                          <CheckCircle2 className="h-8 w-8 text-green-500" />
-                        ) : (
-                          <step.icon className="h-8 w-8 text-orange-500" />
-                        )}
-                      </div>
-                      
-                      <span className="text-sm font-semibold">{step.label}</span>
-                      <span className="text-xs text-muted-foreground text-center">{step.description}</span>
-                      
-                      {step.count > 0 && !step.isComplete && (
-                        <Badge variant="destructive" className="mt-2 text-xs">
-                          {step.count} to do
-                        </Badge>
-                      )}
-                      {step.isComplete && (
-                        <Badge variant="outline" className="mt-2 text-xs text-green-600 border-green-300">
-                          Complete
-                        </Badge>
-                      )}
-                    </button>
-                  ))}
+                {/* Progress Bar */}
+                <div className="relative h-4 bg-muted rounded-full overflow-hidden">
+                  {(() => {
+                    const maxGuests = budgetData?.capacity.maxGuests || 0;
+                    const confirmed = planningSnapshot?.summary.confirmedSeats || guests.length;
+                    const pending = planningSnapshot?.summary.pendingSeats || pendingSuggestions.length;
+                    if (maxGuests <= 0) return null;
+                    
+                    const confirmedPct = Math.min(Math.max((confirmed / maxGuests) * 100, 0), 100);
+                    const pendingPct = Math.min(Math.max((pending / maxGuests) * 100, 0), 100 - confirmedPct);
+                    
+                    return (
+                      <>
+                        <div 
+                          className="absolute h-full bg-green-500 transition-all"
+                          style={{ width: `${confirmedPct}%` }}
+                        />
+                        <div 
+                          className="absolute h-full bg-amber-500 transition-all"
+                          style={{ left: `${confirmedPct}%`, width: `${pendingPct}%` }}
+                        />
+                      </>
+                    );
+                  })()}
                 </div>
+                
+                {/* Over capacity warning */}
+                {budgetData?.capacity.maxGuests && budgetData.capacity.maxGuests > 0 && ((planningSnapshot?.summary.confirmedSeats || guests.length) + (planningSnapshot?.summary.pendingSeats || 0)) > budgetData.capacity.maxGuests && (
+                  <div className="flex items-center gap-2 mt-2 text-sm text-destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <span>Over budget by {((planningSnapshot?.summary.confirmedSeats || guests.length) + (planningSnapshot?.summary.pendingSeats || 0)) - budgetData.capacity.maxGuests} guests</span>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
-            {/* Planning Tabs Content - 3-phase workflow */}
+            {/* Planning Tabs - Simplified with clear action labels */}
             <Tabs value={planningTab} onValueChange={setPlanningTab}>
-              <TabsList className="hidden">
-                <TabsTrigger value="add">Add Guests</TabsTrigger>
-                <TabsTrigger value="review">Review</TabsTrigger>
-                <TabsTrigger value="optimize">Optimize</TabsTrigger>
+              <TabsList className="w-full sm:w-auto grid grid-cols-3 h-auto">
+                <TabsTrigger value="add" className="gap-2 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-add-families">
+                  <UserPlus className="h-4 w-4" />
+                  <span className="hidden sm:inline">Add Families</span>
+                  <span className="sm:hidden text-xs">Add</span>
+                </TabsTrigger>
+                <TabsTrigger value="review" className="gap-2 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-review-families">
+                  <Inbox className="h-4 w-4" />
+                  <span className="hidden sm:inline">Review Family Adds</span>
+                  <span className="sm:hidden text-xs">Review</span>
+                  {pendingSuggestions.length > 0 && (
+                    <Badge variant="destructive" className="ml-1 h-5 px-1.5 text-xs">
+                      {pendingSuggestions.length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="optimize" className="gap-2 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-budget-check">
+                  <Target className="h-4 w-4" />
+                  <span className="hidden sm:inline">Budget Check</span>
+                  <span className="sm:hidden text-xs">Budget</span>
+                  {needsCuts && (
+                    <Badge variant="destructive" className="ml-1 h-5 px-1.5 text-xs">!</Badge>
+                  )}
+                </TabsTrigger>
               </TabsList>
 
-              {/* Phase 1: Add Guests - Import or add manually */}
+              {/* Phase 1: Add Families - Import or add manually */}
               <TabsContent value="add" className="space-y-6">
                 <Card className="border-2 border-primary/20 bg-gradient-to-br from-orange-50/50 to-pink-50/50 dark:from-orange-950/10 dark:to-pink-950/10">
-                  <CardContent className="p-8">
-                    <div className="text-center mb-8">
+                  <CardContent className="p-6 sm:p-8">
+                    <div className="text-center mb-6 sm:mb-8">
                       <div className="inline-flex p-4 rounded-full bg-primary/10 mb-4">
-                        <UserPlus className="h-10 w-10 text-primary" />
+                        <UserPlus className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
                       </div>
-                      <h2 className="text-2xl font-bold mb-2">Start Building Your Guest List</h2>
-                      <p className="text-muted-foreground max-w-md mx-auto">
-                        Add guests in bulk, import from a spreadsheet, or add them one at a time. 
-                        This is your planning sandbox - nothing is final until you're ready!
+                      <h2 className="text-xl sm:text-2xl font-bold mb-2">Add Your Families</h2>
+                      <p className="text-sm sm:text-base text-muted-foreground max-w-md mx-auto">
+                        Import a spreadsheet or add families one by one. Don't worry about being perfect - you can adjust later!
                       </p>
                     </div>
 
-                    <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+                    <div className="grid md:grid-cols-2 gap-4 sm:gap-6 max-w-2xl mx-auto">
                       <Card className="hover-elevate cursor-pointer" onClick={() => setImportDialogOpen(true)} data-testid="card-import-guests">
-                        <CardContent className="p-6 text-center">
-                          <div className="inline-flex p-3 rounded-full bg-blue-100 dark:bg-blue-900/30 mb-4">
-                            <FileSpreadsheet className="h-8 w-8 text-blue-600" />
+                        <CardContent className="p-4 sm:p-6 text-center">
+                          <div className="inline-flex p-3 rounded-full bg-blue-100 dark:bg-blue-900/30 mb-3 sm:mb-4">
+                            <FileSpreadsheet className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
                           </div>
-                          <h3 className="font-semibold text-lg mb-2">Import from Spreadsheet</h3>
-                          <p className="text-sm text-muted-foreground mb-4">
-                            Upload a CSV or Excel file with your guest list
+                          <h3 className="font-semibold text-base sm:text-lg mb-2">Import from Spreadsheet</h3>
+                          <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
+                            Upload a CSV or Excel file
                           </p>
-                          <Button className="w-full" data-testid="button-import-spreadsheet">
+                          <Button className="w-full min-h-[48px]" data-testid="button-import-spreadsheet">
                             <Upload className="w-4 h-4 mr-2" />
-                            Import Guests
+                            Import Families
                           </Button>
                         </CardContent>
                       </Card>
 
-                      <Card className="hover-elevate cursor-pointer" onClick={() => setDialogOpen(true)} data-testid="card-add-manual">
-                        <CardContent className="p-6 text-center">
-                          <div className="inline-flex p-3 rounded-full bg-green-100 dark:bg-green-900/30 mb-4">
-                            <UserPlus className="h-8 w-8 text-green-600" />
+                      <Card className="hover-elevate cursor-pointer" onClick={() => setHouseholdDialogOpen(true)} data-testid="card-add-manual">
+                        <CardContent className="p-4 sm:p-6 text-center">
+                          <div className="inline-flex p-3 rounded-full bg-green-100 dark:bg-green-900/30 mb-3 sm:mb-4">
+                            <UserPlus className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" />
                           </div>
-                          <h3 className="font-semibold text-lg mb-2">Add Guests Manually</h3>
-                          <p className="text-sm text-muted-foreground mb-4">
-                            Add guests one by one with all their details
+                          <h3 className="font-semibold text-base sm:text-lg mb-2">Add Family Manually</h3>
+                          <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
+                            Add one household at a time
                           </p>
-                          <Button variant="outline" className="w-full" data-testid="button-add-manual">
+                          <Button variant="outline" className="w-full min-h-[48px]" data-testid="button-add-manual">
                             <Plus className="w-4 h-4 mr-2" />
-                            Add Guest
+                            Add Family
                           </Button>
                         </CardContent>
                       </Card>
                     </div>
 
                     {hasGuests && (
-                      <div className="mt-8 text-center">
-                        <Badge variant="outline" className="text-base px-4 py-2 gap-2">
+                      <div className="mt-6 sm:mt-8 text-center">
+                        <Badge variant="outline" className="text-sm sm:text-base px-3 sm:px-4 py-2 gap-2">
                           <CheckCircle2 className="h-4 w-4 text-green-500" />
-                          You have {guests.length} guest{guests.length !== 1 ? 's' : ''} so far
+                          {households.length} {households.length === 1 ? 'family' : 'families'} ({guests.length} guests)
                         </Badge>
                         <div className="mt-4">
                           <Button 
                             variant="default"
+                            className="min-h-[48px]"
                             onClick={() => setPlanningTab(pendingSuggestions.length > 0 ? "review" : "optimize")}
                             data-testid="button-continue-planning"
                           >
-                            Continue to {pendingSuggestions.length > 0 ? "Review Suggestions" : "Optimize"}
+                            Continue to {pendingSuggestions.length > 0 ? "Review Family Adds" : "Budget Check"}
                             <ArrowRight className="h-4 w-4 ml-2" />
                           </Button>
                         </div>
