@@ -2,7 +2,7 @@ import {
   Home, Users, CheckSquare, Clock, DollarSign, FileText, 
   MessageSquare, Music, Image, UserCircle, ShoppingBag, 
   Package, BookOpen, Radio, UsersRound, Globe, Bot, 
-  Calendar, Wallet, BarChart3, Briefcase, Star,
+  Calendar, Wallet, BarChart3, Briefcase, Star, Send,
   type LucideIcon
 } from "lucide-react";
 import type { PermissionCategory } from "@shared/schema";
@@ -61,6 +61,7 @@ export const COUPLE_NAV_SECTIONS: NavSection[] = [
     label: "Messages & Invites",
     items: [
       { path: "/messages", label: "Messages", icon: MessageSquare, description: "Chat with vendors" },
+      { path: "/communication-hub", label: "Send Invites", icon: Send, permission: "guests", description: "Send invitations & track RSVPs" },
       { path: "/invitations", label: "Invitations", icon: ShoppingBag, permission: "invitations", description: "Order cards" },
     ],
   },

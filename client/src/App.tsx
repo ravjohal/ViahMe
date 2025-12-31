@@ -65,6 +65,7 @@ import VendorLeads from "@/pages/vendor-leads";
 import Expenses from "@/pages/expenses";
 import GuestCollector from "@/pages/guest-collector";
 import CostBreakdown from "@/pages/cost-breakdown";
+import CommunicationHub from "@/pages/communication-hub";
 import { VendorRoute } from "@/components/VendorRoute";
 import { CoupleRoute } from "@/components/CoupleRoute";
 import { CouplePlannerChatbot } from "@/components/CouplePlannerChatbot";
@@ -126,6 +127,11 @@ function Router() {
       <Route path="/invitations">
         <ProtectedRoute requiredPermission="invitations">
           <Invitations />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/communication-hub">
+        <ProtectedRoute requiredPermission="guests">
+          <CommunicationHub />
         </ProtectedRoute>
       </Route>
       {/* Vendor marketplace is publicly accessible */}
