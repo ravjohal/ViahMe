@@ -15,7 +15,7 @@ The platform utilizes a modern web stack: **React**, **TypeScript**, **Tailwind 
 
 Key architectural decisions and features include:
 - **Comprehensive Data Model**: Designed to support the intricate nature of multi-day South Asian weddings.
-- **Cultural Templates**: Pre-populated event timelines for 7 wedding traditions with auto-seeding.
+- **Cultural Templates**: Pre-populated event timelines and task templates for 9 wedding traditions with auto-seeding. Task templates are stored in the `task_templates` database table (199 templates across Hindu, Sikh, Muslim, Gujarati, South Indian, Christian, Jain, Parsi, and General traditions) and are fetched via `storage.getTaskTemplatesByTradition(tradition)`. Migration script: `scripts/migrate-task-templates.ts`.
 - **Vendor Specialization**: Support for 32 distinct vendor categories, including culturally-specific services.
 - **Budget Intelligence System**: Provides smart budget recommendations based on cultural spending benchmarks, real-time comparisons, and interactive visualizations.
 - **Guest List Management**: Frictionless bulk guest import (CSV, Excel), advanced guest invitation & RSVP system with household grouping, magic link authentication, per-event RSVP tracking, and bulk invitation sender. Includes an Allocation View Dashboard for analytics.

@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { z } from "zod";
 import { parseConversationId, generateConversationId, type IStorage } from "./storage";
-import { getTasksForTradition, calculateDueDate } from "./task-templates";
+import { calculateDueDate } from "./task-templates";
 import { requireAuth, requireRole, type AuthRequest } from "./auth-middleware";
 import {
   insertWeddingSchema,
@@ -292,11 +292,11 @@ export async function registerLegacyRoutes(app: Express, storage: IStorage, view
         }
       }
 
-      // Auto-create tradition-specific tasks
+      // Auto-create tradition-specific tasks from database templates
       if (wedding.tradition) {
-        const taskTemplates = getTasksForTradition(wedding.tradition);
+        const templates = await storage.getTaskTemplatesByTradition(wedding.tradition);
         
-        for (const template of taskTemplates) {
+        for (const template of templates) {
           let dueDate: Date | undefined = undefined;
           
           // Calculate due date if wedding date is provided
@@ -306,10 +306,10 @@ export async function registerLegacyRoutes(app: Express, storage: IStorage, view
           
           await storage.createTask({
             weddingId: wedding.id,
-            title: template.task,
+            title: template.title,
             description: template.description,
             category: template.category,
-            priority: template.priority || 'medium',
+            priority: (template.priority as 'high' | 'medium' | 'low') || 'medium',
             dueDate: dueDate,
             phase: template.phase,
             completed: false,

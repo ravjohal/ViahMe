@@ -802,6 +802,43 @@ export type InsertTask = z.infer<typeof insertTaskSchema>;
 export type Task = typeof tasks.$inferSelect;
 
 // ============================================================================
+// TASK TEMPLATES - Tradition-specific task templates for auto-seeding
+// ============================================================================
+
+export const taskTemplates = pgTable("task_templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  templateId: varchar("template_id").notNull(), // Original ID like "H01", "SK01", etc.
+  tradition: text("tradition").notNull(), // 'hindu' | 'sikh' | 'muslim' | 'gujarati' | 'south_indian' | 'christian' | 'jain' | 'parsi' | 'general'
+  title: text("title").notNull(), // Task name
+  category: text("category").notNull(), // Category like "Venue", "Attire", "Rituals"
+  description: text("description").notNull(),
+  ceremony: text("ceremony"), // Related ceremony like "Wedding Ceremony", "Mehndi", etc.
+  priority: text("priority").notNull().default('medium'), // 'high' | 'medium' | 'low'
+  daysBeforeWedding: integer("days_before_wedding"), // Days before wedding when this should be done
+  phase: text("phase"), // 'vision' | 'curation' | 'logistics' | 'home_stretch'
+  isActive: boolean("is_active").notNull().default(true), // Allow disabling templates
+  sortOrder: integer("sort_order"), // For custom ordering within tradition
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  traditionIdx: index("task_templates_tradition_idx").on(table.tradition),
+  templateIdIdx: index("task_templates_template_id_idx").on(table.templateId),
+}));
+
+export const insertTaskTemplateSchema = createInsertSchema(taskTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  tradition: z.enum(['hindu', 'sikh', 'muslim', 'gujarati', 'south_indian', 'christian', 'jain', 'parsi', 'mixed', 'other', 'general']),
+  priority: z.enum(['high', 'medium', 'low']).optional(),
+  phase: z.enum(['vision', 'curation', 'logistics', 'home_stretch']).optional(),
+});
+
+export type InsertTaskTemplate = z.infer<typeof insertTaskTemplateSchema>;
+export type TaskTemplate = typeof taskTemplates.$inferSelect;
+
+// ============================================================================
 // TASK REMINDERS - Track sent reminders
 // ============================================================================
 

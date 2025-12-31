@@ -161,6 +161,8 @@ import {
   type InsertGuestCollectorSubmission,
   type VendorFavorite,
   type InsertVendorFavorite,
+  type TaskTemplate,
+  taskTemplates,
 } from "@shared/schema";
 import { randomUUID, randomBytes } from "crypto";
 import bcrypt from "bcrypt";
@@ -323,6 +325,10 @@ export interface IStorage {
   createTask(task: InsertTask): Promise<Task>;
   updateTask(id: string, task: Partial<InsertTask>): Promise<Task | undefined>;
   deleteTask(id: string): Promise<boolean>;
+
+  // Task Templates
+  getTaskTemplatesByTradition(tradition: string): Promise<TaskTemplate[]>;
+  getAllTaskTemplates(): Promise<TaskTemplate[]>;
 
   // Task Reminders
   getTaskReminder(id: string): Promise<TaskReminder | undefined>;
@@ -1822,6 +1828,17 @@ export class MemStorage implements IStorage {
       return reminderDate.toDateString() === targetDate.toDateString();
     });
     return tasks;
+  }
+
+  // Task Templates (MemStorage fetches from database since templates are shared)
+  async getTaskTemplatesByTradition(tradition: string): Promise<TaskTemplate[]> {
+    // MemStorage doesn't store templates - they come from database
+    // Return empty array as fallback; in practice, DatabaseStorage is used
+    return [];
+  }
+
+  async getAllTaskTemplates(): Promise<TaskTemplate[]> {
+    return [];
   }
 
   // Task Reminders
@@ -4735,6 +4752,24 @@ export class DBStorage implements IStorage {
       reminderDate.setDate(reminderDate.getDate() - (task.reminderDaysBefore || 1));
       return reminderDate.toDateString() === targetDate.toDateString();
     });
+  }
+
+  // Task Templates
+  async getTaskTemplatesByTradition(tradition: string): Promise<TaskTemplate[]> {
+    // Fetch both tradition-specific and general templates
+    const templates = await this.db.select().from(taskTemplates).where(
+      and(
+        sql`(${taskTemplates.tradition} = ${tradition} OR ${taskTemplates.tradition} = 'general')`,
+        eq(taskTemplates.isActive, true)
+      )
+    ).orderBy(taskTemplates.daysBeforeWedding);
+    return templates;
+  }
+
+  async getAllTaskTemplates(): Promise<TaskTemplate[]> {
+    return await this.db.select().from(taskTemplates).where(
+      eq(taskTemplates.isActive, true)
+    ).orderBy(taskTemplates.tradition, taskTemplates.daysBeforeWedding);
   }
 
   // Task Reminders
