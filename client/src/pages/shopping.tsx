@@ -28,7 +28,12 @@ export default function ShoppingPage() {
 
   // Fetch shopping items
   const { data: shoppingItems = [], isLoading: isLoadingItems } = useQuery<ShoppingOrderItem[]>({
-    queryKey: ["/api/shopping-items"],
+    queryKey: ["/api/weddings", wedding?.id, "shopping-items"],
+    queryFn: async () => {
+      const res = await fetch(`/api/weddings/${wedding?.id}/shopping-items`, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch shopping items");
+      return res.json();
+    },
     enabled: !!wedding?.id,
   });
 
@@ -66,7 +71,7 @@ export default function ShoppingPage() {
       return apiRequest("POST", "/api/shopping-items", { ...data, weddingId: wedding.id });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/shopping-items"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "shopping-items"] });
       toast({ title: editingItem ? "Item Updated" : "Item Added", description: `Shopping item has been ${editingItem ? "updated" : "added"} successfully.` });
       setIsShoppingDialogOpen(false);
       resetShoppingForm();
@@ -80,7 +85,7 @@ export default function ShoppingPage() {
   const deleteShoppingItemMutation = useMutation({
     mutationFn: async (id: string) => apiRequest("DELETE", `/api/shopping-items/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/shopping-items"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "shopping-items"] });
       toast({ title: "Item Deleted", description: "Shopping item has been deleted successfully." });
     },
     onError: () => {
