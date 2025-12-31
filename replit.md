@@ -42,6 +42,13 @@ Key architectural decisions and features include:
   - **Couple Booking Suggestions**: AI helps couples craft effective vendor booking request messages
   - **Context-Aware**: Suggestions consider wedding tradition, event details, and conversation history
   - **Input Sanitization**: Server-side validation with length limits (1000 chars for messages, 100 chars for names) to prevent abuse
+- **ViahMe Guest Assistant**: AI-powered chat on the guest contribution page for family members:
+  - **DIY-Friendly**: Helps parents/aunties/uncles who are confused about adding guests (e.g., "I don't have their address" → "That's fine! Just add names and the couple can find it later")
+  - **Dadi-Proof UI**: 48px touch targets, 16pt fonts for elderly users
+  - **Quick Prompts**: Common questions like "Should I add children?", "What if I forget someone?"
+  - **Context-Aware**: Knows the couple's names, wedding date, and which step of the form the user is on
+  - **Public Endpoint**: No authentication required since family members use collector links (API: `/api/ai/guest-assistant`)
+  - **Implementation**: `server/ai/gemini.ts` (chatWithGuestAssistant), `client/src/components/guest-assistant-chat.tsx`
 - **Live Wedding Experience**: Real-Time Guest Concierge system including a Gap Concierge Designer and Ritual Control Panel for couples, feeding into a public-facing Guest Live Feed.
 - **Real-Time Master Timeline**: Day-of coordination system for couples and vendors:
   - **Drag-and-drop event reordering** using dnd-kit with WebSocket broadcast for real-time sync
