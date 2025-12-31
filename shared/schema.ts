@@ -444,6 +444,25 @@ export type InsertBooking = z.infer<typeof insertBookingSchema>;
 export type Booking = typeof bookings.$inferSelect;
 
 // ============================================================================
+// VENDOR FAVORITES - Couples can save vendors they're interested in
+// ============================================================================
+
+export const vendorFavorites = pgTable("vendor_favorites", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  vendorId: varchar("vendor_id").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertVendorFavoriteSchema = createInsertSchema(vendorFavorites).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertVendorFavorite = z.infer<typeof insertVendorFavoriteSchema>;
+export type VendorFavorite = typeof vendorFavorites.$inferSelect;
+
+// ============================================================================
 // BUDGET CATEGORIES - Cultural budget allocation
 // ============================================================================
 
