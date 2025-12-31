@@ -316,22 +316,36 @@ export default function Vendors() {
 
   // Effect to scroll to and highlight the focused vendor when booked tab is active
   useEffect(() => {
-    if (activeTab === "booked" && focusedVendorId && bookedVendorRefs.current[focusedVendorId]) {
-      // Small delay to ensure the tab content is rendered
-      setTimeout(() => {
-        const element = bookedVendorRefs.current[focusedVendorId];
-        if (element) {
-          element.scrollIntoView({ behavior: "smooth", block: "center" });
-          // Add highlight animation
-          element.classList.add("ring-2", "ring-primary", "ring-offset-2");
-          // Remove highlight after 3 seconds
-          setTimeout(() => {
-            element.classList.remove("ring-2", "ring-primary", "ring-offset-2");
-            setFocusedVendorId(null);
-          }, 3000);
-        }
-      }, 100);
-    }
+    if (activeTab !== "booked" || !focusedVendorId) return;
+
+    const HIGHLIGHT_DURATION_MS = 3000;
+    let scrollTimeout: ReturnType<typeof setTimeout>;
+    let highlightTimeout: ReturnType<typeof setTimeout>;
+
+    // Small delay to ensure the tab content is rendered
+    scrollTimeout = setTimeout(() => {
+      const element = bookedVendorRefs.current[focusedVendorId];
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+        // Add highlight animation
+        element.classList.add("ring-2", "ring-primary", "ring-offset-2");
+        // Remove highlight after duration
+        highlightTimeout = setTimeout(() => {
+          element.classList.remove("ring-2", "ring-primary", "ring-offset-2");
+          setFocusedVendorId(null);
+        }, HIGHLIGHT_DURATION_MS);
+      }
+    }, 100);
+
+    // Cleanup on unmount or when dependencies change
+    return () => {
+      clearTimeout(scrollTimeout);
+      clearTimeout(highlightTimeout);
+      // Also clean up highlight classes if unmounting early
+      if (focusedVendorId && bookedVendorRefs.current[focusedVendorId]) {
+        bookedVendorRefs.current[focusedVendorId]?.classList.remove("ring-2", "ring-primary", "ring-offset-2");
+      }
+    };
   }, [activeTab, focusedVendorId, bookedVendorsData]);
 
   const handleAddToComparison = (vendor: Vendor) => {
