@@ -62,6 +62,7 @@ import {
   Circle,
   Link2,
   LayoutPanelLeft,
+  Mail,
 } from "lucide-react";
 import { SideBySideDashboard } from "@/components/side-by-side-dashboard";
 import { CollectorLinksManager } from "@/components/collector-links-manager";
@@ -69,6 +70,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 
 type GuestSuggestionWithSource = GuestSuggestion & {
   source?: GuestSource;
+  potentialDuplicate?: boolean;
+  duplicateReason?: 'name' | 'email' | null;
 };
 
 type ScenarioWithStats = GuestListScenario & {
@@ -268,6 +271,25 @@ export default function GuestManagement() {
     },
     onError: () => {
       toast({ title: "Error", description: "Failed to reject suggestion", variant: "destructive" });
+    },
+  });
+
+  const updateSuggestionStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      return await apiRequest("PATCH", `/api/guest-suggestions/${id}/status`, { status });
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-suggestions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-suggestions", "count"] });
+      const statusLabels: Record<string, string> = {
+        waitlisted: "Waitlisted",
+        under_discussion: "Marked for Discussion",
+        pending: "Returned to Pending",
+      };
+      toast({ title: statusLabels[variables.status] || "Updated", description: "Suggestion status has been updated." });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to update suggestion status", variant: "destructive" });
     },
   });
 
@@ -799,7 +821,10 @@ export default function GuestManagement() {
             </Card>
           ) : (
             <div className="space-y-3">
-              {pendingSuggestions.map(suggestion => (
+              {pendingSuggestions.map(suggestion => {
+                const costPerHead = budgetData?.capacity?.costPerHead || 150;
+                const estimatedCost = (suggestion.maxCount || 1) * costPerHead;
+                return (
                 <Card key={suggestion.id} data-testid={`card-suggestion-${suggestion.id}`}>
                   <CardHeader className="pb-2">
                     <div className="flex items-start justify-between gap-2">
@@ -812,52 +837,107 @@ export default function GuestManagement() {
                           <Badge variant="secondary" className="text-xs">
                             {suggestion.maxCount} {suggestion.maxCount === 1 ? "guest" : "guests"}
                           </Badge>
+                          <Badge className="text-xs bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                            <DollarSign className="h-3 w-3 mr-0.5" />
+                            ~${estimatedCost.toLocaleString()}
+                          </Badge>
                           {suggestion.source && (
                             <Badge variant="outline" className="text-xs">
                               via {suggestion.source.label}
                             </Badge>
                           )}
+                          {suggestion.potentialDuplicate && (
+                            <Badge className="text-xs bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                              <AlertTriangle className="h-3 w-3 mr-0.5" />
+                              Potential Duplicate
+                            </Badge>
+                          )}
                         </CardDescription>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="default"
-                          onClick={() => approveSuggestionMutation.mutate(suggestion.id)}
-                          disabled={approveSuggestionMutation.isPending}
-                          data-testid={`button-approve-${suggestion.id}`}
-                        >
-                          <CheckCircle2 className="h-4 w-4 mr-1" />
-                          Approve
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => {
-                            setSelectedSuggestion(suggestion);
-                            setRejectDialogOpen(true);
-                          }}
-                          data-testid={`button-reject-${suggestion.id}`}
-                        >
-                          <XCircle className="h-4 w-4 mr-1" />
-                          Reject
-                        </Button>
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent className="pt-2">
+                  <CardContent className="pt-2 space-y-3">
                     {suggestion.guestNames && (
                       <p className="text-sm"><strong>Guests:</strong> {suggestion.guestNames}</p>
                     )}
                     {suggestion.notes && (
-                      <p className="text-sm text-muted-foreground mt-1">{suggestion.notes}</p>
+                      <p className="text-sm text-muted-foreground">{suggestion.notes}</p>
                     )}
                     {suggestion.contactEmail && (
-                      <p className="text-xs text-muted-foreground mt-1">Contact: {suggestion.contactEmail}</p>
+                      <p className="text-xs text-muted-foreground">Contact: {suggestion.contactEmail}</p>
                     )}
                   </CardContent>
+                  <CardFooter className="pt-0 flex flex-wrap gap-2 justify-between">
+                    <div className="flex gap-1">
+                      <Button
+                        size="sm"
+                        variant="default"
+                        onClick={() => approveSuggestionMutation.mutate(suggestion.id)}
+                        disabled={approveSuggestionMutation.isPending}
+                        data-testid={`button-approve-${suggestion.id}`}
+                      >
+                        <CheckCircle2 className="h-4 w-4 mr-1" />
+                        Approve
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => {
+                          setSelectedSuggestion(suggestion);
+                          setRejectDialogOpen(true);
+                        }}
+                        data-testid={`button-reject-${suggestion.id}`}
+                      >
+                        <XCircle className="h-4 w-4 mr-1" />
+                        Reject
+                      </Button>
+                    </div>
+                    <div className="flex gap-1">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => updateSuggestionStatusMutation.mutate({ id: suggestion.id, status: "waitlisted" })}
+                            disabled={updateSuggestionStatusMutation.isPending}
+                            data-testid={`button-waitlist-${suggestion.id}`}
+                          >
+                            <Clock className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Move to Waitlist</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => updateSuggestionStatusMutation.mutate({ id: suggestion.id, status: "under_discussion" })}
+                            disabled={updateSuggestionStatusMutation.isPending}
+                            data-testid={`button-discuss-${suggestion.id}`}
+                          >
+                            <CircleDot className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Mark for Discussion</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            disabled
+                            data-testid={`button-ping-${suggestion.id}`}
+                          >
+                            <Mail className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Send Reminder (Coming Soon)</TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </CardFooter>
                 </Card>
-              ))}
+              );})}
             </div>
           )}
 

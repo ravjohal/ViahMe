@@ -8610,7 +8610,22 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
       const { weddingId } = req.params;
       const status = req.query.status as string | undefined;
       const suggestions = await storage.getGuestSuggestionsByWedding(weddingId, status);
-      res.json(suggestions);
+      
+      const households = await storage.getHouseholdsByWedding(weddingId);
+      const householdNames = new Set(households.map(h => h.name.toLowerCase().trim()));
+      const householdEmails = new Set(households.filter(h => h.email).map(h => h.email!.toLowerCase().trim()));
+      
+      const suggestionsWithDuplicates = suggestions.map(suggestion => {
+        const nameMatch = householdNames.has(suggestion.householdName?.toLowerCase().trim() || '');
+        const emailMatch = suggestion.contactEmail && householdEmails.has(suggestion.contactEmail.toLowerCase().trim());
+        return {
+          ...suggestion,
+          potentialDuplicate: nameMatch || emailMatch,
+          duplicateReason: nameMatch ? 'name' : emailMatch ? 'email' : null,
+        };
+      });
+      
+      res.json(suggestionsWithDuplicates);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
@@ -8719,6 +8734,43 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
         targetType: "suggestion",
         targetId: suggestion.id,
         details: { householdName: suggestion.householdName, reason },
+      });
+      
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/guest-suggestions/:id/status", async (req, res) => {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      const suggestion = await storage.getGuestSuggestion(req.params.id);
+      if (!suggestion) {
+        return res.status(404).json({ error: "Suggestion not found" });
+      }
+      
+      const { status } = req.body;
+      const validStatuses = ["pending", "under_discussion", "approved", "declined", "frozen", "waitlisted"];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ error: "Invalid status" });
+      }
+      
+      const result = await storage.updateGuestSuggestion(req.params.id, { status });
+      
+      // Log activity
+      await storage.logCollaboratorActivity({
+        weddingId: suggestion.weddingId,
+        collaboratorId: null,
+        userId,
+        action: "suggestion_status_changed",
+        targetType: "suggestion",
+        targetId: suggestion.id,
+        details: { householdName: suggestion.householdName, newStatus: status },
       });
       
       res.json(result);
@@ -8875,11 +8927,15 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
         weddingId: link.weddingId,
         submitterName: req.body.submitterName,
         submitterRelation: req.body.submitterRelation,
-        guestName: req.body.guestName,
+        guestName: req.body.guestName || req.body.householdName,
         guestEmail: req.body.guestEmail,
         guestPhone: req.body.guestPhone,
         relationshipTier: req.body.relationshipTier,
         notes: req.body.notes,
+        householdName: req.body.householdName,
+        guestNames: req.body.guestNames,
+        guestCount: req.body.guestCount,
+        desiDietaryType: req.body.desiDietaryType,
       });
       
       res.status(201).json({ success: true, submissionId: submission.id });
@@ -8943,6 +8999,26 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
       res.json(result);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Public endpoint - Parse voice transcript to extract guest names (no auth for collector)
+  app.post("/api/voice-to-guest", async (req, res) => {
+    try {
+      const { transcript } = req.body;
+      if (!transcript || typeof transcript !== "string") {
+        return res.status(400).json({ error: "Transcript is required" });
+      }
+      if (transcript.length > 1000) {
+        return res.status(400).json({ error: "Transcript too long (max 1000 characters)" });
+      }
+      
+      const { parseVoiceTranscript } = await import('./ai/gemini');
+      const result = await parseVoiceTranscript(transcript);
+      res.json(result);
+    } catch (error: any) {
+      console.error("Voice-to-guest parsing error:", error);
+      res.status(500).json({ error: "Failed to parse voice input" });
     }
   });
 

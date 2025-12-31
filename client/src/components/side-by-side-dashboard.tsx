@@ -9,7 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Guest, Wedding } from "@shared/schema";
+import type { Guest, Wedding, GuestSource } from "@shared/schema";
 import {
   Users,
   Eye,
@@ -24,6 +24,8 @@ import {
   Unlock,
   ChevronRight,
   RefreshCw,
+  Target,
+  AlertTriangle,
 } from "lucide-react";
 import {
   Tooltip,
@@ -78,6 +80,13 @@ interface SideBySideDashboardProps {
   userSide?: 'bride' | 'groom';
 }
 
+type SourceStat = {
+  sourceId: string;
+  count: number;
+  seats: number;
+  source?: GuestSource;
+};
+
 export function SideBySideDashboard({ weddingId, wedding, userSide = 'bride' }: SideBySideDashboardProps) {
   const { toast } = useToast();
   const [selectedGuests, setSelectedGuests] = useState<string[]>([]);
@@ -86,6 +95,30 @@ export function SideBySideDashboard({ weddingId, wedding, userSide = 'bride' }: 
   const { data: sideStats, isLoading: statsLoading } = useQuery<SideStats>({
     queryKey: ["/api/weddings", weddingId, "side-statistics"],
   });
+
+  const { data: sources = [] } = useQuery<GuestSource[]>({
+    queryKey: ["/api/weddings", weddingId, "guest-sources"],
+  });
+
+  const { data: sourceStats = [] } = useQuery<SourceStat[]>({
+    queryKey: ["/api/weddings", weddingId, "guest-sources", "stats"],
+  });
+
+  const brideQuota = sources
+    .filter(s => s.side === "bride" && s.quotaLimit)
+    .reduce((sum, s) => sum + (s.quotaLimit || 0), 0);
+  
+  const groomQuota = sources
+    .filter(s => s.side === "groom" && s.quotaLimit)
+    .reduce((sum, s) => sum + (s.quotaLimit || 0), 0);
+
+  const brideUsed = sourceStats
+    .filter(s => s.source?.side === "bride")
+    .reduce((sum, s) => sum + s.seats, 0);
+
+  const groomUsed = sourceStats
+    .filter(s => s.source?.side === "groom")
+    .reduce((sum, s) => sum + s.seats, 0);
 
   const { data: brideGuests = [], isLoading: brideLoading } = useQuery<Guest[]>({
     queryKey: ["/api/weddings", weddingId, "guests-by-side", "bride"],
@@ -238,6 +271,28 @@ export function SideBySideDashboard({ weddingId, wedding, userSide = 'bride' }: 
                 <EyeOff className="w-3 h-3" /> {sideStats?.bride.private || 0} private
               </span>
             </div>
+            {brideQuota > 0 && (
+              <div className="mt-3 pt-3 border-t">
+                <div className="flex items-center justify-between text-sm mb-1">
+                  <span className="flex items-center gap-1 text-muted-foreground">
+                    <Target className="w-3 h-3" /> Quota
+                  </span>
+                  <span className={brideUsed > brideQuota ? "text-red-600 font-medium" : ""}>
+                    {brideUsed} / {brideQuota}
+                  </span>
+                </div>
+                <Progress 
+                  value={Math.min((brideUsed / brideQuota) * 100, 100)}
+                  className={`h-1.5 ${brideUsed > brideQuota ? "[&>div]:bg-red-500" : ""}`}
+                />
+                {brideUsed > brideQuota && (
+                  <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" />
+                    Over quota by {brideUsed - brideQuota}
+                  </p>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -258,6 +313,28 @@ export function SideBySideDashboard({ weddingId, wedding, userSide = 'bride' }: 
                 <EyeOff className="w-3 h-3" /> {sideStats?.groom.private || 0} private
               </span>
             </div>
+            {groomQuota > 0 && (
+              <div className="mt-3 pt-3 border-t">
+                <div className="flex items-center justify-between text-sm mb-1">
+                  <span className="flex items-center gap-1 text-muted-foreground">
+                    <Target className="w-3 h-3" /> Quota
+                  </span>
+                  <span className={groomUsed > groomQuota ? "text-red-600 font-medium" : ""}>
+                    {groomUsed} / {groomQuota}
+                  </span>
+                </div>
+                <Progress 
+                  value={Math.min((groomUsed / groomQuota) * 100, 100)}
+                  className={`h-1.5 ${groomUsed > groomQuota ? "[&>div]:bg-red-500" : ""}`}
+                />
+                {groomUsed > groomQuota && (
+                  <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" />
+                    Over quota by {groomUsed - groomQuota}
+                  </p>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 

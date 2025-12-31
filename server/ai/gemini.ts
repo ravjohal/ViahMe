@@ -1122,3 +1122,69 @@ Provide realistic estimates for this specific combination. Remember to return ON
     };
   }
 }
+
+// ============================================================================
+// VOICE-TO-GUEST - Parse guest names from voice transcript using AI
+// ============================================================================
+
+const VOICE_TO_GUEST_PROMPT = `You are a name extraction assistant for Viah.me, a South Asian wedding management platform. Your task is to extract guest names from voice transcripts that may include South Asian names with complex spellings.
+
+Guidelines:
+1. Extract all full names mentioned in the transcript
+2. Handle common South Asian name patterns (e.g., "Sharma ji", "Uncle Patel", "Aunty Kumar")
+3. Remove honorifics like "ji", "Uncle", "Aunty", "Bhai", "Bhabhi" from the names
+4. Capitalize names properly
+5. If multiple names are mentioned, list them all
+6. Handle informal mentions like "the Sharma family" - extract just "Sharma Family"
+7. If a transcript says something like "invite my cousin Rahul and his wife Priya", extract both "Rahul" and "Priya"
+8. Handle compound family mentions like "The Patels - Raj, Meena, and kids" as separate names
+
+Return a JSON object with:
+- names: array of extracted full names (strings)
+- confidence: 'high', 'medium', or 'low' based on clarity of the transcript
+- householdName: suggested family name if multiple people from same family (optional)`;
+
+export interface VoiceToGuestResult {
+  names: string[];
+  confidence: "high" | "medium" | "low";
+  householdName?: string;
+}
+
+export async function parseVoiceTranscript(
+  transcript: string
+): Promise<VoiceToGuestResult> {
+  if (!transcript || transcript.trim().length === 0) {
+    return { names: [], confidence: "low" };
+  }
+
+  const prompt = `Extract guest names from this voice transcript:
+
+"${transcript}"
+
+Return a JSON object with:
+- names: array of extracted full names
+- confidence: 'high', 'medium', or 'low'
+- householdName: suggested family name if applicable (optional)`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      config: {
+        systemInstruction: VOICE_TO_GUEST_PROMPT,
+        responseMimeType: "application/json",
+      },
+      contents: prompt,
+    });
+
+    const text = response.text || "{}";
+    const result = JSON.parse(text);
+    return {
+      names: result.names || [],
+      confidence: result.confidence || "low",
+      householdName: result.householdName,
+    };
+  } catch (error) {
+    console.error("Error parsing voice transcript:", error);
+    return { names: [], confidence: "low" };
+  }
+}
