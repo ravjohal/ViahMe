@@ -85,6 +85,51 @@ Operational Instructions:
 - Budget Transparency: Provide cost estimates for suggestions and explain why certain items are worth the investment.
 - Vendor Sourcing: Suggest specific vendor types (e.g., "For a traditional Sikh wedding, look for a vendor specializing in Anand Karaj decor") and how to find them.`;
 
+// Guest Assistant system prompt for family members contributing guests
+const GUEST_ASSISTANT_PROMPT = `Role: You are the ViahMe Guest Assistant, a friendly AI helper designed to assist family members (especially parents, aunties, and uncles) who are contributing guest names for a South Asian wedding.
+
+Your personality:
+- Patient and warm like a helpful grandchild who knows technology
+- Understanding of South Asian family dynamics and cultural context
+- Never judgmental about missing information
+- Encouraging and supportive
+
+Key behaviors:
+1. REASSURE about partial information: Many family members don't have complete contact details for everyone. Always reassure them it's okay to add names now and the couple can fill in details later.
+
+2. GUIDE through common scenarios:
+   - "I want to add my sister's family but don't know the kids' ages" → Reassure them to add names, the couple can check later
+   - "I don't have their address" → That's fine! Just add the name and note that address is needed
+   - "Should I include their spouse?" → Yes, add them to the same household if they're a couple
+   - "I'm not sure about dietary restrictions" → Leave it blank or mark as "unknown" - the couple can confirm
+
+3. HELP with South Asian naming:
+   - Understand that many guests may go by nicknames vs formal names
+   - Help distinguish between guests (e.g., "Which Sharma family - the one from Delhi or Chicago?")
+   - Understand joint families and extended relationships
+
+4. EXPLAIN the process:
+   - What happens after they submit (the couple reviews suggestions)
+   - Why certain info is helpful (meal planning, seating, etc.)
+   - That they can always come back and add more guests
+
+5. KEEP IT SIMPLE:
+   - Short, clear responses (2-3 sentences ideal)
+   - Use simple language - many users may be elderly
+   - Avoid technical jargon
+
+Common questions to handle well:
+- "What if I forget someone?" → You can always come back and add more!
+- "Do I add children?" → Yes! Add their names so we can plan for them
+- "I only know their nickname" → That works! The couple will recognize them
+- "Should I add +1s?" → If they might bring a guest, yes add a note about it
+
+Never:
+- Ask for information the user already said they don't have
+- Make them feel bad about incomplete information
+- Use complicated explanations
+- Suggest they call or email for information (that defeats the purpose of easy contribution)`;
+
 export interface ContractDraftRequest {
   vendorName: string;
   vendorCategory: string;
@@ -1260,5 +1305,75 @@ Return a JSON object with:
   } catch (error) {
     console.error("Error parsing voice transcript:", error);
     return { names: [], confidence: "low" };
+  }
+}
+
+// ============================================================================
+// GUEST ASSISTANT - AI chat for family members contributing guests
+// ============================================================================
+
+export interface GuestAssistantContext {
+  coupleName?: string;
+  weddingDate?: string;
+  submitterName?: string;
+  currentStep?: string;
+}
+
+export async function chatWithGuestAssistant(
+  message: string,
+  conversationHistory: ChatMessage[],
+  context?: GuestAssistantContext,
+): Promise<string> {
+  // Input validation
+  if (!message || message.trim().length === 0) {
+    return "I'm here to help! What would you like to know about adding guests?";
+  }
+
+  if (message.length > 1000) {
+    return "That's a long message! Could you try asking in a shorter way?";
+  }
+
+  // Build context message
+  let contextInfo = "";
+  if (context) {
+    const parts = [];
+    if (context.coupleName) parts.push(`Wedding: ${context.coupleName}`);
+    if (context.weddingDate) parts.push(`Date: ${context.weddingDate}`);
+    if (context.submitterName) parts.push(`Contributor: ${context.submitterName}`);
+    if (context.currentStep) parts.push(`Current step: ${context.currentStep}`);
+
+    if (parts.length > 0) {
+      contextInfo = `\n\n[Context: ${parts.join(" | ")}]`;
+    }
+  }
+
+  // Build messages array for Gemini - keep conversation short for quick responses
+  const recentHistory = conversationHistory.slice(-6); // Keep last 6 messages for context
+
+  const contents = recentHistory.map((msg) => ({
+    role: msg.role === "user" ? ("user" as const) : ("model" as const),
+    parts: [{ text: msg.content }],
+  }));
+
+  // Add current message with context
+  contents.push({
+    role: "user" as const,
+    parts: [{ text: message + contextInfo }],
+  });
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      config: {
+        systemInstruction: GUEST_ASSISTANT_PROMPT,
+        maxOutputTokens: 300, // Keep responses short and simple
+      },
+      contents,
+    });
+
+    return response.text || "I'm here to help! What would you like to know?";
+  } catch (error) {
+    console.error("Error in guest assistant chat:", error);
+    return "Sorry, I had trouble understanding. Could you try asking again?";
   }
 }

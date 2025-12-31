@@ -40,6 +40,7 @@ import {
   MicOff,
   Loader2,
 } from "lucide-react";
+import { GuestAssistantChat } from "@/components/guest-assistant-chat";
 import { format } from "date-fns";
 
 declare global {
@@ -845,6 +846,20 @@ export default function GuestCollector() {
           Powered by Viah.me - South Asian Wedding Planning
         </p>
       </div>
+
+      {/* AI Guest Assistant - helps parents with questions about adding guests */}
+      {!submitted && (
+        <GuestAssistantChat
+          context={{
+            coupleName: linkInfo?.weddingInfo
+              ? `${linkInfo.weddingInfo.partner1Name} & ${linkInfo.weddingInfo.partner2Name}`
+              : undefined,
+            weddingDate: linkInfo?.weddingInfo?.weddingDate,
+            submitterName: submitterInfo.name || undefined,
+            currentStep,
+          }}
+        />
+      )}
     </div>
   );
 }

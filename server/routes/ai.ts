@@ -5,6 +5,7 @@ import {
   draftContract,
   reviewContract,
   chatWithPlanner,
+  chatWithGuestAssistant,
   generateContractClause,
   suggestContractImprovements,
   generateVendorReplySuggestions,
@@ -14,6 +15,7 @@ import {
   type ContractReviewRequest,
   type ChatMessage,
   type WeddingContext,
+  type GuestAssistantContext,
   type VendorReplySuggestionRequest,
   type CoupleMessageSuggestionRequest,
 } from "../ai/gemini";
@@ -328,6 +330,53 @@ export async function registerAiRoutes(router: Router, storage: IStorage) {
       res.status(500).json({ 
         error: "Failed to generate content",
         message: error instanceof Error ? error.message : "Please try again later"
+      });
+    }
+  });
+
+  // Guest Assistant - public endpoint for family members on guest collector page
+  // No auth required since this is accessed via public collector links
+  router.post("/guest-assistant", async (req, res) => {
+    try {
+      const { message, conversationHistory, context } = req.body;
+      
+      if (!message || typeof message !== 'string') {
+        return res.status(400).json({ 
+          error: "Message required",
+          message: "Please provide a message" 
+        });
+      }
+
+      // Sanitize and validate input
+      const sanitizedMessage = message.slice(0, 1000).trim();
+      if (sanitizedMessage.length === 0) {
+        return res.status(400).json({ 
+          error: "Message required",
+          message: "Please provide a message" 
+        });
+      }
+
+      const history: ChatMessage[] = Array.isArray(conversationHistory) 
+        ? conversationHistory.slice(-10).map(msg => ({
+            role: msg.role === 'assistant' ? 'assistant' : 'user',
+            content: String(msg.content || '').slice(0, 500),
+          }))
+        : [];
+
+      const sanitizedContext: GuestAssistantContext | undefined = context ? {
+        coupleName: context.coupleName?.slice(0, 100),
+        weddingDate: context.weddingDate?.slice(0, 50),
+        submitterName: context.submitterName?.slice(0, 100),
+        currentStep: context.currentStep?.slice(0, 50),
+      } : undefined;
+
+      const response = await chatWithGuestAssistant(sanitizedMessage, history, sanitizedContext);
+      res.json({ response });
+    } catch (error) {
+      console.error("Error in guest assistant chat:", error);
+      res.status(500).json({ 
+        error: "Failed to get response",
+        message: "Sorry, I'm having trouble right now. Please try again."
       });
     }
   });
