@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { VendorDirectory } from "@/components/vendor-directory";
 import { VendorDetailModal } from "@/components/vendor-detail-modal";
@@ -27,6 +27,8 @@ export default function Vendors() {
   const [showComparison, setShowComparison] = useState(false);
   const [showSubmitVendor, setShowSubmitVendor] = useState(false);
   const [previewHandled, setPreviewHandled] = useState(false);
+  const [focusedVendorId, setFocusedVendorId] = useState<string | null>(null);
+  const bookedVendorRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   // Parse query params for initial view
   const params = new URLSearchParams(searchString);
@@ -306,6 +308,32 @@ export default function Vendors() {
     }
   };
 
+  // Handler to navigate to booked tab and focus on a specific vendor
+  const handleViewBookings = useCallback((vendorId: string) => {
+    setFocusedVendorId(vendorId);
+    setActiveTab("booked");
+  }, []);
+
+  // Effect to scroll to and highlight the focused vendor when booked tab is active
+  useEffect(() => {
+    if (activeTab === "booked" && focusedVendorId && bookedVendorRefs.current[focusedVendorId]) {
+      // Small delay to ensure the tab content is rendered
+      setTimeout(() => {
+        const element = bookedVendorRefs.current[focusedVendorId];
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+          // Add highlight animation
+          element.classList.add("ring-2", "ring-primary", "ring-offset-2");
+          // Remove highlight after 3 seconds
+          setTimeout(() => {
+            element.classList.remove("ring-2", "ring-primary", "ring-offset-2");
+            setFocusedVendorId(null);
+          }, 3000);
+        }
+      }, 100);
+    }
+  }, [activeTab, focusedVendorId, bookedVendorsData]);
+
   const handleAddToComparison = (vendor: Vendor) => {
     if (comparisonVendors.find(v => v.id === vendor.id)) {
       setComparisonVendors(comparisonVendors.filter(v => v.id !== vendor.id));
@@ -425,6 +453,7 @@ export default function Vendors() {
                 onToggleFavorite={toggleFavorite}
                 isBookingPending={bookingMutation.isPending || offlineBookingMutation.isPending}
                 vendorBookedEventIds={vendorBookedEventIds}
+                onViewBookings={handleViewBookings}
               />
             </TabsContent>
 
@@ -545,7 +574,8 @@ export default function Vendors() {
                       return (
                         <Card 
                           key={vendor.id} 
-                          className="overflow-hidden hover-elevate cursor-pointer"
+                          ref={(el) => { bookedVendorRefs.current[vendor.id] = el; }}
+                          className="overflow-hidden hover-elevate cursor-pointer transition-all duration-300"
                           onClick={() => setSelectedVendor(vendor)}
                           data-testid={`card-booked-vendor-${vendor.id}`}
                         >

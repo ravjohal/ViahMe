@@ -30,6 +30,7 @@ interface VendorCardProps {
   onToggleFavorite?: (vendorId: string) => void;
   isBookingPending?: boolean;
   bookedEventIds?: string[];
+  onViewBookings?: (vendorId: string) => void;
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -74,6 +75,7 @@ export function VendorCard({
   onToggleFavorite,
   isBookingPending = false,
   bookedEventIds = [],
+  onViewBookings,
 }: VendorCardProps) {
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
   const [bookingNotes, setBookingNotes] = useState("");
@@ -332,14 +334,22 @@ export function VendorCard({
           {/* LOGGED IN USER BEHAVIOR */}
           {isLoggedIn && (
             <>
-              {/* Show booked events indicator if vendor has bookings */}
+              {/* Show booked events indicator if vendor has bookings - clickable to view bookings */}
               {hasBookedEvents && (
-                <div className="w-full py-1.5 px-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-md flex items-center gap-2" data-testid={`status-booked-${vendor.id}`}>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onViewBookings?.(vendor.id);
+                  }}
+                  className="w-full py-1.5 px-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-md flex items-center gap-2 hover:bg-green-100 dark:hover:bg-green-900 transition-colors cursor-pointer"
+                  data-testid={`button-view-bookings-${vendor.id}`}
+                >
                   <CheckCircle className="w-3.5 h-3.5 text-green-600 dark:text-green-400 flex-shrink-0" />
                   <span className="text-xs font-medium text-green-700 dark:text-green-300">
-                    Booked for {bookedEventIds.length} event{bookedEventIds.length > 1 ? 's' : ''}
+                    Booked for {bookedEventIds.length} event{bookedEventIds.length > 1 ? 's' : ''} — View
                   </span>
-                </div>
+                </button>
               )}
 
               {/* Claimed vendor: Show Request Booking with popover */}

@@ -35,6 +35,7 @@ interface VendorDirectoryProps {
   onToggleFavorite?: (vendorId: string) => void;
   isBookingPending?: boolean;
   vendorBookedEventIds?: Record<string, string[]>;
+  onViewBookings?: (vendorId: string) => void;
 }
 
 // Map budget amounts to price range tiers
@@ -205,6 +206,7 @@ export function VendorDirectory({
   onToggleFavorite,
   isBookingPending = false,
   vendorBookedEventIds = {},
+  onViewBookings,
 }: VendorDirectoryProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -688,6 +690,7 @@ export function VendorDirectory({
                 onToggleFavorite={onToggleFavorite}
                 isBookingPending={isBookingPending}
                 bookedEventIds={vendorBookedEventIds[vendor.id] || []}
+                onViewBookings={onViewBookings}
               />
             ))}
           </div>
@@ -737,6 +740,7 @@ export function VendorDirectory({
                   onToggleFavorite={onToggleFavorite}
                   isBookingPending={isBookingPending}
                   bookedEventIds={vendorBookedEventIds[vendor.id] || []}
+                  onViewBookings={onViewBookings}
                 />
               ))}
             </div>
