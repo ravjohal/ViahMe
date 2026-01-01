@@ -8815,6 +8815,9 @@ export async function registerLegacyRoutes(app: Express, storage: IStorage, view
       // Get wedding info for display
       const wedding = await storage.getWedding(link.weddingId);
       
+      // Get wedding events for event suggestion selection
+      const events = await storage.getEventsByWedding(link.weddingId);
+      
       res.json({
         id: link.id,
         name: link.name,
@@ -8825,6 +8828,12 @@ export async function registerLegacyRoutes(app: Express, storage: IStorage, view
           partner2Name: wedding.partner2Name,
           weddingDate: wedding.weddingDate,
         } : null,
+        events: events.map(e => ({
+          id: e.id,
+          name: e.name,
+          type: e.type,
+          date: e.date,
+        })),
       });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -8877,6 +8886,7 @@ export async function registerLegacyRoutes(app: Express, storage: IStorage, view
         guestCount,
         desiDietaryType: req.body.desiDietaryType,
         members: members.length > 0 ? JSON.stringify(members) : undefined,
+        eventSuggestions: req.body.eventSuggestions || [],
         fullAddress: req.body.fullAddress,
         contactStreet: req.body.contactStreet,
         contactCity: req.body.contactCity,
