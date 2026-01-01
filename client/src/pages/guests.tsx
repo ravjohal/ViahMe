@@ -68,6 +68,17 @@ import { SideFilterToggle, EventFilterPills, SummaryHeader } from "@/components/
 import { SiWhatsapp } from "react-icons/si";
 import QRCode from "qrcode";
 
+// Helper function to safely parse members which may be array or JSON string
+const parseMembers = (household: any): any[] => {
+  const raw = household?.members;
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw === 'string') {
+    try { return JSON.parse(raw); } catch { return []; }
+  }
+  return [];
+};
+
 const guestFormSchema = insertGuestSchema.extend({
   eventIds: z.array(z.string()).optional(),
 });
@@ -3513,21 +3524,21 @@ export default function Guests() {
               <p className="text-sm font-medium">Households with phone numbers:</p>
               <div className="flex flex-wrap gap-2">
                 {households
-                  .filter(h => h.contactPhone || ((h as any).members || []).some((m: any) => m.phone))
+                  .filter(h => h.contactPhone || parseMembers(h).some((m: any) => m.phone))
                   .slice(0, 5)
                   .map(h => (
                     <Badge key={h.id} variant="outline" className="text-xs">
                       {h.name}
                     </Badge>
                   ))}
-                {households.filter(h => h.contactPhone || ((h as any).members || []).some((m: any) => m.phone)).length > 5 && (
+                {households.filter(h => h.contactPhone || parseMembers(h).some((m: any) => m.phone)).length > 5 && (
                   <Badge variant="secondary" className="text-xs">
-                    +{households.filter(h => h.contactPhone || ((h as any).members || []).some((m: any) => m.phone)).length - 5} more
+                    +{households.filter(h => h.contactPhone || parseMembers(h).some((m: any) => m.phone)).length - 5} more
                   </Badge>
                 )}
               </div>
               <p className="text-xs text-muted-foreground">
-                {households.filter(h => h.contactPhone || ((h as any).members || []).some((m: any) => m.phone)).length} of {households.length} households have phone numbers
+                {households.filter(h => h.contactPhone || parseMembers(h).some((m: any) => m.phone)).length} of {households.length} households have phone numbers
               </p>
             </div>
             
@@ -3542,7 +3553,7 @@ export default function Guests() {
               <Button
                 onClick={() => {
                   const eligibleHouseholds = households.filter(h => {
-                    const phone = h.contactPhone || ((h as any).members || []).find((m: any) => m.phone)?.phone;
+                    const phone = h.contactPhone || parseMembers(h).find((m: any) => m.phone)?.phone;
                     return !!phone;
                   });
                   
@@ -3556,7 +3567,7 @@ export default function Guests() {
                   }
 
                   const firstHousehold = eligibleHouseholds[0];
-                  const phone = firstHousehold.contactPhone || ((firstHousehold as any).members || []).find((m: any) => m.phone)?.phone;
+                  const phone = firstHousehold.contactPhone || parseMembers(firstHousehold).find((m: any) => m.phone)?.phone;
                   const cleanPhone = phone.replace(/\D/g, '');
                   const personalizedMessage = whatsappTemplate.replace(/{name}/g, firstHousehold.name);
                   const encodedMessage = encodeURIComponent(personalizedMessage);

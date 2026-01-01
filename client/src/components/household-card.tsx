@@ -69,7 +69,15 @@ export function HouseholdCard({
   const [touchStartX, setTouchStartX] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
 
-  const members: HouseholdMember[] = (household as any).members || [];
+  const rawMembers = (household as any).members;
+  const members: HouseholdMember[] = (() => {
+    if (!rawMembers) return [];
+    if (Array.isArray(rawMembers)) return rawMembers;
+    if (typeof rawMembers === 'string') {
+      try { return JSON.parse(rawMembers); } catch { return []; }
+    }
+    return [];
+  })();
   const headOfHouseIndex = (household as any).headOfHouseIndex || 0;
   const headOfHouse = members[headOfHouseIndex] || members[0];
   
