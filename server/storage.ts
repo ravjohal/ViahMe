@@ -654,6 +654,7 @@ export interface IStorage {
 
   // Wedding Roles
   getWeddingRole(id: string): Promise<WeddingRole | undefined>;
+  getWeddingRoles(weddingId: string): Promise<WeddingRole[]>;
   getWeddingRolesByWedding(weddingId: string): Promise<WeddingRole[]>;
   getWeddingRoleWithPermissions(id: string): Promise<RoleWithPermissions | undefined>;
   createWeddingRole(role: InsertWeddingRole): Promise<WeddingRole>;
@@ -3524,6 +3525,9 @@ export class MemStorage implements IStorage {
   // Wedding Roles - MemStorage stubs
   async getWeddingRole(id: string): Promise<WeddingRole | undefined> {
     return undefined;
+  }
+  async getWeddingRoles(weddingId: string): Promise<WeddingRole[]> {
+    return this.getWeddingRolesByWedding(weddingId);
   }
   async getWeddingRolesByWedding(weddingId: string): Promise<WeddingRole[]> {
     return [];
@@ -6951,6 +6955,10 @@ export class DBStorage implements IStorage {
       .where(eq(schema.weddingRoles.id, id))
       .limit(1);
     return result[0];
+  }
+
+  async getWeddingRoles(weddingId: string): Promise<WeddingRole[]> {
+    return this.getWeddingRolesByWedding(weddingId);
   }
 
   async getWeddingRolesByWedding(weddingId: string): Promise<WeddingRole[]> {
