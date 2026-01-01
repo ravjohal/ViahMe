@@ -8929,6 +8929,26 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
     }
   });
 
+  // Public endpoint - Get submissions by session ID (no auth required, for showing previous submissions)
+  app.get("/api/collector/:token/my-submissions", async (req, res) => {
+    try {
+      const sessionId = req.query.sessionId as string;
+      if (!sessionId) {
+        return res.json([]);
+      }
+
+      const link = await storage.getGuestCollectorLinkByToken(req.params.token);
+      if (!link) {
+        return res.status(404).json({ error: "Collector link not found" });
+      }
+
+      const submissions = await storage.getCollectorSubmissionsBySession(link.id, sessionId);
+      res.json(submissions);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Public endpoint - Submit guest via collector link (no auth required)
   app.post("/api/collector/:token/submit", async (req, res) => {
     try {
@@ -8968,6 +8988,7 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
         contactState: req.body.contactState,
         contactPostalCode: req.body.contactPostalCode,
         contactCountry: req.body.contactCountry,
+        submissionSessionId: req.body.submissionSessionId,
       });
       
       res.status(201).json({ success: true, submissionId: submission.id });

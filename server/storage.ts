@@ -759,6 +759,7 @@ export interface IStorage {
   approveCollectorSubmission(id: string, reviewerId: string): Promise<{ household: Household; guests: Guest[] }>;
   declineCollectorSubmission(id: string, reviewerId: string): Promise<GuestCollectorSubmission>;
   getPendingCollectorSubmissionsCount(weddingId: string): Promise<number>;
+  getCollectorSubmissionsBySession(linkId: string, sessionId: string): Promise<GuestCollectorSubmission[]>;
 
   // Guest Side Management (bride/groom side features)
   getGuestsBySide(weddingId: string, side: 'bride' | 'groom' | 'mutual'): Promise<Guest[]>;
@@ -3952,6 +3953,7 @@ export class MemStorage implements IStorage {
   async approveCollectorSubmission(id: string, reviewerId: string): Promise<{ household: Household; guests: Guest[] }> { throw new Error("MemStorage does not support Guest Collector Submissions. Use DBStorage."); }
   async declineCollectorSubmission(id: string, reviewerId: string): Promise<GuestCollectorSubmission> { throw new Error("MemStorage does not support Guest Collector Submissions. Use DBStorage."); }
   async getPendingCollectorSubmissionsCount(weddingId: string): Promise<number> { return 0; }
+  async getCollectorSubmissionsBySession(linkId: string, sessionId: string): Promise<GuestCollectorSubmission[]> { return []; }
 
   // Guest Side Management (stubs)
   async getGuestsBySide(weddingId: string, side: 'bride' | 'groom' | 'mutual'): Promise<Guest[]> { return []; }
@@ -9153,6 +9155,15 @@ export class DBStorage implements IStorage {
         eq(schema.guestCollectorSubmissions.status, 'pending')
       ));
     return Number(result[0]?.count || 0);
+  }
+
+  async getCollectorSubmissionsBySession(linkId: string, sessionId: string): Promise<GuestCollectorSubmission[]> {
+    return await this.db.select().from(schema.guestCollectorSubmissions)
+      .where(and(
+        eq(schema.guestCollectorSubmissions.collectorLinkId, linkId),
+        eq(schema.guestCollectorSubmissions.submissionSessionId, sessionId)
+      ))
+      .orderBy(sql`${schema.guestCollectorSubmissions.createdAt} DESC`);
   }
 
   // Guest Side Management
