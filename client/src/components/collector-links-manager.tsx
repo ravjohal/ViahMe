@@ -170,11 +170,13 @@ export function CollectorLinksManager({ weddingId }: CollectorLinksManagerProps)
 
   // Group submissions by submitter
   const submissionsBySubmitter = submissions.reduce((acc, submission) => {
-    const key = `${submission.submitterName}|||${submission.submitterRelation}`;
+    const submitterName = submission.submitterName || 'Unknown';
+    const submitterRelation = submission.submitterRelation || 'Unknown';
+    const key = `${submitterName}|||${submitterRelation}`;
     if (!acc[key]) {
       acc[key] = {
-        name: submission.submitterName,
-        relation: submission.submitterRelation,
+        name: submitterName,
+        relation: submitterRelation,
         submissions: [],
         pendingCount: 0,
         approvedCount: 0,
