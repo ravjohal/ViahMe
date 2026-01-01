@@ -9116,35 +9116,107 @@ export class DBStorage implements IStorage {
     const link = await this.getGuestCollectorLink(submission.collectorLinkId);
     if (!link) throw new Error("Collector link not found");
     
+    // Determine household name (use new householdName field if available, fallback to guestName)
+    const householdName = submission.householdName || submission.guestName;
+    
     // Create household for the guest
     const household = await this.createHousehold({
       weddingId: submission.weddingId,
-      name: submission.guestName,
+      name: householdName,
       side: link.side as 'bride' | 'groom',
       relationshipTier: (submission.relationshipTier as any) || 'friend',
       priorityTier: 'should_invite',
+      headOfHouseEmail: submission.guestEmail || undefined,
+      headOfHousePhone: submission.guestPhone || undefined,
+      dietaryRestriction: (submission.desiDietaryType as any) || 'none',
+      contactStreet: submission.contactStreet || undefined,
+      contactCity: submission.contactCity || undefined,
+      contactState: submission.contactState || undefined,
+      contactPostalCode: submission.contactPostalCode || undefined,
+      contactCountry: submission.contactCountry || undefined,
     });
     
-    // Create guest
-    const guest = await this.createGuest({
-      weddingId: submission.weddingId,
-      householdId: household.id,
-      name: submission.guestName,
-      email: submission.guestEmail || undefined,
-      phone: submission.guestPhone || undefined,
-      side: link.side as 'bride' | 'groom',
-      relationshipTier: (submission.relationshipTier as any) || 'friend',
-      visibility: 'shared',
-      addedBySide: link.side as 'bride' | 'groom',
-      consensusStatus: 'pending',
-    });
+    const guests: Guest[] = [];
+    
+    // Parse members array if available (new wizard format)
+    let members: Array<{ name: string; email?: string; phone?: string; dietary?: string }> = [];
+    if (submission.members) {
+      try {
+        members = typeof submission.members === 'string' 
+          ? JSON.parse(submission.members) 
+          : (submission.members as any);
+      } catch (e) {
+        // Failed to parse members, fall back to single guest
+        members = [];
+      }
+    }
+    
+    if (members.length > 0) {
+      // New wizard format with individual members
+      for (const member of members) {
+        if (!member.name?.trim()) continue;
+        const guest = await this.createGuest({
+          weddingId: submission.weddingId,
+          householdId: household.id,
+          name: member.name,
+          email: member.email || undefined,
+          phone: member.phone || undefined,
+          dietaryRestrictions: member.dietary || undefined,
+          side: link.side as 'bride' | 'groom',
+          relationshipTier: (submission.relationshipTier as any) || 'friend',
+          visibility: 'shared',
+          addedBySide: link.side as 'bride' | 'groom',
+          consensusStatus: 'pending',
+        });
+        guests.push(guest);
+      }
+    } else {
+      // Legacy format or count-only mode - create guest count based on guestCount
+      const guestCount = submission.guestCount || 1;
+      for (let i = 0; i < guestCount; i++) {
+        const guestName = i === 0 
+          ? (submission.mainContactName || householdName)
+          : `${householdName} Guest ${i + 1}`;
+        const guest = await this.createGuest({
+          weddingId: submission.weddingId,
+          householdId: household.id,
+          name: guestName,
+          email: i === 0 ? (submission.guestEmail || undefined) : undefined,
+          phone: i === 0 ? (submission.guestPhone || undefined) : undefined,
+          side: link.side as 'bride' | 'groom',
+          relationshipTier: (submission.relationshipTier as any) || 'friend',
+          visibility: 'shared',
+          addedBySide: link.side as 'bride' | 'groom',
+          consensusStatus: 'pending',
+        });
+        guests.push(guest);
+      }
+    }
+    
+    // Create invitations for suggested events
+    if (submission.eventSuggestions && submission.eventSuggestions.length > 0) {
+      for (const guest of guests) {
+        for (const eventId of submission.eventSuggestions) {
+          try {
+            await this.createInvitation({
+              guestId: guest.id,
+              eventId: eventId,
+              rsvpStatus: 'pending',
+            });
+          } catch (e) {
+            // Skip if invitation already exists or event doesn't exist
+            console.error('Failed to create invitation:', e);
+          }
+        }
+      }
+    }
     
     // Mark submission as approved
     await this.db.update(schema.guestCollectorSubmissions)
       .set({ status: 'approved', reviewedById: reviewerId, reviewedAt: new Date() })
       .where(eq(schema.guestCollectorSubmissions.id, id));
     
-    return { household, guests: [guest] };
+    return { household, guests };
   }
 
   async declineCollectorSubmission(id: string, reviewerId: string): Promise<GuestCollectorSubmission> {
