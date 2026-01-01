@@ -1508,7 +1508,7 @@ export default function GuestCollector() {
                   <Button
                     type="button"
                     onClick={addFamilyToDraft}
-                    disabled={!form.watch("householdName") || !currentMembers.some(m => m.name.trim() !== "")}
+                    disabled={!form.watch("householdName") || (form.watch("addMembersIndividually") && !currentMembers.some(m => m.name.trim() !== ""))}
                     className="min-h-[48px] flex-1 text-base bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600"
                     data-testid="button-update-family"
                   >
@@ -1522,7 +1522,7 @@ export default function GuestCollector() {
                       type="button"
                       variant="outline"
                       onClick={addFamilyAndContinue}
-                      disabled={!form.watch("householdName") || !currentMembers.some(m => m.name.trim() !== "")}
+                      disabled={!form.watch("householdName") || (form.watch("addMembersIndividually") && !currentMembers.some(m => m.name.trim() !== ""))}
                       className="min-h-[48px] flex-1 text-base"
                       data-testid="button-add-and-continue"
                     >
@@ -1532,7 +1532,7 @@ export default function GuestCollector() {
                     <Button
                       type="button"
                       onClick={addFamilyToDraft}
-                      disabled={!form.watch("householdName") || !currentMembers.some(m => m.name.trim() !== "")}
+                      disabled={!form.watch("householdName") || (form.watch("addMembersIndividually") && !currentMembers.some(m => m.name.trim() !== ""))}
                       className="min-h-[48px] flex-1 text-base bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
                       data-testid="button-add-and-review"
                     >
