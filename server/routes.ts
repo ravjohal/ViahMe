@@ -8989,6 +8989,8 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   // Public endpoint - Submit guest via collector link (no auth required)
   app.post("/api/collector/:token/submit", async (req, res) => {
     try {
+      console.log("[Collector Submit] Received body:", JSON.stringify(req.body, null, 2));
+      
       const link = await storage.getGuestCollectorLinkByToken(req.params.token);
       if (!link) {
         return res.status(404).json({ error: "Collector link not found" });
@@ -9015,7 +9017,7 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
         eventSuggestionsValue = [eventSuggestionsValue];
       }
       
-      const submission = await storage.createGuestCollectorSubmission({
+      const submissionData = {
         collectorLinkId: link.id,
         weddingId: link.weddingId,
         submitterName: req.body.submitterName,
@@ -9040,10 +9042,15 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
         submissionSessionId: req.body.submissionSessionId,
         members: membersValue,
         eventSuggestions: eventSuggestionsValue,
-      });
+      };
+      
+      console.log("[Collector Submit] Processed data:", JSON.stringify(submissionData, null, 2));
+      
+      const submission = await storage.createGuestCollectorSubmission(submissionData);
       
       res.status(201).json({ success: true, submissionId: submission.id });
     } catch (error: any) {
+      console.error("[Collector Submit] Error:", error);
       res.status(400).json({ error: error.message });
     }
   });
