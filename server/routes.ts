@@ -9005,10 +9005,18 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
         return res.status(410).json({ error: "This link has reached its submission limit" });
       }
       
-      // Handle members - convert to JSON string if it's an array
+      // Normalize members to always be an array (JSONB column)
+      // Accept both: legacy stringified JSON or new array format
       let membersValue = req.body.members;
-      if (Array.isArray(membersValue)) {
-        membersValue = JSON.stringify(membersValue);
+      if (typeof membersValue === 'string') {
+        try {
+          membersValue = JSON.parse(membersValue);
+        } catch (e) {
+          membersValue = [];
+        }
+      }
+      if (!Array.isArray(membersValue)) {
+        membersValue = [];
       }
       
       // Handle eventSuggestions - ensure it's an array

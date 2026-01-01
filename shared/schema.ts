@@ -762,8 +762,8 @@ export const insertGuestCollectorSubmissionSchema = createInsertSchema(guestColl
   contactPostalCode: z.string().nullable().optional(),
   contactCountry: z.string().nullable().optional(),
   fullAddress: z.string().nullable().optional(),
-  // Individual guest members
-  members: z.string().nullable().optional(), // JSON string of guest members
+  // Individual guest members - stored as JSONB array
+  members: z.array(guestMemberSchema).nullable().optional(),
   // Event suggestions
   eventSuggestions: z.array(z.string()).nullable().optional(), // Array of suggested event IDs
   // Legacy fields (optional for backward compatibility)

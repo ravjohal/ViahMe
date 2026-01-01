@@ -173,6 +173,26 @@ import {
 import { randomUUID, randomBytes } from "crypto";
 import bcrypt from "bcrypt";
 
+// Helper to normalize members field - ensures it's always an array
+// Handles both legacy stringified JSON and proper JSONB arrays
+function normalizeMembers(members: unknown): any[] {
+  if (Array.isArray(members)) return members;
+  if (typeof members === 'string') {
+    try {
+      const parsed = JSON.parse(members);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+// Normalize a submission to ensure members is an array
+function normalizeSubmission<T extends { members?: unknown }>(submission: T): T {
+  return { ...submission, members: normalizeMembers(submission.members) };
+}
+
 // Helper functions for conversationId management
 export function generateConversationId(weddingId: string, vendorId: string, eventId?: string): string {
   const base = `${weddingId}-vendor-${vendorId}`;
@@ -9074,27 +9094,30 @@ export class DBStorage implements IStorage {
   async getGuestCollectorSubmission(id: string): Promise<GuestCollectorSubmission | undefined> {
     const result = await this.db.select().from(schema.guestCollectorSubmissions)
       .where(eq(schema.guestCollectorSubmissions.id, id));
-    return result[0];
+    return result[0] ? normalizeSubmission(result[0]) : undefined;
   }
 
   async getGuestCollectorSubmissionsByLink(linkId: string): Promise<GuestCollectorSubmission[]> {
-    return await this.db.select().from(schema.guestCollectorSubmissions)
+    const results = await this.db.select().from(schema.guestCollectorSubmissions)
       .where(eq(schema.guestCollectorSubmissions.collectorLinkId, linkId))
       .orderBy(sql`${schema.guestCollectorSubmissions.createdAt} DESC`);
+    return results.map(normalizeSubmission);
   }
 
   async getGuestCollectorSubmissionsByWedding(weddingId: string, status?: string): Promise<GuestCollectorSubmission[]> {
     if (status) {
-      return await this.db.select().from(schema.guestCollectorSubmissions)
+      const results = await this.db.select().from(schema.guestCollectorSubmissions)
         .where(and(
           eq(schema.guestCollectorSubmissions.weddingId, weddingId),
           eq(schema.guestCollectorSubmissions.status, status)
         ))
         .orderBy(sql`${schema.guestCollectorSubmissions.createdAt} DESC`);
+      return results.map(normalizeSubmission);
     }
-    return await this.db.select().from(schema.guestCollectorSubmissions)
+    const results = await this.db.select().from(schema.guestCollectorSubmissions)
       .where(eq(schema.guestCollectorSubmissions.weddingId, weddingId))
       .orderBy(sql`${schema.guestCollectorSubmissions.createdAt} DESC`);
+    return results.map(normalizeSubmission);
   }
 
   async createGuestCollectorSubmission(submission: InsertGuestCollectorSubmission): Promise<GuestCollectorSubmission> {
@@ -9105,7 +9128,7 @@ export class DBStorage implements IStorage {
     await this.db.update(schema.guestCollectorLinks)
       .set({ submissionCount: sql`submission_count + 1` })
       .where(eq(schema.guestCollectorLinks.id, submission.collectorLinkId));
-    return result[0];
+    return normalizeSubmission(result[0]);
   }
 
   async approveCollectorSubmission(id: string, reviewerId: string): Promise<{ household: Household; guests: Guest[] }> {
@@ -9224,7 +9247,7 @@ export class DBStorage implements IStorage {
       .set({ status: 'declined', reviewedById: reviewerId, reviewedAt: new Date() })
       .where(eq(schema.guestCollectorSubmissions.id, id))
       .returning();
-    return result[0];
+    return normalizeSubmission(result[0]);
   }
 
   async getPendingCollectorSubmissionsCount(weddingId: string): Promise<number> {
@@ -9238,12 +9261,13 @@ export class DBStorage implements IStorage {
   }
 
   async getCollectorSubmissionsBySession(linkId: string, sessionId: string): Promise<GuestCollectorSubmission[]> {
-    return await this.db.select().from(schema.guestCollectorSubmissions)
+    const results = await this.db.select().from(schema.guestCollectorSubmissions)
       .where(and(
         eq(schema.guestCollectorSubmissions.collectorLinkId, linkId),
         eq(schema.guestCollectorSubmissions.submissionSessionId, sessionId)
       ))
       .orderBy(sql`${schema.guestCollectorSubmissions.createdAt} DESC`);
+    return results.map(normalizeSubmission);
   }
 
   // Guest Side Management

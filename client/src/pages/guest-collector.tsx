@@ -70,6 +70,7 @@ const DESI_DIETARY_OPTIONS = [
   { value: "swaminarayan", label: "Swaminarayan", description: "Strictly vegetarian, no onion/garlic" },
   { value: "eggless", label: "Eggless Vegetarian", description: "Vegetarian, no eggs" },
   { value: "halal", label: "Halal", description: "Halal meat only" },
+  { value: "other", label: "Other", description: "Other restrictions, please specify in notes" },
 ];
 
 const RELATIONSHIP_TIERS = [
@@ -77,6 +78,7 @@ const RELATIONSHIP_TIERS = [
   { value: "extended_family", label: "Extended Family", description: "Aunts, uncles, cousins" },
   { value: "friend", label: "Close Friend", description: "Family friends" },
   { value: "parents_friend", label: "Parent's Friend", description: "Friend of parents" },
+  { value: "coworker", label: "Co-worker", description: "Coworkers or colleagues" },
 ];
 
 type WizardStep = "intro" | "household" | "contact" | "members" | "events" | "notes" | "review";
@@ -356,7 +358,7 @@ export default function GuestCollector() {
       const promises = families.map(family => 
         apiRequest("POST", `/api/collector/${token}/submit`, {
           ...family,
-          members: JSON.stringify(family.members || []),
+          members: family.members || [], // Send as array - server normalizes
           guestName: family.householdName,
           submitterName: submitterInfo.name,
           submitterRelation: submitterInfo.relation,
