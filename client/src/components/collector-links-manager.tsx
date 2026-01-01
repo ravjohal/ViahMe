@@ -132,6 +132,8 @@ export function CollectorLinksManager({ weddingId }: CollectorLinksManagerProps)
     onSuccess: () => {
       toast({ title: "Guest approved", description: "The guest has been added to your list." });
       queryClient.invalidateQueries({ queryKey: ["/api/weddings", weddingId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/guests", weddingId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/households", weddingId] });
     },
     onError: (error: any) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
