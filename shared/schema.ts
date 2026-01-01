@@ -702,6 +702,7 @@ export const guestCollectorSubmissions = pgTable("guest_collector_submissions", 
   guestCount: integer("guest_count").default(1), // Number of family members invited
   desiDietaryType: text("desi_dietary_type"), // Household dietary preference
   members: jsonb("members"), // Individual guest members with name, email, phone, dietary
+  eventSuggestions: text("event_suggestions").array(), // Suggested event IDs for this family
   relationshipTier: text("relationship_tier"), // 'immediate_family' | 'extended_family' | 'friend' | 'parents_friend'
   notes: text("notes"), // Any notes about the family
   // Legacy fields (kept for backward compatibility)
@@ -756,6 +757,8 @@ export const insertGuestCollectorSubmissionSchema = createInsertSchema(guestColl
   fullAddress: z.string().nullable().optional(),
   // Individual guest members
   members: z.string().nullable().optional(), // JSON string of guest members
+  // Event suggestions
+  eventSuggestions: z.array(z.string()).nullable().optional(), // Array of suggested event IDs
   // Legacy fields (optional for backward compatibility)
   guestNames: z.array(z.string()).nullable().optional(),
   guestDietaryInfo: guestDietaryInfoSchema.nullable().optional(),
