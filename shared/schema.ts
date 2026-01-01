@@ -3006,3 +3006,31 @@ export const insertLeadActivityLogSchema = createInsertSchema(leadActivityLog).o
 
 export type InsertLeadActivityLog = z.infer<typeof insertLeadActivityLogSchema>;
 export type LeadActivityLog = typeof leadActivityLog.$inferSelect;
+
+// ============================================================================
+// HOUSEHOLD MERGE AUDITS - Track duplicate household merges
+// ============================================================================
+
+export const householdMergeAudits = pgTable("household_merge_audits", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  survivorHouseholdId: varchar("survivor_household_id").notNull(),
+  mergedHouseholdId: varchar("merged_household_id").notNull(),
+  decision: text("decision").notNull(), // 'kept_older' | 'kept_newer'
+  survivorSnapshot: jsonb("survivor_snapshot").notNull(), // Snapshot of survivor before merge
+  mergedSnapshot: jsonb("merged_snapshot").notNull(), // Snapshot of merged household before deletion
+  guestsMoved: integer("guests_moved").notNull().default(0),
+  invitationsMoved: integer("invitations_moved").notNull().default(0),
+  reviewedById: varchar("reviewed_by_id").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertHouseholdMergeAuditSchema = createInsertSchema(householdMergeAudits).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  decision: z.enum(['kept_older', 'kept_newer']),
+});
+
+export type InsertHouseholdMergeAudit = z.infer<typeof insertHouseholdMergeAuditSchema>;
+export type HouseholdMergeAudit = typeof householdMergeAudits.$inferSelect;
