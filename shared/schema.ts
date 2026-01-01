@@ -708,6 +708,7 @@ export const guestCollectorSubmissions = pgTable("guest_collector_submissions", 
   guestNames: text("guest_names").array(), // Legacy: Array of guest names
   guestDietaryInfo: jsonb("guest_dietary_info"), // Legacy: Per-guest dietary info
   isBulkEntry: boolean("is_bulk_entry").default(false), // Legacy: bulk mode flag
+  submissionSessionId: text("submission_session_id"), // Browser session ID to track submissions from same device
   status: text("status").notNull().default('pending'), // 'pending' | 'approved' | 'declined'
   reviewedById: varchar("reviewed_by_id"),
   reviewedAt: timestamp("reviewed_at"),
@@ -745,6 +746,7 @@ export const insertGuestCollectorSubmissionSchema = createInsertSchema(guestColl
   guestDietaryInfo: guestDietaryInfoSchema.nullable().optional(),
   isBulkEntry: z.boolean().optional(),
   mainContactName: z.string().nullable().optional(),
+  submissionSessionId: z.string().nullable().optional(),
 });
 
 export type InsertGuestCollectorSubmission = z.infer<typeof insertGuestCollectorSubmissionSchema>;
