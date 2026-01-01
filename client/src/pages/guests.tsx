@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { GuestListManager } from "@/components/guest-list-manager";
 import { GuestImportDialog } from "@/components/guest-import-dialog";
 import { CollectorLinksManager } from "@/components/collector-links-manager";
+import { DuplicatesManager } from "@/components/duplicates-manager";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -1301,6 +1302,10 @@ export default function Guests() {
                   <Users className="w-4 h-4 mr-2" />
                   Households
                 </TabsTrigger>
+                <TabsTrigger value="duplicates" data-testid="tab-duplicates">
+                  <AlertTriangle className="w-4 h-4 mr-2" />
+                  Duplicates
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="guests" className="space-y-4">
@@ -1516,6 +1521,10 @@ export default function Guests() {
                     </Card>
                   )}
                 </div>
+              </TabsContent>
+
+              <TabsContent value="duplicates" className="space-y-6">
+                <DuplicatesManager weddingId={weddingId} />
               </TabsContent>
 
               <TabsContent value="allocation" className="space-y-6">
