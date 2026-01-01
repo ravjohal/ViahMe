@@ -9121,8 +9121,47 @@ export class DBStorage implements IStorage {
   }
 
   async createGuestCollectorSubmission(submission: InsertGuestCollectorSubmission): Promise<GuestCollectorSubmission> {
+    // Normalize all array/jsonb fields before insert - handle string values from client
+    let membersValue = submission.members;
+    if (typeof membersValue === 'string') {
+      try {
+        membersValue = JSON.parse(membersValue as string);
+      } catch {
+        membersValue = undefined;
+      }
+    }
+    if (!Array.isArray(membersValue) || membersValue.length === 0) {
+      membersValue = undefined;
+    }
+    
+    let guestNamesValue = submission.guestNames;
+    if (typeof guestNamesValue === 'string') {
+      guestNamesValue = undefined; // guestNames should be an array, not a string
+    }
+    if (!Array.isArray(guestNamesValue) || guestNamesValue.length === 0) {
+      guestNamesValue = undefined;
+    }
+    
+    let eventSuggestionsValue = submission.eventSuggestions;
+    if (!Array.isArray(eventSuggestionsValue) || eventSuggestionsValue.length === 0) {
+      eventSuggestionsValue = undefined;
+    }
+    
+    let guestDietaryInfoValue = submission.guestDietaryInfo;
+    if (!Array.isArray(guestDietaryInfoValue) || guestDietaryInfoValue.length === 0) {
+      guestDietaryInfoValue = undefined;
+    }
+    
+    const normalizedSubmission = {
+      ...submission,
+      members: membersValue,
+      guestNames: guestNamesValue,
+      eventSuggestions: eventSuggestionsValue,
+      guestDietaryInfo: guestDietaryInfoValue,
+    };
+    
     const result = await this.db.insert(schema.guestCollectorSubmissions)
-      .values(submission)
+      .values(normalizedSubmission as any)
       .returning();
     // Increment submission count on the collector link
     await this.db.update(schema.guestCollectorLinks)

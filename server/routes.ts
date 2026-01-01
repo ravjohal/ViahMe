@@ -8989,7 +8989,6 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   // Public endpoint - Submit guest via collector link (no auth required)
   app.post("/api/collector/:token/submit", async (req, res) => {
     try {
-      console.log("[Collector Submit] Received body:", JSON.stringify(req.body, null, 2));
       
       const link = await storage.getGuestCollectorLinkByToken(req.params.token);
       if (!link) {
@@ -9027,7 +9026,18 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
       
       // Ensure guestName is never empty (required field in database)
       const guestName = req.body.guestName || req.body.householdName || "Unknown Guest";
-      console.log("[Collector Submit] guestName resolved to:", guestName);
+      
+      // Handle all array/jsonb fields - must be array or undefined (not null) for Drizzle
+      // Drizzle calls .map() on array fields which fails if they're null
+      let guestNamesValue = req.body.guestNames;
+      if (!Array.isArray(guestNamesValue)) {
+        guestNamesValue = undefined;
+      }
+      
+      let guestDietaryInfoValue = req.body.guestDietaryInfo;
+      if (!Array.isArray(guestDietaryInfoValue)) {
+        guestDietaryInfoValue = undefined;
+      }
       
       const submissionData = {
         collectorLinkId: link.id,
@@ -9040,10 +9050,10 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
         relationshipTier: req.body.relationshipTier || null,
         notes: req.body.notes || null,
         householdName: req.body.householdName || null,
-        guestNames: req.body.guestNames || null,
+        guestNames: guestNamesValue,
         guestCount: req.body.guestCount || req.body.memberCount || 1,
         desiDietaryType: req.body.desiDietaryType || req.body.householdDietaryRestriction || null,
-        guestDietaryInfo: req.body.guestDietaryInfo || null,
+        guestDietaryInfo: guestDietaryInfoValue,
         isBulkEntry: req.body.isBulkEntry || false,
         mainContactName: req.body.mainContactName || null,
         contactStreet: req.body.contactStreet || null,
@@ -9052,20 +9062,15 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
         contactPostalCode: req.body.contactPostalCode || null,
         contactCountry: req.body.contactCountry || null,
         submissionSessionId: req.body.submissionSessionId || null,
-        members: membersValue || null,
-        eventSuggestions: eventSuggestionsValue || null,
+        members: Array.isArray(membersValue) && membersValue.length > 0 ? membersValue : undefined,
+        eventSuggestions: Array.isArray(eventSuggestionsValue) && eventSuggestionsValue.length > 0 ? eventSuggestionsValue : undefined,
       };
       
-      console.log("[Collector Submit] Processed data:", JSON.stringify(submissionData, null, 2));
-      
       const submission = await storage.createGuestCollectorSubmission(submissionData);
-      
       res.status(201).json({ success: true, submissionId: submission.id });
     } catch (error: any) {
-      console.error("[Collector Submit] Error:", error);
-      console.error("[Collector Submit] Error stack:", error.stack);
-      console.error("[Collector Submit] Request body was:", JSON.stringify(req.body, null, 2));
-      res.status(400).json({ error: error.message, stack: error.stack });
+      console.error("[Collector Submit] Error:", error.message);
+      res.status(400).json({ error: error.message });
     }
   });
 

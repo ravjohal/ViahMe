@@ -1,0 +1,40 @@
+[GuestCollector] Total guest count: 4
+guest-collector.tsx:443 [GuestCollector] Current members: [{…}]0: {id: 'de79fdc9-3316-4e0c-80a1-ddc8faf0b46a', name: '', email: '', phone: '', dietaryRestriction: 'none'}length: 1[[Prototype]]: Array(0)
+guest-collector.tsx:566 [GuestCollector] Families draft: [{…}]
+guest-collector.tsx:620 [GuestCollector] Total guest count: 4
+queryClient.ts:15  POST https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/api/collector/9e0a69d48e1cc1242abe2496d1a1f143/submit 400 (Bad Request)
+apiRequest @ queryClient.ts:15
+(anonymous) @ guest-collector.tsx:359
+mutationFn @ guest-collector.tsx:358
+fn @ @tanstack_react-query.js?v=2088c992:1189
+run @ @tanstack_react-query.js?v=2088c992:494
+start @ @tanstack_react-query.js?v=2088c992:536
+execute @ @tanstack_react-query.js?v=2088c992:1225
+await in execute
+mutate @ @tanstack_react-query.js?v=2088c992:2630
+(anonymous) @ @tanstack_react-query.js?v=2088c992:3295
+onSubmitAll @ guest-collector.tsx:573
+callCallback2 @ chunk-RPCDYKBN.js?v=2088c992:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=2088c992:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=2088c992:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=2088c992:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=2088c992:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=2088c992:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=2088c992:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=2088c992:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=2088c992:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=2088c992:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=2088c992:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=2088c992:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=2088c992:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=2088c992:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=2088c992:5449
+guest-collector.tsx:443 [GuestCollector] Current members: [{…}]0: dietaryRestriction: "none"email: ""id: "de79fdc9-3316-4e0c-80a1-ddc8faf0b46a"name: ""phone: ""[[Prototype]]: Objectlength: 1[[Prototype]]: Array(0)
+guest-collector.tsx:566 [GuestCollector] Families draft: [{…}]0: addMembersIndividually: truecontactCity: "St. Paul"contactCountry: "United States"contactPostalCode: "72760"contactState: "Arkansas"contactStreet: "242 2nd Street"eventSuggestions: Array(2)0: "614cd553-1648-4271-b58f-4a2125be9e49"1: "79c87635-e608-401e-a917-a395a88e436b"length: 2[[Prototype]]: Array(0)fullAddress: "242 2nd Street, St. Paul, AR 72760, United States of America"householdDietaryRestriction: "jain"householdName: "Sharma"id: "7d6b9aac-0aa1-461d-b7e3-be078292c584"mainContactEmail: "Great@great.com"mainContactPhone: "234-424-2424"memberCount: 2members: Array(4)0: {id: 'bb522b12-c655-43ba-b44d-88f70e1b1d1a', name: 'Raj', email: 'saf@saa.com', phone: '23232424', dietaryRestriction: 'strict_vegetarian'}1: {id: '34e39a5a-5616-4856-b3c2-2f79ea1a80ee', name: 'taj', email: 'taj@taj.com', phone: '242-242-4242', dietaryRestriction: 'swaminarayan'}2: {id: '6124ba4e-9d6a-43cf-9bee-d0f31a8df465', name: 'Graj', email: 'ta@ta.com', phone: '434-242-3242', dietaryRestriction: 'swaminarayan'}3: {id: '692686ce-d258-43aa-a1b1-2eb25a7f3920', name: 'greaty', email: 'fsa@sds.com', phone: '434-242-2323', dietaryRestriction: 'eggless'}length: 4[[Prototype]]: Array(0)notes: "sdfdas"relationshipTier: "extended_family"[[Prototype]]: Objectlength: 1[[Prototype]]: Array(0)
+guest-collector.tsx:620 [GuestCollector] Total guest count: 4
+guest-collector.tsx:443 [GuestCollector] Current members: [{…}]
+guest-collector.tsx:566 [GuestCollector] Families draft: [{…}]
+guest-collector.tsx:620 [GuestCollector] Total guest count: 4
+guest-collector.tsx:443 [GuestCollector] Current members: [{…}]
+guest-collector.tsx:566 [GuestCollector] Families draft: [{…}]
+guest-collector.tsx:620 [GuestCollector] Total guest count: 4

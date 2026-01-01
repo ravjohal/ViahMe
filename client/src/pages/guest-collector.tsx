@@ -358,7 +358,7 @@ export default function GuestCollector() {
       const promises = families.map(family => 
         apiRequest("POST", `/api/collector/${token}/submit`, {
           ...family,
-          members: family.members || [], // Send as array - server normalizes
+          members: JSON.stringify(family.members || []),
           guestName: family.householdName,
           submitterName: submitterInfo.name,
           submitterRelation: submitterInfo.relation,
@@ -439,6 +439,8 @@ export default function GuestCollector() {
 
   // Get valid members (those with non-empty names)
   const getValidMembers = () => currentMembers.filter(m => m.name.trim() !== "");
+
+  console.log("[GuestCollector] Current members:", currentMembers);
 
   const resetFormAndMembers = () => {
     form.reset({
@@ -561,6 +563,8 @@ export default function GuestCollector() {
     setCurrentStep("household");
   };
 
+  console.log("[GuestCollector] Families draft:", familiesDraft);
+
   const removeFamily = (index: number) => {
     setFamiliesDraft(familiesDraft.filter((_, i) => i !== index));
   };
@@ -612,6 +616,8 @@ export default function GuestCollector() {
     }
     return sum + (f.memberCount || 1);
   }, 0);
+
+  console.log("[GuestCollector] Total guest count:", totalGuestCount)
 
   if (isLoading) {
     return (
