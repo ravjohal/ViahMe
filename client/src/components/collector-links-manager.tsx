@@ -168,6 +168,30 @@ export function CollectorLinksManager({ weddingId }: CollectorLinksManagerProps)
   const pendingSubmissions = submissions.filter(s => s.status === 'pending');
   const processedSubmissions = submissions.filter(s => s.status !== 'pending');
 
+  // Group submissions by submitter
+  const submissionsBySubmitter = submissions.reduce((acc, submission) => {
+    const key = `${submission.submitterName}|||${submission.submitterRelation}`;
+    if (!acc[key]) {
+      acc[key] = {
+        name: submission.submitterName,
+        relation: submission.submitterRelation,
+        submissions: [],
+        pendingCount: 0,
+        approvedCount: 0,
+        declinedCount: 0,
+      };
+    }
+    acc[key].submissions.push(submission);
+    if (submission.status === 'pending') acc[key].pendingCount++;
+    else if (submission.status === 'approved') acc[key].approvedCount++;
+    else if (submission.status === 'declined') acc[key].declinedCount++;
+    return acc;
+  }, {} as Record<string, { name: string; relation: string; submissions: GuestCollectorSubmission[]; pendingCount: number; approvedCount: number; declinedCount: number }>);
+
+  const submitterList = Object.values(submissionsBySubmitter).sort((a, b) => 
+    b.submissions.length - a.submissions.length
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -349,6 +373,65 @@ export function CollectorLinksManager({ weddingId }: CollectorLinksManagerProps)
                 ))}
               </div>
             </ScrollArea>
+          </div>
+        </>
+      )}
+
+      {submitterList.length > 0 && (
+        <>
+          <Separator />
+          <div>
+            <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+              <Users className="w-5 h-5 text-primary" />
+              Submissions by Person
+              <Badge variant="secondary">{submitterList.length} contributor{submitterList.length !== 1 ? 's' : ''}</Badge>
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {submitterList.map((submitter) => (
+                <Card 
+                  key={`${submitter.name}-${submitter.relation}`} 
+                  className="p-4"
+                  data-testid={`submitter-card-${submitter.name.replace(/\s+/g, '-').toLowerCase()}`}
+                >
+                  <div className="space-y-3">
+                    <div>
+                      <div className="font-medium text-base">{submitter.name}</div>
+                      <div className="text-sm text-muted-foreground">{submitter.relation}</div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant="secondary" className="text-xs">
+                        {submitter.submissions.length} total
+                      </Badge>
+                      {submitter.pendingCount > 0 && (
+                        <Badge variant="outline" className="text-xs border-amber-500 text-amber-600">
+                          <Clock className="w-3 h-3 mr-1" />
+                          {submitter.pendingCount} pending
+                        </Badge>
+                      )}
+                      {submitter.approvedCount > 0 && (
+                        <Badge variant="outline" className="text-xs border-green-500 text-green-600">
+                          <CheckCircle2 className="w-3 h-3 mr-1" />
+                          {submitter.approvedCount} approved
+                        </Badge>
+                      )}
+                      {submitter.declinedCount > 0 && (
+                        <Badge variant="outline" className="text-xs border-red-500 text-red-600">
+                          <XCircle className="w-3 h-3 mr-1" />
+                          {submitter.declinedCount} declined
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      <div className="font-medium mb-1">Suggested:</div>
+                      <div className="line-clamp-3">
+                        {submitter.submissions.slice(0, 5).map(s => s.guestName).join(', ')}
+                        {submitter.submissions.length > 5 && ` +${submitter.submissions.length - 5} more`}
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
           </div>
         </>
       )}
