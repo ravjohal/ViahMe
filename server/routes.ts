@@ -2676,6 +2676,53 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   });
 
   // ============================================================================
+  // DUPLICATE DETECTION - Find and merge duplicate households
+  // ============================================================================
+
+  app.get("/api/weddings/:weddingId/duplicate-households", async (req, res) => {
+    try {
+      const duplicates = await storage.detectDuplicateHouseholds(req.params.weddingId);
+      res.json(duplicates);
+    } catch (error: any) {
+      console.error("Duplicate detection error:", error);
+      res.status(500).json({ error: error?.message || "Failed to detect duplicates" });
+    }
+  });
+
+  app.post("/api/households/merge", async (req, res) => {
+    try {
+      const { survivorId, mergedId, decision } = req.body;
+      
+      if (!survivorId || !mergedId || !decision) {
+        return res.status(400).json({ error: "Missing required fields: survivorId, mergedId, decision" });
+      }
+      
+      if (!['kept_older', 'kept_newer'].includes(decision)) {
+        return res.status(400).json({ error: "Decision must be 'kept_older' or 'kept_newer'" });
+      }
+
+      const user = req.user as any;
+      const reviewerId = user?.id || 'system';
+
+      const audit = await storage.mergeHouseholds(survivorId, mergedId, decision, reviewerId);
+      res.json(audit);
+    } catch (error: any) {
+      console.error("Merge error:", error);
+      res.status(500).json({ error: error?.message || "Failed to merge households" });
+    }
+  });
+
+  app.get("/api/weddings/:weddingId/merge-audits", async (req, res) => {
+    try {
+      const audits = await storage.getHouseholdMergeAudits(req.params.weddingId);
+      res.json(audits);
+    } catch (error: any) {
+      console.error("Merge audit fetch error:", error);
+      res.status(500).json({ error: error?.message || "Failed to fetch merge history" });
+    }
+  });
+
+  // ============================================================================
   // INVITATIONS - Per-event RSVP tracking
   // ============================================================================
 

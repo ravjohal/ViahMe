@@ -155,6 +155,8 @@ import {
   type InsertLeadActivityLog,
   type VendorClaimStaging,
   type InsertVendorClaimStaging,
+  type HouseholdMergeAudit,
+  type InsertHouseholdMergeAudit,
   type GuestCollectorLink,
   type InsertGuestCollectorLink,
   type GuestCollectorSubmission,
@@ -937,6 +939,18 @@ export interface IStorage {
       pending: number;
     }>;
   }>;
+
+  // Duplicate Detection & Merging
+  detectDuplicateHouseholds(weddingId: string): Promise<Array<{
+    household1: Household;
+    household2: Household;
+    guests1: Guest[];
+    guests2: Guest[];
+    confidence: number;
+    matchReasons: string[];
+  }>>;
+  mergeHouseholds(survivorId: string, mergedId: string, decision: 'kept_older' | 'kept_newer', reviewerId: string): Promise<HouseholdMergeAudit>;
+  getHouseholdMergeAudits(weddingId: string): Promise<HouseholdMergeAudit[]>;
 }
 
 // Guest Planning Snapshot - comprehensive view of all guests and per-event costs
@@ -4020,6 +4034,18 @@ export class MemStorage implements IStorage {
       pending: number;
     }>;
   }> { return { total: 0, attending: 0, notAttending: 0, pending: 0, byEvent: [] }; }
+
+  // Duplicate Detection stubs
+  async detectDuplicateHouseholds(weddingId: string): Promise<Array<{
+    household1: Household;
+    household2: Household;
+    guests1: Guest[];
+    guests2: Guest[];
+    confidence: number;
+    matchReasons: string[];
+  }>> { return []; }
+  async mergeHouseholds(survivorId: string, mergedId: string, decision: 'kept_older' | 'kept_newer', reviewerId: string): Promise<HouseholdMergeAudit> { throw new Error('Not implemented'); }
+  async getHouseholdMergeAudits(weddingId: string): Promise<HouseholdMergeAudit[]> { return []; }
 }
 
 import { neon } from "@neondatabase/serverless";
@@ -9525,6 +9551,225 @@ export class DBStorage implements IStorage {
       pending,
       byEvent,
     };
+  }
+
+  // ============================================================================
+  // DUPLICATE DETECTION & MERGING
+  // ============================================================================
+
+  private normalizeString(str: string): string {
+    return str
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+      .replace(/[^a-z0-9\s]/g, '') // Remove special chars
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  private calculateStringSimilarity(str1: string, str2: string): number {
+    const s1 = this.normalizeString(str1);
+    const s2 = this.normalizeString(str2);
+    
+    if (s1 === s2) return 1;
+    if (!s1 || !s2) return 0;
+    
+    // Levenshtein distance calculation
+    const m = s1.length;
+    const n = s2.length;
+    const dp: number[][] = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+    
+    for (let i = 0; i <= m; i++) dp[i][0] = i;
+    for (let j = 0; j <= n; j++) dp[0][j] = j;
+    
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        if (s1[i - 1] === s2[j - 1]) {
+          dp[i][j] = dp[i - 1][j - 1];
+        } else {
+          dp[i][j] = 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+        }
+      }
+    }
+    
+    const maxLen = Math.max(m, n);
+    return maxLen === 0 ? 1 : 1 - dp[m][n] / maxLen;
+  }
+
+  async detectDuplicateHouseholds(weddingId: string): Promise<Array<{
+    household1: Household;
+    household2: Household;
+    guests1: Guest[];
+    guests2: Guest[];
+    confidence: number;
+    matchReasons: string[];
+  }>> {
+    const households = await this.getHouseholdsByWedding(weddingId);
+    const duplicates: Array<{
+      household1: Household;
+      household2: Household;
+      guests1: Guest[];
+      guests2: Guest[];
+      confidence: number;
+      matchReasons: string[];
+    }> = [];
+
+    // Get guests for all households
+    const householdGuests: Map<string, Guest[]> = new Map();
+    for (const household of households) {
+      const guests = await this.getGuestsByHousehold(household.id);
+      householdGuests.set(household.id, guests);
+    }
+
+    // Compare each pair of households
+    for (let i = 0; i < households.length; i++) {
+      for (let j = i + 1; j < households.length; j++) {
+        const h1 = households[i];
+        const h2 = households[j];
+        const guests1 = householdGuests.get(h1.id) || [];
+        const guests2 = householdGuests.get(h2.id) || [];
+
+        let score = 0;
+        const matchReasons: string[] = [];
+
+        // Check exact email match (high confidence: 0.6)
+        if (h1.contactEmail && h2.contactEmail && 
+            h1.contactEmail.toLowerCase() === h2.contactEmail.toLowerCase()) {
+          score += 0.6;
+          matchReasons.push('Same email address');
+        }
+
+        // Check exact phone match (high confidence: 0.5)
+        const normalizePhone = (p: string) => p.replace(/\D/g, '').slice(-10);
+        if (h1.contactPhone && h2.contactPhone &&
+            normalizePhone(h1.contactPhone) === normalizePhone(h2.contactPhone)) {
+          score += 0.5;
+          matchReasons.push('Same phone number');
+        }
+
+        // Check household name similarity (medium confidence: 0.25)
+        const nameSimilarity = this.calculateStringSimilarity(h1.name, h2.name);
+        if (nameSimilarity >= 0.8) {
+          score += 0.25;
+          matchReasons.push(`Similar household names (${Math.round(nameSimilarity * 100)}% match)`);
+        }
+
+        // Check guest name overlaps (lower confidence: 0.15)
+        let guestMatchCount = 0;
+        for (const g1 of guests1) {
+          for (const g2 of guests2) {
+            const guestSim = this.calculateStringSimilarity(g1.name, g2.name);
+            if (guestSim >= 0.8) {
+              guestMatchCount++;
+            }
+          }
+        }
+        if (guestMatchCount > 0) {
+          const guestScore = Math.min(0.15, guestMatchCount * 0.05);
+          score += guestScore;
+          matchReasons.push(`${guestMatchCount} guest name(s) match`);
+        }
+
+        // Only include if score meets threshold
+        if (score >= 0.5) {
+          duplicates.push({
+            household1: h1,
+            household2: h2,
+            guests1,
+            guests2,
+            confidence: Math.min(score, 1),
+            matchReasons,
+          });
+        }
+      }
+    }
+
+    // Sort by confidence descending
+    return duplicates.sort((a, b) => b.confidence - a.confidence);
+  }
+
+  async mergeHouseholds(
+    survivorId: string,
+    mergedId: string,
+    decision: 'kept_older' | 'kept_newer',
+    reviewerId: string
+  ): Promise<HouseholdMergeAudit> {
+    const survivor = await this.getHousehold(survivorId);
+    const merged = await this.getHousehold(mergedId);
+    
+    if (!survivor || !merged) {
+      throw new Error('Household not found');
+    }
+
+    const survivorGuests = await this.getGuestsByHousehold(survivorId);
+    const mergedGuests = await this.getGuestsByHousehold(mergedId);
+
+    // Get invitations for merged guests
+    let invitationsMoved = 0;
+    for (const guest of mergedGuests) {
+      const invitations = await this.getInvitationsByGuest(guest.id);
+      for (const invitation of invitations) {
+        // Update guest's household to survivor
+        await this.db.update(schema.guests)
+          .set({ householdId: survivorId })
+          .where(eq(schema.guests.id, guest.id));
+        invitationsMoved += invitations.length;
+      }
+    }
+
+    // Move all guests from merged to survivor
+    await this.db.update(schema.guests)
+      .set({ householdId: survivorId })
+      .where(eq(schema.guests.householdId, mergedId));
+
+    // Merge contact info if survivor is missing
+    const updates: Partial<typeof survivor> = {};
+    if (!survivor.contactEmail && merged.contactEmail) {
+      updates.contactEmail = merged.contactEmail;
+    }
+    if (!survivor.contactPhone && merged.contactPhone) {
+      updates.contactPhone = merged.contactPhone;
+    }
+    if (!survivor.lifafaAmount && merged.lifafaAmount) {
+      updates.lifafaAmount = merged.lifafaAmount;
+    }
+    if (!survivor.giftDescription && merged.giftDescription) {
+      updates.giftDescription = merged.giftDescription;
+    }
+
+    if (Object.keys(updates).length > 0) {
+      await this.db.update(schema.households)
+        .set(updates as any)
+        .where(eq(schema.households.id, survivorId));
+    }
+
+    // Create audit record
+    const auditResult = await this.db.insert(schema.householdMergeAudits)
+      .values({
+        weddingId: survivor.weddingId,
+        survivorHouseholdId: survivorId,
+        mergedHouseholdId: mergedId,
+        decision,
+        survivorSnapshot: survivor as any,
+        mergedSnapshot: merged as any,
+        guestsMoved: mergedGuests.length,
+        invitationsMoved,
+        reviewedById: reviewerId,
+      })
+      .returning();
+
+    // Delete the merged household
+    await this.db.delete(schema.households)
+      .where(eq(schema.households.id, mergedId));
+
+    return auditResult[0];
+  }
+
+  async getHouseholdMergeAudits(weddingId: string): Promise<HouseholdMergeAudit[]> {
+    return await this.db.select()
+      .from(schema.householdMergeAudits)
+      .where(eq(schema.householdMergeAudits.weddingId, weddingId))
+      .orderBy(sql`${schema.householdMergeAudits.createdAt} DESC`);
   }
 }
 
