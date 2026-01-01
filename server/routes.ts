@@ -8936,6 +8936,9 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
         guestNames: req.body.guestNames,
         guestCount: req.body.guestCount,
         desiDietaryType: req.body.desiDietaryType,
+        guestDietaryInfo: req.body.guestDietaryInfo,
+        isBulkEntry: req.body.isBulkEntry || false,
+        mainContactName: req.body.mainContactName,
       });
       
       res.status(201).json({ success: true, submissionId: submission.id });
