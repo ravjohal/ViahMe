@@ -150,7 +150,9 @@ function AddressAutocomplete({
       const response = await fetch(`/api/address-autocomplete?q=${encodeURIComponent(query)}`);
       const data = await response.json();
       
-      if (data.features) {
+      console.log("[AddressAutocomplete] Response:", data);
+      
+      if (data.features && data.features.length > 0) {
         const formattedSuggestions: AddressSuggestion[] = data.features.map((feature: any) => ({
           formatted: feature.properties.formatted,
           street: feature.properties.street 
@@ -162,8 +164,12 @@ function AddressAutocomplete({
           country: feature.properties.country,
           place_id: feature.properties.place_id,
         }));
+        console.log("[AddressAutocomplete] Formatted suggestions:", formattedSuggestions);
         setSuggestions(formattedSuggestions);
         setShowSuggestions(true);
+      } else {
+        console.log("[AddressAutocomplete] No features in response or empty array");
+        setSuggestions([]);
       }
     } catch (error) {
       console.error("Address autocomplete error:", error);

@@ -8871,40 +8871,62 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
 
   // Public endpoint - Address autocomplete using Geoapify (no auth required for collector)
   app.get("/api/address-autocomplete", async (req, res) => {
-    console.log("[Geoapify] Address autocomplete request received");
-    console.log("[Geoapify] Query params:", req.query);
-    
     const query = req.query.q as string;
+    const debug = req.query.debug === "true";
+    
     if (!query || query.length < 3) {
-      console.log("[Geoapify] Query too short or missing, returning empty");
-      return res.json({ features: [] });
+      return res.json({ features: [], debug: debug ? { reason: "Query too short or missing", query } : undefined });
     }
 
     const apiKey = process.env.GEOAPIFY_API_KEY;
-    console.log("[Geoapify] API key present:", !!apiKey);
     
     if (!apiKey) {
-      console.log("[Geoapify] No API key configured!");
-      return res.json({ features: [], error: "Address autocomplete not configured" });
+      return res.json({ features: [], error: "Address autocomplete not configured", debug: debug ? { reason: "No API key" } : undefined });
     }
 
     try {
-      const url = `https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(query)}&apiKey=${apiKey}&limit=5`;
-      console.log("[Geoapify] Fetching from:", url.replace(apiKey, "***API_KEY***"));
+      const url = `https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(query)}&apiKey=${apiKey}&limit=5&format=json`;
       
       const response = await fetch(url);
-      console.log("[Geoapify] Response status:", response.status);
-      
       const data = await response.json();
-      console.log("[Geoapify] Response data - features count:", data.features?.length || 0);
-      if (data.error) {
-        console.log("[Geoapify] API error:", data.error);
+      
+      if (debug) {
+        return res.json({ 
+          features: data.features || data.results || [], 
+          debug: { 
+            status: response.status,
+            hasFeatures: !!data.features,
+            hasResults: !!data.results,
+            featureCount: data.features?.length || data.results?.length || 0,
+            rawKeys: Object.keys(data)
+          } 
+        });
+      }
+      
+      // Geoapify returns 'results' with format=json, 'features' with GeoJSON format
+      if (data.results) {
+        // Convert results format to features format for frontend compatibility
+        const features = data.results.map((result: any) => ({
+          properties: {
+            formatted: result.formatted,
+            street: result.street,
+            housenumber: result.housenumber,
+            address_line1: result.address_line1,
+            city: result.city,
+            town: result.town,
+            village: result.village,
+            state: result.state,
+            postcode: result.postcode,
+            country: result.country,
+            place_id: result.place_id,
+          }
+        }));
+        return res.json({ features });
       }
       
       res.json(data);
     } catch (error: any) {
-      console.error("[Geoapify] Fetch error:", error.message);
-      res.json({ features: [], error: "Failed to fetch address suggestions" });
+      res.json({ features: [], error: "Failed to fetch address suggestions", debug: debug ? { errorMessage: error.message } : undefined });
     }
   });
 
