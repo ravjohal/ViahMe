@@ -688,21 +688,26 @@ export const guestCollectorSubmissions = pgTable("guest_collector_submissions", 
   weddingId: varchar("wedding_id").notNull(),
   submitterName: text("submitter_name"), // Name of person submitting (optional)
   submitterRelation: text("submitter_relation"), // e.g., "Mother of Bride"
-  // Household-first entry support (Dadi-proof)
-  householdName: text("household_name"), // e.g., "The Sharma Family" - for household-first entry
-  guestNames: text("guest_names").array(), // Array of guest names in the household
-  guestCount: integer("guest_count").default(1), // Number of guests in household
-  desiDietaryType: text("desi_dietary_type"), // 'strict_vegetarian' | 'jain' | 'swaminarayan' | 'eggless' | 'halal' | 'none' (legacy household-level)
-  guestDietaryInfo: jsonb("guest_dietary_info"), // Per-guest dietary: [{name: string, dietary: string}]
-  // Legacy single guest fields (still supported)
-  guestName: text("guest_name").notNull(),
-  guestEmail: text("guest_email"),
-  guestPhone: text("guest_phone"),
+  // Household-first entry support (Dadi-proof unified flow)
+  householdName: text("household_name"), // e.g., "The Sharma Family"
+  mainContactName: text("main_contact_name"), // Primary contact person for invitations
+  guestPhone: text("guest_phone"), // Contact phone number
+  guestEmail: text("guest_email"), // Contact email address
+  // Contact address fields
+  contactStreet: text("contact_street"), // Street address
+  contactCity: text("contact_city"), // City
+  contactState: text("contact_state"), // State/Province
+  contactPostalCode: text("contact_postal_code"), // Postal/ZIP code
+  contactCountry: text("contact_country"), // Country
+  guestCount: integer("guest_count").default(1), // Number of family members invited
+  desiDietaryType: text("desi_dietary_type"), // Household dietary preference
   relationshipTier: text("relationship_tier"), // 'immediate_family' | 'extended_family' | 'friend' | 'parents_friend'
-  notes: text("notes"), // Any notes about the guest
-  // Bulk entry support - allows adding multiple households at once
-  isBulkEntry: boolean("is_bulk_entry").default(false), // Whether this was added via bulk entry mode
-  mainContactName: text("main_contact_name"), // For bulk entries: the primary contact for invitations
+  notes: text("notes"), // Any notes about the family
+  // Legacy fields (kept for backward compatibility)
+  guestName: text("guest_name").notNull(), // For backward compatibility - stores household name
+  guestNames: text("guest_names").array(), // Legacy: Array of guest names
+  guestDietaryInfo: jsonb("guest_dietary_info"), // Legacy: Per-guest dietary info
+  isBulkEntry: boolean("is_bulk_entry").default(false), // Legacy: bulk mode flag
   status: text("status").notNull().default('pending'), // 'pending' | 'approved' | 'declined'
   reviewedById: varchar("reviewed_by_id"),
   reviewedAt: timestamp("reviewed_at"),
@@ -728,8 +733,15 @@ export const insertGuestCollectorSubmissionSchema = createInsertSchema(guestColl
 }).extend({
   relationshipTier: z.enum(['immediate_family', 'extended_family', 'friend', 'parents_friend']).optional(),
   desiDietaryType: z.enum(['strict_vegetarian', 'jain', 'swaminarayan', 'eggless', 'halal', 'none']).nullable().optional(),
-  guestNames: z.array(z.string()).nullable().optional(),
   guestCount: z.number().optional(),
+  // Address fields
+  contactStreet: z.string().nullable().optional(),
+  contactCity: z.string().nullable().optional(),
+  contactState: z.string().nullable().optional(),
+  contactPostalCode: z.string().nullable().optional(),
+  contactCountry: z.string().nullable().optional(),
+  // Legacy fields (optional for backward compatibility)
+  guestNames: z.array(z.string()).nullable().optional(),
   guestDietaryInfo: guestDietaryInfoSchema.nullable().optional(),
   isBulkEntry: z.boolean().optional(),
   mainContactName: z.string().nullable().optional(),
