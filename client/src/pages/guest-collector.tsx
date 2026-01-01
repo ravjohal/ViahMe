@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams } from "wouter";
 import { useForm } from "react-hook-form";
@@ -34,6 +34,10 @@ import {
   Utensils,
   Minus,
   Plus,
+  Trash2,
+  Edit2,
+  X,
+  Loader2,
 } from "lucide-react";
 import { GuestAssistantChat } from "@/components/guest-assistant-chat";
 import { format } from "date-fns";
@@ -68,11 +72,40 @@ const RELATIONSHIP_TIERS = [
 
 type WizardStep = "intro" | "family" | "relationship" | "notes" | "review";
 
+type FamilyDraft = {
+  id: string;
+  householdName: string;
+  mainContactName: string;
+  guestPhone: string;
+  guestEmail: string;
+  fullAddress: string;
+  contactStreet: string;
+  contactCity: string;
+  contactState: string;
+  contactPostalCode: string;
+  contactCountry: string;
+  guestCount: number;
+  desiDietaryType: string;
+  relationshipTier: string;
+  notes: string;
+};
+
+type AddressSuggestion = {
+  formatted: string;
+  street?: string;
+  city?: string;
+  state?: string;
+  postcode?: string;
+  country?: string;
+  place_id: string;
+};
+
 const familyFormSchema = z.object({
   householdName: z.string().min(1, "Family name is required"),
   mainContactName: z.string().min(1, "Contact name is required"),
   guestPhone: z.string().optional(),
   guestEmail: z.string().email().optional().or(z.literal("")),
+  fullAddress: z.string().optional(),
   contactStreet: z.string().optional(),
   contactCity: z.string().optional(),
   contactState: z.string().optional(),
@@ -88,12 +121,135 @@ const familyFormSchema = z.object({
 
 type FamilyFormData = z.infer<typeof familyFormSchema>;
 
+function AddressAutocomplete({
+  value,
+  onChange,
+  onAddressSelect,
+  placeholder = "Start typing an address...",
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  onAddressSelect: (address: AddressSuggestion) => void;
+  placeholder?: string;
+}) {
+  const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const fetchSuggestions = useCallback(async (query: string) => {
+    if (!query || query.length < 3) {
+      setSuggestions([]);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch(`/api/address-autocomplete?q=${encodeURIComponent(query)}`);
+      const data = await response.json();
+      
+      if (data.features) {
+        const formattedSuggestions: AddressSuggestion[] = data.features.map((feature: any) => ({
+          formatted: feature.properties.formatted,
+          street: feature.properties.street 
+            ? `${feature.properties.housenumber || ''} ${feature.properties.street}`.trim()
+            : feature.properties.address_line1,
+          city: feature.properties.city || feature.properties.town || feature.properties.village,
+          state: feature.properties.state,
+          postcode: feature.properties.postcode,
+          country: feature.properties.country,
+          place_id: feature.properties.place_id,
+        }));
+        setSuggestions(formattedSuggestions);
+        setShowSuggestions(true);
+      }
+    } catch (error) {
+      console.error("Address autocomplete error:", error);
+      setSuggestions([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    onChange(newValue);
+
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    debounceRef.current = setTimeout(() => {
+      fetchSuggestions(newValue);
+    }, 300);
+  };
+
+  const handleSelectSuggestion = (suggestion: AddressSuggestion) => {
+    onChange(suggestion.formatted);
+    onAddressSelect(suggestion);
+    setShowSuggestions(false);
+    setSuggestions([]);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={containerRef} className="relative">
+      <div className="relative">
+        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+        <Input
+          ref={inputRef}
+          value={value}
+          onChange={handleInputChange}
+          onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+          placeholder={placeholder}
+          className="min-h-[48px] text-base pl-10"
+          data-testid="input-address"
+        />
+        {isLoading && (
+          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 animate-spin text-muted-foreground" />
+        )}
+      </div>
+      
+      {showSuggestions && suggestions.length > 0 && (
+        <div className="absolute z-50 w-full mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-auto">
+          {suggestions.map((suggestion, index) => (
+            <button
+              key={suggestion.place_id || index}
+              type="button"
+              className="w-full text-left px-4 py-3 hover-elevate border-b last:border-b-0 text-sm"
+              onClick={() => handleSelectSuggestion(suggestion)}
+              data-testid={`address-suggestion-${index}`}
+            >
+              {suggestion.formatted}
+            </button>
+          ))}
+        </div>
+      )}
+
+    </div>
+  );
+}
+
 export default function GuestCollector() {
   const { token } = useParams<{ token: string }>();
   const { toast } = useToast();
   const [submitted, setSubmitted] = useState(false);
   const [currentStep, setCurrentStep] = useState<WizardStep>("intro");
   const [submitterInfo, setSubmitterInfo] = useState({ name: "", relation: "" });
+  const [familiesDraft, setFamiliesDraft] = useState<FamilyDraft[]>([]);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
   const { data: linkInfo, isLoading, error } = useQuery<CollectorLinkInfo>({
     queryKey: ["/api/collector", token],
@@ -108,6 +264,7 @@ export default function GuestCollector() {
       mainContactName: "",
       guestPhone: "",
       guestEmail: "",
+      fullAddress: "",
       contactStreet: "",
       contactCity: "",
       contactState: "",
@@ -123,24 +280,29 @@ export default function GuestCollector() {
   });
 
   const submitMutation = useMutation({
-    mutationFn: async (data: FamilyFormData) => {
-      return apiRequest("POST", `/api/collector/${token}/submit`, {
-        ...data,
-        guestName: data.householdName,
-        isBulkEntry: false,
-      });
+    mutationFn: async (families: FamilyDraft[]) => {
+      const promises = families.map(family => 
+        apiRequest("POST", `/api/collector/${token}/submit`, {
+          ...family,
+          guestName: family.householdName,
+          submitterName: submitterInfo.name,
+          submitterRelation: submitterInfo.relation,
+          isBulkEntry: false,
+        })
+      );
+      return Promise.all(promises);
     },
-    onSuccess: () => {
+    onSuccess: (results) => {
       setSubmitted(true);
       toast({ 
-        title: "Family submitted!", 
+        title: `${results.length} ${results.length === 1 ? 'family' : 'families'} submitted!`, 
         description: "Thank you for helping with the guest list." 
       });
     },
     onError: (error: any) => {
       toast({ 
         title: "Error", 
-        description: error.message || "Failed to submit family", 
+        description: error.message || "Failed to submit families", 
         variant: "destructive" 
       });
     },
@@ -174,22 +336,48 @@ export default function GuestCollector() {
         return submitterInfo.name.trim() !== "" && submitterInfo.relation !== "";
       case "family":
         return form.watch("householdName").trim() !== "" && form.watch("mainContactName").trim() !== "";
+      case "review":
+        return familiesDraft.length > 0;
       default:
         return true;
     }
   };
 
-  const onSubmit = () => {
+  const addFamilyToDraft = () => {
     const data = form.getValues();
-    submitMutation.mutate(data);
-  };
+    const newFamily: FamilyDraft = {
+      id: crypto.randomUUID(),
+      householdName: data.householdName,
+      mainContactName: data.mainContactName,
+      guestPhone: data.guestPhone || "",
+      guestEmail: data.guestEmail || "",
+      fullAddress: data.fullAddress || "",
+      contactStreet: data.contactStreet || "",
+      contactCity: data.contactCity || "",
+      contactState: data.contactState || "",
+      contactPostalCode: data.contactPostalCode || "",
+      contactCountry: data.contactCountry || "",
+      guestCount: data.guestCount,
+      desiDietaryType: data.desiDietaryType || "none",
+      relationshipTier: data.relationshipTier || "friend",
+      notes: data.notes || "",
+    };
 
-  const handleAddAnother = () => {
+    if (editingIndex !== null) {
+      const updated = [...familiesDraft];
+      updated[editingIndex] = newFamily;
+      setFamiliesDraft(updated);
+      setEditingIndex(null);
+    } else {
+      setFamiliesDraft([...familiesDraft, newFamily]);
+    }
+
     form.reset({
       householdName: "",
       mainContactName: "",
       guestPhone: "",
       guestEmail: "",
+      fullAddress: "",
       contactStreet: "",
       contactCity: "",
       contactState: "",
@@ -202,8 +390,91 @@ export default function GuestCollector() {
       submitterName: submitterInfo.name,
       submitterRelation: submitterInfo.relation,
     });
+
+    setCurrentStep("review");
+    toast({
+      title: editingIndex !== null ? "Family updated" : "Family added",
+      description: `${newFamily.householdName} has been ${editingIndex !== null ? 'updated' : 'added to your list'}`,
+    });
+  };
+
+  const editFamily = (index: number) => {
+    const family = familiesDraft[index];
+    form.reset({
+      householdName: family.householdName,
+      mainContactName: family.mainContactName,
+      guestPhone: family.guestPhone,
+      guestEmail: family.guestEmail,
+      fullAddress: family.fullAddress,
+      contactStreet: family.contactStreet,
+      contactCity: family.contactCity,
+      contactState: family.contactState,
+      contactPostalCode: family.contactPostalCode,
+      contactCountry: family.contactCountry,
+      guestCount: family.guestCount,
+      desiDietaryType: family.desiDietaryType,
+      relationshipTier: family.relationshipTier,
+      notes: family.notes,
+      submitterName: submitterInfo.name,
+      submitterRelation: submitterInfo.relation,
+    });
+    setEditingIndex(index);
+    setCurrentStep("family");
+  };
+
+  const removeFamily = (index: number) => {
+    setFamiliesDraft(familiesDraft.filter((_, i) => i !== index));
+  };
+
+  const onSubmitAll = () => {
+    submitMutation.mutate(familiesDraft);
+  };
+
+  const handleAddAnother = () => {
+    form.reset({
+      householdName: "",
+      mainContactName: "",
+      guestPhone: "",
+      guestEmail: "",
+      fullAddress: "",
+      contactStreet: "",
+      contactCity: "",
+      contactState: "",
+      contactPostalCode: "",
+      contactCountry: "",
+      guestCount: 2,
+      desiDietaryType: "none",
+      relationshipTier: "friend",
+      notes: "",
+      submitterName: submitterInfo.name,
+      submitterRelation: submitterInfo.relation,
+    });
+    setFamiliesDraft([]);
     setCurrentStep("family");
     setSubmitted(false);
+  };
+
+  const startAddingAnotherFamily = () => {
+    form.reset({
+      householdName: "",
+      mainContactName: "",
+      guestPhone: "",
+      guestEmail: "",
+      fullAddress: "",
+      contactStreet: "",
+      contactCity: "",
+      contactState: "",
+      contactPostalCode: "",
+      contactCountry: "",
+      guestCount: 2,
+      desiDietaryType: "none",
+      relationshipTier: "friend",
+      notes: "",
+      submitterName: submitterInfo.name,
+      submitterRelation: submitterInfo.relation,
+    });
+    setEditingIndex(null);
+    setCurrentStep("family");
   };
 
   const incrementGuestCount = () => {
@@ -219,6 +490,16 @@ export default function GuestCollector() {
       form.setValue("guestCount", current - 1);
     }
   };
+
+  const handleAddressSelect = (address: AddressSuggestion) => {
+    form.setValue("contactStreet", address.street || "");
+    form.setValue("contactCity", address.city || "");
+    form.setValue("contactState", address.state || "");
+    form.setValue("contactPostalCode", address.postcode || "");
+    form.setValue("contactCountry", address.country || "");
+  };
+
+  const totalGuestCount = familiesDraft.reduce((sum, f) => sum + f.guestCount, 0);
 
   if (isLoading) {
     return (
@@ -273,7 +554,7 @@ export default function GuestCollector() {
               Thank You!
             </CardTitle>
             <CardDescription className="text-base">
-              Your guest suggestion has been submitted successfully.
+              Your guest suggestions have been submitted successfully.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -285,10 +566,10 @@ export default function GuestCollector() {
               <Button 
                 onClick={handleAddAnother}
                 className="w-full min-h-[48px] text-base bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600"
-                data-testid="button-add-another-family"
+                data-testid="button-add-more-families"
               >
                 <Users className="w-5 h-5 mr-2" />
-                Add Another Family
+                Add More Families
               </Button>
             </div>
           </CardContent>
@@ -321,15 +602,22 @@ export default function GuestCollector() {
         {currentStep !== "intro" && (
           <div className="mb-4">
             <Progress value={progressPercent} className="h-2" />
-            <p className="text-xs text-muted-foreground text-center mt-1">
-              Step {currentStepIndex} of {steps.length - 1}
-            </p>
+            <div className="flex items-center justify-between mt-1">
+              <p className="text-xs text-muted-foreground">
+                Step {currentStepIndex} of {steps.length - 1}
+              </p>
+              {familiesDraft.length > 0 && currentStep !== "review" && (
+                <p className="text-xs font-medium text-pink-600">
+                  {familiesDraft.length} {familiesDraft.length === 1 ? 'family' : 'families'} ready
+                </p>
+              )}
+            </div>
           </div>
         )}
 
         <Card className="border-pink-100 dark:border-pink-900/20 shadow-xl">
           <Form {...form}>
-            <form onSubmit={(e) => { e.preventDefault(); if (currentStep === "review") onSubmit(); }}>
+            <form onSubmit={(e) => e.preventDefault()}>
               {currentStep === "intro" && (
                 <>
                   <CardHeader className="text-center bg-gradient-to-br from-pink-50 to-rose-50 dark:from-pink-950/20 dark:to-rose-950/20 rounded-t-lg">
@@ -386,7 +674,9 @@ export default function GuestCollector() {
                     <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-pink-100 dark:bg-pink-900/20 flex items-center justify-center">
                       <Users className="w-6 h-6 text-pink-500" />
                     </div>
-                    <CardTitle className="text-xl">Family Information</CardTitle>
+                    <CardTitle className="text-xl">
+                      {editingIndex !== null ? "Edit Family" : "Add a Family"}
+                    </CardTitle>
                     <CardDescription className="text-base">
                       Tell us about the family you want to invite
                     </CardDescription>
@@ -480,96 +770,26 @@ export default function GuestCollector() {
                       />
                     </div>
 
-                    <div className="space-y-3">
-                      <Label className="text-base font-medium flex items-center gap-2">
-                        <MapPin className="w-4 h-4" />
-                        Mailing Address
-                      </Label>
-                      <FormField
-                        control={form.control}
-                        name="contactStreet"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <Input 
-                                {...field}
-                                placeholder="Street address"
-                                className="min-h-[48px] text-base"
-                                data-testid="input-street"
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                      <div className="grid grid-cols-2 gap-3">
-                        <FormField
-                          control={form.control}
-                          name="contactCity"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <Input 
-                                  {...field}
-                                  placeholder="City"
-                                  className="min-h-[48px] text-base"
-                                  data-testid="input-city"
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="contactState"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <Input 
-                                  {...field}
-                                  placeholder="State"
-                                  className="min-h-[48px] text-base"
-                                  data-testid="input-state"
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <FormField
-                          control={form.control}
-                          name="contactPostalCode"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <Input 
-                                  {...field}
-                                  placeholder="ZIP / Postal code"
-                                  className="min-h-[48px] text-base"
-                                  data-testid="input-postal"
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="contactCountry"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <Input 
-                                  {...field}
-                                  placeholder="Country"
-                                  className="min-h-[48px] text-base"
-                                  data-testid="input-country"
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </div>
+                    <FormField
+                      control={form.control}
+                      name="fullAddress"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-base font-medium">Mailing Address</FormLabel>
+                          <FormControl>
+                            <AddressAutocomplete
+                              value={field.value || ""}
+                              onChange={field.onChange}
+                              onAddressSelect={handleAddressSelect}
+                              placeholder="Start typing an address..."
+                            />
+                          </FormControl>
+                          <FormDescription className="text-sm">
+                            Type to search or enter address manually
+                          </FormDescription>
+                        </FormItem>
+                      )}
+                    />
 
                     <FormField
                       control={form.control}
@@ -744,76 +964,108 @@ export default function GuestCollector() {
                     </div>
                     <CardTitle className="text-xl">Review & Submit</CardTitle>
                     <CardDescription className="text-base">
-                      Does everything look correct?
+                      {familiesDraft.length === 0 
+                        ? "Add families to your list before submitting"
+                        : `${familiesDraft.length} ${familiesDraft.length === 1 ? 'family' : 'families'} · ${totalGuestCount} total guests`
+                      }
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4 pt-4">
-                    <div className="bg-muted/50 rounded-lg p-4 space-y-3">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Family Name</p>
-                        <p className="text-base font-medium">{form.watch("householdName")}</p>
+                    {familiesDraft.length === 0 ? (
+                      <div className="text-center py-8">
+                        <Users className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+                        <p className="text-muted-foreground mb-4">No families added yet</p>
+                        <Button
+                          type="button"
+                          onClick={startAddingAnotherFamily}
+                          className="min-h-[48px] text-base"
+                          data-testid="button-add-first-family"
+                        >
+                          <Plus className="w-5 h-5 mr-2" />
+                          Add a Family
+                        </Button>
                       </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Main Contact</p>
-                        <p className="text-base font-medium">{form.watch("mainContactName")}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Family Members</p>
-                        <p className="text-base font-medium">{form.watch("guestCount")} guests</p>
-                      </div>
-                      {(form.watch("guestPhone") || form.watch("guestEmail")) && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Contact Info</p>
-                          <p className="text-base">
-                            {[form.watch("guestPhone"), form.watch("guestEmail")].filter(Boolean).join(" • ")}
-                          </p>
+                    ) : (
+                      <>
+                        <div className="space-y-3">
+                          {familiesDraft.map((family, index) => (
+                            <div 
+                              key={family.id} 
+                              className="bg-muted/50 rounded-lg p-4 relative"
+                              data-testid={`family-card-${index}`}
+                            >
+                              <div className="absolute top-2 right-2 flex gap-1">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => editFamily(index)}
+                                  className="h-8 w-8"
+                                  data-testid={`button-edit-family-${index}`}
+                                >
+                                  <Edit2 className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => removeFamily(index)}
+                                  className="h-8 w-8 text-destructive hover:text-destructive"
+                                  data-testid={`button-remove-family-${index}`}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
+                              <div className="space-y-2 pr-16">
+                                <p className="font-medium text-base">{family.householdName}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  Contact: {family.mainContactName} · {family.guestCount} guest{family.guestCount > 1 ? "s" : ""}
+                                </p>
+                                {family.fullAddress && (
+                                  <p className="text-sm text-muted-foreground truncate">
+                                    {family.fullAddress}
+                                  </p>
+                                )}
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                  <span className="text-xs px-2 py-1 bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 rounded-full">
+                                    {RELATIONSHIP_TIERS.find(t => t.value === family.relationshipTier)?.label || "Friend"}
+                                  </span>
+                                  {family.desiDietaryType && family.desiDietaryType !== "none" && (
+                                    <span className="text-xs px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-full">
+                                      {DESI_DIETARY_OPTIONS.find(d => d.value === family.desiDietaryType)?.label}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                      )}
-                      {(form.watch("contactStreet") || form.watch("contactCity")) && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Address</p>
-                          <p className="text-base">
-                            {[
-                              form.watch("contactStreet"),
-                              form.watch("contactCity"),
-                              form.watch("contactState"),
-                              form.watch("contactPostalCode"),
-                              form.watch("contactCountry"),
-                            ].filter(Boolean).join(", ")}
-                          </p>
+
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={startAddingAnotherFamily}
+                          className="w-full min-h-[48px] text-base"
+                          data-testid="button-add-another"
+                        >
+                          <Plus className="w-5 h-5 mr-2" />
+                          Add Another Family
+                        </Button>
+
+                        <div className="border-t pt-4 mt-4">
+                          <div className="bg-muted/50 rounded-lg p-3">
+                            <p className="text-sm text-muted-foreground">Submitted by</p>
+                            <p className="text-base font-medium">{submitterInfo.name}</p>
+                          </div>
                         </div>
-                      )}
-                      {form.watch("desiDietaryType") && form.watch("desiDietaryType") !== "none" && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Dietary Preference</p>
-                          <p className="text-base font-medium">
-                            {DESI_DIETARY_OPTIONS.find(d => d.value === form.watch("desiDietaryType"))?.label}
-                          </p>
-                        </div>
-                      )}
-                      <div>
-                        <p className="text-sm text-muted-foreground">Relationship</p>
-                        <p className="text-base font-medium">
-                          {RELATIONSHIP_TIERS.find(t => t.value === form.watch("relationshipTier"))?.label || "Friend"}
-                        </p>
-                      </div>
-                      {form.watch("notes") && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Notes</p>
-                          <p className="text-base">{form.watch("notes")}</p>
-                        </div>
-                      )}
-                      <div className="pt-2 border-t">
-                        <p className="text-sm text-muted-foreground">Submitted by</p>
-                        <p className="text-base font-medium">{submitterInfo.name}</p>
-                      </div>
-                    </div>
+                      </>
+                    )}
                   </CardContent>
                 </>
               )}
 
               <CardFooter className="flex gap-3 pt-4">
-                {currentStep !== "intro" && (
+                {currentStep !== "intro" && currentStep !== "review" && (
                   <Button
                     type="button"
                     variant="outline"
@@ -825,7 +1077,19 @@ export default function GuestCollector() {
                     Back
                   </Button>
                 )}
-                {currentStep !== "review" ? (
+                {currentStep === "intro" && (
+                  <Button
+                    type="button"
+                    onClick={handleNext}
+                    disabled={!canProceed()}
+                    className="min-h-[48px] flex-1 text-base bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600"
+                    data-testid="button-next"
+                  >
+                    Get Started
+                    <ArrowRight className="w-5 h-5 ml-1" />
+                  </Button>
+                )}
+                {(currentStep === "family" || currentStep === "relationship") && (
                   <Button
                     type="button"
                     onClick={handleNext}
@@ -836,19 +1100,36 @@ export default function GuestCollector() {
                     Next
                     <ArrowRight className="w-5 h-5 ml-1" />
                   </Button>
-                ) : (
+                )}
+                {currentStep === "notes" && (
                   <Button
-                    type="submit"
+                    type="button"
+                    onClick={addFamilyToDraft}
+                    disabled={!form.watch("householdName") || !form.watch("mainContactName")}
+                    className="min-h-[48px] flex-1 text-base bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600"
+                    data-testid="button-add-to-list"
+                  >
+                    <Plus className="w-5 h-5 mr-1" />
+                    {editingIndex !== null ? "Update Family" : "Add to List"}
+                  </Button>
+                )}
+                {currentStep === "review" && familiesDraft.length > 0 && (
+                  <Button
+                    type="button"
+                    onClick={onSubmitAll}
                     disabled={submitMutation.isPending}
                     className="min-h-[48px] flex-1 text-base bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
-                    data-testid="button-submit"
+                    data-testid="button-submit-all"
                   >
                     {submitMutation.isPending ? (
-                      <>Submitting...</>
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Submitting...
+                      </>
                     ) : (
                       <>
                         <Send className="w-5 h-5 mr-2" />
-                        Submit Family
+                        Submit {familiesDraft.length} {familiesDraft.length === 1 ? 'Family' : 'Families'}
                       </>
                     )}
                   </Button>

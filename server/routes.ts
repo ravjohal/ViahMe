@@ -8869,6 +8869,30 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
     }
   });
 
+  // Public endpoint - Address autocomplete using Geoapify (no auth required for collector)
+  app.get("/api/address-autocomplete", async (req, res) => {
+    const query = req.query.q as string;
+    if (!query || query.length < 3) {
+      return res.json({ features: [] });
+    }
+
+    const apiKey = process.env.GEOAPIFY_API_KEY;
+    if (!apiKey) {
+      return res.json({ features: [], error: "Address autocomplete not configured" });
+    }
+
+    try {
+      const response = await fetch(
+        `https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(query)}&apiKey=${apiKey}&limit=5`
+      );
+      const data = await response.json();
+      res.json(data);
+    } catch (error: any) {
+      console.error("Geoapify error:", error);
+      res.json({ features: [], error: "Failed to fetch address suggestions" });
+    }
+  });
+
   // Public endpoint - Get collector link info by token (no auth required)
   app.get("/api/collector/:token", async (req, res) => {
     try {
@@ -8939,6 +8963,11 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
         guestDietaryInfo: req.body.guestDietaryInfo,
         isBulkEntry: req.body.isBulkEntry || false,
         mainContactName: req.body.mainContactName,
+        contactStreet: req.body.contactStreet,
+        contactCity: req.body.contactCity,
+        contactState: req.body.contactState,
+        contactPostalCode: req.body.contactPostalCode,
+        contactCountry: req.body.contactCountry,
       });
       
       res.status(201).json({ success: true, submissionId: submission.id });
