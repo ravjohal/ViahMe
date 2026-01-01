@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -100,6 +101,8 @@ type FamilyDraft = {
   householdDietaryRestriction: string;
   mainContactEmail: string;
   mainContactPhone: string;
+  memberCount: number;
+  addMembersIndividually: boolean;
   members: GuestMember[];
   eventSuggestions: string[];
   relationshipTier: string;
@@ -127,6 +130,8 @@ const familyFormSchema = z.object({
   householdDietaryRestriction: z.string().optional(),
   mainContactEmail: z.string().optional(),
   mainContactPhone: z.string().optional(),
+  memberCount: z.number().min(1, "At least 1 member required").default(1),
+  addMembersIndividually: z.boolean().default(false),
   relationshipTier: z.string().optional(),
   notes: z.string().optional(),
   submitterName: z.string().min(1, "Your name is required"),
@@ -337,6 +342,8 @@ export default function GuestCollector() {
       householdDietaryRestriction: "none",
       mainContactEmail: "",
       mainContactPhone: "",
+      memberCount: 1,
+      addMembersIndividually: false,
       relationshipTier: "friend",
       notes: "",
       submitterName: "",
@@ -385,6 +392,11 @@ export default function GuestCollector() {
         form.setValue("submitterName", submitterInfo.name);
         form.setValue("submitterRelation", submitterInfo.relation);
       }
+      // Skip members step if not adding individually
+      if (currentStep === "contact" && !form.watch("addMembersIndividually")) {
+        setCurrentStep("events");
+        return;
+      }
       setCurrentStep(steps[nextIndex]);
     }
   };
@@ -392,6 +404,11 @@ export default function GuestCollector() {
   const handleBack = () => {
     const prevIndex = currentStepIndex - 1;
     if (prevIndex >= 0) {
+      // Skip members step when going back if not adding individually
+      if (currentStep === "events" && !form.watch("addMembersIndividually")) {
+        setCurrentStep("contact");
+        return;
+      }
       setCurrentStep(steps[prevIndex]);
     }
   };
@@ -401,7 +418,7 @@ export default function GuestCollector() {
       case "intro":
         return submitterInfo.name.trim() !== "" && submitterInfo.relation !== "";
       case "household":
-        return form.watch("householdName")?.trim() !== "";
+        return form.watch("householdName")?.trim() !== "" && (form.watch("memberCount") || 1) >= 1;
       case "contact":
         return true;
       case "members":
@@ -432,6 +449,8 @@ export default function GuestCollector() {
       householdDietaryRestriction: "none",
       mainContactEmail: "",
       mainContactPhone: "",
+      memberCount: 1,
+      addMembersIndividually: false,
       relationshipTier: "friend",
       notes: "",
       submitterName: submitterInfo.name,
@@ -456,6 +475,8 @@ export default function GuestCollector() {
       householdDietaryRestriction: data.householdDietaryRestriction || "none",
       mainContactEmail: data.mainContactEmail || "",
       mainContactPhone: data.mainContactPhone || "",
+      memberCount: data.memberCount || 1,
+      addMembersIndividually: data.addMembersIndividually || false,
       members: validMembers,
       eventSuggestions: selectedEvents,
       relationshipTier: data.relationshipTier || "friend",
@@ -494,6 +515,8 @@ export default function GuestCollector() {
       householdDietaryRestriction: data.householdDietaryRestriction || "none",
       mainContactEmail: data.mainContactEmail || "",
       mainContactPhone: data.mainContactPhone || "",
+      memberCount: data.memberCount || 1,
+      addMembersIndividually: data.addMembersIndividually || false,
       members: validMembers,
       eventSuggestions: selectedEvents,
       relationshipTier: data.relationshipTier || "friend",
@@ -522,6 +545,8 @@ export default function GuestCollector() {
       householdDietaryRestriction: family.householdDietaryRestriction || "none",
       mainContactEmail: family.mainContactEmail || "",
       mainContactPhone: family.mainContactPhone || "",
+      memberCount: family.memberCount || 1,
+      addMembersIndividually: family.addMembersIndividually || false,
       relationshipTier: family.relationshipTier,
       notes: family.notes,
       submitterName: submitterInfo.name,
@@ -578,7 +603,12 @@ export default function GuestCollector() {
     form.setValue("contactCountry", address.country || "");
   };
 
-  const totalGuestCount = familiesDraft.reduce((sum, f) => sum + f.members.length, 0);
+  const totalGuestCount = familiesDraft.reduce((sum, f) => {
+    if (f.addMembersIndividually) {
+      return sum + (f.members || []).length;
+    }
+    return sum + (f.memberCount || 1);
+  }, 0);
 
   if (isLoading) {
     return (
@@ -847,6 +877,75 @@ export default function GuestCollector() {
                           <FormDescription className="text-sm">
                             Optional - for save-the-dates and invitations
                           </FormDescription>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="memberCount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-base font-medium flex items-center gap-2">
+                            <Users className="w-4 h-4" />
+                            How many people in this family? *
+                          </FormLabel>
+                          <FormControl>
+                            <div className="flex items-center gap-4">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                className="h-12 w-12"
+                                onClick={() => field.onChange(Math.max(1, (field.value || 1) - 1))}
+                                disabled={(field.value || 1) <= 1}
+                                data-testid="button-member-count-minus"
+                              >
+                                <Minus className="w-5 h-5" />
+                              </Button>
+                              <span className="text-3xl font-bold min-w-[3rem] text-center" data-testid="text-member-count">
+                                {field.value || 1}
+                              </span>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                className="h-12 w-12"
+                                onClick={() => field.onChange((field.value || 1) + 1)}
+                                data-testid="button-member-count-plus"
+                              >
+                                <Plus className="w-5 h-5" />
+                              </Button>
+                            </div>
+                          </FormControl>
+                          <FormDescription className="text-sm">
+                            Total number of guests in this household
+                          </FormDescription>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="addMembersIndividually"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-lg border p-4 bg-muted/50">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                              className="h-6 w-6 mt-0.5"
+                              data-testid="checkbox-add-individually"
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel className="text-base font-medium cursor-pointer">
+                              Add members individually
+                            </FormLabel>
+                            <FormDescription className="text-sm">
+                              Enter names and details for each person (optional)
+                            </FormDescription>
+                          </div>
                         </FormItem>
                       )}
                     />
@@ -1268,9 +1367,12 @@ export default function GuestCollector() {
                               <div className="space-y-2 pr-16">
                                 <p className="font-medium text-base">{family.householdName}</p>
                                 <p className="text-sm text-muted-foreground">
-                                  {(family.members || []).length} {(family.members || []).length === 1 ? 'guest' : 'guests'}
+                                  {family.addMembersIndividually 
+                                    ? `${(family.members || []).length} ${(family.members || []).length === 1 ? 'guest' : 'guests'}`
+                                    : `${family.memberCount || 1} ${(family.memberCount || 1) === 1 ? 'guest' : 'guests'}`
+                                  }
                                 </p>
-                                {(family.members || []).length > 0 && (
+                                {family.addMembersIndividually && (family.members || []).length > 0 && (
                                   <div className="text-sm text-muted-foreground">
                                     {(family.members || []).map(m => m.name).join(', ')}
                                   </div>
@@ -1284,9 +1386,14 @@ export default function GuestCollector() {
                                   <span className="text-xs px-2 py-1 bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 rounded-full">
                                     {RELATIONSHIP_TIERS.find(t => t.value === family.relationshipTier)?.label || "Friend"}
                                   </span>
-                                  {(family.members || []).some(m => m.dietaryRestriction && m.dietaryRestriction !== "none") && (
+                                  {family.addMembersIndividually && (family.members || []).some(m => m.dietaryRestriction && m.dietaryRestriction !== "none") && (
                                     <span className="text-xs px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-full">
                                       Dietary notes
+                                    </span>
+                                  )}
+                                  {family.householdDietaryRestriction && family.householdDietaryRestriction !== "none" && (
+                                    <span className="text-xs px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-full">
+                                      {DESI_DIETARY_OPTIONS.find(d => d.value === family.householdDietaryRestriction)?.label || "Diet"}
                                     </span>
                                   )}
                                   {(family.eventSuggestions || []).length > 0 && (
