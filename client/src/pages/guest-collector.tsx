@@ -78,7 +78,7 @@ const RELATIONSHIP_TIERS = [
   { value: "parents_friend", label: "Parent's Friend", description: "Friend of parents" },
 ];
 
-type WizardStep = "intro" | "family" | "members" | "events" | "relationship" | "notes" | "review";
+type WizardStep = "intro" | "household" | "contact" | "members" | "events" | "notes" | "review";
 
 type GuestMember = {
   id: string;
@@ -97,6 +97,9 @@ type FamilyDraft = {
   contactState: string;
   contactPostalCode: string;
   contactCountry: string;
+  householdDietaryRestriction: string;
+  mainContactEmail: string;
+  mainContactPhone: string;
   members: GuestMember[];
   eventSuggestions: string[];
   relationshipTier: string;
@@ -121,6 +124,9 @@ const familyFormSchema = z.object({
   contactState: z.string().optional(),
   contactPostalCode: z.string().optional(),
   contactCountry: z.string().optional(),
+  householdDietaryRestriction: z.string().optional(),
+  mainContactEmail: z.string().optional(),
+  mainContactPhone: z.string().optional(),
   relationshipTier: z.string().optional(),
   notes: z.string().optional(),
   submitterName: z.string().min(1, "Your name is required"),
@@ -328,6 +334,9 @@ export default function GuestCollector() {
       contactState: "",
       contactPostalCode: "",
       contactCountry: "",
+      householdDietaryRestriction: "none",
+      mainContactEmail: "",
+      mainContactPhone: "",
       relationshipTier: "friend",
       notes: "",
       submitterName: "",
@@ -365,7 +374,7 @@ export default function GuestCollector() {
     },
   });
 
-  const steps: WizardStep[] = ["intro", "family", "members", "events", "relationship", "notes", "review"];
+  const steps: WizardStep[] = ["intro", "household", "contact", "members", "events", "notes", "review"];
   const currentStepIndex = steps.indexOf(currentStep);
   const progressPercent = ((currentStepIndex) / (steps.length - 1)) * 100;
 
@@ -391,11 +400,16 @@ export default function GuestCollector() {
     switch (currentStep) {
       case "intro":
         return submitterInfo.name.trim() !== "" && submitterInfo.relation !== "";
-      case "family":
-        return form.watch("householdName").trim() !== "";
+      case "household":
+        return form.watch("householdName")?.trim() !== "";
+      case "contact":
+        return true;
       case "members":
-        // Require at least one member with a name (filter out empty members)
         return currentMembers.some(m => m.name.trim() !== "");
+      case "events":
+        return true;
+      case "notes":
+        return true;
       case "review":
         return familiesDraft.length > 0;
       default:
@@ -415,6 +429,9 @@ export default function GuestCollector() {
       contactState: "",
       contactPostalCode: "",
       contactCountry: "",
+      householdDietaryRestriction: "none",
+      mainContactEmail: "",
+      mainContactPhone: "",
       relationshipTier: "friend",
       notes: "",
       submitterName: submitterInfo.name,
@@ -436,6 +453,9 @@ export default function GuestCollector() {
       contactState: data.contactState || "",
       contactPostalCode: data.contactPostalCode || "",
       contactCountry: data.contactCountry || "",
+      householdDietaryRestriction: data.householdDietaryRestriction || "none",
+      mainContactEmail: data.mainContactEmail || "",
+      mainContactPhone: data.mainContactPhone || "",
       members: validMembers,
       eventSuggestions: selectedEvents,
       relationshipTier: data.relationshipTier || "friend",
@@ -471,6 +491,9 @@ export default function GuestCollector() {
       contactState: data.contactState || "",
       contactPostalCode: data.contactPostalCode || "",
       contactCountry: data.contactCountry || "",
+      householdDietaryRestriction: data.householdDietaryRestriction || "none",
+      mainContactEmail: data.mainContactEmail || "",
+      mainContactPhone: data.mainContactPhone || "",
       members: validMembers,
       eventSuggestions: selectedEvents,
       relationshipTier: data.relationshipTier || "friend",
@@ -479,7 +502,7 @@ export default function GuestCollector() {
 
     setFamiliesDraft([...familiesDraft, newFamily]);
     resetFormAndMembers();
-    setCurrentStep("family");
+    setCurrentStep("household");
     toast({
       title: "Family added!",
       description: `${newFamily.householdName} added. Now add another family.`,
@@ -496,15 +519,18 @@ export default function GuestCollector() {
       contactState: family.contactState,
       contactPostalCode: family.contactPostalCode,
       contactCountry: family.contactCountry,
+      householdDietaryRestriction: family.householdDietaryRestriction || "none",
+      mainContactEmail: family.mainContactEmail || "",
+      mainContactPhone: family.mainContactPhone || "",
       relationshipTier: family.relationshipTier,
       notes: family.notes,
       submitterName: submitterInfo.name,
       submitterRelation: submitterInfo.relation,
     });
-    setCurrentMembers(family.members.length > 0 ? family.members : [DEFAULT_MEMBER()]);
+    setCurrentMembers(family.members && family.members.length > 0 ? family.members : [DEFAULT_MEMBER()]);
     setSelectedEvents(family.eventSuggestions || []);
     setEditingIndex(index);
-    setCurrentStep("family");
+    setCurrentStep("household");
   };
 
   const removeFamily = (index: number) => {
@@ -518,14 +544,14 @@ export default function GuestCollector() {
   const handleAddAnother = () => {
     resetFormAndMembers();
     setFamiliesDraft([]);
-    setCurrentStep("family");
+    setCurrentStep("household");
     setSubmitted(false);
   };
 
   const startAddingAnotherFamily = () => {
     resetFormAndMembers();
     setEditingIndex(null);
-    setCurrentStep("family");
+    setCurrentStep("household");
   };
 
   const addMember = () => {
@@ -759,7 +785,7 @@ export default function GuestCollector() {
                 </>
               )}
 
-              {currentStep === "family" && (
+              {currentStep === "household" && (
                 <>
                   <CardHeader className="text-center">
                     {familiesDraft.length > 0 && editingIndex === null && (
@@ -775,7 +801,7 @@ export default function GuestCollector() {
                       {editingIndex !== null ? "Edit Family" : familiesDraft.length > 0 ? "Add Another Family" : "Add a Family"}
                     </CardTitle>
                     <CardDescription className="text-base">
-                      Enter the household name and address
+                      Enter the household name, address, and dietary preferences
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-5 pt-4">
@@ -821,6 +847,103 @@ export default function GuestCollector() {
                           <FormDescription className="text-sm">
                             Optional - for save-the-dates and invitations
                           </FormDescription>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="householdDietaryRestriction"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-base font-medium flex items-center gap-2">
+                            <Utensils className="w-4 h-4" />
+                            Household Dietary Restriction
+                          </FormLabel>
+                          <Select value={field.value || "none"} onValueChange={field.onChange}>
+                            <FormControl>
+                              <SelectTrigger className="min-h-[48px] text-base" data-testid="select-household-dietary">
+                                <SelectValue placeholder="Select dietary preference" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {DESI_DIETARY_OPTIONS.map((option) => (
+                                <SelectItem key={option.value} value={option.value} className="py-2">
+                                  <span className="text-base">{option.label}</span>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormDescription className="text-sm">
+                            Does the whole household share a dietary restriction?
+                          </FormDescription>
+                        </FormItem>
+                      )}
+                    />
+                  </CardContent>
+                </>
+              )}
+
+              {currentStep === "contact" && (
+                <>
+                  <CardHeader className="text-center">
+                    <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-pink-100 dark:bg-pink-900/20 flex items-center justify-center">
+                      <Phone className="w-6 h-6 text-pink-500" />
+                    </div>
+                    <CardTitle className="text-xl">Main Point of Contact</CardTitle>
+                    <CardDescription className="text-base">
+                      How can the couple reach this family?
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-5 pt-4">
+                    <FormField
+                      control={form.control}
+                      name="mainContactEmail"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-base font-medium flex items-center gap-2">
+                            <Mail className="w-4 h-4" />
+                            Email Address
+                          </FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field}
+                              type="email"
+                              placeholder="email@example.com"
+                              className="min-h-[48px] text-base"
+                              data-testid="input-main-contact-email"
+                            />
+                          </FormControl>
+                          <FormDescription className="text-sm">
+                            For sending invitations and updates
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="mainContactPhone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-base font-medium flex items-center gap-2">
+                            <Phone className="w-4 h-4" />
+                            Phone Number
+                          </FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field}
+                              type="tel"
+                              placeholder="(555) 123-4567"
+                              className="min-h-[48px] text-base"
+                              data-testid="input-main-contact-phone"
+                            />
+                          </FormControl>
+                          <FormDescription className="text-sm">
+                            For WhatsApp or text updates (optional)
+                          </FormDescription>
+                          <FormMessage />
                         </FormItem>
                       )}
                     />
@@ -1015,84 +1138,64 @@ export default function GuestCollector() {
                 </>
               )}
 
-              {currentStep === "relationship" && (
-                <>
-                  <CardHeader className="text-center">
-                    <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-pink-100 dark:bg-pink-900/20 flex items-center justify-center">
-                      <Heart className="w-6 h-6 text-pink-500" />
-                    </div>
-                    <CardTitle className="text-xl">How Close?</CardTitle>
-                    <CardDescription className="text-base">
-                      This helps with seating and priority
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-4">
-                    <FormField
-                      control={form.control}
-                      name="relationshipTier"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <RadioGroup
-                              value={field.value}
-                              onValueChange={field.onChange}
-                              className="space-y-3"
-                            >
-                              {RELATIONSHIP_TIERS.map((tier) => (
-                                <Label
-                                  key={tier.value}
-                                  htmlFor={tier.value}
-                                  className={`flex items-center gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all min-h-[64px] ${
-                                    field.value === tier.value 
-                                      ? "border-pink-500 bg-pink-50 dark:bg-pink-950/20" 
-                                      : "border-muted hover-elevate"
-                                  }`}
-                                  data-testid={`radio-tier-${tier.value}`}
-                                >
-                                  <RadioGroupItem value={tier.value} id={tier.value} />
-                                  <div className="flex-1">
-                                    <p className="font-medium text-base">{tier.label}</p>
-                                    <p className="text-sm text-muted-foreground">{tier.description}</p>
-                                  </div>
-                                </Label>
-                              ))}
-                            </RadioGroup>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </CardContent>
-                </>
-              )}
-
               {currentStep === "notes" && (
                 <>
                   <CardHeader className="text-center">
                     <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-pink-100 dark:bg-pink-900/20 flex items-center justify-center">
                       <MessageSquare className="w-6 h-6 text-pink-500" />
                     </div>
-                    <CardTitle className="text-xl">Any Notes?</CardTitle>
+                    <CardTitle className="text-xl">Final Details</CardTitle>
                     <CardDescription className="text-base">
-                      Add any helpful context (optional)
+                      Add notes and choose how close they are to the couple
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4 pt-4">
+                  <CardContent className="space-y-5 pt-4">
+                    <FormField
+                      control={form.control}
+                      name="relationshipTier"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-base font-medium flex items-center gap-2">
+                            <Heart className="w-4 h-4" />
+                            How close is this family?
+                          </FormLabel>
+                          <Select value={field.value || "friend"} onValueChange={field.onChange}>
+                            <FormControl>
+                              <SelectTrigger className="min-h-[48px] text-base" data-testid="select-relationship-tier">
+                                <SelectValue placeholder="Select relationship" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {RELATIONSHIP_TIERS.map((tier) => (
+                                <SelectItem key={tier.value} value={tier.value} className="py-2">
+                                  <span className="text-base">{tier.label}</span>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormDescription className="text-sm">
+                            This helps with seating and priority
+                          </FormDescription>
+                        </FormItem>
+                      )}
+                    />
+
                     <FormField
                       control={form.control}
                       name="notes"
                       render={({ field }) => (
                         <FormItem>
+                          <FormLabel className="text-base font-medium">Any Notes?</FormLabel>
                           <FormControl>
                             <Textarea 
                               {...field}
                               placeholder="e.g., Dad's college roommate, lives in Chicago, very close family..."
-                              className="min-h-[120px] text-base resize-none"
+                              className="min-h-[100px] text-base resize-none"
                               data-testid="input-notes"
                             />
                           </FormControl>
-                          <FormDescription className="text-center text-sm">
-                            This helps the couple understand the relationship
+                          <FormDescription className="text-sm">
+                            Optional - add any helpful context for the couple
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -1165,11 +1268,11 @@ export default function GuestCollector() {
                               <div className="space-y-2 pr-16">
                                 <p className="font-medium text-base">{family.householdName}</p>
                                 <p className="text-sm text-muted-foreground">
-                                  {family.members.length} {family.members.length === 1 ? 'guest' : 'guests'}
+                                  {(family.members || []).length} {(family.members || []).length === 1 ? 'guest' : 'guests'}
                                 </p>
-                                {family.members.length > 0 && (
+                                {(family.members || []).length > 0 && (
                                   <div className="text-sm text-muted-foreground">
-                                    {family.members.map(m => m.name).join(', ')}
+                                    {(family.members || []).map(m => m.name).join(', ')}
                                   </div>
                                 )}
                                 {family.fullAddress && (
@@ -1181,19 +1284,19 @@ export default function GuestCollector() {
                                   <span className="text-xs px-2 py-1 bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 rounded-full">
                                     {RELATIONSHIP_TIERS.find(t => t.value === family.relationshipTier)?.label || "Friend"}
                                   </span>
-                                  {family.members.some(m => m.dietaryRestriction && m.dietaryRestriction !== "none") && (
+                                  {(family.members || []).some(m => m.dietaryRestriction && m.dietaryRestriction !== "none") && (
                                     <span className="text-xs px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-full">
                                       Dietary notes
                                     </span>
                                   )}
-                                  {family.eventSuggestions && family.eventSuggestions.length > 0 && (
+                                  {(family.eventSuggestions || []).length > 0 && (
                                     <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full">
-                                      {family.eventSuggestions.length} event{family.eventSuggestions.length === 1 ? '' : 's'}
+                                      {(family.eventSuggestions || []).length} event{(family.eventSuggestions || []).length === 1 ? '' : 's'}
                                     </span>
                                   )}
                                 </div>
-                                {family.eventSuggestions && family.eventSuggestions.length > 0 && linkInfo?.events && linkInfo.events.length > 0 && (() => {
-                                  const eventNames = family.eventSuggestions
+                                {(family.eventSuggestions || []).length > 0 && linkInfo?.events && linkInfo.events.length > 0 && (() => {
+                                  const eventNames = (family.eventSuggestions || [])
                                     .map(eventId => linkInfo.events?.find(e => e.id === eventId)?.name)
                                     .filter(Boolean);
                                   return eventNames.length > 0 ? (
@@ -1268,9 +1371,9 @@ export default function GuestCollector() {
                     <ArrowRight className="w-5 h-5 ml-1" />
                   </Button>
                 )}
-                {(currentStep === "family" || currentStep === "members" || currentStep === "events" || currentStep === "relationship") && (
+                {(currentStep === "household" || currentStep === "contact" || currentStep === "members" || currentStep === "events") && (
                   <>
-                    {currentStep === "family" && familiesDraft.length > 0 && !form.watch("householdName") && (
+                    {currentStep === "household" && familiesDraft.length > 0 && !form.watch("householdName") && (
                       <Button
                         type="button"
                         variant="outline"
