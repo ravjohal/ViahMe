@@ -7,6 +7,23 @@ import { GoogleGenAI } from "@google/genai";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
+function logAIRequest(functionName: string, request: unknown): void {
+  console.log(`\n[AI REQUEST] ${functionName}`);
+  console.log(`Timestamp: ${new Date().toISOString()}`);
+  console.log(`Request:`, JSON.stringify(request, null, 2));
+}
+
+function logAIResponse(functionName: string, response: unknown, durationMs: number): void {
+  console.log(`\n[AI RESPONSE] ${functionName}`);
+  console.log(`Duration: ${durationMs}ms`);
+  console.log(`Response:`, typeof response === 'string' ? response.substring(0, 500) + (response.length > 500 ? '...' : '') : JSON.stringify(response, null, 2));
+}
+
+function logAIError(functionName: string, error: unknown): void {
+  console.error(`\n[AI ERROR] ${functionName}`);
+  console.error(`Error:`, error);
+}
+
 // Contract drafting system prompt
 const CONTRACT_SYSTEM_PROMPT = `You are an expert wedding contract drafting assistant for Viah.me, a South Asian wedding management platform. You help couples create professional vendor contracts.
 
@@ -86,13 +103,15 @@ Operational Instructions:
 - Vendor Sourcing: Suggest specific vendor types (e.g., "For a traditional Sikh wedding, look for a vendor specializing in Anand Karaj decor") and how to find them.`;
 
 // Guest Assistant system prompt for family members contributing guests
-const GUEST_ASSISTANT_PROMPT = `Role: You are the ViahMe Guest Assistant, a friendly AI helper designed to assist family members (especially parents, aunties, and uncles) who are contributing guest names for a South Asian wedding.
+const GUEST_ASSISTANT_PROMPT = `Role: You are the ViahMe Guest Assistant, a friendly AI helper designed to assist anyone who is contributing guest names for a South Asian wedding.
 
 Your personality:
-- Patient and warm like a helpful grandchild who knows technology
+- Patient, warm, and helpful
 - Understanding of South Asian family dynamics and cultural context
 - Never judgmental about missing information
 - Encouraging and supportive
+
+IMPORTANT: Do NOT assume who the person is or their relationship to the couple. Do not call them "Auntie", "Uncle", or any title. Just be friendly and helpful without assumptions about their identity.
 
 Key behaviors:
 1. REASSURE about partial information: Many family members don't have complete contact details for everyone. Always reassure them it's okay to add names now and the couple can fill in details later.
@@ -295,6 +314,11 @@ export async function chatWithPlanner(
   conversationHistory: ChatMessage[],
   weddingContext?: WeddingContext,
 ): Promise<string> {
+  const functionName = 'chatWithPlanner';
+  const startTime = Date.now();
+  
+  logAIRequest(functionName, { message, weddingContext, historyLength: conversationHistory.length });
+  
   // Build context message
   let contextInfo = "";
   if (weddingContext) {
@@ -376,12 +400,12 @@ export async function chatWithPlanner(
       contents: contents,
     });
 
-    return (
-      response.text ||
-      "I apologize, but I couldn't generate a response. Please try again."
-    );
+    const result = response.text ||
+      "I apologize, but I couldn't generate a response. Please try again.";
+    logAIResponse(functionName, result, Date.now() - startTime);
+    return result;
   } catch (error) {
-    console.error("Error in wedding planner chat:", error);
+    logAIError(functionName, error);
     throw new Error("Failed to get a response. Please try again.");
   }
 }
@@ -1324,6 +1348,9 @@ export async function chatWithGuestAssistant(
   conversationHistory: ChatMessage[],
   context?: GuestAssistantContext,
 ): Promise<string> {
+  const functionName = 'chatWithGuestAssistant';
+  const startTime = Date.now();
+  
   // Input validation
   if (!message || message.trim().length === 0) {
     return "I'm here to help! What would you like to know about adding guests?";
@@ -1361,6 +1388,8 @@ export async function chatWithGuestAssistant(
     parts: [{ text: message + contextInfo }],
   });
 
+  logAIRequest(functionName, { message, context, historyLength: conversationHistory.length });
+
   try {
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
@@ -1371,9 +1400,11 @@ export async function chatWithGuestAssistant(
       contents,
     });
 
-    return response.text || "I'm here to help! What would you like to know?";
+    const result = response.text || "I'm here to help! What would you like to know?";
+    logAIResponse(functionName, result, Date.now() - startTime);
+    return result;
   } catch (error) {
-    console.error("Error in guest assistant chat:", error);
+    logAIError(functionName, error);
     return "Sorry, I had trouble understanding. Could you try asking again?";
   }
 }
