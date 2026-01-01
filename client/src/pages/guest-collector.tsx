@@ -441,6 +441,55 @@ export default function GuestCollector() {
     });
   };
 
+  const addFamilyAndContinue = () => {
+    const data = form.getValues();
+    const newFamily: FamilyDraft = {
+      id: crypto.randomUUID(),
+      householdName: data.householdName,
+      mainContactName: data.mainContactName,
+      guestPhone: data.guestPhone || "",
+      guestEmail: data.guestEmail || "",
+      fullAddress: data.fullAddress || "",
+      contactStreet: data.contactStreet || "",
+      contactCity: data.contactCity || "",
+      contactState: data.contactState || "",
+      contactPostalCode: data.contactPostalCode || "",
+      contactCountry: data.contactCountry || "",
+      guestCount: data.guestCount,
+      desiDietaryType: data.desiDietaryType || "none",
+      relationshipTier: data.relationshipTier || "friend",
+      notes: data.notes || "",
+    };
+
+    setFamiliesDraft([...familiesDraft, newFamily]);
+
+    form.reset({
+      householdName: "",
+      mainContactName: "",
+      guestPhone: "",
+      guestEmail: "",
+      fullAddress: "",
+      contactStreet: "",
+      contactCity: "",
+      contactState: "",
+      contactPostalCode: "",
+      contactCountry: "",
+      guestCount: 2,
+      desiDietaryType: "none",
+      relationshipTier: "friend",
+      notes: "",
+      submitterName: submitterInfo.name,
+      submitterRelation: submitterInfo.relation,
+    });
+
+    // Go back to family step for next entry
+    setCurrentStep("family");
+    toast({
+      title: "Family added!",
+      description: `${newFamily.householdName} added. Now add another family.`,
+    });
+  };
+
   const editFamily = (index: number) => {
     const family = familiesDraft[index];
     form.reset({
@@ -752,11 +801,17 @@ export default function GuestCollector() {
               {currentStep === "family" && (
                 <>
                   <CardHeader className="text-center">
+                    {familiesDraft.length > 0 && editingIndex === null && (
+                      <div className="mb-3 inline-flex items-center gap-2 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-3 py-1.5 rounded-full text-sm font-medium mx-auto">
+                        <CheckCircle2 className="w-4 h-4" />
+                        {familiesDraft.length} {familiesDraft.length === 1 ? 'family' : 'families'} added
+                      </div>
+                    )}
                     <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-pink-100 dark:bg-pink-900/20 flex items-center justify-center">
                       <Users className="w-6 h-6 text-pink-500" />
                     </div>
                     <CardTitle className="text-xl">
-                      {editingIndex !== null ? "Edit Family" : "Add a Family"}
+                      {editingIndex !== null ? "Edit Family" : familiesDraft.length > 0 ? "Add Another Family" : "Add a Family"}
                     </CardTitle>
                     <CardDescription className="text-base">
                       Tell us about the family you want to invite
@@ -1183,28 +1238,67 @@ export default function GuestCollector() {
                   </Button>
                 )}
                 {(currentStep === "family" || currentStep === "relationship") && (
-                  <Button
-                    type="button"
-                    onClick={handleNext}
-                    disabled={!canProceed()}
-                    className="min-h-[48px] flex-1 text-base bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600"
-                    data-testid="button-next"
-                  >
-                    Next
-                    <ArrowRight className="w-5 h-5 ml-1" />
-                  </Button>
+                  <>
+                    {currentStep === "family" && familiesDraft.length > 0 && !form.watch("householdName") && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setCurrentStep("review")}
+                        className="min-h-[48px] flex-1 text-base"
+                        data-testid="button-skip-to-review"
+                      >
+                        <CheckCircle2 className="w-5 h-5 mr-1" />
+                        Done ({familiesDraft.length})
+                      </Button>
+                    )}
+                    <Button
+                      type="button"
+                      onClick={handleNext}
+                      disabled={!canProceed()}
+                      className="min-h-[48px] flex-1 text-base bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600"
+                      data-testid="button-next"
+                    >
+                      Next
+                      <ArrowRight className="w-5 h-5 ml-1" />
+                    </Button>
+                  </>
                 )}
-                {currentStep === "notes" && (
+                {currentStep === "notes" && editingIndex !== null && (
                   <Button
                     type="button"
                     onClick={addFamilyToDraft}
                     disabled={!form.watch("householdName") || !form.watch("mainContactName")}
                     className="min-h-[48px] flex-1 text-base bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600"
-                    data-testid="button-add-to-list"
+                    data-testid="button-update-family"
                   >
-                    <Plus className="w-5 h-5 mr-1" />
-                    {editingIndex !== null ? "Update Family" : "Add to List"}
+                    <CheckCircle2 className="w-5 h-5 mr-1" />
+                    Update Family
                   </Button>
+                )}
+                {currentStep === "notes" && editingIndex === null && (
+                  <>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={addFamilyAndContinue}
+                      disabled={!form.watch("householdName") || !form.watch("mainContactName")}
+                      className="min-h-[48px] flex-1 text-base"
+                      data-testid="button-add-and-continue"
+                    >
+                      <Plus className="w-5 h-5 mr-1" />
+                      Add & Continue
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={addFamilyToDraft}
+                      disabled={!form.watch("householdName") || !form.watch("mainContactName")}
+                      className="min-h-[48px] flex-1 text-base bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+                      data-testid="button-add-and-review"
+                    >
+                      <CheckCircle2 className="w-5 h-5 mr-1" />
+                      Done Adding
+                    </Button>
+                  </>
                 )}
                 {currentStep === "review" && familiesDraft.length > 0 && (
                   <Button
