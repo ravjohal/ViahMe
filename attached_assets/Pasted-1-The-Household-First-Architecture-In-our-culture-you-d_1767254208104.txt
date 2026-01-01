@@ -1,0 +1,68 @@
+1. The "Household-First" Architecture
+In our culture, you don't invite "Anil Gupta"; you invite "The Gupta Family."
+
+The Redesign: The primary view should be Households, not individuals.
+
+Intuitive Logic: When a couple adds a guest, the system should immediately ask: "Is this a new household or part of an existing one?"
+
+The "Head of House" (HoH): Every household has a designated HoH (usually the person the couple actually talks to). On mobile, the HoH should have a "Quick-Action" button to WhatsApp/iMessage them directly.
+
+2. Mobile-First "Swipe & Group" UI
+Stop using dense tables. They are the enemy of mobile UX.
+
+Card-Based Layout: Each household gets a card. A quick glance shows:
+
+Household Name (e.g., "The Johal Family")
+
+Count (4 Adults, 2 Kids)
+
+Side (Bride/Groom/Shared)
+
+Status (Needs Address / Sent / RSVP'd)
+
+Micro-Interactions: * Swipe Right: Send a "Save the Date" or "RSVP Reminder" via WhatsApp/SMS.
+
+Swipe Left: Move to a specific event sub-list (e.g., "Exclude from Sangeet").
+
+3. The "Multi-Event Matrix" (Simplified)
+This is where most apps break. A guest might be invited to the Mehndi and Wedding, but not the Sangeet.
+
+The Redesign: Instead of a complex grid, use "Event Tags."
+
+Global Filters: At the top of the screen, have "Pills" for each event. Selecting "Sangeet" instantly filters the list to show only those guests, updating the total headcounts and meal requirements in real-time.
+
+Capacity Guard: A small "meter" at the top shows: Sangeet: 245/250 seats filled. This prevents the accidental over-inviting common in large families.
+
+4. Zero-Friction Data Entry (The "Anti-Typing" Strategy)
+Couples hate manual entry. We need to leverage mobile hardware:
+
+Contact Sync: Allow the app to pull directly from the phone’s contact list.
+
+AI Address Collector: A simple "Copy Invite Link" button. The couple sends this link to the HoH via WhatsApp. The HoH clicks it, enters their family’s names, dietary restrictions, and addresses. The data populates the ViahMe module automatically.
+
+OCR Spreadsheet Import: Let them take a photo of a handwritten list or upload a messy Excel; use a lightweight AI layer to map the columns for them.
+
+5. The "Aunty-Proof" RSVP Portal
+The guest-facing side of the module is just as important.
+
+The "Search by Name" flow: When a guest enters "Sharma," the system shows "The Sharma Family (Raj, Meena, & Rahul)."
+
+Bundled RSVPs: One person can RSVP for the whole house in under 60 seconds.
+
+Meal Nuance: Instead of just "Veg/Non-Veg," we need specific South Asian toggles: Jain, Swaminarayan, Halal, Nut Allergy.
+
+6. Principal Designer's "Pro-Tip" Features
+The "Side" Split: A toggle to view the list by "Bride's Side" vs "Groom's Side." This is vital for budget tracking and seating chart politics.
+
+WhatsApp Integration: Since 90% of South Asian wedding coordination happens on WhatsApp, ViahMe should allow "Template Blasts" (e.g., "Hey [HoH Name], we're still missing your RSVP for the Sangeet! Click here: [Link]").
+
+Gift Tracking: Integrated directly into the guest card. After the wedding, the couple can see "The Gil Family - $251 + Silver Set" and mark "Thank You Sent."
+
+Suggested Technical Implementation (React/Tailwind)
+Based on your current codebase, I recommend updating client/src/pages/guests.tsx to include:
+
+A "Summary Header": Floating sticky bar with Total Count, RSVPs Pending, and a "WhatsApp Reminder" trigger.
+
+Segmented Control: Switching between "All Guests" and "Households."
+
+Visual Tags: Colorful badges for "Bride Side" (e.g., Rose) and "Groom Side" (e.g., Gold).

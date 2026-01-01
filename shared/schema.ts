@@ -578,9 +578,13 @@ export const households = pgTable("households", {
   sourceId: varchar("source_id"), // Reference to guest_sources table
   // Desi dietary preferences for South Asian weddings
   desiDietaryType: text("desi_dietary_type"), // 'strict_vegetarian' | 'jain' | 'swaminarayan' | 'eggless' | 'halal' | 'none'
+  // Head of House - index of the member who is the primary contact (0-based index in members array)
+  headOfHouseIndex: integer("head_of_house_index").default(0),
   // Lifafa (monetary gift) tracking post-wedding
   lifafaAmount: decimal("lifafa_amount", { precision: 10, scale: 2 }), // Monetary gift amount
+  giftDescription: text("gift_description"), // Description of physical gifts (e.g., "Silver Set, Saree")
   giftNotes: text("gift_notes"), // Notes about gifts received
+  thankYouSent: boolean("thank_you_sent").default(false), // Whether thank you note was sent
   magicLinkTokenHash: varchar("magic_link_token_hash").unique(), // HASHED secure token for passwordless access
   magicLinkToken: varchar("magic_link_token"), // Plaintext token for QR/copy functionality
   magicLinkExpires: timestamp("magic_link_expires"), // Token expiration
@@ -595,7 +599,10 @@ export const insertHouseholdSchema = createInsertSchema(households).omit({
   createdAt: true,
 }).extend({
   desiDietaryType: z.enum(['strict_vegetarian', 'jain', 'swaminarayan', 'eggless', 'halal', 'none']).nullable().optional(),
+  headOfHouseIndex: z.number().nullable().optional(),
   lifafaAmount: z.string().nullable().optional(),
+  giftDescription: z.string().nullable().optional(),
+  thankYouSent: z.boolean().nullable().optional(),
 });
 
 export type InsertHousehold = z.infer<typeof insertHouseholdSchema>;

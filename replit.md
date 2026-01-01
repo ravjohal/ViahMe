@@ -19,6 +19,13 @@ Key architectural decisions and features include:
 - **Vendor Specialization**: Support for 32 distinct vendor categories, including culturally-specific services.
 - **Budget Intelligence System**: Provides smart budget recommendations based on cultural spending benchmarks, real-time comparisons, and interactive visualizations.
 - **Guest List Management**: Frictionless bulk guest import (CSV, Excel), advanced guest invitation & RSVP system with household grouping, magic link authentication, per-event RSVP tracking, and bulk invitation sender. Includes an Allocation View Dashboard for analytics.
+- **Household-First Architecture**: Mobile-first guest management designed for South Asian wedding culture:
+  - **Head of House (HoH)**: Every household has a designated primary contact with quick-action WhatsApp/SMS/Email buttons
+  - **Side Filter Toggle**: Filter households by Bride's Side vs Groom's Side with colored badges (Rose for Bride, Gold for Groom)
+  - **Event Filter Pills**: Quick-filter guests by event with real-time capacity meters showing seats filled vs venue capacity
+  - **Summary Header**: Floating sticky bar showing total families, guests, confirmed RSVPs, and pending RSVPs
+  - **Gift Tracking**: Track monetary gifts (lifafa) and physical gifts per household with "Thank You Sent" status
+  - **WhatsApp Template Blast**: Send personalized RSVP reminders via WhatsApp with {name} placeholder for household names
 - **Integrated Guest Management Module**: Two-tier tabbed UI structure with "Guest List" and "Guest Planning" tabs:
   - **Guest List Tab**: Individual Guests, Households, and Allocation View for managing the final guest list
   - **Guest Planning Tab**: Intuitive 3-phase planning workflow:

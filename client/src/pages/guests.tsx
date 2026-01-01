@@ -64,6 +64,8 @@ import {
   Share2,
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { SideFilterToggle, EventFilterPills, SummaryHeader } from "@/components/household-card";
+import { SiWhatsapp } from "react-icons/si";
 import QRCode from "qrcode";
 
 const guestFormSchema = insertGuestSchema.extend({
@@ -295,6 +297,15 @@ export default function Guests() {
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [editEventCostPerHead, setEditEventCostPerHead] = useState("");
   const [editEventCapacity, setEditEventCapacity] = useState("");
+
+  // Mobile-first filters for household view
+  const [sideFilter, setSideFilter] = useState<'all' | 'bride' | 'groom'>('all');
+  const [selectedEventFilter, setSelectedEventFilter] = useState<string | null>(null);
+
+  // WhatsApp template blast state
+  const [whatsappBlastDialogOpen, setWhatsappBlastDialogOpen] = useState(false);
+  const [whatsappTemplate, setWhatsappTemplate] = useState("Hi {name}! This is a friendly reminder about our wedding. We're still waiting for your RSVP. Please let us know if you can make it!");
+  const [whatsappTargetEvent, setWhatsappTargetEvent] = useState<string>("");
 
   const { data: weddings, isLoading: weddingsLoading } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
@@ -1291,27 +1302,72 @@ export default function Guests() {
               </TabsContent>
 
               <TabsContent value="households" className="space-y-4">
-                <div className="flex justify-between items-center">
+                {/* Mobile-First Summary Header */}
+                <SummaryHeader
+                  totalHouseholds={households.length}
+                  totalGuests={guests.length || households.reduce((sum, h) => sum + (h.maxCount || 1), 0)}
+                  rsvpPending={households.filter(h => !h.magicLinkTokenHash).length}
+                  rsvpConfirmed={households.filter(h => h.magicLinkTokenHash).length}
+                  onSendReminders={() => setWhatsappBlastDialogOpen(true)}
+                />
+
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <div>
-                    <h2 className="text-2xl font-bold">Household Management</h2>
-                    <p className="text-muted-foreground mt-1">
+                    <h2 className="text-xl sm:text-2xl font-bold">Household Management</h2>
+                    <p className="text-muted-foreground mt-1 text-sm sm:text-base">
                       Group families together and manage invitation links
                     </p>
                   </div>
                   <div className="flex gap-2 flex-wrap">
-                    <Button onClick={handleOpenBulkInvite} variant="default" data-testid="button-bulk-invite">
+                    <Button onClick={handleOpenBulkInvite} variant="default" className="min-h-[44px]" data-testid="button-bulk-invite">
                       <Send className="w-4 h-4 mr-2" />
-                      Send Invitations
+                      <span className="hidden sm:inline">Send Invitations</span>
+                      <span className="sm:hidden">Invite</span>
                     </Button>
-                    <Button onClick={handleAddHousehold} variant="outline" data-testid="button-add-household">
+                    <Button onClick={handleAddHousehold} variant="outline" className="min-h-[44px]" data-testid="button-add-household">
                       <Users className="w-4 h-4 mr-2" />
-                      Add Household
+                      <span className="hidden sm:inline">Add Household</span>
+                      <span className="sm:hidden">Add</span>
                     </Button>
                   </div>
                 </div>
 
+                {/* Side Filter Toggle - Bride's vs Groom's */}
+                <SideFilterToggle
+                  selected={sideFilter}
+                  onSelect={setSideFilter}
+                  counts={{
+                    bride: households.filter(h => h.affiliation === 'bride').length,
+                    groom: households.filter(h => h.affiliation === 'groom').length,
+                    mutual: households.filter(h => h.affiliation === 'mutual').length,
+                  }}
+                />
+
+                {/* Event Filter Pills with Capacity Meters */}
+                {events.length > 0 && (
+                  <EventFilterPills
+                    events={events}
+                    selectedEventId={selectedEventFilter}
+                    onSelectEvent={setSelectedEventFilter}
+                    householdCounts={new Map(events.map(e => {
+                      const guestsForEvent = guests.filter(g => g.eventIds?.includes(e.id));
+                      return [e.id, guestsForEvent.length];
+                    }))}
+                  />
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {households.map((household) => {
+                  {households
+                    .filter(household => {
+                      if (sideFilter !== 'all' && household.affiliation !== sideFilter) return false;
+                      if (selectedEventFilter) {
+                        const householdGuests = guests.filter(g => g.householdId === household.id);
+                        const hasGuestInEvent = householdGuests.some(g => g.eventIds?.includes(selectedEventFilter));
+                        if (!hasGuestInEvent) return false;
+                      }
+                      return true;
+                    })
+                    .map((household) => {
                     const householdGuests = guests.filter(g => g.householdId === household.id);
                     const hasActiveLink = household.magicLinkTokenHash && household.magicLinkExpires && new Date(household.magicLinkExpires) > new Date();
 
@@ -3404,6 +3460,120 @@ export default function Guests() {
                 data-testid="button-save-event-edit"
               >
                 {updateEventMutation.isPending ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* WhatsApp Template Blast Dialog */}
+      <Dialog open={whatsappBlastDialogOpen} onOpenChange={setWhatsappBlastDialogOpen}>
+        <DialogContent className="sm:max-w-lg" data-testid="dialog-whatsapp-blast">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <SiWhatsapp className="h-5 w-5 text-green-600" />
+              Send WhatsApp Reminders
+            </DialogTitle>
+            <DialogDescription>
+              Send personalized RSVP reminders to families. The message will open WhatsApp with pre-filled text.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Message Template</Label>
+              <p className="text-xs text-muted-foreground">Use {"{name}"} to personalize with the household name</p>
+              <Textarea
+                value={whatsappTemplate}
+                onChange={(e) => setWhatsappTemplate(e.target.value)}
+                placeholder="Hi {name}! This is a reminder about our wedding..."
+                className="min-h-[120px]"
+                data-testid="textarea-whatsapp-template"
+              />
+            </div>
+
+            {events.length > 0 && (
+              <div className="space-y-2">
+                <Label>Target Event (optional)</Label>
+                <Select value={whatsappTargetEvent} onValueChange={setWhatsappTargetEvent}>
+                  <SelectTrigger data-testid="select-whatsapp-event">
+                    <SelectValue placeholder="All events" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All events</SelectItem>
+                    {events.map(event => (
+                      <SelectItem key={event.id} value={event.id}>{event.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+              <p className="text-sm font-medium">Households with phone numbers:</p>
+              <div className="flex flex-wrap gap-2">
+                {households
+                  .filter(h => h.contactPhone || ((h as any).members || []).some((m: any) => m.phone))
+                  .slice(0, 5)
+                  .map(h => (
+                    <Badge key={h.id} variant="outline" className="text-xs">
+                      {h.name}
+                    </Badge>
+                  ))}
+                {households.filter(h => h.contactPhone || ((h as any).members || []).some((m: any) => m.phone)).length > 5 && (
+                  <Badge variant="secondary" className="text-xs">
+                    +{households.filter(h => h.contactPhone || ((h as any).members || []).some((m: any) => m.phone)).length - 5} more
+                  </Badge>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {households.filter(h => h.contactPhone || ((h as any).members || []).some((m: any) => m.phone)).length} of {households.length} households have phone numbers
+              </p>
+            </div>
+            
+            <div className="flex gap-2 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setWhatsappBlastDialogOpen(false)}
+                data-testid="button-cancel-whatsapp"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  const eligibleHouseholds = households.filter(h => {
+                    const phone = h.contactPhone || ((h as any).members || []).find((m: any) => m.phone)?.phone;
+                    return !!phone;
+                  });
+                  
+                  if (eligibleHouseholds.length === 0) {
+                    toast({
+                      title: "No phone numbers",
+                      description: "None of your households have phone numbers. Add phone numbers to send WhatsApp reminders.",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+
+                  const firstHousehold = eligibleHouseholds[0];
+                  const phone = firstHousehold.contactPhone || ((firstHousehold as any).members || []).find((m: any) => m.phone)?.phone;
+                  const cleanPhone = phone.replace(/\D/g, '');
+                  const personalizedMessage = whatsappTemplate.replace(/{name}/g, firstHousehold.name);
+                  const encodedMessage = encodeURIComponent(personalizedMessage);
+                  
+                  window.open(`https://wa.me/${cleanPhone}?text=${encodedMessage}`, '_blank');
+                  
+                  toast({
+                    title: "WhatsApp opened",
+                    description: `Sending reminder to ${firstHousehold.name}. Repeat for other households.`,
+                  });
+                  setWhatsappBlastDialogOpen(false);
+                }}
+                className="gap-2"
+                data-testid="button-send-whatsapp"
+              >
+                <SiWhatsapp className="h-4 w-4" />
+                Open WhatsApp
               </Button>
             </div>
           </div>
