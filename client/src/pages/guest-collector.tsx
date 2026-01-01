@@ -101,6 +101,7 @@ type FamilyDraft = {
   contactPostalCode: string;
   contactCountry: string;
   householdDietaryRestriction: string;
+  mainContactName: string;
   mainContactEmail: string;
   mainContactPhone: string;
   memberCount: number;
@@ -130,6 +131,7 @@ const familyFormSchema = z.object({
   contactPostalCode: z.string().optional(),
   contactCountry: z.string().optional(),
   householdDietaryRestriction: z.string().optional(),
+  mainContactName: z.string().optional(),
   mainContactEmail: z.string().optional(),
   mainContactPhone: z.string().optional(),
   memberCount: z.number().min(1, "At least 1 member required").default(1),
@@ -342,6 +344,7 @@ export default function GuestCollector() {
       contactPostalCode: "",
       contactCountry: "",
       householdDietaryRestriction: "none",
+      mainContactName: "",
       mainContactEmail: "",
       mainContactPhone: "",
       memberCount: 1,
@@ -450,6 +453,7 @@ export default function GuestCollector() {
       contactPostalCode: "",
       contactCountry: "",
       householdDietaryRestriction: "none",
+      mainContactName: "",
       mainContactEmail: "",
       mainContactPhone: "",
       memberCount: 1,
@@ -476,6 +480,7 @@ export default function GuestCollector() {
       contactPostalCode: data.contactPostalCode || "",
       contactCountry: data.contactCountry || "",
       householdDietaryRestriction: data.householdDietaryRestriction || "none",
+      mainContactName: data.mainContactName || "",
       mainContactEmail: data.mainContactEmail || "",
       mainContactPhone: data.mainContactPhone || "",
       memberCount: data.memberCount || 1,
@@ -516,6 +521,7 @@ export default function GuestCollector() {
       contactPostalCode: data.contactPostalCode || "",
       contactCountry: data.contactCountry || "",
       householdDietaryRestriction: data.householdDietaryRestriction || "none",
+      mainContactName: data.mainContactName || "",
       mainContactEmail: data.mainContactEmail || "",
       mainContactPhone: data.mainContactPhone || "",
       memberCount: data.memberCount || 1,
@@ -546,6 +552,7 @@ export default function GuestCollector() {
       contactPostalCode: family.contactPostalCode,
       contactCountry: family.contactCountry,
       householdDietaryRestriction: family.householdDietaryRestriction || "none",
+      mainContactName: family.mainContactName || "",
       mainContactEmail: family.mainContactEmail || "",
       mainContactPhone: family.mainContactPhone || "",
       memberCount: family.memberCount || 1,
@@ -998,6 +1005,31 @@ export default function GuestCollector() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-5 pt-4">
+                    <FormField
+                      control={form.control}
+                      name="mainContactName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-base font-medium flex items-center gap-2">
+                            <User className="w-4 h-4" />
+                            Contact Name
+                          </FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field}
+                              placeholder="e.g., Auntie Patel"
+                              className="min-h-[48px] text-base"
+                              data-testid="input-main-contact-name"
+                            />
+                          </FormControl>
+                          <FormDescription className="text-sm">
+                            Who should the couple reach out to for this family?
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
                     <FormField
                       control={form.control}
                       name="mainContactEmail"
