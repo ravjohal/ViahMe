@@ -42,6 +42,13 @@ import {
 import { GuestAssistantChat } from "@/components/guest-assistant-chat";
 import { format } from "date-fns";
 
+type WeddingEvent = {
+  id: string;
+  name: string;
+  type: string;
+  date?: string;
+};
+
 type CollectorLinkInfo = {
   id: string;
   name: string;
@@ -52,6 +59,7 @@ type CollectorLinkInfo = {
     partner2Name: string;
     weddingDate?: string;
   };
+  events?: WeddingEvent[];
 };
 
 const DESI_DIETARY_OPTIONS = [
@@ -70,7 +78,7 @@ const RELATIONSHIP_TIERS = [
   { value: "parents_friend", label: "Parent's Friend", description: "Friend of parents" },
 ];
 
-type WizardStep = "intro" | "family" | "members" | "relationship" | "notes" | "review";
+type WizardStep = "intro" | "family" | "members" | "events" | "relationship" | "notes" | "review";
 
 type GuestMember = {
   id: string;
@@ -90,6 +98,7 @@ type FamilyDraft = {
   contactPostalCode: string;
   contactCountry: string;
   members: GuestMember[];
+  eventSuggestions: string[];
   relationshipTier: string;
   notes: string;
 };
@@ -307,6 +316,7 @@ export default function GuestCollector() {
   });
 
   const [currentMembers, setCurrentMembers] = useState<GuestMember[]>([DEFAULT_MEMBER()]);
+  const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
 
   const form = useForm<FamilyFormData>({
     resolver: zodResolver(familyFormSchema),
@@ -355,7 +365,7 @@ export default function GuestCollector() {
     },
   });
 
-  const steps: WizardStep[] = ["intro", "family", "members", "relationship", "notes", "review"];
+  const steps: WizardStep[] = ["intro", "family", "members", "events", "relationship", "notes", "review"];
   const currentStepIndex = steps.indexOf(currentStep);
   const progressPercent = ((currentStepIndex) / (steps.length - 1)) * 100;
 
@@ -411,6 +421,7 @@ export default function GuestCollector() {
       submitterRelation: submitterInfo.relation,
     });
     setCurrentMembers([DEFAULT_MEMBER()]);
+    setSelectedEvents([]);
   };
 
   const addFamilyToDraft = () => {
@@ -426,6 +437,7 @@ export default function GuestCollector() {
       contactPostalCode: data.contactPostalCode || "",
       contactCountry: data.contactCountry || "",
       members: validMembers,
+      eventSuggestions: selectedEvents,
       relationshipTier: data.relationshipTier || "friend",
       notes: data.notes || "",
     };
@@ -460,6 +472,7 @@ export default function GuestCollector() {
       contactPostalCode: data.contactPostalCode || "",
       contactCountry: data.contactCountry || "",
       members: validMembers,
+      eventSuggestions: selectedEvents,
       relationshipTier: data.relationshipTier || "friend",
       notes: data.notes || "",
     };
@@ -489,6 +502,7 @@ export default function GuestCollector() {
       submitterRelation: submitterInfo.relation,
     });
     setCurrentMembers(family.members.length > 0 ? family.members : [DEFAULT_MEMBER()]);
+    setSelectedEvents(family.eventSuggestions || []);
     setEditingIndex(index);
     setCurrentStep("family");
   };
@@ -926,6 +940,81 @@ export default function GuestCollector() {
                 </>
               )}
 
+              {currentStep === "events" && (
+                <>
+                  <CardHeader className="text-center">
+                    <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-pink-100 dark:bg-pink-900/20 flex items-center justify-center">
+                      <Calendar className="w-6 h-6 text-pink-500" />
+                    </div>
+                    <CardTitle className="text-xl">Which Events?</CardTitle>
+                    <CardDescription className="text-base">
+                      Suggest which events to invite this family to (optional)
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3 pt-4">
+                    {linkInfo?.events && linkInfo.events.length > 0 ? (
+                      <>
+                        <p className="text-sm text-muted-foreground text-center mb-4">
+                          The couple will make the final decision. Your suggestions help them plan!
+                        </p>
+                        {linkInfo.events.map((event) => {
+                          const isSelected = selectedEvents.includes(event.id);
+                          return (
+                            <Label
+                              key={event.id}
+                              htmlFor={`event-${event.id}`}
+                              className={`flex items-center gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all min-h-[64px] ${
+                                isSelected 
+                                  ? "border-pink-500 bg-pink-50 dark:bg-pink-950/20" 
+                                  : "border-muted hover-elevate"
+                              }`}
+                              data-testid={`checkbox-event-${event.id}`}
+                              onClick={() => {
+                                if (isSelected) {
+                                  setSelectedEvents(selectedEvents.filter(id => id !== event.id));
+                                } else {
+                                  setSelectedEvents([...selectedEvents, event.id]);
+                                }
+                              }}
+                            >
+                              <div className={`w-6 h-6 rounded border-2 flex items-center justify-center ${
+                                isSelected ? "border-pink-500 bg-pink-500" : "border-muted-foreground"
+                              }`}>
+                                {isSelected && <CheckCircle2 className="w-4 h-4 text-white" />}
+                              </div>
+                              <div className="flex-1">
+                                <p className="font-medium text-base">{event.name}</p>
+                                {event.date && (
+                                  <p className="text-sm text-muted-foreground">
+                                    {format(new Date(event.date), "EEEE, MMMM d, yyyy")}
+                                  </p>
+                                )}
+                              </div>
+                            </Label>
+                          );
+                        })}
+                        <p className="text-xs text-muted-foreground text-center pt-2">
+                          {selectedEvents.length === 0 
+                            ? "No events selected - that's okay!"
+                            : `${selectedEvents.length} event${selectedEvents.length === 1 ? '' : 's'} suggested`
+                          }
+                        </p>
+                      </>
+                    ) : (
+                      <div className="text-center py-8">
+                        <Calendar className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+                        <p className="text-muted-foreground">
+                          The couple hasn't set up events yet.
+                        </p>
+                        <p className="text-sm text-muted-foreground mt-2">
+                          You can skip this step - they'll decide which events to invite guests to.
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </>
+              )}
+
               {currentStep === "relationship" && (
                 <>
                   <CardHeader className="text-center">
@@ -1097,7 +1186,23 @@ export default function GuestCollector() {
                                       Dietary notes
                                     </span>
                                   )}
+                                  {family.eventSuggestions && family.eventSuggestions.length > 0 && (
+                                    <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full">
+                                      {family.eventSuggestions.length} event{family.eventSuggestions.length === 1 ? '' : 's'}
+                                    </span>
+                                  )}
                                 </div>
+                                {family.eventSuggestions && family.eventSuggestions.length > 0 && linkInfo?.events && linkInfo.events.length > 0 && (() => {
+                                  const eventNames = family.eventSuggestions
+                                    .map(eventId => linkInfo.events?.find(e => e.id === eventId)?.name)
+                                    .filter(Boolean);
+                                  return eventNames.length > 0 ? (
+                                    <div className="text-sm text-muted-foreground mt-1">
+                                      <span className="font-medium">Events: </span>
+                                      {eventNames.join(', ')}
+                                    </div>
+                                  ) : null;
+                                })()}
                               </div>
                             </div>
                           ))}
@@ -1163,7 +1268,7 @@ export default function GuestCollector() {
                     <ArrowRight className="w-5 h-5 ml-1" />
                   </Button>
                 )}
-                {(currentStep === "family" || currentStep === "members" || currentStep === "relationship") && (
+                {(currentStep === "family" || currentStep === "members" || currentStep === "events" || currentStep === "relationship") && (
                   <>
                     {currentStep === "family" && familiesDraft.length > 0 && !form.watch("householdName") && (
                       <Button
