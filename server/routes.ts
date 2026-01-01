@@ -8871,24 +8871,39 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
 
   // Public endpoint - Address autocomplete using Geoapify (no auth required for collector)
   app.get("/api/address-autocomplete", async (req, res) => {
+    console.log("[Geoapify] Address autocomplete request received");
+    console.log("[Geoapify] Query params:", req.query);
+    
     const query = req.query.q as string;
     if (!query || query.length < 3) {
+      console.log("[Geoapify] Query too short or missing, returning empty");
       return res.json({ features: [] });
     }
 
     const apiKey = process.env.GEOAPIFY_API_KEY;
+    console.log("[Geoapify] API key present:", !!apiKey);
+    
     if (!apiKey) {
+      console.log("[Geoapify] No API key configured!");
       return res.json({ features: [], error: "Address autocomplete not configured" });
     }
 
     try {
-      const response = await fetch(
-        `https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(query)}&apiKey=${apiKey}&limit=5`
-      );
+      const url = `https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(query)}&apiKey=${apiKey}&limit=5`;
+      console.log("[Geoapify] Fetching from:", url.replace(apiKey, "***API_KEY***"));
+      
+      const response = await fetch(url);
+      console.log("[Geoapify] Response status:", response.status);
+      
       const data = await response.json();
+      console.log("[Geoapify] Response data - features count:", data.features?.length || 0);
+      if (data.error) {
+        console.log("[Geoapify] API error:", data.error);
+      }
+      
       res.json(data);
     } catch (error: any) {
-      console.error("Geoapify error:", error);
+      console.error("[Geoapify] Fetch error:", error.message);
       res.json({ features: [], error: "Failed to fetch address suggestions" });
     }
   });
