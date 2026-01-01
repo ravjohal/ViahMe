@@ -709,10 +709,12 @@ export const guestCollectorSubmissions = pgTable("guest_collector_submissions", 
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-// Type for per-guest dietary info
+// Type for per-guest dietary info (with optional contact for magic links)
 export const guestDietaryInfoSchema = z.array(z.object({
   name: z.string(),
   dietary: z.enum(['strict_vegetarian', 'jain', 'swaminarayan', 'eggless', 'halal', 'none']),
+  phone: z.string().optional(),
+  email: z.string().optional(),
 }));
 
 export type GuestDietaryInfo = z.infer<typeof guestDietaryInfoSchema>;

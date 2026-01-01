@@ -84,6 +84,8 @@ type WizardStep = "intro" | "family" | "guests" | "relationship" | "notes" | "re
 type GuestEntry = {
   name: string;
   dietary: string;
+  phone?: string;
+  email?: string;
 };
 
 const wizardStepSchema = z.object({
@@ -104,6 +106,8 @@ type BulkHousehold = {
   mainContactName: string;
   guestCount: number;
   dietary: string;
+  phone?: string;
+  email?: string;
 };
 
 export default function GuestCollector() {
@@ -111,7 +115,7 @@ export default function GuestCollector() {
   const { toast } = useToast();
   const [submitted, setSubmitted] = useState(false);
   const [currentStep, setCurrentStep] = useState<WizardStep>("intro");
-  const [guestInputs, setGuestInputs] = useState<GuestEntry[]>([{ name: "", dietary: "none" }]);
+  const [guestInputs, setGuestInputs] = useState<GuestEntry[]>([{ name: "", dietary: "none", phone: "", email: "" }]);
   const [sessionDietaryDefault, setSessionDietaryDefault] = useState("none"); // Remember last dietary selection
   const [submitterInfo, setSubmitterInfo] = useState({ name: "", relation: "" });
   const [isListening, setIsListening] = useState(false);
@@ -122,7 +126,7 @@ export default function GuestCollector() {
   // Bulk entry mode state
   const [isBulkMode, setIsBulkMode] = useState(false);
   const [bulkHouseholds, setBulkHouseholds] = useState<BulkHousehold[]>([
-    { householdName: "", mainContactName: "", guestCount: 2, dietary: "none" }
+    { householdName: "", mainContactName: "", guestCount: 2, dietary: "none", phone: "", email: "" }
   ]);
 
   const speechSupported = typeof window !== "undefined" && 
@@ -139,9 +143,11 @@ export default function GuestCollector() {
         const newGuests: GuestEntry[] = result.names.map(name => ({
           name,
           dietary: sessionDietaryDefault, // Use remembered dietary default
+          phone: "",
+          email: "",
         }));
         const allGuests = [...existingGuests, ...newGuests];
-        setGuestInputs(allGuests.length > 0 ? allGuests : [{ name: "", dietary: sessionDietaryDefault }]);
+        setGuestInputs(allGuests.length > 0 ? allGuests : [{ name: "", dietary: sessionDietaryDefault, phone: "", email: "" }]);
         if (result.householdName && !form.getValues("householdName")) {
           form.setValue("householdName", result.householdName);
         }
@@ -263,14 +269,20 @@ export default function GuestCollector() {
       const guestDietaryInfo = validGuests.map(g => ({
         name: g.name,
         dietary: g.dietary,
+        phone: g.phone || undefined,
+        email: g.email || undefined,
       }));
+      // Get first guest's contact as primary for the household
+      const firstGuestWithContact = validGuests.find(g => g.phone || g.email);
       return apiRequest("POST", `/api/collector/${token}/submit`, {
         ...data,
         guestName: data.householdName, // For backward compatibility
         householdName: data.householdName,
         guestNames: filteredNames,
         guestCount: validGuests.length,
-        guestDietaryInfo, // Per-guest dietary info
+        guestDietaryInfo, // Per-guest dietary info with optional contact
+        guestPhone: firstGuestWithContact?.phone || undefined,
+        guestEmail: firstGuestWithContact?.email || undefined,
       });
     },
     onSuccess: () => {
@@ -305,6 +317,8 @@ export default function GuestCollector() {
           submitterRelation: submitterInfo.relation,
           relationshipTier: form.watch("relationshipTier") || "friend",
           notes: form.watch("notes") || "",
+          guestPhone: household.phone || undefined,
+          guestEmail: household.email || undefined,
         })
       );
       return Promise.all(promises);
@@ -331,7 +345,9 @@ export default function GuestCollector() {
       householdName: "", 
       mainContactName: "", 
       guestCount: 2, 
-      dietary: sessionDietaryDefault 
+      dietary: sessionDietaryDefault,
+      phone: "",
+      email: "" 
     }]);
   };
 
@@ -407,15 +423,15 @@ export default function GuestCollector() {
 
   const handleAddAnother = () => {
     form.reset();
-    setGuestInputs([{ name: "", dietary: sessionDietaryDefault }]); // Keep remembered dietary default
-    setBulkHouseholds([{ householdName: "", mainContactName: "", guestCount: 2, dietary: sessionDietaryDefault }]);
+    setGuestInputs([{ name: "", dietary: sessionDietaryDefault, phone: "", email: "" }]); // Keep remembered dietary default
+    setBulkHouseholds([{ householdName: "", mainContactName: "", guestCount: 2, dietary: sessionDietaryDefault, phone: "", email: "" }]);
     setIsBulkMode(false);
     setCurrentStep("family");
     setSubmitted(false);
   };
 
   const addGuestInput = () => {
-    setGuestInputs([...guestInputs, { name: "", dietary: sessionDietaryDefault }]); // Use remembered dietary default
+    setGuestInputs([...guestInputs, { name: "", dietary: sessionDietaryDefault, phone: "", email: "" }]); // Use remembered dietary default
   };
 
   const removeGuestInput = (index: number) => {
@@ -436,6 +452,18 @@ export default function GuestCollector() {
     setGuestInputs(updated);
     // Remember this dietary selection for new guests
     setSessionDietaryDefault(dietary);
+  };
+
+  const updateGuestPhone = (index: number, phone: string) => {
+    const updated = [...guestInputs];
+    updated[index] = { ...updated[index], phone };
+    setGuestInputs(updated);
+  };
+
+  const updateGuestEmail = (index: number, email: string) => {
+    const updated = [...guestInputs];
+    updated[index] = { ...updated[index], email };
+    setGuestInputs(updated);
   };
 
   if (isLoading) {
@@ -692,6 +720,31 @@ export default function GuestCollector() {
                               className="min-h-[48px] text-base"
                               data-testid={`input-bulk-contact-${index}`}
                             />
+                            {/* Optional contact info for magic links */}
+                            <div className="flex gap-2">
+                              <div className="flex-1 flex items-center gap-2">
+                                <Phone className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                                <Input
+                                  value={household.phone || ""}
+                                  onChange={(e) => updateBulkHousehold(index, "phone", e.target.value)}
+                                  placeholder="Phone (optional)"
+                                  type="tel"
+                                  className="min-h-[44px] text-sm"
+                                  data-testid={`input-bulk-phone-${index}`}
+                                />
+                              </div>
+                              <div className="flex-1 flex items-center gap-2">
+                                <Mail className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                                <Input
+                                  value={household.email || ""}
+                                  onChange={(e) => updateBulkHousehold(index, "email", e.target.value)}
+                                  placeholder="Email (optional)"
+                                  type="email"
+                                  className="min-h-[44px] text-sm"
+                                  data-testid={`input-bulk-email-${index}`}
+                                />
+                              </div>
+                            </div>
                             <div className="flex gap-2">
                               <div className="flex-1">
                                 <Label className="text-xs text-muted-foreground">Guests</Label>
@@ -832,6 +885,29 @@ export default function GuestCollector() {
                               ))}
                             </SelectContent>
                           </Select>
+                        </div>
+                        {/* Optional contact info for magic links */}
+                        <div className="flex gap-2 items-center">
+                          <Phone className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          <Input
+                            value={guest.phone || ""}
+                            onChange={(e) => updateGuestPhone(index, e.target.value)}
+                            placeholder="Phone (optional)"
+                            type="tel"
+                            className="min-h-[44px] text-sm flex-1"
+                            data-testid={`input-guest-phone-${index}`}
+                          />
+                        </div>
+                        <div className="flex gap-2 items-center">
+                          <Mail className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          <Input
+                            value={guest.email || ""}
+                            onChange={(e) => updateGuestEmail(index, e.target.value)}
+                            placeholder="Email (optional)"
+                            type="email"
+                            className="min-h-[44px] text-sm flex-1"
+                            data-testid={`input-guest-email-${index}`}
+                          />
                         </div>
                       </div>
                     ))}
