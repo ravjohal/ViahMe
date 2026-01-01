@@ -9051,7 +9051,9 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
       res.status(201).json({ success: true, submissionId: submission.id });
     } catch (error: any) {
       console.error("[Collector Submit] Error:", error);
-      res.status(400).json({ error: error.message });
+      console.error("[Collector Submit] Error stack:", error.stack);
+      console.error("[Collector Submit] Request body was:", JSON.stringify(req.body, null, 2));
+      res.status(400).json({ error: error.message, stack: error.stack });
     }
   });
 
