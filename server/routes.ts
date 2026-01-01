@@ -2449,8 +2449,9 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
     try {
       const households = await storage.getHouseholdsByWedding(req.params.weddingId);
       res.json(households);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to fetch households" });
+    } catch (error: any) {
+      console.error("Households fetch error:", error);
+      res.status(500).json({ error: error?.message || "Failed to fetch households" });
     }
   });
 
