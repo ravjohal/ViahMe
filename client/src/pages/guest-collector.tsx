@@ -356,6 +356,7 @@ export default function GuestCollector() {
       const promises = families.map(family => 
         apiRequest("POST", `/api/collector/${token}/submit`, {
           ...family,
+          members: JSON.stringify(family.members || []),
           guestName: family.householdName,
           submitterName: submitterInfo.name,
           submitterRelation: submitterInfo.relation,
