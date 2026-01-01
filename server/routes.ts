@@ -9003,20 +9003,32 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
         return res.status(410).json({ error: "This link has reached its submission limit" });
       }
       
+      // Handle members - convert to JSON string if it's an array
+      let membersValue = req.body.members;
+      if (Array.isArray(membersValue)) {
+        membersValue = JSON.stringify(membersValue);
+      }
+      
+      // Handle eventSuggestions - ensure it's an array
+      let eventSuggestionsValue = req.body.eventSuggestions;
+      if (eventSuggestionsValue && !Array.isArray(eventSuggestionsValue)) {
+        eventSuggestionsValue = [eventSuggestionsValue];
+      }
+      
       const submission = await storage.createGuestCollectorSubmission({
         collectorLinkId: link.id,
         weddingId: link.weddingId,
         submitterName: req.body.submitterName,
         submitterRelation: req.body.submitterRelation,
-        guestName: req.body.guestName || req.body.householdName,
-        guestEmail: req.body.guestEmail,
-        guestPhone: req.body.guestPhone,
+        guestName: req.body.guestName || req.body.householdName || "Unknown",
+        guestEmail: req.body.guestEmail || req.body.mainContactEmail,
+        guestPhone: req.body.guestPhone || req.body.mainContactPhone,
         relationshipTier: req.body.relationshipTier,
         notes: req.body.notes,
         householdName: req.body.householdName,
         guestNames: req.body.guestNames,
-        guestCount: req.body.guestCount,
-        desiDietaryType: req.body.desiDietaryType,
+        guestCount: req.body.guestCount || req.body.memberCount || 1,
+        desiDietaryType: req.body.desiDietaryType || req.body.householdDietaryRestriction,
         guestDietaryInfo: req.body.guestDietaryInfo,
         isBulkEntry: req.body.isBulkEntry || false,
         mainContactName: req.body.mainContactName,
@@ -9026,6 +9038,8 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
         contactPostalCode: req.body.contactPostalCode,
         contactCountry: req.body.contactCountry,
         submissionSessionId: req.body.submissionSessionId,
+        members: membersValue,
+        eventSuggestions: eventSuggestionsValue,
       });
       
       res.status(201).json({ success: true, submissionId: submission.id });
