@@ -70,22 +70,26 @@ const RELATIONSHIP_TIERS = [
   { value: "parents_friend", label: "Parent's Friend", description: "Friend of parents" },
 ];
 
-type WizardStep = "intro" | "family" | "relationship" | "notes" | "review";
+type WizardStep = "intro" | "family" | "members" | "relationship" | "notes" | "review";
+
+type GuestMember = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  dietaryRestriction: string;
+};
 
 type FamilyDraft = {
   id: string;
   householdName: string;
-  mainContactName: string;
-  guestPhone: string;
-  guestEmail: string;
   fullAddress: string;
   contactStreet: string;
   contactCity: string;
   contactState: string;
   contactPostalCode: string;
   contactCountry: string;
-  guestCount: number;
-  desiDietaryType: string;
+  members: GuestMember[];
   relationshipTier: string;
   notes: string;
 };
@@ -102,17 +106,12 @@ type AddressSuggestion = {
 
 const familyFormSchema = z.object({
   householdName: z.string().min(1, "Family name is required"),
-  mainContactName: z.string().min(1, "Contact name is required"),
-  guestPhone: z.string().optional(),
-  guestEmail: z.string().email().optional().or(z.literal("")),
   fullAddress: z.string().optional(),
   contactStreet: z.string().optional(),
   contactCity: z.string().optional(),
   contactState: z.string().optional(),
   contactPostalCode: z.string().optional(),
   contactCountry: z.string().optional(),
-  guestCount: z.number().min(1, "At least 1 guest").max(50, "Max 50 guests"),
-  desiDietaryType: z.string().optional(),
   relationshipTier: z.string().optional(),
   notes: z.string().optional(),
   submitterName: z.string().min(1, "Your name is required"),
@@ -120,6 +119,14 @@ const familyFormSchema = z.object({
 });
 
 type FamilyFormData = z.infer<typeof familyFormSchema>;
+
+const DEFAULT_MEMBER: () => GuestMember = () => ({
+  id: crypto.randomUUID(),
+  name: "",
+  email: "",
+  phone: "",
+  dietaryRestriction: "none",
+});
 
 function AddressAutocomplete({
   value,
@@ -299,21 +306,18 @@ export default function GuestCollector() {
     enabled: !!token && !!sessionId,
   });
 
+  const [currentMembers, setCurrentMembers] = useState<GuestMember[]>([DEFAULT_MEMBER()]);
+
   const form = useForm<FamilyFormData>({
     resolver: zodResolver(familyFormSchema),
     defaultValues: {
       householdName: "",
-      mainContactName: "",
-      guestPhone: "",
-      guestEmail: "",
       fullAddress: "",
       contactStreet: "",
       contactCity: "",
       contactState: "",
       contactPostalCode: "",
       contactCountry: "",
-      guestCount: 2,
-      desiDietaryType: "none",
       relationshipTier: "friend",
       notes: "",
       submitterName: "",
@@ -351,7 +355,7 @@ export default function GuestCollector() {
     },
   });
 
-  const steps: WizardStep[] = ["intro", "family", "relationship", "notes", "review"];
+  const steps: WizardStep[] = ["intro", "family", "members", "relationship", "notes", "review"];
   const currentStepIndex = steps.indexOf(currentStep);
   const progressPercent = ((currentStepIndex) / (steps.length - 1)) * 100;
 
@@ -378,7 +382,10 @@ export default function GuestCollector() {
       case "intro":
         return submitterInfo.name.trim() !== "" && submitterInfo.relation !== "";
       case "family":
-        return form.watch("householdName").trim() !== "" && form.watch("mainContactName").trim() !== "";
+        return form.watch("householdName").trim() !== "";
+      case "members":
+        // Require at least one member with a name (filter out empty members)
+        return currentMembers.some(m => m.name.trim() !== "");
       case "review":
         return familiesDraft.length > 0;
       default:
@@ -386,22 +393,39 @@ export default function GuestCollector() {
     }
   };
 
+  // Get valid members (those with non-empty names)
+  const getValidMembers = () => currentMembers.filter(m => m.name.trim() !== "");
+
+  const resetFormAndMembers = () => {
+    form.reset({
+      householdName: "",
+      fullAddress: "",
+      contactStreet: "",
+      contactCity: "",
+      contactState: "",
+      contactPostalCode: "",
+      contactCountry: "",
+      relationshipTier: "friend",
+      notes: "",
+      submitterName: submitterInfo.name,
+      submitterRelation: submitterInfo.relation,
+    });
+    setCurrentMembers([DEFAULT_MEMBER()]);
+  };
+
   const addFamilyToDraft = () => {
     const data = form.getValues();
+    const validMembers = getValidMembers();
     const newFamily: FamilyDraft = {
       id: crypto.randomUUID(),
       householdName: data.householdName,
-      mainContactName: data.mainContactName,
-      guestPhone: data.guestPhone || "",
-      guestEmail: data.guestEmail || "",
       fullAddress: data.fullAddress || "",
       contactStreet: data.contactStreet || "",
       contactCity: data.contactCity || "",
       contactState: data.contactState || "",
       contactPostalCode: data.contactPostalCode || "",
       contactCountry: data.contactCountry || "",
-      guestCount: data.guestCount,
-      desiDietaryType: data.desiDietaryType || "none",
+      members: validMembers,
       relationshipTier: data.relationshipTier || "friend",
       notes: data.notes || "",
     };
@@ -415,25 +439,7 @@ export default function GuestCollector() {
       setFamiliesDraft([...familiesDraft, newFamily]);
     }
 
-    form.reset({
-      householdName: "",
-      mainContactName: "",
-      guestPhone: "",
-      guestEmail: "",
-      fullAddress: "",
-      contactStreet: "",
-      contactCity: "",
-      contactState: "",
-      contactPostalCode: "",
-      contactCountry: "",
-      guestCount: 2,
-      desiDietaryType: "none",
-      relationshipTier: "friend",
-      notes: "",
-      submitterName: submitterInfo.name,
-      submitterRelation: submitterInfo.relation,
-    });
-
+    resetFormAndMembers();
     setCurrentStep("review");
     toast({
       title: editingIndex !== null ? "Family updated" : "Family added",
@@ -443,46 +449,23 @@ export default function GuestCollector() {
 
   const addFamilyAndContinue = () => {
     const data = form.getValues();
+    const validMembers = getValidMembers();
     const newFamily: FamilyDraft = {
       id: crypto.randomUUID(),
       householdName: data.householdName,
-      mainContactName: data.mainContactName,
-      guestPhone: data.guestPhone || "",
-      guestEmail: data.guestEmail || "",
       fullAddress: data.fullAddress || "",
       contactStreet: data.contactStreet || "",
       contactCity: data.contactCity || "",
       contactState: data.contactState || "",
       contactPostalCode: data.contactPostalCode || "",
       contactCountry: data.contactCountry || "",
-      guestCount: data.guestCount,
-      desiDietaryType: data.desiDietaryType || "none",
+      members: validMembers,
       relationshipTier: data.relationshipTier || "friend",
       notes: data.notes || "",
     };
 
     setFamiliesDraft([...familiesDraft, newFamily]);
-
-    form.reset({
-      householdName: "",
-      mainContactName: "",
-      guestPhone: "",
-      guestEmail: "",
-      fullAddress: "",
-      contactStreet: "",
-      contactCity: "",
-      contactState: "",
-      contactPostalCode: "",
-      contactCountry: "",
-      guestCount: 2,
-      desiDietaryType: "none",
-      relationshipTier: "friend",
-      notes: "",
-      submitterName: submitterInfo.name,
-      submitterRelation: submitterInfo.relation,
-    });
-
-    // Go back to family step for next entry
+    resetFormAndMembers();
     setCurrentStep("family");
     toast({
       title: "Family added!",
@@ -494,22 +477,18 @@ export default function GuestCollector() {
     const family = familiesDraft[index];
     form.reset({
       householdName: family.householdName,
-      mainContactName: family.mainContactName,
-      guestPhone: family.guestPhone,
-      guestEmail: family.guestEmail,
       fullAddress: family.fullAddress,
       contactStreet: family.contactStreet,
       contactCity: family.contactCity,
       contactState: family.contactState,
       contactPostalCode: family.contactPostalCode,
       contactCountry: family.contactCountry,
-      guestCount: family.guestCount,
-      desiDietaryType: family.desiDietaryType,
       relationshipTier: family.relationshipTier,
       notes: family.notes,
       submitterName: submitterInfo.name,
       submitterRelation: submitterInfo.relation,
     });
+    setCurrentMembers(family.members.length > 0 ? family.members : [DEFAULT_MEMBER()]);
     setEditingIndex(index);
     setCurrentStep("family");
   };
@@ -523,64 +502,32 @@ export default function GuestCollector() {
   };
 
   const handleAddAnother = () => {
-    form.reset({
-      householdName: "",
-      mainContactName: "",
-      guestPhone: "",
-      guestEmail: "",
-      fullAddress: "",
-      contactStreet: "",
-      contactCity: "",
-      contactState: "",
-      contactPostalCode: "",
-      contactCountry: "",
-      guestCount: 2,
-      desiDietaryType: "none",
-      relationshipTier: "friend",
-      notes: "",
-      submitterName: submitterInfo.name,
-      submitterRelation: submitterInfo.relation,
-    });
+    resetFormAndMembers();
     setFamiliesDraft([]);
     setCurrentStep("family");
     setSubmitted(false);
   };
 
   const startAddingAnotherFamily = () => {
-    form.reset({
-      householdName: "",
-      mainContactName: "",
-      guestPhone: "",
-      guestEmail: "",
-      fullAddress: "",
-      contactStreet: "",
-      contactCity: "",
-      contactState: "",
-      contactPostalCode: "",
-      contactCountry: "",
-      guestCount: 2,
-      desiDietaryType: "none",
-      relationshipTier: "friend",
-      notes: "",
-      submitterName: submitterInfo.name,
-      submitterRelation: submitterInfo.relation,
-    });
+    resetFormAndMembers();
     setEditingIndex(null);
     setCurrentStep("family");
   };
 
-  const incrementGuestCount = () => {
-    const current = form.watch("guestCount");
-    if (current < 50) {
-      form.setValue("guestCount", current + 1);
+  const addMember = () => {
+    setCurrentMembers([...currentMembers, DEFAULT_MEMBER()]);
+  };
+
+  const removeMember = (index: number) => {
+    if (currentMembers.length > 1) {
+      setCurrentMembers(currentMembers.filter((_, i) => i !== index));
     }
   };
 
-  const decrementGuestCount = () => {
-    const current = form.watch("guestCount");
-    if (current > 1) {
-      form.setValue("guestCount", current - 1);
-    }
+  const updateMember = (index: number, field: keyof GuestMember, value: string) => {
+    const updated = [...currentMembers];
+    updated[index] = { ...updated[index], [field]: value };
+    setCurrentMembers(updated);
   };
 
   const handleAddressSelect = (address: AddressSuggestion) => {
@@ -591,7 +538,7 @@ export default function GuestCollector() {
     form.setValue("contactCountry", address.country || "");
   };
 
-  const totalGuestCount = familiesDraft.reduce((sum, f) => sum + f.guestCount, 0);
+  const totalGuestCount = familiesDraft.reduce((sum, f) => sum + f.members.length, 0);
 
   if (isLoading) {
     return (
@@ -814,7 +761,7 @@ export default function GuestCollector() {
                       {editingIndex !== null ? "Edit Family" : familiesDraft.length > 0 ? "Add Another Family" : "Add a Family"}
                     </CardTitle>
                     <CardDescription className="text-base">
-                      Tell us about the family you want to invite
+                      Enter the household name and address
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-5 pt-4">
@@ -823,7 +770,7 @@ export default function GuestCollector() {
                       name="householdName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-base font-medium">Family Name *</FormLabel>
+                          <FormLabel className="text-base font-medium">Family/Household Name *</FormLabel>
                           <FormControl>
                             <Input 
                               {...field}
@@ -832,86 +779,23 @@ export default function GuestCollector() {
                               data-testid="input-household-name"
                             />
                           </FormControl>
+                          <FormDescription>
+                            This is how they'll appear on the guest list
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-
-                    <FormField
-                      control={form.control}
-                      name="mainContactName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-base font-medium flex items-center gap-2">
-                            <User className="w-4 h-4" />
-                            Main Contact Person *
-                          </FormLabel>
-                          <FormControl>
-                            <Input 
-                              {...field}
-                              placeholder="Who should receive invitations?"
-                              className="min-h-[48px] text-base"
-                              data-testid="input-main-contact"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <FormField
-                        control={form.control}
-                        name="guestPhone"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-base font-medium flex items-center gap-2">
-                              <Phone className="w-4 h-4" />
-                              Phone
-                            </FormLabel>
-                            <FormControl>
-                              <Input 
-                                {...field}
-                                type="tel"
-                                placeholder="Phone number"
-                                className="min-h-[48px] text-base"
-                                data-testid="input-phone"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="guestEmail"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-base font-medium flex items-center gap-2">
-                              <Mail className="w-4 h-4" />
-                              Email
-                            </FormLabel>
-                            <FormControl>
-                              <Input 
-                                {...field}
-                                type="email"
-                                placeholder="Email address"
-                                className="min-h-[48px] text-base"
-                                data-testid="input-email"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
 
                     <FormField
                       control={form.control}
                       name="fullAddress"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-base font-medium">Mailing Address</FormLabel>
+                          <FormLabel className="text-base font-medium flex items-center gap-2">
+                            <MapPin className="w-4 h-4" />
+                            Mailing Address
+                          </FormLabel>
                           <FormControl>
                             <AddressAutocomplete
                               value={field.value || ""}
@@ -921,86 +805,123 @@ export default function GuestCollector() {
                             />
                           </FormControl>
                           <FormDescription className="text-sm">
-                            Type to search or enter address manually
+                            Optional - for save-the-dates and invitations
                           </FormDescription>
                         </FormItem>
                       )}
                     />
+                  </CardContent>
+                </>
+              )}
 
-                    <FormField
-                      control={form.control}
-                      name="guestCount"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-base font-medium flex items-center gap-2">
-                            <Users className="w-4 h-4" />
-                            Number of Family Members Invited
-                          </FormLabel>
-                          <div className="flex items-center justify-center gap-4 mt-2">
+              {currentStep === "members" && (
+                <>
+                  <CardHeader className="text-center">
+                    <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-pink-100 dark:bg-pink-900/20 flex items-center justify-center">
+                      <User className="w-6 h-6 text-pink-500" />
+                    </div>
+                    <CardTitle className="text-xl">Who's in This Family?</CardTitle>
+                    <CardDescription className="text-base">
+                      Add each guest who should receive an invite
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4 pt-4">
+                    {currentMembers.map((member, index) => (
+                      <Card key={member.id} className="p-4 relative" data-testid={`member-card-${index}`}>
+                        <div className="flex justify-between items-start mb-3">
+                          <span className="text-sm font-medium text-muted-foreground">
+                            Guest {index + 1}
+                          </span>
+                          {currentMembers.length > 1 && (
                             <Button
                               type="button"
-                              variant="outline"
+                              variant="ghost"
                               size="icon"
-                              onClick={decrementGuestCount}
-                              disabled={field.value <= 1}
-                              className="h-12 w-12"
-                              data-testid="button-decrement-count"
+                              onClick={() => removeMember(index)}
+                              className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                              data-testid={`button-remove-member-${index}`}
                             >
-                              <Minus className="w-5 h-5" />
+                              <Trash2 className="w-4 h-4" />
                             </Button>
-                            <span className="text-3xl font-bold w-16 text-center" data-testid="text-guest-count">
-                              {field.value}
-                            </span>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="icon"
-                              onClick={incrementGuestCount}
-                              disabled={field.value >= 50}
-                              className="h-12 w-12"
-                              data-testid="button-increment-count"
-                            >
-                              <Plus className="w-5 h-5" />
-                            </Button>
+                          )}
+                        </div>
+                        <div className="space-y-3">
+                          <div>
+                            <Label className="text-sm font-medium">Full Name *</Label>
+                            <Input
+                              value={member.name}
+                              onChange={(e) => updateMember(index, "name", e.target.value)}
+                              placeholder="e.g., Raj Sharma"
+                              className="min-h-[48px] text-base mt-1"
+                              data-testid={`input-member-name-${index}`}
+                            />
                           </div>
-                          <FormDescription className="text-center text-sm">
-                            Include all family members who will attend
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="desiDietaryType"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-base font-medium flex items-center gap-2">
-                            <Utensils className="w-4 h-4" />
-                            Dietary Preference
-                          </FormLabel>
-                          <Select value={field.value} onValueChange={field.onChange}>
-                            <FormControl>
-                              <SelectTrigger className="min-h-[48px] text-base" data-testid="select-dietary">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <Label className="text-sm font-medium flex items-center gap-1">
+                                <Mail className="w-3 h-3" /> Email
+                              </Label>
+                              <Input
+                                type="email"
+                                value={member.email}
+                                onChange={(e) => updateMember(index, "email", e.target.value)}
+                                placeholder="Email"
+                                className="min-h-[48px] text-base mt-1"
+                                data-testid={`input-member-email-${index}`}
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-sm font-medium flex items-center gap-1">
+                                <Phone className="w-3 h-3" /> Phone
+                              </Label>
+                              <Input
+                                type="tel"
+                                value={member.phone}
+                                onChange={(e) => updateMember(index, "phone", e.target.value)}
+                                placeholder="Phone"
+                                className="min-h-[48px] text-base mt-1"
+                                data-testid={`input-member-phone-${index}`}
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <Label className="text-sm font-medium flex items-center gap-1">
+                              <Utensils className="w-3 h-3" /> Dietary Restriction
+                            </Label>
+                            <Select
+                              value={member.dietaryRestriction}
+                              onValueChange={(value) => updateMember(index, "dietaryRestriction", value)}
+                            >
+                              <SelectTrigger className="min-h-[48px] text-base mt-1" data-testid={`select-dietary-${index}`}>
                                 <SelectValue placeholder="Select dietary preference" />
                               </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {DESI_DIETARY_OPTIONS.map((option) => (
-                                <SelectItem key={option.value} value={option.value} className="py-3">
-                                  <div>
+                              <SelectContent>
+                                {DESI_DIETARY_OPTIONS.map((option) => (
+                                  <SelectItem key={option.value} value={option.value} className="py-2">
                                     <span className="text-base">{option.label}</span>
-                                    <p className="text-xs text-muted-foreground">{option.description}</p>
-                                  </div>
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={addMember}
+                      className="w-full min-h-[48px] text-base"
+                      data-testid="button-add-member"
+                    >
+                      <Plus className="w-5 h-5 mr-2" />
+                      Add Another Person
+                    </Button>
+
+                    <p className="text-sm text-muted-foreground text-center">
+                      {currentMembers.length} {currentMembers.length === 1 ? 'guest' : 'guests'} in this family
+                    </p>
                   </CardContent>
                 </>
               )}
@@ -1155,8 +1076,13 @@ export default function GuestCollector() {
                               <div className="space-y-2 pr-16">
                                 <p className="font-medium text-base">{family.householdName}</p>
                                 <p className="text-sm text-muted-foreground">
-                                  Contact: {family.mainContactName} · {family.guestCount} guest{family.guestCount > 1 ? "s" : ""}
+                                  {family.members.length} {family.members.length === 1 ? 'guest' : 'guests'}
                                 </p>
+                                {family.members.length > 0 && (
+                                  <div className="text-sm text-muted-foreground">
+                                    {family.members.map(m => m.name).join(', ')}
+                                  </div>
+                                )}
                                 {family.fullAddress && (
                                   <p className="text-sm text-muted-foreground truncate">
                                     {family.fullAddress}
@@ -1166,9 +1092,9 @@ export default function GuestCollector() {
                                   <span className="text-xs px-2 py-1 bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 rounded-full">
                                     {RELATIONSHIP_TIERS.find(t => t.value === family.relationshipTier)?.label || "Friend"}
                                   </span>
-                                  {family.desiDietaryType && family.desiDietaryType !== "none" && (
+                                  {family.members.some(m => m.dietaryRestriction && m.dietaryRestriction !== "none") && (
                                     <span className="text-xs px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-full">
-                                      {DESI_DIETARY_OPTIONS.find(d => d.value === family.desiDietaryType)?.label}
+                                      Dietary notes
                                     </span>
                                   )}
                                 </div>
@@ -1237,7 +1163,7 @@ export default function GuestCollector() {
                     <ArrowRight className="w-5 h-5 ml-1" />
                   </Button>
                 )}
-                {(currentStep === "family" || currentStep === "relationship") && (
+                {(currentStep === "family" || currentStep === "members" || currentStep === "relationship") && (
                   <>
                     {currentStep === "family" && familiesDraft.length > 0 && !form.watch("householdName") && (
                       <Button
@@ -1267,7 +1193,7 @@ export default function GuestCollector() {
                   <Button
                     type="button"
                     onClick={addFamilyToDraft}
-                    disabled={!form.watch("householdName") || !form.watch("mainContactName")}
+                    disabled={!form.watch("householdName") || !currentMembers.some(m => m.name.trim() !== "")}
                     className="min-h-[48px] flex-1 text-base bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600"
                     data-testid="button-update-family"
                   >
@@ -1281,7 +1207,7 @@ export default function GuestCollector() {
                       type="button"
                       variant="outline"
                       onClick={addFamilyAndContinue}
-                      disabled={!form.watch("householdName") || !form.watch("mainContactName")}
+                      disabled={!form.watch("householdName") || !currentMembers.some(m => m.name.trim() !== "")}
                       className="min-h-[48px] flex-1 text-base"
                       data-testid="button-add-and-continue"
                     >
@@ -1291,7 +1217,7 @@ export default function GuestCollector() {
                     <Button
                       type="button"
                       onClick={addFamilyToDraft}
-                      disabled={!form.watch("householdName") || !form.watch("mainContactName")}
+                      disabled={!form.watch("householdName") || !currentMembers.some(m => m.name.trim() !== "")}
                       className="min-h-[48px] flex-1 text-base bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
                       data-testid="button-add-and-review"
                     >

@@ -8848,20 +8848,41 @@ export async function registerLegacyRoutes(app: Express, storage: IStorage, view
         return res.status(410).json({ error: "This link has reached its submission limit" });
       }
       
+      // Support both new members array format and legacy guestCount format
+      const members = req.body.members || [];
+      const guestCount = members.length > 0 ? members.length : (req.body.guestCount || 1);
+      
+      // Extract member names for display
+      const guestNames = members.length > 0 
+        ? members.map((m: { name: string }) => m.name).join(', ')
+        : req.body.guestNames;
+      
+      // Get main contact info from first member if using new format
+      const firstMember = members.length > 0 ? members[0] : null;
+      const guestEmail = firstMember?.email || req.body.guestEmail;
+      const guestPhone = firstMember?.phone || req.body.guestPhone;
+      
       const submission = await storage.createGuestCollectorSubmission({
         collectorLinkId: link.id,
         weddingId: link.weddingId,
         submitterName: req.body.submitterName,
         submitterRelation: req.body.submitterRelation,
         guestName: req.body.guestName || req.body.householdName,
-        guestEmail: req.body.guestEmail,
-        guestPhone: req.body.guestPhone,
+        guestEmail,
+        guestPhone,
         relationshipTier: req.body.relationshipTier,
         notes: req.body.notes,
         householdName: req.body.householdName,
-        guestNames: req.body.guestNames,
-        guestCount: req.body.guestCount,
+        guestNames,
+        guestCount,
         desiDietaryType: req.body.desiDietaryType,
+        members: members.length > 0 ? JSON.stringify(members) : undefined,
+        fullAddress: req.body.fullAddress,
+        contactStreet: req.body.contactStreet,
+        contactCity: req.body.contactCity,
+        contactState: req.body.contactState,
+        contactPostalCode: req.body.contactPostalCode,
+        contactCountry: req.body.contactCountry,
       });
       
       res.status(201).json({ success: true, submissionId: submission.id });

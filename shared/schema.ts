@@ -701,6 +701,7 @@ export const guestCollectorSubmissions = pgTable("guest_collector_submissions", 
   contactCountry: text("contact_country"), // Country
   guestCount: integer("guest_count").default(1), // Number of family members invited
   desiDietaryType: text("desi_dietary_type"), // Household dietary preference
+  members: jsonb("members"), // Individual guest members with name, email, phone, dietary
   relationshipTier: text("relationship_tier"), // 'immediate_family' | 'extended_family' | 'friend' | 'parents_friend'
   notes: text("notes"), // Any notes about the family
   // Legacy fields (kept for backward compatibility)
@@ -725,6 +726,17 @@ export const guestDietaryInfoSchema = z.array(z.object({
 
 export type GuestDietaryInfo = z.infer<typeof guestDietaryInfoSchema>;
 
+// Individual guest member schema
+export const guestMemberSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string().optional(),
+  phone: z.string().optional(),
+  dietaryRestriction: z.enum(['strict_vegetarian', 'jain', 'swaminarayan', 'eggless', 'halal', 'none']).optional(),
+});
+
+export type GuestMember = z.infer<typeof guestMemberSchema>;
+
 export const insertGuestCollectorSubmissionSchema = createInsertSchema(guestCollectorSubmissions).omit({
   id: true,
   status: true,
@@ -741,6 +753,9 @@ export const insertGuestCollectorSubmissionSchema = createInsertSchema(guestColl
   contactState: z.string().nullable().optional(),
   contactPostalCode: z.string().nullable().optional(),
   contactCountry: z.string().nullable().optional(),
+  fullAddress: z.string().nullable().optional(),
+  // Individual guest members
+  members: z.string().nullable().optional(), // JSON string of guest members
   // Legacy fields (optional for backward compatibility)
   guestNames: z.array(z.string()).nullable().optional(),
   guestDietaryInfo: guestDietaryInfoSchema.nullable().optional(),
