@@ -1116,16 +1116,28 @@ export default function GuestCollector() {
                           ))}
                         </div>
 
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={startAddingAnotherFamily}
-                          className="w-full min-h-[48px] text-base"
-                          data-testid="button-add-another"
-                        >
-                          <Plus className="w-5 h-5 mr-2" />
-                          Add Another Family
-                        </Button>
+                        <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 space-y-3">
+                          <div className="flex items-start gap-3">
+                            <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center flex-shrink-0">
+                              <Plus className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-blue-800 dark:text-blue-200">Have more families to add?</p>
+                              <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
+                                You can add as many families as you want before submitting. They'll all be sent together.
+                              </p>
+                            </div>
+                          </div>
+                          <Button
+                            type="button"
+                            onClick={startAddingAnotherFamily}
+                            className="w-full min-h-[48px] text-base bg-blue-600 hover:bg-blue-700 text-white"
+                            data-testid="button-add-another"
+                          >
+                            <Plus className="w-5 h-5 mr-2" />
+                            Add Another Family
+                          </Button>
+                        </div>
 
                         <div className="border-t pt-4 mt-4">
                           <div className="bg-muted/50 rounded-lg p-3">
