@@ -2497,106 +2497,6 @@ export default function Guests() {
                       )}
                     </div>
 
-                    {/* Priority Breakdown */}
-                    <div className="space-y-4">
-                      <h2 className="text-lg font-semibold flex items-center gap-2">
-                        <ListFilter className="h-5 w-5 text-muted-foreground" />
-                        Priority Breakdown
-                      </h2>
-                      <p className="text-sm text-muted-foreground">
-                        Combined view of confirmed guests and pending suggestions by priority tier.
-                      </p>
-
-                      <div className="grid gap-4 md:grid-cols-3">
-                        <Card className="border-green-500/50">
-                          <CardHeader className="pb-2">
-                            <CardTitle className="text-base flex items-center gap-2">
-                              <Star className="h-4 w-4 text-green-500" />
-                              Must Invite
-                            </CardTitle>
-                            <CardDescription className="text-xs">Cannot be cut</CardDescription>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="flex items-baseline gap-2">
-                              <p className="text-3xl font-bold">
-                                {(planningSnapshot?.summary.priorityBreakdown.must_invite.confirmed || 0) + 
-                                 (planningSnapshot?.summary.priorityBreakdown.must_invite.pending || 0)}
-                              </p>
-                              <span className="text-sm text-muted-foreground">guests</span>
-                            </div>
-                            <div className="mt-2 text-xs space-y-1">
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">Confirmed:</span>
-                                <span>{planningSnapshot?.summary.priorityBreakdown.must_invite.confirmed || 0}</span>
-                              </div>
-                              <div className="flex justify-between text-orange-600">
-                                <span>Pending:</span>
-                                <span>+{planningSnapshot?.summary.priorityBreakdown.must_invite.pending || 0}</span>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-
-                        <Card className="border-yellow-500/50">
-                          <CardHeader className="pb-2">
-                            <CardTitle className="text-base flex items-center gap-2">
-                              <TrendingUp className="h-4 w-4 text-yellow-500" />
-                              Should Invite
-                            </CardTitle>
-                            <CardDescription className="text-xs">High priority</CardDescription>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="flex items-baseline gap-2">
-                              <p className="text-3xl font-bold">
-                                {(planningSnapshot?.summary.priorityBreakdown.should_invite.confirmed || 0) + 
-                                 (planningSnapshot?.summary.priorityBreakdown.should_invite.pending || 0)}
-                              </p>
-                              <span className="text-sm text-muted-foreground">guests</span>
-                            </div>
-                            <div className="mt-2 text-xs space-y-1">
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">Confirmed:</span>
-                                <span>{planningSnapshot?.summary.priorityBreakdown.should_invite.confirmed || 0}</span>
-                              </div>
-                              <div className="flex justify-between text-orange-600">
-                                <span>Pending:</span>
-                                <span>+{planningSnapshot?.summary.priorityBreakdown.should_invite.pending || 0}</span>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-
-                        <Card className="border-orange-500/50">
-                          <CardHeader className="pb-2">
-                            <CardTitle className="text-base flex items-center gap-2">
-                              <Users className="h-4 w-4 text-orange-500" />
-                              Nice to Have
-                            </CardTitle>
-                            <CardDescription className="text-xs">First to consider for cuts</CardDescription>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="flex items-baseline gap-2">
-                              <p className="text-3xl font-bold">
-                                {(planningSnapshot?.summary.priorityBreakdown.nice_to_have.confirmed || 0) + 
-                                 (planningSnapshot?.summary.priorityBreakdown.nice_to_have.pending || 0)}
-                              </p>
-                              <span className="text-sm text-muted-foreground">guests</span>
-                            </div>
-                            <div className="mt-2 text-xs space-y-1">
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">Confirmed:</span>
-                                <span>{planningSnapshot?.summary.priorityBreakdown.nice_to_have.confirmed || 0}</span>
-                              </div>
-                              <div className="flex justify-between text-orange-600">
-                                <span>Pending:</span>
-                                <span>+{planningSnapshot?.summary.priorityBreakdown.nice_to_have.pending || 0}</span>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </div>
-                    </div>
-
                     {/* Household List with Quick Cut Actions */}
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
@@ -2614,57 +2514,45 @@ export default function Guests() {
                       {planningSnapshot?.confirmedHouseholds && planningSnapshot.confirmedHouseholds.length > 0 ? (
                         <div className="space-y-2">
                           {planningSnapshot.confirmedHouseholds
-                            .sort((a, b) => {
-                              const priorityOrder = { nice_to_have: 0, should_invite: 1, must_invite: 2 };
-                              return (priorityOrder[a.priorityTier as keyof typeof priorityOrder] || 1) - 
-                                     (priorityOrder[b.priorityTier as keyof typeof priorityOrder] || 1);
-                            })
+                            .sort((a, b) => a.name.localeCompare(b.name))
                             .map(household => (
                               <Card key={household.id} className="hover-elevate" data-testid={`card-household-assess-${household.id}`}>
                                 <CardContent className="p-3">
                                   <div className="flex items-center justify-between gap-4">
                                     <div className="flex-1 min-w-0">
                                       <div className="flex items-center gap-2 flex-wrap">
-                                        <p className="font-medium truncate">{household.name}</p>
+                                        <p className="font-medium truncate text-base">{household.name}</p>
                                         <Badge 
-                                          variant={
-                                            household.priorityTier === 'must_invite' ? 'default' : 
-                                            household.priorityTier === 'should_invite' ? 'secondary' : 
-                                            'outline'
-                                          }
-                                          className="text-xs"
+                                          variant={household.affiliation === 'bride' ? 'default' : household.affiliation === 'groom' ? 'secondary' : 'outline'}
+                                          className="text-base"
                                         >
-                                          {household.priorityTier === 'must_invite' ? 'Must' : 
-                                           household.priorityTier === 'should_invite' ? 'Should' : 
-                                           'Nice'}
+                                          {household.affiliation === 'bride' ? "Bride's" : household.affiliation === 'groom' ? "Groom's" : "Mutual"}
                                         </Badge>
                                       </div>
-                                      <p className="text-xs text-muted-foreground">
-                                        {household.maxCount} guests • {household.affiliation === 'bride' ? "Bride's" : household.affiliation === 'groom' ? "Groom's" : "Mutual"}
+                                      <p className="text-base text-muted-foreground">
+                                        {household.maxCount} guests
                                         {household.relationshipTier && ` • ${household.relationshipTier.replace('_', ' ')}`}
                                       </p>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                      <p className="text-sm font-medium">
+                                      <p className="text-base font-medium">
                                         ${(household.maxCount * (planningSnapshot?.budget?.defaultCostPerHead || 150)).toLocaleString()}
                                       </p>
-                                      {household.priorityTier !== 'must_invite' && (
-                                        <Button
-                                          size="sm"
-                                          variant="outline"
-                                          onClick={() => {
-                                            addToCutListMutation.mutate({
-                                              householdId: household.id,
-                                              cutReason: 'priority',
-                                            });
-                                          }}
-                                          disabled={addToCutListMutation.isPending}
-                                          data-testid={`button-cut-${household.id}`}
-                                        >
-                                          <Scissors className="h-3 w-3 mr-1" />
-                                          Maybe Later
-                                        </Button>
-                                      )}
+                                      <Button
+                                        className="min-h-[48px] text-base"
+                                        variant="outline"
+                                        onClick={() => {
+                                          addToCutListMutation.mutate({
+                                            householdId: household.id,
+                                            cutReason: 'priority',
+                                          });
+                                        }}
+                                        disabled={addToCutListMutation.isPending}
+                                        data-testid={`button-cut-${household.id}`}
+                                      >
+                                        <Scissors className="h-4 w-4 mr-2" />
+                                        Maybe Later
+                                      </Button>
                                     </div>
                                   </div>
                                 </CardContent>
@@ -3045,43 +2933,6 @@ export default function Guests() {
                   <SelectItem value="parents_friend">Parent's Friends</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="household-priority">
-                Priority Tier <span className="text-destructive">*</span>
-              </Label>
-              <Select
-                value={householdForm.watch("priorityTier")}
-                onValueChange={(value) => householdForm.setValue("priorityTier", value as "must_invite" | "should_invite" | "nice_to_have")}
-              >
-                <SelectTrigger id="household-priority" data-testid="select-household-priority">
-                  <SelectValue placeholder="Select priority" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="must_invite">
-                    <div className="flex items-center gap-2">
-                      <Star className="h-4 w-4 text-green-500" />
-                      Must Invite
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="should_invite">
-                    <div className="flex items-center gap-2">
-                      <TrendingUp className="h-4 w-4 text-yellow-500" />
-                      Should Invite
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="nice_to_have">
-                    <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4 text-orange-500" />
-                      Nice to Have
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                Used for budget planning - "Nice to Have" guests are considered first for cuts
-              </p>
             </div>
 
             <div className="flex justify-between pt-4">

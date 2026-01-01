@@ -203,19 +203,19 @@ export function DuplicatesManager({ weddingId }: DuplicatesManagerProps) {
               <div className="grid grid-cols-2 gap-4 text-center">
                 <div>
                   <p className="font-semibold text-lg">{selectedPair.household1.name}</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-base text-muted-foreground">
                     {selectedPair.guests1.length} guest{selectedPair.guests1.length !== 1 ? "s" : ""}
                   </p>
-                  <Badge variant="outline" className="mt-2">
+                  <Badge variant="outline" className="mt-2 text-base">
                     {new Date(selectedPair.household1.createdAt) < new Date(selectedPair.household2.createdAt) ? "Older" : "Newer"}
                   </Badge>
                 </div>
                 <div>
                   <p className="font-semibold text-lg">{selectedPair.household2.name}</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-base text-muted-foreground">
                     {selectedPair.guests2.length} guest{selectedPair.guests2.length !== 1 ? "s" : ""}
                   </p>
-                  <Badge variant="outline" className="mt-2">
+                  <Badge variant="outline" className="mt-2 text-base">
                     {new Date(selectedPair.household2.createdAt) < new Date(selectedPair.household1.createdAt) ? "Older" : "Newer"}
                   </Badge>
                 </div>
@@ -253,38 +253,38 @@ function HouseholdCard({ household, guests, label }: { household: Household; gue
     <div className="border rounded-lg p-4 bg-background">
       <div className="flex items-start justify-between mb-3">
         <div>
-          <h4 className="font-semibold text-base">{household.name}</h4>
-          <Badge variant="outline" className="text-xs mt-1">{label}</Badge>
+          <h4 className="font-semibold text-lg">{household.name}</h4>
+          <Badge variant="outline" className="text-base mt-1">{label}</Badge>
         </div>
-        <Badge variant="secondary">
-          <Users className="h-3 w-3 mr-1" />
+        <Badge variant="secondary" className="text-base">
+          <Users className="h-4 w-4 mr-1" />
           {guests.length}
         </Badge>
       </div>
       
-      <div className="space-y-2 text-sm">
+      <div className="space-y-2 text-base">
         {household.contactEmail && (
           <div className="flex items-center gap-2 text-muted-foreground">
-            <Mail className="h-4 w-4" />
+            <Mail className="h-5 w-5" />
             <span className="truncate">{household.contactEmail}</span>
           </div>
         )}
         {household.contactPhone && (
           <div className="flex items-center gap-2 text-muted-foreground">
-            <Phone className="h-4 w-4" />
+            <Phone className="h-5 w-5" />
             <span>{household.contactPhone}</span>
           </div>
         )}
         
         {guests.length > 0 && (
           <div className="mt-3 pt-3 border-t">
-            <p className="text-xs font-medium text-muted-foreground mb-2">Members:</p>
+            <p className="text-base font-medium text-muted-foreground mb-2">Members:</p>
             <div className="space-y-1">
               {guests.slice(0, 4).map(guest => (
-                <p key={guest.id} className="text-sm">{guest.name}</p>
+                <p key={guest.id} className="text-base">{guest.name}</p>
               ))}
               {guests.length > 4 && (
-                <p className="text-xs text-muted-foreground">+{guests.length - 4} more</p>
+                <p className="text-base text-muted-foreground">+{guests.length - 4} more</p>
               )}
             </div>
           </div>

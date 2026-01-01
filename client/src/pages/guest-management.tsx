@@ -1163,183 +1163,37 @@ export default function GuestManagement() {
 
         <TabsContent value="priority" className="space-y-4 sm:space-y-6">
           {/* Step Guidance Card */}
-          <Card className={`border-2 ${organizeProgress === 100 ? "border-green-300 bg-green-50/50 dark:bg-green-950/20" : "border-blue-200 bg-blue-50/50 dark:bg-blue-950/20"}`}>
+          <Card className="border-2 border-blue-200 bg-blue-50/50 dark:bg-blue-950/20">
             <CardContent className="p-3 sm:p-4">
               <div className="flex items-start gap-3">
-                <div className={`p-2 rounded-full flex-shrink-0 ${organizeProgress === 100 ? "bg-green-100 dark:bg-green-900/30" : "bg-blue-100 dark:bg-blue-900/30"}`}>
-                  {organizeProgress === 100 ? (
-                    <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
-                  ) : (
-                    <Target className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
-                  )}
+                <div className="p-2 rounded-full flex-shrink-0 bg-blue-100 dark:bg-blue-900/30">
+                  <Target className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  {organizeProgress === 100 ? (
-                    <>
-                      <p className="font-semibold text-sm sm:text-base text-green-700 dark:text-green-400">Step 2 Complete!</p>
-                      <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                        Your guests are organized by priority. Now let's finalize your budget and capacity.
+                  <p className="font-semibold text-base">Compare Guest List Options</p>
+                  <p className="text-base text-muted-foreground mt-1">
+                    Create What-If Lists to explore different guest list scenarios and see how they affect your count.
+                  </p>
+                  {scenarios.length === 0 && (
+                    <div className="mt-3 p-2 rounded-lg bg-background/80 border">
+                      <p className="text-base font-medium flex items-center gap-2">
+                        <ArrowRight className="h-4 w-4 text-blue-500" />
+                        <span>Get started:</span>
                       </p>
                       <Button 
-                        size="sm" 
-                        className="mt-3 gap-2"
-                        onClick={() => setActiveTab("budget")}
+                        className="mt-2 gap-2 min-h-[48px] text-base"
+                        variant="outline"
+                        onClick={() => setScenarioDialogOpen(true)}
                       >
-                        Continue to Finalize
-                        <ArrowRight className="h-3 w-3" />
+                        <Plus className="h-4 w-4" />
+                        Create Your First What-If List
                       </Button>
-                    </>
-                  ) : (
-                    <>
-                      <p className="font-semibold text-sm sm:text-base">Step 2: Organize Your Guest List</p>
-                      <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                        {priorityBreakdown.unassigned.length > 0 
-                          ? `You have ${priorityBreakdown.unassigned.length} household${priorityBreakdown.unassigned.length > 1 ? 's' : ''} without priority. Assign each one to help with tough decisions later.`
-                          : "Great start! Now create a What-If List to compare different guest list scenarios."}
-                        <span className="hidden sm:inline"> This is totally normal - weddings involve tricky family politics!</span>
-                      </p>
-                      {priorityBreakdown.unassigned.length > 0 && (
-                        <div className="mt-3 p-2 rounded-lg bg-background/80 border">
-                          <p className="text-xs font-medium flex items-center gap-2">
-                            <ArrowRight className="h-3 w-3 text-blue-500" />
-                            <span>Next: Scroll down to assign priorities to unassigned households</span>
-                          </p>
-                        </div>
-                      )}
-                      {priorityBreakdown.unassigned.length === 0 && scenarios.length === 0 && (
-                        <div className="mt-3 p-2 rounded-lg bg-background/80 border">
-                          <p className="text-xs font-medium flex items-center gap-2">
-                            <ArrowRight className="h-3 w-3 text-blue-500" />
-                            <span>Next:</span>
-                          </p>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            className="mt-2 gap-2"
-                            onClick={() => setScenarioDialogOpen(true)}
-                          >
-                            <Plus className="h-3 w-3" />
-                            Create Your First What-If List
-                          </Button>
-                        </div>
-                      )}
-                    </>
+                    </div>
                   )}
                 </div>
               </div>
             </CardContent>
           </Card>
-
-          {/* Priority Tiers Section */}
-          <div className="space-y-3 sm:space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
-              <div className="min-w-0">
-                <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2">
-                  <ListFilter className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0" />
-                  Guest Priority
-                </h2>
-                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Who's most important? Assign priority to help with tough decisions.</p>
-              </div>
-            </div>
-
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card className="border-green-500/50">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Star className="h-4 w-4 text-green-500" />
-                  Must Invite
-                </CardTitle>
-                <CardDescription className="text-xs">Cannot be cut under any circumstances</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold" data-testid="text-must-invite-count">{priorityBreakdown.must_invite.length}</p>
-                <p className="text-sm text-muted-foreground">
-                  {priorityBreakdown.must_invite.reduce((sum, h) => sum + h.maxCount, 0)} guests
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-yellow-500/50">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-yellow-500" />
-                  Should Invite
-                </CardTitle>
-                <CardDescription className="text-xs">High priority but can be adjusted</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold" data-testid="text-should-invite-count">{priorityBreakdown.should_invite.length}</p>
-                <p className="text-sm text-muted-foreground">
-                  {priorityBreakdown.should_invite.reduce((sum, h) => sum + h.maxCount, 0)} guests
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-orange-500/50">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Users className="h-4 w-4 text-orange-500" />
-                  Nice to Have
-                </CardTitle>
-                <CardDescription className="text-xs">First to consider for cuts</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold" data-testid="text-nice-to-have-count">{priorityBreakdown.nice_to_have.length}</p>
-                <p className="text-sm text-muted-foreground">
-                  {priorityBreakdown.nice_to_have.reduce((sum, h) => sum + h.maxCount, 0)} guests
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-muted">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center gap-2 text-muted-foreground">
-                  <AlertTriangle className="h-4 w-4" />
-                  Unassigned
-                </CardTitle>
-                <CardDescription className="text-xs">Needs priority assignment</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold" data-testid="text-unassigned-count">{priorityBreakdown.unassigned.length}</p>
-                <p className="text-sm text-muted-foreground">
-                  {priorityBreakdown.unassigned.reduce((sum, h) => sum + h.maxCount, 0)} guests
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Bulk Cut by Priority</CardTitle>
-              <CardDescription>Quickly cut all households in a priority tier</CardDescription>
-            </CardHeader>
-            <CardContent className="flex gap-4 items-end flex-wrap">
-              <div className="space-y-2 flex-1 min-w-[200px]">
-                <Label>Select Priority Tier</Label>
-                <Select value={bulkCutTier} onValueChange={setBulkCutTier} data-testid="select-bulk-cut-tier">
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose tier to cut..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="nice_to_have">Nice to Have ({priorityBreakdown.nice_to_have.length})</SelectItem>
-                    <SelectItem value="should_invite">Should Invite ({priorityBreakdown.should_invite.length})</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button
-                variant="destructive"
-                disabled={!bulkCutTier || bulkCutMutation.isPending}
-                onClick={() => bulkCutMutation.mutate({ priorityTier: bulkCutTier, reason: "Bulk cut to reduce list" })}
-                data-testid="button-bulk-cut"
-              >
-                <Scissors className="h-4 w-4 mr-2" />
-                Cut All in Tier
-              </Button>
-            </CardContent>
-          </Card>
-          </div>
-
-          <Separator />
 
           {/* What-If Lists Section (formerly Scenarios) */}
           <div className="space-y-3 sm:space-y-4">
@@ -1534,30 +1388,17 @@ export default function GuestManagement() {
                 </Select>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="relationshipTier">Relationship</Label>
-                <Select value={suggestionForm.watch("relationshipTier")} onValueChange={(v: any) => suggestionForm.setValue("relationshipTier", v)} data-testid="select-relationship">
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="immediate_family">Immediate Family</SelectItem>
-                    <SelectItem value="extended_family">Extended Family</SelectItem>
-                    <SelectItem value="friend">Friends</SelectItem>
-                    <SelectItem value="parents_friend">Parent's Friends</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="priorityTier">Priority</Label>
-                <Select value={suggestionForm.watch("priorityTier") || ""} onValueChange={(v) => suggestionForm.setValue("priorityTier", v)} data-testid="select-priority">
-                  <SelectTrigger><SelectValue placeholder="Select priority" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="must_invite">Must Invite</SelectItem>
-                    <SelectItem value="should_invite">Should Invite</SelectItem>
-                    <SelectItem value="nice_to_have">Nice to Have</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="relationshipTier">Relationship</Label>
+              <Select value={suggestionForm.watch("relationshipTier")} onValueChange={(v: any) => suggestionForm.setValue("relationshipTier", v)} data-testid="select-relationship">
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="immediate_family">Immediate Family</SelectItem>
+                  <SelectItem value="extended_family">Extended Family</SelectItem>
+                  <SelectItem value="friend">Friends</SelectItem>
+                  <SelectItem value="parents_friend">Parent's Friends</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             {sources.length > 0 && (
               <div className="space-y-2">
