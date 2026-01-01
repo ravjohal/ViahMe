@@ -779,6 +779,8 @@ export interface IStorage {
   createGuestCollectorSubmission(submission: InsertGuestCollectorSubmission): Promise<GuestCollectorSubmission>;
   approveCollectorSubmission(id: string, reviewerId: string): Promise<{ household: Household; guests: Guest[] }>;
   declineCollectorSubmission(id: string, reviewerId: string): Promise<GuestCollectorSubmission>;
+  markCollectorSubmissionMaybe(id: string, reviewerId: string): Promise<GuestCollectorSubmission>;
+  restoreCollectorSubmission(id: string, targetStatus: 'pending' | 'maybe' | 'approved', reviewerId: string): Promise<GuestCollectorSubmission | { household: Household; guests: Guest[] }>;
   getPendingCollectorSubmissionsCount(weddingId: string): Promise<number>;
   getCollectorSubmissionsBySession(linkId: string, sessionId: string): Promise<GuestCollectorSubmission[]>;
 
@@ -3976,6 +3978,8 @@ export class MemStorage implements IStorage {
   async createGuestCollectorSubmission(submission: InsertGuestCollectorSubmission): Promise<GuestCollectorSubmission> { throw new Error("MemStorage does not support Guest Collector Submissions. Use DBStorage."); }
   async approveCollectorSubmission(id: string, reviewerId: string): Promise<{ household: Household; guests: Guest[] }> { throw new Error("MemStorage does not support Guest Collector Submissions. Use DBStorage."); }
   async declineCollectorSubmission(id: string, reviewerId: string): Promise<GuestCollectorSubmission> { throw new Error("MemStorage does not support Guest Collector Submissions. Use DBStorage."); }
+  async markCollectorSubmissionMaybe(id: string, reviewerId: string): Promise<GuestCollectorSubmission> { throw new Error("MemStorage does not support Guest Collector Submissions. Use DBStorage."); }
+  async restoreCollectorSubmission(id: string, targetStatus: 'pending' | 'maybe' | 'approved', reviewerId: string): Promise<GuestCollectorSubmission | { household: Household; guests: Guest[] }> { throw new Error("MemStorage does not support Guest Collector Submissions. Use DBStorage."); }
   async getPendingCollectorSubmissionsCount(weddingId: string): Promise<number> { return 0; }
   async getCollectorSubmissionsBySession(linkId: string, sessionId: string): Promise<GuestCollectorSubmission[]> { return []; }
 
@@ -9284,6 +9288,26 @@ export class DBStorage implements IStorage {
   async declineCollectorSubmission(id: string, reviewerId: string): Promise<GuestCollectorSubmission> {
     const result = await this.db.update(schema.guestCollectorSubmissions)
       .set({ status: 'declined', reviewedById: reviewerId, reviewedAt: new Date() })
+      .where(eq(schema.guestCollectorSubmissions.id, id))
+      .returning();
+    return normalizeSubmission(result[0]);
+  }
+
+  async markCollectorSubmissionMaybe(id: string, reviewerId: string): Promise<GuestCollectorSubmission> {
+    const result = await this.db.update(schema.guestCollectorSubmissions)
+      .set({ status: 'maybe', reviewedById: reviewerId, reviewedAt: new Date() })
+      .where(eq(schema.guestCollectorSubmissions.id, id))
+      .returning();
+    return normalizeSubmission(result[0]);
+  }
+
+  async restoreCollectorSubmission(id: string, targetStatus: 'pending' | 'maybe' | 'approved', reviewerId: string): Promise<GuestCollectorSubmission | { household: Household; guests: Guest[] }> {
+    if (targetStatus === 'approved') {
+      return await this.approveCollectorSubmission(id, reviewerId);
+    }
+    
+    const result = await this.db.update(schema.guestCollectorSubmissions)
+      .set({ status: targetStatus, reviewedById: reviewerId, reviewedAt: new Date() })
       .where(eq(schema.guestCollectorSubmissions.id, id))
       .returning();
     return normalizeSubmission(result[0]);
