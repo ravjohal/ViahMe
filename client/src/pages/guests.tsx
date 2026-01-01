@@ -1524,7 +1524,7 @@ export default function Guests() {
               </TabsContent>
 
               <TabsContent value="duplicates" className="space-y-6">
-                <DuplicatesManager weddingId={weddingId} />
+                <DuplicatesManager weddingId={wedding?.id || ""} />
               </TabsContent>
 
               <TabsContent value="allocation" className="space-y-6">
