@@ -62,6 +62,53 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   
   registerAuthRoutes(app, storage);
 
+  // Public endpoint - Address autocomplete using Geoapify (no auth required for collector)
+  app.get("/api/address-autocomplete", async (req, res) => {
+    const query = req.query.q as string;
+    
+    if (!query || query.length < 3) {
+      return res.json({ features: [] });
+    }
+
+    const apiKey = process.env.GEOAPIFY_API_KEY;
+    
+    if (!apiKey) {
+      return res.json({ features: [], error: "Address autocomplete not configured" });
+    }
+
+    try {
+      const url = `https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(query)}&apiKey=${apiKey}&limit=5&format=json`;
+      
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      // Geoapify returns 'results' with format=json, 'features' with GeoJSON format
+      if (data.results) {
+        // Convert results format to features format for frontend compatibility
+        const features = data.results.map((result: any) => ({
+          properties: {
+            formatted: result.formatted,
+            street: result.street,
+            housenumber: result.housenumber,
+            address_line1: result.address_line1,
+            city: result.city,
+            town: result.town,
+            village: result.village,
+            state: result.state,
+            postcode: result.postcode,
+            country: result.country,
+            place_id: result.place_id,
+          }
+        }));
+        return res.json({ features });
+      }
+      
+      res.json(data);
+    } catch (error: any) {
+      res.json({ features: [], error: "Failed to fetch address suggestions" });
+    }
+  });
+
   const aiRouter = Router();
   await registerAiRoutes(aiRouter, storage);
   app.use("/api/ai", aiRouter);
