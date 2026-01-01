@@ -16,17 +16,16 @@ import {
   Link2,
   Plus,
   Copy,
-  Trash2,
-  Eye,
-  EyeOff,
   Users,
-  Calendar,
   CheckCircle2,
   Clock,
   XCircle,
   ExternalLink,
   RefreshCw,
   Heart,
+  HelpCircle,
+  RotateCcw,
+  EyeOff,
 } from "lucide-react";
 import {
   Tooltip,
@@ -44,6 +43,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type GuestCollectorLink = {
   id: string;
@@ -60,15 +60,26 @@ type GuestCollectorLink = {
   createdAt: string;
 };
 
+type GuestMember = {
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  dietaryRestriction?: string;
+};
+
 type GuestCollectorSubmission = {
   id: string;
   collectorLinkId: string;
   weddingId: string;
   submitterName: string;
   submitterRelation: string;
+  householdName?: string;
   guestName: string;
   guestEmail?: string;
   guestPhone?: string;
+  guestCount?: number;
+  members?: GuestMember[];
   relationshipTier?: string;
   notes?: string;
   status: string;
@@ -93,9 +104,12 @@ export function CollectorLinksManager({ weddingId }: CollectorLinksManagerProps)
     queryKey: ["/api/weddings", weddingId, "collector-submissions"],
   });
 
-  const { data: pendingCount } = useQuery<{ count: number }>({
-    queryKey: ["/api/weddings", weddingId, "collector-submissions", "count"],
-  });
+  const invalidateAll = () => {
+    queryClient.invalidateQueries({ queryKey: ["/api/weddings", weddingId] });
+    queryClient.invalidateQueries({ queryKey: ["/api/weddings", weddingId, "collector-submissions"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/guests", weddingId] });
+    queryClient.invalidateQueries({ queryKey: ["/api/households", weddingId] });
+  };
 
   const createLinkMutation = useMutation({
     mutationFn: async ({ name, side }: { name: string; side: string }) => {
@@ -130,10 +144,8 @@ export function CollectorLinksManager({ weddingId }: CollectorLinksManagerProps)
       return apiRequest("POST", `/api/collector-submissions/${submissionId}/approve`, {});
     },
     onSuccess: () => {
-      toast({ title: "Guest approved", description: "The guest has been added to your list." });
-      queryClient.invalidateQueries({ queryKey: ["/api/weddings", weddingId] });
-      queryClient.invalidateQueries({ queryKey: ["/api/guests", weddingId] });
-      queryClient.invalidateQueries({ queryKey: ["/api/households", weddingId] });
+      toast({ title: "Added to Final List", description: "This family has been added to your guest list." });
+      invalidateAll();
     },
     onError: (error: any) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -145,8 +157,35 @@ export function CollectorLinksManager({ weddingId }: CollectorLinksManagerProps)
       return apiRequest("POST", `/api/collector-submissions/${submissionId}/decline`, {});
     },
     onSuccess: () => {
-      toast({ title: "Suggestion declined", description: "The guest suggestion has been declined." });
-      queryClient.invalidateQueries({ queryKey: ["/api/weddings", weddingId] });
+      toast({ title: "Moved to Denied", description: "You can restore this later if you change your mind." });
+      invalidateAll();
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const maybeSubmissionMutation = useMutation({
+    mutationFn: async (submissionId: string) => {
+      return apiRequest("POST", `/api/collector-submissions/${submissionId}/maybe`, {});
+    },
+    onSuccess: () => {
+      toast({ title: "Added to Maybe", description: "You can decide on this later." });
+      invalidateAll();
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const restoreSubmissionMutation = useMutation({
+    mutationFn: async ({ submissionId, targetStatus }: { submissionId: string; targetStatus: string }) => {
+      return apiRequest("POST", `/api/collector-submissions/${submissionId}/restore`, { targetStatus });
+    },
+    onSuccess: (_, { targetStatus }) => {
+      const msg = targetStatus === 'approved' ? "Added to Final List" : targetStatus === 'maybe' ? "Moved to Maybe" : "Back to Review";
+      toast({ title: msg, description: "Guest suggestion has been updated." });
+      invalidateAll();
     },
     onError: (error: any) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -168,33 +207,136 @@ export function CollectorLinksManager({ weddingId }: CollectorLinksManagerProps)
   };
 
   const pendingSubmissions = submissions.filter(s => s.status === 'pending');
-  const processedSubmissions = submissions.filter(s => s.status !== 'pending');
+  const maybeSubmissions = submissions.filter(s => s.status === 'maybe');
+  const deniedSubmissions = submissions.filter(s => s.status === 'declined');
+  const approvedSubmissions = submissions.filter(s => s.status === 'approved');
 
-  // Group submissions by submitter
-  const submissionsBySubmitter = submissions.reduce((acc, submission) => {
-    const submitterName = submission.submitterName || 'Unknown';
-    const submitterRelation = submission.submitterRelation || 'Unknown';
-    const key = `${submitterName}|||${submitterRelation}`;
-    if (!acc[key]) {
-      acc[key] = {
-        name: submitterName,
-        relation: submitterRelation,
-        submissions: [],
-        pendingCount: 0,
-        approvedCount: 0,
-        declinedCount: 0,
-      };
-    }
-    acc[key].submissions.push(submission);
-    if (submission.status === 'pending') acc[key].pendingCount++;
-    else if (submission.status === 'approved') acc[key].approvedCount++;
-    else if (submission.status === 'declined') acc[key].declinedCount++;
-    return acc;
-  }, {} as Record<string, { name: string; relation: string; submissions: GuestCollectorSubmission[]; pendingCount: number; approvedCount: number; declinedCount: number }>);
-
-  const submitterList = Object.values(submissionsBySubmitter).sort((a, b) => 
-    b.submissions.length - a.submissions.length
-  );
+  const renderSubmissionCard = (submission: GuestCollectorSubmission, showActions: 'pending' | 'maybe' | 'denied') => {
+    const memberCount = submission.members?.length || submission.guestCount || 1;
+    const isProcessing = approveSubmissionMutation.isPending || declineSubmissionMutation.isPending || maybeSubmissionMutation.isPending || restoreSubmissionMutation.isPending;
+    
+    return (
+      <Card key={submission.id} className="p-4" data-testid={`submission-${submission.id}`}>
+        <div className="space-y-3">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold text-base">{submission.householdName || submission.guestName}</div>
+              <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
+                <Users className="w-4 h-4" />
+                {memberCount} {memberCount === 1 ? 'person' : 'people'}
+              </div>
+            </div>
+          </div>
+          
+          {submission.members && submission.members.length > 0 && (
+            <div className="text-sm text-muted-foreground">
+              {submission.members.map(m => m.name).join(', ')}
+            </div>
+          )}
+          
+          <div className="text-xs text-muted-foreground">
+            Suggested by <span className="font-medium">{submission.submitterName || 'Unknown'}</span>
+            {submission.submitterRelation && ` (${submission.submitterRelation})`}
+          </div>
+          
+          {submission.notes && (
+            <div className="text-xs text-muted-foreground italic bg-muted/50 p-2 rounded">"{submission.notes}"</div>
+          )}
+          
+          <div className="flex flex-wrap gap-2 pt-2">
+            {showActions === 'pending' && (
+              <>
+                <Button
+                  size="default"
+                  className="flex-1 min-w-[100px] h-12 text-base"
+                  onClick={() => approveSubmissionMutation.mutate(submission.id)}
+                  disabled={isProcessing}
+                  data-testid={`button-approve-${submission.id}`}
+                >
+                  <CheckCircle2 className="w-5 h-5 mr-2" />
+                  Add
+                </Button>
+                <Button
+                  size="default"
+                  variant="secondary"
+                  className="flex-1 min-w-[100px] h-12 text-base"
+                  onClick={() => maybeSubmissionMutation.mutate(submission.id)}
+                  disabled={isProcessing}
+                  data-testid={`button-maybe-${submission.id}`}
+                >
+                  <HelpCircle className="w-5 h-5 mr-2" />
+                  Maybe
+                </Button>
+                <Button
+                  size="default"
+                  variant="outline"
+                  className="flex-1 min-w-[100px] h-12 text-base"
+                  onClick={() => declineSubmissionMutation.mutate(submission.id)}
+                  disabled={isProcessing}
+                  data-testid={`button-deny-${submission.id}`}
+                >
+                  <XCircle className="w-5 h-5 mr-2" />
+                  No
+                </Button>
+              </>
+            )}
+            
+            {showActions === 'maybe' && (
+              <>
+                <Button
+                  size="default"
+                  className="flex-1 min-w-[100px] h-12 text-base"
+                  onClick={() => restoreSubmissionMutation.mutate({ submissionId: submission.id, targetStatus: 'approved' })}
+                  disabled={isProcessing}
+                  data-testid={`button-approve-maybe-${submission.id}`}
+                >
+                  <CheckCircle2 className="w-5 h-5 mr-2" />
+                  Add to List
+                </Button>
+                <Button
+                  size="default"
+                  variant="outline"
+                  className="flex-1 min-w-[100px] h-12 text-base"
+                  onClick={() => declineSubmissionMutation.mutate(submission.id)}
+                  disabled={isProcessing}
+                  data-testid={`button-deny-maybe-${submission.id}`}
+                >
+                  <XCircle className="w-5 h-5 mr-2" />
+                  Deny
+                </Button>
+              </>
+            )}
+            
+            {showActions === 'denied' && (
+              <>
+                <Button
+                  size="default"
+                  className="flex-1 min-w-[100px] h-12 text-base"
+                  onClick={() => restoreSubmissionMutation.mutate({ submissionId: submission.id, targetStatus: 'approved' })}
+                  disabled={isProcessing}
+                  data-testid={`button-restore-final-${submission.id}`}
+                >
+                  <CheckCircle2 className="w-5 h-5 mr-2" />
+                  Add to List
+                </Button>
+                <Button
+                  size="default"
+                  variant="secondary"
+                  className="flex-1 min-w-[100px] h-12 text-base"
+                  onClick={() => restoreSubmissionMutation.mutate({ submissionId: submission.id, targetStatus: 'maybe' })}
+                  disabled={isProcessing}
+                  data-testid={`button-restore-maybe-${submission.id}`}
+                >
+                  <RotateCcw className="w-5 h-5 mr-2" />
+                  To Maybe
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+      </Card>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -234,7 +376,7 @@ export function CollectorLinksManager({ weddingId }: CollectorLinksManagerProps)
               data-testid={`collector-link-${link.id}`}
             >
               <CardHeader className="pb-2">
-                <div className="flex justify-between items-start">
+                <div className="flex justify-between items-start gap-2">
                   <div className="flex items-center gap-2">
                     <Heart className={`w-4 h-4 ${link.side === 'bride' ? 'text-pink-500' : 'text-blue-500'}`} />
                     <CardTitle className="text-base">{link.name}</CardTitle>
@@ -314,129 +456,86 @@ export function CollectorLinksManager({ weddingId }: CollectorLinksManagerProps)
         </div>
       )}
 
-      {pendingSubmissions.length > 0 && (
+      {submissions.length > 0 && (
         <>
           <Separator />
-          <div>
-            <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
-              <Clock className="w-5 h-5 text-amber-500" />
-              Pending Submissions
-              <Badge variant="secondary">{pendingSubmissions.length}</Badge>
-            </h3>
-            <ScrollArea className="h-[300px]">
-              <div className="space-y-3">
-                {pendingSubmissions.map(submission => (
-                  <Card key={submission.id} className="p-4" data-testid={`submission-${submission.id}`}>
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium">{submission.guestName}</div>
-                        <div className="text-sm text-muted-foreground">
-                          Suggested by {submission.submitterName} ({submission.submitterRelation})
-                        </div>
-                        {submission.guestEmail && (
-                          <div className="text-xs text-muted-foreground mt-1">{submission.guestEmail}</div>
-                        )}
-                        {submission.notes && (
-                          <div className="text-xs text-muted-foreground mt-1 italic">"{submission.notes}"</div>
-                        )}
-                      </div>
-                      <div className="flex gap-2">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button 
-                              variant="outline" 
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => approveSubmissionMutation.mutate(submission.id)}
-                              disabled={approveSubmissionMutation.isPending}
-                              data-testid={`button-approve-submission-${submission.id}`}
-                            >
-                              <CheckCircle2 className="w-4 h-4 text-green-500" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Approve and add to guest list</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button 
-                              variant="outline" 
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => declineSubmissionMutation.mutate(submission.id)}
-                              disabled={declineSubmissionMutation.isPending}
-                              data-testid={`button-decline-submission-${submission.id}`}
-                            >
-                              <XCircle className="w-4 h-4 text-red-500" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Decline suggestion</TooltipContent>
-                        </Tooltip>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </ScrollArea>
-          </div>
-        </>
-      )}
+          <Tabs defaultValue="pending" className="w-full">
+            <TabsList className="grid w-full grid-cols-3 h-auto">
+              <TabsTrigger value="pending" className="py-3 text-base data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <Clock className="w-4 h-4 mr-2" />
+                Review ({pendingSubmissions.length})
+              </TabsTrigger>
+              <TabsTrigger value="maybe" className="py-3 text-base data-[state=active]:bg-amber-500 data-[state=active]:text-white">
+                <HelpCircle className="w-4 h-4 mr-2" />
+                Maybe ({maybeSubmissions.length})
+              </TabsTrigger>
+              <TabsTrigger value="denied" className="py-3 text-base data-[state=active]:bg-destructive data-[state=active]:text-destructive-foreground">
+                <XCircle className="w-4 h-4 mr-2" />
+                Denied ({deniedSubmissions.length})
+              </TabsTrigger>
+            </TabsList>
 
-      {submitterList.length > 0 && (
-        <>
-          <Separator />
-          <div>
-            <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
-              <Users className="w-5 h-5 text-primary" />
-              Submissions by Person
-              <Badge variant="secondary">{submitterList.length} contributor{submitterList.length !== 1 ? 's' : ''}</Badge>
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {submitterList.map((submitter) => (
-                <Card 
-                  key={`${submitter.name}-${submitter.relation}`} 
-                  className="p-4"
-                  data-testid={`submitter-card-${submitter.name.replace(/\s+/g, '-').toLowerCase()}`}
-                >
-                  <div className="space-y-3">
-                    <div>
-                      <div className="font-medium text-base">{submitter.name}</div>
-                      <div className="text-sm text-muted-foreground">{submitter.relation}</div>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <Badge variant="secondary" className="text-xs">
-                        {submitter.submissions.length} total
-                      </Badge>
-                      {submitter.pendingCount > 0 && (
-                        <Badge variant="outline" className="text-xs border-amber-500 text-amber-600">
-                          <Clock className="w-3 h-3 mr-1" />
-                          {submitter.pendingCount} pending
-                        </Badge>
-                      )}
-                      {submitter.approvedCount > 0 && (
-                        <Badge variant="outline" className="text-xs border-green-500 text-green-600">
-                          <CheckCircle2 className="w-3 h-3 mr-1" />
-                          {submitter.approvedCount} approved
-                        </Badge>
-                      )}
-                      {submitter.declinedCount > 0 && (
-                        <Badge variant="outline" className="text-xs border-red-500 text-red-600">
-                          <XCircle className="w-3 h-3 mr-1" />
-                          {submitter.declinedCount} declined
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      <div className="font-medium mb-1">Suggested:</div>
-                      <div className="line-clamp-3">
-                        {submitter.submissions.slice(0, 5).map(s => s.guestName).join(', ')}
-                        {submitter.submissions.length > 5 && ` +${submitter.submissions.length - 5} more`}
-                      </div>
-                    </div>
-                  </div>
+            <TabsContent value="pending" className="mt-4">
+              {pendingSubmissions.length === 0 ? (
+                <Card className="p-8 text-center">
+                  <CheckCircle2 className="w-12 h-12 mx-auto mb-4 text-green-500 opacity-50" />
+                  <p className="text-muted-foreground">All caught up!</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    No pending suggestions to review
+                  </p>
                 </Card>
-              ))}
+              ) : (
+                <ScrollArea className="h-[400px]">
+                  <div className="space-y-4 pr-4">
+                    {pendingSubmissions.map(submission => renderSubmissionCard(submission, 'pending'))}
+                  </div>
+                </ScrollArea>
+              )}
+            </TabsContent>
+
+            <TabsContent value="maybe" className="mt-4">
+              {maybeSubmissions.length === 0 ? (
+                <Card className="p-8 text-center">
+                  <HelpCircle className="w-12 h-12 mx-auto mb-4 text-amber-500 opacity-50" />
+                  <p className="text-muted-foreground">No maybes yet</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Families you're unsure about will appear here
+                  </p>
+                </Card>
+              ) : (
+                <ScrollArea className="h-[400px]">
+                  <div className="space-y-4 pr-4">
+                    {maybeSubmissions.map(submission => renderSubmissionCard(submission, 'maybe'))}
+                  </div>
+                </ScrollArea>
+              )}
+            </TabsContent>
+
+            <TabsContent value="denied" className="mt-4">
+              {deniedSubmissions.length === 0 ? (
+                <Card className="p-8 text-center">
+                  <XCircle className="w-12 h-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+                  <p className="text-muted-foreground">No denied suggestions</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Denied families can be restored if you change your mind
+                  </p>
+                </Card>
+              ) : (
+                <ScrollArea className="h-[400px]">
+                  <div className="space-y-4 pr-4">
+                    {deniedSubmissions.map(submission => renderSubmissionCard(submission, 'denied'))}
+                  </div>
+                </ScrollArea>
+              )}
+            </TabsContent>
+          </Tabs>
+
+          {approvedSubmissions.length > 0 && (
+            <div className="text-sm text-muted-foreground text-center py-2">
+              <CheckCircle2 className="w-4 h-4 inline mr-1 text-green-500" />
+              {approvedSubmissions.length} {approvedSubmissions.length === 1 ? 'family' : 'families'} added to your guest list
             </div>
-          </div>
+          )}
         </>
       )}
 

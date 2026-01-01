@@ -1749,7 +1749,7 @@ export default function Guests() {
 
             {/* Planning Tabs - Simplified with clear action labels */}
             <Tabs value={planningTab} onValueChange={setPlanningTab}>
-              <TabsList className="w-full sm:w-auto grid grid-cols-3 h-auto">
+              <TabsList className="w-full sm:w-auto grid grid-cols-2 h-auto">
                 <TabsTrigger value="add" className="gap-2 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-add-families">
                   <UserPlus className="h-4 w-4" />
                   <span className="hidden sm:inline">Add Families</span>
@@ -1763,14 +1763,6 @@ export default function Guests() {
                     <Badge variant="destructive" className="ml-1 h-5 px-1.5 text-xs">
                       {pendingSuggestions.length}
                     </Badge>
-                  )}
-                </TabsTrigger>
-                <TabsTrigger value="optimize" className="gap-2 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-budget-check">
-                  <Target className="h-4 w-4" />
-                  <span className="hidden sm:inline">Budget Check</span>
-                  <span className="sm:hidden text-xs">Budget</span>
-                  {needsCuts && (
-                    <Badge variant="destructive" className="ml-1 h-5 px-1.5 text-xs">!</Badge>
                   )}
                 </TabsTrigger>
               </TabsList>
@@ -1845,17 +1837,19 @@ export default function Guests() {
                           <CheckCircle2 className="h-4 w-4 text-green-500" />
                           {households.length} {households.length === 1 ? 'family' : 'families'} ({guests.length} guests)
                         </Badge>
-                        <div className="mt-4">
-                          <Button 
-                            variant="default"
-                            className="min-h-[48px]"
-                            onClick={() => setPlanningTab(totalPendingReviews > 0 ? "review" : "optimize")}
-                            data-testid="button-continue-planning"
-                          >
-                            Continue to {totalPendingReviews > 0 ? "Review Family Adds" : "Budget Check"}
-                            <ArrowRight className="h-4 w-4 ml-2" />
-                          </Button>
-                        </div>
+                        {totalPendingReviews > 0 && (
+                          <div className="mt-4">
+                            <Button 
+                              variant="default"
+                              className="min-h-[48px]"
+                              onClick={() => setPlanningTab("review")}
+                              data-testid="button-continue-planning"
+                            >
+                              Review Family Adds
+                              <ArrowRight className="h-4 w-4 ml-2" />
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     )}
                   </CardContent>

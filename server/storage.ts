@@ -9178,6 +9178,11 @@ export class DBStorage implements IStorage {
     const submission = await this.getGuestCollectorSubmission(id);
     if (!submission) throw new Error("Submission not found");
     
+    // Prevent re-approving an already approved submission (would create duplicate guests)
+    if (submission.status === 'approved') {
+      throw new Error("Submission has already been approved");
+    }
+    
     // Get collector link to determine side
     const link = await this.getGuestCollectorLink(submission.collectorLinkId);
     if (!link) throw new Error("Collector link not found");
