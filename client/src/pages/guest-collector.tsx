@@ -242,6 +242,26 @@ function AddressAutocomplete({
   );
 }
 
+type PreviousSubmission = {
+  id: string;
+  householdName: string;
+  mainContactName: string;
+  guestCount: number;
+  relationshipTier: string;
+  createdAt: string;
+  status: string;
+};
+
+function getOrCreateSessionId(token: string): string {
+  const storageKey = `collector_session_${token}`;
+  let sessionId = localStorage.getItem(storageKey);
+  if (!sessionId) {
+    sessionId = crypto.randomUUID();
+    localStorage.setItem(storageKey, sessionId);
+  }
+  return sessionId;
+}
+
 export default function GuestCollector() {
   const { token } = useParams<{ token: string }>();
   const { toast } = useToast();
@@ -250,11 +270,27 @@ export default function GuestCollector() {
   const [submitterInfo, setSubmitterInfo] = useState({ name: "", relation: "" });
   const [familiesDraft, setFamiliesDraft] = useState<FamilyDraft[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [sessionId, setSessionId] = useState<string>("");
+
+  useEffect(() => {
+    if (token) {
+      setSessionId(getOrCreateSessionId(token));
+    }
+  }, [token]);
 
   const { data: linkInfo, isLoading, error } = useQuery<CollectorLinkInfo>({
     queryKey: ["/api/collector", token],
     enabled: !!token,
     retry: false,
+  });
+
+  const { data: previousSubmissions = [], isLoading: loadingPrevious } = useQuery<PreviousSubmission[]>({
+    queryKey: ["/api/collector", token, "my-submissions", sessionId],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/collector/${token}/my-submissions?sessionId=${sessionId}`);
+      return res.json();
+    },
+    enabled: !!token && !!sessionId,
   });
 
   const form = useForm<FamilyFormData>({
@@ -288,6 +324,7 @@ export default function GuestCollector() {
           submitterName: submitterInfo.name,
           submitterRelation: submitterInfo.relation,
           isBulkEntry: false,
+          submissionSessionId: sessionId,
         })
       );
       return Promise.all(promises);
@@ -664,6 +701,44 @@ export default function GuestCollector() {
                         </Select>
                       </div>
                     </div>
+
+                    {previousSubmissions.length > 0 && (
+                      <div className="mt-6 pt-6 border-t border-pink-100 dark:border-pink-900/20">
+                        <h3 className="text-base font-semibold mb-3 flex items-center gap-2">
+                          <CheckCircle2 className="w-5 h-5 text-green-500" />
+                          Families You Already Added
+                        </h3>
+                        <div className="space-y-2">
+                          {previousSubmissions.map((sub) => (
+                            <div 
+                              key={sub.id} 
+                              className="p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-100 dark:border-green-900/30"
+                              data-testid={`previous-submission-${sub.id}`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="font-medium text-green-800 dark:text-green-200">
+                                    {sub.householdName || sub.mainContactName}
+                                  </p>
+                                  <p className="text-sm text-green-600 dark:text-green-400">
+                                    {sub.guestCount} {sub.guestCount === 1 ? 'guest' : 'guests'} • {RELATIONSHIP_TIERS.find(t => t.value === sub.relationshipTier)?.label || 'Guest'}
+                                  </p>
+                                </div>
+                                <span 
+                                  className="text-xs bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 px-2 py-1 rounded"
+                                  data-testid={`status-submission-${sub.id}`}
+                                >
+                                  {sub.status === 'pending' ? 'Pending review' : sub.status === 'approved' ? 'Approved' : 'Declined'}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-3">
+                          Want to add more families? Continue below.
+                        </p>
+                      </div>
+                    )}
                   </CardContent>
                 </>
               )}
