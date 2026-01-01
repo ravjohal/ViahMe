@@ -9017,31 +9017,35 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
         eventSuggestionsValue = [eventSuggestionsValue];
       }
       
+      // Ensure guestName is never empty (required field in database)
+      const guestName = req.body.guestName || req.body.householdName || "Unknown Guest";
+      console.log("[Collector Submit] guestName resolved to:", guestName);
+      
       const submissionData = {
         collectorLinkId: link.id,
         weddingId: link.weddingId,
-        submitterName: req.body.submitterName,
-        submitterRelation: req.body.submitterRelation,
-        guestName: req.body.guestName || req.body.householdName || "Unknown",
-        guestEmail: req.body.guestEmail || req.body.mainContactEmail,
-        guestPhone: req.body.guestPhone || req.body.mainContactPhone,
-        relationshipTier: req.body.relationshipTier,
-        notes: req.body.notes,
-        householdName: req.body.householdName,
-        guestNames: req.body.guestNames,
+        submitterName: req.body.submitterName || null,
+        submitterRelation: req.body.submitterRelation || null,
+        guestName: guestName,
+        guestEmail: req.body.guestEmail || req.body.mainContactEmail || null,
+        guestPhone: req.body.guestPhone || req.body.mainContactPhone || null,
+        relationshipTier: req.body.relationshipTier || null,
+        notes: req.body.notes || null,
+        householdName: req.body.householdName || null,
+        guestNames: req.body.guestNames || null,
         guestCount: req.body.guestCount || req.body.memberCount || 1,
-        desiDietaryType: req.body.desiDietaryType || req.body.householdDietaryRestriction,
-        guestDietaryInfo: req.body.guestDietaryInfo,
+        desiDietaryType: req.body.desiDietaryType || req.body.householdDietaryRestriction || null,
+        guestDietaryInfo: req.body.guestDietaryInfo || null,
         isBulkEntry: req.body.isBulkEntry || false,
-        mainContactName: req.body.mainContactName,
-        contactStreet: req.body.contactStreet,
-        contactCity: req.body.contactCity,
-        contactState: req.body.contactState,
-        contactPostalCode: req.body.contactPostalCode,
-        contactCountry: req.body.contactCountry,
-        submissionSessionId: req.body.submissionSessionId,
-        members: membersValue,
-        eventSuggestions: eventSuggestionsValue,
+        mainContactName: req.body.mainContactName || null,
+        contactStreet: req.body.contactStreet || null,
+        contactCity: req.body.contactCity || null,
+        contactState: req.body.contactState || null,
+        contactPostalCode: req.body.contactPostalCode || null,
+        contactCountry: req.body.contactCountry || null,
+        submissionSessionId: req.body.submissionSessionId || null,
+        members: membersValue || null,
+        eventSuggestions: eventSuggestionsValue || null,
       };
       
       console.log("[Collector Submit] Processed data:", JSON.stringify(submissionData, null, 2));
