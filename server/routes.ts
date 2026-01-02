@@ -8910,12 +8910,15 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
     }
     
     try {
+      console.log(`[Reactivate] Attempting to reactivate link: ${req.params.id}`);
       const link = await storage.updateGuestCollectorLink(req.params.id, { isActive: true });
+      console.log(`[Reactivate] Result:`, link ? { id: link.id, isActive: link.isActive } : 'null');
       if (!link) {
         return res.status(404).json({ error: "Collector link not found" });
       }
       res.json(link);
     } catch (error: any) {
+      console.error(`[Reactivate] Error:`, error);
       res.status(500).json({ error: error.message });
     }
   });

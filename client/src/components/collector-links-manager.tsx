@@ -102,7 +102,7 @@ export function CollectorLinksManager({ weddingId, onNavigateToReview }: Collect
     },
     onSuccess: () => {
       toast({ title: "Link reactivated", description: "This link is now active and can accept submissions." });
-      queryClient.invalidateQueries({ queryKey: ["/api/weddings", weddingId, "collector-links"] });
+      queryClient.refetchQueries({ queryKey: ["/api/weddings", weddingId, "collector-links"] });
     },
     onError: (error: any) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
