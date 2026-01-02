@@ -13,6 +13,10 @@ import { registerCollectorRoutes } from "./collector-submissions";
 import { registerWeddingRoutes } from "./weddings";
 import { registerEventRoutes, registerEventCostItemRoutes, registerWeddingCostSummaryRoute } from "./events";
 import { registerTaskRoutes, registerTaskReminderRoutes, registerTaskCommentRoutes } from "./tasks";
+import { registerBudgetCategoryRoutes } from "./budget-categories";
+import { registerExpenseRoutes, registerExpenseSplitRoutes } from "./expenses";
+import { registerHouseholdRoutes } from "./households";
+import { registerInvitationRoutes } from "./invitations";
 import { seedVendors, seedBudgetBenchmarks } from "../seed-data";
 
 let defaultStorageSeeded = false;
@@ -161,6 +165,26 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   const taskCommentRouter = Router();
   await registerTaskCommentRoutes(taskCommentRouter, storage);
   app.use("/api/task-comments", taskCommentRouter);
+
+  const budgetCategoryRouter = Router();
+  await registerBudgetCategoryRoutes(budgetCategoryRouter, storage);
+  app.use("/api/budget-categories", budgetCategoryRouter);
+
+  const expenseRouter = Router();
+  await registerExpenseRoutes(expenseRouter, storage);
+  app.use("/api/expenses", expenseRouter);
+
+  const expenseSplitRouter = Router();
+  await registerExpenseSplitRoutes(expenseSplitRouter, storage);
+  app.use("/api/expense-splits", expenseSplitRouter);
+
+  const householdRouter = Router();
+  await registerHouseholdRoutes(householdRouter, storage);
+  app.use("/api/households", householdRouter);
+
+  const invitationRouter = Router();
+  await registerInvitationRoutes(invitationRouter, storage);
+  app.use("/api/invitations", invitationRouter);
 
   const { registerLegacyRoutes } = await import("../routes-legacy");
   await registerLegacyRoutes(app, storage, { activeViewers, getViewerCount, cleanupStaleViewers });
