@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { AlertTriangle, Users, Mail, Phone, CheckCircle2, ArrowRight, Merge } from "lucide-react";
+import { AlertTriangle, Users, Mail, Phone, CheckCircle2, ArrowRight, Trash2 } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Household, Guest } from "@shared/schema";
@@ -43,8 +43,8 @@ export function DuplicatesManager({ weddingId }: DuplicatesManagerProps) {
       setMergeDialogOpen(false);
       setSelectedPair(null);
       toast({
-        title: "Families merged",
-        description: "The duplicate families have been combined successfully.",
+        title: "Duplicate resolved",
+        description: "The duplicate entry has been deleted.",
       });
     },
     onError: (error: any) => {
@@ -113,7 +113,7 @@ export function DuplicatesManager({ weddingId }: DuplicatesManagerProps) {
       <div>
         <h2 className="text-xl sm:text-2xl font-bold">Duplicate Detection</h2>
         <p className="text-muted-foreground mt-1 text-base">
-          Review potential duplicate families based on names, emails, and household info
+          Found families that might be duplicates. Choose which one to keep and delete the other.
         </p>
       </div>
 
@@ -139,7 +139,7 @@ export function DuplicatesManager({ weddingId }: DuplicatesManagerProps) {
               <CardHeader className="pb-3 bg-muted/30">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <Merge className="h-5 w-5 text-amber-500" />
+                    <AlertTriangle className="h-5 w-5 text-amber-500" />
                     Possible Duplicate
                   </CardTitle>
                   <Badge className={getConfidenceColor(pair.confidence)}>
@@ -173,8 +173,8 @@ export function DuplicatesManager({ weddingId }: DuplicatesManagerProps) {
                     className="min-h-[48px] text-base gap-2"
                     data-testid={`button-merge-${index}`}
                   >
-                    <Merge className="h-5 w-5" />
-                    Merge These Families
+                    <Trash2 className="h-5 w-5" />
+                    Resolve Duplicate
                   </Button>
                 </div>
               </CardContent>
@@ -187,58 +187,73 @@ export function DuplicatesManager({ weddingId }: DuplicatesManagerProps) {
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
-              <Merge className="h-5 w-5" />
-              Merge Families
+              <Trash2 className="h-5 w-5" />
+              Resolve Duplicate
             </DialogTitle>
             <DialogDescription className="text-base">
-              Choose which family record to keep. The other will be deleted and its guests will be moved to the surviving record.
+              Choose which family to keep. The other will be permanently deleted.
             </DialogDescription>
           </DialogHeader>
           
-          {selectedPair && (
-            <div className="space-y-4 py-4">
-              <div className="grid grid-cols-2 gap-4 text-center">
-                <div>
-                  <p className="font-semibold text-lg">{selectedPair.household1.name}</p>
-                  <p className="text-base text-muted-foreground">
-                    {selectedPair.guests1.length} guest{selectedPair.guests1.length !== 1 ? "s" : ""}
-                  </p>
-                  <Badge variant="outline" className="mt-2 text-base">
-                    {new Date(selectedPair.household1.createdAt) < new Date(selectedPair.household2.createdAt) ? "Older" : "Newer"}
-                  </Badge>
+          {selectedPair && (() => {
+            const h1Date = new Date(selectedPair.household1.createdAt);
+            const h2Date = new Date(selectedPair.household2.createdAt);
+            const h1IsOlder = h1Date < h2Date;
+            const olderHousehold = h1IsOlder ? selectedPair.household1 : selectedPair.household2;
+            const newerHousehold = h1IsOlder ? selectedPair.household2 : selectedPair.household1;
+            const olderGuests = h1IsOlder ? selectedPair.guests1 : selectedPair.guests2;
+            const newerGuests = h1IsOlder ? selectedPair.guests2 : selectedPair.guests1;
+            
+            return (
+              <div className="space-y-4 py-4">
+                <div className="space-y-3">
+                  <div className="border rounded-lg p-4 bg-muted/30">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="font-semibold text-lg">{olderHousehold.name}</p>
+                      <Badge variant="outline">Added first</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {olderGuests.length} guest{olderGuests.length !== 1 ? "s" : ""} · 
+                      Added {h1IsOlder ? h1Date.toLocaleDateString() : h2Date.toLocaleDateString()}
+                    </p>
+                    <Button
+                      variant="default"
+                      onClick={() => executeMerge(true)}
+                      disabled={mergeMutation.isPending}
+                      className="w-full mt-3 min-h-[44px]"
+                      data-testid="button-keep-older"
+                    >
+                      Keep This One (Delete the other)
+                    </Button>
+                  </div>
+                  
+                  <div className="border rounded-lg p-4 bg-muted/30">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="font-semibold text-lg">{newerHousehold.name}</p>
+                      <Badge variant="outline">Added later</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {newerGuests.length} guest{newerGuests.length !== 1 ? "s" : ""} · 
+                      Added {h1IsOlder ? h2Date.toLocaleDateString() : h1Date.toLocaleDateString()}
+                    </p>
+                    <Button
+                      variant="default"
+                      onClick={() => executeMerge(false)}
+                      disabled={mergeMutation.isPending}
+                      className="w-full mt-3 min-h-[44px]"
+                      data-testid="button-keep-newer"
+                    >
+                      Keep This One (Delete the other)
+                    </Button>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-semibold text-lg">{selectedPair.household2.name}</p>
-                  <p className="text-base text-muted-foreground">
-                    {selectedPair.guests2.length} guest{selectedPair.guests2.length !== 1 ? "s" : ""}
-                  </p>
-                  <Badge variant="outline" className="mt-2 text-base">
-                    {new Date(selectedPair.household2.createdAt) < new Date(selectedPair.household1.createdAt) ? "Older" : "Newer"}
-                  </Badge>
-                </div>
+                
+                <p className="text-sm text-muted-foreground text-center">
+                  The deleted family and all its guests will be removed permanently.
+                </p>
               </div>
-            </div>
-          )}
-
-          <DialogFooter className="flex-col sm:flex-row gap-3">
-            <Button
-              variant="outline"
-              onClick={() => executeMerge(true)}
-              disabled={mergeMutation.isPending}
-              className="min-h-[48px] text-base flex-1"
-              data-testid="button-keep-older"
-            >
-              Keep Older Entry
-            </Button>
-            <Button
-              onClick={() => executeMerge(false)}
-              disabled={mergeMutation.isPending}
-              className="min-h-[48px] text-base flex-1"
-              data-testid="button-keep-newer"
-            >
-              Keep Newer Entry
-            </Button>
-          </DialogFooter>
+            );
+          })()}
         </DialogContent>
       </Dialog>
     </div>
