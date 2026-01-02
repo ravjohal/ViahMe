@@ -35,6 +35,8 @@ import { registerVendorToolsRoutes } from "./vendor-tools";
 import { createReviewsRouter } from "./reviews";
 import { createPlaylistsRouter, createSongsRouter, createVotesRouter } from "./playlists";
 import { createDocumentsRouter, createObjectStorageRouter, createObjectDownloadRouter } from "./documents";
+import { createWeddingWebsitesRouter, createRegistriesRouter, createPublicWeddingRouter } from "./wedding-websites";
+import { createGalleriesRouter, createPhotosRouter } from "./galleries";
 import { seedVendors, seedBudgetBenchmarks } from "../seed-data";
 
 let defaultStorageSeeded = false;
@@ -281,6 +283,17 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   app.use("/api/documents", createDocumentsRouter(storage));
   app.use("/api/objects", createObjectStorageRouter());
   app.use("/objects", createObjectDownloadRouter());
+
+  // Wedding websites and registries
+  app.use("/api/wedding-websites", createWeddingWebsitesRouter(storage));
+  app.use("/api/registry-retailers", createRegistriesRouter(storage));
+  app.use("/api/weddings", createRegistriesRouter(storage));
+  app.use("/api/registries", createRegistriesRouter(storage));
+  app.use("/api/public", createPublicWeddingRouter(storage));
+
+  // Galleries and photos
+  app.use("/api/galleries", createGalleriesRouter(storage));
+  app.use("/api/photos", createPhotosRouter(storage));
 
   const { registerLegacyRoutes } = await import("../routes-legacy");
   await registerLegacyRoutes(app, storage, { activeViewers, getViewerCount, cleanupStaleViewers });
