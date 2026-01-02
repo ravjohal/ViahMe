@@ -269,7 +269,7 @@ export default function Guests() {
   const { toast } = useToast();
   
   // Top-level tab state
-  const [mainTab, setMainTab] = useState("guest-planning");
+  const [mainTab, setMainTab] = useState("guest-list");
   const [planningTab, setPlanningTab] = useState("add");
   const [submissionFilter, setSubmissionFilter] = useState<"all" | "pending" | "approved" | "maybe" | "declined">("all");
   
@@ -1184,23 +1184,10 @@ export default function Guests() {
         {/* Top-level tabs: Guest List and Guest Planning */}
         <Tabs value={mainTab} onValueChange={setMainTab} className="space-y-6">
           <div className="flex items-center justify-between gap-4 flex-wrap">
-            <TabsList className="grid grid-cols-2 w-auto">
-              <TabsTrigger value="guest-planning" data-testid="tab-guest-planning" className="gap-2">
-                <ClipboardList className="w-4 h-4" />
-                <span className="hidden sm:inline">Plan & Review</span>
-                <span className="sm:hidden">Plan</span>
-                {totalPendingReviews > 0 && (
-                  <Badge variant="destructive" className="ml-1 h-5 px-1.5 text-xs">
-                    {totalPendingReviews}
-                  </Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="guest-list" data-testid="tab-guest-list" className="gap-2">
-                <Users className="w-4 h-4" />
-                <span className="hidden sm:inline">View Guest List</span>
-                <span className="sm:hidden">List</span>
-              </TabsTrigger>
-            </TabsList>
+            <h1 className="text-2xl font-semibold flex items-center gap-2">
+              <Users className="w-6 h-6" />
+              Guest List
+            </h1>
             
             <Link href="/communication-hub">
               <Button className="min-h-[48px] gap-2" data-testid="button-send-invites">
@@ -1710,102 +1697,6 @@ export default function Guests() {
               </TabsContent>
             </Tabs>
           </TabsContent>
-
-          {/* Guest Planning Tab - Simplified unified experience */}
-          <TabsContent value="guest-planning" className="space-y-6">
-            {/* Capacity Bar - Single consolidated stat display */}
-            <Card className="border-primary/20">
-              <CardContent className="p-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2">
-                      <Users className="h-5 w-5 text-primary" />
-                      <span className="font-semibold">Capacity Overview</span>
-                    </div>
-                    {workflowSteps.every(s => s.isComplete) && (
-                      <Badge className="bg-green-500 text-white gap-1">
-                        <Sparkles className="h-3 w-3" />
-                        Ready!
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-4 text-sm">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-3 h-3 rounded-full bg-green-500" />
-                      <span className="text-muted-foreground">Confirmed:</span>
-                      <span className="font-semibold">{planningSnapshot?.summary.confirmedSeats || guests.length}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-3 h-3 rounded-full bg-amber-500" />
-                      <span className="text-muted-foreground">Pending:</span>
-                      <span className="font-semibold">{planningSnapshot?.summary.pendingSeats || pendingCollectorSubmissions.length}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-3 h-3 rounded-full bg-muted" />
-                      <span className="text-muted-foreground">Budget:</span>
-                      <span className="font-semibold">{budgetData?.capacity.maxGuests || "—"}</span>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Progress Bar */}
-                <div className="relative h-4 bg-muted rounded-full overflow-hidden">
-                  {(() => {
-                    const maxGuests = budgetData?.capacity.maxGuests || 0;
-                    const confirmed = planningSnapshot?.summary.confirmedSeats || guests.length;
-                    const pending = planningSnapshot?.summary.pendingSeats || pendingCollectorSubmissions.length;
-                    if (maxGuests <= 0) return null;
-                    
-                    const confirmedPct = Math.min(Math.max((confirmed / maxGuests) * 100, 0), 100);
-                    const pendingPct = Math.min(Math.max((pending / maxGuests) * 100, 0), 100 - confirmedPct);
-                    
-                    return (
-                      <>
-                        <div 
-                          className="absolute h-full bg-green-500 transition-all"
-                          style={{ width: `${confirmedPct}%` }}
-                        />
-                        <div 
-                          className="absolute h-full bg-amber-500 transition-all"
-                          style={{ left: `${confirmedPct}%`, width: `${pendingPct}%` }}
-                        />
-                      </>
-                    );
-                  })()}
-                </div>
-                
-                {/* Over capacity warning */}
-                {budgetData?.capacity.maxGuests && budgetData.capacity.maxGuests > 0 && ((planningSnapshot?.summary.confirmedSeats || guests.length) + (planningSnapshot?.summary.pendingSeats || 0)) > budgetData.capacity.maxGuests && (
-                  <div className="flex items-center gap-2 mt-2 text-sm text-destructive">
-                    <AlertTriangle className="h-4 w-4" />
-                    <span>Over budget by {((planningSnapshot?.summary.confirmedSeats || guests.length) + (planningSnapshot?.summary.pendingSeats || 0)) - budgetData.capacity.maxGuests} guests</span>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Planning Tabs - Simplified with clear action labels */}
-            <Tabs value={planningTab} onValueChange={setPlanningTab}>
-              <TabsList className="w-full sm:w-auto grid grid-cols-2 h-auto">
-                <TabsTrigger value="add" className="gap-2 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-add-families">
-                  <UserPlus className="h-4 w-4" />
-                  <span className="hidden sm:inline">Add Families</span>
-                  <span className="sm:hidden text-xs">Add</span>
-                </TabsTrigger>
-                <TabsTrigger value="review" className="gap-2 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-review-families">
-                  <Inbox className="h-4 w-4" />
-                  <span className="hidden sm:inline">Review Family Adds</span>
-                  <span className="sm:hidden text-xs">Review</span>
-                  {pendingCollectorSubmissions.length > 0 && (
-                    <Badge variant="destructive" className="ml-1 h-5 px-1.5 text-xs">
-                      {pendingCollectorSubmissions.length}
-                    </Badge>
-                  )}
-                </TabsTrigger>
-              </TabsList>
-
-              {/* Phase 1: Add Families - Import or add manually */}
-              <TabsContent value="add" className="space-y-6">
                 <Card className="border-2 border-primary/20 bg-gradient-to-br from-orange-50/50 to-pink-50/50 dark:from-orange-950/10 dark:to-pink-950/10">
                   <CardContent className="p-6 sm:p-8">
                     <div className="text-center mb-6 sm:mb-8">
