@@ -1578,7 +1578,7 @@ export default function Guests() {
                                 data-testid={`button-generate-link-${household.id}`}
                               >
                                 <LinkIcon className="w-3 h-3 mr-1" />
-                                Generate Link
+                                Generate RSVP Link
                               </Button>
                             )}
                           </div>
