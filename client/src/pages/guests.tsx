@@ -1456,69 +1456,74 @@ export default function Guests() {
                           </div>
 
                           {/* Main Point of Contact */}
-                          {(household.contactEmail || household.contactPhone || householdGuests.length > 0) && (
-                            <div className="text-sm border rounded-md p-2 bg-muted/30 space-y-2">
-                              <div className="flex items-center gap-2">
-                                <User className="w-4 h-4 text-muted-foreground" />
-                                <span className="font-medium">
-                                  {householdGuests[household.headOfHouseIndex || 0]?.name || household.name}
-                                </span>
-                                <Badge variant="outline" className="text-xs">Main Contact</Badge>
-                              </div>
-                              {(household.contactPhone || household.contactEmail) && (
-                                <div className="text-xs text-muted-foreground space-y-1 pl-6">
-                                  {household.contactPhone && (
-                                    <div className="flex items-center gap-1.5" data-testid={`text-phone-${household.id}`}>
-                                      <Phone className="w-3 h-3" />
-                                      <span>{household.contactPhone}</span>
-                                    </div>
-                                  )}
-                                  {household.contactEmail && (
-                                    <div className="flex items-center gap-1.5" data-testid={`text-email-${household.id}`}>
-                                      <Mail className="w-3 h-3" />
-                                      <span className="truncate">{household.contactEmail}</span>
-                                    </div>
-                                  )}
+                          {(() => {
+                            const mainContactGuest = householdGuests.find(g => g.isMainHouseholdContact) || householdGuests[0];
+                            const contactPhone = mainContactGuest?.phone;
+                            const contactEmail = mainContactGuest?.email || household.contactEmail;
+                            return (contactEmail || contactPhone || householdGuests.length > 0) && (
+                              <div className="text-sm border rounded-md p-2 bg-muted/30 space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <User className="w-4 h-4 text-muted-foreground" />
+                                  <span className="font-medium">
+                                    {mainContactGuest?.name || household.name}
+                                  </span>
+                                  <Badge variant="outline" className="text-xs">Main Contact</Badge>
                                 </div>
-                              )}
-                              {household.contactPhone && (
-                                <div className="flex flex-wrap gap-1 pl-6">
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    className="h-7 text-xs gap-1"
-                                    onClick={() => window.open(`https://wa.me/${household.contactPhone!.replace(/\D/g, '')}`, '_blank')}
-                                    data-testid={`button-whatsapp-${household.id}`}
-                                  >
-                                    <MessageCircle className="w-3 h-3" />
-                                    WhatsApp
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    className="h-7 text-xs gap-1"
-                                    onClick={() => window.open(`sms:${household.contactPhone}`, '_blank')}
-                                    data-testid={`button-sms-${household.id}`}
-                                  >
-                                    <Phone className="w-3 h-3" />
-                                    SMS
-                                  </Button>
-                                  {household.contactEmail && (
+                                {(contactPhone || contactEmail) && (
+                                  <div className="text-xs text-muted-foreground space-y-1 pl-6">
+                                    {contactPhone && (
+                                      <div className="flex items-center gap-1.5" data-testid={`text-phone-${household.id}`}>
+                                        <Phone className="w-3 h-3" />
+                                        <span>{contactPhone}</span>
+                                      </div>
+                                    )}
+                                    {contactEmail && (
+                                      <div className="flex items-center gap-1.5" data-testid={`text-email-${household.id}`}>
+                                        <Mail className="w-3 h-3" />
+                                        <span className="truncate">{contactEmail}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                                {contactPhone && (
+                                  <div className="flex flex-wrap gap-1 pl-6">
                                     <Button
                                       size="sm"
                                       variant="ghost"
                                       className="h-7 text-xs gap-1"
-                                      onClick={() => window.open(`mailto:${household.contactEmail}`, '_blank')}
-                                      data-testid={`button-email-${household.id}`}
+                                      onClick={() => window.open(`https://wa.me/${contactPhone.replace(/\D/g, '')}`, '_blank')}
+                                      data-testid={`button-whatsapp-${household.id}`}
                                     >
-                                      <Mail className="w-3 h-3" />
-                                      Email
+                                      <MessageCircle className="w-3 h-3" />
+                                      WhatsApp
                                     </Button>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          )}
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-7 text-xs gap-1"
+                                      onClick={() => window.open(`sms:${contactPhone}`, '_blank')}
+                                      data-testid={`button-sms-${household.id}`}
+                                    >
+                                      <Phone className="w-3 h-3" />
+                                      SMS
+                                    </Button>
+                                    {contactEmail && (
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-7 text-xs gap-1"
+                                        onClick={() => window.open(`mailto:${contactEmail}`, '_blank')}
+                                        data-testid={`button-email-${household.id}`}
+                                      >
+                                        <Mail className="w-3 h-3" />
+                                        Email
+                                      </Button>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
 
                           {householdGuests.length > 0 && (
                             <div className="text-sm text-muted-foreground">
@@ -3185,21 +3190,37 @@ export default function Guests() {
               <p className="text-sm font-medium">Households with phone numbers:</p>
               <div className="flex flex-wrap gap-2">
                 {households
-                  .filter(h => h.contactPhone || parseMembers(h).some((m: any) => m.phone))
+                  .filter(h => {
+                    const householdGuests = guests.filter(g => g.householdId === h.id);
+                    const mainContact = householdGuests.find(g => g.isMainHouseholdContact) || householdGuests[0];
+                    return mainContact?.phone || parseMembers(h).some((m: any) => m.phone);
+                  })
                   .slice(0, 5)
                   .map(h => (
                     <Badge key={h.id} variant="outline" className="text-xs">
                       {h.name}
                     </Badge>
                   ))}
-                {households.filter(h => h.contactPhone || parseMembers(h).some((m: any) => m.phone)).length > 5 && (
+                {households.filter(h => {
+                  const householdGuests = guests.filter(g => g.householdId === h.id);
+                  const mainContact = householdGuests.find(g => g.isMainHouseholdContact) || householdGuests[0];
+                  return mainContact?.phone || parseMembers(h).some((m: any) => m.phone);
+                }).length > 5 && (
                   <Badge variant="secondary" className="text-xs">
-                    +{households.filter(h => h.contactPhone || parseMembers(h).some((m: any) => m.phone)).length - 5} more
+                    +{households.filter(h => {
+                      const householdGuests = guests.filter(g => g.householdId === h.id);
+                      const mainContact = householdGuests.find(g => g.isMainHouseholdContact) || householdGuests[0];
+                      return mainContact?.phone || parseMembers(h).some((m: any) => m.phone);
+                    }).length - 5} more
                   </Badge>
                 )}
               </div>
               <p className="text-xs text-muted-foreground">
-                {households.filter(h => h.contactPhone || parseMembers(h).some((m: any) => m.phone)).length} of {households.length} households have phone numbers
+                {households.filter(h => {
+                  const householdGuests = guests.filter(g => g.householdId === h.id);
+                  const mainContact = householdGuests.find(g => g.isMainHouseholdContact) || householdGuests[0];
+                  return mainContact?.phone || parseMembers(h).some((m: any) => m.phone);
+                }).length} of {households.length} households have phone numbers
               </p>
             </div>
             
@@ -3214,7 +3235,9 @@ export default function Guests() {
               <Button
                 onClick={() => {
                   const eligibleHouseholds = households.filter(h => {
-                    const phone = h.contactPhone || parseMembers(h).find((m: any) => m.phone)?.phone;
+                    const householdGuests = guests.filter(g => g.householdId === h.id);
+                    const mainContact = householdGuests.find(g => g.isMainHouseholdContact) || householdGuests[0];
+                    const phone = mainContact?.phone || parseMembers(h).find((m: any) => m.phone)?.phone;
                     return !!phone;
                   });
                   
@@ -3228,7 +3251,9 @@ export default function Guests() {
                   }
 
                   const firstHousehold = eligibleHouseholds[0];
-                  const phone = firstHousehold.contactPhone || parseMembers(firstHousehold).find((m: any) => m.phone)?.phone;
+                  const householdGuests = guests.filter(g => g.householdId === firstHousehold.id);
+                  const mainContact = householdGuests.find(g => g.isMainHouseholdContact) || householdGuests[0];
+                  const phone = mainContact?.phone || parseMembers(firstHousehold).find((m: any) => m.phone)?.phone;
                   const cleanPhone = phone.replace(/\D/g, '');
                   const personalizedMessage = whatsappTemplate.replace(/{name}/g, firstHousehold.name);
                   const encodedMessage = encodeURIComponent(personalizedMessage);

@@ -249,6 +249,10 @@ export function DuplicatesManager({ weddingId }: DuplicatesManagerProps) {
 }
 
 function HouseholdCard({ household, guests, label }: { household: Household; guests: Guest[]; label: string }) {
+  const mainContactGuest = guests.find(g => g.isMainHouseholdContact) || guests[0];
+  const contactEmail = mainContactGuest?.email || household.contactEmail;
+  const contactPhone = mainContactGuest?.phone;
+  
   return (
     <div className="border rounded-lg p-4 bg-background">
       <div className="flex items-start justify-between mb-3">
@@ -263,16 +267,16 @@ function HouseholdCard({ household, guests, label }: { household: Household; gue
       </div>
       
       <div className="space-y-2 text-base">
-        {household.contactEmail && (
+        {contactEmail && (
           <div className="flex items-center gap-2 text-muted-foreground">
             <Mail className="h-5 w-5" />
-            <span className="truncate">{household.contactEmail}</span>
+            <span className="truncate">{contactEmail}</span>
           </div>
         )}
-        {household.contactPhone && (
+        {contactPhone && (
           <div className="flex items-center gap-2 text-muted-foreground">
             <Phone className="h-5 w-5" />
-            <span>{household.contactPhone}</span>
+            <span>{contactPhone}</span>
           </div>
         )}
         

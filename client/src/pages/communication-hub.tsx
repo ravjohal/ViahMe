@@ -194,11 +194,19 @@ export default function CommunicationHub() {
   };
 
   const householdsWithContact = useMemo(() => {
-    if (!households) return { email: 0, phone: 0, total: 0 };
-    const withEmail = households.filter((h) => h.contactEmail).length;
-    const withPhone = households.filter((h) => h.contactPhone).length;
+    if (!households || !guests) return { email: 0, phone: 0, total: 0 };
+    const withEmail = households.filter((h) => {
+      const householdGuests = guests.filter(g => g.householdId === h.id);
+      const mainContact = householdGuests.find(g => g.isMainHouseholdContact) || householdGuests[0];
+      return mainContact?.email || h.contactEmail;
+    }).length;
+    const withPhone = households.filter((h) => {
+      const householdGuests = guests.filter(g => g.householdId === h.id);
+      const mainContact = householdGuests.find(g => g.isMainHouseholdContact) || householdGuests[0];
+      return mainContact?.phone;
+    }).length;
     return { email: withEmail, phone: withPhone, total: households.length };
-  }, [households]);
+  }, [households, guests]);
 
   const totalResponded = useMemo(() => {
     if (!rsvpStats?.length) return { attending: 0, declined: 0, pending: 0, total: 0 };
@@ -364,41 +372,47 @@ export default function CommunicationHub() {
                         <p className="text-sm">Add households in the Guests page first</p>
                       </div>
                     ) : (
-                      filteredHouseholds.map((household) => (
-                        <div
-                          key={household.id}
-                          className={`flex items-center gap-3 p-3 rounded-lg hover-elevate cursor-pointer ${
-                            selectedHouseholds.includes(household.id)
-                              ? "bg-primary/10"
-                              : "bg-muted/30"
-                          }`}
-                          onClick={() => toggleHousehold(household.id)}
-                          data-testid={`household-row-${household.id}`}
-                        >
-                          <Checkbox
-                            checked={selectedHouseholds.includes(household.id)}
-                            className="h-5 w-5"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium truncate">{household.name}</p>
-                            <div className="flex gap-2 mt-0.5">
-                              {household.contactEmail && (
-                                <Badge variant="outline" className="text-xs">
-                                  <Mail className="h-3 w-3 mr-1" />
-                                  Email
-                                </Badge>
-                              )}
-                              {household.contactPhone && (
-                                <Badge variant="outline" className="text-xs">
-                                  <Phone className="h-3 w-3 mr-1" />
-                                  Phone
-                                </Badge>
-                              )}
+                      filteredHouseholds.map((household) => {
+                        const householdGuests = guests?.filter(g => g.householdId === household.id) || [];
+                        const mainContact = householdGuests.find(g => g.isMainHouseholdContact) || householdGuests[0];
+                        const hasEmail = mainContact?.email || household.contactEmail;
+                        const hasPhone = mainContact?.phone;
+                        return (
+                          <div
+                            key={household.id}
+                            className={`flex items-center gap-3 p-3 rounded-lg hover-elevate cursor-pointer ${
+                              selectedHouseholds.includes(household.id)
+                                ? "bg-primary/10"
+                                : "bg-muted/30"
+                            }`}
+                            onClick={() => toggleHousehold(household.id)}
+                            data-testid={`household-row-${household.id}`}
+                          >
+                            <Checkbox
+                              checked={selectedHouseholds.includes(household.id)}
+                              className="h-5 w-5"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium truncate">{household.name}</p>
+                              <div className="flex gap-2 mt-0.5">
+                                {hasEmail && (
+                                  <Badge variant="outline" className="text-xs">
+                                    <Mail className="h-3 w-3 mr-1" />
+                                    Email
+                                  </Badge>
+                                )}
+                                {hasPhone && (
+                                  <Badge variant="outline" className="text-xs">
+                                    <Phone className="h-3 w-3 mr-1" />
+                                    Phone
+                                  </Badge>
+                                )}
+                              </div>
                             </div>
+                            <Badge variant="secondary">{household.maxCount} guests</Badge>
                           </div>
-                          <Badge variant="secondary">{household.maxCount} guests</Badge>
-                        </div>
-                      ))
+                        );
+                      })
                     )}
                   </div>
                 </ScrollArea>
