@@ -1,7 +1,9 @@
 import { Router } from "express";
+import { z } from "zod";
+import { randomUUID } from "crypto";
 import { requireAuth, type AuthRequest } from "../auth-middleware";
 import type { IStorage } from "../storage";
-import { insertVendorSchema, insertBookingSchema, insertServicePackageSchema, insertReviewSchema, type Vendor } from "@shared/schema";
+import { insertVendorSchema, insertBookingSchema, insertServicePackageSchema, insertReviewSchema, coupleSubmitVendorSchema, type Vendor, type InsertVendor } from "@shared/schema";
 import { ensureVendorAccess } from "./middleware";
 import { sendBookingConfirmationEmail, sendVendorNotificationEmail } from "../email";
 
@@ -79,10 +81,35 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
         );
       });
       
+      const maskEmail = (email: string | null): string | null => {
+        if (!email) return null;
+        const [local, domain] = email.split('@');
+        if (!domain) return '***@***.***';
+        const maskedLocal = local.length > 2 ? local[0] + '*'.repeat(local.length - 2) + local[local.length - 1] : '***';
+        return `${maskedLocal}@${domain}`;
+      };
+      
+      const maskPhone = (phone: string | null): string | null => {
+        if (!phone) return null;
+        const digits = phone.replace(/\D/g, '');
+        if (digits.length < 4) return '***-***-****';
+        return `***-***-${digits.slice(-4)}`;
+      };
+      
       const sanitizedVendors = unclaimedVendors.slice(0, 20).map(v => ({
-        ...v,
-        email: v.email ? v.email.replace(/(.{2})(.*)(@.*)/, "$1***$3") : null,
-        phone: v.phone ? v.phone.replace(/(\d{3})(\d{3})(\d{4})/, "($1) ***-$3") : null,
+        id: v.id,
+        name: v.name,
+        category: v.category,
+        categories: v.categories,
+        location: v.location,
+        city: v.city,
+        priceRange: v.priceRange,
+        rating: v.rating,
+        claimed: v.claimed,
+        email: maskEmail(v.email),
+        phone: maskPhone(v.phone),
+        hasEmail: !!v.email,
+        hasPhone: !!v.phone,
       }));
       
       res.json(sanitizedVendors);
@@ -435,6 +462,297 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
       res.json(availability);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch vendor availability" });
+    }
+  });
+
+  router.post("/submit", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      if (!authReq.user) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      if (authReq.user.role !== "couple") {
+        return res.status(403).json({ error: "Only couples can submit vendor profiles" });
+      }
+      
+      const validatedData = coupleSubmitVendorSchema.parse(req.body);
+      
+      const vendorData: InsertVendor = {
+        name: validatedData.name,
+        categories: validatedData.categories,
+        city: validatedData.city,
+        location: validatedData.location,
+        priceRange: validatedData.priceRange,
+        culturalSpecialties: validatedData.culturalSpecialties || [],
+        description: validatedData.description || null,
+        email: validatedData.email || null,
+        phone: validatedData.phone,
+        website: validatedData.website || null,
+        instagram: validatedData.instagram,
+        isPublished: false,
+        claimed: false,
+        source: "couple_submitted",
+        createdByUserId: authReq.user.id,
+        createdByUserType: "couple",
+        calendarShared: false,
+        calendarSource: "local",
+        featured: false,
+      };
+      
+      const vendor = await storage.createVendor(vendorData);
+      
+      const updatedVendor = await storage.updateVendor(vendor.id, {
+        approvalStatus: "pending",
+      });
+      
+      res.json({ message: "Vendor submitted for review", vendor: updatedVendor });
+    } catch (error) {
+      console.error("Error submitting vendor:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Validation failed", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to submit vendor" });
+    }
+  });
+
+  router.post("/:id/request-claim", async (req, res) => {
+    try {
+      const vendor = await storage.getVendor(req.params.id);
+      if (!vendor) {
+        return res.status(404).json({ error: "Vendor not found" });
+      }
+      
+      if (vendor.claimed) {
+        return res.status(400).json({ error: "This profile has already been claimed" });
+      }
+      
+      if (vendor.email) {
+        const claimToken = randomUUID();
+        const claimTokenExpires = new Date(Date.now() + 48 * 60 * 60 * 1000);
+        
+        await storage.updateVendor(req.params.id, {
+          claimToken,
+          claimTokenExpires,
+        } as any);
+        
+        const claimLink = `${req.protocol}://${req.get('host')}/claim-profile?token=${claimToken}`;
+        
+        try {
+          await storage.sendClaimEmail(vendor.id, vendor.email, vendor.name, claimLink);
+        } catch (err) {
+          console.error("Failed to send claim email:", err);
+        }
+        
+        return res.json({
+          message: "Claim request sent. Check your email for verification instructions.",
+          requiresEmail: false,
+          ...(process.env.NODE_ENV === 'development' && { claimLink }),
+        });
+      }
+      
+      const { claimantEmail, claimantName, claimantPhone, notes } = req.body;
+      
+      if (!claimantEmail) {
+        return res.status(400).json({ 
+          error: "This vendor has no email on file. Please provide your business email for verification.",
+          requiresEmail: true
+        });
+      }
+      
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(claimantEmail)) {
+        return res.status(400).json({ error: "Please provide a valid email address" });
+      }
+      
+      const existingClaims = await storage.getVendorClaimStagingByVendor(req.params.id);
+      const pendingClaim = existingClaims.find(c => c.status === 'pending');
+      if (pendingClaim) {
+        return res.status(400).json({ 
+          error: "There is already a pending claim for this vendor. Please wait for admin review." 
+        });
+      }
+      
+      await storage.createVendorClaimStaging({
+        vendorId: req.params.id,
+        vendorName: vendor.name,
+        vendorCategories: vendor.categories,
+        vendorLocation: vendor.location,
+        vendorCity: vendor.city,
+        claimantEmail,
+        claimantName: claimantName || null,
+        claimantPhone: claimantPhone || null,
+        notes: notes || null,
+      });
+      
+      res.json({
+        message: "Claim request submitted for admin review. We'll contact you at the provided email once verified.",
+        requiresEmail: false,
+        pendingAdminReview: true,
+      });
+    } catch (error) {
+      console.error("Error requesting claim:", error);
+      res.status(500).json({ error: "Failed to request profile claim" });
+    }
+  });
+
+  router.get("/claim/verify", async (req, res) => {
+    try {
+      const token = req.query.token as string;
+      
+      if (!token) {
+        return res.status(400).json({ error: "Claim token is required", valid: false });
+      }
+      
+      const vendor = await storage.getVendorByClaimToken(token);
+      if (!vendor) {
+        return res.status(404).json({ error: "Invalid or expired claim token", valid: false });
+      }
+      
+      if (vendor.claimTokenExpires && new Date() > new Date(vendor.claimTokenExpires)) {
+        return res.status(400).json({ error: "Claim token has expired", valid: false, expired: true });
+      }
+      
+      res.json({
+        valid: true,
+        vendor: {
+          id: vendor.id,
+          name: vendor.name,
+          categories: vendor.categories,
+          location: vendor.location,
+          phone: vendor.phone,
+          website: vendor.website,
+          description: vendor.description,
+          priceRange: vendor.priceRange,
+        },
+      });
+    } catch (error) {
+      console.error("Error verifying claim token:", error);
+      res.status(500).json({ error: "Failed to verify claim token", valid: false });
+    }
+  });
+
+  router.post("/claim/complete", async (req, res) => {
+    try {
+      const { token, email, password, phone, description, website, priceRange } = req.body;
+      
+      if (!token || !email || !password) {
+        return res.status(400).json({ error: "Token, email, and password are required" });
+      }
+      
+      const vendor = await storage.getVendorByClaimToken(token);
+      if (!vendor) {
+        return res.status(404).json({ error: "Invalid or expired claim token" });
+      }
+      
+      if (vendor.claimTokenExpires && new Date() > new Date(vendor.claimTokenExpires)) {
+        return res.status(400).json({ error: "Claim token has expired. Please request a new one." });
+      }
+      
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ error: "Email already in use. Please login instead." });
+      }
+      
+      const bcrypt = await import('bcrypt');
+      const passwordHash = await bcrypt.hash(password, 10);
+      const newUser = await storage.createUser({
+        email,
+        passwordHash,
+        role: 'vendor',
+        emailVerified: true,
+      });
+      
+      await storage.updateVendor(vendor.id, {
+        claimed: true,
+        userId: newUser.id,
+        claimToken: null,
+        claimTokenExpires: null,
+        email: email,
+        phone: phone || vendor.phone,
+        description: description || vendor.description,
+        website: website || vendor.website,
+        priceRange: priceRange || vendor.priceRange,
+      } as any);
+      
+      res.json({
+        message: "Profile claimed successfully! You can now login to manage your profile.",
+        vendorId: vendor.id,
+      });
+    } catch (error) {
+      console.error("Error completing claim:", error);
+      res.status(500).json({ error: "Failed to complete claim" });
+    }
+  });
+
+  router.post("/claim/verify", async (req, res) => {
+    try {
+      const { token, email, password } = req.body;
+      
+      if (!token) {
+        return res.status(400).json({ error: "Claim token is required" });
+      }
+      
+      const vendor = await storage.getVendorByClaimToken(token);
+      if (!vendor) {
+        return res.status(404).json({ error: "Invalid or expired claim token" });
+      }
+      
+      if (vendor.claimTokenExpires && new Date() > new Date(vendor.claimTokenExpires)) {
+        return res.status(400).json({ error: "Claim token has expired. Please request a new one." });
+      }
+      
+      let userId = vendor.userId;
+      if (email && password) {
+        const existingUser = await storage.getUserByEmail(email);
+        if (existingUser) {
+          return res.status(400).json({ error: "Email already in use. Please login instead." });
+        }
+        
+        const bcrypt = await import('bcrypt');
+        const passwordHash = await bcrypt.hash(password, 10);
+        const newUser = await storage.createUser({
+          email,
+          passwordHash,
+          role: 'vendor',
+          emailVerified: true,
+        });
+        userId = newUser.id;
+      }
+      
+      await storage.updateVendor(vendor.id, {
+        claimed: true,
+        userId: userId,
+        claimToken: null,
+        claimTokenExpires: null,
+        email: email || vendor.email,
+      } as any);
+      
+      res.json({
+        message: "Profile claimed successfully! You can now login to manage your profile.",
+        vendorId: vendor.id,
+      });
+    } catch (error) {
+      console.error("Error verifying claim:", error);
+      res.status(500).json({ error: "Failed to verify claim" });
+    }
+  });
+
+  router.post("/:id/opt-out", async (req, res) => {
+    try {
+      const vendor = await storage.getVendor(req.params.id);
+      if (!vendor) {
+        return res.status(404).json({ error: "Vendor not found" });
+      }
+      
+      await storage.updateVendor(req.params.id, {
+        optedOutOfNotifications: true,
+      } as any);
+      
+      res.json({ message: "You have been opted out of future notifications." });
+    } catch (error) {
+      console.error("Error opting out:", error);
+      res.status(500).json({ error: "Failed to opt out" });
     }
   });
 

@@ -30,6 +30,7 @@ import { registerQuoteRequestRoutes } from "./quote-requests";
 import { registerBookingRoutes } from "./bookings";
 import { registerAiAssistantRoutes } from "./ai-assistant";
 import { registerMessageRoutes, registerConversationRoutes } from "./messages";
+import { registerAdminVendorRoutes } from "./admin-vendors";
 import { seedVendors, seedBudgetBenchmarks } from "../seed-data";
 
 let defaultStorageSeeded = false;
@@ -144,7 +145,7 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
 
   const vendorRouter = Router();
   await registerVendorRoutes(vendorRouter, storage);
-  app.use("/api/vendor", vendorRouter);
+  app.use("/api/vendors", vendorRouter);
 
   const communicationRouter = Router();
   await registerCommunicationRoutes(communicationRouter, storage);
@@ -254,6 +255,10 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   const conversationRouter = Router();
   await registerConversationRoutes(conversationRouter, storage);
   app.use("/api/conversations", conversationRouter);
+
+  const adminVendorRouter = Router();
+  await registerAdminVendorRoutes(adminVendorRouter, storage);
+  app.use("/api/admin", adminVendorRouter);
 
   const { registerLegacyRoutes } = await import("../routes-legacy");
   await registerLegacyRoutes(app, storage, { activeViewers, getViewerCount, cleanupStaleViewers });
