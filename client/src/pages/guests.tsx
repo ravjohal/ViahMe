@@ -766,8 +766,8 @@ export default function Guests() {
       return await apiRequest("POST", `/api/collector-submissions/${id}/maybe`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "collector-submissions"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-planning-snapshot"] });
+      queryClient.refetchQueries({ queryKey: ["/api/weddings", wedding?.id, "collector-submissions"] });
+      queryClient.refetchQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-planning-snapshot"] });
       toast({ title: "Moved to Maybe", description: "Family submission has been moved to your maybe list." });
     },
     onError: () => {
@@ -1162,13 +1162,11 @@ export default function Guests() {
   }
 
   // Guest Planning calculations
-  const pendingSuggestions = suggestions.filter(s => s.status === "pending");
-  const reviewedSuggestions = suggestions.filter(s => s.status !== "pending");
   const pendingCollectorSubmissions = collectorSubmissions.filter(s => s.status === "pending");
   const approvedCollectorSubmissions = collectorSubmissions.filter(s => s.status === "approved");
   const maybeCollectorSubmissions = collectorSubmissions.filter(s => s.status === "maybe");
   const declinedCollectorSubmissions = collectorSubmissions.filter(s => s.status === "declined");
-  const totalPendingReviews = pendingSuggestions.length + pendingCollectorSubmissions.length;
+  const totalPendingReviews = pendingCollectorSubmissions.length;
   
   // Filtered submissions based on filter state
   const filteredCollectorSubmissions = submissionFilter === "all" 
@@ -1184,7 +1182,7 @@ export default function Guests() {
 
   // Workflow step progress
   const hasGuests = guests.length > 0;
-  const allSuggestionsReviewed = hasGuests && totalPendingReviews === 0;
+  const allSuggestionsReviewed = hasGuests && pendingCollectorSubmissions.length === 0;
   const hasBudgetSet = budgetData?.settings?.maxGuestBudget && Number(budgetData.settings.maxGuestBudget) > 0;
 
   // New 3-phase workflow based on user's mental model
@@ -1273,7 +1271,7 @@ export default function Guests() {
                     <div className="flex items-center gap-1.5">
                       <div className="w-3 h-3 rounded-full bg-amber-500" />
                       <span className="text-muted-foreground">Pending:</span>
-                      <span className="font-semibold">{planningSnapshot?.summary.pendingSeats || pendingSuggestions.length}</span>
+                      <span className="font-semibold">{planningSnapshot?.summary.pendingSeats || pendingCollectorSubmissions.length}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <div className="w-3 h-3 rounded-full bg-muted" />
@@ -1287,7 +1285,7 @@ export default function Guests() {
                   {(() => {
                     const maxGuests = budgetData?.capacity.maxGuests || 0;
                     const confirmed = planningSnapshot?.summary.confirmedSeats || guests.length;
-                    const pending = planningSnapshot?.summary.pendingSeats || pendingSuggestions.length;
+                    const pending = planningSnapshot?.summary.pendingSeats || pendingCollectorSubmissions.length;
                     if (maxGuests <= 0) return null;
                     
                     const confirmedPct = Math.min(Math.max((confirmed / maxGuests) * 100, 0), 100);
@@ -1732,7 +1730,7 @@ export default function Guests() {
                     <div className="flex items-center gap-1.5">
                       <div className="w-3 h-3 rounded-full bg-amber-500" />
                       <span className="text-muted-foreground">Pending:</span>
-                      <span className="font-semibold">{planningSnapshot?.summary.pendingSeats || pendingSuggestions.length}</span>
+                      <span className="font-semibold">{planningSnapshot?.summary.pendingSeats || pendingCollectorSubmissions.length}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <div className="w-3 h-3 rounded-full bg-muted" />
@@ -1747,7 +1745,7 @@ export default function Guests() {
                   {(() => {
                     const maxGuests = budgetData?.capacity.maxGuests || 0;
                     const confirmed = planningSnapshot?.summary.confirmedSeats || guests.length;
-                    const pending = planningSnapshot?.summary.pendingSeats || pendingSuggestions.length;
+                    const pending = planningSnapshot?.summary.pendingSeats || pendingCollectorSubmissions.length;
                     if (maxGuests <= 0) return null;
                     
                     const confirmedPct = Math.min(Math.max((confirmed / maxGuests) * 100, 0), 100);
@@ -1790,9 +1788,9 @@ export default function Guests() {
                   <Inbox className="h-4 w-4" />
                   <span className="hidden sm:inline">Review Family Adds</span>
                   <span className="sm:hidden text-xs">Review</span>
-                  {pendingSuggestions.length > 0 && (
+                  {pendingCollectorSubmissions.length > 0 && (
                     <Badge variant="destructive" className="ml-1 h-5 px-1.5 text-xs">
-                      {pendingSuggestions.length}
+                      {pendingCollectorSubmissions.length}
                     </Badge>
                   )}
                 </TabsTrigger>
@@ -1928,22 +1926,22 @@ export default function Guests() {
 
               {/* Phase 2: Review - Review family suggestions */}
               <TabsContent value="review" className="space-y-6">
-                <Card className={`border-2 ${allSuggestionsReviewed ? "border-green-300 bg-green-50/50 dark:bg-green-950/20" : "border-orange-200 bg-orange-50/50 dark:bg-orange-950/20"}`}>
+                <Card className={`border-2 ${pendingCollectorSubmissions.length === 0 ? "border-green-300 bg-green-50/50 dark:bg-green-950/20" : "border-orange-200 bg-orange-50/50 dark:bg-orange-950/20"}`}>
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">
-                      <div className={`p-2 rounded-full flex-shrink-0 ${allSuggestionsReviewed ? "bg-green-100 dark:bg-green-900/30" : "bg-orange-100 dark:bg-orange-900/30"}`}>
-                        {allSuggestionsReviewed ? (
+                      <div className={`p-2 rounded-full flex-shrink-0 ${pendingCollectorSubmissions.length === 0 ? "bg-green-100 dark:bg-green-900/30" : "bg-orange-100 dark:bg-orange-900/30"}`}>
+                        {pendingCollectorSubmissions.length === 0 ? (
                           <Sparkles className="h-5 w-5 text-green-600" />
                         ) : (
                           <Inbox className="h-5 w-5 text-orange-600" />
                         )}
                       </div>
                       <div className="flex-1">
-                        {allSuggestionsReviewed ? (
+                        {pendingCollectorSubmissions.length === 0 ? (
                           <>
                             <p className="font-semibold text-green-700 dark:text-green-400">All Caught Up!</p>
                             <p className="text-sm text-muted-foreground mt-1">
-                              No suggested guests from your team. When team members with "Suggest Guests" permission suggest guests, they'll appear here.
+                              No pending family submissions to review. When family members add guests via collector links, they'll appear here.
                             </p>
                             <Button 
                               size="sm" 
@@ -1956,15 +1954,9 @@ export default function Guests() {
                           </>
                         ) : (
                           <>
-                            <p className="font-semibold">Review Guest Submissions</p>
+                            <p className="font-semibold">Review Family Submissions</p>
                             <p className="text-sm text-muted-foreground mt-1">
-                              You have {totalPendingReviews} pending submission{totalPendingReviews !== 1 ? 's' : ''} to review
-                              {pendingSuggestions.length > 0 && pendingCollectorSubmissions.length > 0 
-                                ? ` (${pendingSuggestions.length} from team members, ${pendingCollectorSubmissions.length} from collector links)`
-                                : pendingCollectorSubmissions.length > 0 
-                                  ? ' from family members via collector links'
-                                  : ' from team members'
-                              }. Approve to add to your guest list or decline.
+                              You have {pendingCollectorSubmissions.length} pending submission{pendingCollectorSubmissions.length !== 1 ? 's' : ''} to review from family members via collector links. Approve to add to your guest list, mark as Maybe for later, or decline.
                             </p>
                           </>
                         )}
@@ -1973,128 +1965,8 @@ export default function Guests() {
                   </CardContent>
                 </Card>
 
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h2 className="text-lg font-semibold flex items-center gap-2">
-                        <UserPlus className="h-5 w-5 text-muted-foreground" />
-                        Suggested Guests
-                        {pendingSuggestions.length > 0 && (
-                          <Badge variant="destructive">{pendingSuggestions.length}</Badge>
-                        )}
-                      </h2>
-                      <p className="text-sm text-muted-foreground">
-                        Guests suggested by team members with permission
-                      </p>
-                    </div>
-                  </div>
-
-                  {suggestionsLoading ? (
-                    <div className="space-y-3">
-                      {[1, 2, 3].map(i => <Skeleton key={i} className="h-32 w-full" />)}
-                    </div>
-                  ) : pendingSuggestions.length === 0 ? (
-                    <Card className="border-dashed">
-                      <CardContent className="p-6 text-center">
-                        <CheckCircle2 className="h-12 w-12 mx-auto text-green-500 mb-3" />
-                        <p className="font-medium mb-1">No Suggested Guests</p>
-                        <p className="text-sm text-muted-foreground">
-                          When team members with "Suggest Guests" permission suggest guests, they'll appear here for your review.
-                        </p>
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    <div className="space-y-3">
-                      {pendingSuggestions.map(suggestion => (
-                        <Card key={suggestion.id} data-testid={`card-suggestion-${suggestion.id}`}>
-                          <CardHeader className="pb-2">
-                            <div className="flex items-start justify-between gap-2">
-                              <div>
-                                <CardTitle className="text-base">{suggestion.householdName}</CardTitle>
-                                <CardDescription className="flex items-center gap-2 flex-wrap mt-1">
-                                  <Badge variant="outline" className="text-xs">
-                                    {suggestion.affiliation === "bride" ? "Bride's Side" : suggestion.affiliation === "groom" ? "Groom's Side" : "Mutual"}
-                                  </Badge>
-                                  <Badge variant="secondary" className="text-xs">
-                                    {suggestion.maxCount} {suggestion.maxCount === 1 ? "guest" : "guests"}
-                                  </Badge>
-                                  {suggestion.suggestedByName && (
-                                    <Badge variant="outline" className="text-xs">
-                                      by {suggestion.suggestedByName}
-                                    </Badge>
-                                  )}
-                                </CardDescription>
-                              </div>
-                              <div className="flex gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="default"
-                                  onClick={() => approveSuggestionMutation.mutate(suggestion.id)}
-                                  disabled={approveSuggestionMutation.isPending}
-                                  data-testid={`button-approve-${suggestion.id}`}
-                                >
-                                  <CheckCircle2 className="h-4 w-4 mr-1" />
-                                  Approve
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  onClick={() => {
-                                    setSelectedSuggestion(suggestion);
-                                    setRejectDialogOpen(true);
-                                  }}
-                                  data-testid={`button-reject-${suggestion.id}`}
-                                >
-                                  <XCircle className="h-4 w-4 mr-1" />
-                                  Decline
-                                </Button>
-                              </div>
-                            </div>
-                          </CardHeader>
-                          <CardContent className="pt-2">
-                            {suggestion.guestNames && (
-                              <p className="text-sm"><strong>Guests:</strong> {suggestion.guestNames}</p>
-                            )}
-                            {suggestion.notes && (
-                              <p className="text-sm text-muted-foreground mt-1">{suggestion.notes}</p>
-                            )}
-                            {suggestion.contactEmail && (
-                              <p className="text-xs text-muted-foreground mt-1">Contact: {suggestion.contactEmail}</p>
-                            )}
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
-
-                  {reviewedSuggestions.length > 0 && (
-                    <div className="mt-6">
-                      <h3 className="text-sm font-medium text-muted-foreground mb-3">Previously Reviewed Team Suggestions</h3>
-                      <ScrollArea className="h-48">
-                        <div className="space-y-2">
-                          {reviewedSuggestions.map(suggestion => (
-                            <div key={suggestion.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                              <div>
-                                <p className="font-medium">{suggestion.householdName}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {suggestion.maxCount} guests
-                                  {suggestion.suggestedByName && ` • by ${suggestion.suggestedByName}`}
-                                </p>
-                              </div>
-                              <Badge variant={suggestion.status === "approved" ? "default" : "destructive"}>
-                                {suggestion.status === "approved" ? "Approved" : "Declined"}
-                              </Badge>
-                            </div>
-                          ))}
-                        </div>
-                      </ScrollArea>
-                    </div>
-                  )}
-                </div>
-
                 {/* Collector Link Submissions Section */}
-                <div className="space-y-4 mt-8">
-                  <Separator />
+                <div className="space-y-4">
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <div>
                       <h2 className="text-lg font-semibold flex items-center gap-2">
