@@ -280,7 +280,11 @@ export async function registerGuestRoutes(router: Router, storage: IStorage) {
       }
 
       // Debug: log first guest to see if householdName is present
+      console.log("=== BULK IMPORT DEBUG ===");
+      console.log("Number of guests:", guestsArray.length);
       console.log("First guest data received:", JSON.stringify(guestsArray[0], null, 2));
+      console.log("First guest householdName:", guestsArray[0]?.householdName);
+      console.log("=========================");
 
       const weddingId = guestsArray[0].weddingId;
       const wedding = await storage.getWedding(weddingId);
