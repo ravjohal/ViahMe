@@ -43,6 +43,8 @@ import { createAnalyticsRouter } from "./analytics";
 import { createInvitationCardsRouter, createOrdersRouter, createPaymentsRouter, createDepositPaymentsRouter } from "./orders-payments";
 import { createMeasurementProfilesRouter, createShoppingItemsRouter } from "./shopping";
 import { createGapWindowsRouter, createGapRecommendationsRouter } from "./gap-concierge";
+import { createRitualStagesRouter, createRitualStageUpdatesRouter, createGuestNotificationsRouter, createLiveWeddingRouter, createPublicLiveRouter } from "./live-wedding";
+import { createRolesRouter, createCollaboratorsRouter, createCollaboratorInvitesRouter, createCollaboratorActivityRouter, createPermissionsRouter, createMyCollaborationsRouter } from "./collaborators";
 import { seedVendors, seedBudgetBenchmarks } from "../seed-data";
 
 let defaultStorageSeeded = false;
@@ -325,6 +327,26 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   app.use("/api/gap-windows", createGapWindowsRouter(storage));
   app.use("/api/weddings", createGapWindowsRouter(storage));
   app.use("/api/gap-recommendations", createGapRecommendationsRouter(storage));
+
+  // Live wedding
+  app.use("/api/ritual-stages", createRitualStagesRouter(storage));
+  app.use("/api/events", createRitualStagesRouter(storage));
+  app.use("/api/ritual-stage-updates", createRitualStageUpdatesRouter(storage));
+  app.use("/api/guest-notifications", createGuestNotificationsRouter(storage));
+  app.use("/api/weddings", createGuestNotificationsRouter(storage));
+  app.use("/api/weddings", createLiveWeddingRouter(storage, { activeViewers, getViewerCount }));
+  app.use("/api/public/weddings", createPublicLiveRouter(storage, { activeViewers, getViewerCount }));
+
+  // Collaborators and roles
+  app.use("/api/roles", createRolesRouter(storage));
+  app.use("/api/weddings", createRolesRouter(storage));
+  app.use("/api/collaborators", createCollaboratorsRouter(storage));
+  app.use("/api/weddings", createCollaboratorsRouter(storage));
+  app.use("/api/collaborator-invites", createCollaboratorInvitesRouter(storage));
+  app.use("/api/collaborator-activity", createCollaboratorActivityRouter(storage));
+  app.use("/api/weddings", createCollaboratorActivityRouter(storage));
+  app.use("/api", createPermissionsRouter(storage));
+  app.use("/api/my-collaborations", createMyCollaborationsRouter(storage));
 
   const { registerLegacyRoutes } = await import("../routes-legacy");
   await registerLegacyRoutes(app, storage, { activeViewers, getViewerCount, cleanupStaleViewers });
