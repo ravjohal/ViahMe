@@ -1215,31 +1215,14 @@ export default function Guests() {
           <TabsContent value="guest-list" className="space-y-6">
             {/* Guest Allocation Summary */}
             {(() => {
-              const householdById = new Map(households.map(h => [h.id, h]));
               const brideHouseholds = households.filter(h => h.affiliation === 'bride');
               const groomHouseholds = households.filter(h => h.affiliation === 'groom');
               const mutualHouseholds = households.filter(h => h.affiliation === 'mutual');
 
-              const brideGuests = guests.filter(g => {
-                if (!g.householdId) return false;
-                const household = householdById.get(g.householdId);
-                return household?.affiliation === 'bride';
-              });
-              const groomGuests = guests.filter(g => {
-                if (!g.householdId) return false;
-                const household = householdById.get(g.householdId);
-                return household?.affiliation === 'groom';
-              });
-              const mutualGuests = guests.filter(g => {
-                if (!g.householdId) return false;
-                const household = householdById.get(g.householdId);
-                return household?.affiliation === 'mutual';
-              });
-              const unassignedGuests = guests.filter(g => {
-                if (!g.householdId) return true;
-                const household = householdById.get(g.householdId);
-                return !household || !household.affiliation;
-              });
+              const brideGuests = guests.filter(g => g.side === 'bride');
+              const groomGuests = guests.filter(g => g.side === 'groom');
+              const mutualGuests = guests.filter(g => g.side === 'mutual');
+              const unassignedGuests = guests.filter(g => !g.householdId);
 
               return (
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
