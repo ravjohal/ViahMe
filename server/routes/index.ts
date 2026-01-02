@@ -22,6 +22,10 @@ import { registerVendorFavoriteRoutes } from "./vendor-favorites";
 import { registerContractRoutes } from "./contracts";
 import { registerContractTemplateRoutes } from "./contract-templates";
 import { registerNotificationRoutes } from "./notifications";
+import { registerServicePackageRoutes } from "./service-packages";
+import { registerContractSignatureRoutes } from "./contract-signatures";
+import { registerContractDocumentRoutes } from "./contract-documents";
+import { registerContractPaymentRoutes } from "./contract-payments";
 import { seedVendors, seedBudgetBenchmarks } from "../seed-data";
 
 let defaultStorageSeeded = false;
@@ -210,6 +214,22 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   const notificationRouter = Router();
   await registerNotificationRoutes(notificationRouter, storage);
   app.use("/api/notifications", notificationRouter);
+
+  const servicePackageRouter = Router();
+  await registerServicePackageRoutes(servicePackageRouter, storage);
+  app.use("/api/service-packages", servicePackageRouter);
+
+  const contractSignatureRouter = Router();
+  await registerContractSignatureRoutes(contractSignatureRouter, storage);
+  app.use("/api/contracts", contractSignatureRouter);
+
+  const contractDocumentRouter = Router();
+  await registerContractDocumentRoutes(contractDocumentRouter, storage);
+  app.use("/api/contracts", contractDocumentRouter);
+
+  const contractPaymentRouter = Router();
+  await registerContractPaymentRoutes(contractPaymentRouter, storage);
+  app.use("/api/contracts", contractPaymentRouter);
 
   const { registerLegacyRoutes } = await import("../routes-legacy");
   await registerLegacyRoutes(app, storage, { activeViewers, getViewerCount, cleanupStaleViewers });
