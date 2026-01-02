@@ -104,15 +104,12 @@ import {
   PERMISSION_CATEGORIES,
   type GuestSource,
   type InsertGuestSource,
-  type GuestSuggestion,
-  type InsertGuestSuggestion,
   type GuestListScenario,
   type InsertGuestListScenario,
   type ScenarioHousehold,
   type InsertScenarioHousehold,
   type GuestBudgetSettings,
   type InsertGuestBudgetSettings,
-  type GuestSuggestionWithSource,
   type ScenarioWithStats,
   type VendorEventTag,
   type InsertVendorEventTag,
@@ -719,15 +716,6 @@ export interface IStorage {
   deleteGuestSource(id: string): Promise<boolean>;
   getGuestSourceStats(weddingId: string): Promise<{ sourceId: string; count: number; seats: number }[]>;
 
-  // Guest Suggestions (for collaborators to suggest guests)
-  getGuestSuggestion(id: string): Promise<GuestSuggestion | undefined>;
-  getGuestSuggestionsByWedding(weddingId: string, status?: string): Promise<GuestSuggestionWithSource[]>;
-  createGuestSuggestion(suggestion: InsertGuestSuggestion): Promise<GuestSuggestion>;
-  updateGuestSuggestion(id: string, suggestion: Partial<GuestSuggestion>): Promise<GuestSuggestion | undefined>;
-  approveSuggestion(id: string, reviewerId: string): Promise<{ household: Household; guests: Guest[] }>;
-  rejectSuggestion(id: string, reviewerId: string, reason?: string): Promise<GuestSuggestion>;
-  getPendingSuggestionsCount(weddingId: string): Promise<number>;
-
   // Guest List Scenarios (what-if playground)
   getGuestListScenario(id: string): Promise<GuestListScenario | undefined>;
   getGuestListScenarioWithStats(id: string): Promise<ScenarioWithStats | undefined>;
@@ -944,19 +932,17 @@ export interface IStorage {
 
 // Guest Planning Snapshot - comprehensive view of all guests and per-event costs
 export interface GuestPlanningSnapshot {
-  // Combined guest pool (confirmed + pending suggestions)
+  // Confirmed households
   confirmedHouseholds: Household[];
-  pendingSuggestions: GuestSuggestionWithSource[];
   
   // Summary counts
   summary: {
     confirmedSeats: number;
-    pendingSeats: number;
-    totalPotentialSeats: number; // confirmed + pending
+    totalSeats: number;
     priorityBreakdown: {
-      must_invite: { confirmed: number; pending: number };
-      should_invite: { confirmed: number; pending: number };
-      nice_to_have: { confirmed: number; pending: number };
+      must_invite: number;
+      should_invite: number;
+      nice_to_have: number;
     };
   };
   
@@ -968,15 +954,13 @@ export interface GuestPlanningSnapshot {
     date: Date | null;
     costPerHead: number | null;
     venueCapacity: number | null;
-    budgetAllocation: number | null; // From budget category for this event
+    budgetAllocation: number | null;
     
     // Guest counts for this event
-    confirmedInvited: number; // Guests invited to this event
-    potentialTotal: number; // If all pending approved
+    confirmedInvited: number;
     
     // Budget impact
     confirmedCost: number;
-    potentialCost: number;
     
     // Capacity status
     capacityUsed: number;
@@ -987,13 +971,11 @@ export interface GuestPlanningSnapshot {
   
   // Overall budget analysis
   budget: {
-    weddingTotalBudget: number; // From wedding.totalBudget
-    guestBudget: number; // From guest budget settings (or defaulted from wedding)
+    weddingTotalBudget: number;
+    guestBudget: number;
     defaultCostPerHead: number;
     confirmedSpend: number;
-    potentialSpend: number; // If all pending approved
     remainingBudget: number;
-    potentialOverage: number; // How much over budget if all approved
     isOverBudget: boolean;
   };
 }
@@ -3663,29 +3645,6 @@ export class MemStorage implements IStorage {
   }
   async getGuestSourceStats(weddingId: string): Promise<{ sourceId: string; count: number; seats: number }[]> {
     return [];
-  }
-
-  // Guest Suggestions - MemStorage stubs
-  async getGuestSuggestion(id: string): Promise<GuestSuggestion | undefined> {
-    return undefined;
-  }
-  async getGuestSuggestionsByWedding(weddingId: string, status?: string): Promise<GuestSuggestionWithSource[]> {
-    return [];
-  }
-  async createGuestSuggestion(suggestion: InsertGuestSuggestion): Promise<GuestSuggestion> {
-    throw new Error("MemStorage does not support Guest Suggestions. Use DBStorage.");
-  }
-  async updateGuestSuggestion(id: string, suggestion: Partial<GuestSuggestion>): Promise<GuestSuggestion | undefined> {
-    throw new Error("MemStorage does not support Guest Suggestions. Use DBStorage.");
-  }
-  async approveSuggestion(id: string, reviewerId: string): Promise<{ household: Household; guests: Guest[] }> {
-    throw new Error("MemStorage does not support Guest Suggestions. Use DBStorage.");
-  }
-  async rejectSuggestion(id: string, reviewerId: string, reason?: string): Promise<GuestSuggestion> {
-    throw new Error("MemStorage does not support Guest Suggestions. Use DBStorage.");
-  }
-  async getPendingSuggestionsCount(weddingId: string): Promise<number> {
-    return 0;
   }
 
   // Guest List Scenarios - MemStorage stubs
@@ -7498,124 +7457,6 @@ export class DBStorage implements IStorage {
   }
 
   // ============================================================================
-  // Guest Suggestions
-  // ============================================================================
-
-  async getGuestSuggestion(id: string): Promise<GuestSuggestion | undefined> {
-    const result = await this.db
-      .select()
-      .from(schema.guestSuggestions)
-      .where(eq(schema.guestSuggestions.id, id))
-      .limit(1);
-    return result[0];
-  }
-
-  async getGuestSuggestionsByWedding(weddingId: string, status?: string): Promise<GuestSuggestionWithSource[]> {
-    const conditions = [eq(schema.guestSuggestions.weddingId, weddingId)];
-    if (status) {
-      conditions.push(eq(schema.guestSuggestions.status, status));
-    }
-    
-    const suggestions = await this.db
-      .select()
-      .from(schema.guestSuggestions)
-      .where(and(...conditions))
-      .orderBy(sql`${schema.guestSuggestions.createdAt} DESC`);
-    
-    // Fetch sources for suggestions that have sourceId
-    const result: GuestSuggestionWithSource[] = [];
-    for (const suggestion of suggestions) {
-      let source: GuestSource | undefined;
-      if (suggestion.sourceId) {
-        source = await this.getGuestSource(suggestion.sourceId);
-      }
-      result.push({ ...suggestion, source });
-    }
-    return result;
-  }
-
-  async createGuestSuggestion(suggestion: InsertGuestSuggestion): Promise<GuestSuggestion> {
-    const result = await this.db
-      .insert(schema.guestSuggestions)
-      .values(suggestion)
-      .returning();
-    return result[0];
-  }
-
-  async updateGuestSuggestion(id: string, suggestion: Partial<GuestSuggestion>): Promise<GuestSuggestion | undefined> {
-    const result = await this.db
-      .update(schema.guestSuggestions)
-      .set(suggestion)
-      .where(eq(schema.guestSuggestions.id, id))
-      .returning();
-    return result[0];
-  }
-
-  async approveSuggestion(id: string, reviewerId: string): Promise<{ household: Household; guests: Guest[] }> {
-    const suggestion = await this.getGuestSuggestion(id);
-    if (!suggestion) throw new Error("Suggestion not found");
-    if (suggestion.status !== "pending") throw new Error("Suggestion already reviewed");
-
-    // Create household from suggestion (contactEmail now stored on main contact guest)
-    const household = await this.createHousehold({
-      weddingId: suggestion.weddingId,
-      name: suggestion.householdName,
-      maxCount: suggestion.maxCount,
-      affiliation: suggestion.affiliation as "bride" | "groom" | "mutual",
-      relationshipTier: suggestion.relationshipTier as "immediate_family" | "extended_family" | "friend" | "parents_friend",
-      priorityTier: suggestion.priorityTier,
-      sourceId: suggestion.sourceId,
-    });
-
-    // Create guests if guest names were provided
-    const guests: Guest[] = [];
-    if (suggestion.guestNames) {
-      const names = suggestion.guestNames.split(',').map(n => n.trim()).filter(n => n);
-      for (const name of names) {
-        const guest = await this.createGuest({
-          weddingId: suggestion.weddingId,
-          householdId: household.id,
-          name,
-          side: suggestion.affiliation as "bride" | "groom" | "mutual",
-          relationshipTier: suggestion.relationshipTier as "immediate_family" | "extended_family" | "friend" | "parents_friend",
-        });
-        guests.push(guest);
-      }
-    }
-
-    // Update suggestion status
-    await this.updateGuestSuggestion(id, {
-      status: "approved",
-      reviewedBy: reviewerId,
-      reviewedAt: new Date(),
-    });
-
-    return { household, guests };
-  }
-
-  async rejectSuggestion(id: string, reviewerId: string, reason?: string): Promise<GuestSuggestion> {
-    const result = await this.updateGuestSuggestion(id, {
-      status: "rejected",
-      reviewedBy: reviewerId,
-      reviewedAt: new Date(),
-      rejectionReason: reason || null,
-    });
-    if (!result) throw new Error("Failed to reject suggestion");
-    return result;
-  }
-
-  async getPendingSuggestionsCount(weddingId: string): Promise<number> {
-    const result = await this.db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(schema.guestSuggestions)
-      .where(and(
-        eq(schema.guestSuggestions.weddingId, weddingId),
-        eq(schema.guestSuggestions.status, "pending")
-      ));
-    return result[0]?.count || 0;
-  }
-
-  // ============================================================================
   // Guest List Scenarios
   // ============================================================================
 
@@ -7938,9 +7779,6 @@ export class DBStorage implements IStorage {
     // Get all confirmed households
     const confirmedHouseholds = await this.getHouseholdsByWedding(weddingId);
 
-    // Get pending suggestions
-    const pendingSuggestions = await this.getGuestSuggestionsByWedding(weddingId, 'pending');
-
     // Get wedding for total budget
     const wedding = await this.getWedding(weddingId);
     const weddingTotalBudget = wedding?.totalBudget ? parseFloat(wedding.totalBudget) : 0;
@@ -7950,12 +7788,10 @@ export class DBStorage implements IStorage {
     const defaultCostPerHead = budgetSettings?.defaultCostPerHead ? parseFloat(budgetSettings.defaultCostPerHead) : 150;
     
     // Use guest budget settings if set, otherwise use the wedding's total budget
-    // If neither is set, use 0 (no budget limit means nothing is over budget)
     let guestBudget = 0;
     if (budgetSettings?.maxGuestBudget) {
       guestBudget = parseFloat(budgetSettings.maxGuestBudget);
     } else if (weddingTotalBudget > 0) {
-      // Default to the wedding's total budget when no guest-specific budget is set
       guestBudget = weddingTotalBudget;
     }
     
@@ -7965,28 +7801,20 @@ export class DBStorage implements IStorage {
     // Get budget categories for per-event allocations
     const budgetCategories = await this.getBudgetCategoriesByWedding(weddingId);
 
-    // Calculate confirmed and pending seat counts
+    // Calculate confirmed seat counts
     const confirmedSeats = confirmedHouseholds.reduce((sum, h) => sum + h.maxCount, 0);
-    const pendingSeats = pendingSuggestions.reduce((sum, s) => sum + s.maxCount, 0);
 
     // Priority breakdown
     const priorityBreakdown = {
-      must_invite: { confirmed: 0, pending: 0 },
-      should_invite: { confirmed: 0, pending: 0 },
-      nice_to_have: { confirmed: 0, pending: 0 },
+      must_invite: 0,
+      should_invite: 0,
+      nice_to_have: 0,
     };
 
     for (const h of confirmedHouseholds) {
       const tier = h.priorityTier as keyof typeof priorityBreakdown;
-      if (priorityBreakdown[tier]) {
-        priorityBreakdown[tier].confirmed += h.maxCount;
-      }
-    }
-
-    for (const s of pendingSuggestions) {
-      const tier = s.priorityTier as keyof typeof priorityBreakdown;
-      if (priorityBreakdown[tier]) {
-        priorityBreakdown[tier].pending += s.maxCount;
+      if (tier in priorityBreakdown) {
+        priorityBreakdown[tier] += h.maxCount;
       }
     }
 
@@ -8018,17 +7846,13 @@ export class DBStorage implements IStorage {
     }
 
     // Calculate per-event analysis
-    // Calculate proportional allocation per event if no explicit allocation found
     const numEvents = allEvents.length || 1;
     const defaultEventAllocation = guestBudget > 0 ? guestBudget / numEvents : null;
     
     const eventAnalysis = allEvents.map(event => {
       const costPerHead = event.costPerHead ? parseFloat(event.costPerHead) : defaultCostPerHead;
       
-      // Determine event capacity with priority:
-      // 1. Event guest number (if defined)
-      // 2. Venue capacity (if event guest number not defined)
-      // 3. Couple's target guest count for the wedding (if neither is defined)
+      // Determine event capacity
       let eventCapacity: number | null = null;
       if (event.guestCount !== null && event.guestCount !== undefined) {
         eventCapacity = event.guestCount;
@@ -8038,25 +7862,19 @@ export class DBStorage implements IStorage {
         eventCapacity = coupleTargetGuestCount;
       }
       
-      // Find budget allocation for this event (match by event type/name to budget category)
-      // Check multiple matching strategies for better accuracy
+      // Find budget allocation for this event
       const eventTypeLower = event.type.toLowerCase();
       const eventNameLower = event.name.toLowerCase();
       
       const matchingCategory = budgetCategories.find((cat: BudgetCategory) => {
         const catLower = cat.category.toLowerCase();
-        // Exact match on type or name
         if (catLower === eventTypeLower || catLower === eventNameLower) return true;
-        // Check if category contains event type or name
         if (catLower.includes(eventTypeLower) || catLower.includes(eventNameLower)) return true;
-        // Check if event name/type contains category (for cases like "Sangeet Ceremony" containing "Sangeet")
         if (eventTypeLower.includes(catLower) || eventNameLower.includes(catLower)) return true;
-        // Check for common categories that apply to all events
-        if (['catering', 'food', 'venue', 'hospitality'].some(k => catLower.includes(k))) return false; // Skip general categories for specific event matching
+        if (['catering', 'food', 'venue', 'hospitality'].some(k => catLower.includes(k))) return false;
         return false;
       });
       
-      // Use matched category, or fall back to proportional allocation of guest budget
       const budgetAllocation = matchingCategory?.allocatedAmount 
         ? parseFloat(matchingCategory.allocatedAmount) 
         : defaultEventAllocation;
@@ -8065,19 +7883,14 @@ export class DBStorage implements IStorage {
       const invitedGuestIds = guestEventMap.get(event.id) || new Set();
       const confirmedInvited = confirmedGuests.filter(g => invitedGuestIds.has(g.id)).length;
       
-      // Potential total if all pending suggestions are approved (assume they'd all attend all events)
-      const potentialTotal = confirmedInvited + pendingSeats;
-      
       // Budget impact
       const confirmedCost = confirmedInvited * costPerHead;
-      const potentialCost = potentialTotal * costPerHead;
       
       // Capacity status
       const capacityUsed = confirmedInvited;
-      const capacityRemaining = eventCapacity !== null ? eventCapacity - potentialTotal : null;
-      const isOverCapacity = eventCapacity !== null && potentialTotal > eventCapacity;
-      // Only flag as over budget if we have a positive budget allocation to compare against
-      const isOverBudget = budgetAllocation !== null && budgetAllocation > 0 && potentialCost > budgetAllocation;
+      const capacityRemaining = eventCapacity !== null ? eventCapacity - confirmedInvited : null;
+      const isOverCapacity = eventCapacity !== null && confirmedInvited > eventCapacity;
+      const isOverBudget = budgetAllocation !== null && budgetAllocation > 0 && confirmedCost > budgetAllocation;
 
       return {
         id: event.id,
@@ -8088,9 +7901,7 @@ export class DBStorage implements IStorage {
         venueCapacity: eventCapacity,
         budgetAllocation,
         confirmedInvited,
-        potentialTotal,
         confirmedCost,
-        potentialCost,
         capacityUsed,
         capacityRemaining,
         isOverCapacity,
@@ -8100,21 +7911,14 @@ export class DBStorage implements IStorage {
 
     // Calculate overall budget
     const confirmedSpend = confirmedSeats * defaultCostPerHead;
-    const potentialSpend = (confirmedSeats + pendingSeats) * defaultCostPerHead;
-    
-    // Only calculate remaining/overage if budget is set (guestBudget > 0)
-    // If no budget set, we use 0 for remaining and overage, and isOverBudget is false
     const remainingBudget = guestBudget > 0 ? guestBudget - confirmedSpend : 0;
-    const potentialOverage = guestBudget > 0 && potentialSpend > guestBudget ? potentialSpend - guestBudget : 0;
-    const isOverBudget = guestBudget > 0 && potentialSpend > guestBudget;
+    const isOverBudget = guestBudget > 0 && confirmedSpend > guestBudget;
 
     return {
       confirmedHouseholds,
-      pendingSuggestions,
       summary: {
         confirmedSeats,
-        pendingSeats,
-        totalPotentialSeats: confirmedSeats + pendingSeats,
+        totalSeats: confirmedSeats,
         priorityBreakdown,
       },
       events: eventAnalysis,
@@ -8123,9 +7927,7 @@ export class DBStorage implements IStorage {
         guestBudget,
         defaultCostPerHead,
         confirmedSpend,
-        potentialSpend,
         remainingBudget,
-        potentialOverage,
         isOverBudget,
       },
     };

@@ -46,7 +46,6 @@ import { createGapWindowsRouter, createGapRecommendationsRouter } from "./gap-co
 import { createRitualStagesRouter, createRitualStageUpdatesRouter, createGuestNotificationsRouter, createLiveWeddingRouter, createPublicLiveRouter } from "./live-wedding";
 import { createRolesRouter, createCollaboratorsRouter, createCollaboratorInvitesRouter, createCollaboratorActivityRouter, createPermissionsRouter, createMyCollaborationsRouter } from "./collaborators";
 import { createGuestSourcesRouter } from "./guest-sources";
-import { createGuestSuggestionsRouter } from "./guest-suggestions";
 import { createGuestSideRouter, createGuestConsensusRouter, createScenariosRouter, createGuestBudgetRouter, createHouseholdPriorityRouter } from "./guest-planning";
 import { createTimelineRouter, createEventTimeRouter, createTimelineChangesRouter, createVendorAcknowledgmentsRouter } from "./timeline";
 import { seedVendors, seedBudgetBenchmarks } from "../seed-data";
@@ -355,10 +354,6 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   // Guest sources
   app.use("/api/guest-sources", createGuestSourcesRouter(storage));
   app.use("/api", createGuestSourcesRouter(storage));
-
-  // Guest suggestions
-  app.use("/api/guest-suggestions", createGuestSuggestionsRouter(storage));
-  app.use("/api", createGuestSuggestionsRouter(storage));
 
   // Guest planning
   app.use("/api/weddings", createGuestSideRouter(storage));

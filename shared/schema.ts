@@ -2505,52 +2505,6 @@ export const insertGuestSourceSchema = createInsertSchema(guestSources).omit({
 export type InsertGuestSource = z.infer<typeof insertGuestSourceSchema>;
 export type GuestSource = typeof guestSources.$inferSelect;
 
-// Guest Suggestions - For collaborators to suggest guests pending approval
-export const guestSuggestions = pgTable("guest_suggestions", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  weddingId: varchar("wedding_id").notNull(),
-  suggestedBy: varchar("suggested_by").notNull(), // User ID who made the suggestion
-  suggestedByName: text("suggested_by_name"), // Display name of suggester
-  status: text("status").notNull().default("pending"), // "pending" | "approved" | "rejected"
-  
-  // Household suggestion fields
-  householdName: text("household_name").notNull(), // e.g., "The Patel Family"
-  maxCount: integer("max_count").notNull().default(1), // Seats requested
-  affiliation: text("affiliation").notNull().default("bride"), // "bride" | "groom" | "mutual"
-  relationshipTier: text("relationship_tier").notNull().default("friend"),
-  priorityTier: text("priority_tier").notNull().default("nice_to_have"), // "must_invite" | "should_invite" | "nice_to_have"
-  
-  // Guest names within household (comma separated or JSON)
-  guestNames: text("guest_names"), // Individual guest names
-  
-  // Source tracking
-  sourceId: varchar("source_id"), // Who submitted originally (e.g., Mom, Grandma)
-  notes: text("notes"), // Suggester's notes
-  
-  // Review fields
-  reviewedBy: varchar("reviewed_by"), // User who reviewed
-  reviewedAt: timestamp("reviewed_at"),
-  rejectionReason: text("rejection_reason"),
-  
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
-
-export const insertGuestSuggestionSchema = createInsertSchema(guestSuggestions).omit({
-  id: true,
-  status: true,
-  reviewedBy: true,
-  reviewedAt: true,
-  rejectionReason: true,
-  createdAt: true,
-}).extend({
-  affiliation: z.enum(["bride", "groom", "mutual"]),
-  relationshipTier: z.enum(["immediate_family", "extended_family", "friend", "parents_friend"]),
-  priorityTier: z.enum(["must_invite", "should_invite", "nice_to_have"]),
-});
-
-export type InsertGuestSuggestion = z.infer<typeof insertGuestSuggestionSchema>;
-export type GuestSuggestion = typeof guestSuggestions.$inferSelect;
-
 // Guest List Scenarios - What-if playground for comparing guest lists
 export const guestListScenarios = pgTable("guest_list_scenarios", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -2623,10 +2577,6 @@ export type InsertGuestBudgetSettings = z.infer<typeof insertGuestBudgetSettings
 export type GuestBudgetSettings = typeof guestBudgetSettings.$inferSelect;
 
 // Extended types for guest management
-export type GuestSuggestionWithSource = GuestSuggestion & {
-  source?: GuestSource;
-};
-
 export type ScenarioWithStats = GuestListScenario & {
   householdCount: number;
   guestCount: number;
