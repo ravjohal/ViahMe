@@ -17,6 +17,7 @@ import { registerBudgetCategoryRoutes } from "./budget-categories";
 import { registerExpenseRoutes, registerExpenseSplitRoutes } from "./expenses";
 import { registerHouseholdRoutes } from "./households";
 import { registerInvitationRoutes } from "./invitations";
+import { registerGuestPublicRoutes } from "./guests-public";
 import { seedVendors, seedBudgetBenchmarks } from "../seed-data";
 
 let defaultStorageSeeded = false;
@@ -185,6 +186,10 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   const invitationRouter = Router();
   await registerInvitationRoutes(invitationRouter, storage);
   app.use("/api/invitations", invitationRouter);
+
+  const guestPublicRouter = Router();
+  await registerGuestPublicRoutes(guestPublicRouter, storage);
+  app.use("/api/guests", guestPublicRouter);
 
   const { registerLegacyRoutes } = await import("../routes-legacy");
   await registerLegacyRoutes(app, storage, { activeViewers, getViewerCount, cleanupStaleViewers });
