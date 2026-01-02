@@ -516,6 +516,47 @@ export default function Guests() {
     },
   });
 
+  // Plus-One mutations
+  const createPlusOneMutation = useMutation({
+    mutationFn: async (guestId: string) => {
+      return await apiRequest("POST", `/api/guests/${guestId}/plus-one`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/guests"] });
+      toast({
+        title: "Plus one added",
+        description: "A plus one guest has been created",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to add plus one",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deletePlusOneMutation = useMutation({
+    mutationFn: async (guestId: string) => {
+      return await apiRequest("DELETE", `/api/guests/${guestId}/plus-one`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/guests"] });
+      toast({
+        title: "Plus one removed",
+        description: "The plus one guest has been removed",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to remove plus one",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Household mutations
   const createHouseholdMutation = useMutation({
     mutationFn: async (data: HouseholdFormData) => {
@@ -2543,12 +2584,27 @@ export default function Guests() {
               <Checkbox
                 id="plusOne"
                 checked={form.watch("plusOne") ?? false}
-                onCheckedChange={(checked) => form.setValue("plusOne", checked as boolean)}
+                onCheckedChange={(checked) => {
+                  const isChecked = checked as boolean;
+                  form.setValue("plusOne", isChecked);
+                  
+                  if (editingGuest) {
+                    if (isChecked) {
+                      createPlusOneMutation.mutate(editingGuest.id);
+                    } else {
+                      deletePlusOneMutation.mutate(editingGuest.id);
+                    }
+                  }
+                }}
+                disabled={createPlusOneMutation.isPending || deletePlusOneMutation.isPending}
                 data-testid="checkbox-plus-one"
               />
               <Label htmlFor="plusOne" className="cursor-pointer">
                 Bringing a plus one
               </Label>
+              {(createPlusOneMutation.isPending || deletePlusOneMutation.isPending) && (
+                <span className="text-sm text-muted-foreground">Updating...</span>
+              )}
             </div>
 
             <div className="space-y-2">

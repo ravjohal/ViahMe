@@ -466,6 +466,81 @@ export async function registerGuestRoutes(router: Router, storage: IStorage) {
     }
   });
 
+  // Plus-One Management
+  router.post("/guests/:id/plus-one", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      if (!authReq.session.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const guest = await storage.getGuest(req.params.id);
+      if (!guest) {
+        return res.status(404).json({ error: "Guest not found" });
+      }
+
+      const wedding = await storage.getWedding(guest.weddingId);
+      if (!wedding) {
+        return res.status(404).json({ error: "Wedding not found" });
+      }
+      if (wedding.coupleId !== authReq.session.userId) {
+        const roles = await storage.getWeddingRoles(guest.weddingId);
+        const hasAccess = roles.some(role => role.userId === authReq.session.userId);
+        if (!hasAccess) {
+          return res.status(403).json({ error: "Access denied" });
+        }
+      }
+
+      const plusOneGuest = await storage.createPlusOneGuest(req.params.id);
+      res.json(plusOneGuest);
+    } catch (error) {
+      console.error("Failed to create plus-one:", error);
+      res.status(500).json({ error: "Failed to create plus-one" });
+    }
+  });
+
+  router.delete("/guests/:id/plus-one", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      if (!authReq.session.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const guest = await storage.getGuest(req.params.id);
+      if (!guest) {
+        return res.status(404).json({ error: "Guest not found" });
+      }
+
+      const wedding = await storage.getWedding(guest.weddingId);
+      if (!wedding) {
+        return res.status(404).json({ error: "Wedding not found" });
+      }
+      if (wedding.coupleId !== authReq.session.userId) {
+        const roles = await storage.getWeddingRoles(guest.weddingId);
+        const hasAccess = roles.some(role => role.userId === authReq.session.userId);
+        if (!hasAccess) {
+          return res.status(403).json({ error: "Access denied" });
+        }
+      }
+
+      const success = await storage.deletePlusOneGuest(req.params.id);
+      res.json({ success });
+    } catch (error) {
+      console.error("Failed to delete plus-one:", error);
+      res.status(500).json({ error: "Failed to delete plus-one" });
+    }
+  });
+
+  router.get("/guests/:id/plus-one", async (req, res) => {
+    try {
+      const plusOne = await storage.getPlusOneForGuest(req.params.id);
+      res.json(plusOne || null);
+    } catch (error) {
+      console.error("Failed to get plus-one:", error);
+      res.status(500).json({ error: "Failed to get plus-one" });
+    }
+  });
+
   router.get("/invitations/by-guest/:guestId", async (req, res) => {
     try {
       const invitations = await storage.getInvitationsByGuest(req.params.guestId);
