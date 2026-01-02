@@ -2840,16 +2840,21 @@ export default function Guests() {
 
             <div className="flex justify-between pt-4">
               {editingGuest && (
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onClick={handleDelete}
-                  disabled={deleteMutation.isPending}
-                  data-testid="button-delete-guest"
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete
-                </Button>
+                <div className="flex flex-col gap-1">
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={handleDelete}
+                    disabled={deleteMutation.isPending || editingGuest.rsvpStatus === "confirmed"}
+                    data-testid="button-delete-guest"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete
+                  </Button>
+                  {editingGuest.rsvpStatus === "confirmed" && (
+                    <span className="text-xs text-muted-foreground">Cannot delete RSVP'd guest</span>
+                  )}
+                </div>
               )}
               <div className={`flex gap-2 ${editingGuest ? "" : "ml-auto"}`}>
                 <Button

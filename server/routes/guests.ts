@@ -390,6 +390,11 @@ export async function registerGuestRoutes(router: Router, storage: IStorage) {
         }
       }
 
+      // Prevent uninviting guests who have already RSVP'd (confirmed)
+      if (req.body.rsvpStatus === "uninvited" && existingGuest.rsvpStatus === "confirmed") {
+        return res.status(400).json({ error: "Cannot uninvite a guest who has already RSVP'd" });
+      }
+
       const guest = await storage.updateGuest(req.params.id, req.body);
       if (!guest) {
         return res.status(404).json({ error: "Guest not found" });
@@ -459,6 +464,11 @@ export async function registerGuestRoutes(router: Router, storage: IStorage) {
         if (!hasAccess) {
           return res.status(403).json({ error: "Access denied" });
         }
+      }
+
+      // Prevent deleting guests who have already RSVP'd (confirmed)
+      if (existingGuest.rsvpStatus === "confirmed") {
+        return res.status(400).json({ error: "Cannot delete a guest who has already RSVP'd" });
       }
 
       const success = await storage.deleteGuest(req.params.id);

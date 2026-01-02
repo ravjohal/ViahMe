@@ -322,7 +322,16 @@ export function GuestListManager({ guests, households = [], onAddGuest, onImport
                             Send Invitation
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          {guest.rsvpStatus !== "uninvited" ? (
+                          {guest.rsvpStatus === "confirmed" ? (
+                            <DropdownMenuItem
+                              disabled
+                              className="text-muted-foreground cursor-not-allowed"
+                              data-testid={`action-uninvite-disabled-${guest.id}`}
+                            >
+                              <UserX className="w-4 h-4 mr-2" />
+                              Cannot uninvite (RSVP'd)
+                            </DropdownMenuItem>
+                          ) : guest.rsvpStatus !== "uninvited" ? (
                             <DropdownMenuItem
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -347,17 +356,28 @@ export function GuestListManager({ guests, households = [], onAddGuest, onImport
                               Re-invite Guest
                             </DropdownMenuItem>
                           )}
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onDeleteGuest?.(guest);
-                            }}
-                            className="text-destructive"
-                            data-testid={`action-delete-${guest.id}`}
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Delete Guest
-                          </DropdownMenuItem>
+                          {guest.rsvpStatus === "confirmed" ? (
+                            <DropdownMenuItem
+                              disabled
+                              className="text-muted-foreground cursor-not-allowed"
+                              data-testid={`action-delete-disabled-${guest.id}`}
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Cannot delete (RSVP'd)
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onDeleteGuest?.(guest);
+                              }}
+                              className="text-destructive"
+                              data-testid={`action-delete-${guest.id}`}
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Delete Guest
+                            </DropdownMenuItem>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
