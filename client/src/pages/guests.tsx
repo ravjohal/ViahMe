@@ -4,6 +4,7 @@ import { GuestListManager } from "@/components/guest-list-manager";
 import { GuestImportDialog } from "@/components/guest-import-dialog";
 import { CollectorLinksManager } from "@/components/collector-links-manager";
 import { DuplicatesManager } from "@/components/duplicates-manager";
+import { AddressAutocomplete, type ParsedAddress } from "@/components/address-autocomplete";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -2554,35 +2555,41 @@ export default function Guests() {
 
             <div className="space-y-2">
               <Label>Address</Label>
-              <Input
-                {...householdForm.register("addressStreet")}
-                placeholder="Street Address"
-                data-testid="input-household-address-street"
+              <AddressAutocomplete
+                value={[
+                  householdForm.watch("addressStreet"),
+                  householdForm.watch("addressCity"),
+                  householdForm.watch("addressState"),
+                  householdForm.watch("addressPostalCode"),
+                  householdForm.watch("addressCountry")
+                ].filter(Boolean).join(", ")}
+                onChange={(val) => {
+                  if (!val) {
+                    householdForm.setValue("addressStreet", "");
+                    householdForm.setValue("addressCity", "");
+                    householdForm.setValue("addressState", "");
+                    householdForm.setValue("addressPostalCode", "");
+                    householdForm.setValue("addressCountry", "");
+                  }
+                }}
+                onAddressSelect={(parsed: ParsedAddress) => {
+                  householdForm.setValue("addressStreet", parsed.street);
+                  householdForm.setValue("addressCity", parsed.city);
+                  householdForm.setValue("addressState", parsed.state);
+                  householdForm.setValue("addressPostalCode", parsed.postalCode);
+                  householdForm.setValue("addressCountry", parsed.country);
+                }}
+                placeholder="Start typing an address..."
+                testid="input-household-address"
               />
-              <div className="grid grid-cols-2 gap-2">
-                <Input
-                  {...householdForm.register("addressCity")}
-                  placeholder="City"
-                  data-testid="input-household-address-city"
-                />
-                <Input
-                  {...householdForm.register("addressState")}
-                  placeholder="State/Province"
-                  data-testid="input-household-address-state"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <Input
-                  {...householdForm.register("addressPostalCode")}
-                  placeholder="Postal Code"
-                  data-testid="input-household-address-postal-code"
-                />
-                <Input
-                  {...householdForm.register("addressCountry")}
-                  placeholder="Country"
-                  data-testid="input-household-address-country"
-                />
-              </div>
+              <p className="text-xs text-muted-foreground">
+                Type to search and select an address
+              </p>
+              <input type="hidden" {...householdForm.register("addressStreet")} />
+              <input type="hidden" {...householdForm.register("addressCity")} />
+              <input type="hidden" {...householdForm.register("addressState")} />
+              <input type="hidden" {...householdForm.register("addressPostalCode")} />
+              <input type="hidden" {...householdForm.register("addressCountry")} />
             </div>
 
             <div className="space-y-2">

@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { MapPin, X } from "lucide-react";
 
 interface AddressSuggestion {
@@ -10,9 +9,34 @@ interface AddressSuggestion {
   lon: string;
 }
 
+interface GeoapifyResult {
+  properties: {
+    formatted: string;
+    street?: string;
+    housenumber?: string;
+    address_line1?: string;
+    city?: string;
+    town?: string;
+    village?: string;
+    state?: string;
+    postcode?: string;
+    country?: string;
+  };
+}
+
+export interface ParsedAddress {
+  formatted: string;
+  street: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+}
+
 interface AddressAutocompleteProps {
   value: string;
   onChange: (address: string) => void;
+  onAddressSelect?: (parsed: ParsedAddress) => void;
   placeholder?: string;
   disabled?: boolean;
   testid?: string;
@@ -21,11 +45,12 @@ interface AddressAutocompleteProps {
 export function AddressAutocomplete({
   value,
   onChange,
+  onAddressSelect,
   placeholder = "Enter address",
   disabled = false,
   testid = "input-address",
 }: AddressAutocompleteProps) {
-  const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
+  const [geoapifySuggestions, setGeoapifySuggestions] = useState<GeoapifyResult[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [loading, setLoading] = useState(false);
   const [inputValue, setInputValue] = useState(value);
@@ -38,21 +63,19 @@ export function AddressAutocomplete({
 
   const fetchAddressSuggestions = async (query: string) => {
     if (query.length < 3) {
-      setSuggestions([]);
+      setGeoapifySuggestions([]);
       return;
     }
 
     setLoading(true);
     try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5`
-      );
+      const response = await fetch(`/api/address-autocomplete?q=${encodeURIComponent(query)}`);
       const data = await response.json();
-      setSuggestions(data);
+      setGeoapifySuggestions(data.features || []);
       setShowSuggestions(true);
     } catch (error) {
       console.error("Error fetching address suggestions:", error);
-      setSuggestions([]);
+      setGeoapifySuggestions([]);
     } finally {
       setLoading(false);
     }
@@ -62,32 +85,59 @@ export function AddressAutocomplete({
     const newValue = e.target.value;
     setInputValue(newValue);
 
-    // Clear existing timeout
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
 
-    // Set new timeout for debounced search
     timeoutRef.current = setTimeout(() => {
       fetchAddressSuggestions(newValue);
     }, 300);
   };
 
-  const handleSelectSuggestion = (suggestion: AddressSuggestion) => {
-    setInputValue(suggestion.display_name);
-    onChange(suggestion.display_name);
+  const handleSelectGeoapify = (result: GeoapifyResult) => {
+    const props = result.properties;
+    const formatted = props.formatted || "";
+    
+    setInputValue(formatted);
+    onChange(formatted);
+    
+    if (onAddressSelect) {
+      const street = props.address_line1 || 
+        (props.housenumber && props.street ? `${props.housenumber} ${props.street}` : props.street) || 
+        "";
+      const city = props.city || props.town || props.village || "";
+      
+      onAddressSelect({
+        formatted,
+        street,
+        city,
+        state: props.state || "",
+        postalCode: props.postcode || "",
+        country: props.country || "",
+      });
+    }
+    
     setShowSuggestions(false);
-    setSuggestions([]);
+    setGeoapifySuggestions([]);
   };
 
   const handleClear = () => {
     setInputValue("");
     onChange("");
-    setSuggestions([]);
+    if (onAddressSelect) {
+      onAddressSelect({
+        formatted: "",
+        street: "",
+        city: "",
+        state: "",
+        postalCode: "",
+        country: "",
+      });
+    }
+    setGeoapifySuggestions([]);
     setShowSuggestions(false);
   };
 
-  // Close suggestions when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -134,29 +184,29 @@ export function AddressAutocomplete({
         )}
       </div>
 
-      {showSuggestions && suggestions.length > 0 && (
+      {showSuggestions && geoapifySuggestions.length > 0 && (
         <div
           ref={suggestionsRef}
-          className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-input rounded-md shadow-md max-h-64 overflow-y-auto"
+          className="absolute top-full left-0 right-0 z-50 mt-1 bg-background border border-input rounded-md shadow-md max-h-64 overflow-y-auto"
           data-testid="address-suggestions"
         >
-          {suggestions.map((suggestion, idx) => (
+          {geoapifySuggestions.map((result, idx) => (
             <Button
               key={idx}
               variant="ghost"
-              onClick={() => handleSelectSuggestion(suggestion)}
+              onClick={() => handleSelectGeoapify(result)}
               className="w-full justify-start text-left font-normal h-auto py-2 px-3 rounded-none hover:bg-accent"
               data-testid={`suggestion-${idx}`}
             >
               <MapPin className="w-3 h-3 mr-2 text-muted-foreground flex-shrink-0" />
-              <span className="text-sm line-clamp-2">{suggestion.display_name}</span>
+              <span className="text-sm line-clamp-2">{result.properties.formatted}</span>
             </Button>
           ))}
         </div>
       )}
 
-      {showSuggestions && inputValue && suggestions.length === 0 && !loading && (
-        <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-input rounded-md shadow-md p-3">
+      {showSuggestions && inputValue && geoapifySuggestions.length === 0 && !loading && (
+        <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-background border border-input rounded-md shadow-md p-3">
           <p className="text-sm text-muted-foreground">No addresses found. Try a different search.</p>
         </div>
       )}
