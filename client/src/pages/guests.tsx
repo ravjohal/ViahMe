@@ -1416,7 +1416,7 @@ export default function Guests() {
                             <div className="flex-1 min-w-0">
                               <CardTitle className="text-lg truncate">{household.name}</CardTitle>
                               <CardDescription className="mt-1">
-                                {household.maxCount} {household.maxCount === 1 ? 'seat' : 'seats'} • {householdGuests.length} {householdGuests.length === 1 ? 'guest' : 'guests'}
+                                {householdGuests.length} {householdGuests.length === 1 ? 'seat' : 'seats'}
                               </CardDescription>
                             </div>
                             <DropdownMenu>
@@ -1613,12 +1613,6 @@ export default function Guests() {
                   const groomHouseholds = filteredHouseholds.filter(h => h.affiliation === 'groom');
                   const mutualHouseholds = filteredHouseholds.filter(h => h.affiliation === 'mutual');
 
-                  const brideSeats = brideHouseholds.reduce((sum, h) => sum + (h.maxCount || 0), 0);
-                  const groomSeats = groomHouseholds.reduce((sum, h) => sum + (h.maxCount || 0), 0);
-                  const mutualSeats = mutualHouseholds.reduce((sum, h) => sum + (h.maxCount || 0), 0);
-                  const totalSeats = brideSeats + groomSeats + mutualSeats;
-                  const totalGuests = filteredGuests.length;
-
                   const brideGuests = filteredGuests.filter(g => {
                     if (!g.householdId) return false;
                     const household = householdById.get(g.householdId);
@@ -1634,6 +1628,12 @@ export default function Guests() {
                     const household = householdById.get(g.householdId);
                     return household?.affiliation === 'mutual';
                   });
+
+                  const brideSeats = brideGuests.length;
+                  const groomSeats = groomGuests.length;
+                  const mutualSeats = mutualGuests.length;
+                  const totalSeats = filteredGuests.length;
+                  const totalGuests = filteredGuests.length;
 
                   return (
                     <>
@@ -2990,7 +2990,7 @@ export default function Guests() {
                             {household.name}
                           </label>
                           <p className="text-xs text-muted-foreground">
-                            {household.maxCount} seats • {householdGuests.length} guests
+                            {householdGuests.length} {householdGuests.length === 1 ? 'seat' : 'seats'}
                             {missingEmail && (
                               <span className="text-destructive ml-2">(No email)</span>
                             )}
