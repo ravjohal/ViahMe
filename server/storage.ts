@@ -9675,10 +9675,12 @@ export class DBStorage implements IStorage {
           matchReasons.push('Same email address');
         }
 
-        // Check exact phone match (high confidence: 0.5)
+        // Check exact phone match from main contact guests (high confidence: 0.5)
         const normalizePhone = (p: string) => p.replace(/\D/g, '').slice(-10);
-        if (h1.contactPhone && h2.contactPhone &&
-            normalizePhone(h1.contactPhone) === normalizePhone(h2.contactPhone)) {
+        const mainContact1 = guests1.find(g => g.isMainHouseholdContact) || guests1[0];
+        const mainContact2 = guests2.find(g => g.isMainHouseholdContact) || guests2[0];
+        if (mainContact1?.phone && mainContact2?.phone &&
+            normalizePhone(mainContact1.phone) === normalizePhone(mainContact2.phone)) {
           score += 0.5;
           matchReasons.push('Same phone number');
         }
@@ -9761,13 +9763,10 @@ export class DBStorage implements IStorage {
       .set({ householdId: survivorId })
       .where(eq(schema.guests.householdId, mergedId));
 
-    // Merge contact info if survivor is missing
+    // Merge contact info if survivor is missing (contactPhone now stored on guests, not households)
     const updates: Partial<typeof survivor> = {};
     if (!survivor.contactEmail && merged.contactEmail) {
       updates.contactEmail = merged.contactEmail;
-    }
-    if (!survivor.contactPhone && merged.contactPhone) {
-      updates.contactPhone = merged.contactPhone;
     }
     if (!survivor.lifafaAmount && merged.lifafaAmount) {
       updates.lifafaAmount = merged.lifafaAmount;

@@ -81,9 +81,11 @@ export function HouseholdCard({
   const headOfHouseIndex = (household as any).headOfHouseIndex || 0;
   const headOfHouse = members[headOfHouseIndex] || members[0];
   
-  const mainContactName = household.mainContactName || headOfHouse?.name;
-  
   const householdGuests = guests.filter(g => g.householdId === household.id);
+  
+  // Find the main contact guest (first guest with isMainHouseholdContact=true, or first guest)
+  const mainContactGuest = householdGuests.find(g => g.isMainHouseholdContact) || householdGuests[0];
+  const mainContactName = mainContactGuest?.name || headOfHouse?.name;
   const adultCount = householdGuests.length || household.maxCount || 1;
   
   const getAffiliationColor = () => {
@@ -95,7 +97,9 @@ export function HouseholdCard({
   };
 
   const getStatusBadge = () => {
-    if (!household.contactEmail && !household.contactPhone) {
+    // Check main contact guest for contact info
+    const hasContactInfo = mainContactGuest?.email || mainContactGuest?.phone || household.contactEmail;
+    if (!hasContactInfo) {
       return <Badge variant="outline" className="text-orange-600 border-orange-300">Needs Contact</Badge>;
     }
     return null;
@@ -123,7 +127,7 @@ export function HouseholdCard({
   };
 
   const handleWhatsAppClick = () => {
-    const phone = headOfHouse?.phone || household.contactPhone;
+    const phone = mainContactGuest?.phone || headOfHouse?.phone;
     if (phone) {
       const cleanPhone = phone.replace(/\D/g, '');
       const message = encodeURIComponent(`Hi! This is a reminder about our wedding. We'd love to have you and your family join us!`);
@@ -132,14 +136,14 @@ export function HouseholdCard({
   };
 
   const handleSMSClick = () => {
-    const phone = headOfHouse?.phone || household.contactPhone;
+    const phone = mainContactGuest?.phone || headOfHouse?.phone;
     if (phone) {
       window.open(`sms:${phone}`, '_blank');
     }
   };
 
   const handleEmailClick = () => {
-    const email = headOfHouse?.email || household.contactEmail;
+    const email = mainContactGuest?.email || headOfHouse?.email || household.contactEmail;
     if (email) {
       window.open(`mailto:${email}`, '_blank');
     }
@@ -158,8 +162,8 @@ export function HouseholdCard({
   };
 
   const hasGift = household.lifafaAmount || (household as any).giftDescription;
-  const contactPhone = headOfHouse?.phone || household.contactPhone;
-  const contactEmail = headOfHouse?.email || household.contactEmail;
+  const contactPhone = mainContactGuest?.phone || headOfHouse?.phone;
+  const contactEmail = mainContactGuest?.email || headOfHouse?.email || household.contactEmail;
 
   return (
     <>
