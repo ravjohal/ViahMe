@@ -253,4 +253,16 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
       res.status(500).json({ error: "Failed to create wedding", message: error instanceof Error ? error.message : String(error) });
     }
   });
+
+  // Duplicate household detection
+  router.get("/:id/duplicate-households", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const weddingId = req.params.id;
+      const duplicates = await storage.detectDuplicateHouseholds(weddingId);
+      res.json(duplicates);
+    } catch (error) {
+      console.error("Error detecting duplicate households:", error);
+      res.status(500).json({ error: "Failed to detect duplicates" });
+    }
+  });
 }
