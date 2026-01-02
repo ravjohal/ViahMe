@@ -9325,11 +9325,24 @@ export class DBStorage implements IStorage {
   }
 
   async markCollectorSubmissionMaybe(id: string, reviewerId: string): Promise<GuestCollectorSubmission> {
-    // Identical pattern to declineCollectorSubmission - just different status value
+    // First verify the submission exists
+    const existing = await this.db.select().from(schema.guestCollectorSubmissions)
+      .where(eq(schema.guestCollectorSubmissions.id, id));
+    
+    if (!existing.length) {
+      throw new Error(`Submission not found: ${id}`);
+    }
+    
+    // Perform the update
     const result = await this.db.update(schema.guestCollectorSubmissions)
       .set({ status: 'maybe', reviewedById: reviewerId, reviewedAt: new Date() })
       .where(eq(schema.guestCollectorSubmissions.id, id))
       .returning();
+    
+    if (!result.length) {
+      throw new Error(`Failed to update submission: ${id}`);
+    }
+    
     return normalizeSubmission(result[0]);
   }
 
