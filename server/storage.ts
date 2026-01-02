@@ -9671,14 +9671,17 @@ export class DBStorage implements IStorage {
           matchReasons.push('Same phone number');
         }
 
-        // Check household name similarity (medium confidence: 0.25)
+        // Check household name similarity (higher confidence for exact/near matches)
         const nameSimilarity = this.calculateStringSimilarity(h1.name, h2.name);
-        if (nameSimilarity >= 0.8) {
-          score += 0.25;
+        if (nameSimilarity >= 0.95) {
+          score += 0.5;
+          matchReasons.push(`Nearly identical household names (${Math.round(nameSimilarity * 100)}% match)`);
+        } else if (nameSimilarity >= 0.8) {
+          score += 0.35;
           matchReasons.push(`Similar household names (${Math.round(nameSimilarity * 100)}% match)`);
         }
 
-        // Check guest name overlaps (lower confidence: 0.15)
+        // Check guest name overlaps (higher confidence for matching guests)
         let guestMatchCount = 0;
         for (const g1 of guests1) {
           for (const g2 of guests2) {
@@ -9689,13 +9692,13 @@ export class DBStorage implements IStorage {
           }
         }
         if (guestMatchCount > 0) {
-          const guestScore = Math.min(0.15, guestMatchCount * 0.05);
+          const guestScore = Math.min(0.35, guestMatchCount * 0.15);
           score += guestScore;
           matchReasons.push(`${guestMatchCount} guest name(s) match`);
         }
 
         // Only include if score meets threshold
-        if (score >= 0.5) {
+        if (score >= 0.4) {
           duplicates.push({
             household1: h1,
             household2: h2,
