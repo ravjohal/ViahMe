@@ -13,6 +13,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Plus,
+  Minus,
   Trash2,
   User,
   Mail,
@@ -20,6 +21,7 @@ import {
   CheckCircle2,
   X,
   UserCheck,
+  UtensilsCrossed,
 } from "lucide-react";
 import type { Household, Guest } from "@shared/schema";
 
@@ -211,6 +213,7 @@ export function HouseholdWizard({
     // Default to true when editing (so they can see existing members)
     return !!editingHousehold;
   });
+  const [dietaryRestriction, setDietaryRestriction] = useState(editingHousehold?.dietaryRestriction || "none");
   
   // Main contact info (step 2)
   const [mainContactName, setMainContactName] = useState("");
@@ -377,7 +380,7 @@ export function HouseholdWizard({
       name: householdName,
       affiliation,
       relationshipTier,
-      priorityTier,
+      dietaryRestriction: dietaryRestriction === "none" ? null : dietaryRestriction,
       addressStreet,
       addressCity,
       addressState,
@@ -390,7 +393,7 @@ export function HouseholdWizard({
 
   const getStepLabel = (step: WizardStep): string => {
     switch (step) {
-      case "household": return "Household Info";
+      case "household": return "Family Info";
       case "main_contact": return "Main Contact";
       case "members": return "Add Members";
       case "review": return "Review";
@@ -421,15 +424,15 @@ export function HouseholdWizard({
             <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center">
               <Users className="w-6 h-6 text-primary" />
             </div>
-            <h3 className="text-lg font-semibold">Household Information</h3>
+            <h3 className="text-lg font-semibold">Add a Family</h3>
             <p className="text-sm text-muted-foreground">
-              Enter the family name and details
+              Enter the household name, address, and dietary preferences
             </p>
           </div>
 
           <div className="space-y-2">
             <Label className="text-base font-medium">
-              Household Name <span className="text-destructive">*</span>
+              Family/Household Name <span className="text-destructive">*</span>
             </Label>
             <Input
               value={householdName}
@@ -438,52 +441,9 @@ export function HouseholdWizard({
               className="min-h-[48px] text-base"
               data-testid="input-wizard-household-name"
             />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-base font-medium">Side</Label>
-              <Select value={affiliation} onValueChange={setAffiliation}>
-                <SelectTrigger className="min-h-[48px]" data-testid="select-wizard-affiliation">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="bride">Bride's Side</SelectItem>
-                  <SelectItem value="groom">Groom's Side</SelectItem>
-                  <SelectItem value="mutual">Mutual</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-base font-medium">Relationship</Label>
-              <Select value={relationshipTier} onValueChange={setRelationshipTier}>
-                <SelectTrigger className="min-h-[48px]" data-testid="select-wizard-relationship">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {RELATIONSHIP_TIERS.map(tier => (
-                    <SelectItem key={tier.value} value={tier.value}>
-                      {tier.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-base font-medium">Priority</Label>
-            <Select value={priorityTier} onValueChange={setPriorityTier}>
-              <SelectTrigger className="min-h-[48px]" data-testid="select-wizard-priority">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="must_invite">Must Invite</SelectItem>
-                <SelectItem value="should_invite">Should Invite</SelectItem>
-                <SelectItem value="nice_to_have">Nice to Have</SelectItem>
-              </SelectContent>
-            </Select>
+            <p className="text-xs text-muted-foreground">
+              This is how they'll appear on the guest list
+            </p>
           </div>
 
           <div className="space-y-2">
@@ -505,23 +465,41 @@ export function HouseholdWizard({
           <div className="space-y-2">
             <Label className="text-base font-medium flex items-center gap-2">
               <Users className="w-4 h-4" />
-              Number of Family Members <span className="text-destructive">*</span>
+              How many people in this family? <span className="text-destructive">*</span>
             </Label>
-            <Select value={memberCount.toString()} onValueChange={(v) => setMemberCount(parseInt(v))}>
-              <SelectTrigger className="min-h-[48px]" data-testid="select-wizard-member-count">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
-                  <SelectItem key={n} value={n.toString()}>
-                    {n} {n === 1 ? "person" : "people"}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => setMemberCount(Math.max(1, memberCount - 1))}
+                disabled={memberCount <= 1}
+                className="h-12 w-12"
+                data-testid="button-member-count-minus"
+              >
+                <Minus className="w-4 h-4" />
+              </Button>
+              <span className="text-2xl font-semibold w-12 text-center" data-testid="text-member-count">
+                {memberCount}
+              </span>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => setMemberCount(Math.min(20, memberCount + 1))}
+                disabled={memberCount >= 20}
+                className="h-12 w-12"
+                data-testid="button-member-count-plus"
+              >
+                <Plus className="w-4 h-4" />
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Total number of guests in this household
+            </p>
           </div>
 
-          <div className="flex items-center space-x-3 pt-2 p-3 rounded-lg bg-muted/50">
+          <div className="flex items-center space-x-3 p-4 rounded-lg border bg-card">
             <Checkbox
               id="add-individually"
               checked={addMembersIndividually}
@@ -533,9 +511,34 @@ export function HouseholdWizard({
                 Add members individually
               </Label>
               <p className="text-xs text-muted-foreground">
-                Enter name and contact info for each family member
+                Enter names and details for each person (optional)
               </p>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-base font-medium flex items-center gap-2">
+              <UtensilsCrossed className="w-4 h-4" />
+              Household Dietary Restriction
+            </Label>
+            <Select value={dietaryRestriction} onValueChange={setDietaryRestriction}>
+              <SelectTrigger className="min-h-[48px]" data-testid="select-wizard-dietary">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No dietary restrictions</SelectItem>
+                <SelectItem value="vegetarian">Vegetarian</SelectItem>
+                <SelectItem value="vegan">Vegan</SelectItem>
+                <SelectItem value="halal">Halal</SelectItem>
+                <SelectItem value="kosher">Kosher</SelectItem>
+                <SelectItem value="gluten_free">Gluten-Free</SelectItem>
+                <SelectItem value="nut_allergy">Nut Allergy</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Does the whole household share a dietary restriction?
+            </p>
           </div>
         </div>
       )}
@@ -757,9 +760,17 @@ export function HouseholdWizard({
                 <Badge variant="secondary">
                   {RELATIONSHIP_TIERS.find(t => t.value === relationshipTier)?.label || relationshipTier}
                 </Badge>
-                <Badge variant="secondary">
-                  {priorityTier === "must_invite" ? "Must Invite" : priorityTier === "should_invite" ? "Should Invite" : "Nice to Have"}
-                </Badge>
+                {dietaryRestriction && dietaryRestriction !== "none" && (
+                  <Badge variant="secondary">
+                    {dietaryRestriction === "vegetarian" ? "Vegetarian" :
+                     dietaryRestriction === "vegan" ? "Vegan" :
+                     dietaryRestriction === "halal" ? "Halal" :
+                     dietaryRestriction === "kosher" ? "Kosher" :
+                     dietaryRestriction === "gluten_free" ? "Gluten-Free" :
+                     dietaryRestriction === "nut_allergy" ? "Nut Allergy" :
+                     dietaryRestriction}
+                  </Badge>
+                )}
               </div>
             </div>
           </Card>
