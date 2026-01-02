@@ -250,7 +250,7 @@ export function DuplicatesManager({ weddingId }: DuplicatesManagerProps) {
 
 function HouseholdCard({ household, guests, label }: { household: Household; guests: Guest[]; label: string }) {
   const mainContactGuest = guests.find(g => g.isMainHouseholdContact) || guests[0];
-  const contactEmail = mainContactGuest?.email || household.contactEmail;
+  const contactEmail = mainContactGuest?.email;
   const contactPhone = mainContactGuest?.phone;
   
   return (

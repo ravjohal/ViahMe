@@ -92,7 +92,6 @@ type GuestFormData = z.infer<typeof guestFormSchema>;
 
 const householdFormSchema = insertHouseholdSchema.extend({
   maxCount: z.number().min(1, "Max count must be at least 1"),
-  contactEmail: z.string().email("Please enter a valid email address").optional().or(z.literal("")),
   addressStreet: z.string().optional().or(z.literal("")),
   addressCity: z.string().optional().or(z.literal("")),
   addressState: z.string().optional().or(z.literal("")),
@@ -164,6 +163,7 @@ function exportToCSV(households: Household[], guests: Guest[]) {
   const rows = households.map(household => {
     const householdGuests = guests.filter(g => g.householdId === household.id);
     const guestNames = householdGuests.map(g => g.name).join('; ');
+    const mainContact = householdGuests.find(g => g.isMainHouseholdContact) || householdGuests[0];
     
     return [
       household.name,
@@ -174,7 +174,7 @@ function exportToCSV(households: Household[], guests: Guest[]) {
       household.maxCount || 0,
       householdGuests.length,
       guestNames || 'No guests added',
-      household.contactEmail || 'Not provided'
+      mainContact?.email || 'Not provided'
     ];
   });
   
@@ -427,7 +427,6 @@ export default function Guests() {
     resolver: zodResolver(householdFormSchema),
     defaultValues: {
       name: "",
-      contactEmail: "",
       addressStreet: "",
       addressCity: "",
       addressState: "",
@@ -974,7 +973,6 @@ export default function Guests() {
     setEditingHousehold(null);
     householdForm.reset({
       name: "",
-      contactEmail: "",
       addressStreet: "",
       addressCity: "",
       addressState: "",
@@ -993,7 +991,6 @@ export default function Guests() {
     setEditingHousehold(household);
     householdForm.reset({
       name: household.name,
-      contactEmail: household.contactEmail || "",
       addressStreet: household.addressStreet || "",
       addressCity: household.addressCity || "",
       addressState: household.addressState || "",
@@ -1009,15 +1006,10 @@ export default function Guests() {
   };
 
   const handleHouseholdSubmit = (data: HouseholdFormData) => {
-    const householdData = {
-      ...data,
-      contactEmail: data.contactEmail || undefined,
-    };
-
     if (editingHousehold) {
-      updateHouseholdMutation.mutate({ id: editingHousehold.id, data: householdData });
+      updateHouseholdMutation.mutate({ id: editingHousehold.id, data });
     } else {
-      createHouseholdMutation.mutate(householdData);
+      createHouseholdMutation.mutate(data);
     }
   };
 
@@ -1105,7 +1097,9 @@ export default function Guests() {
 
     const householdsWithoutEmail = selectedHouseholds.filter(id => {
       const household = households.find(h => h.id === id);
-      return !household?.contactEmail;
+      const householdGuests = guests.filter(g => g.householdId === id);
+      const mainContact = householdGuests.find(g => g.isMainHouseholdContact) || householdGuests[0];
+      return !mainContact?.email;
     });
 
     if (householdsWithoutEmail.length > 0) {
@@ -1459,7 +1453,7 @@ export default function Guests() {
                           {(() => {
                             const mainContactGuest = householdGuests.find(g => g.isMainHouseholdContact) || householdGuests[0];
                             const contactPhone = mainContactGuest?.phone;
-                            const contactEmail = mainContactGuest?.email || household.contactEmail;
+                            const contactEmail = mainContactGuest?.email;
                             return (contactEmail || contactPhone || householdGuests.length > 0) && (
                               <div className="text-sm border rounded-md p-2 bg-muted/30 space-y-2">
                                 <div className="flex items-center gap-2">
@@ -2681,26 +2675,9 @@ export default function Guests() {
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="household-contactEmail">
-                Household Email
-              </Label>
-              <Input
-                id="household-contactEmail"
-                type="email"
-                {...householdForm.register("contactEmail")}
-                placeholder="e.g., patel@example.com"
-                data-testid="input-household-contact-email"
-              />
-              {householdForm.formState.errors.contactEmail && (
-                <p className="text-sm text-destructive">
-                  {householdForm.formState.errors.contactEmail.message}
-                </p>
-              )}
-              <p className="text-xs text-muted-foreground">
-                Contact details for individual guests can be added when editing guests
-              </p>
-            </div>
+            <p className="text-xs text-muted-foreground">
+              Contact details (email, phone) are managed on individual guests. The Main Point of Contact's email will be used for household communications.
+            </p>
 
             <div className="space-y-2">
               <Label>Address</Label>
@@ -2856,7 +2833,8 @@ export default function Guests() {
                 ) : (
                   households.map((household) => {
                     const householdGuests = guests.filter(g => g.householdId === household.id);
-                    const missingEmail = !household.contactEmail;
+                    const mainContact = householdGuests.find(g => g.isMainHouseholdContact) || householdGuests[0];
+                    const missingEmail = !mainContact?.email;
                     
                     return (
                       <div

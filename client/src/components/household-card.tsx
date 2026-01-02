@@ -98,7 +98,7 @@ export function HouseholdCard({
 
   const getStatusBadge = () => {
     // Check main contact guest for contact info
-    const hasContactInfo = mainContactGuest?.email || mainContactGuest?.phone || household.contactEmail;
+    const hasContactInfo = mainContactGuest?.email || mainContactGuest?.phone;
     if (!hasContactInfo) {
       return <Badge variant="outline" className="text-orange-600 border-orange-300">Needs Contact</Badge>;
     }
@@ -143,7 +143,7 @@ export function HouseholdCard({
   };
 
   const handleEmailClick = () => {
-    const email = mainContactGuest?.email || headOfHouse?.email || household.contactEmail;
+    const email = mainContactGuest?.email || headOfHouse?.email;
     if (email) {
       window.open(`mailto:${email}`, '_blank');
     }
@@ -163,7 +163,7 @@ export function HouseholdCard({
 
   const hasGift = household.lifafaAmount || (household as any).giftDescription;
   const contactPhone = mainContactGuest?.phone || headOfHouse?.phone;
-  const contactEmail = mainContactGuest?.email || headOfHouse?.email || household.contactEmail;
+  const contactEmail = mainContactGuest?.email || headOfHouse?.email;
 
   return (
     <>

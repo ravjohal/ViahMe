@@ -101,7 +101,6 @@ type SourceStat = {
 
 const suggestionFormSchema = z.object({
   householdName: z.string().min(1, "Name is required"),
-  contactEmail: z.string().email("Valid email required").optional().or(z.literal("")),
   maxCount: z.coerce.number().min(1, "At least 1 guest required"),
   affiliation: z.enum(["bride", "groom", "mutual"]),
   relationshipTier: z.enum(["immediate_family", "extended_family", "friend", "parents_friend"]),
@@ -196,7 +195,6 @@ export default function GuestManagement() {
     resolver: zodResolver(suggestionFormSchema),
     defaultValues: {
       householdName: "",
-      contactEmail: "",
       maxCount: 1,
       affiliation: "bride",
       relationshipTier: "friend",
@@ -827,9 +825,6 @@ export default function GuestManagement() {
                     )}
                     {suggestion.notes && (
                       <p className="text-sm text-muted-foreground">{suggestion.notes}</p>
-                    )}
-                    {suggestion.contactEmail && (
-                      <p className="text-xs text-muted-foreground">Contact: {suggestion.contactEmail}</p>
                     )}
                   </CardContent>
                   <CardFooter className="pt-0 flex flex-wrap gap-2 justify-between">

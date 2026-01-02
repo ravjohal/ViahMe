@@ -18,15 +18,23 @@ export function createGuestSuggestionsRouter(storage: IStorage): Router {
       
       const households = await storage.getHouseholdsByWedding(weddingId);
       const householdNames = new Set(households.map(h => h.name.toLowerCase().trim()));
-      const householdEmails = new Set(households.filter(h => h.email).map(h => h.email!.toLowerCase().trim()));
+      
+      // Get main contact emails from guests for duplicate checking
+      const mainContactEmails = new Set<string>();
+      for (const h of households) {
+        const guests = await storage.getGuestsByHousehold(h.id);
+        const mainContact = guests.find(g => g.isMainHouseholdContact) || guests[0];
+        if (mainContact?.email) {
+          mainContactEmails.add(mainContact.email.toLowerCase().trim());
+        }
+      }
       
       const suggestionsWithDuplicates = suggestions.map(suggestion => {
         const nameMatch = householdNames.has(suggestion.householdName?.toLowerCase().trim() || '');
-        const emailMatch = suggestion.contactEmail && householdEmails.has(suggestion.contactEmail.toLowerCase().trim());
         return {
           ...suggestion,
-          potentialDuplicate: nameMatch || emailMatch,
-          duplicateReason: nameMatch ? 'name' : emailMatch ? 'email' : null,
+          potentialDuplicate: nameMatch,
+          duplicateReason: nameMatch ? 'name' : null,
         };
       });
       

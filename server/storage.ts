@@ -1655,7 +1655,6 @@ export class MemStorage implements IStorage {
     const household: Household = {
       ...insertHousehold,
       id,
-      contactEmail: insertHousehold.contactEmail ?? null,
       maxCount: insertHousehold.maxCount ?? 1,
       magicLinkTokenHash: null,
       magicLinkToken: null,
@@ -7590,11 +7589,10 @@ export class DBStorage implements IStorage {
     if (!suggestion) throw new Error("Suggestion not found");
     if (suggestion.status !== "pending") throw new Error("Suggestion already reviewed");
 
-    // Create household from suggestion
+    // Create household from suggestion (contactEmail now stored on main contact guest)
     const household = await this.createHousehold({
       weddingId: suggestion.weddingId,
       name: suggestion.householdName,
-      contactEmail: suggestion.contactEmail,
       maxCount: suggestion.maxCount,
       affiliation: suggestion.affiliation as "bride" | "groom" | "mutual",
       relationshipTier: suggestion.relationshipTier as "immediate_family" | "extended_family" | "friend" | "parents_friend",
@@ -9231,7 +9229,7 @@ export class DBStorage implements IStorage {
     // Determine maxCount: use members length if available, otherwise use guestCount from submission
     const maxCount = parsedMembers.length > 0 ? parsedMembers.length : (submission.guestCount || 1);
     
-    // Create household for the guest (contact info now comes from main contact guest)
+    // Create household for the guest (contact info comes from main contact guest)
     const household = await this.createHousehold({
       weddingId: submission.weddingId,
       name: householdName,
@@ -9239,7 +9237,6 @@ export class DBStorage implements IStorage {
       relationshipTier: (submission.relationshipTier as any) || 'friend',
       priorityTier: 'should_invite',
       maxCount: maxCount,
-      contactEmail: submission.guestEmail || undefined,
       desiDietaryType: (submission.desiDietaryType as any) || 'none',
     });
     
@@ -9668,17 +9665,17 @@ export class DBStorage implements IStorage {
         let score = 0;
         const matchReasons: string[] = [];
 
-        // Check exact email match (high confidence: 0.6)
-        if (h1.contactEmail && h2.contactEmail && 
-            h1.contactEmail.toLowerCase() === h2.contactEmail.toLowerCase()) {
+        // Check exact email match from main contact guests (high confidence: 0.6)
+        const mainContact1 = guests1.find(g => g.isMainHouseholdContact) || guests1[0];
+        const mainContact2 = guests2.find(g => g.isMainHouseholdContact) || guests2[0];
+        if (mainContact1?.email && mainContact2?.email && 
+            mainContact1.email.toLowerCase() === mainContact2.email.toLowerCase()) {
           score += 0.6;
           matchReasons.push('Same email address');
         }
 
         // Check exact phone match from main contact guests (high confidence: 0.5)
         const normalizePhone = (p: string) => p.replace(/\D/g, '').slice(-10);
-        const mainContact1 = guests1.find(g => g.isMainHouseholdContact) || guests1[0];
-        const mainContact2 = guests2.find(g => g.isMainHouseholdContact) || guests2[0];
         if (mainContact1?.phone && mainContact2?.phone &&
             normalizePhone(mainContact1.phone) === normalizePhone(mainContact2.phone)) {
           score += 0.5;
@@ -9763,11 +9760,8 @@ export class DBStorage implements IStorage {
       .set({ householdId: survivorId })
       .where(eq(schema.guests.householdId, mergedId));
 
-    // Merge contact info if survivor is missing (contactPhone now stored on guests, not households)
+    // Merge other info if survivor is missing (contactEmail/phone now stored on guests, not households)
     const updates: Partial<typeof survivor> = {};
-    if (!survivor.contactEmail && merged.contactEmail) {
-      updates.contactEmail = merged.contactEmail;
-    }
     if (!survivor.lifafaAmount && merged.lifafaAmount) {
       updates.lifafaAmount = merged.lifafaAmount;
     }

@@ -568,7 +568,6 @@ export const households = pgTable("households", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   weddingId: varchar("wedding_id").notNull(),
   name: text("name").notNull(), // e.g., "The Patel Family"
-  contactEmail: text("contact_email"), // Primary contact email for invitations (kept at household level for bulk email sends)
   // Address fields
   addressStreet: text("address_street"),
   addressCity: text("address_city"),
@@ -2516,7 +2515,6 @@ export const guestSuggestions = pgTable("guest_suggestions", {
   
   // Household suggestion fields
   householdName: text("household_name").notNull(), // e.g., "The Patel Family"
-  contactEmail: text("contact_email"),
   maxCount: integer("max_count").notNull().default(1), // Seats requested
   affiliation: text("affiliation").notNull().default("bride"), // "bride" | "groom" | "mutual"
   relationshipTier: text("relationship_tier").notNull().default("friend"),

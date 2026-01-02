@@ -183,9 +183,11 @@ export async function registerHouseholdRoutes(router: Router, storage: IStorage)
             }
           }
 
-          if (household.contactEmail) {
+          const mainContact = guests.find(g => g.isMainHouseholdContact) || guests[0];
+          const contactEmail = mainContact?.email;
+          if (contactEmail) {
             await sendInvitationEmail({
-              to: household.contactEmail,
+              to: contactEmail,
               householdName: household.name,
               coupleName,
               magicLink,
@@ -194,7 +196,7 @@ export async function registerHouseholdRoutes(router: Router, storage: IStorage)
               personalMessage,
             });
 
-            results.push({ householdId, email: household.contactEmail, success: true });
+            results.push({ householdId, email: contactEmail, success: true });
           } else {
             errors.push({ householdId, error: "No contact email" });
           }

@@ -106,10 +106,13 @@ export async function registerCommunicationRoutes(router: Router, storage: IStor
         const magicLink = `${process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : "http://localhost:5000"}/rsvp/${token}`;
 
         if (channel === "email" || channel === "both") {
-          if (household.contactEmail) {
+          const guests = await storage.getGuestsByHousehold(household.id);
+          const mainContact = guests.find(g => g.isMainHouseholdContact) || guests[0];
+          const contactEmail = mainContact?.email;
+          if (contactEmail) {
             try {
               await sendInvitationEmail({
-                to: household.contactEmail,
+                to: contactEmail,
                 householdName: household.name,
                 coupleName,
                 magicLink,
@@ -121,12 +124,12 @@ export async function registerCommunicationRoutes(router: Router, storage: IStor
               recipientRecords.push({
                 communicationId: communication.id,
                 householdId: household.id,
-                email: household.contactEmail,
+                email: contactEmail,
                 channel: "email" as const,
               });
               deliveredCount++;
             } catch (error) {
-              console.error(`Failed to send email to ${household.contactEmail}:`, error);
+              console.error(`Failed to send email to ${contactEmail}:`, error);
               failedCount++;
             }
           }
@@ -223,11 +226,14 @@ export async function registerCommunicationRoutes(router: Router, storage: IStor
         if (!household) continue;
 
         if (channel === "email" || channel === "both" || !channel) {
-          if (household.contactEmail) {
+          const guests = await storage.getGuestsByHousehold(household.id);
+          const mainContact = guests.find(g => g.isMainHouseholdContact) || guests[0];
+          const contactEmail = mainContact?.email;
+          if (contactEmail) {
             try {
               const { sendUpdateEmail } = await import("../email");
               await sendUpdateEmail({
-                to: household.contactEmail,
+                to: contactEmail,
                 householdName: household.name,
                 subject,
                 message,
@@ -237,12 +243,12 @@ export async function registerCommunicationRoutes(router: Router, storage: IStor
               recipientRecords.push({
                 communicationId: communication.id,
                 householdId: household.id,
-                email: household.contactEmail,
+                email: contactEmail,
                 channel: "email" as const,
               });
               deliveredCount++;
             } catch (error) {
-              console.error(`Failed to send email to ${household.contactEmail}:`, error);
+              console.error(`Failed to send email to ${contactEmail}:`, error);
               failedCount++;
             }
           }
@@ -372,11 +378,14 @@ export async function registerCommunicationRoutes(router: Router, storage: IStor
         const magicLink = `${process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : "http://localhost:5000"}/rsvp/${token}`;
 
         if (channel === "email" || channel === "both" || !channel) {
-          if (household.contactEmail) {
+          const guests = await storage.getGuestsByHousehold(household.id);
+          const mainContact = guests.find(g => g.isMainHouseholdContact) || guests[0];
+          const contactEmail = mainContact?.email;
+          if (contactEmail) {
             try {
               const { sendRsvpReminderEmail } = await import("../email");
               await sendRsvpReminderEmail({
-                to: household.contactEmail,
+                to: contactEmail,
                 householdName: household.name,
                 coupleName,
                 magicLink,
@@ -386,12 +395,12 @@ export async function registerCommunicationRoutes(router: Router, storage: IStor
               recipientRecords.push({
                 communicationId: communication.id,
                 householdId: household.id,
-                email: household.contactEmail,
+                email: contactEmail,
                 channel: "email" as const,
               });
               deliveredCount++;
             } catch (error) {
-              console.error(`Failed to send reminder email to ${household.contactEmail}:`, error);
+              console.error(`Failed to send reminder email to ${contactEmail}:`, error);
               failedCount++;
             }
           }

@@ -101,7 +101,6 @@ describe('Viah.me API Tests', () => {
     testHousehold = await storage.createHousehold({
       weddingId: testWedding.id,
       name: 'Test Family',
-      contactEmail: 'family@test.com',
       maxCount: 4,
       affiliation: 'bride',
       relationshipTier: 'immediate_family',
@@ -298,7 +297,6 @@ describe('Viah.me API Tests', () => {
         .send({
           weddingId: testWedding.id,
           name: 'New Family',
-          contactEmail: 'newfamily@test.com',
           maxCount: 2,
           affiliation: 'groom',
           relationshipTier: 'extended_family',

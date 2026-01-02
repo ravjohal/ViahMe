@@ -198,7 +198,7 @@ export default function CommunicationHub() {
     const withEmail = households.filter((h) => {
       const householdGuests = guests.filter(g => g.householdId === h.id);
       const mainContact = householdGuests.find(g => g.isMainHouseholdContact) || householdGuests[0];
-      return mainContact?.email || h.contactEmail;
+      return mainContact?.email;
     }).length;
     const withPhone = households.filter((h) => {
       const householdGuests = guests.filter(g => g.householdId === h.id);
@@ -375,7 +375,7 @@ export default function CommunicationHub() {
                       filteredHouseholds.map((household) => {
                         const householdGuests = guests?.filter(g => g.householdId === household.id) || [];
                         const mainContact = householdGuests.find(g => g.isMainHouseholdContact) || householdGuests[0];
-                        const hasEmail = mainContact?.email || household.contactEmail;
+                        const hasEmail = mainContact?.email;
                         const hasPhone = mainContact?.phone;
                         return (
                           <div
