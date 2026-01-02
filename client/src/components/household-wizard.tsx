@@ -19,6 +19,7 @@ import {
   Phone,
   CheckCircle2,
   X,
+  UserCheck,
 } from "lucide-react";
 import type { Household, Guest } from "@shared/schema";
 
@@ -154,7 +155,7 @@ const RELATIONSHIP_TIERS = [
   { value: "coworker", label: "Co-worker" },
 ];
 
-type WizardStep = "household" | "members" | "review";
+type WizardStep = "household" | "main_contact" | "members" | "review";
 
 type GuestMember = {
   id: string;
@@ -187,7 +188,7 @@ export function HouseholdWizard({
   onSave,
   onCancel,
 }: HouseholdWizardProps) {
-  const [currentStep, setCurrentStep] = useState<WizardStep>("household");
+  // Household info
   const [householdName, setHouseholdName] = useState(editingHousehold?.name || "");
   const [affiliation, setAffiliation] = useState<string>(editingHousehold?.affiliation || "bride");
   const [relationshipTier, setRelationshipTier] = useState(editingHousehold?.relationshipTier || "friend");
@@ -199,26 +200,52 @@ export function HouseholdWizard({
   const [addressPostalCode, setAddressPostalCode] = useState(editingHousehold?.addressPostalCode || "");
   const [addressCountry, setAddressCountry] = useState(editingHousehold?.addressCountry || "");
   
-  const [members, setMembers] = useState<GuestMember[]>(() => {
+  // New fields for step 1
+  const [memberCount, setMemberCount] = useState(() => {
     if (editingHousehold && existingGuests.length > 0) {
-      const householdGuests = existingGuests.filter(g => g.householdId === editingHousehold.id);
-      if (householdGuests.length > 0) {
-        return householdGuests.map(g => ({
-          id: g.id,
-          name: g.name,
-          email: g.email || "",
-          phone: g.phone || "",
-          isMainContact: g.isMainHouseholdContact || false,
-        }));
+      return existingGuests.filter(g => g.householdId === editingHousehold.id).length;
+    }
+    return 1;
+  });
+  const [addMembersIndividually, setAddMembersIndividually] = useState(() => {
+    // Default to true when editing (so they can see existing members)
+    return !!editingHousehold;
+  });
+  
+  // Main contact info (step 2)
+  const [mainContactName, setMainContactName] = useState("");
+  const [mainContactEmail, setMainContactEmail] = useState("");
+  const [mainContactPhone, setMainContactPhone] = useState("");
+  
+  // Additional members (step 3)
+  const [additionalMembers, setAdditionalMembers] = useState<GuestMember[]>([]);
+  
+  // Wizard state
+  const [currentStep, setCurrentStep] = useState<WizardStep>("household");
+
+  // Calculate steps based on checkbox - memoize to avoid recalculation issues
+  const steps: WizardStep[] = addMembersIndividually 
+    ? ["household", "main_contact", "members", "review"]
+    : ["household", "main_contact", "review"];
+
+  // Ensure currentStep is valid when checkbox changes
+  useEffect(() => {
+    if (!steps.includes(currentStep)) {
+      // If current step is no longer valid (e.g., "members" when checkbox unchecked),
+      // move to the last valid step before the invalid one
+      if (currentStep === "members") {
+        setCurrentStep("main_contact");
+      } else {
+        setCurrentStep("household");
       }
     }
-    return [DEFAULT_MEMBER()];
-  });
+  }, [addMembersIndividually, currentStep, steps]);
 
-  const steps: WizardStep[] = ["household", "members", "review"];
   const currentStepIndex = steps.indexOf(currentStep);
-  const progressPercent = ((currentStepIndex + 1) / steps.length) * 100;
+  const safeStepIndex = currentStepIndex >= 0 ? currentStepIndex : 0;
+  const progressPercent = ((safeStepIndex + 1) / steps.length) * 100;
 
+  // Initialize from existing data when editing
   useEffect(() => {
     if (editingHousehold) {
       const addressParts = [
@@ -229,8 +256,35 @@ export function HouseholdWizard({
         editingHousehold.addressCountry
       ].filter(Boolean);
       setFullAddress(addressParts.join(", "));
+      
+      // Load existing guests
+      const householdGuests = existingGuests.filter(g => g.householdId === editingHousehold.id);
+      const mainContact = householdGuests.find(g => g.isMainHouseholdContact);
+      const others = householdGuests.filter(g => !g.isMainHouseholdContact);
+      
+      if (mainContact) {
+        setMainContactName(mainContact.name);
+        setMainContactEmail(mainContact.email || "");
+        setMainContactPhone(mainContact.phone || "");
+      } else if (householdGuests.length > 0) {
+        // If no main contact designated, use first guest
+        setMainContactName(householdGuests[0].name);
+        setMainContactEmail(householdGuests[0].email || "");
+        setMainContactPhone(householdGuests[0].phone || "");
+      }
+      
+      if (others.length > 0) {
+        setAdditionalMembers(others.map(g => ({
+          id: g.id,
+          name: g.name,
+          email: g.email || "",
+          phone: g.phone || "",
+          isMainContact: false,
+        })));
+        setAddMembersIndividually(true);
+      }
     }
-  }, [editingHousehold]);
+  }, [editingHousehold, existingGuests]);
 
   const handleAddressSelect = (address: AddressSuggestion) => {
     setAddressStreet(address.street || "");
@@ -241,14 +295,14 @@ export function HouseholdWizard({
   };
 
   const handleNext = () => {
-    const nextIndex = currentStepIndex + 1;
+    const nextIndex = safeStepIndex + 1;
     if (nextIndex < steps.length) {
       setCurrentStep(steps[nextIndex]);
     }
   };
 
   const handleBack = () => {
-    const prevIndex = currentStepIndex - 1;
+    const prevIndex = safeStepIndex - 1;
     if (prevIndex >= 0) {
       setCurrentStep(steps[prevIndex]);
     }
@@ -257,9 +311,11 @@ export function HouseholdWizard({
   const canProceed = (): boolean => {
     switch (currentStep) {
       case "household":
-        return householdName.trim() !== "";
+        return householdName.trim() !== "" && memberCount >= 1;
+      case "main_contact":
+        return mainContactName.trim() !== "";
       case "members":
-        return members.some(m => m.name.trim() !== "");
+        return true; // Additional members are optional
       case "review":
         return true;
       default:
@@ -267,35 +323,56 @@ export function HouseholdWizard({
     }
   };
 
-  const addMember = () => {
-    setMembers([...members, DEFAULT_MEMBER()]);
+  const addAdditionalMember = () => {
+    setAdditionalMembers([...additionalMembers, DEFAULT_MEMBER()]);
   };
 
-  const removeMember = (index: number) => {
-    if (members.length > 1) {
-      setMembers(members.filter((_, i) => i !== index));
-    }
+  const removeAdditionalMember = (index: number) => {
+    setAdditionalMembers(additionalMembers.filter((_, i) => i !== index));
   };
 
-  const updateMember = (index: number, field: keyof GuestMember, value: string | boolean) => {
-    const updated = [...members];
+  const updateAdditionalMember = (index: number, field: keyof GuestMember, value: string | boolean) => {
+    const updated = [...additionalMembers];
     updated[index] = { ...updated[index], [field]: value };
-    
-    if (field === "isMainContact" && value === true) {
-      updated.forEach((m, i) => {
-        if (i !== index) {
-          m.isMainContact = false;
-        }
-      });
-    }
-    
-    setMembers(updated);
+    setAdditionalMembers(updated);
   };
 
-  const getValidMembers = () => members.filter(m => m.name.trim() !== "");
+  const getAllMembers = (): GuestMember[] => {
+    // Main contact is always first and marked as main contact
+    const mainContact: GuestMember = {
+      id: editingHousehold 
+        ? existingGuests.find(g => g.householdId === editingHousehold.id && g.isMainHouseholdContact)?.id 
+          || existingGuests.find(g => g.householdId === editingHousehold.id)?.id 
+          || crypto.randomUUID()
+        : crypto.randomUUID(),
+      name: mainContactName,
+      email: mainContactEmail,
+      phone: mainContactPhone,
+      isMainContact: true,
+    };
+
+    if (addMembersIndividually) {
+      // Return main contact + individually added members
+      const validAdditional = additionalMembers.filter(m => m.name.trim() !== "");
+      return [mainContact, ...validAdditional];
+    } else {
+      // Create placeholder members based on count
+      const placeholders: GuestMember[] = [];
+      for (let i = 1; i < memberCount; i++) {
+        placeholders.push({
+          id: crypto.randomUUID(),
+          name: `${householdName} Guest ${i + 1}`,
+          email: "",
+          phone: "",
+          isMainContact: false,
+        });
+      }
+      return [mainContact, ...placeholders];
+    }
+  };
 
   const handleSave = () => {
-    const validMembers = getValidMembers();
+    const allMembers = getAllMembers();
     const householdData = {
       name: householdName,
       affiliation,
@@ -308,11 +385,20 @@ export function HouseholdWizard({
       addressCountry,
       weddingId,
     };
-    onSave(householdData, validMembers);
+    onSave(householdData, allMembers);
   };
 
-  const validMembers = getValidMembers();
-  const mainContact = members.find(m => m.isMainContact);
+  const getStepLabel = (step: WizardStep): string => {
+    switch (step) {
+      case "household": return "Household Info";
+      case "main_contact": return "Main Contact";
+      case "members": return "Add Members";
+      case "review": return "Review";
+      default: return "";
+    }
+  };
+
+  const allMembers = getAllMembers();
 
   return (
     <div className="space-y-4">
@@ -320,14 +406,15 @@ export function HouseholdWizard({
         <Progress value={progressPercent} className="h-2" />
         <div className="flex items-center justify-between mt-1">
           <p className="text-xs text-muted-foreground">
-            Step {currentStepIndex + 1} of {steps.length}
+            Step {safeStepIndex + 1} of {steps.length}
           </p>
           <p className="text-xs font-medium text-primary">
-            {currentStep === "household" ? "Household Info" : currentStep === "members" ? "Add Members" : "Review"}
+            {getStepLabel(currentStep)}
           </p>
         </div>
       </div>
 
+      {/* Step 1: Household Info */}
       {currentStep === "household" && (
         <div className="space-y-5">
           <div className="text-center mb-4">
@@ -414,118 +501,230 @@ export function HouseholdWizard({
               Optional - for save-the-dates and invitations
             </p>
           </div>
+
+          <div className="space-y-2">
+            <Label className="text-base font-medium flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              Number of Family Members <span className="text-destructive">*</span>
+            </Label>
+            <Select value={memberCount.toString()} onValueChange={(v) => setMemberCount(parseInt(v))}>
+              <SelectTrigger className="min-h-[48px]" data-testid="select-wizard-member-count">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
+                  <SelectItem key={n} value={n.toString()}>
+                    {n} {n === 1 ? "person" : "people"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center space-x-3 pt-2 p-3 rounded-lg bg-muted/50">
+            <Checkbox
+              id="add-individually"
+              checked={addMembersIndividually}
+              onCheckedChange={(checked) => setAddMembersIndividually(checked as boolean)}
+              data-testid="checkbox-add-individually"
+            />
+            <div>
+              <Label htmlFor="add-individually" className="text-base cursor-pointer font-medium">
+                Add members individually
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Enter name and contact info for each family member
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
+      {/* Step 2: Main Point of Contact */}
+      {currentStep === "main_contact" && (
+        <div className="space-y-5">
+          <div className="text-center mb-4">
+            <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center">
+              <UserCheck className="w-6 h-6 text-primary" />
+            </div>
+            <h3 className="text-lg font-semibold">Main Point of Contact</h3>
+            <p className="text-sm text-muted-foreground">
+              Who should receive invitations and updates for this household?
+            </p>
+          </div>
+
+          <Card className="p-4 border-primary bg-primary/5">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Badge className="bg-primary text-primary-foreground">Main Contact</Badge>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm flex items-center gap-1">
+                  <User className="w-3 h-3" />
+                  Full Name <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  value={mainContactName}
+                  onChange={(e) => setMainContactName(e.target.value)}
+                  placeholder="Full name"
+                  className="min-h-[48px] text-base"
+                  data-testid="input-main-contact-name"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label className="text-sm flex items-center gap-1">
+                    <Mail className="w-3 h-3" />
+                    Email
+                  </Label>
+                  <Input
+                    type="email"
+                    value={mainContactEmail}
+                    onChange={(e) => setMainContactEmail(e.target.value)}
+                    placeholder="email@example.com"
+                    className="min-h-[48px]"
+                    data-testid="input-main-contact-email"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm flex items-center gap-1">
+                    <Phone className="w-3 h-3" />
+                    Phone
+                  </Label>
+                  <Input
+                    value={mainContactPhone}
+                    onChange={(e) => setMainContactPhone(e.target.value)}
+                    placeholder="+1 (555) 123-4567"
+                    className="min-h-[48px]"
+                    data-testid="input-main-contact-phone"
+                  />
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          <p className="text-sm text-muted-foreground text-center">
+            This person will be the primary contact for all communications with this household.
+          </p>
+        </div>
+      )}
+
+      {/* Step 3: Additional Members (conditional) */}
       {currentStep === "members" && (
         <div className="space-y-5">
           <div className="text-center mb-4">
             <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center">
-              <User className="w-6 h-6 text-primary" />
+              <Users className="w-6 h-6 text-primary" />
             </div>
-            <h3 className="text-lg font-semibold">Add Family Members</h3>
+            <h3 className="text-lg font-semibold">Additional Family Members</h3>
             <p className="text-sm text-muted-foreground">
-              Add each person in this household
+              Add other members of this household (optional)
             </p>
           </div>
 
-          <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
-            {members.map((member, index) => (
-              <Card key={member.id} className={`p-4 ${member.isMainContact ? 'border-primary bg-primary/5' : ''}`}>
-                <div className="flex items-start justify-between gap-2 mb-3">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline">#{index + 1}</Badge>
-                    {member.isMainContact && (
-                      <Badge className="bg-primary text-primary-foreground">Main Contact</Badge>
-                    )}
-                  </div>
-                  {members.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeMember(index)}
-                      data-testid={`button-remove-member-${index}`}
-                    >
-                      <Trash2 className="w-4 h-4 text-destructive" />
-                    </Button>
-                  )}
-                </div>
-
-                <div className="space-y-3">
-                  <div className="space-y-1">
-                    <Label className="text-sm flex items-center gap-1">
-                      <User className="w-3 h-3" />
-                      Name <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      value={member.name}
-                      onChange={(e) => updateMember(index, "name", e.target.value)}
-                      placeholder="Full name"
-                      className="min-h-[44px]"
-                      data-testid={`input-member-name-${index}`}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-1">
-                      <Label className="text-sm flex items-center gap-1">
-                        <Mail className="w-3 h-3" />
-                        Email
-                      </Label>
-                      <Input
-                        type="email"
-                        value={member.email}
-                        onChange={(e) => updateMember(index, "email", e.target.value)}
-                        placeholder="email@example.com"
-                        className="min-h-[44px]"
-                        data-testid={`input-member-email-${index}`}
-                      />
+          {additionalMembers.length === 0 ? (
+            <Card className="p-6 border-dashed text-center">
+              <Users className="w-10 h-10 mx-auto text-muted-foreground mb-3 opacity-50" />
+              <p className="font-medium mb-1">No additional members yet</p>
+              <p className="text-sm text-muted-foreground mb-4">
+                Click below to add more family members
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={addAdditionalMember}
+                className="min-h-[48px]"
+                data-testid="button-add-first-member"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Family Member
+              </Button>
+            </Card>
+          ) : (
+            <>
+              <div className="space-y-4 max-h-[350px] overflow-y-auto pr-2">
+                {additionalMembers.map((member, index) => (
+                  <Card key={member.id} className="p-4">
+                    <div className="flex items-start justify-between gap-2 mb-3">
+                      <Badge variant="outline">Member #{index + 2}</Badge>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeAdditionalMember(index)}
+                        data-testid={`button-remove-member-${index}`}
+                      >
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                      </Button>
                     </div>
-                    <div className="space-y-1">
-                      <Label className="text-sm flex items-center gap-1">
-                        <Phone className="w-3 h-3" />
-                        Phone
-                      </Label>
-                      <Input
-                        value={member.phone}
-                        onChange={(e) => updateMember(index, "phone", e.target.value)}
-                        placeholder="+1 (555) 123-4567"
-                        className="min-h-[44px]"
-                        data-testid={`input-member-phone-${index}`}
-                      />
+
+                    <div className="space-y-3">
+                      <div className="space-y-1">
+                        <Label className="text-sm flex items-center gap-1">
+                          <User className="w-3 h-3" />
+                          Name
+                        </Label>
+                        <Input
+                          value={member.name}
+                          onChange={(e) => updateAdditionalMember(index, "name", e.target.value)}
+                          placeholder="Full name"
+                          className="min-h-[44px]"
+                          data-testid={`input-member-name-${index}`}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <Label className="text-sm flex items-center gap-1">
+                            <Mail className="w-3 h-3" />
+                            Email
+                          </Label>
+                          <Input
+                            type="email"
+                            value={member.email}
+                            onChange={(e) => updateAdditionalMember(index, "email", e.target.value)}
+                            placeholder="email@example.com"
+                            className="min-h-[44px]"
+                            data-testid={`input-member-email-${index}`}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-sm flex items-center gap-1">
+                            <Phone className="w-3 h-3" />
+                            Phone
+                          </Label>
+                          <Input
+                            value={member.phone}
+                            onChange={(e) => updateAdditionalMember(index, "phone", e.target.value)}
+                            placeholder="+1 (555) 123-4567"
+                            className="min-h-[44px]"
+                            data-testid={`input-member-phone-${index}`}
+                          />
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  </Card>
+                ))}
+              </div>
 
-                  <div className="flex items-center space-x-2 pt-1">
-                    <Checkbox
-                      id={`main-contact-${index}`}
-                      checked={member.isMainContact}
-                      onCheckedChange={(checked) => updateMember(index, "isMainContact", checked as boolean)}
-                      data-testid={`checkbox-main-contact-${index}`}
-                    />
-                    <Label htmlFor={`main-contact-${index}`} className="text-sm cursor-pointer">
-                      Main Point of Contact for this household
-                    </Label>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-
-          <Button
-            type="button"
-            variant="outline"
-            onClick={addMember}
-            className="w-full min-h-[48px]"
-            data-testid="button-add-member"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Another Member
-          </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={addAdditionalMember}
+                className="w-full min-h-[48px]"
+                data-testid="button-add-member"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Another Member
+              </Button>
+            </>
+          )}
         </div>
       )}
 
+      {/* Step 4: Review */}
       {currentStep === "review" && (
         <div className="space-y-5">
           <div className="text-center mb-4">
@@ -540,7 +739,7 @@ export function HouseholdWizard({
 
           <Card className="p-4">
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
                 <span className="font-semibold text-lg">{householdName}</span>
                 <Badge variant="outline">
                   {affiliation === "bride" ? "Bride's Side" : affiliation === "groom" ? "Groom's Side" : "Mutual"}
@@ -554,7 +753,7 @@ export function HouseholdWizard({
                 </p>
               )}
 
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <Badge variant="secondary">
                   {RELATIONSHIP_TIERS.find(t => t.value === relationshipTier)?.label || relationshipTier}
                 </Badge>
@@ -567,18 +766,18 @@ export function HouseholdWizard({
 
           <Card className="p-4">
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
                 <span className="font-medium">Family Members</span>
-                <Badge>{validMembers.length} {validMembers.length === 1 ? 'person' : 'people'}</Badge>
+                <Badge>{allMembers.length} {allMembers.length === 1 ? 'person' : 'people'}</Badge>
               </div>
 
               <div className="space-y-2">
-                {validMembers.map((member, index) => (
-                  <div key={member.id} className="flex items-center justify-between py-2 border-b last:border-b-0">
-                    <div>
+                {allMembers.map((member, index) => (
+                  <div key={member.id} className="flex items-center justify-between py-2 border-b last:border-b-0 gap-2 flex-wrap">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-medium">{member.name}</span>
                       {member.isMainContact && (
-                        <Badge className="ml-2 text-xs bg-primary text-primary-foreground">Main Contact</Badge>
+                        <Badge className="text-xs bg-primary text-primary-foreground">Main Contact</Badge>
                       )}
                     </div>
                     <div className="text-sm text-muted-foreground">
@@ -592,8 +791,9 @@ export function HouseholdWizard({
         </div>
       )}
 
-      <div className="flex justify-between pt-4 border-t">
-        {currentStepIndex > 0 ? (
+      {/* Navigation Buttons */}
+      <div className="flex justify-between pt-4 border-t gap-2">
+        {safeStepIndex > 0 ? (
           <Button
             type="button"
             variant="outline"
@@ -622,7 +822,7 @@ export function HouseholdWizard({
             type="button"
             onClick={handleSave}
             className="min-h-[48px]"
-            disabled={validMembers.length === 0}
+            disabled={allMembers.length === 0}
             data-testid="button-wizard-save"
           >
             <CheckCircle2 className="w-4 h-4 mr-2" />
