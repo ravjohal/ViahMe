@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { AlertTriangle, Users, Mail, Phone, CheckCircle2, ArrowRight, Trash2 } from "lucide-react";
+import { AlertTriangle, Users, Mail, Phone, CheckCircle2, ArrowRight, Trash2, Check } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Household, Guest } from "@shared/schema";
@@ -51,6 +51,33 @@ export function DuplicatesManager({ weddingId }: DuplicatesManagerProps) {
       toast({
         title: "Merge failed",
         description: error.message || "Failed to merge families",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const keepBothMutation = useMutation({
+    mutationFn: async ({ householdId1, householdId2 }: { householdId1: string; householdId2: string }) => {
+      return await apiRequest('POST', '/api/households/ignore-duplicate', { 
+        weddingId, 
+        householdId1, 
+        householdId2,
+        ignoredById: 'system' // In real implementation, this would be the current user ID
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/weddings', weddingId, 'duplicate-households'] });
+      setMergeDialogOpen(false);
+      setSelectedPair(null);
+      toast({
+        title: "Marked as not duplicates",
+        description: "These families will no longer appear as potential duplicates.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed",
+        description: error.message || "Failed to mark as not duplicates",
         variant: "destructive",
       });
     },
@@ -248,9 +275,27 @@ export function DuplicatesManager({ weddingId }: DuplicatesManagerProps) {
                   </div>
                 </div>
                 
-                <p className="text-sm text-muted-foreground text-center">
-                  The deleted family and all its guests will be removed permanently.
-                </p>
+                <div className="border-t pt-4 mt-4">
+                  <p className="text-sm text-muted-foreground text-center mb-3">
+                    Or if these are actually different families:
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={() => keepBothMutation.mutate({
+                      householdId1: selectedPair.household1.id,
+                      householdId2: selectedPair.household2.id,
+                    })}
+                    disabled={keepBothMutation.isPending || mergeMutation.isPending}
+                    className="w-full min-h-[44px] gap-2"
+                    data-testid="button-keep-both"
+                  >
+                    <Check className="h-4 w-4" />
+                    Keep Both (Not Duplicates)
+                  </Button>
+                  <p className="text-xs text-muted-foreground text-center mt-2">
+                    This pair will no longer appear in duplicate reports.
+                  </p>
+                </div>
               </div>
             );
           })()}

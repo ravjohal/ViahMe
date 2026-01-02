@@ -243,4 +243,27 @@ export async function registerHouseholdRoutes(router: Router, storage: IStorage)
       res.status(500).json({ error: "Failed to send invitations" });
     }
   });
+
+  // Ignore duplicate pair (keep both)
+  router.post("/ignore-duplicate", async (req, res) => {
+    try {
+      const { weddingId, householdId1, householdId2, ignoredById } = req.body;
+      
+      if (!weddingId || !householdId1 || !householdId2 || !ignoredById) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+      
+      const result = await storage.ignoreHouseholdDuplicatePair(
+        weddingId,
+        householdId1,
+        householdId2,
+        ignoredById
+      );
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Failed to ignore duplicate pair:", error);
+      res.status(500).json({ error: "Failed to ignore duplicate pair" });
+    }
+  });
 }

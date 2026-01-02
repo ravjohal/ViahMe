@@ -165,6 +165,8 @@ import {
   type InsertCommunicationRecipient,
   guestCommunications,
   communicationRecipients,
+  type IgnoredDuplicatePair,
+  type InsertIgnoredDuplicatePair,
 } from "@shared/schema";
 import { randomUUID, randomBytes } from "crypto";
 import bcrypt from "bcrypt";
@@ -928,6 +930,10 @@ export interface IStorage {
   }>>;
   mergeHouseholds(survivorId: string, mergedId: string, decision: 'kept_older' | 'kept_newer', reviewerId: string): Promise<HouseholdMergeAudit>;
   getHouseholdMergeAudits(weddingId: string): Promise<HouseholdMergeAudit[]>;
+  
+  // Ignored duplicate pairs (keep both)
+  ignoreHouseholdDuplicatePair(weddingId: string, householdId1: string, householdId2: string, ignoredById: string): Promise<IgnoredDuplicatePair>;
+  getIgnoredDuplicatePairs(weddingId: string): Promise<IgnoredDuplicatePair[]>;
 }
 
 // Guest Planning Snapshot - comprehensive view of all guests and per-event costs
@@ -3971,6 +3977,8 @@ export class MemStorage implements IStorage {
   }>> { return []; }
   async mergeHouseholds(survivorId: string, mergedId: string, decision: 'kept_older' | 'kept_newer', reviewerId: string): Promise<HouseholdMergeAudit> { throw new Error('Not implemented'); }
   async getHouseholdMergeAudits(weddingId: string): Promise<HouseholdMergeAudit[]> { return []; }
+  async ignoreHouseholdDuplicatePair(weddingId: string, householdId1: string, householdId2: string, ignoredById: string): Promise<IgnoredDuplicatePair> { throw new Error('Not implemented'); }
+  async getIgnoredDuplicatePairs(weddingId: string): Promise<IgnoredDuplicatePair[]> { return []; }
 }
 
 import { neon } from "@neondatabase/serverless";
@@ -9244,6 +9252,15 @@ export class DBStorage implements IStorage {
       matchReasons: string[];
     }> = [];
 
+    // Get ignored pairs to filter them out
+    const ignoredPairs = await this.getIgnoredDuplicatePairs(weddingId);
+    const ignoredSet = new Set<string>();
+    for (const pair of ignoredPairs) {
+      // Store both orderings so we can check either way
+      ignoredSet.add(`${pair.householdId1}-${pair.householdId2}`);
+      ignoredSet.add(`${pair.householdId2}-${pair.householdId1}`);
+    }
+
     // Get guests for all households
     const householdGuests: Map<string, Guest[]> = new Map();
     for (const household of households) {
@@ -9256,6 +9273,12 @@ export class DBStorage implements IStorage {
       for (let j = i + 1; j < households.length; j++) {
         const h1 = households[i];
         const h2 = households[j];
+        
+        // Skip if this pair was marked as "keep both"
+        if (ignoredSet.has(`${h1.id}-${h2.id}`)) {
+          continue;
+        }
+        
         const guests1 = householdGuests.get(h1.id) || [];
         const guests2 = householdGuests.get(h2.id) || [];
 
@@ -9399,6 +9422,29 @@ export class DBStorage implements IStorage {
       .from(schema.householdMergeAudits)
       .where(eq(schema.householdMergeAudits.weddingId, weddingId))
       .orderBy(sql`${schema.householdMergeAudits.createdAt} DESC`);
+  }
+
+  async ignoreHouseholdDuplicatePair(
+    weddingId: string,
+    householdId1: string,
+    householdId2: string,
+    ignoredById: string
+  ): Promise<IgnoredDuplicatePair> {
+    const result = await this.db.insert(schema.ignoredDuplicatePairs)
+      .values({
+        weddingId,
+        householdId1,
+        householdId2,
+        ignoredById,
+      })
+      .returning();
+    return result[0];
+  }
+
+  async getIgnoredDuplicatePairs(weddingId: string): Promise<IgnoredDuplicatePair[]> {
+    return await this.db.select()
+      .from(schema.ignoredDuplicatePairs)
+      .where(eq(schema.ignoredDuplicatePairs.weddingId, weddingId));
   }
 }
 

@@ -2998,3 +2998,24 @@ export const insertHouseholdMergeAuditSchema = createInsertSchema(householdMerge
 
 export type InsertHouseholdMergeAudit = z.infer<typeof insertHouseholdMergeAuditSchema>;
 export type HouseholdMergeAudit = typeof householdMergeAudits.$inferSelect;
+
+// ============================================================================
+// IGNORED DUPLICATE PAIRS - Track household pairs marked as "not duplicates"
+// ============================================================================
+
+export const ignoredDuplicatePairs = pgTable("ignored_duplicate_pairs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  householdId1: varchar("household_id_1").notNull(),
+  householdId2: varchar("household_id_2").notNull(),
+  ignoredById: varchar("ignored_by_id").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertIgnoredDuplicatePairSchema = createInsertSchema(ignoredDuplicatePairs).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertIgnoredDuplicatePair = z.infer<typeof insertIgnoredDuplicatePairSchema>;
+export type IgnoredDuplicatePair = typeof ignoredDuplicatePairs.$inferSelect;
