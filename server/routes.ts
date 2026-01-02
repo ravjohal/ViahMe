@@ -9201,16 +9201,19 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   });
 
   app.post("/api/collector-submissions/:id/maybe", async (req, res) => {
+    console.log("MAYBE_ROUTE_V2:", req.params.id);
     const userId = req.session?.userId;
     if (!userId) {
       return res.status(401).json({ error: "Authentication required" });
     }
     
     try {
-      // Use the same pattern as declineCollectorSubmission which works
+      console.log("MAYBE_CALLING_STORAGE:", req.params.id, userId);
       const result = await storage.markCollectorSubmissionMaybe(req.params.id, userId);
+      console.log("MAYBE_RESULT:", JSON.stringify(result));
       res.json(result);
     } catch (error: any) {
+      console.error("MAYBE_ERROR:", error.message);
       res.status(500).json({ error: error.message });
     }
   });
