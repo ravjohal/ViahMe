@@ -351,6 +351,10 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
   const handleImport = async () => {
     setImporting(true);
     try {
+      // Debug: log what we're sending
+      console.log("Importing guests with data:", JSON.stringify(previewGuests.slice(0, 2), null, 2));
+      console.log("Column mapping:", columnMapping);
+      
       // Use previewGuests which may have been edited by the user
       await onImport(previewGuests);
       resetDialog();
