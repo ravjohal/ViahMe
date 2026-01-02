@@ -9231,22 +9231,15 @@ export class DBStorage implements IStorage {
     // Determine maxCount: use members length if available, otherwise use guestCount from submission
     const maxCount = parsedMembers.length > 0 ? parsedMembers.length : (submission.guestCount || 1);
     
-    // Create household for the guest
+    // Create household for the guest (contact info now comes from main contact guest)
     const household = await this.createHousehold({
       weddingId: submission.weddingId,
       name: householdName,
-      mainContactName: submission.mainContactName || submission.guestName || undefined,
       affiliation: link.side as 'bride' | 'groom' | 'mutual',
       relationshipTier: (submission.relationshipTier as any) || 'friend',
       priorityTier: 'should_invite',
       maxCount: maxCount,
       contactEmail: submission.guestEmail || undefined,
-      contactPhone: submission.guestPhone || undefined,
-      addressStreet: submission.contactStreet || undefined,
-      addressCity: submission.contactCity || undefined,
-      addressState: submission.contactState || undefined,
-      addressPostalCode: submission.contactPostalCode || undefined,
-      addressCountry: submission.contactCountry || undefined,
       desiDietaryType: (submission.desiDietaryType as any) || 'none',
     });
     
@@ -9254,8 +9247,10 @@ export class DBStorage implements IStorage {
     
     if (parsedMembers.length > 0) {
       // New wizard format with individual members
-      for (const member of parsedMembers) {
+      for (let i = 0; i < parsedMembers.length; i++) {
+        const member = parsedMembers[i];
         if (!member.name?.trim()) continue;
+        const isFirstGuest = guests.length === 0;
         const guest = await this.createGuest({
           weddingId: submission.weddingId,
           householdId: household.id,
@@ -9263,6 +9258,12 @@ export class DBStorage implements IStorage {
           email: member.email || undefined,
           phone: member.phone || undefined,
           dietaryRestrictions: member.dietary || undefined,
+          isMainHouseholdContact: isFirstGuest,
+          addressStreet: isFirstGuest ? (submission.contactStreet || undefined) : undefined,
+          addressCity: isFirstGuest ? (submission.contactCity || undefined) : undefined,
+          addressState: isFirstGuest ? (submission.contactState || undefined) : undefined,
+          addressPostalCode: isFirstGuest ? (submission.contactPostalCode || undefined) : undefined,
+          addressCountry: isFirstGuest ? (submission.contactCountry || undefined) : undefined,
           side: link.side as 'bride' | 'groom',
           relationshipTier: (submission.relationshipTier as any) || 'friend',
           visibility: 'shared',
@@ -9278,12 +9279,19 @@ export class DBStorage implements IStorage {
         const guestName = i === 0 
           ? (submission.mainContactName || householdName)
           : `${householdName} Guest ${i + 1}`;
+        const isFirstGuest = i === 0;
         const guest = await this.createGuest({
           weddingId: submission.weddingId,
           householdId: household.id,
           name: guestName,
-          email: i === 0 ? (submission.guestEmail || undefined) : undefined,
-          phone: i === 0 ? (submission.guestPhone || undefined) : undefined,
+          email: isFirstGuest ? (submission.guestEmail || undefined) : undefined,
+          phone: isFirstGuest ? (submission.guestPhone || undefined) : undefined,
+          isMainHouseholdContact: isFirstGuest,
+          addressStreet: isFirstGuest ? (submission.contactStreet || undefined) : undefined,
+          addressCity: isFirstGuest ? (submission.contactCity || undefined) : undefined,
+          addressState: isFirstGuest ? (submission.contactState || undefined) : undefined,
+          addressPostalCode: isFirstGuest ? (submission.contactPostalCode || undefined) : undefined,
+          addressCountry: isFirstGuest ? (submission.contactCountry || undefined) : undefined,
           side: link.side as 'bride' | 'groom',
           relationshipTier: (submission.relationshipTier as any) || 'friend',
           visibility: 'shared',
