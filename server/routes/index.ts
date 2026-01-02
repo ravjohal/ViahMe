@@ -26,6 +26,10 @@ import { registerServicePackageRoutes } from "./service-packages";
 import { registerContractSignatureRoutes } from "./contract-signatures";
 import { registerContractDocumentRoutes } from "./contract-documents";
 import { registerContractPaymentRoutes } from "./contract-payments";
+import { registerQuoteRequestRoutes } from "./quote-requests";
+import { registerBookingRoutes } from "./bookings";
+import { registerAiAssistantRoutes } from "./ai-assistant";
+import { registerMessageRoutes, registerConversationRoutes } from "./messages";
 import { seedVendors, seedBudgetBenchmarks } from "../seed-data";
 
 let defaultStorageSeeded = false;
@@ -230,6 +234,26 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   const contractPaymentRouter = Router();
   await registerContractPaymentRoutes(contractPaymentRouter, storage);
   app.use("/api/contracts", contractPaymentRouter);
+
+  const quoteRequestRouter = Router();
+  await registerQuoteRequestRoutes(quoteRequestRouter, storage);
+  app.use("/api", quoteRequestRouter);
+
+  const bookingRouter = Router();
+  await registerBookingRoutes(bookingRouter, storage);
+  app.use("/api/bookings", bookingRouter);
+
+  const aiAssistantRouter = Router();
+  await registerAiAssistantRoutes(aiAssistantRouter, storage);
+  app.use("/api/ai", aiAssistantRouter);
+
+  const messageRouter = Router();
+  await registerMessageRoutes(messageRouter, storage);
+  app.use("/api/messages", messageRouter);
+
+  const conversationRouter = Router();
+  await registerConversationRoutes(conversationRouter, storage);
+  app.use("/api/conversations", conversationRouter);
 
   const { registerLegacyRoutes } = await import("../routes-legacy");
   await registerLegacyRoutes(app, storage, { activeViewers, getViewerCount, cleanupStaleViewers });
