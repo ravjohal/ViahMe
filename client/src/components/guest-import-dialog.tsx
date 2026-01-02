@@ -28,6 +28,7 @@ interface ParsedGuest {
   plusOne?: boolean;
   dietaryRestrictions?: string;
   householdName?: string;
+  isMainHouseholdContact?: boolean;
 }
 
 interface ColumnMapping {
@@ -38,6 +39,7 @@ interface ColumnMapping {
   plusOne?: string;
   dietaryRestrictions?: string;
   householdName?: string;
+  isMainHouseholdContact?: string;
 }
 
 interface ValidationError {
@@ -109,7 +111,11 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
     detectedHeaders.forEach(header => {
       const lower = header.toLowerCase().trim();
       
-      if (lower.includes('household') || lower.includes('family')) mapping.householdName = header;
+      // Check for "main contact" BEFORE "household" to properly detect "Main Household Contact"
+      if (lower.includes('main') && lower.includes('contact')) mapping.isMainHouseholdContact = header;
+      else if (lower.includes('primary') && lower.includes('contact')) mapping.isMainHouseholdContact = header;
+      else if (lower.includes('point of contact')) mapping.isMainHouseholdContact = header;
+      else if (lower.includes('household') || lower.includes('family')) mapping.householdName = header;
       else if (lower.includes('name')) mapping.name = header;
       else if (lower.includes('email') || lower.includes('e-mail')) mapping.email = header;
       else if (lower.includes('phone') || lower.includes('mobile') || lower.includes('cell')) mapping.phone = header;
@@ -183,6 +189,9 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
         householdName: columnMapping.householdName && columnMapping.householdName !== 'none' && row[columnMapping.householdName]
           ? row[columnMapping.householdName].toString().trim()
           : undefined,
+        isMainHouseholdContact: columnMapping.isMainHouseholdContact && row[columnMapping.isMainHouseholdContact]
+          ? parseBooleanValue(row[columnMapping.isMainHouseholdContact])
+          : false,
       };
       return guest;
     }).filter(guest => guest.name); // Filter out rows without names
@@ -309,10 +318,11 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
                 <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
                   <li>Include a header row with column names</li>
                   <li>Required: <strong>Name</strong> column</li>
-                  <li>Optional: Household Name, Email, Phone, Side (bride/groom/mutual), Plus One (yes/no), Dietary Restrictions</li>
+                  <li>Optional: Household Name, Main Contact, Email, Phone, Side (bride/groom/mutual), Plus One (yes/no), Dietary Restrictions</li>
                   <li><strong>Household Name</strong>: Group guests together by using the same household name</li>
+                  <li><strong>Main Contact</strong>: Mark one person per household as the main point of contact (yes/no)</li>
                   <li>Side values: "bride", "groom", or "mutual"</li>
-                  <li>Plus One: "yes", "no", "true", "false", "1", or "0"</li>
+                  <li>Plus One / Main Contact: "yes", "no", "true", "false", "1", or "0"</li>
                 </ul>
               </div>
               
@@ -324,6 +334,7 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
                       <TableRow className="bg-muted/50">
                         <TableHead className="text-xs font-semibold">Household Name</TableHead>
                         <TableHead className="text-xs font-semibold">Name</TableHead>
+                        <TableHead className="text-xs font-semibold">Main Contact</TableHead>
                         <TableHead className="text-xs font-semibold">Email</TableHead>
                         <TableHead className="text-xs font-semibold">Phone</TableHead>
                         <TableHead className="text-xs font-semibold">Side</TableHead>
@@ -335,6 +346,7 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
                       <TableRow>
                         <TableCell className="text-xs">Sharma Family</TableCell>
                         <TableCell className="text-xs">Priya Sharma</TableCell>
+                        <TableCell className="text-xs">Yes</TableCell>
                         <TableCell className="text-xs">priya@email.com</TableCell>
                         <TableCell className="text-xs">555-123-4567</TableCell>
                         <TableCell className="text-xs">bride</TableCell>
@@ -344,6 +356,7 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
                       <TableRow>
                         <TableCell className="text-xs">Sharma Family</TableCell>
                         <TableCell className="text-xs">Raj Sharma</TableCell>
+                        <TableCell className="text-xs">No</TableCell>
                         <TableCell className="text-xs"></TableCell>
                         <TableCell className="text-xs"></TableCell>
                         <TableCell className="text-xs">bride</TableCell>
@@ -353,6 +366,7 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
                       <TableRow>
                         <TableCell className="text-xs">Patel Family</TableCell>
                         <TableCell className="text-xs">Rahul Patel</TableCell>
+                        <TableCell className="text-xs">Yes</TableCell>
                         <TableCell className="text-xs">rahul@email.com</TableCell>
                         <TableCell className="text-xs">555-987-6543</TableCell>
                         <TableCell className="text-xs">groom</TableCell>
@@ -362,7 +376,7 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
                     </TableBody>
                   </Table>
                 </div>
-                <p className="text-xs text-muted-foreground">Empty cells are fine for optional fields. Guests with the same Household Name will be grouped together.</p>
+                <p className="text-xs text-muted-foreground">Empty cells are fine for optional fields. Guests with the same Household Name will be grouped together. Mark one person per household as the Main Contact.</p>
               </div>
             </div>
           </div>
@@ -500,6 +514,26 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
                     onValueChange={(value) => setColumnMapping({ ...columnMapping, dietaryRestrictions: value })}
                   >
                     <SelectTrigger id="dietary-column" data-testid="select-dietary-column">
+                      <SelectValue placeholder="Select column (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {headers.map((header) => (
+                        <SelectItem key={header} value={header}>
+                          {header}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="maincontact-column">Main Household Contact Column</Label>
+                  <Select
+                    value={columnMapping.isMainHouseholdContact}
+                    onValueChange={(value) => setColumnMapping({ ...columnMapping, isMainHouseholdContact: value })}
+                  >
+                    <SelectTrigger id="maincontact-column" data-testid="select-maincontact-column">
                       <SelectValue placeholder="Select column (optional)" />
                     </SelectTrigger>
                     <SelectContent>
