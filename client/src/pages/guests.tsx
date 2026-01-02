@@ -2649,7 +2649,14 @@ export default function Guests() {
               Create shareable links for parents, aunties, and uncles to add guest names. They don't need an account - just share the link!
             </DialogDescription>
           </DialogHeader>
-          <CollectorLinksManager weddingId={wedding.id} />
+          <CollectorLinksManager 
+            weddingId={wedding.id} 
+            onNavigateToReview={() => {
+              setCollectorLinksDialogOpen(false);
+              setMainTab("guest-planning");
+              setPlanningTab("review");
+            }}
+          />
         </DialogContent>
       </Dialog>
 

@@ -1349,7 +1349,10 @@ export default function GuestManagement() {
           </Card>
           
           {wedding?.id && (
-            <CollectorLinksManager weddingId={wedding.id} />
+            <CollectorLinksManager 
+              weddingId={wedding.id} 
+              onNavigateToReview={() => setActiveTab("suggestions")}
+            />
           )}
         </TabsContent>
 
