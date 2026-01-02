@@ -9216,6 +9216,21 @@ export class DBStorage implements IStorage {
     // Determine household name (use new householdName field if available, fallback to guestName)
     const householdName = submission.householdName || submission.guestName;
     
+    // Parse members to determine guest count
+    let parsedMembers: Array<{ name: string; email?: string; phone?: string; dietary?: string }> = [];
+    if (submission.members) {
+      try {
+        parsedMembers = typeof submission.members === 'string' 
+          ? JSON.parse(submission.members) 
+          : (submission.members as any);
+      } catch (e) {
+        parsedMembers = [];
+      }
+    }
+    
+    // Determine maxCount: use members length if available, otherwise use guestCount from submission
+    const maxCount = parsedMembers.length > 0 ? parsedMembers.length : (submission.guestCount || 1);
+    
     // Create household for the guest
     const household = await this.createHousehold({
       weddingId: submission.weddingId,
@@ -9224,6 +9239,7 @@ export class DBStorage implements IStorage {
       affiliation: link.side as 'bride' | 'groom' | 'mutual',
       relationshipTier: (submission.relationshipTier as any) || 'friend',
       priorityTier: 'should_invite',
+      maxCount: maxCount,
       contactEmail: submission.guestEmail || undefined,
       contactPhone: submission.guestPhone || undefined,
       addressStreet: submission.contactStreet || undefined,
@@ -9236,22 +9252,9 @@ export class DBStorage implements IStorage {
     
     const guests: Guest[] = [];
     
-    // Parse members array if available (new wizard format)
-    let members: Array<{ name: string; email?: string; phone?: string; dietary?: string }> = [];
-    if (submission.members) {
-      try {
-        members = typeof submission.members === 'string' 
-          ? JSON.parse(submission.members) 
-          : (submission.members as any);
-      } catch (e) {
-        // Failed to parse members, fall back to single guest
-        members = [];
-      }
-    }
-    
-    if (members.length > 0) {
+    if (parsedMembers.length > 0) {
       // New wizard format with individual members
-      for (const member of members) {
+      for (const member of parsedMembers) {
         if (!member.name?.trim()) continue;
         const guest = await this.createGuest({
           weddingId: submission.weddingId,
