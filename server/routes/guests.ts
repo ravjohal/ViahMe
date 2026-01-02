@@ -275,8 +275,6 @@ export async function registerGuestRoutes(router: Router, storage: IStorage) {
         return res.status(400).json({ error: "Request body must contain a 'guests' array" });
       }
 
-      console.log("Bulk import received guests:", JSON.stringify(guestsArray.slice(0, 3), null, 2));
-
       if (guestsArray.length === 0) {
         return res.json({ success: 0, failed: 0, guests: [], errors: undefined });
       }
@@ -336,10 +334,12 @@ export async function registerGuestRoutes(router: Router, storage: IStorage) {
             }
           }
 
-          const { householdName: _, ...guestWithoutHouseholdName } = guestData;
+          const { householdName: _, address, ...guestWithoutHouseholdName } = guestData;
           const validatedData = insertGuestSchema.parse({
             ...guestWithoutHouseholdName,
             householdId,
+            // Map 'address' from import to 'addressStreet' in schema
+            addressStreet: address || guestWithoutHouseholdName.addressStreet,
           });
           const guest = await storage.createGuest(validatedData);
           createdGuests.push(guest);

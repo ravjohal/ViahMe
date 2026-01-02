@@ -5,7 +5,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, X, Copy, Check, ClipboardPaste } from "lucide-react";
+import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, X, Copy, Check, ClipboardPaste, Trash2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
@@ -25,6 +27,7 @@ interface ParsedGuest {
   name: string;
   email?: string;
   phone?: string;
+  address?: string;
   side?: 'bride' | 'groom' | 'mutual';
   eventIds?: string[];
   rsvpStatus?: 'pending' | 'confirmed' | 'declined';
@@ -38,6 +41,7 @@ interface ColumnMapping {
   name?: string;
   email?: string;
   phone?: string;
+  address?: string;
   side?: string;
   plusOne?: string;
   dietaryRestrictions?: string;
@@ -65,6 +69,7 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
   const [copied, setCopied] = useState(false);
   const [pastedData, setPastedData] = useState("");
   const [importMethod, setImportMethod] = useState<'file' | 'paste'>('file');
+  const [previewGuests, setPreviewGuests] = useState<ParsedGuest[]>([]);
 
   const handlePastedData = (text: string) => {
     setPastedData(text);
@@ -155,10 +160,10 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
 
   const copyTemplateToClipboard = async () => {
     const templateData = [
-      ["Household Name", "Name", "Main Contact", "Email", "Phone", "Side", "Plus One", "Dietary"],
-      ["Sharma Family", "Priya Sharma", "Yes", "priya@email.com", "555-123-4567", "bride", "yes", "vegetarian"],
-      ["Sharma Family", "Raj Sharma", "No", "", "", "bride", "no", ""],
-      ["Patel Family", "Rahul Patel", "Yes", "rahul@email.com", "555-987-6543", "groom", "no", ""],
+      ["Household Name", "Name", "Main Contact", "Email", "Phone", "Address", "Side", "Plus One", "Dietary"],
+      ["Sharma Family", "Priya Sharma", "Yes", "priya@email.com", "555-123-4567", "123 Main St, San Jose, CA 95123", "bride", "yes", "vegetarian"],
+      ["Sharma Family", "Raj Sharma", "No", "", "", "", "bride", "no", ""],
+      ["Patel Family", "Rahul Patel", "Yes", "rahul@email.com", "555-987-6543", "456 Oak Ave, Fremont, CA 94536", "groom", "no", ""],
     ];
     
     const tsvContent = templateData.map(row => row.join("\t")).join("\n");
@@ -240,6 +245,7 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
       else if (lower.includes('name')) mapping.name = header;
       else if (lower.includes('email') || lower.includes('e-mail')) mapping.email = header;
       else if (lower.includes('phone') || lower.includes('mobile') || lower.includes('cell')) mapping.phone = header;
+      else if (lower.includes('address') || lower.includes('street') || lower.includes('location')) mapping.address = header;
       else if (lower.includes('side') || lower.includes('party')) mapping.side = header;
       else if (lower.includes('plus') || lower.includes('+1')) mapping.plusOne = header;
       else if (lower.includes('dietary') || lower.includes('diet') || lower.includes('restriction') || lower.includes('allerg')) mapping.dietaryRestrictions = header;
@@ -286,31 +292,36 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
     setErrors(validationErrors);
     
     if (validationErrors.length === 0) {
+      // Parse guests and set preview data for editing
+      const guests = parseGuests();
+      setPreviewGuests(guests);
       setStep('preview');
     }
   };
 
+  const updatePreviewGuest = (index: number, field: keyof ParsedGuest, value: any) => {
+    setPreviewGuests(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+  };
+
+  const removePreviewGuest = (index: number) => {
+    setPreviewGuests(prev => prev.filter((_, i) => i !== index));
+  };
+
   const parseGuests = (): ParsedGuest[] => {
-    console.log("parseGuests - columnMapping:", columnMapping);
-    console.log("parseGuests - rawData sample:", rawData.slice(0, 2));
-    
-    return rawData.map((row, i) => {
+    return rawData.map((row) => {
       const householdValue = columnMapping.householdName && columnMapping.householdName !== 'none' 
         ? row[columnMapping.householdName] 
         : undefined;
-      
-      if (i === 0) {
-        console.log("First row householdName mapping:", {
-          mappingKey: columnMapping.householdName,
-          rowValue: householdValue,
-          fullRow: row
-        });
-      }
       
       const guest: ParsedGuest = {
         name: columnMapping.name ? row[columnMapping.name]?.toString().trim() : '',
         email: columnMapping.email && row[columnMapping.email] ? row[columnMapping.email].toString().trim() : undefined,
         phone: columnMapping.phone && row[columnMapping.phone] ? row[columnMapping.phone].toString().trim() : undefined,
+        address: columnMapping.address && row[columnMapping.address] ? row[columnMapping.address].toString().trim() : undefined,
         side: columnMapping.side && row[columnMapping.side] 
           ? (row[columnMapping.side].toString().toLowerCase() as 'bride' | 'groom' | 'mutual')
           : defaultSide,
@@ -340,8 +351,8 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
   const handleImport = async () => {
     setImporting(true);
     try {
-      const guests = parseGuests();
-      await onImport(guests);
+      // Use previewGuests which may have been edited by the user
+      await onImport(previewGuests);
       resetDialog();
       onOpenChange(false);
     } catch (error) {
@@ -362,6 +373,7 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
     setStep('upload');
     setPastedData("");
     setImportMethod('file');
+    setPreviewGuests([]);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -511,7 +523,7 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
                 <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
                   <li>Include a header row with column names</li>
                   <li>Required: <strong>Name</strong> column</li>
-                  <li>Optional: Household Name, Main Contact, Email, Phone, Side (bride/groom/mutual), Plus One (yes/no), Dietary Restrictions</li>
+                  <li>Optional: Household Name, Main Contact, Email, Phone, Address, Side (bride/groom/mutual), Plus One (yes/no), Dietary Restrictions</li>
                   <li><strong>Household Name</strong>: Group guests together by using the same household name</li>
                   <li><strong>Main Contact</strong>: Mark one person per household as the main point of contact (yes/no)</li>
                   <li>Side values: "bride", "groom", or "mutual"</li>
@@ -550,6 +562,7 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
                         <TableHead className="text-xs font-semibold">Main Contact</TableHead>
                         <TableHead className="text-xs font-semibold">Email</TableHead>
                         <TableHead className="text-xs font-semibold">Phone</TableHead>
+                        <TableHead className="text-xs font-semibold">Address</TableHead>
                         <TableHead className="text-xs font-semibold">Side</TableHead>
                         <TableHead className="text-xs font-semibold">Plus One</TableHead>
                         <TableHead className="text-xs font-semibold">Dietary</TableHead>
@@ -562,6 +575,7 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
                         <TableCell className="text-xs">Yes</TableCell>
                         <TableCell className="text-xs">priya@email.com</TableCell>
                         <TableCell className="text-xs">555-123-4567</TableCell>
+                        <TableCell className="text-xs">123 Main St, San Jose</TableCell>
                         <TableCell className="text-xs">bride</TableCell>
                         <TableCell className="text-xs">yes</TableCell>
                         <TableCell className="text-xs">vegetarian</TableCell>
@@ -570,6 +584,7 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
                         <TableCell className="text-xs">Sharma Family</TableCell>
                         <TableCell className="text-xs">Raj Sharma</TableCell>
                         <TableCell className="text-xs">No</TableCell>
+                        <TableCell className="text-xs"></TableCell>
                         <TableCell className="text-xs"></TableCell>
                         <TableCell className="text-xs"></TableCell>
                         <TableCell className="text-xs">bride</TableCell>
@@ -582,6 +597,7 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
                         <TableCell className="text-xs">Yes</TableCell>
                         <TableCell className="text-xs">rahul@email.com</TableCell>
                         <TableCell className="text-xs">555-987-6543</TableCell>
+                        <TableCell className="text-xs">456 Oak Ave, Fremont</TableCell>
                         <TableCell className="text-xs">groom</TableCell>
                         <TableCell className="text-xs">no</TableCell>
                         <TableCell className="text-xs"></TableCell>
@@ -667,6 +683,26 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
                     onValueChange={(value) => setColumnMapping({ ...columnMapping, phone: value })}
                   >
                     <SelectTrigger id="phone-column" data-testid="select-phone-column">
+                      <SelectValue placeholder="Select column (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {headers.map((header) => (
+                        <SelectItem key={header} value={header}>
+                          {header}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="address-column">Address Column</Label>
+                  <Select
+                    value={columnMapping.address}
+                    onValueChange={(value) => setColumnMapping({ ...columnMapping, address: value })}
+                  >
+                    <SelectTrigger id="address-column" data-testid="select-address-column">
                       <SelectValue placeholder="Select column (optional)" />
                     </SelectTrigger>
                     <SelectContent>
@@ -819,53 +855,136 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
 
         {step === 'preview' && (
           <div className="space-y-4">
-            <div className="bg-muted/50 p-3 rounded-lg flex items-center gap-2">
-              <CheckCircle className="w-5 h-5 text-primary" />
-              <span className="font-semibold">Ready to import {rawData.length} guests</span>
+            <div className="bg-muted/50 p-3 rounded-lg flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-primary" />
+                <span className="font-semibold">Review and edit {previewGuests.length} guests before importing</span>
+              </div>
+              <span className="text-sm text-muted-foreground">Click any field to edit</span>
             </div>
 
             <div className="border rounded-lg overflow-hidden">
-              <div className="max-h-96 overflow-y-auto">
+              <div className="max-h-[400px] overflow-auto">
                 <Table>
-                  <TableHeader>
+                  <TableHeader className="sticky top-0 bg-background z-10">
                     <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Household</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Phone</TableHead>
-                      <TableHead>Side</TableHead>
-                      <TableHead>Plus One</TableHead>
-                      <TableHead>Dietary</TableHead>
+                      <TableHead className="w-8"></TableHead>
+                      <TableHead className="min-w-[140px]">Name</TableHead>
+                      <TableHead className="min-w-[120px]">Household</TableHead>
+                      <TableHead className="min-w-[160px]">Email</TableHead>
+                      <TableHead className="min-w-[120px]">Phone</TableHead>
+                      <TableHead className="min-w-[180px]">Address</TableHead>
+                      <TableHead className="min-w-[90px]">Side</TableHead>
+                      <TableHead className="min-w-[70px]">+1</TableHead>
+                      <TableHead className="min-w-[120px]">Dietary</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {parseGuests().slice(0, 10).map((guest, index) => (
+                    {previewGuests.map((guest, index) => (
                       <TableRow key={index}>
-                        <TableCell className="font-medium">{guest.name}</TableCell>
-                        <TableCell>{guest.householdName || '-'}</TableCell>
-                        <TableCell>{guest.email || '-'}</TableCell>
-                        <TableCell>{guest.phone || '-'}</TableCell>
-                        <TableCell className="capitalize">{guest.side || defaultSide}</TableCell>
-                        <TableCell>{guest.plusOne ? 'Yes' : 'No'}</TableCell>
-                        <TableCell>{guest.dietaryRestrictions || '-'}</TableCell>
+                        <TableCell className="p-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                            onClick={() => removePreviewGuest(index)}
+                            data-testid={`button-remove-guest-${index}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                        <TableCell className="p-1">
+                          <Input
+                            value={guest.name}
+                            onChange={(e) => updatePreviewGuest(index, 'name', e.target.value)}
+                            className="h-8 text-sm"
+                            data-testid={`input-name-${index}`}
+                          />
+                        </TableCell>
+                        <TableCell className="p-1">
+                          <Input
+                            value={guest.householdName || ''}
+                            onChange={(e) => updatePreviewGuest(index, 'householdName', e.target.value || undefined)}
+                            placeholder="Household"
+                            className="h-8 text-sm"
+                            data-testid={`input-household-${index}`}
+                          />
+                        </TableCell>
+                        <TableCell className="p-1">
+                          <Input
+                            value={guest.email || ''}
+                            onChange={(e) => updatePreviewGuest(index, 'email', e.target.value || undefined)}
+                            placeholder="Email"
+                            className="h-8 text-sm"
+                            data-testid={`input-email-${index}`}
+                          />
+                        </TableCell>
+                        <TableCell className="p-1">
+                          <Input
+                            value={guest.phone || ''}
+                            onChange={(e) => updatePreviewGuest(index, 'phone', e.target.value || undefined)}
+                            placeholder="Phone"
+                            className="h-8 text-sm"
+                            data-testid={`input-phone-${index}`}
+                          />
+                        </TableCell>
+                        <TableCell className="p-1">
+                          <Input
+                            value={guest.address || ''}
+                            onChange={(e) => updatePreviewGuest(index, 'address', e.target.value || undefined)}
+                            placeholder="Address"
+                            className="h-8 text-sm"
+                            data-testid={`input-address-${index}`}
+                          />
+                        </TableCell>
+                        <TableCell className="p-1">
+                          <Select
+                            value={guest.side || defaultSide}
+                            onValueChange={(value) => updatePreviewGuest(index, 'side', value as 'bride' | 'groom' | 'mutual')}
+                          >
+                            <SelectTrigger className="h-8 text-sm" data-testid={`select-side-${index}`}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="bride">Bride</SelectItem>
+                              <SelectItem value="groom">Groom</SelectItem>
+                              <SelectItem value="mutual">Mutual</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell className="p-1 text-center">
+                          <Checkbox
+                            checked={guest.plusOne || false}
+                            onCheckedChange={(checked) => updatePreviewGuest(index, 'plusOne', !!checked)}
+                            data-testid={`checkbox-plusone-${index}`}
+                          />
+                        </TableCell>
+                        <TableCell className="p-1">
+                          <Input
+                            value={guest.dietaryRestrictions || ''}
+                            onChange={(e) => updatePreviewGuest(index, 'dietaryRestrictions', e.target.value || undefined)}
+                            placeholder="Dietary"
+                            className="h-8 text-sm"
+                            data-testid={`input-dietary-${index}`}
+                          />
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
               </div>
-              {rawData.length > 10 && (
-                <div className="p-3 bg-muted text-sm text-center text-muted-foreground">
-                  Showing first 10 of {rawData.length} guests
-                </div>
-              )}
             </div>
 
             <div className="flex justify-between gap-2">
               <Button variant="outline" onClick={() => setStep('mapping')} data-testid="button-back-mapping">
                 Back
               </Button>
-              <Button onClick={handleImport} disabled={importing} data-testid="button-import">
-                {importing ? "Importing..." : `Import ${rawData.length} Guests`}
+              <Button 
+                onClick={handleImport} 
+                disabled={importing || previewGuests.length === 0} 
+                data-testid="button-import"
+              >
+                {importing ? "Importing..." : `Import ${previewGuests.length} Guests`}
               </Button>
             </div>
           </div>

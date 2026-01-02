@@ -872,14 +872,11 @@ export default function Guests() {
         weddingId: wedding?.id || "",
       }));
 
-      console.log("Importing guests with data:", guestsWithWeddingId);
-
       const response = await apiRequest("POST", "/api/guests/bulk", {
         guests: guestsWithWeddingId,
       });
       
       const result = await response.json();
-      console.log("Import result:", result);
       
       // Invalidate both guests and households queries
       queryClient.invalidateQueries({ queryKey: ["/api/guests"] });
@@ -898,7 +895,6 @@ export default function Guests() {
         });
       }
     } catch (error) {
-      console.error("Import error:", error);
       toast({
         title: "Import Failed",
         description: "An error occurred while importing guests. Please try again.",
