@@ -330,6 +330,11 @@ export interface IStorage {
   deleteGuest(id: string): Promise<boolean>;
   generateMagicLinkToken(guestId: string, expiresInDays?: number): Promise<string>; // Returns plaintext token, stores hash (deprecated - use household)
   revokeMagicLinkToken(guestId: string): Promise<boolean>; // Invalidates token for security (deprecated - use household)
+  
+  // Plus-One Guest Management
+  createPlusOneGuest(guestId: string): Promise<Guest>; // Creates a plus-one guest linked to the given guest
+  deletePlusOneGuest(guestId: string): Promise<boolean>; // Deletes the plus-one guest linked to the given guest
+  getPlusOneForGuest(guestId: string): Promise<Guest | undefined>; // Gets the plus-one guest linked to the given guest
 
   // Invitations
   getInvitation(id: string): Promise<Invitation | undefined>;
@@ -1771,6 +1776,47 @@ export class MemStorage implements IStorage {
     } as Guest;
     this.guests.set(guestId, updated);
     return true;
+  }
+
+  // Plus-One Guest Management
+  async createPlusOneGuest(guestId: string): Promise<Guest> {
+    const guest = this.guests.get(guestId);
+    if (!guest) throw new Error('Guest not found');
+    
+    // Check if plus one already exists
+    const existingPlusOne = Array.from(this.guests.values()).find(g => g.plusOneForGuestId === guestId);
+    if (existingPlusOne) return existingPlusOne;
+    
+    // Create plus one guest
+    const plusOneGuest = await this.createGuest({
+      weddingId: guest.weddingId,
+      householdId: guest.householdId,
+      name: `${guest.name}'s Guest`,
+      side: guest.side,
+      plusOneForGuestId: guestId,
+    } as InsertGuest);
+    
+    // Mark the original guest as having a plus one
+    await this.updateGuest(guestId, { plusOne: true });
+    
+    return plusOneGuest;
+  }
+
+  async deletePlusOneGuest(guestId: string): Promise<boolean> {
+    const plusOne = Array.from(this.guests.values()).find(g => g.plusOneForGuestId === guestId);
+    if (!plusOne) return false;
+    
+    // Delete the plus one guest
+    this.guests.delete(plusOne.id);
+    
+    // Update the original guest
+    await this.updateGuest(guestId, { plusOne: false });
+    
+    return true;
+  }
+
+  async getPlusOneForGuest(guestId: string): Promise<Guest | undefined> {
+    return Array.from(this.guests.values()).find(g => g.plusOneForGuestId === guestId);
   }
 
   // Invitations
@@ -4705,6 +4751,65 @@ export class DBStorage implements IStorage {
       })
       .where(eq(schema.guests.id, guestId));
     return true;
+  }
+
+  // Plus-One Guest Management
+  async createPlusOneGuest(guestId: string): Promise<Guest> {
+    const guest = await this.getGuest(guestId);
+    if (!guest) throw new Error('Guest not found');
+    
+    // Check if plus one already exists
+    const existingPlusOne = await this.db
+      .select()
+      .from(schema.guests)
+      .where(eq(schema.guests.plusOneForGuestId, guestId));
+    if (existingPlusOne.length > 0) return existingPlusOne[0];
+    
+    // Create plus one guest
+    const plusOneResult = await this.db.insert(schema.guests).values({
+      weddingId: guest.weddingId,
+      householdId: guest.householdId,
+      name: `${guest.name}'s Guest`,
+      side: guest.side,
+      plusOneForGuestId: guestId,
+    }).returning();
+    
+    // Mark the original guest as having a plus one
+    await this.db
+      .update(schema.guests)
+      .set({ plusOne: true })
+      .where(eq(schema.guests.id, guestId));
+    
+    return plusOneResult[0];
+  }
+
+  async deletePlusOneGuest(guestId: string): Promise<boolean> {
+    // Find the plus one guest
+    const plusOne = await this.db
+      .select()
+      .from(schema.guests)
+      .where(eq(schema.guests.plusOneForGuestId, guestId));
+    
+    if (plusOne.length === 0) return false;
+    
+    // Delete the plus one guest
+    await this.db.delete(schema.guests).where(eq(schema.guests.plusOneForGuestId, guestId));
+    
+    // Update the original guest
+    await this.db
+      .update(schema.guests)
+      .set({ plusOne: false })
+      .where(eq(schema.guests.id, guestId));
+    
+    return true;
+  }
+
+  async getPlusOneForGuest(guestId: string): Promise<Guest | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.guests)
+      .where(eq(schema.guests.plusOneForGuestId, guestId));
+    return result[0];
   }
 
   // Invitations
