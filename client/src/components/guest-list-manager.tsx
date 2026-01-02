@@ -212,12 +212,25 @@ export function GuestListManager({ guests, households = [], onAddGuest, onImport
                     data-testid={`row-guest-${guest.id}`}
                   >
                     <TableCell className="font-medium">
-                      {guest.name}
-                      {guest.plusOne && (
-                        <Badge variant="outline" className="ml-2 text-xs">
-                          +1
-                        </Badge>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {(guest as any).plusOneForGuestId ? (
+                          <>
+                            <span className="text-muted-foreground">{guest.name}</span>
+                            <Badge variant="secondary" className="text-xs">
+                              Plus One
+                            </Badge>
+                          </>
+                        ) : (
+                          <>
+                            {guest.name}
+                            {guest.plusOne && (
+                              <Badge variant="outline" className="text-xs text-primary border-primary">
+                                Has +1
+                              </Badge>
+                            )}
+                          </>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       {guest.householdId ? (
