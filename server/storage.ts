@@ -9290,7 +9290,7 @@ export class DBStorage implements IStorage {
       }
     }
     
-    // Create invitations for suggested events
+    // Create invitations for suggested events and update guest eventIds
     if (submission.eventSuggestions && submission.eventSuggestions.length > 0) {
       for (const guest of guests) {
         for (const eventId of submission.eventSuggestions) {
@@ -9304,6 +9304,16 @@ export class DBStorage implements IStorage {
             // Skip if invitation already exists or event doesn't exist
             console.error('Failed to create invitation:', e);
           }
+        }
+        // Update guest's eventIds field to match the selected events
+        try {
+          await this.db.update(schema.guests)
+            .set({ eventIds: submission.eventSuggestions })
+            .where(eq(schema.guests.id, guest.id));
+          // Update local guest object
+          (guest as any).eventIds = submission.eventSuggestions;
+        } catch (e) {
+          console.error('Failed to update guest eventIds:', e);
         }
       }
     }
