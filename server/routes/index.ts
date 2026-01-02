@@ -40,6 +40,9 @@ import { createGalleriesRouter, createPhotosRouter } from "./galleries";
 import { createVendorAvailabilityRouter } from "./vendor-availability";
 import { createVendorCalendarAccountsRouter, createVendorCalendarsRouter } from "./vendor-calendars";
 import { createAnalyticsRouter } from "./analytics";
+import { createInvitationCardsRouter, createOrdersRouter, createPaymentsRouter, createDepositPaymentsRouter } from "./orders-payments";
+import { createMeasurementProfilesRouter, createShoppingItemsRouter } from "./shopping";
+import { createGapWindowsRouter, createGapRecommendationsRouter } from "./gap-concierge";
 import { seedVendors, seedBudgetBenchmarks } from "../seed-data";
 
 let defaultStorageSeeded = false;
@@ -305,6 +308,23 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
 
   // Analytics
   app.use("/api/analytics", createAnalyticsRouter(storage));
+
+  // Orders and payments
+  app.use("/api/invitation-cards", createInvitationCardsRouter(storage));
+  app.use("/api/orders", createOrdersRouter(storage));
+  app.use("/api", createPaymentsRouter(storage));
+  app.use("/api/bookings", createDepositPaymentsRouter(storage));
+
+  // Shopping and measurements
+  app.use("/api/measurement-profiles", createMeasurementProfilesRouter(storage));
+  app.use("/api/guests", createMeasurementProfilesRouter(storage));
+  app.use("/api/shopping-items", createShoppingItemsRouter(storage));
+  app.use("/api/weddings", createShoppingItemsRouter(storage));
+
+  // Gap concierge
+  app.use("/api/gap-windows", createGapWindowsRouter(storage));
+  app.use("/api/weddings", createGapWindowsRouter(storage));
+  app.use("/api/gap-recommendations", createGapRecommendationsRouter(storage));
 
   const { registerLegacyRoutes } = await import("../routes-legacy");
   await registerLegacyRoutes(app, storage, { activeViewers, getViewerCount, cleanupStaleViewers });
