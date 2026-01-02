@@ -479,6 +479,11 @@ export async function registerGuestRoutes(router: Router, storage: IStorage) {
         return res.status(404).json({ error: "Guest not found" });
       }
 
+      // Prevent creating a plus-one for a guest that is already a plus-one
+      if ((guest as any).plusOneForGuestId) {
+        return res.status(400).json({ error: "Cannot create a plus-one for a guest that is already a plus-one" });
+      }
+
       const wedding = await storage.getWedding(guest.weddingId);
       if (!wedding) {
         return res.status(404).json({ error: "Wedding not found" });

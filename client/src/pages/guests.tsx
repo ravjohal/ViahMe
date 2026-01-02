@@ -2580,32 +2580,50 @@ export default function Guests() {
               </div>
             </div>
 
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="plusOne"
-                checked={form.watch("plusOne") ?? false}
-                onCheckedChange={(checked) => {
-                  const isChecked = checked as boolean;
-                  form.setValue("plusOne", isChecked);
-                  
-                  if (editingGuest) {
-                    if (isChecked) {
-                      createPlusOneMutation.mutate(editingGuest.id);
-                    } else {
-                      deletePlusOneMutation.mutate(editingGuest.id);
+            {/* Hide plus-one checkbox if editing a guest that is already a plus-one */}
+            {!(editingGuest && (editingGuest as any).plusOneForGuestId) && (
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="plusOne"
+                  checked={form.watch("plusOne") ?? false}
+                  onCheckedChange={(checked) => {
+                    const isChecked = checked as boolean;
+                    const previousValue = form.getValues("plusOne");
+                    form.setValue("plusOne", isChecked);
+                    
+                    if (editingGuest) {
+                      if (isChecked) {
+                        createPlusOneMutation.mutate(editingGuest.id, {
+                          onError: () => {
+                            form.setValue("plusOne", previousValue ?? false);
+                          }
+                        });
+                      } else {
+                        deletePlusOneMutation.mutate(editingGuest.id, {
+                          onError: () => {
+                            form.setValue("plusOne", previousValue ?? true);
+                          }
+                        });
+                      }
                     }
-                  }
-                }}
-                disabled={createPlusOneMutation.isPending || deletePlusOneMutation.isPending}
-                data-testid="checkbox-plus-one"
-              />
-              <Label htmlFor="plusOne" className="cursor-pointer">
-                Bringing a plus one
-              </Label>
-              {(createPlusOneMutation.isPending || deletePlusOneMutation.isPending) && (
-                <span className="text-sm text-muted-foreground">Updating...</span>
-              )}
-            </div>
+                  }}
+                  disabled={createPlusOneMutation.isPending || deletePlusOneMutation.isPending}
+                  data-testid="checkbox-plus-one"
+                />
+                <Label htmlFor="plusOne" className="cursor-pointer">
+                  Bringing a plus one
+                </Label>
+                {(createPlusOneMutation.isPending || deletePlusOneMutation.isPending) && (
+                  <span className="text-sm text-muted-foreground">Updating...</span>
+                )}
+              </div>
+            )}
+            {editingGuest && (editingGuest as any).plusOneForGuestId && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Badge variant="secondary">Plus One Guest</Badge>
+                <span>This guest is a plus-one for another guest</span>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label>Household (Optional)</Label>
