@@ -31,6 +31,10 @@ import { registerBookingRoutes } from "./bookings";
 import { registerAiAssistantRoutes } from "./ai-assistant";
 import { registerMessageRoutes, registerConversationRoutes } from "./messages";
 import { registerAdminVendorRoutes } from "./admin-vendors";
+import { registerVendorToolsRoutes } from "./vendor-tools";
+import { createReviewsRouter } from "./reviews";
+import { createPlaylistsRouter, createSongsRouter, createVotesRouter } from "./playlists";
+import { createDocumentsRouter, createObjectStorageRouter, createObjectDownloadRouter } from "./documents";
 import { seedVendors, seedBudgetBenchmarks } from "../seed-data";
 
 let defaultStorageSeeded = false;
@@ -259,6 +263,24 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   const adminVendorRouter = Router();
   await registerAdminVendorRoutes(adminVendorRouter, storage);
   app.use("/api/admin", adminVendorRouter);
+
+  // Vendor tools (lead inbox, quick reply templates, follow-up reminders)
+  const vendorToolsRouter = Router();
+  await registerVendorToolsRoutes(vendorToolsRouter, storage);
+  app.use("/api", vendorToolsRouter);
+
+  // Reviews
+  app.use("/api/reviews", createReviewsRouter(storage));
+
+  // Playlists, songs, and votes
+  app.use("/api/playlists", createPlaylistsRouter(storage));
+  app.use("/api/songs", createSongsRouter(storage));
+  app.use("/api/votes", createVotesRouter(storage));
+
+  // Documents and object storage
+  app.use("/api/documents", createDocumentsRouter(storage));
+  app.use("/api/objects", createObjectStorageRouter());
+  app.use("/objects", createObjectDownloadRouter());
 
   const { registerLegacyRoutes } = await import("../routes-legacy");
   await registerLegacyRoutes(app, storage, { activeViewers, getViewerCount, cleanupStaleViewers });
