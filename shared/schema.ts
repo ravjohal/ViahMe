@@ -676,7 +676,7 @@ export const guests = pgTable("guests", {
   relationshipTier: text("relationship_tier"), // 'immediate_family' | 'extended_family' | 'friend' | 'parents_friend'
   group: text("group"), // Legacy field - deprecated, use householdId
   eventIds: text("event_ids").array(), // Which events they're invited to (deprecated - use invitations table)
-  rsvpStatus: text("rsvp_status").default('pending'), // 'pending' | 'confirmed' | 'declined' (deprecated - use invitations table)
+  rsvpStatus: text("rsvp_status").default('pending'), // 'pending' | 'confirmed' | 'declined' | 'uninvited' (deprecated - use invitations table)
   plusOne: boolean("plus_one").default(false), // Flag indicating this guest can bring a plus-one
   plusOneForGuestId: varchar("plus_one_for_guest_id"), // If set, this guest IS a plus-one for the referenced guest
   dietaryRestrictions: text("dietary_restrictions"), // (deprecated - use invitations table)
@@ -708,7 +708,7 @@ export const insertGuestSchema = createInsertSchema(guests).omit({
   isMainHouseholdContact: z.boolean().optional(),
   side: z.enum(['bride', 'groom', 'mutual']).optional(),
   relationshipTier: z.enum(['immediate_family', 'extended_family', 'friend', 'parents_friend']).optional(),
-  rsvpStatus: z.enum(['pending', 'confirmed', 'declined']).optional(),
+  rsvpStatus: z.enum(['pending', 'confirmed', 'declined', 'uninvited']).optional(),
   visibility: z.enum(['private', 'shared']).optional(),
   addedBySide: z.enum(['bride', 'groom']).optional(),
   consensusStatus: z.enum(['pending', 'under_discussion', 'approved', 'declined', 'frozen', 'waitlisted']).optional(),
