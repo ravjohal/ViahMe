@@ -568,9 +568,7 @@ export const households = pgTable("households", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   weddingId: varchar("wedding_id").notNull(),
   name: text("name").notNull(), // e.g., "The Patel Family"
-  mainContactName: text("main_contact_name"), // Main Point of Contact name
-  contactEmail: text("contact_email"), // Primary contact email for invitations (required for sending)
-  contactPhone: text("contact_phone"), // Phone number for SMS/WhatsApp pings
+  contactEmail: text("contact_email"), // Primary contact email for invitations (kept at household level for bulk email sends)
   // Address fields
   addressStreet: text("address_street"),
   addressCity: text("address_city"),
@@ -632,6 +630,13 @@ export const guests = pgTable("guests", {
   name: text("name").notNull(),
   email: text("email"),
   phone: text("phone"),
+  // Address fields (used when guest is not part of a household, or for individual mailing)
+  addressStreet: text("address_street"),
+  addressCity: text("address_city"),
+  addressState: text("address_state"),
+  addressPostalCode: text("address_postal_code"),
+  addressCountry: text("address_country"),
+  isMainHouseholdContact: boolean("is_main_household_contact").default(false), // If true, this guest is the main contact for their household
   side: text("side").notNull().default('mutual'), // 'bride' | 'groom' | 'mutual' (Affiliation)
   relationshipTier: text("relationship_tier"), // 'immediate_family' | 'extended_family' | 'friend' | 'parents_friend'
   group: text("group"), // Legacy field - deprecated, use householdId
@@ -658,6 +663,12 @@ export const insertGuestSchema = createInsertSchema(guests).omit({
   createdAt: true,
 }).extend({
   name: z.string().min(1, { message: "Guest name is required" }),
+  addressStreet: z.string().nullable().optional(),
+  addressCity: z.string().nullable().optional(),
+  addressState: z.string().nullable().optional(),
+  addressPostalCode: z.string().nullable().optional(),
+  addressCountry: z.string().nullable().optional(),
+  isMainHouseholdContact: z.boolean().optional(),
   side: z.enum(['bride', 'groom', 'mutual']).optional(),
   relationshipTier: z.enum(['immediate_family', 'extended_family', 'friend', 'parents_friend']).optional(),
   rsvpStatus: z.enum(['pending', 'confirmed', 'declined']).optional(),
