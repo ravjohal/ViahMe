@@ -8774,30 +8774,15 @@ export class DBStorage implements IStorage {
       membersValue = undefined;
     }
     
-    let guestNamesValue = submission.guestNames;
-    if (typeof guestNamesValue === 'string') {
-      guestNamesValue = undefined; // guestNames should be an array, not a string
-    }
-    if (!Array.isArray(guestNamesValue) || guestNamesValue.length === 0) {
-      guestNamesValue = undefined;
-    }
-    
     let eventSuggestionsValue = submission.eventSuggestions;
     if (!Array.isArray(eventSuggestionsValue) || eventSuggestionsValue.length === 0) {
       eventSuggestionsValue = undefined;
     }
     
-    let guestDietaryInfoValue = submission.guestDietaryInfo;
-    if (!Array.isArray(guestDietaryInfoValue) || guestDietaryInfoValue.length === 0) {
-      guestDietaryInfoValue = undefined;
-    }
-    
     const normalizedSubmission = {
       ...submission,
       members: membersValue,
-      guestNames: guestNamesValue,
       eventSuggestions: eventSuggestionsValue,
-      guestDietaryInfo: guestDietaryInfoValue,
     };
     
     const result = await this.db.insert(schema.guestCollectorSubmissions)
@@ -8823,8 +8808,8 @@ export class DBStorage implements IStorage {
     const link = await this.getGuestCollectorLink(submission.collectorLinkId);
     if (!link) throw new Error("Collector link not found");
     
-    // Determine household name (use new householdName field if available, fallback to guestName)
-    const householdName = submission.householdName || submission.guestName;
+    // Household name is now required
+    const householdName = submission.householdName;
     
     // Parse members to determine guest count
     let parsedMembers: Array<{ name: string; email?: string; phone?: string; dietary?: string }> = [];
@@ -8849,7 +8834,7 @@ export class DBStorage implements IStorage {
       relationshipTier: (submission.relationshipTier as any) || 'friend',
       priorityTier: 'should_invite',
       maxCount: maxCount,
-      desiDietaryType: (submission.desiDietaryType as any) || 'none',
+      desiDietaryType: (submission.dietaryRestriction as any) || 'none',
     });
     
     const guests: Guest[] = [];
@@ -8893,8 +8878,8 @@ export class DBStorage implements IStorage {
           weddingId: submission.weddingId,
           householdId: household.id,
           name: guestName,
-          email: isFirstGuest ? (submission.guestEmail || undefined) : undefined,
-          phone: isFirstGuest ? (submission.guestPhone || undefined) : undefined,
+          email: isFirstGuest ? (submission.mainContactEmail || undefined) : undefined,
+          phone: isFirstGuest ? (submission.mainContactPhone || undefined) : undefined,
           isMainHouseholdContact: isFirstGuest,
           addressStreet: isFirstGuest ? (submission.contactStreet || undefined) : undefined,
           addressCity: isFirstGuest ? (submission.contactCity || undefined) : undefined,

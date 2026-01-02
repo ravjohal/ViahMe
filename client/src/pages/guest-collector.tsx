@@ -87,7 +87,6 @@ type GuestMember = {
 type FamilyDraft = {
   id: string;
   householdName: string;
-  fullAddress: string;
   contactStreet: string;
   contactCity: string;
   contactState: string;
@@ -117,7 +116,6 @@ type AddressSuggestion = {
 
 const familyFormSchema = z.object({
   householdName: z.string().min(1, "Family name is required"),
-  fullAddress: z.string().optional(),
   contactStreet: z.string().optional(),
   contactCity: z.string().optional(),
   contactState: z.string().optional(),
@@ -330,7 +328,6 @@ export default function GuestCollector() {
     resolver: zodResolver(familyFormSchema),
     defaultValues: {
       householdName: "",
-      fullAddress: "",
       contactStreet: "",
       contactCity: "",
       contactState: "",
@@ -353,15 +350,23 @@ export default function GuestCollector() {
     mutationFn: async (families: FamilyDraft[]) => {
       const promises = families.map(family => 
         apiRequest("POST", `/api/collector/${token}/submit`, {
-          ...family,
-          members: family.members || [],
-          guestName: family.householdName,
+          householdName: family.householdName,
+          mainContactName: family.mainContactName || undefined,
+          mainContactEmail: family.mainContactEmail || undefined,
+          mainContactPhone: family.mainContactPhone || undefined,
+          contactStreet: family.contactStreet || undefined,
+          contactCity: family.contactCity || undefined,
+          contactState: family.contactState || undefined,
+          contactPostalCode: family.contactPostalCode || undefined,
+          contactCountry: family.contactCountry || undefined,
+          dietaryRestriction: family.householdDietaryRestriction || undefined,
           guestCount: family.memberCount || 1,
-          guestEmail: family.mainContactEmail || undefined,
-          guestPhone: family.mainContactPhone || undefined,
+          members: family.members || [],
+          eventSuggestions: family.eventSuggestions || [],
+          relationshipTier: family.relationshipTier || undefined,
+          notes: family.notes || undefined,
           submitterName: submitterInfo.name,
           submitterRelation: submitterInfo.relation,
-          isBulkEntry: false,
           submissionSessionId: sessionId,
         })
       );
@@ -442,7 +447,6 @@ export default function GuestCollector() {
   const resetFormAndMembers = () => {
     form.reset({
       householdName: "",
-      fullAddress: "",
       contactStreet: "",
       contactCity: "",
       contactState: "",
@@ -469,7 +473,6 @@ export default function GuestCollector() {
     const newFamily: FamilyDraft = {
       id: crypto.randomUUID(),
       householdName: data.householdName,
-      fullAddress: data.fullAddress || "",
       contactStreet: data.contactStreet || "",
       contactCity: data.contactCity || "",
       contactState: data.contactState || "",
@@ -510,7 +513,6 @@ export default function GuestCollector() {
     const newFamily: FamilyDraft = {
       id: crypto.randomUUID(),
       householdName: data.householdName,
-      fullAddress: data.fullAddress || "",
       contactStreet: data.contactStreet || "",
       contactCity: data.contactCity || "",
       contactState: data.contactState || "",
@@ -541,7 +543,6 @@ export default function GuestCollector() {
     const family = familiesDraft[index];
     form.reset({
       householdName: family.householdName,
-      fullAddress: family.fullAddress,
       contactStreet: family.contactStreet,
       contactCity: family.contactCity,
       contactState: family.contactState,
@@ -865,7 +866,7 @@ export default function GuestCollector() {
 
                     <FormField
                       control={form.control}
-                      name="fullAddress"
+                      name="contactStreet"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-base font-medium flex items-center gap-2">
@@ -874,8 +875,21 @@ export default function GuestCollector() {
                           </FormLabel>
                           <FormControl>
                             <AddressAutocomplete
-                              value={field.value || ""}
-                              onChange={field.onChange}
+                              value={[
+                                form.watch("contactStreet"),
+                                form.watch("contactCity"),
+                                form.watch("contactState"),
+                                form.watch("contactPostalCode")
+                              ].filter(Boolean).join(", ") || ""}
+                              onChange={(value) => {
+                                if (!value) {
+                                  form.setValue("contactStreet", "");
+                                  form.setValue("contactCity", "");
+                                  form.setValue("contactState", "");
+                                  form.setValue("contactPostalCode", "");
+                                  form.setValue("contactCountry", "");
+                                }
+                              }}
                               onAddressSelect={handleAddressSelect}
                               placeholder="Start typing an address..."
                             />
@@ -1408,9 +1422,9 @@ export default function GuestCollector() {
                                     {(family.members || []).map(m => m.name).join(', ')}
                                   </div>
                                 )}
-                                {family.fullAddress && (
+                                {(family.contactStreet || family.contactCity) && (
                                   <p className="text-sm text-muted-foreground truncate">
-                                    {family.fullAddress}
+                                    {[family.contactStreet, family.contactCity, family.contactState].filter(Boolean).join(", ")}
                                   </p>
                                 )}
                                 <div className="flex flex-wrap gap-2 mt-2">

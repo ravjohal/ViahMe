@@ -173,32 +173,21 @@ export async function registerCollectorRoutes(router: Router, storage: IStorage)
       const members = req.body.members || [];
       const guestCount = members.length > 0 ? members.length : (req.body.guestCount || 1);
       
-      const guestNames = members.length > 0 
-        ? members.map((m: { name: string }) => m.name).join(', ')
-        : req.body.guestNames;
-      
-      const firstMember = members.length > 0 ? members[0] : null;
-      const guestEmail = firstMember?.email || req.body.guestEmail;
-      const guestPhone = firstMember?.phone || req.body.guestPhone;
-      
       const submission = await storage.createGuestCollectorSubmission({
         collectorLinkId: link.id,
         weddingId: link.weddingId,
         submitterName: req.body.submitterName,
         submitterRelation: req.body.submitterRelation,
-        guestName: req.body.guestName || req.body.householdName,
-        guestEmail,
-        guestPhone,
+        householdName: req.body.householdName,
+        mainContactName: req.body.mainContactName,
+        mainContactEmail: req.body.mainContactEmail,
+        mainContactPhone: req.body.mainContactPhone,
         relationshipTier: req.body.relationshipTier,
         notes: req.body.notes,
-        householdName: req.body.householdName,
-        guestNames,
         guestCount,
-        desiDietaryType: req.body.desiDietaryType,
-        mainContactName: req.body.mainContactName,
+        dietaryRestriction: req.body.dietaryRestriction,
         members: members.length > 0 ? JSON.stringify(members) : undefined,
         eventSuggestions: req.body.eventSuggestions || [],
-        fullAddress: req.body.fullAddress,
         contactStreet: req.body.contactStreet,
         contactCity: req.body.contactCity,
         contactState: req.body.contactState,

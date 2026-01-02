@@ -1920,7 +1920,7 @@ export default function Guests() {
                             <div className="flex items-start justify-between gap-2 flex-wrap">
                               <div>
                                 <CardTitle className="text-base flex items-center gap-2">
-                                  {submission.householdName || submission.guestName}
+                                  {submission.householdName}
                                   {submission.status === "approved" && (
                                     <Badge variant="default" className="text-xs">Approved</Badge>
                                   )}
@@ -1933,7 +1933,7 @@ export default function Guests() {
                                 </CardTitle>
                                 <CardDescription className="flex items-center gap-2 flex-wrap mt-1">
                                   <Badge variant="secondary" className="text-xs">
-                                    {submission.guestCount || submission.guestNames?.length || 1} {(submission.guestCount || submission.guestNames?.length || 1) === 1 ? "guest" : "guests"}
+                                    {submission.guestCount || 1} {(submission.guestCount || 1) === 1 ? "guest" : "guests"}
                                   </Badge>
                                   {submission.relationshipTier && (
                                     <Badge variant="outline" className="text-xs">
@@ -1989,19 +1989,16 @@ export default function Guests() {
                             </div>
                           </CardHeader>
                           <CardContent className="pt-2 space-y-1">
-                            {submission.guestNames && submission.guestNames.length > 0 && (
-                              <p className="text-sm"><strong>Guests:</strong> {submission.guestNames.join(", ")}</p>
-                            )}
-                            {(submission.mainContactName || submission.guestEmail || submission.guestPhone) && (
+                            {(submission.mainContactName || submission.mainContactEmail || submission.mainContactPhone) && (
                               <div className="text-sm space-y-0.5">
                                 {submission.mainContactName && (
                                   <p><strong>Main Contact:</strong> {submission.mainContactName}</p>
                                 )}
-                                {submission.guestEmail && (
-                                  <p><strong>Email:</strong> {submission.guestEmail}</p>
+                                {submission.mainContactEmail && (
+                                  <p><strong>Email:</strong> {submission.mainContactEmail}</p>
                                 )}
-                                {submission.guestPhone && (
-                                  <p><strong>Phone:</strong> {submission.guestPhone}</p>
+                                {submission.mainContactPhone && (
+                                  <p><strong>Phone:</strong> {submission.mainContactPhone}</p>
                                 )}
                               </div>
                             )}
@@ -2017,8 +2014,8 @@ export default function Guests() {
                                 ].filter(Boolean).join(", ")}
                               </p>
                             )}
-                            {submission.desiDietaryType && submission.desiDietaryType !== "none" && (
-                              <p className="text-sm"><strong>Dietary:</strong> {submission.desiDietaryType.replace(/_/g, ' ')}</p>
+                            {submission.dietaryRestriction && submission.dietaryRestriction !== "none" && (
+                              <p className="text-sm"><strong>Dietary:</strong> {submission.dietaryRestriction.replace(/_/g, ' ')}</p>
                             )}
                             {submission.notes && (
                               <p className="text-sm text-muted-foreground mt-1">{submission.notes}</p>

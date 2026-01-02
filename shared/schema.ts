@@ -755,10 +755,10 @@ export const guestCollectorSubmissions = pgTable("guest_collector_submissions", 
   submitterName: text("submitter_name"), // Name of person submitting (optional)
   submitterRelation: text("submitter_relation"), // e.g., "Mother of Bride"
   // Household-first entry support (Dadi-proof unified flow)
-  householdName: text("household_name"), // e.g., "The Sharma Family"
+  householdName: text("household_name").notNull(), // e.g., "The Sharma Family"
   mainContactName: text("main_contact_name"), // Primary contact person for invitations
-  guestPhone: text("guest_phone"), // Contact phone number
-  guestEmail: text("guest_email"), // Contact email address
+  mainContactPhone: text("main_contact_phone"), // Contact phone number
+  mainContactEmail: text("main_contact_email"), // Contact email address
   // Contact address fields
   contactStreet: text("contact_street"), // Street address
   contactCity: text("contact_city"), // City
@@ -766,16 +766,11 @@ export const guestCollectorSubmissions = pgTable("guest_collector_submissions", 
   contactPostalCode: text("contact_postal_code"), // Postal/ZIP code
   contactCountry: text("contact_country"), // Country
   guestCount: integer("guest_count").default(1), // Number of family members invited
-  desiDietaryType: text("desi_dietary_type"), // Household dietary preference
+  dietaryRestriction: text("dietary_restriction"), // Household dietary preference (uses DIETARY_OPTIONS)
   members: jsonb("members"), // Individual guest members with name, email, phone, dietary
   eventSuggestions: text("event_suggestions").array(), // Suggested event IDs for this family
   relationshipTier: text("relationship_tier"), // 'immediate_family' | 'extended_family' | 'friend' | 'parents_friend'
   notes: text("notes"), // Any notes about the family
-  // Legacy fields (kept for backward compatibility)
-  guestName: text("guest_name").notNull(), // For backward compatibility - stores household name
-  guestNames: text("guest_names").array(), // Legacy: Array of guest names
-  guestDietaryInfo: jsonb("guest_dietary_info"), // Legacy: Per-guest dietary info
-  isBulkEntry: boolean("is_bulk_entry").default(false), // Legacy: bulk mode flag
   submissionSessionId: text("submission_session_id"), // Browser session ID to track submissions from same device
   status: text("status").notNull().default('pending'), // 'pending' | 'approved' | 'declined' | 'maybe'
   reviewedById: varchar("reviewed_by_id"),
@@ -812,7 +807,7 @@ export const insertGuestCollectorSubmissionSchema = createInsertSchema(guestColl
   createdAt: true,
 }).extend({
   relationshipTier: z.enum(['immediate_family', 'extended_family', 'friend', 'parents_friend']).optional(),
-  desiDietaryType: dietaryOptionSchema.nullable().optional(),
+  dietaryRestriction: dietaryOptionSchema.nullable().optional(),
   guestCount: z.number().optional(),
   // Address fields
   contactStreet: z.string().nullable().optional(),
@@ -820,16 +815,13 @@ export const insertGuestCollectorSubmissionSchema = createInsertSchema(guestColl
   contactState: z.string().nullable().optional(),
   contactPostalCode: z.string().nullable().optional(),
   contactCountry: z.string().nullable().optional(),
-  fullAddress: z.string().nullable().optional(),
   // Individual guest members - stored as JSONB array
   members: z.array(guestMemberSchema).nullable().optional(),
   // Event suggestions
-  eventSuggestions: z.array(z.string()).nullable().optional(), // Array of suggested event IDs
-  // Legacy fields (optional for backward compatibility)
-  guestNames: z.array(z.string()).nullable().optional(),
-  guestDietaryInfo: guestDietaryInfoSchema.nullable().optional(),
-  isBulkEntry: z.boolean().optional(),
+  eventSuggestions: z.array(z.string()).nullable().optional(),
   mainContactName: z.string().nullable().optional(),
+  mainContactEmail: z.string().nullable().optional(),
+  mainContactPhone: z.string().nullable().optional(),
   submissionSessionId: z.string().nullable().optional(),
 });
 
