@@ -291,7 +291,22 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
   };
 
   const parseGuests = (): ParsedGuest[] => {
-    return rawData.map(row => {
+    console.log("parseGuests - columnMapping:", columnMapping);
+    console.log("parseGuests - rawData sample:", rawData.slice(0, 2));
+    
+    return rawData.map((row, i) => {
+      const householdValue = columnMapping.householdName && columnMapping.householdName !== 'none' 
+        ? row[columnMapping.householdName] 
+        : undefined;
+      
+      if (i === 0) {
+        console.log("First row householdName mapping:", {
+          mappingKey: columnMapping.householdName,
+          rowValue: householdValue,
+          fullRow: row
+        });
+      }
+      
       const guest: ParsedGuest = {
         name: columnMapping.name ? row[columnMapping.name]?.toString().trim() : '',
         email: columnMapping.email && row[columnMapping.email] ? row[columnMapping.email].toString().trim() : undefined,
@@ -307,9 +322,7 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
         dietaryRestrictions: columnMapping.dietaryRestrictions && row[columnMapping.dietaryRestrictions]
           ? row[columnMapping.dietaryRestrictions].toString().trim()
           : undefined,
-        householdName: columnMapping.householdName && columnMapping.householdName !== 'none' && row[columnMapping.householdName]
-          ? row[columnMapping.householdName].toString().trim()
-          : undefined,
+        householdName: householdValue ? householdValue.toString().trim() : undefined,
         isMainHouseholdContact: columnMapping.isMainHouseholdContact && row[columnMapping.isMainHouseholdContact]
           ? parseBooleanValue(row[columnMapping.isMainHouseholdContact])
           : false,
