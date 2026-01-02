@@ -9207,9 +9207,12 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
     }
     
     try {
+      console.log(`[Maybe] Marking submission ${req.params.id} as maybe by user ${userId}`);
       const result = await storage.markCollectorSubmissionMaybe(req.params.id, userId);
+      console.log(`[Maybe] Result:`, result ? { id: result.id, status: result.status } : 'null');
       res.json(result);
     } catch (error: any) {
+      console.error(`[Maybe] Error:`, error);
       res.status(500).json({ error: error.message });
     }
   });
