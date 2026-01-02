@@ -1988,9 +1988,34 @@ export default function Guests() {
                               </div>
                             </div>
                           </CardHeader>
-                          <CardContent className="pt-2">
+                          <CardContent className="pt-2 space-y-1">
                             {submission.guestNames && submission.guestNames.length > 0 && (
                               <p className="text-sm"><strong>Guests:</strong> {submission.guestNames.join(", ")}</p>
+                            )}
+                            {(submission.mainContactName || submission.guestEmail || submission.guestPhone) && (
+                              <div className="text-sm space-y-0.5">
+                                {submission.mainContactName && (
+                                  <p><strong>Main Contact:</strong> {submission.mainContactName}</p>
+                                )}
+                                {submission.guestEmail && (
+                                  <p><strong>Email:</strong> {submission.guestEmail}</p>
+                                )}
+                                {submission.guestPhone && (
+                                  <p><strong>Phone:</strong> {submission.guestPhone}</p>
+                                )}
+                              </div>
+                            )}
+                            {(submission.contactStreet || submission.contactCity || submission.contactState) && (
+                              <p className="text-sm">
+                                <strong>Address:</strong>{" "}
+                                {[
+                                  submission.contactStreet,
+                                  submission.contactCity,
+                                  submission.contactState,
+                                  submission.contactPostalCode,
+                                  submission.contactCountry
+                                ].filter(Boolean).join(", ")}
+                              </p>
                             )}
                             {submission.desiDietaryType && submission.desiDietaryType !== "none" && (
                               <p className="text-sm"><strong>Dietary:</strong> {submission.desiDietaryType.replace(/_/g, ' ')}</p>
