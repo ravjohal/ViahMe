@@ -34,10 +34,7 @@ export function DuplicatesManager({ weddingId }: DuplicatesManagerProps) {
 
   const mergeMutation = useMutation({
     mutationFn: async ({ survivorId, mergedId, decision }: { survivorId: string; mergedId: string; decision: 'kept_older' | 'kept_newer' }) => {
-      return await apiRequest('/api/households/merge', {
-        method: 'POST',
-        body: JSON.stringify({ survivorId, mergedId, decision }),
-      });
+      return await apiRequest('POST', '/api/households/merge', { survivorId, mergedId, decision });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/weddings', weddingId, 'duplicate-households'] });
