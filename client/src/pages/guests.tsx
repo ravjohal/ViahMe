@@ -21,7 +21,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useLocation, Link } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertGuestSchema, insertHouseholdSchema, type Wedding, type Guest, type Event, type Household, type GuestSuggestion, type EventCostItem, type GuestCollectorSubmission } from "@shared/schema";
+import { insertGuestSchema, insertHouseholdSchema, type Wedding, type Guest, type Event, type Household, type EventCostItem, type GuestCollectorSubmission } from "@shared/schema";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -111,15 +111,13 @@ type BudgetCapacity = {
 
 type GuestPlanningSnapshot = {
   confirmedHouseholds: Household[];
-  pendingSuggestions: Array<GuestSuggestion & { suggestedByName?: string }>;
   summary: {
     confirmedSeats: number;
-    pendingSeats: number;
-    totalPotentialSeats: number;
+    totalSeats: number;
     priorityBreakdown: {
-      must_invite: { confirmed: number; pending: number };
-      should_invite: { confirmed: number; pending: number };
-      nice_to_have: { confirmed: number; pending: number };
+      must_invite: number;
+      should_invite: number;
+      nice_to_have: number;
     };
   };
   events: Array<{
@@ -131,9 +129,7 @@ type GuestPlanningSnapshot = {
     venueCapacity: number | null;
     budgetAllocation: number | null;
     confirmedInvited: number;
-    potentialTotal: number;
     confirmedCost: number;
-    potentialCost: number;
     capacityUsed: number;
     capacityRemaining: number | null;
     isOverCapacity: boolean;
@@ -144,9 +140,7 @@ type GuestPlanningSnapshot = {
     guestBudget: number;
     defaultCostPerHead: number;
     confirmedSpend: number;
-    potentialSpend: number;
     remainingBudget: number;
-    potentialOverage: number;
     isOverBudget: boolean;
   };
 };
@@ -298,9 +292,8 @@ export default function Guests() {
   const [selectedHouseholdForQR, setSelectedHouseholdForQR] = useState<Household | null>(null);
   const [qrCodeDataURL, setQrCodeDataURL] = useState<string>("");
 
-  // Guest Planning state
+  // Guest Planning state (for collector submissions)
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
-  const [selectedSuggestion, setSelectedSuggestion] = useState<GuestSuggestion | null>(null);
   const [rejectReason, setRejectReason] = useState("");
 
   // Event quick-edit state for Optimize tab
@@ -336,17 +329,6 @@ export default function Guests() {
 
   const { data: households = [], isLoading: householdsLoading } = useQuery<Household[]>({
     queryKey: ["/api/households", wedding?.id],
-    enabled: !!wedding?.id,
-  });
-
-  // Guest Planning queries
-  const { data: suggestions = [], isLoading: suggestionsLoading } = useQuery<GuestSuggestion[]>({
-    queryKey: ["/api/weddings", wedding?.id, "guest-suggestions"],
-    enabled: !!wedding?.id,
-  });
-
-  const { data: suggestionsCount } = useQuery<{ count: number }>({
-    queryKey: ["/api/weddings", wedding?.id, "guest-suggestions", "count"],
     enabled: !!wedding?.id,
   });
 
@@ -662,42 +644,6 @@ export default function Guests() {
         description: error.message || "An error occurred while sending invitations",
         variant: "destructive",
       });
-    },
-  });
-
-  // Guest Planning mutations
-  const approveSuggestionMutation = useMutation({
-    mutationFn: async (id: string) => {
-      return await apiRequest("POST", `/api/guest-suggestions/${id}/approve`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-suggestions"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-suggestions", "count"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/households", wedding?.id] });
-      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-budget"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-planning-snapshot"] });
-      toast({ title: "Approved", description: "Guest suggestion has been approved and added to your list." });
-    },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to approve suggestion", variant: "destructive" });
-    },
-  });
-
-  const rejectSuggestionMutation = useMutation({
-    mutationFn: async ({ id, reason }: { id: string; reason: string }) => {
-      return await apiRequest("POST", `/api/guest-suggestions/${id}/reject`, { reason });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-suggestions"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-suggestions", "count"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-planning-snapshot"] });
-      setRejectDialogOpen(false);
-      setSelectedSuggestion(null);
-      setRejectReason("");
-      toast({ title: "Rejected", description: "Guest suggestion has been declined." });
-    },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to reject suggestion", variant: "destructive" });
     },
   });
 
@@ -1135,7 +1081,7 @@ export default function Guests() {
 
   // New 3-phase workflow based on user's mental model
   const hasEventsOverCapacity = planningSnapshot?.events.some(e => e.isOverCapacity) || false;
-  const hasOverBudget = (planningSnapshot?.budget.potentialOverage || 0) > 0;
+  const hasOverBudget = planningSnapshot?.budget.isOverBudget || false;
   const needsCuts = hasEventsOverCapacity || hasOverBudget;
 
   const workflowSteps = [
@@ -1150,7 +1096,7 @@ export default function Guests() {
     {
       id: "review",
       label: "Review Family Adds",
-      description: "Approve suggestions",
+      description: "Review collector submissions",
       icon: Inbox,
       isComplete: hasGuests && allSuggestionsReviewed,
       count: totalPendingReviews,
@@ -1732,7 +1678,7 @@ export default function Guests() {
                 </Card>
               </TabsContent>
 
-              {/* Phase 2: Review - Review family suggestions */}
+              {/* Phase 2: Review - Review collector submissions */}
               <TabsContent value="review" className="space-y-6">
                 <Card className={`border-2 ${pendingCollectorSubmissions.length === 0 ? "border-green-300 bg-green-50/50 dark:bg-green-950/20" : "border-orange-200 bg-orange-50/50 dark:bg-orange-950/20"}`}>
                   <CardContent className="p-4">
@@ -2064,7 +2010,7 @@ export default function Guests() {
                               <>
                                 <p className="font-semibold text-green-700 dark:text-green-400">Looking Good!</p>
                                 <p className="text-sm text-muted-foreground mt-1">
-                                  All your guests (including pending suggestions) fit within your budget and venue capacities.
+                                  All your guests fit within your budget and venue capacities.
                                 </p>
                                 <Button 
                                   size="sm" 
@@ -2079,7 +2025,7 @@ export default function Guests() {
                               <>
                                 <p className="font-semibold text-amber-700 dark:text-amber-400">Decisions Needed</p>
                                 <p className="text-sm text-muted-foreground mt-1">
-                                  {hasOverBudget && `Over budget by $${planningSnapshot?.budget.potentialOverage?.toLocaleString()}. `}
+                                  {hasOverBudget && `Over budget by $${Math.abs(planningSnapshot?.budget.remainingBudget || 0).toLocaleString()}. `}
                                   {hasEventsOverCapacity && `Some events exceed venue capacity. `}
                                   Review the details below to optimize your guest list.
                                 </p>
@@ -2091,41 +2037,31 @@ export default function Guests() {
                     </Card>
 
                     {/* The Whole Picture Summary */}
-                    <div className="grid gap-4 md:grid-cols-4">
+                    <div className="grid gap-4 md:grid-cols-3">
                       <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/20">
                         <CardContent className="p-4 text-center">
                           <p className="text-3xl font-bold text-blue-600" data-testid="text-confirmed-seats">
                             {planningSnapshot?.summary.confirmedSeats || 0}
                           </p>
-                          <p className="text-sm text-muted-foreground">Confirmed Guests</p>
+                          <p className="text-sm text-muted-foreground">Total Guests</p>
                           <p className="text-xs text-muted-foreground mt-1">Your current list</p>
-                        </CardContent>
-                      </Card>
-
-                      <Card className="border-orange-200 bg-orange-50/50 dark:bg-orange-950/20">
-                        <CardContent className="p-4 text-center">
-                          <p className="text-3xl font-bold text-orange-600" data-testid="text-pending-seats">
-                            +{planningSnapshot?.summary.pendingSeats || 0}
-                          </p>
-                          <p className="text-sm text-muted-foreground">Pending Suggestions</p>
-                          <p className="text-xs text-muted-foreground mt-1">From family members</p>
                         </CardContent>
                       </Card>
 
                       <Card className="border-purple-200 bg-purple-50/50 dark:bg-purple-950/20">
                         <CardContent className="p-4 text-center">
-                          <p className="text-3xl font-bold text-purple-600" data-testid="text-total-potential">
-                            {planningSnapshot?.summary.totalPotentialSeats || 0}
+                          <p className="text-3xl font-bold text-purple-600" data-testid="text-pending-collector">
+                            {pendingCollectorSubmissions.length}
                           </p>
-                          <p className="text-sm text-muted-foreground">Total Potential</p>
-                          <p className="text-xs text-muted-foreground mt-1">If all approved</p>
+                          <p className="text-sm text-muted-foreground">Pending Review</p>
+                          <p className="text-xs text-muted-foreground mt-1">From collector links</p>
                         </CardContent>
                       </Card>
 
                       <Card className={`${!needsCuts ? "border-green-200 bg-green-50/50 dark:bg-green-950/20" : "border-red-200 bg-red-50/50 dark:bg-red-950/20"}`}>
                         <CardContent className="p-4 text-center">
                           <p className={`text-3xl font-bold ${!needsCuts ? "text-green-600" : "text-red-600"}`} data-testid="text-budget-status">
-                            ${planningSnapshot?.budget.potentialSpend?.toLocaleString() || 0}
+                            ${planningSnapshot?.budget.confirmedSpend?.toLocaleString() || 0}
                           </p>
                           <p className="text-sm text-muted-foreground">Projected Cost</p>
                           <p className="text-xs text-muted-foreground mt-1">
@@ -2189,7 +2125,7 @@ export default function Guests() {
                         Per-Event Cost & Capacity
                       </h2>
                       <p className="text-sm text-muted-foreground">
-                        See how your guest list impacts each event. This shows the cost and capacity for ALL potential guests (confirmed + pending suggestions).
+                        See how your guest list impacts each event. This shows the cost and capacity for your confirmed guests.
                       </p>
 
                       {planningSnapshot?.events && planningSnapshot.events.length > 0 ? (
@@ -2236,8 +2172,8 @@ export default function Guests() {
                                   
                                   <div className="grid grid-cols-3 gap-4 text-center">
                                     <div>
-                                      <p className="text-lg font-bold">{event.potentialTotal}</p>
-                                      <p className="text-xs text-muted-foreground">Potential Guests</p>
+                                      <p className="text-lg font-bold">{event.confirmedInvited}</p>
+                                      <p className="text-xs text-muted-foreground">Guests</p>
                                     </div>
                                     <div>
                                       <p className="text-lg font-bold">
@@ -2247,7 +2183,7 @@ export default function Guests() {
                                     </div>
                                     <div>
                                       <p className={`text-lg font-bold ${event.isOverCapacity || event.isOverBudget ? "text-red-600" : ""}`}>
-                                        ${event.potentialCost?.toLocaleString() || 0}
+                                        ${event.confirmedCost?.toLocaleString() || 0}
                                       </p>
                                       <p className="text-xs text-muted-foreground">Total Cost</p>
                                       {event.budgetAllocation && (
@@ -2262,7 +2198,7 @@ export default function Guests() {
                                     {event.venueCapacity ? (
                                       <>
                                         <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                                          <span>Capacity: {event.potentialTotal} / {event.venueCapacity}</span>
+                                          <span>Capacity: {event.confirmedInvited} / {event.venueCapacity}</span>
                                           {event.isOverCapacity && (
                                             <span className="text-red-600 font-medium">
                                               {Math.abs(event.capacityRemaining || 0)} over
@@ -2270,7 +2206,7 @@ export default function Guests() {
                                           )}
                                         </div>
                                         <Progress
-                                          value={Math.min((event.potentialTotal / event.venueCapacity) * 100, 100)}
+                                          value={Math.min((event.confirmedInvited / event.venueCapacity) * 100, 100)}
                                           className={`h-2 ${event.isOverCapacity ? "[&>div]:bg-red-500" : ""}`}
                                         />
                                       </>
@@ -2281,7 +2217,7 @@ export default function Guests() {
                                     )}
                                   </div>
 
-                                  <EventCostBreakdown eventId={event.id} guestCount={event.potentialTotal} />
+                                  <EventCostBreakdown eventId={event.id} guestCount={event.confirmedInvited} />
                                 </div>
                               </CardContent>
                             </Card>
@@ -2937,61 +2873,6 @@ export default function Guests() {
               >
                 <Download className="w-4 h-4 mr-2" />
                 Download QR Code
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Reject Suggestion Dialog */}
-      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-        <DialogContent className="sm:max-w-md" data-testid="dialog-reject-suggestion">
-          <DialogHeader>
-            <DialogTitle>Decline Suggestion</DialogTitle>
-            <DialogDescription>
-              Decline the suggestion for "{selectedSuggestion?.householdName}". This won't add them to your guest list.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="rejectReason">Reason (optional)</Label>
-              <Textarea
-                id="rejectReason"
-                value={rejectReason}
-                onChange={(e) => setRejectReason(e.target.value)}
-                placeholder="e.g., Budget constraints, not enough room..."
-                className="min-h-[80px]"
-                data-testid="textarea-reject-reason"
-              />
-            </div>
-            
-            <div className="flex gap-2 justify-end">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setRejectDialogOpen(false);
-                  setSelectedSuggestion(null);
-                  setRejectReason("");
-                }}
-                data-testid="button-cancel-reject"
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={() => {
-                  if (selectedSuggestion) {
-                    rejectSuggestionMutation.mutate({
-                      id: selectedSuggestion.id,
-                      reason: rejectReason,
-                    });
-                  }
-                }}
-                disabled={rejectSuggestionMutation.isPending}
-                data-testid="button-confirm-reject"
-              >
-                {rejectSuggestionMutation.isPending ? "Declining..." : "Decline Suggestion"}
               </Button>
             </div>
           </div>

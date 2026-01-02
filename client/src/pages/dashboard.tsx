@@ -43,7 +43,6 @@ interface FeatureCard {
 
 const COLLABORATOR_FEATURES: FeatureCard[] = [
   { permission: "guests", label: "Guest Management", description: "View and manage the guest list", icon: Users, path: "/guests", color: "pink" },
-  { permission: "guest_suggestions", label: "Suggest Guests", description: "Suggest guests for the couple to approve", icon: UserPlus, path: "/guests", color: "rose" },
   { permission: "timeline", label: "Timeline & Events", description: "View and manage wedding events", icon: Clock, path: "/timeline", color: "orange" },
   { permission: "budget", label: "Budget & Payments", description: "View and track the wedding budget", icon: DollarSign, path: "/budget", color: "emerald" },
   { permission: "vendors", label: "Vendors", description: "Browse and manage vendor relationships", icon: Briefcase, path: "/vendors", color: "blue" },

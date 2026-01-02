@@ -28,13 +28,13 @@ Key architectural decisions and features include:
   - **WhatsApp Template Blast**: Send personalized RSVP reminders via WhatsApp with {name} placeholder for household names
 - **Integrated Guest Management Module**: Two-tier tabbed UI structure with "Guest List" and "Guest Planning" tabs:
   - **Guest List Tab**: Individual Guests, Households, and Allocation View for managing the final guest list
-  - **Guest Planning Tab**: Intuitive planning workflow:
-    - **Phase 1 - Review**: Team member suggestions queue - review and approve/decline suggestions from family members with `guest_suggestions` permission
-    - **Phase 2 - Assess Impact**: Comprehensive "whole picture" view combining confirmed guests + pending suggestions, with per-event cost breakdowns, capacity analysis, and priority tier summaries
-    - **Phase 3 - Finalize**: Make final decisions based on budget/capacity constraints
+  - **Guest Planning Tab**: Simplified planning workflow:
+    - **Phase 1 - Build**: Create households and add guests directly, or share collector links with family
+    - **Phase 2 - Review**: Review and process collector submissions from family members
+    - **Phase 3 - Assess**: View budget impact and capacity analysis with per-event cost breakdowns
+  - **Collector Links**: Magic link system allowing family members to suggest guests via public submission forms
   - **Per-Event Cost & Capacity Tracking**: Events table includes costPerHead and venueCapacity fields for precise budgeting
-  - **Planning Snapshot API**: `/api/weddings/:id/guest-planning-snapshot` endpoint aggregates all planning data server-side for accurate analysis
-  - Note: "Source" concept removed - suggestions now come directly from team members via the permission-based collaboration system
+  - **Planning Snapshot API**: `/api/weddings/:id/guest-planning-snapshot` endpoint aggregates planning data server-side
 - **Communication & Collaboration**: Messaging system for couple-vendor communication, review system, document storage, and team collaboration with granular role-based access control and activity logging.
 - **Persistent AI Planner Chatbot**: Floating AI assistant available throughout the app for couples:
   - **Mobile-First Design**: Full-screen modal on mobile, floating card on desktop
