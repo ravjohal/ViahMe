@@ -765,9 +765,11 @@ export default function Guests() {
     mutationFn: async (id: string) => {
       return await apiRequest("POST", `/api/collector-submissions/${id}/maybe`);
     },
-    onSuccess: () => {
-      queryClient.refetchQueries({ queryKey: ["/api/weddings", wedding?.id, "collector-submissions"] });
-      queryClient.refetchQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-planning-snapshot"] });
+    onSuccess: async () => {
+      // Force fresh data fetch by invalidating AND refetching
+      await queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "collector-submissions"] });
+      await queryClient.refetchQueries({ queryKey: ["/api/weddings", wedding?.id, "collector-submissions"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-planning-snapshot"] });
       toast({ title: "Moved to Maybe", description: "Family submission has been moved to your maybe list." });
     },
     onError: () => {
