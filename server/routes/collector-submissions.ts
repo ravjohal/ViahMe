@@ -78,6 +78,23 @@ export async function registerCollectorRoutes(router: Router, storage: IStorage)
     }
   });
 
+  router.post("/collector-links/:id/reactivate", async (req, res) => {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      const link = await storage.updateGuestCollectorLink(req.params.id, { isActive: true });
+      if (!link) {
+        return res.status(404).json({ error: "Collector link not found" });
+      }
+      res.json(link);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   router.delete("/collector-links/:id", async (req, res) => {
     const userId = req.session?.userId;
     if (!userId) {
