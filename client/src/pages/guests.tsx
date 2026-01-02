@@ -267,6 +267,7 @@ export default function Guests() {
   // Top-level tab state
   const [mainTab, setMainTab] = useState("guest-planning");
   const [planningTab, setPlanningTab] = useState("add");
+  const [submissionFilter, setSubmissionFilter] = useState<"all" | "pending" | "approved" | "maybe" | "declined">("all");
   
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
@@ -760,6 +761,20 @@ export default function Guests() {
     },
   });
 
+  const maybeCollectorMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiRequest("POST", `/api/collector-submissions/${id}/maybe`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "collector-submissions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-planning-snapshot"] });
+      toast({ title: "Moved to Maybe", description: "Family submission has been moved to your maybe list." });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to update submission", variant: "destructive" });
+    },
+  });
+
   const restoreFromCutListMutation = useMutation({
     mutationFn: async (id: string) => {
       return await apiRequest("POST", `/api/cut-list/${id}/restore`);
@@ -1150,8 +1165,15 @@ export default function Guests() {
   const pendingSuggestions = suggestions.filter(s => s.status === "pending");
   const reviewedSuggestions = suggestions.filter(s => s.status !== "pending");
   const pendingCollectorSubmissions = collectorSubmissions.filter(s => s.status === "pending");
-  const reviewedCollectorSubmissions = collectorSubmissions.filter(s => s.status !== "pending");
+  const approvedCollectorSubmissions = collectorSubmissions.filter(s => s.status === "approved");
+  const maybeCollectorSubmissions = collectorSubmissions.filter(s => s.status === "maybe");
+  const declinedCollectorSubmissions = collectorSubmissions.filter(s => s.status === "declined");
   const totalPendingReviews = pendingSuggestions.length + pendingCollectorSubmissions.length;
+  
+  // Filtered submissions based on filter state
+  const filteredCollectorSubmissions = submissionFilter === "all" 
+    ? collectorSubmissions 
+    : collectorSubmissions.filter(s => s.status === submissionFilter);
 
   const priorityBreakdown = {
     must_invite: households.filter(h => h.priorityTier === "must_invite"),
@@ -2073,13 +2095,13 @@ export default function Guests() {
                 {/* Collector Link Submissions Section */}
                 <div className="space-y-4 mt-8">
                   <Separator />
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
                     <div>
                       <h2 className="text-lg font-semibold flex items-center gap-2">
                         <Share2 className="h-5 w-5 text-muted-foreground" />
                         Family Submissions
                         {pendingCollectorSubmissions.length > 0 && (
-                          <Badge variant="destructive">{pendingCollectorSubmissions.length}</Badge>
+                          <Badge variant="destructive">{pendingCollectorSubmissions.length} pending</Badge>
                         )}
                       </h2>
                       <p className="text-sm text-muted-foreground">
@@ -2088,28 +2110,101 @@ export default function Guests() {
                     </div>
                   </div>
 
+                  {/* Filter Buttons */}
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant={submissionFilter === "all" ? "default" : "outline"}
+                      onClick={() => setSubmissionFilter("all")}
+                      data-testid="filter-all"
+                    >
+                      All ({collectorSubmissions.length})
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={submissionFilter === "pending" ? "default" : "outline"}
+                      onClick={() => setSubmissionFilter("pending")}
+                      data-testid="filter-pending"
+                    >
+                      Pending ({pendingCollectorSubmissions.length})
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={submissionFilter === "approved" ? "default" : "outline"}
+                      onClick={() => setSubmissionFilter("approved")}
+                      data-testid="filter-approved"
+                    >
+                      <CheckCircle2 className="h-4 w-4 mr-1" />
+                      Approved ({approvedCollectorSubmissions.length})
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={submissionFilter === "maybe" ? "default" : "outline"}
+                      onClick={() => setSubmissionFilter("maybe")}
+                      data-testid="filter-maybe"
+                    >
+                      <HelpCircle className="h-4 w-4 mr-1" />
+                      Maybe ({maybeCollectorSubmissions.length})
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={submissionFilter === "declined" ? "default" : "outline"}
+                      onClick={() => setSubmissionFilter("declined")}
+                      data-testid="filter-declined"
+                    >
+                      <XCircle className="h-4 w-4 mr-1" />
+                      Declined ({declinedCollectorSubmissions.length})
+                    </Button>
+                  </div>
+
                   {collectorLoading ? (
                     <div className="space-y-3">
                       {[1, 2, 3].map(i => <Skeleton key={i} className="h-32 w-full" />)}
                     </div>
-                  ) : pendingCollectorSubmissions.length === 0 ? (
+                  ) : filteredCollectorSubmissions.length === 0 ? (
                     <Card className="border-dashed">
                       <CardContent className="p-6 text-center">
-                        <CheckCircle2 className="h-12 w-12 mx-auto text-green-500 mb-3" />
-                        <p className="font-medium mb-1">No Pending Family Submissions</p>
-                        <p className="text-sm text-muted-foreground">
-                          When family members add guests via collector links, they'll appear here for your review.
-                        </p>
+                        {submissionFilter === "pending" ? (
+                          <>
+                            <CheckCircle2 className="h-12 w-12 mx-auto text-green-500 mb-3" />
+                            <p className="font-medium mb-1">No Pending Family Submissions</p>
+                            <p className="text-sm text-muted-foreground">
+                              When family members add guests via collector links, they'll appear here for your review.
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <Inbox className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                            <p className="font-medium mb-1">No {submissionFilter === "all" ? "" : submissionFilter} submissions</p>
+                            <p className="text-sm text-muted-foreground">
+                              {submissionFilter === "approved" && "Approved families will appear in your guest list."}
+                              {submissionFilter === "maybe" && "Families you're undecided about will appear here."}
+                              {submissionFilter === "declined" && "Declined families will appear here."}
+                              {submissionFilter === "all" && "No family submissions yet."}
+                            </p>
+                          </>
+                        )}
                       </CardContent>
                     </Card>
                   ) : (
                     <div className="space-y-3">
-                      {pendingCollectorSubmissions.map(submission => (
+                      {filteredCollectorSubmissions.map(submission => (
                         <Card key={submission.id} data-testid={`card-collector-${submission.id}`}>
                           <CardHeader className="pb-2">
-                            <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-start justify-between gap-2 flex-wrap">
                               <div>
-                                <CardTitle className="text-base">{submission.householdName || submission.guestName}</CardTitle>
+                                <CardTitle className="text-base flex items-center gap-2">
+                                  {submission.householdName || submission.guestName}
+                                  {submission.status === "approved" && (
+                                    <Badge variant="default" className="text-xs">Approved</Badge>
+                                  )}
+                                  {submission.status === "maybe" && (
+                                    <Badge variant="secondary" className="text-xs">Maybe</Badge>
+                                  )}
+                                  {submission.status === "declined" && (
+                                    <Badge variant="destructive" className="text-xs">Declined</Badge>
+                                  )}
+                                </CardTitle>
                                 <CardDescription className="flex items-center gap-2 flex-wrap mt-1">
                                   <Badge variant="secondary" className="text-xs">
                                     {submission.guestCount || submission.guestNames?.length || 1} {(submission.guestCount || submission.guestNames?.length || 1) === 1 ? "guest" : "guests"}
@@ -2126,27 +2221,44 @@ export default function Guests() {
                                   )}
                                 </CardDescription>
                               </div>
-                              <div className="flex gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="default"
-                                  onClick={() => approveCollectorMutation.mutate(submission.id)}
-                                  disabled={approveCollectorMutation.isPending}
-                                  data-testid={`button-approve-collector-${submission.id}`}
-                                >
-                                  <CheckCircle2 className="h-4 w-4 mr-1" />
-                                  Approve
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  onClick={() => declineCollectorMutation.mutate(submission.id)}
-                                  disabled={declineCollectorMutation.isPending}
-                                  data-testid={`button-decline-collector-${submission.id}`}
-                                >
-                                  <XCircle className="h-4 w-4 mr-1" />
-                                  Decline
-                                </Button>
+                              <div className="flex gap-2 flex-wrap">
+                                {/* Show different actions based on current status */}
+                                {submission.status !== "approved" && (
+                                  <Button
+                                    size="sm"
+                                    variant="default"
+                                    onClick={() => approveCollectorMutation.mutate(submission.id)}
+                                    disabled={approveCollectorMutation.isPending}
+                                    data-testid={`button-approve-collector-${submission.id}`}
+                                  >
+                                    <CheckCircle2 className="h-4 w-4 mr-1" />
+                                    Approve
+                                  </Button>
+                                )}
+                                {submission.status !== "maybe" && (
+                                  <Button
+                                    size="sm"
+                                    variant="secondary"
+                                    onClick={() => maybeCollectorMutation.mutate(submission.id)}
+                                    disabled={maybeCollectorMutation.isPending}
+                                    data-testid={`button-maybe-collector-${submission.id}`}
+                                  >
+                                    <HelpCircle className="h-4 w-4 mr-1" />
+                                    Maybe
+                                  </Button>
+                                )}
+                                {submission.status !== "declined" && (
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={() => declineCollectorMutation.mutate(submission.id)}
+                                    disabled={declineCollectorMutation.isPending}
+                                    data-testid={`button-decline-collector-${submission.id}`}
+                                  >
+                                    <XCircle className="h-4 w-4 mr-1" />
+                                    Decline
+                                  </Button>
+                                )}
                               </div>
                             </div>
                           </CardHeader>
@@ -2166,30 +2278,6 @@ export default function Guests() {
                           </CardContent>
                         </Card>
                       ))}
-                    </div>
-                  )}
-
-                  {reviewedCollectorSubmissions.length > 0 && (
-                    <div className="mt-6">
-                      <h3 className="text-sm font-medium text-muted-foreground mb-3">Previously Reviewed Family Submissions</h3>
-                      <ScrollArea className="h-48">
-                        <div className="space-y-2">
-                          {reviewedCollectorSubmissions.map(submission => (
-                            <div key={submission.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                              <div>
-                                <p className="font-medium">{submission.householdName || submission.guestName}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {submission.guestCount || submission.guestNames?.length || 1} guests
-                                  {submission.submitterName && ` • added by ${submission.submitterName}`}
-                                </p>
-                              </div>
-                              <Badge variant={submission.status === "approved" ? "default" : "destructive"}>
-                                {submission.status === "approved" ? "Approved" : "Declined"}
-                              </Badge>
-                            </div>
-                          ))}
-                        </div>
-                      </ScrollArea>
                     </div>
                   )}
                 </div>
