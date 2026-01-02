@@ -37,6 +37,9 @@ import { createPlaylistsRouter, createSongsRouter, createVotesRouter } from "./p
 import { createDocumentsRouter, createObjectStorageRouter, createObjectDownloadRouter } from "./documents";
 import { createWeddingWebsitesRouter, createRegistriesRouter, createPublicWeddingRouter } from "./wedding-websites";
 import { createGalleriesRouter, createPhotosRouter } from "./galleries";
+import { createVendorAvailabilityRouter } from "./vendor-availability";
+import { createVendorCalendarAccountsRouter, createVendorCalendarsRouter } from "./vendor-calendars";
+import { createAnalyticsRouter } from "./analytics";
 import { seedVendors, seedBudgetBenchmarks } from "../seed-data";
 
 let defaultStorageSeeded = false;
@@ -294,6 +297,14 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   // Galleries and photos
   app.use("/api/galleries", createGalleriesRouter(storage));
   app.use("/api/photos", createPhotosRouter(storage));
+
+  // Vendor availability and calendars
+  app.use("/api/vendor-availability", createVendorAvailabilityRouter(storage));
+  app.use("/api/vendor-calendar-accounts", createVendorCalendarAccountsRouter(storage));
+  app.use("/api/vendor-calendars", createVendorCalendarsRouter(storage));
+
+  // Analytics
+  app.use("/api/analytics", createAnalyticsRouter(storage));
 
   const { registerLegacyRoutes } = await import("../routes-legacy");
   await registerLegacyRoutes(app, storage, { activeViewers, getViewerCount, cleanupStaleViewers });
