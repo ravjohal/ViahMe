@@ -92,7 +92,14 @@ type GuestFormData = z.infer<typeof guestFormSchema>;
 
 const householdFormSchema = insertHouseholdSchema.extend({
   maxCount: z.number().min(1, "Max count must be at least 1"),
+  mainContactName: z.string().optional().or(z.literal("")),
   contactEmail: z.string().email("Please enter a valid email address").optional().or(z.literal("")),
+  contactPhone: z.string().optional().or(z.literal("")),
+  addressStreet: z.string().optional().or(z.literal("")),
+  addressCity: z.string().optional().or(z.literal("")),
+  addressState: z.string().optional().or(z.literal("")),
+  addressPostalCode: z.string().optional().or(z.literal("")),
+  addressCountry: z.string().optional().or(z.literal("")),
 });
 
 type HouseholdFormData = z.infer<typeof householdFormSchema>;
@@ -422,7 +429,14 @@ export default function Guests() {
     resolver: zodResolver(householdFormSchema),
     defaultValues: {
       name: "",
+      mainContactName: "",
       contactEmail: "",
+      contactPhone: "",
+      addressStreet: "",
+      addressCity: "",
+      addressState: "",
+      addressPostalCode: "",
+      addressCountry: "",
       maxCount: 1,
       affiliation: "bride",
       relationshipTier: "friend",
@@ -964,7 +978,14 @@ export default function Guests() {
     setEditingHousehold(null);
     householdForm.reset({
       name: "",
+      mainContactName: "",
       contactEmail: "",
+      contactPhone: "",
+      addressStreet: "",
+      addressCity: "",
+      addressState: "",
+      addressPostalCode: "",
+      addressCountry: "",
       maxCount: 1,
       affiliation: "bride",
       relationshipTier: "friend",
@@ -978,7 +999,14 @@ export default function Guests() {
     setEditingHousehold(household);
     householdForm.reset({
       name: household.name,
+      mainContactName: household.mainContactName || "",
       contactEmail: household.contactEmail || "",
+      contactPhone: household.contactPhone || "",
+      addressStreet: household.addressStreet || "",
+      addressCity: household.addressCity || "",
+      addressState: household.addressState || "",
+      addressPostalCode: household.addressPostalCode || "",
+      addressCountry: household.addressCountry || "",
       maxCount: household.maxCount || 1,
       affiliation: household.affiliation as "bride" | "groom" | "mutual",
       relationshipTier: household.relationshipTier || "friend",
@@ -2613,7 +2641,7 @@ export default function Guests() {
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={householdForm.handleSubmit(handleHouseholdSubmit)} className="space-y-4">
+          <form onSubmit={householdForm.handleSubmit(handleHouseholdSubmit)} className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
             <div className="space-y-2">
               <Label htmlFor="household-name">
                 Household Name <span className="text-destructive">*</span>
@@ -2632,24 +2660,81 @@ export default function Guests() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="household-contactEmail">
-                Contact Email
+              <Label htmlFor="household-mainContactName">
+                Main Point of Contact Name
               </Label>
               <Input
-                id="household-contactEmail"
-                type="email"
-                {...householdForm.register("contactEmail")}
-                placeholder="e.g., patel@example.com"
-                data-testid="input-household-contact-email"
+                id="household-mainContactName"
+                {...householdForm.register("mainContactName")}
+                placeholder="e.g., Raj Patel"
+                data-testid="input-household-main-contact-name"
               />
-              {householdForm.formState.errors.contactEmail && (
-                <p className="text-sm text-destructive">
-                  {householdForm.formState.errors.contactEmail.message}
-                </p>
-              )}
-              <p className="text-xs text-muted-foreground">
-                Email address for sending invitations
-              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="household-contactEmail">
+                  Main Contact Email
+                </Label>
+                <Input
+                  id="household-contactEmail"
+                  type="email"
+                  {...householdForm.register("contactEmail")}
+                  placeholder="e.g., patel@example.com"
+                  data-testid="input-household-contact-email"
+                />
+                {householdForm.formState.errors.contactEmail && (
+                  <p className="text-sm text-destructive">
+                    {householdForm.formState.errors.contactEmail.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="household-contactPhone">
+                  Main Contact Phone
+                </Label>
+                <Input
+                  id="household-contactPhone"
+                  type="tel"
+                  {...householdForm.register("contactPhone")}
+                  placeholder="e.g., +1 555-123-4567"
+                  data-testid="input-household-contact-phone"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Address</Label>
+              <Input
+                {...householdForm.register("addressStreet")}
+                placeholder="Street Address"
+                data-testid="input-household-address-street"
+              />
+              <div className="grid grid-cols-2 gap-2">
+                <Input
+                  {...householdForm.register("addressCity")}
+                  placeholder="City"
+                  data-testid="input-household-address-city"
+                />
+                <Input
+                  {...householdForm.register("addressState")}
+                  placeholder="State/Province"
+                  data-testid="input-household-address-state"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Input
+                  {...householdForm.register("addressPostalCode")}
+                  placeholder="Postal Code"
+                  data-testid="input-household-address-postal-code"
+                />
+                <Input
+                  {...householdForm.register("addressCountry")}
+                  placeholder="Country"
+                  data-testid="input-household-address-country"
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -2709,6 +2794,7 @@ export default function Guests() {
                   <SelectItem value="extended_family">Extended Family</SelectItem>
                   <SelectItem value="friend">Friends</SelectItem>
                   <SelectItem value="parents_friend">Parent's Friends</SelectItem>
+                  <SelectItem value="coworker">Co-workers</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -568,11 +568,18 @@ export const households = pgTable("households", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   weddingId: varchar("wedding_id").notNull(),
   name: text("name").notNull(), // e.g., "The Patel Family"
+  mainContactName: text("main_contact_name"), // Main Point of Contact name
   contactEmail: text("contact_email"), // Primary contact email for invitations (required for sending)
   contactPhone: text("contact_phone"), // Phone number for SMS/WhatsApp pings
+  // Address fields
+  addressStreet: text("address_street"),
+  addressCity: text("address_city"),
+  addressState: text("address_state"),
+  addressPostalCode: text("address_postal_code"),
+  addressCountry: text("address_country"),
   maxCount: integer("max_count").notNull().default(1), // Total seats allocated (e.g., 4)
   affiliation: text("affiliation").notNull().default("bride"), // "bride" | "groom" | "mutual"
-  relationshipTier: text("relationship_tier").notNull().default("friend"), // "immediate_family" | "extended_family" | "friend" | "parents_friend"
+  relationshipTier: text("relationship_tier").notNull().default("friend"), // "immediate_family" | "extended_family" | "friend" | "parents_friend" | "coworker"
   // Priority and source tracking for advanced guest management
   priorityTier: text("priority_tier").notNull().default("should_invite"), // "must_invite" | "should_invite" | "nice_to_have"
   sourceId: varchar("source_id"), // Reference to guest_sources table
@@ -598,6 +605,12 @@ export const insertHouseholdSchema = createInsertSchema(households).omit({
   magicLinkExpires: true,
   createdAt: true,
 }).extend({
+  mainContactName: z.string().nullable().optional(),
+  addressStreet: z.string().nullable().optional(),
+  addressCity: z.string().nullable().optional(),
+  addressState: z.string().nullable().optional(),
+  addressPostalCode: z.string().nullable().optional(),
+  addressCountry: z.string().nullable().optional(),
   desiDietaryType: z.enum(['strict_vegetarian', 'jain', 'swaminarayan', 'eggless', 'halal', 'none']).nullable().optional(),
   headOfHouseIndex: z.number().nullable().optional(),
   lifafaAmount: z.string().nullable().optional(),

@@ -9220,11 +9220,17 @@ export class DBStorage implements IStorage {
     const household = await this.createHousehold({
       weddingId: submission.weddingId,
       name: householdName,
+      mainContactName: submission.mainContactName || submission.guestName || undefined,
       affiliation: link.side as 'bride' | 'groom' | 'mutual',
       relationshipTier: (submission.relationshipTier as any) || 'friend',
       priorityTier: 'should_invite',
       contactEmail: submission.guestEmail || undefined,
       contactPhone: submission.guestPhone || undefined,
+      addressStreet: submission.contactStreet || undefined,
+      addressCity: submission.contactCity || undefined,
+      addressState: submission.contactState || undefined,
+      addressPostalCode: submission.contactPostalCode || undefined,
+      addressCountry: submission.contactCountry || undefined,
       desiDietaryType: (submission.desiDietaryType as any) || 'none',
     });
     
