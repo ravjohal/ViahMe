@@ -677,7 +677,8 @@ export const guests = pgTable("guests", {
   group: text("group"), // Legacy field - deprecated, use householdId
   eventIds: text("event_ids").array(), // Which events they're invited to (deprecated - use invitations table)
   rsvpStatus: text("rsvp_status").default('pending'), // 'pending' | 'confirmed' | 'declined' (deprecated - use invitations table)
-  plusOne: boolean("plus_one").default(false),
+  plusOne: boolean("plus_one").default(false), // Flag indicating this guest can bring a plus-one
+  plusOneForGuestId: varchar("plus_one_for_guest_id"), // If set, this guest IS a plus-one for the referenced guest
   dietaryRestrictions: text("dietary_restrictions"), // (deprecated - use invitations table)
   magicLinkTokenHash: varchar("magic_link_token_hash").unique(), // HASHED secure token (deprecated - use household token)
   magicLinkExpires: timestamp("magic_link_expires"), // Token expiration (deprecated - use household token)
@@ -689,6 +690,7 @@ export const guests = pgTable("guests", {
 }, (table) => ({
   weddingIdIdx: index("guests_wedding_id_idx").on(table.weddingId),
   householdIdIdx: index("guests_household_id_idx").on(table.householdId),
+  plusOneForGuestIdIdx: index("guests_plus_one_for_guest_id_idx").on(table.plusOneForGuestId),
 }));
 
 export const insertGuestSchema = createInsertSchema(guests).omit({
