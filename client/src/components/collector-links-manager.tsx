@@ -254,7 +254,7 @@ export function CollectorLinksManager({ weddingId, onNavigateToReview }: Collect
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button 
-                          variant="outline"
+                          variant="default"
                           className="min-h-[44px]"
                           onClick={() => reactivateLinkMutation.mutate(link.id)}
                           disabled={reactivateLinkMutation.isPending}
