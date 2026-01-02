@@ -5,7 +5,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, X } from "lucide-react";
+import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, X, Copy, Check } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
 import type { Event } from "@shared/schema";
@@ -49,6 +50,7 @@ interface ValidationError {
 }
 
 export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImport }: GuestImportDialogProps) {
+  const { toast } = useToast();
   const [file, setFile] = useState<File | null>(null);
   const [rawData, setRawData] = useState<any[]>([]);
   const [headers, setHeaders] = useState<string[]>([]);
@@ -58,6 +60,34 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
   const [errors, setErrors] = useState<ValidationError[]>([]);
   const [importing, setImporting] = useState(false);
   const [step, setStep] = useState<'upload' | 'mapping' | 'preview'>('upload');
+  const [copied, setCopied] = useState(false);
+
+  const copyTemplateToClipboard = async () => {
+    const templateData = [
+      ["Household Name", "Name", "Main Contact", "Email", "Phone", "Side", "Plus One", "Dietary"],
+      ["Sharma Family", "Priya Sharma", "Yes", "priya@email.com", "555-123-4567", "bride", "yes", "vegetarian"],
+      ["Sharma Family", "Raj Sharma", "No", "", "", "bride", "no", ""],
+      ["Patel Family", "Rahul Patel", "Yes", "rahul@email.com", "555-987-6543", "groom", "no", ""],
+    ];
+    
+    const tsvContent = templateData.map(row => row.join("\t")).join("\n");
+    
+    try {
+      await navigator.clipboard.writeText(tsvContent);
+      setCopied(true);
+      toast({
+        title: "Template copied",
+        description: "Paste it directly into Google Sheets or Excel",
+      });
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      toast({
+        title: "Copy failed",
+        description: "Please try again or manually copy the template",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleFileUpload = async (uploadedFile: File) => {
     setFile(uploadedFile);
@@ -252,7 +282,7 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
         <DialogHeader>
           <DialogTitle>Import Guest List</DialogTitle>
           <DialogDescription>
-            Upload a CSV or Excel file containing your guest list
+            Upload a CSV, Excel, or Google Sheets export containing your guest list
           </DialogDescription>
         </DialogHeader>
 
@@ -287,7 +317,10 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
               <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
               <h3 className="font-semibold mb-2">Drop your file here</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                or click to browse for CSV or Excel (.xlsx, .xls) files
+                or click to browse for CSV, Excel (.xlsx, .xls), or Google Sheets exports
+              </p>
+              <p className="text-xs text-muted-foreground">
+                For Google Sheets: File → Download → Microsoft Excel (.xlsx)
               </p>
               <input
                 id="file-upload"
@@ -327,7 +360,27 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
               </div>
               
               <div className="space-y-2">
-                <h4 className="font-semibold text-sm">Example Format:</h4>
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold text-sm">Example Format:</h4>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={copyTemplateToClipboard}
+                    data-testid="button-copy-template"
+                  >
+                    {copied ? (
+                      <>
+                        <Check className="w-4 h-4 mr-2" />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4 mr-2" />
+                        Copy Template
+                      </>
+                    )}
+                  </Button>
+                </div>
                 <div className="border rounded-lg overflow-hidden bg-background overflow-x-auto">
                   <Table>
                     <TableHeader>
