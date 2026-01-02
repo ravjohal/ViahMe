@@ -61,7 +61,17 @@ function AddressAutocomplete({
       const response = await fetch(`/api/address-autocomplete?q=${encodeURIComponent(query)}`);
       if (response.ok) {
         const data = await response.json();
-        setSuggestions(data.suggestions || []);
+        // Parse Geoapify response format
+        const parsed: AddressSuggestion[] = (data.features || []).map((feature: any) => ({
+          formatted: feature.properties?.formatted || "",
+          street: feature.properties?.street || feature.properties?.address_line1 || "",
+          city: feature.properties?.city || "",
+          state: feature.properties?.state || "",
+          postcode: feature.properties?.postcode || "",
+          country: feature.properties?.country || "",
+          place_id: feature.properties?.place_id || crypto.randomUUID(),
+        }));
+        setSuggestions(parsed);
       }
     } catch (error) {
       console.error("Address autocomplete error:", error);
