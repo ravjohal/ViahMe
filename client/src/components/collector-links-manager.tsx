@@ -24,6 +24,7 @@ import {
   HelpCircle,
   RotateCcw,
   EyeOff,
+  Eye,
   ChevronDown,
   ChevronUp,
   Loader2,
@@ -134,6 +135,19 @@ export function CollectorLinksManager({ weddingId }: CollectorLinksManagerProps)
     },
     onSuccess: () => {
       toast({ title: "Link deactivated", description: "This link can no longer be used to submit guests." });
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", weddingId, "collector-links"] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const reactivateLinkMutation = useMutation({
+    mutationFn: async (linkId: string) => {
+      return apiRequest("POST", `/api/collector-links/${linkId}/reactivate`, {});
+    },
+    onSuccess: () => {
+      toast({ title: "Link reactivated", description: "This link is now active and can accept submissions." });
       queryClient.invalidateQueries({ queryKey: ["/api/weddings", weddingId, "collector-links"] });
     },
     onError: (error: any) => {
@@ -310,7 +324,7 @@ export function CollectorLinksManager({ weddingId }: CollectorLinksManagerProps)
                     </TooltipTrigger>
                     <TooltipContent>Preview link</TooltipContent>
                   </Tooltip>
-                  {link.isActive && (
+                  {link.isActive ? (
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button variant="outline" size="icon" className="min-h-[44px] min-w-[44px]" data-testid={`button-deactivate-${link.id}`}>
@@ -337,6 +351,26 @@ export function CollectorLinksManager({ weddingId }: CollectorLinksManagerProps)
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
+                  ) : (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="outline"
+                          className="min-h-[44px]"
+                          onClick={() => reactivateLinkMutation.mutate(link.id)}
+                          disabled={reactivateLinkMutation.isPending}
+                          data-testid={`button-reactivate-${link.id}`}
+                        >
+                          {reactivateLinkMutation.isPending ? (
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          ) : (
+                            <Eye className="w-4 h-4 mr-2" />
+                          )}
+                          Reactivate
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Make this link active again</TooltipContent>
+                    </Tooltip>
                   )}
                 </div>
               </CardContent>

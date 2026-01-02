@@ -8903,6 +8903,23 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
     }
   });
 
+  app.post("/api/collector-links/:id/reactivate", async (req, res) => {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      const link = await storage.updateGuestCollectorLink(req.params.id, { isActive: true });
+      if (!link) {
+        return res.status(404).json({ error: "Collector link not found" });
+      }
+      res.json(link);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.delete("/api/collector-links/:id", async (req, res) => {
     const userId = req.session?.userId;
     if (!userId) {
