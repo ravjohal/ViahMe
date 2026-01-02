@@ -87,6 +87,11 @@ const parseMembers = (household: any): any[] => {
 
 const guestFormSchema = insertGuestSchema.extend({
   eventIds: z.array(z.string()).optional(),
+  addressStreet: z.string().optional().or(z.literal("")),
+  addressCity: z.string().optional().or(z.literal("")),
+  addressState: z.string().optional().or(z.literal("")),
+  addressPostalCode: z.string().optional().or(z.literal("")),
+  addressCountry: z.string().optional().or(z.literal("")),
 });
 
 type GuestFormData = z.infer<typeof guestFormSchema>;
@@ -392,6 +397,13 @@ export default function Guests() {
       plusOne: false,
       eventIds: [],
       weddingId: wedding?.id || "",
+      householdId: null,
+      isMainHouseholdContact: false,
+      addressStreet: "",
+      addressCity: "",
+      addressState: "",
+      addressPostalCode: "",
+      addressCountry: "",
     },
   });
 
@@ -849,6 +861,13 @@ export default function Guests() {
       plusOne: false,
       eventIds: [],
       weddingId: wedding?.id || "",
+      householdId: null,
+      isMainHouseholdContact: false,
+      addressStreet: "",
+      addressCity: "",
+      addressState: "",
+      addressPostalCode: "",
+      addressCountry: "",
     });
     setSelectedEvents([]);
     setDialogOpen(true);
@@ -865,6 +884,13 @@ export default function Guests() {
       plusOne: guest.plusOne || false,
       eventIds: guest.eventIds || [],
       weddingId: guest.weddingId,
+      householdId: guest.householdId || null,
+      isMainHouseholdContact: guest.isMainHouseholdContact || false,
+      addressStreet: guest.addressStreet || "",
+      addressCity: guest.addressCity || "",
+      addressState: guest.addressState || "",
+      addressPostalCode: guest.addressPostalCode || "",
+      addressCountry: guest.addressCountry || "",
     });
     setSelectedEvents(guest.eventIds || []);
     setDialogOpen(true);
@@ -2448,6 +2474,83 @@ export default function Guests() {
               <Label htmlFor="plusOne" className="cursor-pointer">
                 Bringing a plus one
               </Label>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Household (Optional)</Label>
+              <Select
+                value={form.watch("householdId") || "none"}
+                onValueChange={(value) => {
+                  if (value === "none") {
+                    form.setValue("householdId", null);
+                    form.setValue("isMainHouseholdContact", false);
+                  } else {
+                    form.setValue("householdId", value);
+                  }
+                }}
+              >
+                <SelectTrigger data-testid="select-guest-household">
+                  <SelectValue placeholder="Select household" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No Household</SelectItem>
+                  {households.map((household) => (
+                    <SelectItem key={household.id} value={household.id}>
+                      {household.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {form.watch("householdId") && (
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="isMainHouseholdContact"
+                  checked={form.watch("isMainHouseholdContact") ?? false}
+                  onCheckedChange={(checked) => form.setValue("isMainHouseholdContact", checked as boolean)}
+                  data-testid="checkbox-main-contact"
+                />
+                <Label htmlFor="isMainHouseholdContact" className="cursor-pointer">
+                  Main Point of Contact for Household
+                </Label>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label>Address</Label>
+              <AddressAutocomplete
+                value={[
+                  form.watch("addressStreet"),
+                  form.watch("addressCity"),
+                  form.watch("addressState"),
+                  form.watch("addressPostalCode"),
+                  form.watch("addressCountry")
+                ].filter(Boolean).join(", ")}
+                onChange={(val) => {
+                  if (!val) {
+                    form.setValue("addressStreet", "");
+                    form.setValue("addressCity", "");
+                    form.setValue("addressState", "");
+                    form.setValue("addressPostalCode", "");
+                    form.setValue("addressCountry", "");
+                  }
+                }}
+                onAddressSelect={(parsed: ParsedAddress) => {
+                  form.setValue("addressStreet", parsed.street);
+                  form.setValue("addressCity", parsed.city);
+                  form.setValue("addressState", parsed.state);
+                  form.setValue("addressPostalCode", parsed.postalCode);
+                  form.setValue("addressCountry", parsed.country);
+                }}
+                placeholder="Start typing an address..."
+                testid="input-guest-address"
+              />
+              <input type="hidden" {...form.register("addressStreet")} />
+              <input type="hidden" {...form.register("addressCity")} />
+              <input type="hidden" {...form.register("addressState")} />
+              <input type="hidden" {...form.register("addressPostalCode")} />
+              <input type="hidden" {...form.register("addressCountry")} />
             </div>
 
             {events.length > 0 && (
