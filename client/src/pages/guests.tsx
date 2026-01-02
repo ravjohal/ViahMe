@@ -21,7 +21,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useLocation, Link } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertGuestSchema, insertHouseholdSchema, type Wedding, type Guest, type Event, type Household, type GuestSuggestion, type CutListItem, type EventCostItem, type GuestCollectorSubmission } from "@shared/schema";
+import { insertGuestSchema, insertHouseholdSchema, type Wedding, type Guest, type Event, type Household, type GuestSuggestion, type EventCostItem, type GuestCollectorSubmission } from "@shared/schema";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -101,10 +101,6 @@ const householdFormSchema = insertHouseholdSchema.extend({
 
 type HouseholdFormData = z.infer<typeof householdFormSchema>;
 
-type CutListItemWithHousehold = CutListItem & {
-  household: Household;
-};
-
 type BudgetCapacity = {
   maxGuests: number;
   currentCount: number;
@@ -116,11 +112,9 @@ type BudgetCapacity = {
 type GuestPlanningSnapshot = {
   confirmedHouseholds: Household[];
   pendingSuggestions: Array<GuestSuggestion & { suggestedByName?: string }>;
-  cutList: CutListItemWithHousehold[];
   summary: {
     confirmedSeats: number;
     pendingSeats: number;
-    cutSeats: number;
     totalPotentialSeats: number;
     priorityBreakdown: {
       must_invite: { confirmed: number; pending: number };
@@ -364,11 +358,6 @@ export default function Guests() {
 
   const { data: budgetData } = useQuery<{ settings: any; capacity: BudgetCapacity }>({
     queryKey: ["/api/weddings", wedding?.id, "guest-budget"],
-    enabled: !!wedding?.id,
-  });
-
-  const { data: cutList = [], isLoading: cutListLoading } = useQuery<CutListItemWithHousehold[]>({
-    queryKey: ["/api/weddings", wedding?.id, "cut-list"],
     enabled: !!wedding?.id,
   });
 
@@ -756,22 +745,6 @@ export default function Guests() {
     },
     onError: () => {
       toast({ title: "Error", description: "Failed to update submission", variant: "destructive" });
-    },
-  });
-
-  const restoreFromCutListMutation = useMutation({
-    mutationFn: async (id: string) => {
-      return await apiRequest("POST", `/api/cut-list/${id}/restore`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "cut-list"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/households", wedding?.id] });
-      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-budget"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-planning-snapshot"] });
-      toast({ title: "Restored", description: "Household has been restored to your guest list." });
-    },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to restore household", variant: "destructive" });
     },
   });
 
@@ -2386,42 +2359,6 @@ export default function Guests() {
                         </Card>
                       )}
                     </div>
-
-                    {/* Maybe Later Section - Parked Guests */}
-                    {cutList.length > 0 && (
-                      <Card className="border-amber-200 bg-amber-50/30 dark:bg-amber-950/10">
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-base flex items-center gap-2">
-                            <Scissors className="h-4 w-4 text-amber-600" />
-                            Maybe Later
-                            <Badge variant="secondary" className="ml-auto">{cutList.length} parked</Badge>
-                          </CardTitle>
-                          <CardDescription>
-                            These guests won't receive invitations - restore them anytime
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-2">
-                          {cutList.map(item => (
-                            <div key={item.id} className="flex items-center justify-between p-3 bg-background rounded-lg border" data-testid={`card-cut-${item.id}`}>
-                              <div>
-                                <p className="font-medium">{item.household?.name || "Unknown"}</p>
-                                <p className="text-xs text-muted-foreground">{item.household?.maxCount || 0} guests</p>
-                              </div>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => restoreFromCutListMutation.mutate(item.id)}
-                                disabled={restoreFromCutListMutation.isPending}
-                                data-testid={`button-restore-${item.id}`}
-                              >
-                                <RotateCcw className="h-4 w-4 mr-1" />
-                                Restore
-                              </Button>
-                            </div>
-                          ))}
-                        </CardContent>
-                      </Card>
-                    )}
 
                     {/* Action Button */}
                     <div className="flex justify-end">

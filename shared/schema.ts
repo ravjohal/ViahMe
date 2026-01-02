@@ -2622,33 +2622,6 @@ export const insertGuestBudgetSettingsSchema = createInsertSchema(guestBudgetSet
 export type InsertGuestBudgetSettings = z.infer<typeof insertGuestBudgetSettingsSchema>;
 export type GuestBudgetSettings = typeof guestBudgetSettings.$inferSelect;
 
-// Cut List - Track households that were removed from guest list
-export const cutListItems = pgTable("cut_list_items", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  weddingId: varchar("wedding_id").notNull(),
-  householdId: varchar("household_id").notNull(),
-  cutReason: text("cut_reason"), // "budget", "space", "priority", "other"
-  cutNotes: text("cut_notes"),
-  cutBy: varchar("cut_by").notNull(), // User who cut
-  cutAt: timestamp("cut_at").notNull().defaultNow(),
-  canRestore: boolean("can_restore").notNull().default(true),
-  restoredAt: timestamp("restored_at"),
-  restoredBy: varchar("restored_by"),
-});
-
-export const insertCutListItemSchema = createInsertSchema(cutListItems).omit({
-  id: true,
-  cutAt: true,
-  restoredAt: true,
-  restoredBy: true,
-}).extend({
-  cutReason: z.enum(["budget", "space", "priority", "other"]).optional(),
-  cutNotes: z.string().optional().nullable(),
-});
-
-export type InsertCutListItem = z.infer<typeof insertCutListItemSchema>;
-export type CutListItem = typeof cutListItems.$inferSelect;
-
 // Extended types for guest management
 export type GuestSuggestionWithSource = GuestSuggestion & {
   source?: GuestSource;
@@ -2664,10 +2637,6 @@ export type HouseholdWithPriority = Household & {
   priorityTier?: string;
   sourceId?: string;
   source?: GuestSource;
-};
-
-export type CutListItemWithHousehold = CutListItem & {
-  household: Household;
 };
 
 // ============================================================================

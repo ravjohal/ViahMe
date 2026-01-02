@@ -25,7 +25,6 @@ import type {
   GuestSource,
   GuestSuggestion,
   GuestListScenario,
-  CutListItem,
   Household,
 } from "@shared/schema";
 import {
@@ -78,10 +77,6 @@ type ScenarioWithStats = GuestListScenario & {
   householdCount: number;
   guestCount: number;
   remainingBudget?: number;
-};
-
-type CutListItemWithHousehold = CutListItem & {
-  household: Household;
 };
 
 type BudgetCapacity = {
@@ -183,11 +178,6 @@ export default function GuestManagement() {
 
   const { data: budgetData } = useQuery<{ settings: any; capacity: BudgetCapacity }>({
     queryKey: ["/api/weddings", wedding?.id, "guest-budget"],
-    enabled: !!wedding?.id,
-  });
-
-  const { data: cutList = [], isLoading: cutListLoading } = useQuery<CutListItemWithHousehold[]>({
-    queryKey: ["/api/weddings", wedding?.id, "cut-list"],
     enabled: !!wedding?.id,
   });
 
@@ -360,48 +350,6 @@ export default function GuestManagement() {
     },
   });
 
-  const restoreFromCutListMutation = useMutation({
-    mutationFn: async (id: string) => {
-      return await apiRequest("POST", `/api/cut-list/${id}/restore`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "cut-list"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/households", wedding?.id] });
-      toast({ title: "Restored", description: "Household has been restored to the guest list." });
-    },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to restore household", variant: "destructive" });
-    },
-  });
-
-  const permanentDeleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      return await apiRequest("DELETE", `/api/cut-list/${id}/permanent`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "cut-list"] });
-      toast({ title: "Deleted", description: "Household has been permanently deleted." });
-    },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to delete household", variant: "destructive" });
-    },
-  });
-
-  const bulkCutMutation = useMutation({
-    mutationFn: async ({ priorityTier, reason }: { priorityTier: string; reason?: string }) => {
-      return await apiRequest("POST", `/api/weddings/${wedding?.id}/cut-list/bulk-by-priority`, { priorityTier, reason });
-    },
-    onSuccess: (data: any) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "cut-list"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/households", wedding?.id] });
-      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-budget"] });
-      toast({ title: "Bulk cut complete", description: `${data.count} households moved to cut list.` });
-    },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to perform bulk cut", variant: "destructive" });
-    },
-  });
-
   const updateBudgetMutation = useMutation({
     mutationFn: async (data: { maxGuestBudget: string; defaultCostPerHead: string }) => {
       return await apiRequest("POST", `/api/weddings/${wedding?.id}/guest-budget`, data);
@@ -497,7 +445,7 @@ export default function GuestManagement() {
       icon: CheckSquare,
       isComplete: finalizeProgress === 100,
       progress: finalizeProgress,
-      count: cutList.length,
+      count: 0,
       tab: "budget",
       checklist: finalizeChecklist,
     },
@@ -1083,77 +1031,6 @@ export default function GuestManagement() {
           </div>
           </div>
 
-          <Separator />
-
-          {/* Maybe Later Section (formerly Cut List) */}
-          <div className="space-y-3 sm:space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
-              <div className="min-w-0">
-                <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2 flex-wrap">
-                  <Scissors className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0" />
-                  <span>Maybe Later</span>
-                  {cutList.length > 0 && (
-                    <Badge variant="secondary" className="text-xs">{cutList.length} parked</Badge>
-                  )}
-                </h2>
-                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Guests you might not invite - restore them anytime</p>
-              </div>
-            </div>
-
-            {cutListLoading ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map(i => <Skeleton key={i} className="h-24 w-full" />)}
-              </div>
-            ) : cutList.length === 0 ? (
-              <Card className="border-dashed">
-                <CardContent className="p-6 text-center">
-                  <Scissors className="h-10 w-10 mx-auto text-muted-foreground mb-3 opacity-50" />
-                  <p className="font-medium mb-1">No guests parked yet</p>
-                  <p className="text-sm text-muted-foreground">
-                    When you need to trim your list, move guests here instead of deleting them.
-                    You can always restore them later.
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-3">
-                {cutList.map(item => (
-                  <Card key={item.id} data-testid={`card-cut-${item.id}`}>
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between gap-4">
-                        <div>
-                          <p className="font-medium">{item.household?.name || "Unknown"}</p>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <span>{item.household?.maxCount || 0} guests</span>
-                            {item.cutReason && (
-                              <>
-                                <span>•</span>
-                                <Badge variant="outline" className="text-xs">
-                                  {item.cutReason === "budget" ? "Budget" : 
-                                   item.cutReason === "space" ? "Space" : 
-                                   item.cutReason === "priority" ? "Priority" : "Other"}
-                                </Badge>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => restoreFromCutListMutation.mutate(item.id)}
-                          disabled={restoreFromCutListMutation.isPending}
-                          data-testid={`button-restore-${item.id}`}
-                        >
-                          <RotateCcw className="h-4 w-4 mr-1" />
-                          Restore
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
         </TabsContent>
 
         <TabsContent value="priority" className="space-y-4 sm:space-y-6">

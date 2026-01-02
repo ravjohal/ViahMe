@@ -28,10 +28,10 @@ Key architectural decisions and features include:
   - **WhatsApp Template Blast**: Send personalized RSVP reminders via WhatsApp with {name} placeholder for household names
 - **Integrated Guest Management Module**: Two-tier tabbed UI structure with "Guest List" and "Guest Planning" tabs:
   - **Guest List Tab**: Individual Guests, Households, and Allocation View for managing the final guest list
-  - **Guest Planning Tab**: Intuitive 3-phase planning workflow:
+  - **Guest Planning Tab**: Intuitive planning workflow:
     - **Phase 1 - Review**: Team member suggestions queue - review and approve/decline suggestions from family members with `guest_suggestions` permission
     - **Phase 2 - Assess Impact**: Comprehensive "whole picture" view combining confirmed guests + pending suggestions, with per-event cost breakdowns, capacity analysis, and priority tier summaries
-    - **Phase 3 - Decide & Cut**: Make final decisions based on budget/capacity constraints, manage the "Maybe Later" cut list
+    - **Phase 3 - Finalize**: Make final decisions based on budget/capacity constraints
   - **Per-Event Cost & Capacity Tracking**: Events table includes costPerHead and venueCapacity fields for precise budgeting
   - **Planning Snapshot API**: `/api/weddings/:id/guest-planning-snapshot` endpoint aggregates all planning data server-side for accurate analysis
   - Note: "Source" concept removed - suggestions now come directly from team members via the permission-based collaboration system

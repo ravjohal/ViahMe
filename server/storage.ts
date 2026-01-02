@@ -112,11 +112,8 @@ import {
   type InsertScenarioHousehold,
   type GuestBudgetSettings,
   type InsertGuestBudgetSettings,
-  type CutListItem,
-  type InsertCutListItem,
   type GuestSuggestionWithSource,
   type ScenarioWithStats,
-  type CutListItemWithHousehold,
   type VendorEventTag,
   type InsertVendorEventTag,
   type TimelineChange,
@@ -754,14 +751,6 @@ export interface IStorage {
   createOrUpdateGuestBudgetSettings(settings: InsertGuestBudgetSettings): Promise<GuestBudgetSettings>;
   calculateBudgetCapacity(weddingId: string): Promise<{ maxGuests: number; currentCount: number; costPerHead: number; totalBudget: number; remainingBudget: number }>;
 
-  // Cut List (track removed guests)
-  getCutListItem(id: string): Promise<CutListItem | undefined>;
-  getCutListByWedding(weddingId: string): Promise<CutListItemWithHousehold[]>;
-  addToCutList(item: InsertCutListItem): Promise<CutListItem>;
-  restoreFromCutList(id: string, userId: string): Promise<Household>;
-  permanentlyDeleteFromCutList(id: string): Promise<boolean>;
-  bulkCutByPriority(weddingId: string, priorityTier: string, userId: string, reason?: string): Promise<number>;
-
   // Guest Planning Snapshot (comprehensive view for planning)
   getGuestPlanningSnapshot(weddingId: string): Promise<GuestPlanningSnapshot>;
 
@@ -958,13 +947,11 @@ export interface GuestPlanningSnapshot {
   // Combined guest pool (confirmed + pending suggestions)
   confirmedHouseholds: Household[];
   pendingSuggestions: GuestSuggestionWithSource[];
-  cutList: CutListItemWithHousehold[];
   
   // Summary counts
   summary: {
     confirmedSeats: number;
     pendingSeats: number;
-    cutSeats: number;
     totalPotentialSeats: number; // confirmed + pending
     priorityBreakdown: {
       must_invite: { confirmed: number; pending: number };
@@ -3756,26 +3743,6 @@ export class MemStorage implements IStorage {
   }
   async calculateBudgetCapacity(weddingId: string): Promise<{ maxGuests: number; currentCount: number; costPerHead: number; totalBudget: number; remainingBudget: number }> {
     return { maxGuests: 0, currentCount: 0, costPerHead: 150, totalBudget: 0, remainingBudget: 0 };
-  }
-
-  // Cut List - MemStorage stubs
-  async getCutListItem(id: string): Promise<CutListItem | undefined> {
-    return undefined;
-  }
-  async getCutListByWedding(weddingId: string): Promise<CutListItemWithHousehold[]> {
-    return [];
-  }
-  async addToCutList(item: InsertCutListItem): Promise<CutListItem> {
-    throw new Error("MemStorage does not support Cut List. Use DBStorage.");
-  }
-  async restoreFromCutList(id: string, userId: string): Promise<Household> {
-    throw new Error("MemStorage does not support Cut List. Use DBStorage.");
-  }
-  async permanentlyDeleteFromCutList(id: string): Promise<boolean> {
-    return false;
-  }
-  async bulkCutByPriority(weddingId: string, priorityTier: string, userId: string, reason?: string): Promise<number> {
-    return 0;
   }
 
   async getGuestPlanningSnapshot(weddingId: string): Promise<GuestPlanningSnapshot> {
@@ -7815,29 +7782,10 @@ export class DBStorage implements IStorage {
     // Get all wedding households
     const allHouseholds = await this.getHouseholdsByWedding(scenario.weddingId);
 
-    // Cut households not in scenario, restore those that are
+    // Delete households not in scenario
     for (const household of allHouseholds) {
       if (!includedIds.has(household.id)) {
-        // Add to cut list if not already there
-        const existingCut = await this.db
-          .select()
-          .from(schema.cutListItems)
-          .where(and(
-            eq(schema.cutListItems.householdId, household.id),
-            sql`${schema.cutListItems.restoredAt} IS NULL`
-          ))
-          .limit(1);
-        
-        if (existingCut.length === 0) {
-          await this.addToCutList({
-            weddingId: scenario.weddingId,
-            householdId: household.id,
-            cutReason: "priority",
-            cutNotes: `Cut when promoting scenario "${scenario.name}"`,
-            cutBy: scenario.createdBy,
-            canRestore: true,
-          });
-        }
+        await this.deleteHousehold(household.id);
       }
     }
 
@@ -7920,21 +7868,9 @@ export class DBStorage implements IStorage {
 
   async copyAllHouseholdsToScenario(scenarioId: string, weddingId: string): Promise<number> {
     const households = await this.getHouseholdsByWedding(weddingId);
-    
-    // Get households that are not in cut list
-    const cutItems = await this.db
-      .select()
-      .from(schema.cutListItems)
-      .where(and(
-        eq(schema.cutListItems.weddingId, weddingId),
-        sql`${schema.cutListItems.restoredAt} IS NULL`
-      ));
-    
-    const cutHouseholdIds = new Set(cutItems.map(c => c.householdId));
-    const activeHouseholds = households.filter(h => !cutHouseholdIds.has(h.id));
 
     let count = 0;
-    for (const household of activeHouseholds) {
+    for (const household of households) {
       await this.addHouseholdToScenario(scenarioId, household.id);
       count++;
     }
@@ -7978,19 +7914,9 @@ export class DBStorage implements IStorage {
     const costPerHead = settings?.defaultCostPerHead ? parseFloat(settings.defaultCostPerHead) : 150; // Default $150/head
     const totalBudget = settings?.maxGuestBudget ? parseFloat(settings.maxGuestBudget) : 0;
     
-    // Get current household count (excluding cut list)
+    // Get current household count
     const households = await this.getHouseholdsByWedding(weddingId);
-    const cutItems = await this.db
-      .select()
-      .from(schema.cutListItems)
-      .where(and(
-        eq(schema.cutListItems.weddingId, weddingId),
-        sql`${schema.cutListItems.restoredAt} IS NULL`
-      ));
-    
-    const cutHouseholdIds = new Set(cutItems.map(c => c.householdId));
-    const activeHouseholds = households.filter(h => !cutHouseholdIds.has(h.id));
-    const currentCount = activeHouseholds.reduce((sum, h) => sum + h.maxCount, 0);
+    const currentCount = households.reduce((sum, h) => sum + h.maxCount, 0);
     
     const maxGuests = totalBudget > 0 && costPerHead > 0 ? Math.floor(totalBudget / costPerHead) : 0;
     const remainingBudget = totalBudget - (currentCount * costPerHead);
@@ -8005,125 +7931,12 @@ export class DBStorage implements IStorage {
   }
 
   // ============================================================================
-  // Cut List
-  // ============================================================================
-
-  async getCutListItem(id: string): Promise<CutListItem | undefined> {
-    const result = await this.db
-      .select()
-      .from(schema.cutListItems)
-      .where(eq(schema.cutListItems.id, id))
-      .limit(1);
-    return result[0];
-  }
-
-  async getCutListByWedding(weddingId: string): Promise<CutListItemWithHousehold[]> {
-    const cutItems = await this.db
-      .select()
-      .from(schema.cutListItems)
-      .where(and(
-        eq(schema.cutListItems.weddingId, weddingId),
-        sql`${schema.cutListItems.restoredAt} IS NULL`
-      ))
-      .orderBy(sql`${schema.cutListItems.cutAt} DESC`);
-
-    const result: CutListItemWithHousehold[] = [];
-    for (const item of cutItems) {
-      const household = await this.getHousehold(item.householdId);
-      if (household) {
-        result.push({ ...item, household });
-      }
-    }
-    return result;
-  }
-
-  async addToCutList(item: InsertCutListItem): Promise<CutListItem> {
-    const result = await this.db
-      .insert(schema.cutListItems)
-      .values(item)
-      .returning();
-    return result[0];
-  }
-
-  async restoreFromCutList(id: string, userId: string): Promise<Household> {
-    const cutItem = await this.getCutListItem(id);
-    if (!cutItem) throw new Error("Cut list item not found");
-
-    // Mark as restored
-    await this.db
-      .update(schema.cutListItems)
-      .set({
-        restoredAt: new Date(),
-        restoredBy: userId,
-      })
-      .where(eq(schema.cutListItems.id, id));
-
-    const household = await this.getHousehold(cutItem.householdId);
-    if (!household) throw new Error("Household not found");
-    return household;
-  }
-
-  async permanentlyDeleteFromCutList(id: string): Promise<boolean> {
-    const cutItem = await this.getCutListItem(id);
-    if (!cutItem) return false;
-
-    // Delete the household
-    await this.deleteHousehold(cutItem.householdId);
-
-    // Delete the cut list item
-    const result = await this.db
-      .delete(schema.cutListItems)
-      .where(eq(schema.cutListItems.id, id))
-      .returning();
-    return result.length > 0;
-  }
-
-  async bulkCutByPriority(weddingId: string, priorityTier: string, userId: string, reason?: string): Promise<number> {
-    const households = await this.db
-      .select()
-      .from(schema.households)
-      .where(and(
-        eq(schema.households.weddingId, weddingId),
-        eq(schema.households.priorityTier, priorityTier)
-      ));
-
-    // Get already cut households
-    const cutItems = await this.db
-      .select()
-      .from(schema.cutListItems)
-      .where(and(
-        eq(schema.cutListItems.weddingId, weddingId),
-        sql`${schema.cutListItems.restoredAt} IS NULL`
-      ));
-    const alreadyCut = new Set(cutItems.map(c => c.householdId));
-
-    let count = 0;
-    for (const household of households) {
-      if (!alreadyCut.has(household.id)) {
-        await this.addToCutList({
-          weddingId,
-          householdId: household.id,
-          cutReason: reason as any || "priority",
-          cutNotes: `Bulk cut: ${priorityTier} tier`,
-          cutBy: userId,
-          canRestore: true,
-        });
-        count++;
-      }
-    }
-    return count;
-  }
-
-  // ============================================================================
   // Guest Planning Snapshot - Comprehensive view for planning workflow
   // ============================================================================
 
   async getGuestPlanningSnapshot(weddingId: string): Promise<GuestPlanningSnapshot> {
-    // Get all confirmed households (excluding cut ones)
-    const allHouseholds = await this.getHouseholdsByWedding(weddingId);
-    const cutList = await this.getCutListByWedding(weddingId);
-    const cutHouseholdIds = new Set(cutList.map(c => c.householdId));
-    const confirmedHouseholds = allHouseholds.filter(h => !cutHouseholdIds.has(h.id));
+    // Get all confirmed households
+    const confirmedHouseholds = await this.getHouseholdsByWedding(weddingId);
 
     // Get pending suggestions
     const pendingSuggestions = await this.getGuestSuggestionsByWedding(weddingId, 'pending');
@@ -8155,7 +7968,6 @@ export class DBStorage implements IStorage {
     // Calculate confirmed and pending seat counts
     const confirmedSeats = confirmedHouseholds.reduce((sum, h) => sum + h.maxCount, 0);
     const pendingSeats = pendingSuggestions.reduce((sum, s) => sum + s.maxCount, 0);
-    const cutSeats = cutList.reduce((sum, c) => sum + c.household.maxCount, 0);
 
     // Priority breakdown
     const priorityBreakdown = {
@@ -8299,11 +8111,9 @@ export class DBStorage implements IStorage {
     return {
       confirmedHouseholds,
       pendingSuggestions,
-      cutList,
       summary: {
         confirmedSeats,
         pendingSeats,
-        cutSeats,
         totalPotentialSeats: confirmedSeats + pendingSeats,
         priorityBreakdown,
       },

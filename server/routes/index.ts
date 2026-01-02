@@ -47,7 +47,7 @@ import { createRitualStagesRouter, createRitualStageUpdatesRouter, createGuestNo
 import { createRolesRouter, createCollaboratorsRouter, createCollaboratorInvitesRouter, createCollaboratorActivityRouter, createPermissionsRouter, createMyCollaborationsRouter } from "./collaborators";
 import { createGuestSourcesRouter } from "./guest-sources";
 import { createGuestSuggestionsRouter } from "./guest-suggestions";
-import { createGuestSideRouter, createGuestConsensusRouter, createScenariosRouter, createGuestBudgetRouter, createCutListRouter, createHouseholdPriorityRouter } from "./guest-planning";
+import { createGuestSideRouter, createGuestConsensusRouter, createScenariosRouter, createGuestBudgetRouter, createHouseholdPriorityRouter } from "./guest-planning";
 import { createTimelineRouter, createEventTimeRouter, createTimelineChangesRouter, createVendorAcknowledgmentsRouter } from "./timeline";
 import { seedVendors, seedBudgetBenchmarks } from "../seed-data";
 
@@ -366,8 +366,6 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   app.use("/api/scenarios", createScenariosRouter(storage));
   app.use("/api", createScenariosRouter(storage));
   app.use("/api/weddings", createGuestBudgetRouter(storage));
-  app.use("/api/cut-list", createCutListRouter(storage));
-  app.use("/api", createCutListRouter(storage));
   app.use("/api/households", createHouseholdPriorityRouter(storage));
 
   // Timeline routes
