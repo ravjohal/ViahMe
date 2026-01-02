@@ -1417,7 +1417,7 @@ export default function Guests() {
                             )}
                           </div>
 
-                          {/* Head of House / Main Contact */}
+                          {/* Main Point of Contact */}
                           {(household.contactEmail || household.contactPhone || householdGuests.length > 0) && (
                             <div className="text-sm border rounded-md p-2 bg-muted/30">
                               <div className="flex items-center gap-2 mb-1">
@@ -1425,7 +1425,7 @@ export default function Guests() {
                                 <span className="font-medium">
                                   {householdGuests[household.headOfHouseIndex || 0]?.name || household.name}
                                 </span>
-                                <Badge variant="outline" className="text-xs">Head of House</Badge>
+                                <Badge variant="outline" className="text-xs">Main Contact</Badge>
                               </div>
                               <div className="flex flex-wrap gap-2 mt-2">
                                 {household.contactEmail && (
@@ -1476,7 +1476,7 @@ export default function Guests() {
                                   <li key={guest.id} className="flex items-center gap-1">
                                     {guest.name}
                                     {idx === (household.headOfHouseIndex || 0) && (
-                                      <span className="text-xs text-primary">(HoH)</span>
+                                      <span className="text-xs text-primary">(Contact)</span>
                                     )}
                                   </li>
                                 ))}
