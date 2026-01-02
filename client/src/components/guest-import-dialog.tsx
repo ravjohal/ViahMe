@@ -5,7 +5,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, X, Copy, Check } from "lucide-react";
+import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, X, Copy, Check, ClipboardPaste } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
@@ -61,6 +63,95 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
   const [importing, setImporting] = useState(false);
   const [step, setStep] = useState<'upload' | 'mapping' | 'preview'>('upload');
   const [copied, setCopied] = useState(false);
+  const [pastedData, setPastedData] = useState("");
+  const [importMethod, setImportMethod] = useState<'file' | 'paste'>('file');
+
+  const handlePastedData = (text: string) => {
+    setPastedData(text);
+    if (!text.trim()) return;
+
+    try {
+      // Parse TSV/CSV data - Google Sheets copies as TSV
+      const lines = text.trim().split('\n');
+      if (lines.length < 2) {
+        setErrors([{ row: 0, field: 'paste', message: 'Please include a header row and at least one data row' }]);
+        return;
+      }
+
+      // Detect delimiter (tab for Google Sheets, comma for CSV)
+      const firstLine = lines[0];
+      const delimiter = firstLine.includes('\t') ? '\t' : ',';
+
+      const parsedRows = lines.map(line => {
+        // Handle quoted values with commas
+        if (delimiter === ',') {
+          const result: string[] = [];
+          let current = '';
+          let inQuotes = false;
+          for (const char of line) {
+            if (char === '"') {
+              inQuotes = !inQuotes;
+            } else if (char === ',' && !inQuotes) {
+              result.push(current.trim());
+              current = '';
+            } else {
+              current += char;
+            }
+          }
+          result.push(current.trim());
+          return result;
+        }
+        return line.split(delimiter).map(cell => cell.trim());
+      });
+
+      const headerRow = parsedRows[0];
+      const dataRows = parsedRows.slice(1).filter(row => row.some(cell => cell)); // Filter empty rows
+
+      if (dataRows.length === 0) {
+        setErrors([{ row: 0, field: 'paste', message: 'No data rows found after header' }]);
+        return;
+      }
+
+      // Convert to object format like file upload
+      const jsonData = dataRows.map(row => {
+        const obj: Record<string, string> = {};
+        headerRow.forEach((header, index) => {
+          obj[header] = row[index] || '';
+        });
+        return obj;
+      });
+
+      setHeaders(headerRow);
+      setRawData(jsonData);
+      setColumnMapping(autoMapColumns(headerRow));
+      setErrors([]);
+      setStep('mapping');
+    } catch (error) {
+      console.error("Error parsing pasted data:", error);
+      setErrors([{ row: 0, field: 'paste', message: 'Failed to parse pasted data. Make sure you copied the data correctly.' }]);
+    }
+  };
+
+  const handlePasteFromClipboard = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) {
+        handlePastedData(text);
+      } else {
+        toast({
+          title: "Clipboard empty",
+          description: "Copy your data from Google Sheets first, then click Paste",
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      toast({
+        title: "Paste failed",
+        description: "Please use the text area below to paste your data",
+        variant: "destructive",
+      });
+    }
+  };
 
   const copyTemplateToClipboard = async () => {
     const templateData = [
@@ -256,6 +347,8 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
     setSelectedEventIds([]);
     setErrors([]);
     setStep('upload');
+    setPastedData("");
+    setImportMethod('file');
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -307,43 +400,97 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
 
         {step === 'upload' && (
           <div className="space-y-4">
-            <div
-              onDragOver={handleDragOver}
-              onDrop={handleDrop}
-              className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-12 text-center hover-elevate cursor-pointer"
-              onClick={() => document.getElementById('file-upload')?.click()}
-              data-testid="dropzone-upload"
-            >
-              <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="font-semibold mb-2">Drop your file here</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                or click to browse for CSV, Excel (.xlsx, .xls), or Google Sheets exports
-              </p>
-              <p className="text-xs text-muted-foreground">
-                For Google Sheets: File → Download → Microsoft Excel (.xlsx)
-              </p>
-              <input
-                id="file-upload"
-                type="file"
-                accept=".csv,.xlsx,.xls"
-                className="hidden"
-                onChange={(e) => {
-                  const uploadedFile = e.target.files?.[0];
-                  if (uploadedFile) handleFileUpload(uploadedFile);
-                }}
-                data-testid="input-file-upload"
-              />
-            </div>
+            <Tabs value={importMethod} onValueChange={(v) => setImportMethod(v as 'file' | 'paste')}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="file" data-testid="tab-file-upload">
+                  <Upload className="w-4 h-4 mr-2" />
+                  Upload File
+                </TabsTrigger>
+                <TabsTrigger value="paste" data-testid="tab-paste">
+                  <ClipboardPaste className="w-4 h-4 mr-2" />
+                  Paste from Sheets
+                </TabsTrigger>
+              </TabsList>
 
-            {file && (
-              <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
-                <FileSpreadsheet className="w-5 h-5 text-primary" />
-                <span className="flex-1 font-medium">{file.name}</span>
-                <span className="text-sm text-muted-foreground">
-                  {(file.size / 1024).toFixed(1)} KB
-                </span>
-              </div>
-            )}
+              <TabsContent value="file" className="space-y-4">
+                <div
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                  className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-12 text-center hover-elevate cursor-pointer"
+                  onClick={() => document.getElementById('file-upload')?.click()}
+                  data-testid="dropzone-upload"
+                >
+                  <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                  <h3 className="font-semibold mb-2">Drop your file here</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    or click to browse for CSV or Excel (.xlsx, .xls) files
+                  </p>
+                  <input
+                    id="file-upload"
+                    type="file"
+                    accept=".csv,.xlsx,.xls"
+                    className="hidden"
+                    onChange={(e) => {
+                      const uploadedFile = e.target.files?.[0];
+                      if (uploadedFile) handleFileUpload(uploadedFile);
+                    }}
+                    data-testid="input-file-upload"
+                  />
+                </div>
+
+                {file && (
+                  <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                    <FileSpreadsheet className="w-5 h-5 text-primary" />
+                    <span className="flex-1 font-medium">{file.name}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {(file.size / 1024).toFixed(1)} KB
+                    </span>
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="paste" className="space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      onClick={handlePasteFromClipboard}
+                      variant="outline"
+                      className="flex-1"
+                      data-testid="button-paste-clipboard"
+                    >
+                      <ClipboardPaste className="w-4 h-4 mr-2" />
+                      Paste from Clipboard
+                    </Button>
+                  </div>
+                  <div className="text-center text-sm text-muted-foreground">or paste directly below</div>
+                  <Textarea
+                    placeholder="Select your data in Google Sheets (including headers), copy it (Ctrl+C / Cmd+C), then paste here (Ctrl+V / Cmd+V)"
+                    value={pastedData}
+                    onChange={(e) => setPastedData(e.target.value)}
+                    className="min-h-[150px] font-mono text-sm"
+                    data-testid="textarea-paste-data"
+                  />
+                  {pastedData && (
+                    <Button
+                      onClick={() => handlePastedData(pastedData)}
+                      className="w-full"
+                      data-testid="button-process-paste"
+                    >
+                      Process Pasted Data
+                    </Button>
+                  )}
+                </div>
+                <div className="bg-muted/50 p-3 rounded-lg">
+                  <h4 className="font-semibold text-sm mb-2">How to copy from Google Sheets:</h4>
+                  <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+                    <li>Open your Google Sheet with guest data</li>
+                    <li>Select all cells including the header row</li>
+                    <li>Copy (Ctrl+C on Windows, Cmd+C on Mac)</li>
+                    <li>Click "Paste from Clipboard" above or paste in the text area</li>
+                  </ol>
+                </div>
+              </TabsContent>
+            </Tabs>
 
             <div className="bg-muted/50 p-4 rounded-lg space-y-4">
               <div className="space-y-2">
