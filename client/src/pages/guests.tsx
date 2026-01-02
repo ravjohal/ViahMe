@@ -271,7 +271,7 @@ export default function Guests() {
   // Top-level tab state
   const [mainTab, setMainTab] = useState("guest-planning");
   const [planningTab, setPlanningTab] = useState("add");
-  const [submissionFilter, setSubmissionFilter] = useState<"all" | "pending" | "approved" | "maybe" | "declined">("all");
+  const [submissionFilter, setSubmissionFilter] = useState<"all" | "pending" | "approved" | "maybe" | "declined">("pending");
   
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
@@ -2063,9 +2063,18 @@ export default function Guests() {
                           <>
                             <CheckCircle2 className="h-12 w-12 mx-auto text-green-500 mb-3" />
                             <p className="font-medium mb-1">No Pending Family Submissions</p>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-sm text-muted-foreground mb-4">
                               When family members add guests via collector links, they'll appear here for your review.
                             </p>
+                            <Button 
+                              onClick={() => setMainTab("guest-list")}
+                              className="gap-2"
+                              data-testid="button-view-guest-list"
+                            >
+                              <Users className="h-4 w-4" />
+                              View Guest List
+                              <ArrowRight className="h-4 w-4" />
+                            </Button>
                           </>
                         ) : (
                           <>
