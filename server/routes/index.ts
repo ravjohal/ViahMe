@@ -45,6 +45,9 @@ import { createMeasurementProfilesRouter, createShoppingItemsRouter } from "./sh
 import { createGapWindowsRouter, createGapRecommendationsRouter } from "./gap-concierge";
 import { createRitualStagesRouter, createRitualStageUpdatesRouter, createGuestNotificationsRouter, createLiveWeddingRouter, createPublicLiveRouter } from "./live-wedding";
 import { createRolesRouter, createCollaboratorsRouter, createCollaboratorInvitesRouter, createCollaboratorActivityRouter, createPermissionsRouter, createMyCollaborationsRouter } from "./collaborators";
+import { createGuestSourcesRouter } from "./guest-sources";
+import { createGuestSuggestionsRouter } from "./guest-suggestions";
+import { createGuestSideRouter, createGuestConsensusRouter, createScenariosRouter, createGuestBudgetRouter, createCutListRouter, createHouseholdPriorityRouter } from "./guest-planning";
 import { seedVendors, seedBudgetBenchmarks } from "../seed-data";
 
 let defaultStorageSeeded = false;
@@ -347,6 +350,24 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   app.use("/api/weddings", createCollaboratorActivityRouter(storage));
   app.use("/api", createPermissionsRouter(storage));
   app.use("/api/my-collaborations", createMyCollaborationsRouter(storage));
+
+  // Guest sources
+  app.use("/api/guest-sources", createGuestSourcesRouter(storage));
+  app.use("/api", createGuestSourcesRouter(storage));
+
+  // Guest suggestions
+  app.use("/api/guest-suggestions", createGuestSuggestionsRouter(storage));
+  app.use("/api", createGuestSuggestionsRouter(storage));
+
+  // Guest planning
+  app.use("/api/weddings", createGuestSideRouter(storage));
+  app.use("/api/guests", createGuestConsensusRouter(storage));
+  app.use("/api/scenarios", createScenariosRouter(storage));
+  app.use("/api", createScenariosRouter(storage));
+  app.use("/api/weddings", createGuestBudgetRouter(storage));
+  app.use("/api/cut-list", createCutListRouter(storage));
+  app.use("/api", createCutListRouter(storage));
+  app.use("/api/households", createHouseholdPriorityRouter(storage));
 
   const { registerLegacyRoutes } = await import("../routes-legacy");
   await registerLegacyRoutes(app, storage, { activeViewers, getViewerCount, cleanupStaleViewers });
