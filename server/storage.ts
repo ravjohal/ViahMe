@@ -9325,10 +9325,12 @@ export class DBStorage implements IStorage {
   }
 
   async markCollectorSubmissionMaybe(id: string, reviewerId: string): Promise<GuestCollectorSubmission> {
+    console.log("[DBStorage.markCollectorSubmissionMaybe] Called with id:", id, "reviewerId:", reviewerId);
     const result = await this.db.update(schema.guestCollectorSubmissions)
       .set({ status: 'maybe', reviewedById: reviewerId, reviewedAt: new Date() })
       .where(eq(schema.guestCollectorSubmissions.id, id))
       .returning();
+    console.log("[DBStorage.markCollectorSubmissionMaybe] Result:", result);
     return normalizeSubmission(result[0]);
   }
 
