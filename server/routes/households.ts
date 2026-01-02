@@ -127,6 +127,30 @@ export async function registerHouseholdRoutes(router: Router, storage: IStorage)
     }
   });
 
+  // Merge duplicate households
+  router.post("/merge", async (req, res) => {
+    try {
+      const { survivorId, mergedId, decision } = req.body;
+      
+      if (!survivorId || !mergedId) {
+        return res.status(400).json({ error: "Both survivorId and mergedId are required" });
+      }
+      
+      if (!['kept_older', 'kept_newer'].includes(decision)) {
+        return res.status(400).json({ error: "Decision must be 'kept_older' or 'kept_newer'" });
+      }
+
+      // Get user from session for audit logging
+      const userId = (req as any).user?.id || 'system';
+      
+      const audit = await storage.mergeHouseholds(survivorId, mergedId, decision, userId);
+      res.json({ success: true, audit });
+    } catch (error) {
+      console.error("Error merging households:", error);
+      res.status(500).json({ error: error instanceof Error ? error.message : "Failed to merge households" });
+    }
+  });
+
   router.post("/send-invitations", async (req, res) => {
     try {
       const { householdIds, weddingId, eventIds, personalMessage } = req.body;
