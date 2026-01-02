@@ -31,8 +31,12 @@ import {
   Trash2,
   Upload,
   Users,
+  User,
   Link as LinkIcon,
   MailCheck,
+  Mail,
+  MessageCircle,
+  Phone,
   Copy,
   Send,
   BarChart3,
@@ -1467,12 +1471,68 @@ export default function Guests() {
                             )}
                           </div>
 
+                          {/* Head of House / Main Contact */}
+                          {(household.contactEmail || household.contactPhone || householdGuests.length > 0) && (
+                            <div className="text-sm border rounded-md p-2 bg-muted/30">
+                              <div className="flex items-center gap-2 mb-1">
+                                <User className="w-4 h-4 text-muted-foreground" />
+                                <span className="font-medium">
+                                  {householdGuests[household.headOfHouseIndex || 0]?.name || household.name}
+                                </span>
+                                <Badge variant="outline" className="text-xs">Head of House</Badge>
+                              </div>
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                {household.contactEmail && (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-7 text-xs gap-1"
+                                    onClick={() => window.open(`mailto:${household.contactEmail}`, '_blank')}
+                                    data-testid={`button-email-${household.id}`}
+                                  >
+                                    <Mail className="w-3 h-3" />
+                                    {household.contactEmail}
+                                  </Button>
+                                )}
+                                {household.contactPhone && (
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-7 text-xs gap-1"
+                                      onClick={() => window.open(`https://wa.me/${household.contactPhone!.replace(/\D/g, '')}`, '_blank')}
+                                      data-testid={`button-whatsapp-${household.id}`}
+                                    >
+                                      <MessageCircle className="w-3 h-3" />
+                                      WhatsApp
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-7 text-xs gap-1"
+                                      onClick={() => window.open(`sms:${household.contactPhone}`, '_blank')}
+                                      data-testid={`button-sms-${household.id}`}
+                                    >
+                                      <Phone className="w-3 h-3" />
+                                      SMS
+                                    </Button>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
                           {householdGuests.length > 0 && (
                             <div className="text-sm text-muted-foreground">
-                              <div className="font-medium mb-1">Members:</div>
+                              <div className="font-medium mb-1">Members ({householdGuests.length}):</div>
                               <ul className="space-y-0.5">
-                                {householdGuests.map((guest) => (
-                                  <li key={guest.id}>{guest.name}</li>
+                                {householdGuests.map((guest, idx) => (
+                                  <li key={guest.id} className="flex items-center gap-1">
+                                    {guest.name}
+                                    {idx === (household.headOfHouseIndex || 0) && (
+                                      <span className="text-xs text-primary">(HoH)</span>
+                                    )}
+                                  </li>
                                 ))}
                               </ul>
                             </div>
