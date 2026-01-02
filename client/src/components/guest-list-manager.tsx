@@ -18,7 +18,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Filter, Users, Check, X, Clock, Upload } from "lucide-react";
+import { Plus, Search, Filter, Users, Check, X, Clock, Upload, MoreHorizontal, Edit, UserX, Trash2, Mail } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type { Guest, Household } from "@shared/schema";
 
 interface GuestListManagerProps {
@@ -27,21 +34,26 @@ interface GuestListManagerProps {
   onAddGuest?: () => void;
   onImportGuests?: () => void;
   onEditGuest?: (guest: Guest) => void;
+  onUninviteGuest?: (guest: Guest) => void;
+  onDeleteGuest?: (guest: Guest) => void;
+  onSendInvitation?: (guest: Guest) => void;
 }
 
 const RSVP_STATUS_ICONS = {
   confirmed: <Check className="w-4 h-4 text-green-600" />,
   declined: <X className="w-4 h-4 text-red-600" />,
   pending: <Clock className="w-4 h-4 text-yellow-600" />,
+  uninvited: <UserX className="w-4 h-4 text-gray-500" />,
 };
 
 const RSVP_STATUS_LABELS = {
   confirmed: "Confirmed",
   declined: "Declined",
   pending: "Pending",
+  uninvited: "Uninvited",
 };
 
-export function GuestListManager({ guests, households = [], onAddGuest, onImportGuests, onEditGuest }: GuestListManagerProps) {
+export function GuestListManager({ guests, households = [], onAddGuest, onImportGuests, onEditGuest, onUninviteGuest, onDeleteGuest, onSendInvitation }: GuestListManagerProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterSide, setFilterSide] = useState<string>("all");
   const [filterRsvp, setFilterRsvp] = useState<string>("all");
@@ -56,10 +68,11 @@ export function GuestListManager({ guests, households = [], onAddGuest, onImport
   });
 
   const stats = {
-    total: guests.length,
+    total: guests.filter((g) => g.rsvpStatus !== "uninvited").length,
     confirmed: guests.filter((g) => g.rsvpStatus === "confirmed").length,
     pending: guests.filter((g) => g.rsvpStatus === "pending").length,
     declined: guests.filter((g) => g.rsvpStatus === "declined").length,
+    uninvited: guests.filter((g) => g.rsvpStatus === "uninvited").length,
   };
 
   return (
@@ -175,6 +188,7 @@ export function GuestListManager({ guests, households = [], onAddGuest, onImport
               <SelectItem value="confirmed">Confirmed</SelectItem>
               <SelectItem value="pending">Pending</SelectItem>
               <SelectItem value="declined">Declined</SelectItem>
+              <SelectItem value="uninvited">Uninvited ({stats.uninvited})</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -201,6 +215,7 @@ export function GuestListManager({ guests, households = [], onAddGuest, onImport
                   <TableHead>Contact</TableHead>
                   <TableHead>RSVP Status</TableHead>
                   <TableHead>Events</TableHead>
+                  <TableHead className="w-[80px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -272,6 +287,79 @@ export function GuestListManager({ guests, households = [], onAddGuest, onImport
                       <span className="font-mono text-sm">
                         {guest.eventIds?.length || 0} events
                       </span>
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={(e) => e.stopPropagation()}
+                            data-testid={`button-actions-${guest.id}`}
+                          >
+                            <MoreHorizontal className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onEditGuest?.(guest);
+                            }}
+                            data-testid={`action-edit-${guest.id}`}
+                          >
+                            <Edit className="w-4 h-4 mr-2" />
+                            Edit Guest
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onSendInvitation?.(guest);
+                            }}
+                            data-testid={`action-send-invitation-${guest.id}`}
+                          >
+                            <Mail className="w-4 h-4 mr-2" />
+                            Send Invitation
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          {guest.rsvpStatus !== "uninvited" ? (
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onUninviteGuest?.(guest);
+                              }}
+                              className="text-orange-600"
+                              data-testid={`action-uninvite-${guest.id}`}
+                            >
+                              <UserX className="w-4 h-4 mr-2" />
+                              Uninvite Guest
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onUninviteGuest?.(guest);
+                              }}
+                              className="text-green-600"
+                              data-testid={`action-reinvite-${guest.id}`}
+                            >
+                              <Check className="w-4 h-4 mr-2" />
+                              Re-invite Guest
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onDeleteGuest?.(guest);
+                            }}
+                            className="text-destructive"
+                            data-testid={`action-delete-${guest.id}`}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete Guest
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))}
