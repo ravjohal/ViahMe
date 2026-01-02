@@ -234,6 +234,8 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
   const autoMapColumns = (detectedHeaders: string[]): ColumnMapping => {
     const mapping: ColumnMapping = {};
     
+    console.log("Auto-mapping columns for headers:", detectedHeaders);
+    
     detectedHeaders.forEach(header => {
       const lower = header.toLowerCase().trim();
       
@@ -251,6 +253,7 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
       else if (lower.includes('dietary') || lower.includes('diet') || lower.includes('restriction') || lower.includes('allerg')) mapping.dietaryRestrictions = header;
     });
     
+    console.log("Final column mapping:", mapping);
     return mapping;
   };
 
