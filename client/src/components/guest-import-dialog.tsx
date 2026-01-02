@@ -817,6 +817,7 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
                   <TableHeader>
                     <TableRow>
                       <TableHead>Name</TableHead>
+                      <TableHead>Household</TableHead>
                       <TableHead>Email</TableHead>
                       <TableHead>Phone</TableHead>
                       <TableHead>Side</TableHead>
@@ -828,6 +829,7 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
                     {parseGuests().slice(0, 10).map((guest, index) => (
                       <TableRow key={index}>
                         <TableCell className="font-medium">{guest.name}</TableCell>
+                        <TableCell>{guest.householdName || '-'}</TableCell>
                         <TableCell>{guest.email || '-'}</TableCell>
                         <TableCell>{guest.phone || '-'}</TableCell>
                         <TableCell className="capitalize">{guest.side || defaultSide}</TableCell>
