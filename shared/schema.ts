@@ -603,7 +603,6 @@ export const insertHouseholdSchema = createInsertSchema(households).omit({
   magicLinkExpires: true,
   createdAt: true,
 }).extend({
-  mainContactName: z.string().nullable().optional(),
   addressStreet: z.string().nullable().optional(),
   addressCity: z.string().nullable().optional(),
   addressState: z.string().nullable().optional(),
