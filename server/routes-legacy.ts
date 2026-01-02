@@ -8959,6 +8959,38 @@ export async function registerLegacyRoutes(app: Express, storage: IStorage, view
     }
   });
 
+  app.post("/api/collector-submissions/:id/maybe", async (req, res) => {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      const result = await storage.markCollectorSubmissionMaybe(req.params.id, userId);
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/collector-submissions/:id/restore", async (req, res) => {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      const { targetStatus } = req.body;
+      if (!targetStatus || !['pending', 'maybe', 'approved'].includes(targetStatus)) {
+        return res.status(400).json({ error: "Valid targetStatus required (pending, maybe, or approved)" });
+      }
+      const result = await storage.restoreCollectorSubmission(req.params.id, targetStatus, userId);
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Public endpoint - Parse voice transcript to extract guest names (no auth for collector)
   app.post("/api/voice-to-guest", async (req, res) => {
     try {
