@@ -19,10 +19,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Plus, Search, Filter, Users, Check, X, Clock, Upload } from "lucide-react";
-import type { Guest } from "@shared/schema";
+import type { Guest, Household } from "@shared/schema";
 
 interface GuestListManagerProps {
   guests: Guest[];
+  households?: Household[];
   onAddGuest?: () => void;
   onImportGuests?: () => void;
   onEditGuest?: (guest: Guest) => void;
@@ -40,10 +41,12 @@ const RSVP_STATUS_LABELS = {
   pending: "Pending",
 };
 
-export function GuestListManager({ guests, onAddGuest, onImportGuests, onEditGuest }: GuestListManagerProps) {
+export function GuestListManager({ guests, households = [], onAddGuest, onImportGuests, onEditGuest }: GuestListManagerProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterSide, setFilterSide] = useState<string>("all");
   const [filterRsvp, setFilterRsvp] = useState<string>("all");
+  
+  const householdById = new Map(households.map(h => [h.id, h]));
 
   const filteredGuests = guests.filter((guest) => {
     const matchesSearch = guest.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -192,6 +195,7 @@ export function GuestListManager({ guests, onAddGuest, onImportGuests, onEditGue
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
+                  <TableHead>Household</TableHead>
                   <TableHead>Side</TableHead>
                   <TableHead>Contact</TableHead>
                   <TableHead>RSVP Status</TableHead>
@@ -212,6 +216,15 @@ export function GuestListManager({ guests, onAddGuest, onImportGuests, onEditGue
                         <Badge variant="outline" className="ml-2 text-xs">
                           +1
                         </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {guest.householdId ? (
+                        <span className="text-sm">
+                          {householdById.get(guest.householdId)?.name || "—"}
+                        </span>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">Unassigned</span>
                       )}
                     </TableCell>
                     <TableCell>

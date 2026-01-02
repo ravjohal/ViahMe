@@ -1326,6 +1326,7 @@ export default function Guests() {
               <TabsContent value="guests" className="space-y-4">
                 <GuestListManager
                   guests={guests}
+                  households={households}
                   onAddGuest={handleAddGuest}
                   onImportGuests={() => setImportDialogOpen(true)}
                   onEditGuest={handleEditGuest}
