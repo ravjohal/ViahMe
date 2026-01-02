@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { GuestListManager } from "@/components/guest-list-manager";
 import { GuestImportDialog } from "@/components/guest-import-dialog";
@@ -268,9 +268,10 @@ export default function Guests() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   
-  // Top-level tab state
-  const [mainTab, setMainTab] = useState("guest-planning");
+  // Top-level tab state - will be set dynamically on first load
+  const [mainTab, setMainTab] = useState<string | null>(null);
   const [planningTab, setPlanningTab] = useState("add");
+  const initialTabSet = useRef(false);
   const [submissionFilter, setSubmissionFilter] = useState<"all" | "pending" | "approved" | "maybe" | "declined">("pending");
   
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -355,6 +356,25 @@ export default function Guests() {
     queryKey: ["/api/weddings", wedding?.id, "guest-planning-snapshot"],
     enabled: !!wedding?.id,
   });
+
+  // Set initial tab based on data state (runs once when data loads)
+  useEffect(() => {
+    if (initialTabSet.current) return;
+    if (guestsLoading || collectorLoading) return;
+    
+    // Determine initial tab:
+    // 1. If there are pending submissions to review → Plan tab
+    // 2. If there are no guests at all → Plan tab  
+    // 3. Otherwise → Guest List tab
+    const pendingSubmissions = collectorSubmissions.filter(s => s.status === "pending");
+    
+    if (pendingSubmissions.length > 0 || guests.length === 0) {
+      setMainTab("guest-planning");
+    } else {
+      setMainTab("guest-list");
+    }
+    initialTabSet.current = true;
+  }, [guests, collectorSubmissions, guestsLoading, collectorLoading]);
 
   // Fetch magic links for households with active links on page load
   useEffect(() => {
@@ -1205,7 +1225,7 @@ export default function Guests() {
     <div className="min-h-screen bg-background">
       <main className="container mx-auto px-6 py-8">
         {/* Top-level tabs: Guest List and Guest Planning */}
-        <Tabs value={mainTab} onValueChange={setMainTab} className="space-y-6">
+        <Tabs value={mainTab || "guest-planning"} onValueChange={setMainTab} className="space-y-6">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <TabsList className="grid grid-cols-2 w-auto">
               <TabsTrigger value="guest-planning" data-testid="tab-guest-planning" className="gap-2">
@@ -1357,11 +1377,6 @@ export default function Guests() {
                     </p>
                   </div>
                   <div className="flex gap-2 flex-wrap">
-                    <Button onClick={handleOpenBulkInvite} variant="default" className="min-h-[44px]" data-testid="button-bulk-invite">
-                      <Send className="w-4 h-4 mr-2" />
-                      <span className="hidden sm:inline">Send Invitations</span>
-                      <span className="sm:hidden">Invite</span>
-                    </Button>
                     <Button onClick={handleAddHousehold} variant="outline" className="min-h-[44px]" data-testid="button-add-household">
                       <Users className="w-4 h-4 mr-2" />
                       <span className="hidden sm:inline">Add Household</span>
