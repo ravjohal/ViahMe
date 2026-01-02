@@ -516,6 +516,51 @@ export default function Guests() {
     },
   });
 
+  // Uninvite mutation - toggles between uninvited and pending
+  const uninviteGuestMutation = useMutation({
+    mutationFn: async ({ id, newStatus }: { id: string; newStatus: string }) => {
+      return await apiRequest("PATCH", `/api/guests/${id}`, { rsvpStatus: newStatus });
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/guests"] });
+      const isReinviting = variables.newStatus === "pending";
+      toast({
+        title: isReinviting ? "Guest re-invited" : "Guest uninvited",
+        description: isReinviting 
+          ? "Guest has been added back to your invitation list"
+          : "Guest has been moved to your uninvited list",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update guest status",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Direct delete mutation (from table actions, no dialog side effects)
+  const directDeleteGuestMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiRequest("DELETE", `/api/guests/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/guests"] });
+      toast({
+        title: "Guest deleted",
+        description: "Guest has been removed from your list",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete guest",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Plus-One mutations
   const createPlusOneMutation = useMutation({
     mutationFn: async (guestId: string) => {
@@ -980,6 +1025,59 @@ export default function Guests() {
     }
   };
 
+  // Direct delete from actions menu (uses dedicated mutation, no dialog side effects)
+  const handleDeleteGuest = (guest: Guest) => {
+    if (confirm(`Are you sure you want to delete ${guest.name}? This action cannot be undone.`)) {
+      directDeleteGuestMutation.mutate(guest.id);
+    }
+  };
+
+  // Toggle uninvite/reinvite from actions menu
+  const handleUninviteGuest = (guest: Guest) => {
+    const newStatus = guest.rsvpStatus === "uninvited" ? "pending" : "uninvited";
+    uninviteGuestMutation.mutate({ id: guest.id, newStatus });
+  };
+
+  // Send invitation action
+  const handleSendInvitation = (guest: Guest) => {
+    // If guest has a household, use the household's magic link flow
+    if (guest.householdId) {
+      const household = households.find(h => h.id === guest.householdId);
+      if (household) {
+        const token = householdTokens.get(household.id);
+        if (token) {
+          // Copy magic link
+          const magicLink = `${window.location.origin}/rsvp/${token}`;
+          navigator.clipboard.writeText(magicLink).then(() => {
+            toast({
+              title: "Invitation link copied",
+              description: `Share this link with ${household.name} to invite them`,
+            });
+          }).catch(() => {
+            // Fallback: show the link in a toast for manual copy
+            toast({
+              title: "Copy link manually",
+              description: magicLink,
+            });
+          });
+        } else {
+          // Generate token first - show loading feedback
+          toast({
+            title: "Generating invitation link...",
+            description: "Please wait while we create the invitation link",
+          });
+          generateTokenMutation.mutate(household.id);
+        }
+      }
+    } else {
+      toast({
+        title: "No household assigned",
+        description: "Assign this guest to a household first to send an invitation",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleAddHousehold = () => {
     setEditingHousehold(null);
     householdForm.reset({
@@ -1400,6 +1498,9 @@ export default function Guests() {
                   onAddGuest={handleAddGuest}
                   onImportGuests={() => setImportDialogOpen(true)}
                   onEditGuest={handleEditGuest}
+                  onUninviteGuest={handleUninviteGuest}
+                  onDeleteGuest={handleDeleteGuest}
+                  onSendInvitation={handleSendInvitation}
                 />
               </TabsContent>
 
