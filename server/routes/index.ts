@@ -18,6 +18,10 @@ import { registerExpenseRoutes, registerExpenseSplitRoutes } from "./expenses";
 import { registerHouseholdRoutes } from "./households";
 import { registerInvitationRoutes } from "./invitations";
 import { registerGuestPublicRoutes } from "./guests-public";
+import { registerVendorFavoriteRoutes } from "./vendor-favorites";
+import { registerContractRoutes } from "./contracts";
+import { registerContractTemplateRoutes } from "./contract-templates";
+import { registerNotificationRoutes } from "./notifications";
 import { seedVendors, seedBudgetBenchmarks } from "../seed-data";
 
 let defaultStorageSeeded = false;
@@ -190,6 +194,22 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   const guestPublicRouter = Router();
   await registerGuestPublicRoutes(guestPublicRouter, storage);
   app.use("/api/guests", guestPublicRouter);
+
+  const vendorFavoriteRouter = Router();
+  await registerVendorFavoriteRoutes(vendorFavoriteRouter, storage);
+  app.use("/api/vendor-favorites", vendorFavoriteRouter);
+
+  const contractRouter = Router();
+  await registerContractRoutes(contractRouter, storage);
+  app.use("/api/contracts", contractRouter);
+
+  const contractTemplateRouter = Router();
+  await registerContractTemplateRoutes(contractTemplateRouter, storage);
+  app.use("/api/contract-templates", contractTemplateRouter);
+
+  const notificationRouter = Router();
+  await registerNotificationRoutes(notificationRouter, storage);
+  app.use("/api/notifications", notificationRouter);
 
   const { registerLegacyRoutes } = await import("../routes-legacy");
   await registerLegacyRoutes(app, storage, { activeViewers, getViewerCount, cleanupStaleViewers });
