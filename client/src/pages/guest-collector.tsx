@@ -42,6 +42,7 @@ import {
 } from "lucide-react";
 import { GuestAssistantChat } from "@/components/guest-assistant-chat";
 import { format } from "date-fns";
+import { DIETARY_OPTIONS, getDietaryLabel } from "@shared/schema";
 
 type WeddingEvent = {
   id: string;
@@ -63,15 +64,7 @@ type CollectorLinkInfo = {
   events?: WeddingEvent[];
 };
 
-const DESI_DIETARY_OPTIONS = [
-  { value: "none", label: "No dietary restrictions", description: "Standard menu is fine" },
-  { value: "strict_vegetarian", label: "Strict Vegetarian", description: "No meat, fish, or eggs" },
-  { value: "jain", label: "Jain", description: "No root vegetables, no eggs" },
-  { value: "swaminarayan", label: "Swaminarayan", description: "Strictly vegetarian, no onion/garlic" },
-  { value: "eggless", label: "Eggless Vegetarian", description: "Vegetarian, no eggs" },
-  { value: "halal", label: "Halal", description: "Halal meat only" },
-  { value: "other", label: "Other", description: "Other restrictions, please specify in notes" },
-];
+// Using centralized DIETARY_OPTIONS from shared/schema.ts
 
 const RELATIONSHIP_TIERS = [
   { value: "immediate_family", label: "Immediate Family", description: "Parents, siblings, grandparents" },
@@ -979,7 +972,7 @@ export default function GuestCollector() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {DESI_DIETARY_OPTIONS.map((option) => (
+                              {DIETARY_OPTIONS.map((option) => (
                                 <SelectItem key={option.value} value={option.value} className="py-2">
                                   <span className="text-base">{option.label}</span>
                                 </SelectItem>
@@ -1170,7 +1163,7 @@ export default function GuestCollector() {
                                 <SelectValue placeholder="Select dietary preference" />
                               </SelectTrigger>
                               <SelectContent>
-                                {DESI_DIETARY_OPTIONS.map((option) => (
+                                {DIETARY_OPTIONS.map((option) => (
                                   <SelectItem key={option.value} value={option.value} className="py-2">
                                     <span className="text-base">{option.label}</span>
                                   </SelectItem>
@@ -1431,7 +1424,7 @@ export default function GuestCollector() {
                                   )}
                                   {family.householdDietaryRestriction && family.householdDietaryRestriction !== "none" && (
                                     <span className="text-xs px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-full">
-                                      {DESI_DIETARY_OPTIONS.find(d => d.value === family.householdDietaryRestriction)?.label || "Diet"}
+                                      {DIETARY_OPTIONS.find(d => d.value === family.householdDietaryRestriction)?.label || "Diet"}
                                     </span>
                                   )}
                                   {(family.eventSuggestions || []).length > 0 && (

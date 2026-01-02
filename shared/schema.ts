@@ -4,6 +4,43 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // ============================================================================
+// DIETARY RESTRICTIONS - Centralized options for South Asian weddings
+// ============================================================================
+
+// Combined dietary options - South Asian specific + common Western preferences
+export const DIETARY_OPTIONS = [
+  { value: "none", label: "No dietary restrictions", description: "Standard menu is fine" },
+  { value: "strict_vegetarian", label: "Strict Vegetarian", description: "No meat, fish, or eggs" },
+  { value: "jain", label: "Jain", description: "No root vegetables, no eggs" },
+  { value: "swaminarayan", label: "Swaminarayan", description: "Strictly vegetarian, no onion/garlic" },
+  { value: "eggless", label: "Eggless Vegetarian", description: "Vegetarian, no eggs" },
+  { value: "halal", label: "Halal", description: "Halal meat only" },
+  { value: "kosher", label: "Kosher", description: "Kosher dietary laws" },
+  { value: "vegan", label: "Vegan", description: "No animal products" },
+  { value: "gluten_free", label: "Gluten-Free", description: "No gluten-containing foods" },
+  { value: "lactose_intolerant", label: "Lactose Intolerant", description: "No dairy products" },
+  { value: "nut_allergy", label: "Nut Allergy", description: "No nuts or nut products" },
+  { value: "other", label: "Other", description: "Other restrictions, please specify in notes" },
+] as const;
+
+// Extract the value types for type safety
+export type DietaryOptionValue = typeof DIETARY_OPTIONS[number]['value'];
+
+// Zod enum for validation
+export const dietaryOptionSchema = z.enum([
+  'none', 'strict_vegetarian', 'jain', 'swaminarayan', 'eggless', 
+  'halal', 'kosher', 'vegan', 'gluten_free', 'lactose_intolerant', 
+  'nut_allergy', 'other'
+]);
+
+// Helper function to get label from value
+export function getDietaryLabel(value: string | null | undefined): string {
+  if (!value || value === 'none') return '';
+  const option = DIETARY_OPTIONS.find(o => o.value === value);
+  return option?.label || value;
+}
+
+// ============================================================================
 // USERS & AUTHENTICATION
 // ============================================================================
 
@@ -607,7 +644,7 @@ export const insertHouseholdSchema = createInsertSchema(households).omit({
   addressState: z.string().nullable().optional(),
   addressPostalCode: z.string().nullable().optional(),
   addressCountry: z.string().nullable().optional(),
-  desiDietaryType: z.enum(['strict_vegetarian', 'jain', 'swaminarayan', 'eggless', 'halal', 'none']).nullable().optional(),
+  desiDietaryType: dietaryOptionSchema.nullable().optional(),
   headOfHouseIndex: z.number().nullable().optional(),
   lifafaAmount: z.string().nullable().optional(),
   giftDescription: z.string().nullable().optional(),
@@ -749,7 +786,7 @@ export const guestCollectorSubmissions = pgTable("guest_collector_submissions", 
 // Type for per-guest dietary info (with optional contact for magic links)
 export const guestDietaryInfoSchema = z.array(z.object({
   name: z.string(),
-  dietary: z.enum(['strict_vegetarian', 'jain', 'swaminarayan', 'eggless', 'halal', 'none']),
+  dietary: dietaryOptionSchema,
   phone: z.string().optional(),
   email: z.string().optional(),
 }));
@@ -762,7 +799,7 @@ export const guestMemberSchema = z.object({
   name: z.string(),
   email: z.string().optional(),
   phone: z.string().optional(),
-  dietaryRestriction: z.enum(['strict_vegetarian', 'jain', 'swaminarayan', 'eggless', 'halal', 'none']).optional(),
+  dietaryRestriction: dietaryOptionSchema.optional(),
 });
 
 export type GuestMember = z.infer<typeof guestMemberSchema>;
@@ -775,7 +812,7 @@ export const insertGuestCollectorSubmissionSchema = createInsertSchema(guestColl
   createdAt: true,
 }).extend({
   relationshipTier: z.enum(['immediate_family', 'extended_family', 'friend', 'parents_friend']).optional(),
-  desiDietaryType: z.enum(['strict_vegetarian', 'jain', 'swaminarayan', 'eggless', 'halal', 'none']).nullable().optional(),
+  desiDietaryType: dietaryOptionSchema.nullable().optional(),
   guestCount: z.number().optional(),
   // Address fields
   contactStreet: z.string().nullable().optional(),

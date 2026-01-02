@@ -23,7 +23,7 @@ import {
   UserCheck,
   UtensilsCrossed,
 } from "lucide-react";
-import type { Household, Guest } from "@shared/schema";
+import { type Household, type Guest, DIETARY_OPTIONS, getDietaryLabel } from "@shared/schema";
 
 type AddressSuggestion = {
   formatted: string;
@@ -526,14 +526,11 @@ export function HouseholdWizard({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">No dietary restrictions</SelectItem>
-                <SelectItem value="vegetarian">Vegetarian</SelectItem>
-                <SelectItem value="vegan">Vegan</SelectItem>
-                <SelectItem value="halal">Halal</SelectItem>
-                <SelectItem value="kosher">Kosher</SelectItem>
-                <SelectItem value="gluten_free">Gluten-Free</SelectItem>
-                <SelectItem value="nut_allergy">Nut Allergy</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
+                {DIETARY_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value} className="py-2">
+                    <span className="text-base">{option.label}</span>
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
@@ -762,13 +759,7 @@ export function HouseholdWizard({
                 </Badge>
                 {dietaryRestriction && dietaryRestriction !== "none" && (
                   <Badge variant="secondary">
-                    {dietaryRestriction === "vegetarian" ? "Vegetarian" :
-                     dietaryRestriction === "vegan" ? "Vegan" :
-                     dietaryRestriction === "halal" ? "Halal" :
-                     dietaryRestriction === "kosher" ? "Kosher" :
-                     dietaryRestriction === "gluten_free" ? "Gluten-Free" :
-                     dietaryRestriction === "nut_allergy" ? "Nut Allergy" :
-                     dietaryRestriction}
+                    {getDietaryLabel(dietaryRestriction)}
                   </Badge>
                 )}
               </div>
