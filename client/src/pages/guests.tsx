@@ -5,6 +5,7 @@ import { GuestImportDialog } from "@/components/guest-import-dialog";
 import { CollectorLinksManager } from "@/components/collector-links-manager";
 import { DuplicatesManager } from "@/components/duplicates-manager";
 import { AddressAutocomplete, type ParsedAddress } from "@/components/address-autocomplete";
+import { HouseholdWizard } from "@/components/household-wizard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -956,6 +957,68 @@ export default function Guests() {
       updateHouseholdMutation.mutate({ id: editingHousehold.id, data });
     } else {
       createHouseholdMutation.mutate(data);
+    }
+  };
+
+  const handleHouseholdWizardSave = async (householdData: any, members: Array<{ id: string; name: string; email: string; phone: string; isMainContact: boolean }>) => {
+    try {
+      let householdId: string;
+      
+      if (editingHousehold) {
+        await apiRequest("PATCH", `/api/households/${editingHousehold.id}`, householdData);
+        householdId = editingHousehold.id;
+      } else {
+        const result = await apiRequest("POST", "/api/households", householdData);
+        const newHousehold = await result.json();
+        householdId = newHousehold.id;
+      }
+
+      const existingHouseholdGuests = guests.filter(g => g.householdId === householdId);
+      const existingGuestIds = new Set(existingHouseholdGuests.map(g => g.id));
+      const processedMemberIds = new Set<string>();
+
+      for (const member of members) {
+        const guestData = {
+          name: member.name,
+          email: member.email || null,
+          phone: member.phone || null,
+          householdId,
+          isMainHouseholdContact: member.isMainContact,
+          weddingId: wedding?.id,
+          side: householdData.affiliation,
+          rsvpStatus: "pending",
+        };
+
+        if (existingGuestIds.has(member.id)) {
+          await apiRequest("PATCH", `/api/guests/${member.id}`, guestData);
+          processedMemberIds.add(member.id);
+        } else {
+          await apiRequest("POST", "/api/guests", guestData);
+        }
+      }
+
+      for (const existingGuest of existingHouseholdGuests) {
+        if (!processedMemberIds.has(existingGuest.id)) {
+          await apiRequest("DELETE", `/api/guests/${existingGuest.id}`);
+        }
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["/api/households"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/guests"] });
+      setHouseholdDialogOpen(false);
+      setEditingHousehold(null);
+      
+      toast({
+        title: editingHousehold ? "Household updated" : "Household created",
+        description: `${householdData.name} with ${members.length} members has been saved`,
+      });
+    } catch (error) {
+      console.error("Error saving household:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save household",
+        variant: "destructive",
+      });
     }
   };
 
@@ -2296,13 +2359,13 @@ export default function Guests() {
                                         </Badge>
                                       </div>
                                       <p className="text-base text-muted-foreground">
-                                        {household.maxCount} guests
+                                        {guests.filter(g => g.householdId === household.id).length} guests
                                         {household.relationshipTier && ` • ${household.relationshipTier.replace('_', ' ')}`}
                                       </p>
                                     </div>
                                     <div className="flex items-center gap-2">
                                       <p className="text-base font-medium">
-                                        ${(household.maxCount * (planningSnapshot?.budget?.defaultCostPerHead || 150)).toLocaleString()}
+                                        ${(guests.filter(g => g.householdId === household.id).length * (planningSnapshot?.budget?.defaultCostPerHead || 150)).toLocaleString()}
                                       </p>
                                     </div>
                                   </div>
@@ -2620,175 +2683,30 @@ export default function Guests() {
         </DialogContent>
       </Dialog>
 
-      {/* Household Form Dialog */}
+      {/* Household Wizard Dialog */}
       <Dialog open={householdDialogOpen} onOpenChange={setHouseholdDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle data-testid="dialog-title-household">
               {editingHousehold ? "Edit Household" : "Add Household"}
             </DialogTitle>
             <DialogDescription>
               {editingHousehold
-                ? "Update household information and allocation"
-                : "Create a new household group for your wedding"}
+                ? "Update household information and members"
+                : "Create a household and add family members"}
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={householdForm.handleSubmit(handleHouseholdSubmit)} className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
-            <div className="space-y-2">
-              <Label htmlFor="household-name">
-                Household Name <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="household-name"
-                {...householdForm.register("name")}
-                placeholder="e.g., The Patel Family"
-                data-testid="input-household-name"
-              />
-              {householdForm.formState.errors.name && (
-                <p className="text-sm text-destructive">
-                  {householdForm.formState.errors.name.message}
-                </p>
-              )}
-            </div>
-
-            <p className="text-xs text-muted-foreground">
-              Contact details (email, phone) are managed on individual guests. The Main Point of Contact's email will be used for household communications.
-            </p>
-
-            <div className="space-y-2">
-              <Label>Address</Label>
-              <AddressAutocomplete
-                value={[
-                  householdForm.watch("addressStreet"),
-                  householdForm.watch("addressCity"),
-                  householdForm.watch("addressState"),
-                  householdForm.watch("addressPostalCode"),
-                  householdForm.watch("addressCountry")
-                ].filter(Boolean).join(", ")}
-                onChange={(val) => {
-                  if (!val) {
-                    householdForm.setValue("addressStreet", "");
-                    householdForm.setValue("addressCity", "");
-                    householdForm.setValue("addressState", "");
-                    householdForm.setValue("addressPostalCode", "");
-                    householdForm.setValue("addressCountry", "");
-                  }
-                }}
-                onAddressSelect={(parsed: ParsedAddress) => {
-                  householdForm.setValue("addressStreet", parsed.street);
-                  householdForm.setValue("addressCity", parsed.city);
-                  householdForm.setValue("addressState", parsed.state);
-                  householdForm.setValue("addressPostalCode", parsed.postalCode);
-                  householdForm.setValue("addressCountry", parsed.country);
-                }}
-                placeholder="Start typing an address..."
-                testid="input-household-address"
-              />
-              <p className="text-xs text-muted-foreground">
-                Type to search and select an address
-              </p>
-              <input type="hidden" {...householdForm.register("addressStreet")} />
-              <input type="hidden" {...householdForm.register("addressCity")} />
-              <input type="hidden" {...householdForm.register("addressState")} />
-              <input type="hidden" {...householdForm.register("addressPostalCode")} />
-              <input type="hidden" {...householdForm.register("addressCountry")} />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="household-maxCount">
-                Max Seats <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="household-maxCount"
-                type="number"
-                min="1"
-                {...householdForm.register("maxCount", { valueAsNumber: true })}
-                placeholder="e.g., 4"
-                data-testid="input-household-max-count"
-              />
-              {householdForm.formState.errors.maxCount && (
-                <p className="text-sm text-destructive">
-                  {householdForm.formState.errors.maxCount.message}
-                </p>
-              )}
-              <p className="text-xs text-muted-foreground">
-                Total number of people in this household
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="household-affiliation">
-                Affiliation <span className="text-destructive">*</span>
-              </Label>
-              <Select
-                value={householdForm.watch("affiliation")}
-                onValueChange={(value) => householdForm.setValue("affiliation", value as "bride" | "groom" | "mutual")}
-              >
-                <SelectTrigger id="household-affiliation" data-testid="select-household-affiliation">
-                  <SelectValue placeholder="Select affiliation" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="bride">Bride's Side</SelectItem>
-                  <SelectItem value="groom">Groom's Side</SelectItem>
-                  <SelectItem value="mutual">Mutual</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="household-tier">
-                Relationship Tier <span className="text-destructive">*</span>
-              </Label>
-              <Select
-                value={householdForm.watch("relationshipTier")}
-                onValueChange={(value) => householdForm.setValue("relationshipTier", value)}
-              >
-                <SelectTrigger id="household-tier" data-testid="select-household-tier">
-                  <SelectValue placeholder="Select tier" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="immediate_family">Immediate Family</SelectItem>
-                  <SelectItem value="extended_family">Extended Family</SelectItem>
-                  <SelectItem value="friend">Friends</SelectItem>
-                  <SelectItem value="parents_friend">Parent's Friends</SelectItem>
-                  <SelectItem value="coworker">Co-workers</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex justify-between pt-4">
-              {editingHousehold && (
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onClick={handleDeleteHousehold}
-                  disabled={deleteHouseholdMutation.isPending}
-                  data-testid="button-delete-household"
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete
-                </Button>
-              )}
-              <div className={`flex gap-2 ${editingHousehold ? "" : "ml-auto"}`}>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setHouseholdDialogOpen(false)}
-                  data-testid="button-cancel-household"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={createHouseholdMutation.isPending || updateHouseholdMutation.isPending}
-                  data-testid="button-save-household"
-                >
-                  {editingHousehold ? "Update Household" : "Add Household"}
-                </Button>
-              </div>
-            </div>
-          </form>
+          <HouseholdWizard
+            weddingId={wedding?.id || ""}
+            editingHousehold={editingHousehold}
+            existingGuests={guests}
+            onSave={handleHouseholdWizardSave}
+            onCancel={() => {
+              setHouseholdDialogOpen(false);
+              setEditingHousehold(null);
+            }}
+          />
         </DialogContent>
       </Dialog>
 
