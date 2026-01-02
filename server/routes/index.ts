@@ -48,6 +48,7 @@ import { createRolesRouter, createCollaboratorsRouter, createCollaboratorInvites
 import { createGuestSourcesRouter } from "./guest-sources";
 import { createGuestSuggestionsRouter } from "./guest-suggestions";
 import { createGuestSideRouter, createGuestConsensusRouter, createScenariosRouter, createGuestBudgetRouter, createCutListRouter, createHouseholdPriorityRouter } from "./guest-planning";
+import { createTimelineRouter, createEventTimeRouter, createTimelineChangesRouter, createVendorAcknowledgmentsRouter } from "./timeline";
 import { seedVendors, seedBudgetBenchmarks } from "../seed-data";
 
 let defaultStorageSeeded = false;
@@ -369,8 +370,11 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   app.use("/api", createCutListRouter(storage));
   app.use("/api/households", createHouseholdPriorityRouter(storage));
 
-  const { registerLegacyRoutes } = await import("../routes-legacy");
-  await registerLegacyRoutes(app, storage, { activeViewers, getViewerCount, cleanupStaleViewers });
+  // Timeline routes
+  app.use("/api/weddings", createTimelineRouter(storage));
+  app.use("/api/events", createEventTimeRouter(storage));
+  app.use("/api/timeline-changes", createTimelineChangesRouter(storage));
+  app.use("/api/vendor", createVendorAcknowledgmentsRouter(storage));
 
   const httpServer = createServer(app);
 
