@@ -275,6 +275,8 @@ export async function registerGuestRoutes(router: Router, storage: IStorage) {
         return res.status(400).json({ error: "Request body must contain a 'guests' array" });
       }
 
+      console.log("Bulk import received guests:", JSON.stringify(guestsArray.slice(0, 3), null, 2));
+
       if (guestsArray.length === 0) {
         return res.json({ success: 0, failed: 0, guests: [], errors: undefined });
       }
