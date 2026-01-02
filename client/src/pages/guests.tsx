@@ -1235,9 +1235,14 @@ export default function Guests() {
                 const household = householdById.get(g.householdId);
                 return household?.affiliation === 'mutual';
               });
+              const unassignedGuests = guests.filter(g => {
+                if (!g.householdId) return true;
+                const household = householdById.get(g.householdId);
+                return !household || !household.affiliation;
+              });
 
               return (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
                   <Card data-testid="card-total-allocation">
                     <CardHeader className="pb-3">
                       <CardDescription>Total Guests</CardDescription>
@@ -1285,6 +1290,20 @@ export default function Guests() {
                       </p>
                     </CardContent>
                   </Card>
+
+                  {unassignedGuests.length > 0 && (
+                    <Card data-testid="card-unassigned-allocation" className="border-l-4 border-l-destructive">
+                      <CardHeader className="pb-3">
+                        <CardDescription>Unassigned</CardDescription>
+                        <CardTitle className="text-3xl">{unassignedGuests.length}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-muted-foreground">
+                          No household
+                        </p>
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
               );
             })()}
