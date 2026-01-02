@@ -1,0 +1,85 @@
+To migrate every route from server/routes-legacy.ts to the new modular system, you should follow this 4-step architectural pattern. This ensures your code remains organized, type-safe, and consistent with the files you’ve already started migrating (like guests.ts).
+
+Step 1: Create a Feature-Specific Router
+Identify a block of routes in server/routes-legacy.ts (e.g., "WEDDINGS" or "EVENTS") and create a matching file in server/routes/.
+
+Example: server/routes/weddings.ts
+
+TypeScript
+
+import { Router } from "express";
+import { requireAuth, type AuthRequest } from "../auth-middleware";
+import type { IStorage } from "../storage";
+import { insertWeddingSchema } from "@shared/schema";
+
+export async function registerWeddingRoutes(router: Router, storage: IStorage) {
+  // Move the route from legacy file and change 'app' to 'router'
+  // Use relative paths (e.g., "/" instead of "/api/weddings") 
+  // because the prefix is handled in the main index.ts
+  router.get("/", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      const [owned, collaborator] = await Promise.all([
+        storage.getWeddingsByUser(authReq.session.userId!),
+        storage.getWeddingsForCollaborator(authReq.session.userId!),
+      ]);
+      res.json([...owned, ...collaborator]);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch weddings" });
+    }
+  });
+
+  // Add remaining Wedding-related routes here...
+}
+Step 2: Register the New Router
+Open server/routes/index.ts to "mount" your new router. This is where you define the base URL prefix for all routes inside that file.
+
+File: server/routes/index.ts
+
+TypeScript
+
+import { registerWeddingRoutes } from "./weddings"; // 1. Import it
+
+export async function registerRoutes(app: Express) {
+  const router = Router();
+  
+  // 2. Setup the sub-router
+  const weddingRouter = Router();
+  await registerWeddingRoutes(weddingRouter, storage);
+  
+  // 3. Mount it to the main API path
+  router.use("/weddings", weddingRouter); 
+
+  // ... rest of the existing registrations
+  app.use("/api", router);
+}
+Step 3: Handle Legacy Utilities
+Your routes-legacy.ts currently handles a few special utilities like viewerUtils (for real-time viewer counts) and WebSockets. When you move the last route:
+
+Move Interfaces: Move ViewerSession and ViewerUtils to a common location like server/types.ts or keep them in index.ts.
+
+Move WebSocket logic: Move the wss.on('connection', ...) block from the bottom of the legacy file into server/index.ts or a new server/socket.ts.
+
+Step 4: Cleanup
+Once a route is successfully tested in its new location:
+
+Delete the route from server/routes-legacy.ts.
+
+Remove unused imports: Clean up the insert...Schema imports at the top of the legacy file as they become unused.
+
+Delete the legacy file: Once server/routes-legacy.ts is empty, remove the registerLegacyRoutes call from server/routes/index.ts and delete the file.
+
+Route Mapping Guide
+Based on your current legacy file, here is how you should split them:
+
+server/routes/weddings.ts: All /api/weddings and /api/registries routes.
+
+server/routes/events.ts: All /api/events and /api/event-cost-items.
+
+server/routes/tasks.ts: All /api/tasks, /api/task-reminders, and /api/task-comments.
+
+server/routes/contracts.ts: All /api/contracts and /api/contract-templates.
+
+server/routes/analytics.ts: All /api/analytics endpoints.
+
+server/routes/ritual.ts: All /api/ritual-stages and notifications.
