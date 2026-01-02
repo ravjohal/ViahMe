@@ -299,11 +299,6 @@ export default function Guests() {
   const [selectedHouseholdForQR, setSelectedHouseholdForQR] = useState<Household | null>(null);
   const [qrCodeDataURL, setQrCodeDataURL] = useState<string>("");
 
-  // Cut list state
-  const [cutListDialogOpen, setCutListDialogOpen] = useState(false);
-  const [householdToCut, setHouseholdToCut] = useState<Household | null>(null);
-  const [cutReason, setCutReason] = useState("");
-
   // Guest Planning state
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [selectedSuggestion, setSelectedSuggestion] = useState<GuestSuggestion | null>(null);
@@ -672,32 +667,6 @@ export default function Guests() {
     },
   });
 
-  const addToCutListMutation = useMutation({
-    mutationFn: async (data: { householdId: string; cutReason?: string }) => {
-      return await apiRequest("POST", `/api/weddings/${wedding?.id}/cut-list`, data);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/households", wedding?.id] });
-      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "cut-list"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-budget"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "guest-planning-snapshot"] });
-      setCutListDialogOpen(false);
-      setHouseholdToCut(null);
-      setCutReason("");
-      toast({
-        title: "Moved to Maybe Later",
-        description: "Household has been parked. You can restore it anytime from Guest Planning.",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to move household to cut list",
-        variant: "destructive",
-      });
-    },
-  });
-
   // Guest Planning mutations
   const approveSuggestionMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -890,20 +859,6 @@ export default function Guests() {
     toast({
       title: "QR Code downloaded",
       description: `QR code for ${selectedHouseholdForQR.name} has been downloaded`,
-    });
-  };
-
-  const handleMoveToCutList = (household: Household) => {
-    setHouseholdToCut(household);
-    setCutReason("");
-    setCutListDialogOpen(true);
-  };
-
-  const confirmMoveToCutList = () => {
-    if (!householdToCut) return;
-    addToCutListMutation.mutate({
-      householdId: householdToCut.id,
-      cutReason: cutReason || undefined,
     });
   };
 
@@ -1439,15 +1394,6 @@ export default function Guests() {
                                   data-testid={`menu-edit-household-${household.id}`}
                                 >
                                   Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  onClick={() => handleMoveToCutList(household)}
-                                  className="text-destructive"
-                                  data-testid={`menu-cut-household-${household.id}`}
-                                >
-                                  <Scissors className="w-4 h-4 mr-2" />
-                                  Move to Maybe Later
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -2561,21 +2507,6 @@ export default function Guests() {
                                       <p className="text-base font-medium">
                                         ${(household.maxCount * (planningSnapshot?.budget?.defaultCostPerHead || 150)).toLocaleString()}
                                       </p>
-                                      <Button
-                                        className="min-h-[48px] text-base"
-                                        variant="outline"
-                                        onClick={() => {
-                                          addToCutListMutation.mutate({
-                                            householdId: household.id,
-                                            cutReason: 'priority',
-                                          });
-                                        }}
-                                        disabled={addToCutListMutation.isPending}
-                                        data-testid={`button-cut-${household.id}`}
-                                      >
-                                        <Scissors className="h-4 w-4 mr-2" />
-                                        Maybe Later
-                                      </Button>
                                     </div>
                                   </div>
                                 </CardContent>
@@ -3190,56 +3121,6 @@ export default function Guests() {
               >
                 <Download className="w-4 h-4 mr-2" />
                 Download QR Code
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Cut List Confirmation Dialog */}
-      <Dialog open={cutListDialogOpen} onOpenChange={setCutListDialogOpen}>
-        <DialogContent className="sm:max-w-md" data-testid="dialog-cut-list">
-          <DialogHeader>
-            <DialogTitle>Move to Maybe Later</DialogTitle>
-            <DialogDescription>
-              Move "{householdToCut?.name}" to the Maybe Later list. This won't delete them permanently - you can restore the household anytime from Guest Planning.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="cutReason">Reason (optional)</Label>
-              <Select
-                value={cutReason}
-                onValueChange={(value) => setCutReason(value)}
-              >
-                <SelectTrigger data-testid="select-cut-reason">
-                  <SelectValue placeholder="Select a reason" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="budget">Budget constraints</SelectItem>
-                  <SelectItem value="space">Venue capacity</SelectItem>
-                  <SelectItem value="priority">Lower priority</SelectItem>
-                  <SelectItem value="other">Other reason</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="flex gap-2 justify-end">
-              <Button
-                variant="outline"
-                onClick={() => setCutListDialogOpen(false)}
-                data-testid="button-cancel-cut"
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={confirmMoveToCutList}
-                disabled={addToCutListMutation.isPending}
-                data-testid="button-confirm-cut"
-              >
-                {addToCutListMutation.isPending ? "Moving..." : "Move to Maybe Later"}
               </Button>
             </div>
           </div>
