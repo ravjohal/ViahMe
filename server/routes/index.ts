@@ -9,6 +9,10 @@ import { registerBudgetRoutes } from "./budget";
 import { registerGuestRoutes } from "./guests";
 import { registerVendorRoutes } from "./vendors";
 import { registerCommunicationRoutes } from "./communications";
+import { registerCollectorRoutes } from "./collector-submissions";
+import { registerWeddingRoutes } from "./weddings";
+import { registerEventRoutes, registerEventCostItemRoutes, registerWeddingCostSummaryRoute } from "./events";
+import { registerTaskRoutes, registerTaskReminderRoutes, registerTaskCommentRoutes } from "./tasks";
 import { seedVendors, seedBudgetBenchmarks } from "../seed-data";
 
 let defaultStorageSeeded = false;
@@ -128,6 +132,35 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   const communicationRouter = Router();
   await registerCommunicationRoutes(communicationRouter, storage);
   app.use("/api", communicationRouter);
+
+  const collectorRouter = Router();
+  await registerCollectorRoutes(collectorRouter, storage);
+  app.use("/api", collectorRouter);
+
+  const weddingRouter = Router();
+  await registerWeddingCostSummaryRoute(weddingRouter, storage);
+  await registerWeddingRoutes(weddingRouter, storage);
+  app.use("/api/weddings", weddingRouter);
+
+  const eventRouter = Router();
+  await registerEventRoutes(eventRouter, storage);
+  app.use("/api/events", eventRouter);
+
+  const eventCostItemRouter = Router();
+  await registerEventCostItemRoutes(eventCostItemRouter, storage);
+  app.use("/api/event-cost-items", eventCostItemRouter);
+
+  const taskRouter = Router();
+  await registerTaskRoutes(taskRouter, storage);
+  app.use("/api/tasks", taskRouter);
+
+  const taskReminderRouter = Router();
+  await registerTaskReminderRoutes(taskReminderRouter, storage);
+  app.use("/api/task-reminders", taskReminderRouter);
+
+  const taskCommentRouter = Router();
+  await registerTaskCommentRoutes(taskCommentRouter, storage);
+  app.use("/api/task-comments", taskCommentRouter);
 
   const { registerLegacyRoutes } = await import("../routes-legacy");
   await registerLegacyRoutes(app, storage, { activeViewers, getViewerCount, cleanupStaleViewers });
