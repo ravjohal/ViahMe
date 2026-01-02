@@ -92,9 +92,7 @@ type GuestFormData = z.infer<typeof guestFormSchema>;
 
 const householdFormSchema = insertHouseholdSchema.extend({
   maxCount: z.number().min(1, "Max count must be at least 1"),
-  mainContactName: z.string().optional().or(z.literal("")),
   contactEmail: z.string().email("Please enter a valid email address").optional().or(z.literal("")),
-  contactPhone: z.string().optional().or(z.literal("")),
   addressStreet: z.string().optional().or(z.literal("")),
   addressCity: z.string().optional().or(z.literal("")),
   addressState: z.string().optional().or(z.literal("")),
@@ -429,9 +427,7 @@ export default function Guests() {
     resolver: zodResolver(householdFormSchema),
     defaultValues: {
       name: "",
-      mainContactName: "",
       contactEmail: "",
-      contactPhone: "",
       addressStreet: "",
       addressCity: "",
       addressState: "",
@@ -978,9 +974,7 @@ export default function Guests() {
     setEditingHousehold(null);
     householdForm.reset({
       name: "",
-      mainContactName: "",
       contactEmail: "",
-      contactPhone: "",
       addressStreet: "",
       addressCity: "",
       addressState: "",
@@ -999,9 +993,7 @@ export default function Guests() {
     setEditingHousehold(household);
     householdForm.reset({
       name: household.name,
-      mainContactName: household.mainContactName || "",
       contactEmail: household.contactEmail || "",
-      contactPhone: household.contactPhone || "",
       addressStreet: household.addressStreet || "",
       addressCity: household.addressCity || "",
       addressState: household.addressState || "",
@@ -2685,48 +2677,24 @@ export default function Guests() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="household-mainContactName">
-                Main Point of Contact Name
+              <Label htmlFor="household-contactEmail">
+                Household Email
               </Label>
               <Input
-                id="household-mainContactName"
-                {...householdForm.register("mainContactName")}
-                placeholder="e.g., Raj Patel"
-                data-testid="input-household-main-contact-name"
+                id="household-contactEmail"
+                type="email"
+                {...householdForm.register("contactEmail")}
+                placeholder="e.g., patel@example.com"
+                data-testid="input-household-contact-email"
               />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="household-contactEmail">
-                  Main Contact Email
-                </Label>
-                <Input
-                  id="household-contactEmail"
-                  type="email"
-                  {...householdForm.register("contactEmail")}
-                  placeholder="e.g., patel@example.com"
-                  data-testid="input-household-contact-email"
-                />
-                {householdForm.formState.errors.contactEmail && (
-                  <p className="text-sm text-destructive">
-                    {householdForm.formState.errors.contactEmail.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="household-contactPhone">
-                  Main Contact Phone
-                </Label>
-                <Input
-                  id="household-contactPhone"
-                  type="tel"
-                  {...householdForm.register("contactPhone")}
-                  placeholder="e.g., +1 555-123-4567"
-                  data-testid="input-household-contact-phone"
-                />
-              </div>
+              {householdForm.formState.errors.contactEmail && (
+                <p className="text-sm text-destructive">
+                  {householdForm.formState.errors.contactEmail.message}
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Contact details for individual guests can be added when editing guests
+              </p>
             </div>
 
             <div className="space-y-2">
