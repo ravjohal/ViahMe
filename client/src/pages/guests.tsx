@@ -1948,7 +1948,8 @@ export default function Guests() {
                             <Button 
                               size="sm" 
                               className="mt-3 gap-2"
-                              onClick={() => setPlanningTab("optimize")}
+                              onClick={() => setMainTab("guest-list")}
+                              data-testid="button-see-full-picture"
                             >
                               See the Full Picture
                               <ArrowRight className="h-3 w-3" />
