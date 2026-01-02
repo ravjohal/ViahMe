@@ -1213,75 +1213,90 @@ export default function Guests() {
 
           {/* Guest List Tab - Current functionality */}
           <TabsContent value="guest-list" className="space-y-6">
-            {/* Capacity Bar - Same as in planning tab for unified view */}
-            <Card className="border-primary/20">
-              <CardContent className="p-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2">
-                      <Users className="h-5 w-5 text-primary" />
-                      <span className="font-semibold">Capacity Overview</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4 text-sm">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-3 h-3 rounded-full bg-green-500" />
-                      <span className="text-muted-foreground">Confirmed:</span>
-                      <span className="font-semibold">{planningSnapshot?.summary.confirmedSeats || guests.length}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-3 h-3 rounded-full bg-amber-500" />
-                      <span className="text-muted-foreground">Pending:</span>
-                      <span className="font-semibold">{planningSnapshot?.summary.pendingSeats || pendingCollectorSubmissions.length}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-3 h-3 rounded-full bg-muted" />
-                      <span className="text-muted-foreground">Budget:</span>
-                      <span className="font-semibold">{budgetData?.capacity.maxGuests || "—"}</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="relative h-4 bg-muted rounded-full overflow-hidden">
-                  {(() => {
-                    const maxGuests = budgetData?.capacity.maxGuests || 0;
-                    const confirmed = planningSnapshot?.summary.confirmedSeats || guests.length;
-                    const pending = planningSnapshot?.summary.pendingSeats || pendingCollectorSubmissions.length;
-                    if (maxGuests <= 0) return null;
-                    
-                    const confirmedPct = Math.min(Math.max((confirmed / maxGuests) * 100, 0), 100);
-                    const pendingPct = Math.min(Math.max((pending / maxGuests) * 100, 0), 100 - confirmedPct);
-                    
-                    return (
-                      <>
-                        <div className="absolute h-full bg-green-500 transition-all" style={{ width: `${confirmedPct}%` }} />
-                        <div className="absolute h-full bg-amber-500 transition-all" style={{ left: `${confirmedPct}%`, width: `${pendingPct}%` }} />
-                      </>
-                    );
-                  })()}
-                </div>
-                
-                {budgetData?.capacity.maxGuests && budgetData.capacity.maxGuests > 0 && ((planningSnapshot?.summary.confirmedSeats || guests.length) + (planningSnapshot?.summary.pendingSeats || 0)) > budgetData.capacity.maxGuests && (
-                  <div className="flex items-center gap-2 mt-2 text-sm text-destructive">
-                    <AlertTriangle className="h-4 w-4" />
-                    <span>Over budget by {((planningSnapshot?.summary.confirmedSeats || guests.length) + (planningSnapshot?.summary.pendingSeats || 0)) - budgetData.capacity.maxGuests} guests</span>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            {/* Guest Allocation Summary */}
+            {(() => {
+              const householdById = new Map(households.map(h => [h.id, h]));
+              const brideHouseholds = households.filter(h => h.affiliation === 'bride');
+              const groomHouseholds = households.filter(h => h.affiliation === 'groom');
+              const mutualHouseholds = households.filter(h => h.affiliation === 'mutual');
 
-            <Tabs defaultValue="allocation" className="space-y-6">
+              const brideGuests = guests.filter(g => {
+                if (!g.householdId) return false;
+                const household = householdById.get(g.householdId);
+                return household?.affiliation === 'bride';
+              });
+              const groomGuests = guests.filter(g => {
+                if (!g.householdId) return false;
+                const household = householdById.get(g.householdId);
+                return household?.affiliation === 'groom';
+              });
+              const mutualGuests = guests.filter(g => {
+                if (!g.householdId) return false;
+                const household = householdById.get(g.householdId);
+                return household?.affiliation === 'mutual';
+              });
+
+              return (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <Card data-testid="card-total-allocation">
+                    <CardHeader className="pb-3">
+                      <CardDescription>Total Guests</CardDescription>
+                      <CardTitle className="text-3xl">{guests.length}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground">
+                        {households.length} households
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card data-testid="card-bride-allocation" className="border-l-4 border-l-primary">
+                    <CardHeader className="pb-3">
+                      <CardDescription>Bride's Side</CardDescription>
+                      <CardTitle className="text-3xl">{brideGuests.length}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground">
+                        {brideHouseholds.length} households
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card data-testid="card-groom-allocation" className="border-l-4 border-l-accent">
+                    <CardHeader className="pb-3">
+                      <CardDescription>Groom's Side</CardDescription>
+                      <CardTitle className="text-3xl">{groomGuests.length}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground">
+                        {groomHouseholds.length} households
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card data-testid="card-mutual-allocation" className="border-l-4 border-l-muted">
+                    <CardHeader className="pb-3">
+                      <CardDescription>Mutual</CardDescription>
+                      <CardTitle className="text-3xl">{mutualGuests.length}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground">
+                        {mutualHouseholds.length} households
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+              );
+            })()}
+
+            <Tabs defaultValue="households" className="space-y-6">
               <TabsList>
-                <TabsTrigger value="allocation" data-testid="tab-allocation">
-                  <BarChart3 className="w-4 h-4 mr-2" />
-                  Guest Summary
-                </TabsTrigger>
-                <TabsTrigger value="guests" data-testid="tab-guests">
-                  Individual Guests
-                </TabsTrigger>
                 <TabsTrigger value="households" data-testid="tab-households">
                   <Users className="w-4 h-4 mr-2" />
                   Households
+                </TabsTrigger>
+                <TabsTrigger value="guests" data-testid="tab-guests">
+                  Individual Guests
                 </TabsTrigger>
                 <TabsTrigger value="duplicates" data-testid="tab-duplicates">
                   <AlertTriangle className="w-4 h-4 mr-2" />
@@ -1567,160 +1582,6 @@ export default function Guests() {
 
               <TabsContent value="duplicates" className="space-y-6">
                 <DuplicatesManager weddingId={wedding?.id || ""} />
-              </TabsContent>
-
-              <TabsContent value="allocation" className="space-y-6">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div>
-                    <h2 className="text-2xl font-bold">Guest Allocation</h2>
-                    <p className="text-muted-foreground mt-1">
-                      Overview of guest distribution by side and relationship tier
-                    </p>
-                  </div>
-                  <div className="flex gap-2 flex-wrap">
-                    <Select value={affiliationFilter} onValueChange={setAffiliationFilter}>
-                      <SelectTrigger className="w-[150px]" data-testid="select-affiliation-filter">
-                        <SelectValue placeholder="Filter by side" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Sides</SelectItem>
-                        <SelectItem value="bride">Bride's Side</SelectItem>
-                        <SelectItem value="groom">Groom's Side</SelectItem>
-                        <SelectItem value="mutual">Mutual</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Select value={tierFilter} onValueChange={setTierFilter}>
-                      <SelectTrigger className="w-[180px]" data-testid="select-tier-filter">
-                        <SelectValue placeholder="Filter by tier" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Tiers</SelectItem>
-                        <SelectItem value="immediate_family">Immediate Family</SelectItem>
-                        <SelectItem value="extended_family">Extended Family</SelectItem>
-                        <SelectItem value="friend">Friends</SelectItem>
-                        <SelectItem value="parents_friend">Parent's Friends</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Button
-                      variant="outline"
-                      onClick={() => exportToCSV(households, guests)}
-                      data-testid="button-export-csv"
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      Export CSV
-                    </Button>
-                  </div>
-                </div>
-
-                {(() => {
-                  const householdById = new Map(households.map(h => [h.id, h]));
-                  const filteredHouseholds = households.filter(h => {
-                    const matchesAffiliation = affiliationFilter === 'all' || h.affiliation === affiliationFilter;
-                    const matchesTier = tierFilter === 'all' || h.relationshipTier === tierFilter;
-                    return matchesAffiliation && matchesTier;
-                  });
-
-                  const filteredGuests = guests.filter(g => {
-                    if (!g.householdId) return false;
-                    const household = householdById.get(g.householdId);
-                    if (!household) return false;
-                    const matchesAffiliation = affiliationFilter === 'all' || household.affiliation === affiliationFilter;
-                    const matchesTier = tierFilter === 'all' || household.relationshipTier === tierFilter;
-                    return matchesAffiliation && matchesTier;
-                  });
-
-                  const brideHouseholds = filteredHouseholds.filter(h => h.affiliation === 'bride');
-                  const groomHouseholds = filteredHouseholds.filter(h => h.affiliation === 'groom');
-                  const mutualHouseholds = filteredHouseholds.filter(h => h.affiliation === 'mutual');
-
-                  const brideGuests = filteredGuests.filter(g => {
-                    if (!g.householdId) return false;
-                    const household = householdById.get(g.householdId);
-                    return household?.affiliation === 'bride';
-                  });
-                  const groomGuests = filteredGuests.filter(g => {
-                    if (!g.householdId) return false;
-                    const household = householdById.get(g.householdId);
-                    return household?.affiliation === 'groom';
-                  });
-                  const mutualGuests = filteredGuests.filter(g => {
-                    if (!g.householdId) return false;
-                    const household = householdById.get(g.householdId);
-                    return household?.affiliation === 'mutual';
-                  });
-
-                  const brideSeats = brideGuests.length;
-                  const groomSeats = groomGuests.length;
-                  const mutualSeats = mutualGuests.length;
-                  const totalSeats = filteredGuests.length;
-                  const totalGuests = filteredGuests.length;
-
-                  return (
-                    <>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <Card data-testid="card-total-allocation">
-                          <CardHeader className="pb-3">
-                            <CardDescription>Total Allocation</CardDescription>
-                            <CardTitle className="text-3xl">{totalSeats}</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <p className="text-sm text-muted-foreground">
-                              {filteredHouseholds.length} households • {totalGuests} guests added
-                            </p>
-                          </CardContent>
-                        </Card>
-
-                        <Card data-testid="card-bride-allocation" className="border-l-4 border-l-primary">
-                          <CardHeader className="pb-3">
-                            <CardDescription>Bride's Side</CardDescription>
-                            <CardTitle className="text-3xl">{brideSeats}</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <p className="text-sm text-muted-foreground">
-                              {brideHouseholds.length} households • {brideGuests.length} guests
-                            </p>
-                          </CardContent>
-                        </Card>
-
-                        <Card data-testid="card-groom-allocation" className="border-l-4 border-l-accent">
-                          <CardHeader className="pb-3">
-                            <CardDescription>Groom's Side</CardDescription>
-                            <CardTitle className="text-3xl">{groomSeats}</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <p className="text-sm text-muted-foreground">
-                              {groomHouseholds.length} households • {groomGuests.length} guests
-                            </p>
-                          </CardContent>
-                        </Card>
-
-                        <Card data-testid="card-mutual-allocation" className="border-l-4 border-l-muted">
-                          <CardHeader className="pb-3">
-                            <CardDescription>Mutual</CardDescription>
-                            <CardTitle className="text-3xl">{mutualSeats}</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <p className="text-sm text-muted-foreground">
-                              {mutualHouseholds.length} households • {mutualGuests.length} guests
-                            </p>
-                          </CardContent>
-                        </Card>
-                      </div>
-
-                      {filteredHouseholds.length === 0 && (
-                        <Card className="border-dashed">
-                          <CardContent className="p-8 text-center">
-                            <BarChart3 className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-                            <h3 className="font-semibold mb-2">No Allocation Data</h3>
-                            <p className="text-muted-foreground">
-                              Create households to see guest allocation breakdowns by bride/groom side
-                            </p>
-                          </CardContent>
-                        </Card>
-                      )}
-                    </>
-                  );
-                })()}
               </TabsContent>
             </Tabs>
           </TabsContent>
