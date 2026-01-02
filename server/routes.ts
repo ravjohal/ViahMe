@@ -9201,20 +9201,16 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   });
 
   app.post("/api/collector-submissions/:id/maybe", async (req, res) => {
-    console.log("=== MAYBE ROUTE HIT ===");
     const userId = req.session?.userId;
-    console.log("User ID:", userId);
     if (!userId) {
       return res.status(401).json({ error: "Authentication required" });
     }
     
     try {
-      console.log(`[Maybe] Marking submission ${req.params.id} as maybe by user ${userId}`);
+      // Use the same pattern as declineCollectorSubmission which works
       const result = await storage.markCollectorSubmissionMaybe(req.params.id, userId);
-      console.log(`[Maybe] Result:`, JSON.stringify(result, null, 2));
       res.json(result);
     } catch (error: any) {
-      console.error(`[Maybe] Error:`, error);
       res.status(500).json({ error: error.message });
     }
   });
