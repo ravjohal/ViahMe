@@ -1419,52 +1419,66 @@ export default function Guests() {
 
                           {/* Main Point of Contact */}
                           {(household.contactEmail || household.contactPhone || householdGuests.length > 0) && (
-                            <div className="text-sm border rounded-md p-2 bg-muted/30">
-                              <div className="flex items-center gap-2 mb-1">
+                            <div className="text-sm border rounded-md p-2 bg-muted/30 space-y-2">
+                              <div className="flex items-center gap-2">
                                 <User className="w-4 h-4 text-muted-foreground" />
                                 <span className="font-medium">
                                   {householdGuests[household.headOfHouseIndex || 0]?.name || household.name}
                                 </span>
                                 <Badge variant="outline" className="text-xs">Main Contact</Badge>
                               </div>
-                              <div className="flex flex-wrap gap-2 mt-2">
-                                {household.contactEmail && (
+                              {(household.contactPhone || household.contactEmail) && (
+                                <div className="text-xs text-muted-foreground space-y-1 pl-6">
+                                  {household.contactPhone && (
+                                    <div className="flex items-center gap-1.5" data-testid={`text-phone-${household.id}`}>
+                                      <Phone className="w-3 h-3" />
+                                      <span>{household.contactPhone}</span>
+                                    </div>
+                                  )}
+                                  {household.contactEmail && (
+                                    <div className="flex items-center gap-1.5" data-testid={`text-email-${household.id}`}>
+                                      <Mail className="w-3 h-3" />
+                                      <span className="truncate">{household.contactEmail}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                              {household.contactPhone && (
+                                <div className="flex flex-wrap gap-1 pl-6">
                                   <Button
                                     size="sm"
                                     variant="ghost"
                                     className="h-7 text-xs gap-1"
-                                    onClick={() => window.open(`mailto:${household.contactEmail}`, '_blank')}
-                                    data-testid={`button-email-${household.id}`}
+                                    onClick={() => window.open(`https://wa.me/${household.contactPhone!.replace(/\D/g, '')}`, '_blank')}
+                                    data-testid={`button-whatsapp-${household.id}`}
                                   >
-                                    <Mail className="w-3 h-3" />
-                                    {household.contactEmail}
+                                    <MessageCircle className="w-3 h-3" />
+                                    WhatsApp
                                   </Button>
-                                )}
-                                {household.contactPhone && (
-                                  <>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-7 text-xs gap-1"
+                                    onClick={() => window.open(`sms:${household.contactPhone}`, '_blank')}
+                                    data-testid={`button-sms-${household.id}`}
+                                  >
+                                    <Phone className="w-3 h-3" />
+                                    SMS
+                                  </Button>
+                                  {household.contactEmail && (
                                     <Button
                                       size="sm"
                                       variant="ghost"
                                       className="h-7 text-xs gap-1"
-                                      onClick={() => window.open(`https://wa.me/${household.contactPhone!.replace(/\D/g, '')}`, '_blank')}
-                                      data-testid={`button-whatsapp-${household.id}`}
+                                      onClick={() => window.open(`mailto:${household.contactEmail}`, '_blank')}
+                                      data-testid={`button-email-${household.id}`}
                                     >
-                                      <MessageCircle className="w-3 h-3" />
-                                      WhatsApp
+                                      <Mail className="w-3 h-3" />
+                                      Email
                                     </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      className="h-7 text-xs gap-1"
-                                      onClick={() => window.open(`sms:${household.contactPhone}`, '_blank')}
-                                      data-testid={`button-sms-${household.id}`}
-                                    >
-                                      <Phone className="w-3 h-3" />
-                                      SMS
-                                    </Button>
-                                  </>
-                                )}
-                              </div>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           )}
 
