@@ -195,6 +195,7 @@ export async function registerCollectorRoutes(router: Router, storage: IStorage)
         guestNames,
         guestCount,
         desiDietaryType: req.body.desiDietaryType,
+        mainContactName: req.body.mainContactName,
         members: members.length > 0 ? JSON.stringify(members) : undefined,
         eventSuggestions: req.body.eventSuggestions || [],
         fullAddress: req.body.fullAddress,
