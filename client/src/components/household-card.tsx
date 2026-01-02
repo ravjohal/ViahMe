@@ -218,49 +218,65 @@ export function HouseholdCard({
 
         <CardContent className="px-4 pb-4 space-y-3">
           {headOfHouse && (
-            <div className="flex items-center gap-3 p-2 bg-muted/50 rounded-lg">
-              <div className="flex items-center gap-2 flex-1 min-w-0">
-                <Crown className="h-4 w-4 text-amber-500 flex-shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-sm font-medium truncate">{headOfHouse.name}</p>
-                  <p className="text-xs text-muted-foreground">Head of House</p>
+            <div className="p-2 bg-muted/50 rounded-lg space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <Crown className="h-4 w-4 text-amber-500 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{headOfHouse.name}</p>
+                    <p className="text-xs text-muted-foreground">Main Point of Contact</p>
+                  </div>
+                </div>
+                <div className="flex gap-1">
+                  {contactPhone && (
+                    <>
+                      <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        className="text-green-600"
+                        onClick={handleWhatsAppClick}
+                        data-testid={`button-whatsapp-${household.id}`}
+                      >
+                        <SiWhatsapp className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        onClick={handleSMSClick}
+                        data-testid={`button-sms-${household.id}`}
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                      </Button>
+                    </>
+                  )}
+                  {contactEmail && (
+                    <Button 
+                      size="icon" 
+                      variant="ghost" 
+                      onClick={handleEmailClick}
+                      data-testid={`button-email-${household.id}`}
+                    >
+                      <Mail className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
-              <div className="flex gap-1">
-                {contactPhone && (
-                  <>
-                    <Button 
-                      size="icon" 
-                      variant="ghost" 
-                      className="h-9 w-9 text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30"
-                      onClick={handleWhatsAppClick}
-                      data-testid={`button-whatsapp-${household.id}`}
-                    >
-                      <SiWhatsapp className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      size="icon" 
-                      variant="ghost" 
-                      className="h-9 w-9"
-                      onClick={handleSMSClick}
-                      data-testid={`button-sms-${household.id}`}
-                    >
-                      <MessageCircle className="h-4 w-4" />
-                    </Button>
-                  </>
-                )}
-                {contactEmail && (
-                  <Button 
-                    size="icon" 
-                    variant="ghost" 
-                    className="h-9 w-9"
-                    onClick={handleEmailClick}
-                    data-testid={`button-email-${household.id}`}
-                  >
-                    <Mail className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
+              {(contactPhone || contactEmail) && (
+                <div className="text-xs text-muted-foreground space-y-0.5 pl-6">
+                  {contactPhone && (
+                    <div className="flex items-center gap-1.5">
+                      <Phone className="h-3 w-3" />
+                      <span>{contactPhone}</span>
+                    </div>
+                  )}
+                  {contactEmail && (
+                    <div className="flex items-center gap-1.5">
+                      <Mail className="h-3 w-3" />
+                      <span className="truncate">{contactEmail}</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
