@@ -36,7 +36,7 @@ import {
   Phone,
   Home,
 } from "lucide-react";
-import type { Wedding, Event, Household, GuestCommunication } from "@shared/schema";
+import type { Wedding, Event, Household, Guest, GuestCommunication } from "@shared/schema";
 import { format } from "date-fns";
 
 type RsvpStats = {
@@ -72,6 +72,11 @@ export default function CommunicationHub() {
 
   const { data: households, isLoading: householdsLoading } = useQuery<Household[]>({
     queryKey: ["/api/households", wedding?.id],
+    enabled: !!wedding?.id,
+  });
+
+  const { data: guests = [] } = useQuery<Guest[]>({
+    queryKey: ["/api/guests", wedding?.id],
     enabled: !!wedding?.id,
   });
 
