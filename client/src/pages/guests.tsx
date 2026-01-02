@@ -1347,9 +1347,9 @@ export default function Guests() {
                 {/* Mobile-First Summary Header */}
                 <SummaryHeader
                   totalHouseholds={households.length}
-                  totalGuests={guests.length || households.reduce((sum, h) => sum + (h.maxCount || 1), 0)}
-                  rsvpPending={households.filter(h => !h.magicLinkTokenHash).length}
-                  rsvpConfirmed={households.filter(h => h.magicLinkTokenHash).length}
+                  totalGuests={guests.length}
+                  rsvpPending={guests.filter(g => g.rsvpStatus === 'pending').length}
+                  rsvpConfirmed={guests.filter(g => g.rsvpStatus === 'confirmed').length}
                   onSendReminders={() => setWhatsappBlastDialogOpen(true)}
                 />
 
