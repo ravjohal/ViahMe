@@ -243,8 +243,15 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
         }
       }
 
-      const { splits, ...expenseData } = req.body;
-      const expense = await storage.updateExpense(req.params.id, expenseData);
+      const { splits, expenseDate, ...expenseData } = req.body;
+      
+      // Convert expenseDate string to Date object if provided
+      const updateData = {
+        ...expenseData,
+        ...(expenseDate && { expenseDate: new Date(expenseDate) }),
+      };
+      
+      const expense = await storage.updateExpense(req.params.id, updateData);
       if (!expense) {
         return res.status(404).json({ error: "Expense not found" });
       }
