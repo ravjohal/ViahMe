@@ -27,12 +27,20 @@ export async function registerBudgetCategoryRoutes(router: Router, storage: ISto
 
   router.patch("/:id", async (req, res) => {
     try {
-      const category = await storage.updateBudgetCategory(req.params.id, req.body);
+      const updateData = { ...req.body };
+      
+      // Convert ISO string to Date for lastEstimatedAt if present
+      if (updateData.lastEstimatedAt && typeof updateData.lastEstimatedAt === 'string') {
+        updateData.lastEstimatedAt = new Date(updateData.lastEstimatedAt);
+      }
+      
+      const category = await storage.updateBudgetCategory(req.params.id, updateData);
       if (!category) {
         return res.status(404).json({ error: "Budget category not found" });
       }
       res.json(category);
     } catch (error) {
+      console.error("[Budget Category PATCH] Error:", error);
       res.status(500).json({ error: "Failed to update budget category" });
     }
   });
