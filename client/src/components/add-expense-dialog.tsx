@@ -43,6 +43,7 @@ export function AddExpenseDialog({
     notes: "",
     expenseDate: new Date().toISOString().split("T")[0],
     allocationStrategy: "single" as AllocationStrategy,
+    paymentStatus: "pending" as "pending" | "deposit_paid" | "paid",
   });
   const [splitAmounts, setSplitAmounts] = useState<Record<string, string>>({});
   const [selectedEventIds, setSelectedEventIds] = useState<string[]>([]);
@@ -87,6 +88,7 @@ export function AddExpenseDialog({
       notes: "",
       expenseDate: new Date().toISOString().split("T")[0],
       allocationStrategy: "single",
+      paymentStatus: "pending",
     });
     setSplitAmounts({});
     setSelectedEventIds([]);
@@ -168,6 +170,7 @@ export function AddExpenseDialog({
       paidById: payerId,
       paidByName: teamMembers.find((m) => m.id === payerId)?.name || "Unknown",
       splitType: formData.splitType,
+      paymentStatus: formData.paymentStatus,
       notes: formData.notes,
       expenseDate: formData.expenseDate,
       splits,
@@ -431,6 +434,22 @@ export function AddExpenseDialog({
               onChange={(e) => setFormData({ ...formData, expenseDate: e.target.value })}
               data-testid="input-expense-date"
             />
+          </div>
+          <div>
+            <Label htmlFor="paymentStatus">Payment Status</Label>
+            <Select 
+              value={formData.paymentStatus} 
+              onValueChange={(v: "pending" | "deposit_paid" | "paid") => setFormData({ ...formData, paymentStatus: v })}
+            >
+              <SelectTrigger data-testid="select-payment-status">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="deposit_paid">Deposit Paid</SelectItem>
+                <SelectItem value="paid">Paid in Full</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <Label htmlFor="notes">Notes (Optional)</Label>

@@ -553,6 +553,7 @@ export const expenses = pgTable("expenses", {
   paidByName: text("paid_by_name").notNull(), // Cached name for display
   splitType: text("split_type").notNull().default('equal'), // 'equal' | 'percentage' | 'custom' | 'full'
   allocationStrategy: text("allocation_strategy").default('single'), // 'single' | 'equal' | 'percentage' | 'custom'
+  paymentStatus: text("payment_status").notNull().default('pending'), // 'pending' | 'deposit_paid' | 'paid'
   receiptUrl: text("receipt_url"), // Optional receipt image/document
   notes: text("notes"),
   expenseDate: timestamp("expense_date").notNull().defaultNow(),
@@ -566,6 +567,7 @@ export const insertExpenseSchema = createInsertSchema(expenses).omit({
   amount: z.string().regex(/^\d+(\.\d{1,2})?$/, "Amount must be a valid decimal"),
   splitType: z.enum(['equal', 'percentage', 'custom', 'full']),
   allocationStrategy: z.enum(['single', 'equal', 'percentage', 'custom']).optional(),
+  paymentStatus: z.enum(['pending', 'deposit_paid', 'paid']).optional(),
   expenseDate: z.string().optional().transform(val => val ? new Date(val) : new Date()),
 });
 

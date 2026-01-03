@@ -37,6 +37,7 @@ export default function Expenses() {
     notes: "",
     expenseDate: new Date().toISOString().split("T")[0],
     allocationStrategy: "single" as AllocationStrategy,
+    paymentStatus: "pending" as "pending" | "deposit_paid" | "paid",
   });
   const [splitAmounts, setSplitAmounts] = useState<Record<string, string>>({});
   const [selectedEventIds, setSelectedEventIds] = useState<string[]>([]);
@@ -152,6 +153,7 @@ export default function Expenses() {
       notes: "",
       expenseDate: new Date().toISOString().split("T")[0],
       allocationStrategy: "single",
+      paymentStatus: "pending",
     });
     setSplitAmounts({});
     setSelectedEventIds([]);
@@ -219,6 +221,7 @@ export default function Expenses() {
       paidById: payerId,
       paidByName: teamMembers.find(m => m.id === payerId)?.name || user.email,
       splitType: formData.splitType,
+      paymentStatus: formData.paymentStatus,
       eventId: formData.allocationStrategy === "single" ? (formData.eventId || null) : null,
       allocationStrategy: formData.allocationStrategy,
       categoryId: formData.categoryId || null,
@@ -252,6 +255,7 @@ export default function Expenses() {
       notes: expense.notes || "",
       expenseDate: expense.expenseDate ? new Date(expense.expenseDate).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
       allocationStrategy: strategy,
+      paymentStatus: (expense as any).paymentStatus || "pending",
     });
     
     const amounts: Record<string, string> = {};
@@ -562,6 +566,22 @@ export default function Expenses() {
                   onChange={(e) => setFormData({ ...formData, expenseDate: e.target.value })}
                   data-testid="input-expense-date"
                 />
+              </div>
+              <div>
+                <Label htmlFor="paymentStatus">Payment Status</Label>
+                <Select 
+                  value={formData.paymentStatus} 
+                  onValueChange={(v: "pending" | "deposit_paid" | "paid") => setFormData({ ...formData, paymentStatus: v })}
+                >
+                  <SelectTrigger data-testid="select-payment-status">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="deposit_paid">Deposit Paid</SelectItem>
+                    <SelectItem value="paid">Paid in Full</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label htmlFor="notes">Notes (Optional)</Label>

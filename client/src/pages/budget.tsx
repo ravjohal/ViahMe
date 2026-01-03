@@ -510,11 +510,9 @@ export default function Budget() {
 
   // Get expense payment status
   const getPaymentStatus = (expense: Expense): { label: string; variant: "default" | "secondary" | "destructive" | "outline" } => {
-    // This would ideally come from linked contracts or a status field
-    // For now, derive from notes or a status field if available
-    const notes = expense.notes?.toLowerCase() || "";
-    if (notes.includes("paid")) return { label: "PAID", variant: "default" };
-    if (notes.includes("deposit")) return { label: "DEPOSIT REQ", variant: "outline" };
+    const status = (expense as any).paymentStatus || "pending";
+    if (status === "paid") return { label: "PAID", variant: "default" };
+    if (status === "deposit_paid") return { label: "DEPOSIT PAID", variant: "outline" };
     return { label: "PENDING", variant: "secondary" };
   };
 
