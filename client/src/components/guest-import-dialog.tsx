@@ -16,7 +16,6 @@ import { Badge } from "@/components/ui/badge";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
 import type { Event } from "@shared/schema";
-import { apiRequest } from "@/lib/queryClient";
 
 interface DuplicateMatch {
   importIndex: number;
@@ -322,13 +321,19 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
       
       setCheckingDuplicates(true);
       try {
-        const response = await apiRequest('POST', '/api/guests/bulk/preview', {
-          weddingId,
-          guests: guests.map(g => ({ name: g.name, email: g.email, phone: g.phone, householdName: g.householdName }))
+        const response = await fetch('/api/guests/bulk/preview', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            weddingId,
+            guests: guests.map(g => ({ name: g.name, email: g.email, phone: g.phone, householdName: g.householdName }))
+          }),
         });
-        const data = await response.json();
-        setDuplicatesWithExisting(data.duplicatesWithExisting || []);
-        setDuplicatesInBatch(data.duplicatesInBatch || []);
+        if (response.ok) {
+          const data = await response.json();
+          setDuplicatesWithExisting(data.duplicatesWithExisting || []);
+          setDuplicatesInBatch(data.duplicatesInBatch || []);
+        }
       } catch (error) {
         console.error("Failed to check for duplicates:", error);
       } finally {
