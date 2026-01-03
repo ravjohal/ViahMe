@@ -62,7 +62,6 @@ export const COUPLE_NAV_SECTIONS: NavSection[] = [
     items: [
       { path: "/messages", label: "Messages", icon: MessageSquare, description: "Chat with vendors" },
       { path: "/communication-hub", label: "Send Invites", icon: Send, permission: "guests", description: "Send invitations & track RSVPs" },
-      { path: "/invitations", label: "Invitations", icon: ShoppingBag, permission: "invitations", description: "Order cards" },
     ],
   },
   {

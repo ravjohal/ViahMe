@@ -36,7 +36,6 @@ import Settings from "@/pages/settings";
 import Landing from "@/pages/landing";
 import VendorAnalytics from "@/pages/vendor-analytics";
 import CoupleAnalytics from "@/pages/couple-analytics";
-import Invitations from "@/pages/invitations";
 import Checkout from "@/pages/checkout";
 import OrderConfirmation from "@/pages/order-confirmation";
 import RsvpPortal from "@/pages/rsvp-portal";
@@ -125,11 +124,6 @@ function Router() {
       <Route path="/guests">
         <ProtectedRoute requiredPermission="guests">
           <Guests />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/invitations">
-        <ProtectedRoute requiredPermission="invitations">
-          <Invitations />
         </ProtectedRoute>
       </Route>
       <Route path="/communication-hub">
