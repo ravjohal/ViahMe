@@ -9,6 +9,74 @@ function calculateDueDate(weddingDate: Date, daysBeforeWedding: number): Date {
   return dueDate;
 }
 
+// Calculate event date relative to the main wedding ceremony date
+// Main ceremonies (anand_karaj, wedding, nikah, etc.) get the wedding date
+// Pre-wedding ceremonies are scheduled before, reception is same day or after
+function calculateEventDate(weddingDate: Date, ceremonyId: string, eventType: string): Date {
+  const eventDate = new Date(weddingDate);
+  
+  // Main wedding ceremonies - use the wedding date
+  const mainCeremonies = [
+    'anand_karaj', 'wedding', 'hindu_wedding', 'sikh_anand_karaj', 
+    'nikah', 'muslim_nikah', 'gujarati_wedding', 'south_indian_muhurtham',
+    'christian_ceremony', 'jain_wedding', 'parsi_lagan'
+  ];
+  
+  if (mainCeremonies.includes(ceremonyId) || mainCeremonies.includes(eventType)) {
+    return eventDate;
+  }
+  
+  // Reception - same day as wedding (could be evening)
+  if (eventType === 'reception' || ceremonyId.includes('reception')) {
+    return eventDate;
+  }
+  
+  // Walima - day after wedding for Muslim weddings
+  if (eventType === 'walima' || ceremonyId.includes('walima')) {
+    eventDate.setDate(weddingDate.getDate() + 1);
+    return eventDate;
+  }
+  
+  // Pre-wedding ceremonies with typical scheduling
+  const preWeddingOffsets: Record<string, number> = {
+    // 7 days before
+    'paath': 7,
+    'roka': 7,
+    'sagai': 7,
+    'engagement': 7,
+    
+    // 3-4 days before
+    'mehndi': 3,
+    'hindu_mehndi': 3,
+    'sikh_mehndi': 3,
+    'muslim_mehndi': 3,
+    'maiyan': 3,
+    'haldi': 2,
+    'hindu_haldi': 2,
+    'pithi': 3,
+    'gujarati_pithi': 3,
+    'dholki': 4,
+    'muslim_dholki': 4,
+    
+    // 2 days before
+    'sangeet': 2,
+    'hindu_sangeet': 2,
+    'sikh_sangeet': 2,
+    'garba': 2,
+    'gujarati_garba': 2,
+    
+    // 1 day before
+    'baraat': 1,
+    'hindu_baraat': 1,
+    'milni': 1,
+    'cocktail': 1,
+  };
+  
+  const offset = preWeddingOffsets[eventType] || preWeddingOffsets[ceremonyId] || 1;
+  eventDate.setDate(weddingDate.getDate() - offset);
+  return eventDate;
+}
+
 export async function registerWeddingRoutes(router: Router, storage: IStorage) {
   router.get("/", await requireAuth(storage, false), async (req, res) => {
     try {
@@ -109,6 +177,16 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
             ? parseInt(customEvent.guestCount) 
             : (ceremony?.defaultGuests || undefined);
           
+          // Calculate event date based on wedding date
+          let eventDate: Date | undefined = undefined;
+          if (wedding.weddingDate) {
+            eventDate = calculateEventDate(
+              new Date(wedding.weddingDate), 
+              customEvent.ceremonyId, 
+              eventType
+            );
+          }
+          
           await storage.createEvent({
             weddingId: wedding.id,
             name: eventName,
@@ -116,6 +194,7 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
             description: eventDescription,
             order: i + 1,
             guestCount: guestCount,
+            date: eventDate,
           });
         }
       } else if (wedding.tradition === "sikh") {
