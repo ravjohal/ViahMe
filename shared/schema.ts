@@ -3273,3 +3273,85 @@ export const insertDashboardWidgetSchema = createInsertSchema(dashboardWidgets).
 
 export type InsertDashboardWidget = z.infer<typeof insertDashboardWidgetSchema>;
 export type DashboardWidget = typeof dashboardWidgets.$inferSelect;
+
+// ============================================================================
+// CEREMONY TEMPLATES - Database-driven ceremony cost estimates
+// ============================================================================
+
+export const ceremonyTemplates = pgTable("ceremony_templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  ceremonyId: text("ceremony_id").notNull().unique(), // e.g., 'sikh_maiyan', 'sikh_anand_karaj'
+  name: text("name").notNull(), // Display name e.g., "Maiyan"
+  description: text("description"), // Description of the ceremony
+  tradition: text("tradition").notNull(), // 'sikh' | 'hindu' | 'muslim' | etc.
+  costPerGuestLow: decimal("cost_per_guest_low", { precision: 10, scale: 2 }).notNull(),
+  costPerGuestHigh: decimal("cost_per_guest_high", { precision: 10, scale: 2 }).notNull(),
+  defaultGuests: integer("default_guests").notNull().default(100),
+  costBreakdown: jsonb("cost_breakdown").notNull(), // Array of CostCategory objects
+  isActive: boolean("is_active").notNull().default(true),
+  displayOrder: integer("display_order").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertCeremonyTemplateSchema = createInsertSchema(ceremonyTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  tradition: z.enum(['sikh', 'hindu', 'muslim', 'gujarati', 'south_indian', 'christian', 'jain', 'parsi', 'mixed', 'general']),
+  costPerGuestLow: z.string(),
+  costPerGuestHigh: z.string(),
+  costBreakdown: z.array(z.object({
+    category: z.string(),
+    lowCost: z.number(),
+    highCost: z.number(),
+    unit: z.enum(['fixed', 'per_hour', 'per_person']),
+    hoursLow: z.number().optional(),
+    hoursHigh: z.number().optional(),
+    notes: z.string().optional(),
+  })),
+});
+
+export type InsertCeremonyTemplate = z.infer<typeof insertCeremonyTemplateSchema>;
+export type CeremonyTemplate = typeof ceremonyTemplates.$inferSelect;
+
+// Cost breakdown item type for the JSON field
+export type CeremonyTemplateCostItem = {
+  category: string;
+  lowCost: number;
+  highCost: number;
+  unit: 'fixed' | 'per_hour' | 'per_person';
+  hoursLow?: number;
+  hoursHigh?: number;
+  notes?: string;
+};
+
+// ============================================================================
+// REGIONAL PRICING - City-specific cost multipliers
+// ============================================================================
+
+export const regionalPricing = pgTable("regional_pricing", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  city: text("city").notNull().unique(), // 'Bay Area', 'NYC', 'LA', 'Chicago', 'Seattle'
+  displayName: text("display_name").notNull(), // Full display name
+  multiplier: decimal("multiplier", { precision: 4, scale: 2 }).notNull(), // e.g., 1.50 for 50% more expensive
+  venueMultiplier: decimal("venue_multiplier", { precision: 4, scale: 2 }), // Optional venue-specific multiplier
+  cateringMultiplier: decimal("catering_multiplier", { precision: 4, scale: 2 }), // Optional catering-specific multiplier
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertRegionalPricingSchema = createInsertSchema(regionalPricing).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  multiplier: z.string(),
+  venueMultiplier: z.string().optional(),
+  cateringMultiplier: z.string().optional(),
+});
+
+export type InsertRegionalPricing = z.infer<typeof insertRegionalPricingSchema>;
+export type RegionalPricing = typeof regionalPricing.$inferSelect;

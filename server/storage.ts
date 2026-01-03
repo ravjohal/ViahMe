@@ -187,8 +187,14 @@ import {
   type InsertBudgetAlert,
   type DashboardWidget,
   type InsertDashboardWidget,
+  type CeremonyTemplate,
+  type InsertCeremonyTemplate,
+  type RegionalPricing,
+  type InsertRegionalPricing,
   budgetAlerts,
   dashboardWidgets,
+  ceremonyTemplates,
+  regionalPricing,
 } from "@shared/schema";
 import { randomUUID, randomBytes } from "crypto";
 import bcrypt from "bcrypt";
@@ -1037,6 +1043,20 @@ export interface IStorage {
   updateDashboardWidget(id: string, widget: Partial<InsertDashboardWidget>): Promise<DashboardWidget | undefined>;
   deleteDashboardWidget(id: string): Promise<boolean>;
   updateDashboardWidgetPositions(widgetIds: string[], positions: number[]): Promise<DashboardWidget[]>;
+
+  // Ceremony Templates
+  getCeremonyTemplate(ceremonyId: string): Promise<CeremonyTemplate | undefined>;
+  getCeremonyTemplatesByTradition(tradition: string): Promise<CeremonyTemplate[]>;
+  getAllCeremonyTemplates(): Promise<CeremonyTemplate[]>;
+  createCeremonyTemplate(template: InsertCeremonyTemplate): Promise<CeremonyTemplate>;
+  updateCeremonyTemplate(ceremonyId: string, template: Partial<InsertCeremonyTemplate>): Promise<CeremonyTemplate | undefined>;
+  deleteCeremonyTemplate(ceremonyId: string): Promise<boolean>;
+
+  // Regional Pricing
+  getRegionalPricing(city: string): Promise<RegionalPricing | undefined>;
+  getAllRegionalPricing(): Promise<RegionalPricing[]>;
+  createRegionalPricing(pricing: InsertRegionalPricing): Promise<RegionalPricing>;
+  updateRegionalPricing(city: string, pricing: Partial<InsertRegionalPricing>): Promise<RegionalPricing | undefined>;
 }
 
 // Guest Planning Snapshot - comprehensive view of all guests and per-event costs
@@ -4193,6 +4213,20 @@ export class MemStorage implements IStorage {
   async getHouseholdMergeAudits(weddingId: string): Promise<HouseholdMergeAudit[]> { return []; }
   async ignoreHouseholdDuplicatePair(weddingId: string, householdId1: string, householdId2: string, ignoredById: string): Promise<IgnoredDuplicatePair> { throw new Error('Not implemented'); }
   async getIgnoredDuplicatePairs(weddingId: string): Promise<IgnoredDuplicatePair[]> { return []; }
+
+  // Ceremony Templates (stubs - use DBStorage for production)
+  async getCeremonyTemplate(ceremonyId: string): Promise<CeremonyTemplate | undefined> { return undefined; }
+  async getCeremonyTemplatesByTradition(tradition: string): Promise<CeremonyTemplate[]> { return []; }
+  async getAllCeremonyTemplates(): Promise<CeremonyTemplate[]> { return []; }
+  async createCeremonyTemplate(template: InsertCeremonyTemplate): Promise<CeremonyTemplate> { throw new Error('MemStorage does not support Ceremony Templates. Use DBStorage.'); }
+  async updateCeremonyTemplate(ceremonyId: string, template: Partial<InsertCeremonyTemplate>): Promise<CeremonyTemplate | undefined> { throw new Error('MemStorage does not support Ceremony Templates. Use DBStorage.'); }
+  async deleteCeremonyTemplate(ceremonyId: string): Promise<boolean> { return false; }
+
+  // Regional Pricing (stubs - use DBStorage for production)
+  async getRegionalPricing(city: string): Promise<RegionalPricing | undefined> { return undefined; }
+  async getAllRegionalPricing(): Promise<RegionalPricing[]> { return []; }
+  async createRegionalPricing(pricing: InsertRegionalPricing): Promise<RegionalPricing> { throw new Error('MemStorage does not support Regional Pricing. Use DBStorage.'); }
+  async updateRegionalPricing(city: string, pricing: Partial<InsertRegionalPricing>): Promise<RegionalPricing | undefined> { throw new Error('MemStorage does not support Regional Pricing. Use DBStorage.'); }
 }
 
 import { neon } from "@neondatabase/serverless";
@@ -10280,6 +10314,77 @@ export class DBStorage implements IStorage {
       if (result[0]) results.push(result[0]);
     }
     return results;
+  }
+
+  // Ceremony Templates
+  async getCeremonyTemplate(ceremonyId: string): Promise<CeremonyTemplate | undefined> {
+    const result = await this.db.select()
+      .from(ceremonyTemplates)
+      .where(eq(ceremonyTemplates.ceremonyId, ceremonyId));
+    return result[0];
+  }
+
+  async getCeremonyTemplatesByTradition(tradition: string): Promise<CeremonyTemplate[]> {
+    return await this.db.select()
+      .from(ceremonyTemplates)
+      .where(eq(ceremonyTemplates.tradition, tradition))
+      .orderBy(sql`${ceremonyTemplates.displayOrder} ASC`);
+  }
+
+  async getAllCeremonyTemplates(): Promise<CeremonyTemplate[]> {
+    return await this.db.select()
+      .from(ceremonyTemplates)
+      .orderBy(sql`${ceremonyTemplates.tradition} ASC, ${ceremonyTemplates.displayOrder} ASC`);
+  }
+
+  async createCeremonyTemplate(template: InsertCeremonyTemplate): Promise<CeremonyTemplate> {
+    const result = await this.db.insert(ceremonyTemplates)
+      .values(template)
+      .returning();
+    return result[0];
+  }
+
+  async updateCeremonyTemplate(ceremonyId: string, template: Partial<InsertCeremonyTemplate>): Promise<CeremonyTemplate | undefined> {
+    const result = await this.db.update(ceremonyTemplates)
+      .set(template)
+      .where(eq(ceremonyTemplates.ceremonyId, ceremonyId))
+      .returning();
+    return result[0];
+  }
+
+  async deleteCeremonyTemplate(ceremonyId: string): Promise<boolean> {
+    await this.db.delete(ceremonyTemplates)
+      .where(eq(ceremonyTemplates.ceremonyId, ceremonyId));
+    return true;
+  }
+
+  // Regional Pricing
+  async getRegionalPricing(city: string): Promise<RegionalPricing | undefined> {
+    const result = await this.db.select()
+      .from(regionalPricing)
+      .where(eq(regionalPricing.city, city));
+    return result[0];
+  }
+
+  async getAllRegionalPricing(): Promise<RegionalPricing[]> {
+    return await this.db.select()
+      .from(regionalPricing)
+      .orderBy(sql`${regionalPricing.city} ASC`);
+  }
+
+  async createRegionalPricing(pricing: InsertRegionalPricing): Promise<RegionalPricing> {
+    const result = await this.db.insert(regionalPricing)
+      .values(pricing)
+      .returning();
+    return result[0];
+  }
+
+  async updateRegionalPricing(city: string, pricing: Partial<InsertRegionalPricing>): Promise<RegionalPricing | undefined> {
+    const result = await this.db.update(regionalPricing)
+      .set(pricing)
+      .where(eq(regionalPricing.city, city))
+      .returning();
+    return result[0];
   }
 }
 
