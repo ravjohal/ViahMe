@@ -24,6 +24,7 @@ import { SiWhatsapp } from "react-icons/si";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { MultiCeremonySavingsCalculator } from "@/components/multi-ceremony-savings-calculator";
+import { AddExpenseDialog } from "@/components/add-expense-dialog";
 
 // Extended expense type that includes event allocations from API
 interface ExpenseWithAllocations extends Expense {
@@ -73,6 +74,8 @@ export default function Budget() {
   const [customCategoryInput, setCustomCategoryInput] = useState("");
   const [useCustomCategory, setUseCustomCategory] = useState(false);
   const [aiEstimate, setAiEstimate] = useState<AIBudgetEstimate | null>(null);
+  const [addExpenseDialogOpen, setAddExpenseDialogOpen] = useState(false);
+  const [addExpenseEventId, setAddExpenseEventId] = useState<string | undefined>(undefined);
   const [aiEstimateLoading, setAiEstimateLoading] = useState(false);
   const [expandedEvents, setExpandedEvents] = useState<Set<string>>(new Set());
   const [contributorFilter, setContributorFilter] = useState<ContributorFilter>("all");
@@ -763,7 +766,10 @@ export default function Budget() {
                           variant="ghost"
                           size="sm"
                           className="mt-2 text-xs"
-                          onClick={() => setLocation(`/expenses?eventId=${event.id}`)}
+                          onClick={() => {
+                            setAddExpenseEventId(event.id);
+                            setAddExpenseDialogOpen(true);
+                          }}
                           data-testid={`button-add-expense-${event.id}`}
                         >
                           <Plus className="w-3 h-3 mr-1" />
@@ -948,6 +954,17 @@ export default function Budget() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Add Expense Dialog */}
+        {wedding?.id && (
+          <AddExpenseDialog
+            open={addExpenseDialogOpen}
+            onOpenChange={setAddExpenseDialogOpen}
+            weddingId={wedding.id}
+            events={events}
+            defaultEventId={addExpenseEventId}
+          />
+        )}
       </main>
     </div>
   );
