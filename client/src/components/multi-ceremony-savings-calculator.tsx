@@ -13,12 +13,14 @@ import {
   ChevronDown,
   ChevronUp,
   Utensils,
-  ExternalLink
+  ExternalLink,
+  Loader2
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Link } from "wouter";
-import type { Event } from "@shared/schema";
-import { CEREMONY_COST_BREAKDOWNS, CEREMONY_CATALOG, calculateCeremonyTotalRange } from "@shared/ceremonies";
+import type { Event, CeremonyTemplate, CeremonyTemplateCostItem } from "@shared/schema";
+import { useCeremonyTemplates, getCostBreakdownFromTemplate, calculateCeremonyTotal } from "@/hooks/use-ceremony-templates";
+import { CEREMONY_COST_BREAKDOWNS, calculateCeremonyTotalRange, type CostCategory } from "@shared/ceremonies";
 
 interface MultiCeremonySavingsCalculatorProps {
   events: Event[];
@@ -36,9 +38,39 @@ function formatCurrencyFull(amount: number): string {
   return `$${amount.toLocaleString()}`;
 }
 
-function getTopCostDrivers(ceremonyId: string, guestCount: number): { category: string; savings: number }[] {
-  const breakdown = CEREMONY_COST_BREAKDOWNS[ceremonyId];
-  if (!breakdown) return [];
+const CEREMONY_MAPPINGS: Record<string, string[]> = {
+  sikh_roka: ["roka", "sikh roka"],
+  sikh_kurmai: ["kurmai", "engagement", "sikh engagement"],
+  sikh_sangeet: ["sangeet", "lady sangeet", "sikh sangeet"],
+  sikh_mehndi: ["mehndi", "henna", "sikh mehndi"],
+  sikh_maiyan: ["maiyan", "sikh maiyan"],
+  sikh_chooda_kalire: ["chooda", "kalire", "chooda kalire", "chooda & kalire"],
+  sikh_jaggo: ["jaggo", "sikh jaggo"],
+  sikh_anand_karaj: ["anand karaj", "anand_karaj", "sikh wedding"],
+  sikh_baraat: ["baraat", "sikh baraat"],
+  sikh_milni: ["milni", "sikh milni"],
+  sikh_reception: ["sikh reception"],
+  hindu_mehndi: ["mehndi", "henna", "hindu mehndi"],
+  hindu_sangeet: ["sangeet", "lady sangeet", "hindu sangeet"],
+  hindu_haldi: ["haldi", "hindu haldi"],
+  hindu_baraat: ["baraat", "hindu baraat"],
+  hindu_wedding: ["hindu wedding", "wedding ceremony"],
+  reception: ["reception"],
+  muslim_nikah: ["nikah", "muslim nikah", "muslim wedding"],
+  muslim_walima: ["walima", "muslim walima"],
+  muslim_dholki: ["dholki", "muslim dholki"],
+  gujarati_pithi: ["pithi", "gujarati pithi"],
+  gujarati_garba: ["garba", "gujarati garba"],
+  gujarati_wedding: ["gujarati wedding"],
+  south_indian_muhurtham: ["muhurtham", "south indian muhurtham", "south indian wedding"],
+  general_wedding: ["general wedding", "western wedding", "christian wedding", "civil ceremony"],
+  rehearsal_dinner: ["rehearsal dinner", "rehearsal"],
+  cocktail_hour: ["cocktail hour", "cocktail", "cocktails"],
+};
+
+function getTopCostDrivers(template: CeremonyTemplate, guestCount: number): { category: string; savings: number }[] {
+  const breakdown = getCostBreakdownFromTemplate(template);
+  if (!breakdown.length) return [];
   
   const perPersonItems = breakdown
     .filter(item => item.unit === "per_person")
@@ -52,43 +84,36 @@ function getTopCostDrivers(ceremonyId: string, guestCount: number): { category: 
   return perPersonItems;
 }
 
-function getCeremonyIdFromEvent(event: Event): string | null {
-  if ((event as any).ceremonyId && CEREMONY_COST_BREAKDOWNS[(event as any).ceremonyId]) {
-    return (event as any).ceremonyId;
-  }
-  
+function getCeremonyIdFromEvent(event: Event, templateMap: Map<string, CeremonyTemplate>): { ceremonyId: string; useApi: boolean } | null {
   const eventType = event.type?.toLowerCase() || "";
   const eventName = event.name?.toLowerCase() || "";
   
-  const mappings: Record<string, string[]> = {
-    hindu_mehndi: ["mehndi", "henna"],
-    hindu_sangeet: ["sangeet", "lady sangeet"],
-    hindu_haldi: ["haldi"],
-    sikh_maiyan: ["maiyan"],
-    hindu_baraat: ["baraat"],
-    hindu_wedding: ["hindu wedding", "wedding ceremony"],
-    reception: ["reception"],
-    sikh_anand_karaj: ["anand karaj", "anand_karaj"],
-    muslim_nikah: ["nikah"],
-    muslim_walima: ["walima"],
-    muslim_dholki: ["dholki"],
-    gujarati_pithi: ["pithi"],
-    gujarati_garba: ["garba"],
-    gujarati_wedding: ["gujarati wedding"],
-    south_indian_muhurtham: ["muhurtham"],
-    general_wedding: ["general wedding", "western wedding"],
-    rehearsal_dinner: ["rehearsal dinner", "rehearsal"],
-    cocktail_hour: ["cocktail hour", "cocktail"],
-  };
+  if ((event as any).ceremonyId && templateMap.has((event as any).ceremonyId)) {
+    return { ceremonyId: (event as any).ceremonyId, useApi: true };
+  }
   
-  for (const [ceremonyId, keywords] of Object.entries(mappings)) {
+  for (const [ceremonyId, keywords] of Object.entries(CEREMONY_MAPPINGS)) {
     if (keywords.some(kw => eventName.includes(kw) || eventType.includes(kw))) {
-      return ceremonyId;
+      if (templateMap.has(ceremonyId)) {
+        return { ceremonyId, useApi: true };
+      }
+    }
+  }
+  
+  if (templateMap.has(eventType)) {
+    return { ceremonyId: eventType, useApi: true };
+  }
+  
+  for (const [ceremonyId, keywords] of Object.entries(CEREMONY_MAPPINGS)) {
+    if (keywords.some(kw => eventName.includes(kw) || eventType.includes(kw))) {
+      if (CEREMONY_COST_BREAKDOWNS[ceremonyId]) {
+        return { ceremonyId, useApi: false };
+      }
     }
   }
   
   if (CEREMONY_COST_BREAKDOWNS[eventType]) {
-    return eventType;
+    return { ceremonyId: eventType, useApi: false };
   }
   
   return null;
@@ -98,6 +123,7 @@ interface EventGuestState {
   eventId: number;
   eventName: string;
   ceremonyId: string;
+  useApi: boolean;
   originalGuests: number;
   currentGuests: number;
   minGuests: number;
@@ -105,28 +131,46 @@ interface EventGuestState {
 }
 
 export function MultiCeremonySavingsCalculator({ events, className = "" }: MultiCeremonySavingsCalculatorProps) {
+  const { data: templates, isLoading } = useCeremonyTemplates();
+  
+  const templateMap = useMemo(() => {
+    const map = new Map<string, CeremonyTemplate>();
+    if (templates) {
+      for (const t of templates) {
+        map.set(t.ceremonyId, t);
+      }
+    }
+    return map;
+  }, [templates]);
+  
   const eventsWithCosts = useMemo(() => {
     return events.filter(event => {
-      const ceremonyId = getCeremonyIdFromEvent(event);
-      return ceremonyId && CEREMONY_COST_BREAKDOWNS[ceremonyId];
+      const result = getCeremonyIdFromEvent(event, templateMap);
+      return result !== null;
     }).map(event => {
-      const ceremonyId = getCeremonyIdFromEvent(event)!;
-      const ceremony = CEREMONY_CATALOG.find(c => c.id === ceremonyId);
-      const originalGuests = event.guestCount || ceremony?.defaultGuests || 100;
+      const result = getCeremonyIdFromEvent(event, templateMap)!;
+      const { ceremonyId, useApi } = result;
+      let originalGuests = event.guestCount || 100;
+      
+      if (useApi) {
+        const template = templateMap.get(ceremonyId);
+        originalGuests = event.guestCount || template?.defaultGuests || 100;
+      }
+      
       const minGuests = Math.max(20, Math.floor(originalGuests * 0.3));
-      // Ensure maxGuests is always greater than minGuests and at least equal to originalGuests
       const maxGuests = Math.max(minGuests + 50, originalGuests, Math.ceil(originalGuests * 1.5));
       return {
         eventId: event.id,
         eventName: event.name,
         ceremonyId,
+        useApi,
         originalGuests,
         currentGuests: originalGuests,
         minGuests,
         maxGuests,
       };
     });
-  }, [events]);
+  }, [events, templateMap]);
 
   const [guestStates, setGuestStates] = useState<EventGuestState[]>([]);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -148,17 +192,43 @@ export function MultiCeremonySavingsCalculator({ events, className = "" }: Multi
 
   const originalTotal = useMemo(() => {
     return guestStates.reduce((sum, state) => {
-      const range = calculateCeremonyTotalRange(state.ceremonyId, state.originalGuests);
-      return sum + (range.low + range.high) / 2;
+      if (state.useApi) {
+        const template = templateMap.get(state.ceremonyId);
+        if (!template) return sum;
+        const range = calculateCeremonyTotal(template, state.originalGuests);
+        return sum + (range.low + range.high) / 2;
+      } else {
+        const legacyBreakdown = CEREMONY_COST_BREAKDOWNS[state.ceremonyId];
+        if (!legacyBreakdown) return sum;
+        const range = calculateCeremonyTotalRange(legacyBreakdown, state.originalGuests);
+        return sum + (range.low + range.high) / 2;
+      }
     }, 0);
-  }, [guestStates]);
+  }, [guestStates, templateMap]);
 
   const currentTotal = useMemo(() => {
     return guestStates.reduce((sum, state) => {
-      const range = calculateCeremonyTotalRange(state.ceremonyId, state.currentGuests);
-      return sum + (range.low + range.high) / 2;
+      if (state.useApi) {
+        const template = templateMap.get(state.ceremonyId);
+        if (!template) return sum;
+        const range = calculateCeremonyTotal(template, state.currentGuests);
+        return sum + (range.low + range.high) / 2;
+      } else {
+        const legacyBreakdown = CEREMONY_COST_BREAKDOWNS[state.ceremonyId];
+        if (!legacyBreakdown) return sum;
+        const range = calculateCeremonyTotalRange(legacyBreakdown, state.currentGuests);
+        return sum + (range.low + range.high) / 2;
+      }
     }, 0);
-  }, [guestStates]);
+  }, [guestStates, templateMap]);
+
+  if (isLoading) {
+    return (
+      <div className={`flex items-center justify-center p-8 ${className}`}>
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   if (eventsWithCosts.length === 0 || guestStates.length === 0) {
     return null;
@@ -269,14 +339,17 @@ export function MultiCeremonySavingsCalculator({ events, className = "" }: Multi
         <CollapsibleContent>
           <div className="p-4 space-y-6">
             {guestStates.map((state) => {
-              const range = calculateCeremonyTotalRange(state.ceremonyId, state.currentGuests);
-              const originalRange = calculateCeremonyTotalRange(state.ceremonyId, state.originalGuests);
+              const template = templateMap.get(state.ceremonyId);
+              if (!template) return null;
+              
+              const range = calculateCeremonyTotal(template, state.currentGuests);
+              const originalRange = calculateCeremonyTotal(template, state.originalGuests);
               const avgCurrent = (range.low + range.high) / 2;
               const avgOriginal = (originalRange.low + originalRange.high) / 2;
               const eventSavings = avgOriginal - avgCurrent;
               const guestsChanged = state.currentGuests !== state.originalGuests;
               const guestsReduced = state.originalGuests - state.currentGuests;
-              const costDrivers = getTopCostDrivers(state.ceremonyId, guestsReduced > 0 ? guestsReduced : 10);
+              const costDrivers = getTopCostDrivers(template, guestsReduced > 0 ? guestsReduced : 10);
 
               return (
                 <div 

@@ -4,6 +4,11 @@ import type { CeremonyTemplate, RegionalPricing, CeremonyTemplateCostItem } from
 export function useCeremonyTemplates() {
   return useQuery<CeremonyTemplate[]>({
     queryKey: ['/api/ceremony-templates'],
+    queryFn: async () => {
+      const response = await fetch('/api/ceremony-templates');
+      if (!response.ok) throw new Error('Failed to fetch ceremony templates');
+      return response.json();
+    },
   });
 }
 
@@ -34,6 +39,11 @@ export function useCeremonyTemplate(ceremonyId: string) {
 export function useRegionalPricing() {
   return useQuery<RegionalPricing[]>({
     queryKey: ['/api/regional-pricing'],
+    queryFn: async () => {
+      const response = await fetch('/api/regional-pricing');
+      if (!response.ok) throw new Error('Failed to fetch regional pricing');
+      return response.json();
+    },
   });
 }
 

@@ -1,5 +1,4 @@
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -7,9 +6,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Lightbulb, Calculator, Plus, Minus, DollarSign, Users, Info } from "lucide-react";
-import { getCeremoniesForTradition, type CeremonyDefinition } from "@shared/ceremonies";
-import type { Wedding, Event } from "@shared/schema";
+import { Lightbulb, Calculator, Plus, Minus, DollarSign, Users, Info, Loader2 } from "lucide-react";
+import type { Wedding, Event, CeremonyTemplate } from "@shared/schema";
+import { useCeremonyTemplatesByTradition } from "@/hooks/use-ceremony-templates";
 
 interface EventEstimate {
   id: string;
@@ -47,9 +46,7 @@ export function BudgetEstimator({ wedding, events = [], onUpdateBudget }: Budget
   const [customEvents, setCustomEvents] = useState<EventEstimate[]>([]);
   const [useWeddingEvents, setUseWeddingEvents] = useState(true);
 
-  const traditionCeremonies = useMemo(() => {
-    return getCeremoniesForTradition(selectedTradition);
-  }, [selectedTradition]);
+  const { data: traditionCeremonies = [], isLoading } = useCeremonyTemplatesByTradition(selectedTradition);
 
   const weddingEventEstimates: EventEstimate[] = useMemo(() => {
     if (!useWeddingEvents || events.length === 0) return [];
@@ -57,11 +54,11 @@ export function BudgetEstimator({ wedding, events = [], onUpdateBudget }: Budget
     return events.map(event => {
       const ceremony = traditionCeremonies.find(c => 
         c.name.toLowerCase() === event.name.toLowerCase() ||
-        c.id.includes(event.name.toLowerCase().replace(/\s+/g, '_'))
+        c.ceremonyId.includes(event.name.toLowerCase().replace(/\s+/g, '_'))
       );
       
-      const costLow = ceremony?.costPerGuestLow || 50;
-      const costHigh = ceremony?.costPerGuestHigh || 100;
+      const costLow = ceremony ? parseFloat(ceremony.costPerGuestLow) : 50;
+      const costHigh = ceremony ? parseFloat(ceremony.costPerGuestHigh) : 100;
       const guestCount = event.guestCount || ceremony?.defaultGuests || 150;
       
       return {
@@ -96,15 +93,17 @@ export function BudgetEstimator({ wedding, events = [], onUpdateBudget }: Budget
     return traditionCeremonies.filter(c => !chosenNames.has(c.name.toLowerCase()));
   }, [traditionCeremonies, allEstimates]);
 
-  const addCeremony = (ceremony: CeremonyDefinition) => {
+  const addCeremony = (ceremony: CeremonyTemplate) => {
+    const costLow = parseFloat(ceremony.costPerGuestLow);
+    const costHigh = parseFloat(ceremony.costPerGuestHigh);
     const newEvent: EventEstimate = {
       id: `custom-${Date.now()}`,
       name: ceremony.name,
       guests: ceremony.defaultGuests,
-      costPerGuestLow: ceremony.costPerGuestLow,
-      costPerGuestHigh: ceremony.costPerGuestHigh,
-      totalLow: ceremony.costPerGuestLow * ceremony.defaultGuests,
-      totalHigh: ceremony.costPerGuestHigh * ceremony.defaultGuests,
+      costPerGuestLow: costLow,
+      costPerGuestHigh: costHigh,
+      totalLow: costLow * ceremony.defaultGuests,
+      totalHigh: costHigh * ceremony.defaultGuests,
     };
     setCustomEvents([...customEvents, newEvent]);
   };
@@ -198,7 +197,11 @@ export function BudgetEstimator({ wedding, events = [], onUpdateBudget }: Budget
               </div>
             </div>
 
-            {allEstimates.length > 0 ? (
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
+              </div>
+            ) : allEstimates.length > 0 ? (
               <div className="space-y-2">
                 {allEstimates.map((event) => (
                   <div
@@ -297,7 +300,7 @@ export function BudgetEstimator({ wedding, events = [], onUpdateBudget }: Budget
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="text-xs text-muted-foreground">
-                        ${ceremony.costPerGuestLow}-${ceremony.costPerGuestHigh}/guest
+                        ${parseFloat(ceremony.costPerGuestLow)}-${parseFloat(ceremony.costPerGuestHigh)}/guest
                       </span>
                       <Button
                         variant="outline"

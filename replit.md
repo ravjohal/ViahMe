@@ -15,12 +15,14 @@ The platform utilizes a modern web stack: **React**, **TypeScript**, **Tailwind 
 
 Key architectural decisions and features include:
 - **Comprehensive Data Model**: Designed to support the intricate nature of multi-day South Asian weddings.
-- **Cultural Templates**: Pre-populated event timelines and task templates for 9 wedding traditions with auto-seeding. Ceremony cost estimates are database-driven for flexibility, including city-specific price multipliers.
+- **Cultural Templates**: Pre-populated event timelines and task templates for 9 wedding traditions with auto-seeding. Ceremony cost estimates use a hybrid data approach for flexibility.
   - **Ceremony Cost Database**: Templates stored in `ceremony_templates` table with JSONB cost breakdown per category (Venue, Catering, Decor, etc.)
   - **Regional Pricing**: `regional_pricing` table with city-specific multipliers (Bay Area 1.5x, NYC 1.4x, LA 1.3x, Chicago 1.2x, Seattle 1.1x)
   - **API Endpoints**: `/api/ceremony-templates`, `/api/regional-pricing`, `/api/ceremony-estimate` (public read, admin write)
   - **Admin UI**: Site admins (users with `isSiteAdmin: true`) can manage templates at `/admin/ceremony-templates`
   - **Seed Script**: `scripts/seed-ceremony-templates.ts` populates initial Sikh ceremony data (11 ceremonies)
+  - **Hybrid Data Approach**: Frontend components (ceremony-cost-breakdown, multi-ceremony-savings-calculator) try API templates first, then fall back to `shared/ceremonies.ts` hardcoded data for backward compatibility
+  - **Ceremony Mapping**: `CEREMONY_MAPPINGS` object maps event names/types to ceremony IDs for matching events to templates
 - **Vendor Specialization**: Support for 32 distinct vendor categories, including culturally-specific services.
 - **Budget Intelligence System**: Provides smart budget recommendations, event-centric views, contributor filtering, guest savings calculator, upcoming payments timeline, multi-event expense allocation, and a share budget feature. Includes a customizable financial dashboard with 6 widget types, drag-and-drop reordering, and automatic budget alerts.
 - **Guest List Management**: Frictionless bulk guest import, advanced invitation & RSVP system with household grouping, magic link authentication, per-event RSVP tracking, and bulk invitation sender. Features a Household-First Architecture with Head of House contacts, side filters, event filter pills, summary headers, gift tracking, and WhatsApp template blasts.

@@ -7,6 +7,7 @@ import { ChevronDown, ChevronUp, DollarSign, Users, Clock, Info, Loader2 } from 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Event, CeremonyTemplate, CeremonyTemplateCostItem } from "@shared/schema";
 import { useCeremonyTemplates, getCostBreakdownFromTemplate, calculateCeremonyTotal } from "@/hooks/use-ceremony-templates";
+import { CEREMONY_COST_BREAKDOWNS, CEREMONY_CATALOG, calculateCeremonyTotalRange, type CostCategory } from "@shared/ceremonies";
 
 interface CeremonyCostBreakdownProps {
   events: Event[];
@@ -25,53 +26,114 @@ function formatCurrencyFull(amount: number): string {
 }
 
 const CEREMONY_MAPPINGS: Record<string, string[]> = {
-  hindu_mehndi: ["mehndi", "henna"],
-  hindu_sangeet: ["sangeet", "lady sangeet"],
-  hindu_haldi: ["haldi"],
-  sikh_maiyan: ["maiyan"],
-  sikh_roka: ["roka"],
-  sikh_kurmai: ["kurmai", "engagement"],
-  sikh_chooda: ["chooda", "kalire"],
-  sikh_jaggo: ["jaggo"],
-  sikh_baraat: ["baraat"],
-  sikh_milni: ["milni"],
-  hindu_baraat: ["baraat"],
+  sikh_roka: ["roka", "sikh roka"],
+  sikh_kurmai: ["kurmai", "engagement", "sikh engagement"],
+  sikh_sangeet: ["sangeet", "lady sangeet", "sikh sangeet"],
+  sikh_mehndi: ["mehndi", "henna", "sikh mehndi"],
+  sikh_maiyan: ["maiyan", "sikh maiyan"],
+  sikh_chooda_kalire: ["chooda", "kalire", "chooda kalire", "chooda & kalire"],
+  sikh_jaggo: ["jaggo", "sikh jaggo"],
+  sikh_anand_karaj: ["anand karaj", "anand_karaj", "sikh wedding"],
+  sikh_baraat: ["baraat", "sikh baraat"],
+  sikh_milni: ["milni", "sikh milni"],
+  sikh_reception: ["sikh reception"],
+  hindu_mehndi: ["mehndi", "henna", "hindu mehndi"],
+  hindu_sangeet: ["sangeet", "lady sangeet", "hindu sangeet"],
+  hindu_haldi: ["haldi", "hindu haldi"],
+  hindu_baraat: ["baraat", "hindu baraat"],
   hindu_wedding: ["hindu wedding", "wedding ceremony"],
   reception: ["reception"],
-  sikh_anand_karaj: ["anand karaj", "anand_karaj"],
-  muslim_nikah: ["nikah"],
-  muslim_walima: ["walima"],
-  muslim_dholki: ["dholki"],
-  gujarati_pithi: ["pithi"],
-  gujarati_garba: ["garba"],
+  muslim_nikah: ["nikah", "muslim nikah", "muslim wedding"],
+  muslim_walima: ["walima", "muslim walima"],
+  muslim_dholki: ["dholki", "muslim dholki"],
+  gujarati_pithi: ["pithi", "gujarati pithi"],
+  gujarati_garba: ["garba", "gujarati garba"],
   gujarati_wedding: ["gujarati wedding"],
-  south_indian_muhurtham: ["muhurtham"],
-  general_wedding: ["general wedding", "western wedding"],
+  south_indian_muhurtham: ["muhurtham", "south indian muhurtham", "south indian wedding"],
+  general_wedding: ["general wedding", "western wedding", "christian wedding", "civil ceremony"],
   rehearsal_dinner: ["rehearsal dinner", "rehearsal"],
-  cocktail_hour: ["cocktail hour", "cocktail"],
+  cocktail_hour: ["cocktail hour", "cocktail", "cocktails"],
 };
 
-function getCeremonyIdFromEvent(event: Event, templateMap: Map<string, CeremonyTemplate>): string | null {
-  if ((event as any).ceremonyId && templateMap.has((event as any).ceremonyId)) {
-    return (event as any).ceremonyId;
-  }
-  
+function getCeremonyIdFromEvent(event: Event, templateMap: Map<string, CeremonyTemplate>): { ceremonyId: string; useApi: boolean } | null {
   const eventType = event.type?.toLowerCase() || "";
   const eventName = event.name?.toLowerCase() || "";
+  
+  if ((event as any).ceremonyId && templateMap.has((event as any).ceremonyId)) {
+    return { ceremonyId: (event as any).ceremonyId, useApi: true };
+  }
   
   for (const [ceremonyId, keywords] of Object.entries(CEREMONY_MAPPINGS)) {
     if (keywords.some(kw => eventName.includes(kw) || eventType.includes(kw))) {
       if (templateMap.has(ceremonyId)) {
-        return ceremonyId;
+        return { ceremonyId, useApi: true };
       }
     }
   }
   
   if (templateMap.has(eventType)) {
-    return eventType;
+    return { ceremonyId: eventType, useApi: true };
+  }
+  
+  for (const [ceremonyId, keywords] of Object.entries(CEREMONY_MAPPINGS)) {
+    if (keywords.some(kw => eventName.includes(kw) || eventType.includes(kw))) {
+      if (CEREMONY_COST_BREAKDOWNS[ceremonyId]) {
+        return { ceremonyId, useApi: false };
+      }
+    }
+  }
+  
+  if (CEREMONY_COST_BREAKDOWNS[eventType]) {
+    return { ceremonyId: eventType, useApi: false };
   }
   
   return null;
+}
+
+function LegacyCostCategoryRow({ item, guestCount }: { item: CostCategory; guestCount: number }) {
+  let displayLow: number;
+  let displayHigh: number;
+  let unitLabel: string;
+  
+  if (item.unit === "per_person") {
+    displayLow = item.lowCost * guestCount;
+    displayHigh = item.highCost * guestCount;
+    unitLabel = `@ ${formatCurrencyFull(item.lowCost)}-${formatCurrencyFull(item.highCost)}/person`;
+  } else if (item.unit === "per_hour") {
+    const hoursLow = item.hoursLow ?? 3;
+    const hoursHigh = item.hoursHigh ?? 4;
+    displayLow = item.lowCost * hoursLow;
+    displayHigh = item.highCost * hoursHigh;
+    unitLabel = `@ ${formatCurrencyFull(item.lowCost)}-${formatCurrencyFull(item.highCost)}/hr (${hoursLow}-${hoursHigh}hrs)`;
+  } else {
+    displayLow = item.lowCost;
+    displayHigh = item.highCost;
+    unitLabel = "fixed";
+  }
+  
+  return (
+    <div className="grid grid-cols-[1fr_auto] sm:grid-cols-[minmax(0,1fr)_auto_auto] items-start sm:items-center gap-x-3 gap-y-1 py-2 border-b border-border/50 last:border-0">
+      <div className="flex items-start gap-2 min-w-0">
+        <span className="text-sm font-medium leading-tight">{item.category}</span>
+        {item.notes && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Info className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 cursor-help mt-0.5" />
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-[250px]">
+              <p className="text-xs">{item.notes}</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
+      </div>
+      <Badge variant="outline" className="text-xs whitespace-nowrap hidden sm:inline-flex">
+        {unitLabel}
+      </Badge>
+      <span className="text-sm font-semibold text-orange-600 dark:text-orange-400 whitespace-nowrap text-right">
+        {formatCurrency(displayLow)} - {formatCurrency(displayHigh)}
+      </span>
+    </div>
+  );
 }
 
 function CostCategoryRow({ item, guestCount }: { item: CeremonyTemplateCostItem; guestCount: number }) {
@@ -127,16 +189,91 @@ interface EventCostCardProps {
 
 function EventCostCard({ event, templateMap }: EventCostCardProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const ceremonyId = getCeremonyIdFromEvent(event, templateMap);
-  const template = ceremonyId ? templateMap.get(ceremonyId) : null;
+  const ceremonyResult = getCeremonyIdFromEvent(event, templateMap);
   
-  if (!template) {
+  if (!ceremonyResult) {
     return null;
   }
   
-  const breakdown = getCostBreakdownFromTemplate(template);
-  const guestCount = event.guestCount || template.defaultGuests || 100;
-  const totalRange = calculateCeremonyTotal(template, guestCount);
+  const { ceremonyId, useApi } = ceremonyResult;
+  const guestCount = event.guestCount || 100;
+  
+  if (useApi) {
+    const template = templateMap.get(ceremonyId);
+    if (!template) return null;
+    
+    const breakdown = getCostBreakdownFromTemplate(template);
+    const actualGuestCount = guestCount || template.defaultGuests || 100;
+    const totalRange = calculateCeremonyTotal(template, actualGuestCount);
+    
+    return (
+      <Card className="overflow-hidden hover-elevate" data-testid={`cost-card-${event.id}`}>
+        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+          <CollapsibleTrigger asChild>
+            <Button
+              variant="ghost"
+              className="w-full p-4 h-auto justify-between rounded-none"
+              data-testid={`button-expand-${event.id}`}
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-100 to-pink-100 dark:from-orange-900/30 dark:to-pink-900/30 flex items-center justify-center">
+                  <DollarSign className="w-5 h-5 text-orange-600" />
+                </div>
+                <div className="text-left">
+                  <h3 className="font-semibold text-base">{event.name}</h3>
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                    <Users className="w-3.5 h-3.5" />
+                    <span>{actualGuestCount} guests</span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="text-right">
+                  <p className="text-lg font-bold text-orange-600 dark:text-orange-400">
+                    {formatCurrency(totalRange.low)} - {formatCurrency(totalRange.high)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">estimated total</p>
+                </div>
+                {isOpen ? (
+                  <ChevronUp className="w-5 h-5 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                )}
+              </div>
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="px-4 pb-4 pt-2 bg-muted/30">
+              <div className="flex items-center gap-2 mb-3">
+                <Badge variant="secondary" className="text-xs">
+                  Cost Breakdown
+                </Badge>
+                <span className="text-xs text-muted-foreground">
+                  Based on {actualGuestCount} guests in mid-to-high cost areas
+                </span>
+              </div>
+              <div className="space-y-0">
+                {breakdown.map((item, index) => (
+                  <CostCategoryRow key={index} item={item} guestCount={actualGuestCount} />
+                ))}
+              </div>
+              <div className="mt-4 pt-3 border-t flex items-center justify-between">
+                <span className="font-medium">Total Estimated Range</span>
+                <span className="text-lg font-bold text-orange-600 dark:text-orange-400">
+                  {formatCurrencyFull(totalRange.low)} - {formatCurrencyFull(totalRange.high)}
+                </span>
+              </div>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      </Card>
+    );
+  }
+  
+  const legacyBreakdown = CEREMONY_COST_BREAKDOWNS[ceremonyId];
+  if (!legacyBreakdown) return null;
+  
+  const totalRange = calculateCeremonyTotalRange(legacyBreakdown, guestCount);
   
   return (
     <Card className="overflow-hidden hover-elevate" data-testid={`cost-card-${event.id}`}>
@@ -185,8 +322,8 @@ function EventCostCard({ event, templateMap }: EventCostCardProps) {
               </span>
             </div>
             <div className="space-y-0">
-              {breakdown.map((item, index) => (
-                <CostCategoryRow key={index} item={item} guestCount={guestCount} />
+              {legacyBreakdown.map((item, index) => (
+                <LegacyCostCategoryRow key={index} item={item} guestCount={guestCount} />
               ))}
             </div>
             <div className="mt-4 pt-3 border-t flex items-center justify-between">
