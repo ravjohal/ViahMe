@@ -133,6 +133,8 @@ import {
   type InsertExpense,
   type ExpenseSplit,
   type InsertExpenseSplit,
+  type ExpenseEventAllocation,
+  type InsertExpenseEventAllocation,
   type QuoteRequest,
   type InsertQuoteRequest,
   type ConversationStatus,
@@ -325,6 +327,13 @@ export interface IStorage {
   updateExpenseSplit(id: string, split: Partial<InsertExpenseSplit>): Promise<ExpenseSplit | undefined>;
   deleteExpenseSplit(id: string): Promise<boolean>;
   deleteExpenseSplitsByExpense(expenseId: string): Promise<boolean>;
+
+  // Expense Event Allocations (for multi-event vendor packages)
+  getExpenseEventAllocationsByExpense(expenseId: string): Promise<ExpenseEventAllocation[]>;
+  getExpenseEventAllocationsByEvent(eventId: string): Promise<ExpenseEventAllocation[]>;
+  createExpenseEventAllocation(allocation: InsertExpenseEventAllocation): Promise<ExpenseEventAllocation>;
+  deleteExpenseEventAllocationsByExpense(expenseId: string): Promise<boolean>;
+  getExpenseTotalByEvent(eventId: string): Promise<number>;
 
   // Households
   getHousehold(id: string): Promise<Household | undefined>;
@@ -1094,6 +1103,7 @@ export class MemStorage implements IStorage {
   private shoppingOrderItems: Map<string, ShoppingOrderItem>;
   private expenses: Map<string, Expense>;
   private expenseSplits: Map<string, ExpenseSplit>;
+  private expenseEventAllocations: Map<string, ExpenseEventAllocation>;
 
   constructor() {
     this.users = new Map();
@@ -1131,6 +1141,7 @@ export class MemStorage implements IStorage {
     this.shoppingOrderItems = new Map();
     this.expenses = new Map();
     this.expenseSplits = new Map();
+    this.expenseEventAllocations = new Map();
   }
 
   // Users
@@ -1684,6 +1695,61 @@ export class MemStorage implements IStorage {
       .map(([id]) => id);
     toDelete.forEach((id) => this.expenseSplits.delete(id));
     return true;
+  }
+
+  // Expense Event Allocations
+  async getExpenseEventAllocationsByExpense(expenseId: string): Promise<ExpenseEventAllocation[]> {
+    return Array.from(this.expenseEventAllocations.values()).filter(a => a.expenseId === expenseId);
+  }
+
+  async getExpenseEventAllocationsByEvent(eventId: string): Promise<ExpenseEventAllocation[]> {
+    return Array.from(this.expenseEventAllocations.values()).filter(a => a.eventId === eventId);
+  }
+
+  async createExpenseEventAllocation(allocation: InsertExpenseEventAllocation): Promise<ExpenseEventAllocation> {
+    const id = crypto.randomUUID();
+    const newAllocation: ExpenseEventAllocation = {
+      id,
+      expenseId: allocation.expenseId,
+      eventId: allocation.eventId,
+      allocatedAmount: allocation.allocatedAmount,
+      allocatedPercent: allocation.allocatedPercent || null,
+      createdAt: new Date(),
+    };
+    this.expenseEventAllocations.set(id, newAllocation);
+    return newAllocation;
+  }
+
+  async deleteExpenseEventAllocationsByExpense(expenseId: string): Promise<boolean> {
+    const toDelete = Array.from(this.expenseEventAllocations.entries())
+      .filter(([_, allocation]) => allocation.expenseId === expenseId)
+      .map(([id]) => id);
+    toDelete.forEach((id) => this.expenseEventAllocations.delete(id));
+    return true;
+  }
+
+  async getExpenseTotalByEvent(eventId: string): Promise<number> {
+    const allocations = await this.getExpenseEventAllocationsByEvent(eventId);
+    let total = 0;
+    for (const allocation of allocations) {
+      const amount = parseFloat(allocation.allocatedAmount?.toString() || "0");
+      if (!isNaN(amount)) {
+        total += amount;
+      }
+    }
+    // Also include expenses with direct eventId link (legacy single-event expenses)
+    const expenses = Array.from(this.expenses.values()).filter(e => e.eventId === eventId);
+    for (const expense of expenses) {
+      // Only count if not already allocated via allocations table
+      const hasAllocations = allocations.some(a => a.expenseId === expense.id);
+      if (!hasAllocations) {
+        const amount = parseFloat(expense.amount?.toString() || "0");
+        if (!isNaN(amount)) {
+          total += amount;
+        }
+      }
+    }
+    return total;
   }
 
   // Households
@@ -4694,6 +4760,53 @@ export class DBStorage implements IStorage {
   async deleteExpenseSplitsByExpense(expenseId: string): Promise<boolean> {
     await this.db.delete(schema.expenseSplits).where(eq(schema.expenseSplits.expenseId, expenseId));
     return true;
+  }
+
+  // Expense Event Allocations
+  async getExpenseEventAllocationsByExpense(expenseId: string): Promise<ExpenseEventAllocation[]> {
+    return await this.db.select().from(schema.expenseEventAllocations).where(eq(schema.expenseEventAllocations.expenseId, expenseId));
+  }
+
+  async getExpenseEventAllocationsByEvent(eventId: string): Promise<ExpenseEventAllocation[]> {
+    return await this.db.select().from(schema.expenseEventAllocations).where(eq(schema.expenseEventAllocations.eventId, eventId));
+  }
+
+  async createExpenseEventAllocation(allocation: InsertExpenseEventAllocation): Promise<ExpenseEventAllocation> {
+    const result = await this.db.insert(schema.expenseEventAllocations).values(allocation).returning();
+    return result[0];
+  }
+
+  async deleteExpenseEventAllocationsByExpense(expenseId: string): Promise<boolean> {
+    await this.db.delete(schema.expenseEventAllocations).where(eq(schema.expenseEventAllocations.expenseId, expenseId));
+    return true;
+  }
+
+  async getExpenseTotalByEvent(eventId: string): Promise<number> {
+    // First get allocations for this event
+    const allocations = await this.getExpenseEventAllocationsByEvent(eventId);
+    let total = 0;
+    const allocatedExpenseIds = new Set<string>();
+    
+    for (const allocation of allocations) {
+      const amount = parseFloat(allocation.allocatedAmount?.toString() || "0");
+      if (!isNaN(amount)) {
+        total += amount;
+      }
+      allocatedExpenseIds.add(allocation.expenseId);
+    }
+    
+    // Also include expenses with direct eventId link (legacy single-event expenses)
+    const directExpenses = await this.db.select().from(schema.expenses).where(eq(schema.expenses.eventId, eventId));
+    for (const expense of directExpenses) {
+      // Only count if not already allocated via allocations table
+      if (!allocatedExpenseIds.has(expense.id)) {
+        const amount = parseFloat(expense.amount?.toString() || "0");
+        if (!isNaN(amount)) {
+          total += amount;
+        }
+      }
+    }
+    return total;
   }
 
   // Households
