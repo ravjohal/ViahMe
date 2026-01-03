@@ -18,7 +18,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Filter, Users, Check, X, Clock, Upload, MoreHorizontal, Edit, UserX, Trash2, Mail } from "lucide-react";
+import { Plus, Search, Filter, Users, Check, X, Clock, Upload, MoreHorizontal, Edit, UserX, Trash2, Mail, AlertTriangle } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -53,12 +54,52 @@ const RSVP_STATUS_LABELS = {
   uninvited: "Uninvited",
 };
 
+const normalizeString = (str: string): string => {
+  return str.toLowerCase().trim().replace(/\s+/g, ' ');
+};
+
+const calculateStringSimilarity = (str1: string, str2: string): number => {
+  const s1 = normalizeString(str1);
+  const s2 = normalizeString(str2);
+  
+  if (s1 === s2) return 1;
+  if (!s1 || !s2) return 0;
+  
+  const m = s1.length;
+  const n = s2.length;
+  const dp: number[][] = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+  
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (s1[i - 1] === s2[j - 1]) {
+        dp[i][j] = dp[i - 1][j - 1];
+      } else {
+        dp[i][j] = 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+      }
+    }
+  }
+  
+  const maxLen = Math.max(m, n);
+  return maxLen === 0 ? 1 : 1 - dp[m][n] / maxLen;
+};
+
 export function GuestListManager({ guests, households = [], onAddGuest, onImportGuests, onEditGuest, onUninviteGuest, onDeleteGuest, onSendInvitation }: GuestListManagerProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterSide, setFilterSide] = useState<string>("all");
   const [filterRsvp, setFilterRsvp] = useState<string>("all");
   
   const householdById = new Map(households.map(h => [h.id, h]));
+
+  const getPotentialDuplicates = (guest: Guest): Guest[] => {
+    return guests.filter(other => {
+      if (other.id === guest.id) return false;
+      const similarity = calculateStringSimilarity(guest.name, other.name);
+      return similarity >= 0.9;
+    });
+  };
 
   const filteredGuests = guests.filter((guest) => {
     const matchesSearch = guest.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -249,6 +290,25 @@ export function GuestListManager({ guests, households = [], onAddGuest, onImport
                             )}
                           </>
                         )}
+                        {(() => {
+                          const duplicates = getPotentialDuplicates(guest);
+                          if (duplicates.length === 0) return null;
+                          return (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="cursor-help" onClick={(e) => e.stopPropagation()}>
+                                  <AlertTriangle className="w-4 h-4 text-yellow-600" />
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent side="right" className="max-w-xs">
+                                <p className="text-sm font-medium">Possible duplicate</p>
+                                <p className="text-xs text-muted-foreground">
+                                  Similar to: {duplicates.map(d => d.name).join(', ')}
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          );
+                        })()}
                       </div>
                     </TableCell>
                     <TableCell>
