@@ -17,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Trash2, Pencil, DollarSign, Users, ArrowRightLeft, Check, Receipt, Share2, Copy, Calendar } from "lucide-react";
 import type { Expense, ExpenseSplit, Event, Wedding, BudgetCategory, ExpenseEventAllocation } from "@shared/schema";
+import { EditExpenseDialog, type ExpenseWithDetails } from "@/components/edit-expense-dialog";
 
 type ExpenseWithSplits = Expense & { splits: ExpenseSplit[]; eventAllocations?: ExpenseEventAllocation[] };
 type SettlementBalance = Record<string, { name: string; paid: number; owes: number; balance: number }>;
@@ -103,7 +104,7 @@ export default function Expenses() {
   });
 
   const updateExpenseMutation = useMutation({
-    mutationFn: async ({ id, ...data }: any) => {
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
       return apiRequest("PATCH", `/api/expenses/${id}`, data);
     },
     onSuccess: () => {
@@ -231,55 +232,11 @@ export default function Expenses() {
       eventAllocations: allocationsToSend.length > 0 ? allocationsToSend : undefined,
     };
 
-    if (editingExpense) {
-      updateExpenseMutation.mutate({ id: editingExpense.id, ...expenseData });
-    } else {
-      createExpenseMutation.mutate(expenseData);
-    }
+    createExpenseMutation.mutate(expenseData);
   };
 
   const openEditDialog = (expense: ExpenseWithSplits) => {
     setEditingExpense(expense);
-    
-    // Determine allocation strategy from existing data
-    const hasAllocations = expense.eventAllocations && expense.eventAllocations.length > 0;
-    let strategy: AllocationStrategy = (expense.allocationStrategy as AllocationStrategy) || "single";
-    
-    setFormData({
-      description: expense.description,
-      amount: expense.amount,
-      eventId: expense.eventId || "",
-      categoryId: expense.categoryId || "",
-      splitType: expense.splitType as any,
-      paidById: expense.paidById || "",
-      notes: expense.notes || "",
-      expenseDate: expense.expenseDate ? new Date(expense.expenseDate).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
-      allocationStrategy: strategy,
-      paymentStatus: (expense as any).paymentStatus || "pending",
-    });
-    
-    const amounts: Record<string, string> = {};
-    expense.splits.forEach((s) => {
-      amounts[s.userId] = s.shareAmount;
-    });
-    setSplitAmounts(amounts);
-    
-    // Populate event allocations if present
-    if (hasAllocations) {
-      const allocIds = expense.eventAllocations!.map(a => a.eventId);
-      setSelectedEventIds(allocIds);
-      const allocData: Record<string, { amount: string; percent: string }> = {};
-      expense.eventAllocations!.forEach(a => {
-        allocData[a.eventId] = {
-          amount: String(a.allocatedAmount || "0"),
-          percent: String(a.allocatedPercent || "0"),
-        };
-      });
-      setEventAllocations(allocData);
-    } else {
-      setSelectedEventIds([]);
-      setEventAllocations({});
-    }
   };
 
   const totalExpenses = expenses.reduce((sum, e) => sum + parseFloat(e.amount), 0);
@@ -303,10 +260,9 @@ export default function Expenses() {
           <h1 className="text-2xl font-bold" data-testid="text-page-title">Expense Splitting</h1>
           <p className="text-muted-foreground">Track and split shared wedding costs</p>
         </div>
-        <Dialog open={isAddDialogOpen || !!editingExpense} onOpenChange={(open) => {
+        <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
           if (!open) {
             setIsAddDialogOpen(false);
-            setEditingExpense(null);
             resetForm();
           }
         }}>
@@ -318,7 +274,7 @@ export default function Expenses() {
           </DialogTrigger>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>{editingExpense ? "Edit Expense" : "Add New Expense"}</DialogTitle>
+              <DialogTitle>Add New Expense</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
@@ -600,7 +556,7 @@ export default function Expenses() {
                 disabled={createExpenseMutation.isPending || updateExpenseMutation.isPending}
                 data-testid="button-save-expense"
               >
-                {editingExpense ? "Update Expense" : "Add Expense"}
+                Add Expense
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -857,6 +813,21 @@ export default function Expenses() {
           )}
         </CardContent>
       </Card>
+
+      {/* Edit Expense Dialog (shared component) */}
+      <EditExpenseDialog
+        expense={editingExpense as ExpenseWithDetails | null}
+        open={!!editingExpense}
+        onOpenChange={(open) => !open && setEditingExpense(null)}
+        categories={budgetCategories}
+        events={events}
+        onSave={(data) => {
+          if (editingExpense) {
+            updateExpenseMutation.mutate({ id: editingExpense.id, data });
+          }
+        }}
+        isPending={updateExpenseMutation.isPending}
+      />
     </div>
   );
 }
