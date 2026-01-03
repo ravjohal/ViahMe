@@ -23,7 +23,7 @@ export function ensureCoupleAccess(
         return res.status(404).json({ error: "Wedding not found" });
       }
 
-      if (wedding.coupleId !== userId) {
+      if (wedding.userId !== userId) {
         const roles = await storage.getWeddingRoles(weddingId);
         const hasAccess = roles.some(role => role.userId === userId);
         if (!hasAccess) {

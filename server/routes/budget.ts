@@ -27,7 +27,7 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
       if (!wedding) {
         return res.status(404).json({ error: "Wedding not found" });
       }
-      if (wedding.coupleId !== authReq.session.userId) {
+      if (wedding.userId !== authReq.session.userId) {
         const roles = await storage.getWeddingRoles(validatedData.weddingId);
         const hasAccess = roles.some(role => role.userId === authReq.session.userId);
         if (!hasAccess) {
@@ -61,7 +61,7 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
       if (!wedding) {
         return res.status(404).json({ error: "Wedding not found" });
       }
-      if (wedding.coupleId !== authReq.session.userId) {
+      if (wedding.userId !== authReq.session.userId) {
         const roles = await storage.getWeddingRoles(existingCategory.weddingId);
         const hasAccess = roles.some(role => role.userId === authReq.session.userId);
         if (!hasAccess) {
@@ -92,7 +92,7 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
       if (!wedding) {
         return res.status(404).json({ error: "Wedding not found" });
       }
-      if (wedding.coupleId !== authReq.session.userId) {
+      if (wedding.userId !== authReq.session.userId) {
         const roles = await storage.getWeddingRoles(existingCategory.weddingId);
         const hasAccess = roles.some(role => role.userId === authReq.session.userId);
         if (!hasAccess) {
@@ -159,7 +159,7 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
       if (!wedding) {
         return res.status(404).json({ error: "Wedding not found" });
       }
-      if (wedding.coupleId !== authReq.session.userId) {
+      if (wedding.userId !== authReq.session.userId) {
         const roles = await storage.getWeddingRoles(expense.weddingId);
         const hasAccess = roles.some(role => role.userId === authReq.session.userId);
         if (!hasAccess) {
@@ -187,7 +187,7 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
       if (!wedding) {
         return res.status(404).json({ error: "Wedding not found" });
       }
-      if (wedding.coupleId !== authReq.session.userId) {
+      if (wedding.userId !== authReq.session.userId) {
         const roles = await storage.getWeddingRoles(expenseData.weddingId);
         const hasAccess = roles.some(role => role.userId === authReq.session.userId);
         if (!hasAccess) {
@@ -235,7 +235,7 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
       if (!wedding) {
         return res.status(404).json({ error: "Wedding not found" });
       }
-      if (wedding.coupleId !== authReq.session.userId) {
+      if (wedding.userId !== authReq.session.userId) {
         const roles = await storage.getWeddingRoles(existingExpense.weddingId);
         const hasAccess = roles.some(role => role.userId === authReq.session.userId);
         if (!hasAccess) {
@@ -287,7 +287,7 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
       if (!wedding) {
         return res.status(404).json({ error: "Wedding not found" });
       }
-      if (wedding.coupleId !== authReq.session.userId) {
+      if (wedding.userId !== authReq.session.userId) {
         const roles = await storage.getWeddingRoles(existingExpense.weddingId);
         const hasAccess = roles.some(role => role.userId === authReq.session.userId);
         if (!hasAccess) {

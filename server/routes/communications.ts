@@ -26,7 +26,7 @@ export async function registerCommunicationRoutes(router: Router, storage: IStor
       }
 
       const wedding = await storage.getWedding(communication.weddingId);
-      if (!wedding || wedding.coupleId !== authReq.session.userId) {
+      if (!wedding || wedding.userId !== authReq.session.userId) {
         return res.status(403).json({ error: "Access denied" });
       }
 
@@ -62,7 +62,7 @@ export async function registerCommunicationRoutes(router: Router, storage: IStor
       }
 
       const wedding = await storage.getWedding(weddingId);
-      if (!wedding || wedding.coupleId !== authReq.session.userId) {
+      if (!wedding || wedding.userId !== authReq.session.userId) {
         return res.status(403).json({ error: "Access denied" });
       }
 
@@ -197,7 +197,7 @@ export async function registerCommunicationRoutes(router: Router, storage: IStor
       }
 
       const wedding = await storage.getWedding(weddingId);
-      if (!wedding || wedding.coupleId !== authReq.session.userId) {
+      if (!wedding || wedding.userId !== authReq.session.userId) {
         return res.status(403).json({ error: "Access denied" });
       }
 
@@ -313,7 +313,7 @@ export async function registerCommunicationRoutes(router: Router, storage: IStor
       }
 
       const wedding = await storage.getWedding(weddingId);
-      if (!wedding || wedding.coupleId !== authReq.session.userId) {
+      if (!wedding || wedding.userId !== authReq.session.userId) {
         return res.status(403).json({ error: "Access denied" });
       }
 
@@ -464,7 +464,7 @@ export async function registerCommunicationRoutes(router: Router, storage: IStor
       }
 
       const wedding = await storage.getWedding(communication.weddingId);
-      if (!wedding || wedding.coupleId !== authReq.session.userId) {
+      if (!wedding || wedding.userId !== authReq.session.userId) {
         return res.status(403).json({ error: "Access denied" });
       }
 

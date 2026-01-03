@@ -288,7 +288,7 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
         return res.status(404).json({ error: "Wedding not found" });
       }
       
-      if (wedding.coupleId !== authReq.session.userId) {
+      if (wedding.userId !== authReq.session.userId) {
         const roles = await storage.getWeddingRoles(weddingId);
         const hasAccess = roles.some(role => role.userId === authReq.session.userId);
         if (!hasAccess) {
@@ -336,7 +336,7 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
       if (!wedding) {
         return res.status(404).json({ error: "Wedding not found" });
       }
-      if (wedding.coupleId !== authReq.session.userId) {
+      if (wedding.userId !== authReq.session.userId) {
         const roles = await storage.getWeddingRoles(validatedData.weddingId);
         const hasAccess = roles.some(role => role.userId === authReq.session.userId);
         if (!hasAccess) {
@@ -370,7 +370,7 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
       if (!wedding) {
         return res.status(404).json({ error: "Wedding not found" });
       }
-      if (wedding.coupleId !== authReq.session.userId) {
+      if (wedding.userId !== authReq.session.userId) {
         const roles = await storage.getWeddingRoles(existingBooking.weddingId);
         const hasAccess = roles.some(role => role.userId === authReq.session.userId);
         if (!hasAccess) {
@@ -443,7 +443,7 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
 
       const validatedData = insertReviewSchema.parse({
         ...req.body,
-        coupleId: authReq.session.userId,
+        createdById: authReq.session.userId,
       });
       
       const review = await storage.createReview(validatedData);
