@@ -120,7 +120,14 @@ export default function Budget() {
   // Get vendor name by ID
   const getVendorName = (vendorId: string) => {
     const vendor = vendors.find(v => v.id === vendorId);
-    return vendor?.businessName || "Vendor";
+    return vendor?.name || "Vendor";
+  };
+
+  // Get category name by ID
+  const getCategoryName = (categoryId: string | null | undefined) => {
+    if (!categoryId) return "Other";
+    const category = categories.find(c => c.id === categoryId);
+    return category?.category || CATEGORY_LABELS[categoryId] || categoryId;
   };
 
   // Extract upcoming payments from contracts
@@ -161,7 +168,7 @@ export default function Budget() {
 
         return milestones
           .filter((m) => m && m.status !== "paid" && m.dueDate)
-          .map((milestone) => {
+          .map((milestone): UpcomingPayment | null => {
             const dueDate = new Date(milestone.dueDate);
             if (isNaN(dueDate.getTime())) return null;
             const now = new Date();
@@ -181,7 +188,7 @@ export default function Budget() {
           })
           .filter((p): p is UpcomingPayment => p !== null);
       })
-      .filter((p) => p.daysUntilDue >= -30)
+      .filter((p): p is UpcomingPayment => p !== null && p.daysUntilDue >= -30)
       .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime())
       .slice(0, 10);
   }, [contracts, vendors]);
@@ -702,29 +709,50 @@ export default function Budget() {
                     <CollapsibleContent>
                       <div className="border-t px-4 py-3 bg-muted/30">
                         {eventData?.expenses.length ? (
-                          <div className="space-y-2">
-                            {eventData.expenses.map((expense, idx) => {
-                              const amount = expense.allocatedAmount || parseFloat(expense.amount?.toString() || "0");
-                              const status = getPaymentStatus(expense);
-                              return (
-                                <div 
-                                  key={expense.id || idx}
-                                  className="flex items-center justify-between py-2 text-sm"
-                                  data-testid={`expense-item-${expense.id}`}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-muted-foreground">-</span>
-                                    <span>{expense.description}</span>
-                                    <Badge variant={status.variant} className="text-xs">
-                                      {status.label}
-                                    </Badge>
+                          <div className="space-y-4">
+                            {/* Group expenses by category */}
+                            {(() => {
+                              const byCategory: Record<string, typeof eventData.expenses> = {};
+                              eventData.expenses.forEach((exp) => {
+                                const cat = exp.categoryId || "Other";
+                                if (!byCategory[cat]) byCategory[cat] = [];
+                                byCategory[cat].push(exp);
+                              });
+                              return Object.entries(byCategory).map(([categoryId, catExpenses]) => {
+                                const categoryTotal = catExpenses.reduce((sum, exp) => {
+                                  return sum + (exp.allocatedAmount || parseFloat(exp.amount?.toString() || "0"));
+                                }, 0);
+                                return (
+                                  <div key={categoryId} className="space-y-1">
+                                    <div className="flex items-center justify-between text-sm font-medium text-muted-foreground border-b pb-1">
+                                      <span>{getCategoryName(categoryId)}</span>
+                                      <span className="font-mono">${categoryTotal.toLocaleString()}</span>
+                                    </div>
+                                    {catExpenses.map((expense, idx) => {
+                                      const amount = expense.allocatedAmount || parseFloat(expense.amount?.toString() || "0");
+                                      const status = getPaymentStatus(expense);
+                                      return (
+                                        <div 
+                                          key={expense.id || idx}
+                                          className="flex items-center justify-between py-1 text-sm pl-4"
+                                          data-testid={`expense-item-${expense.id}`}
+                                        >
+                                          <div className="flex items-center gap-2">
+                                            <span>{expense.description}</span>
+                                            <Badge variant={status.variant} className="text-xs">
+                                              {status.label}
+                                            </Badge>
+                                          </div>
+                                          <span className="font-mono text-muted-foreground">
+                                            ${amount.toLocaleString()}
+                                          </span>
+                                        </div>
+                                      );
+                                    })}
                                   </div>
-                                  <span className="font-mono">
-                                    ${amount.toLocaleString()}
-                                  </span>
-                                </div>
-                              );
-                            })}
+                                );
+                              });
+                            })()}
                           </div>
                         ) : (
                           <p className="text-sm text-muted-foreground py-2">
@@ -775,28 +803,50 @@ export default function Budget() {
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     <div className="border-t px-4 py-3 bg-muted/30">
-                      <div className="space-y-2">
-                        {expensesByEvent["unassigned"].expenses.map((expense, idx) => {
-                          const amount = expense.allocatedAmount || parseFloat(expense.amount?.toString() || "0");
-                          const status = getPaymentStatus(expense);
-                          return (
-                            <div 
-                              key={expense.id || idx}
-                              className="flex items-center justify-between py-2 text-sm"
-                            >
-                              <div className="flex items-center gap-2">
-                                <span className="text-muted-foreground">-</span>
-                                <span>{expense.description}</span>
-                                <Badge variant={status.variant} className="text-xs">
-                                  {status.label}
-                                </Badge>
+                      <div className="space-y-4">
+                        {/* Group unassigned expenses by category */}
+                        {(() => {
+                          const unassignedExpenses = expensesByEvent["unassigned"].expenses;
+                          const byCategory: Record<string, typeof unassignedExpenses> = {};
+                          unassignedExpenses.forEach((exp) => {
+                            const cat = exp.categoryId || "Other";
+                            if (!byCategory[cat]) byCategory[cat] = [];
+                            byCategory[cat].push(exp);
+                          });
+                          return Object.entries(byCategory).map(([categoryId, catExpenses]) => {
+                            const categoryTotal = catExpenses.reduce((sum, exp) => {
+                              return sum + (exp.allocatedAmount || parseFloat(exp.amount?.toString() || "0"));
+                            }, 0);
+                            return (
+                              <div key={categoryId} className="space-y-1">
+                                <div className="flex items-center justify-between text-sm font-medium text-muted-foreground border-b pb-1">
+                                  <span>{getCategoryName(categoryId)}</span>
+                                  <span className="font-mono">${categoryTotal.toLocaleString()}</span>
+                                </div>
+                                {catExpenses.map((expense, idx) => {
+                                  const amount = expense.allocatedAmount || parseFloat(expense.amount?.toString() || "0");
+                                  const status = getPaymentStatus(expense);
+                                  return (
+                                    <div 
+                                      key={expense.id || idx}
+                                      className="flex items-center justify-between py-1 text-sm pl-4"
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <span>{expense.description}</span>
+                                        <Badge variant={status.variant} className="text-xs">
+                                          {status.label}
+                                        </Badge>
+                                      </div>
+                                      <span className="font-mono text-muted-foreground">
+                                        ${amount.toLocaleString()}
+                                      </span>
+                                    </div>
+                                  );
+                                })}
                               </div>
-                              <span className="font-mono">
-                                ${amount.toLocaleString()}
-                              </span>
-                            </div>
-                          );
-                        })}
+                            );
+                          });
+                        })()}
                       </div>
                     </div>
                   </CollapsibleContent>
