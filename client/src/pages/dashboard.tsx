@@ -771,12 +771,12 @@ export default function Dashboard() {
             <Button
               variant="outline"
               className="justify-start h-auto py-3 px-4"
-              onClick={() => setLocation("/photo-gallery")}
+              onClick={() => setLocation("/website-builder")}
             >
-              <Camera className="w-5 h-5 mr-3 text-amber-600" />
+              <Globe className="w-5 h-5 mr-3 text-cyan-600" />
               <div className="text-left">
-                <p className="font-medium">Photo Gallery</p>
-                <p className="text-xs text-muted-foreground">Inspiration & event photos</p>
+                <p className="font-medium">Wedding Website</p>
+                <p className="text-xs text-muted-foreground">Create your wedding site</p>
               </div>
             </Button>
             <Button
