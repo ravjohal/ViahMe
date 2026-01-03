@@ -375,14 +375,9 @@ export default function Expenses() {
                   <Select 
                     value={formData.eventId || "none"} 
                     onValueChange={(v) => {
-                      const selectedEvent = events.find(e => e.id === v);
-                      const eventDate = selectedEvent?.date 
-                        ? new Date(selectedEvent.date).toISOString().split("T")[0]
-                        : formData.expenseDate;
                       setFormData({ 
                         ...formData, 
                         eventId: v === "none" ? "" : v,
-                        expenseDate: v === "none" ? formData.expenseDate : eventDate
                       });
                     }}
                   >

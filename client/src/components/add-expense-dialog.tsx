@@ -68,17 +68,13 @@ export function AddExpenseDialog({
 
   useEffect(() => {
     if (open && defaultEventId) {
-      const selectedEvent = events.find(e => e.id === defaultEventId);
-      const eventDate = selectedEvent?.date 
-        ? new Date(selectedEvent.date).toISOString().split("T")[0]
-        : new Date().toISOString().split("T")[0];
       setFormData(prev => ({
         ...prev,
         eventId: defaultEventId,
-        expenseDate: eventDate,
+        expenseDate: new Date().toISOString().split("T")[0],
       }));
     }
-  }, [open, defaultEventId, events]);
+  }, [open, defaultEventId]);
 
   const resetForm = () => {
     setFormData({
@@ -248,14 +244,9 @@ export function AddExpenseDialog({
               <Select 
                 value={formData.eventId || "none"} 
                 onValueChange={(v) => {
-                  const selectedEvent = events.find(e => e.id === v);
-                  const eventDate = selectedEvent?.date 
-                    ? new Date(selectedEvent.date).toISOString().split("T")[0]
-                    : formData.expenseDate;
                   setFormData({ 
                     ...formData, 
                     eventId: v === "none" ? "" : v,
-                    expenseDate: v === "none" ? formData.expenseDate : eventDate
                   });
                 }}
               >
