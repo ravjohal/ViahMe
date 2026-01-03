@@ -391,7 +391,7 @@ export default function Expenses() {
             </div>
             <p className="text-xs text-muted-foreground mt-2">
               Bride & Groom by default. Add more via{" "}
-              <a href="/team" className="text-primary hover:underline">Team Settings</a>.
+              <a href="/collaborators" className="text-primary hover:underline">Team Settings</a>.
             </p>
           </CardContent>
         </Card>
