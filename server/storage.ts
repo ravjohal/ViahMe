@@ -9419,18 +9419,28 @@ export class DBStorage implements IStorage {
 
         // Check guest name overlaps (higher confidence for matching guests)
         let guestMatchCount = 0;
+        let highConfidenceGuestMatches = 0;
         for (const g1 of guests1) {
           for (const g2 of guests2) {
             const guestSim = this.calculateStringSimilarity(g1.name, g2.name);
-            if (guestSim >= 0.8) {
+            if (guestSim >= 0.95) {
+              // Near-exact match (e.g., "Rahul Patel" vs "Rahul Patel")
+              highConfidenceGuestMatches++;
+              guestMatchCount++;
+            } else if (guestSim >= 0.8) {
               guestMatchCount++;
             }
           }
         }
-        if (guestMatchCount > 0) {
-          const guestScore = Math.min(0.35, guestMatchCount * 0.15);
+        if (highConfidenceGuestMatches > 0) {
+          // Near-exact guest name matches get higher weight - can trigger duplicate alone
+          const guestScore = Math.min(0.6, highConfidenceGuestMatches * 0.45);
           score += guestScore;
-          matchReasons.push(`${guestMatchCount} guest name(s) match`);
+          matchReasons.push(`${highConfidenceGuestMatches} guest name(s) nearly identical`);
+        } else if (guestMatchCount > 0) {
+          const guestScore = Math.min(0.35, guestMatchCount * 0.2);
+          score += guestScore;
+          matchReasons.push(`${guestMatchCount} guest name(s) similar`);
         }
 
         // Only include if score meets threshold
