@@ -65,14 +65,13 @@ export default function Expenses() {
     enabled: !!weddingId,
   });
 
+  // Build team members list: use partner names for the couple, plus collaborators
+  // The logged-in user is one of the partners, so we don't add them separately
   const teamMembers = [
-    ...(user ? [{ id: user.id, name: user.email }] : []),
     ...(wedding?.partner1Name ? [{ id: "partner1", name: wedding.partner1Name }] : []),
     ...(wedding?.partner2Name ? [{ id: "partner2", name: wedding.partner2Name }] : []),
     ...collaborators.map((c: any) => ({ id: c.userId, name: c.user?.name || c.user?.email || "Team Member" })),
-  ].filter((member, index, self) => 
-    index === self.findIndex((m) => m.id === member.id)
-  );
+  ];
 
   const createExpenseMutation = useMutation({
     mutationFn: async (data: any) => {
