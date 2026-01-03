@@ -46,11 +46,12 @@ export function AddExpenseDialog({
 
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
+  const [amountPaid, setAmountPaid] = useState("");
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [payer, setPayer] = useState<PayerType>("couple");
   const [notes, setNotes] = useState("");
-  const [paymentStatus, setPaymentStatus] = useState<"pending" | "deposit_paid" | "paid">("pending");
+  const [paymentStatus, setPaymentStatus] = useState<"partial" | "paid">("partial");
   const [showNotesSection, setShowNotesSection] = useState(false);
   const [splitType, setSplitType] = useState<"full" | "split">("full");
   const [splitPercentages, setSplitPercentages] = useState({
@@ -73,11 +74,12 @@ export function AddExpenseDialog({
   const resetForm = () => {
     setDescription("");
     setAmount("");
+    setAmountPaid("");
     setSelectedEvents([]);
     setSelectedCategoryId(null);
     setPayer("couple");
     setNotes("");
-    setPaymentStatus("pending");
+    setPaymentStatus("partial");
     setShowNotesSection(false);
     setSplitType("full");
     setSplitPercentages({ couple: "50", bride_family: "25", groom_family: "25" });
@@ -194,10 +196,15 @@ export function AddExpenseDialog({
       }));
     }
 
+    const parsedAmountPaid = paymentStatus === "paid" 
+      ? parsedAmount 
+      : (parseFloat(amountPaid.replace(/,/g, "")) || 0);
+
     createExpenseMutation.mutate({
       weddingId,
       description: description.trim(),
       amount: parsedAmount.toFixed(2),
+      amountPaid: parsedAmountPaid.toFixed(2),
       eventId,
       categoryId: selectedCategoryId,
       paidById: payerId,
@@ -477,31 +484,22 @@ export function AddExpenseDialog({
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
-                onClick={() => setPaymentStatus("pending")}
+                onClick={() => setPaymentStatus("partial")}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  paymentStatus === "pending"
-                    ? "bg-secondary text-secondary-foreground ring-2 ring-secondary"
-                    : "bg-muted text-muted-foreground hover-elevate"
-                }`}
-                data-testid="button-status-pending"
-              >
-                Pending
-              </button>
-              <button
-                type="button"
-                onClick={() => setPaymentStatus("deposit_paid")}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  paymentStatus === "deposit_paid"
+                  paymentStatus === "partial"
                     ? "bg-orange-100 text-orange-700 ring-2 ring-orange-300 dark:bg-orange-900/30 dark:text-orange-400"
                     : "bg-muted text-muted-foreground hover-elevate"
                 }`}
-                data-testid="button-status-deposit"
+                data-testid="button-status-partial"
               >
-                Deposit Paid
+                Partially Paid
               </button>
               <button
                 type="button"
-                onClick={() => setPaymentStatus("paid")}
+                onClick={() => {
+                  setPaymentStatus("paid");
+                  setAmountPaid("");
+                }}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                   paymentStatus === "paid"
                     ? "bg-green-100 text-green-700 ring-2 ring-green-300 dark:bg-green-900/30 dark:text-green-400"
@@ -509,9 +507,36 @@ export function AddExpenseDialog({
                 }`}
                 data-testid="button-status-paid"
               >
-                Paid in Full
+                Fully Paid
               </button>
             </div>
+
+            {paymentStatus === "partial" && (
+              <div className="mt-3 p-4 bg-orange-50 dark:bg-orange-950/30 rounded-lg space-y-2">
+                <Label className="text-xs font-medium text-orange-700 dark:text-orange-400">
+                  How much has been paid so far?
+                </Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">$</span>
+                  <Input
+                    type="text"
+                    value={amountPaid}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^0-9.,]/g, "");
+                      setAmountPaid(val);
+                    }}
+                    placeholder="0.00"
+                    className="pl-7 text-base font-medium bg-white dark:bg-background"
+                    data-testid="input-amount-paid"
+                  />
+                </div>
+                {amount && amountPaid && (
+                  <p className="text-xs text-orange-600 dark:text-orange-400">
+                    Still owed: ${(parseFloat(amount.replace(/,/g, "")) - parseFloat(amountPaid.replace(/,/g, ""))).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           <Collapsible open={showNotesSection} onOpenChange={setShowNotesSection}>

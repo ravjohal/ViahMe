@@ -600,12 +600,17 @@ export default function Budget() {
     }
   };
 
-  // Get expense payment status
-  const getPaymentStatus = (expense: Expense): { label: string; variant: "default" | "secondary" | "destructive" | "outline" } => {
-    const status = (expense as any).paymentStatus || "pending";
-    if (status === "paid") return { label: "PAID", variant: "default" };
-    if (status === "deposit_paid") return { label: "DEPOSIT PAID", variant: "outline" };
-    return { label: "PENDING", variant: "secondary" };
+  // Get expense payment status with remaining amount
+  const getPaymentStatus = (expense: Expense): { label: string; variant: "default" | "secondary" | "destructive" | "outline"; remaining: number } => {
+    const status = (expense as any).paymentStatus || "partial";
+    const totalAmount = Number(expense.amount) || 0;
+    const amountPaid = Number((expense as any).amountPaid) || 0;
+    const remaining = totalAmount - amountPaid;
+    
+    if (status === "paid" || remaining <= 0) {
+      return { label: "FULLY PAID", variant: "default", remaining: 0 };
+    }
+    return { label: "PARTIAL", variant: "outline", remaining };
   };
 
   if (weddingsLoading || categoriesLoading) {
@@ -913,17 +918,26 @@ export default function Budget() {
                                     {catExpenses.map((expense, idx) => {
                                       const amount = expense.allocatedAmount || parseFloat(expense.amount?.toString() || "0");
                                       const status = getPaymentStatus(expense);
+                                      const isPartial = status.remaining > 0;
                                       return (
                                         <div 
                                           key={expense.id || idx}
-                                          className="flex items-center justify-between py-1 text-sm pl-4"
+                                          className={`flex items-center justify-between py-1 text-sm pl-4 ${isPartial ? "bg-orange-50/50 dark:bg-orange-950/20 rounded -mx-2 px-2" : ""}`}
                                           data-testid={`expense-item-${expense.id}`}
                                         >
-                                          <div className="flex items-center gap-2">
+                                          <div className="flex items-center gap-2 flex-wrap">
                                             <span>{expense.description}</span>
-                                            <Badge variant={status.variant} className="text-xs">
+                                            <Badge 
+                                              variant={status.variant} 
+                                              className={`text-xs ${isPartial ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" : ""}`}
+                                            >
                                               {status.label}
                                             </Badge>
+                                            {isPartial && (
+                                              <span className="text-xs text-orange-600 dark:text-orange-400 font-medium">
+                                                (${status.remaining.toLocaleString()} owed)
+                                              </span>
+                                            )}
                                           </div>
                                           <span className="font-mono text-muted-foreground">
                                             ${amount.toLocaleString()}
@@ -1011,16 +1025,25 @@ export default function Budget() {
                                 {catExpenses.map((expense, idx) => {
                                   const amount = expense.allocatedAmount || parseFloat(expense.amount?.toString() || "0");
                                   const status = getPaymentStatus(expense);
+                                  const isPartial = status.remaining > 0;
                                   return (
                                     <div 
                                       key={expense.id || idx}
-                                      className="flex items-center justify-between py-1 text-sm pl-4"
+                                      className={`flex items-center justify-between py-1 text-sm pl-4 ${isPartial ? "bg-orange-50/50 dark:bg-orange-950/20 rounded -mx-2 px-2" : ""}`}
                                     >
-                                      <div className="flex items-center gap-2">
+                                      <div className="flex items-center gap-2 flex-wrap">
                                         <span>{expense.description}</span>
-                                        <Badge variant={status.variant} className="text-xs">
+                                        <Badge 
+                                          variant={status.variant} 
+                                          className={`text-xs ${isPartial ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" : ""}`}
+                                        >
                                           {status.label}
                                         </Badge>
+                                        {isPartial && (
+                                          <span className="text-xs text-orange-600 dark:text-orange-400 font-medium">
+                                            (${status.remaining.toLocaleString()} owed)
+                                          </span>
+                                        )}
                                       </div>
                                       <span className="font-mono text-muted-foreground">
                                         ${amount.toLocaleString()}

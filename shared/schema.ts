@@ -549,11 +549,12 @@ export const expenses = pgTable("expenses", {
   categoryId: varchar("category_id"), // Optional - link to budget category
   description: text("description").notNull(),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  amountPaid: decimal("amount_paid", { precision: 10, scale: 2 }).default('0'), // Amount paid so far
   paidById: varchar("paid_by_id").notNull(), // User ID who paid
   paidByName: text("paid_by_name").notNull(), // Cached name for display
   splitType: text("split_type").notNull().default('equal'), // 'equal' | 'percentage' | 'custom' | 'full'
   allocationStrategy: text("allocation_strategy").default('single'), // 'single' | 'equal' | 'percentage' | 'custom'
-  paymentStatus: text("payment_status").notNull().default('pending'), // 'pending' | 'deposit_paid' | 'paid'
+  paymentStatus: text("payment_status").notNull().default('partial'), // 'partial' | 'paid' (fully paid)
   receiptUrl: text("receipt_url"), // Optional receipt image/document
   notes: text("notes"),
   expenseDate: timestamp("expense_date").notNull().defaultNow(),
@@ -565,9 +566,10 @@ export const insertExpenseSchema = createInsertSchema(expenses).omit({
   createdAt: true,
 }).extend({
   amount: z.string().regex(/^\d+(\.\d{1,2})?$/, "Amount must be a valid decimal"),
+  amountPaid: z.string().regex(/^\d+(\.\d{1,2})?$/, "Amount paid must be a valid decimal").optional(),
   splitType: z.enum(['equal', 'percentage', 'custom', 'full']),
   allocationStrategy: z.enum(['single', 'equal', 'percentage', 'custom']).optional(),
-  paymentStatus: z.enum(['pending', 'deposit_paid', 'paid']).optional(),
+  paymentStatus: z.enum(['partial', 'paid']).optional(),
   expenseDate: z.string().optional().transform(val => val ? new Date(val) : new Date()),
 });
 
