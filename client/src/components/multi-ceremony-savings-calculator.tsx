@@ -14,13 +14,23 @@ import {
   ChevronUp,
   Utensils,
   ExternalLink,
-  Loader2
+  Loader2,
+  Settings2
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Link } from "wouter";
 import type { Event, CeremonyTemplate, CeremonyTemplateCostItem } from "@shared/schema";
 import { useCeremonyTemplates, getCostBreakdownFromTemplate, calculateCeremonyTotal } from "@/hooks/use-ceremony-templates";
 import { CEREMONY_COST_BREAKDOWNS, calculateCeremonyTotalRange, type CostCategory } from "@shared/ceremonies";
+import { PricingAdjuster } from "@/components/pricing-adjuster";
+import {
+  type VenueClass,
+  type VendorTier,
+  VENUE_CLASS_MULTIPLIERS,
+  VENDOR_TIER_MULTIPLIERS,
+  GUEST_BRACKET_MULTIPLIERS,
+  getGuestBracket,
+} from "@shared/pricing";
 
 interface MultiCeremonySavingsCalculatorProps {
   events: Event[];
@@ -132,6 +142,13 @@ interface EventGuestState {
 
 export function MultiCeremonySavingsCalculator({ events, className = "" }: MultiCeremonySavingsCalculatorProps) {
   const { data: templates, isLoading } = useCeremonyTemplates();
+  const [venueClass, setVenueClass] = useState<VenueClass>("community_hall");
+  const [vendorTier, setVendorTier] = useState<VendorTier>("standard");
+  const [showPricingSettings, setShowPricingSettings] = useState(false);
+  
+  const pricingMultiplier = useMemo(() => {
+    return VENUE_CLASS_MULTIPLIERS[venueClass] * VENDOR_TIER_MULTIPLIERS[vendorTier];
+  }, [venueClass, vendorTier]);
   
   const templateMap = useMemo(() => {
     const map = new Map<string, CeremonyTemplate>();
@@ -192,35 +209,39 @@ export function MultiCeremonySavingsCalculator({ events, className = "" }: Multi
 
   const originalTotal = useMemo(() => {
     return guestStates.reduce((sum, state) => {
+      const guestBracketMultiplier = GUEST_BRACKET_MULTIPLIERS[getGuestBracket(state.originalGuests)];
+      const totalMultiplier = pricingMultiplier * guestBracketMultiplier;
       if (state.useApi) {
         const template = templateMap.get(state.ceremonyId);
         if (!template) return sum;
         const range = calculateCeremonyTotal(template, state.originalGuests);
-        return sum + (range.low + range.high) / 2;
+        return sum + ((range.low + range.high) / 2) * totalMultiplier;
       } else {
         const legacyBreakdown = CEREMONY_COST_BREAKDOWNS[state.ceremonyId];
         if (!legacyBreakdown) return sum;
         const range = calculateCeremonyTotalRange(legacyBreakdown, state.originalGuests);
-        return sum + (range.low + range.high) / 2;
+        return sum + ((range.low + range.high) / 2) * totalMultiplier;
       }
     }, 0);
-  }, [guestStates, templateMap]);
+  }, [guestStates, templateMap, pricingMultiplier]);
 
   const currentTotal = useMemo(() => {
     return guestStates.reduce((sum, state) => {
+      const guestBracketMultiplier = GUEST_BRACKET_MULTIPLIERS[getGuestBracket(state.currentGuests)];
+      const totalMultiplier = pricingMultiplier * guestBracketMultiplier;
       if (state.useApi) {
         const template = templateMap.get(state.ceremonyId);
         if (!template) return sum;
         const range = calculateCeremonyTotal(template, state.currentGuests);
-        return sum + (range.low + range.high) / 2;
+        return sum + ((range.low + range.high) / 2) * totalMultiplier;
       } else {
         const legacyBreakdown = CEREMONY_COST_BREAKDOWNS[state.ceremonyId];
         if (!legacyBreakdown) return sum;
         const range = calculateCeremonyTotalRange(legacyBreakdown, state.currentGuests);
-        return sum + (range.low + range.high) / 2;
+        return sum + ((range.low + range.high) / 2) * totalMultiplier;
       }
     }, 0);
-  }, [guestStates, templateMap]);
+  }, [guestStates, templateMap, pricingMultiplier]);
 
   if (isLoading) {
     return (
@@ -268,19 +289,55 @@ export function MultiCeremonySavingsCalculator({ events, className = "" }: Multi
               Perfect for having "the conversation" with family.
             </p>
           </div>
-          {hasChanges && (
+          <div className="flex items-center gap-2 shrink-0">
             <Button 
               variant="outline" 
               size="sm" 
-              onClick={resetAll}
-              className="shrink-0"
-              data-testid="button-reset-guests"
+              onClick={() => setShowPricingSettings(!showPricingSettings)}
+              className="gap-1"
+              data-testid="button-pricing-settings"
             >
-              <RotateCcw className="w-3.5 h-3.5 mr-1" />
-              Reset
+              <Settings2 className="w-3.5 h-3.5" />
+              Refine
             </Button>
-          )}
+            {hasChanges && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={resetAll}
+                data-testid="button-reset-guests"
+              >
+                <RotateCcw className="w-3.5 h-3.5 mr-1" />
+                Reset
+              </Button>
+            )}
+          </div>
         </div>
+        
+        {showPricingSettings && (
+          <div className="mt-4 p-3 rounded-lg bg-white/50 dark:bg-black/20 border border-blue-200 dark:border-blue-800">
+            <div className="mb-2">
+              <p className="text-xs text-blue-700 dark:text-blue-300 font-medium">Refine pricing based on your venue and vendor choices</p>
+            </div>
+            <PricingAdjuster
+              venueClass={venueClass}
+              vendorTier={vendorTier}
+              onVenueClassChange={setVenueClass}
+              onVendorTierChange={setVendorTier}
+              compact
+            />
+            {pricingMultiplier !== 1 && (
+              <div className="mt-2">
+                <Badge variant="outline" className="text-xs bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+                  {pricingMultiplier < 1 
+                    ? `${Math.round((1 - pricingMultiplier) * 100)}% savings applied`
+                    : `${Math.round((pricingMultiplier - 1) * 100)}% premium applied`
+                  }
+                </Badge>
+              </div>
+            )}
+          </div>
+        )}
 
         {hasChanges && (
           <div className="mt-4 p-4 rounded-lg bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 border border-green-200 dark:border-green-800">

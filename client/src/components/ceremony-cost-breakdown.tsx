@@ -3,11 +3,20 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronUp, DollarSign, Users, Clock, Info, Loader2 } from "lucide-react";
+import { ChevronDown, ChevronUp, DollarSign, Users, Clock, Info, Loader2, Settings2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Event, CeremonyTemplate, CeremonyTemplateCostItem } from "@shared/schema";
 import { useCeremonyTemplates, getCostBreakdownFromTemplate, calculateCeremonyTotal } from "@/hooks/use-ceremony-templates";
 import { CEREMONY_COST_BREAKDOWNS, CEREMONY_CATALOG, calculateCeremonyTotalRange, type CostCategory } from "@shared/ceremonies";
+import { PricingAdjuster } from "@/components/pricing-adjuster";
+import {
+  type VenueClass,
+  type VendorTier,
+  VENUE_CLASS_MULTIPLIERS,
+  VENDOR_TIER_MULTIPLIERS,
+  GUEST_BRACKET_MULTIPLIERS,
+  getGuestBracket,
+} from "@shared/pricing";
 
 interface CeremonyCostBreakdownProps {
   events: Event[];
@@ -90,24 +99,28 @@ function getCeremonyIdFromEvent(event: Event, templateMap: Map<string, CeremonyT
   return null;
 }
 
-function LegacyCostCategoryRow({ item, guestCount }: { item: CostCategory; guestCount: number }) {
+function LegacyCostCategoryRow({ item, guestCount, multiplier = 1 }: { item: CostCategory; guestCount: number; multiplier?: number }) {
   let displayLow: number;
   let displayHigh: number;
   let unitLabel: string;
   
   if (item.unit === "per_person") {
-    displayLow = item.lowCost * guestCount;
-    displayHigh = item.highCost * guestCount;
-    unitLabel = `@ ${formatCurrencyFull(item.lowCost)}-${formatCurrencyFull(item.highCost)}/person`;
+    const adjustedLow = Math.round(item.lowCost * multiplier);
+    const adjustedHigh = Math.round(item.highCost * multiplier);
+    displayLow = adjustedLow * guestCount;
+    displayHigh = adjustedHigh * guestCount;
+    unitLabel = `@ ${formatCurrencyFull(adjustedLow)}-${formatCurrencyFull(adjustedHigh)}/person`;
   } else if (item.unit === "per_hour") {
     const hoursLow = item.hoursLow ?? 3;
     const hoursHigh = item.hoursHigh ?? 4;
-    displayLow = item.lowCost * hoursLow;
-    displayHigh = item.highCost * hoursHigh;
-    unitLabel = `@ ${formatCurrencyFull(item.lowCost)}-${formatCurrencyFull(item.highCost)}/hr (${hoursLow}-${hoursHigh}hrs)`;
+    const adjustedLow = Math.round(item.lowCost * multiplier);
+    const adjustedHigh = Math.round(item.highCost * multiplier);
+    displayLow = adjustedLow * hoursLow;
+    displayHigh = adjustedHigh * hoursHigh;
+    unitLabel = `@ ${formatCurrencyFull(adjustedLow)}-${formatCurrencyFull(adjustedHigh)}/hr (${hoursLow}-${hoursHigh}hrs)`;
   } else {
-    displayLow = item.lowCost;
-    displayHigh = item.highCost;
+    displayLow = Math.round(item.lowCost * multiplier);
+    displayHigh = Math.round(item.highCost * multiplier);
     unitLabel = "fixed";
   }
   
@@ -136,24 +149,28 @@ function LegacyCostCategoryRow({ item, guestCount }: { item: CostCategory; guest
   );
 }
 
-function CostCategoryRow({ item, guestCount }: { item: CeremonyTemplateCostItem; guestCount: number }) {
+function CostCategoryRow({ item, guestCount, multiplier = 1 }: { item: CeremonyTemplateCostItem; guestCount: number; multiplier?: number }) {
   let displayLow: number;
   let displayHigh: number;
   let unitLabel: string;
   
   if (item.unit === "per_person") {
-    displayLow = item.lowCost * guestCount;
-    displayHigh = item.highCost * guestCount;
-    unitLabel = `@ ${formatCurrencyFull(item.lowCost)}-${formatCurrencyFull(item.highCost)}/person`;
+    const adjustedLow = Math.round(item.lowCost * multiplier);
+    const adjustedHigh = Math.round(item.highCost * multiplier);
+    displayLow = adjustedLow * guestCount;
+    displayHigh = adjustedHigh * guestCount;
+    unitLabel = `@ ${formatCurrencyFull(adjustedLow)}-${formatCurrencyFull(adjustedHigh)}/person`;
   } else if (item.unit === "per_hour") {
     const hoursLow = item.hoursLow ?? 3;
     const hoursHigh = item.hoursHigh ?? 4;
-    displayLow = item.lowCost * hoursLow;
-    displayHigh = item.highCost * hoursHigh;
-    unitLabel = `@ ${formatCurrencyFull(item.lowCost)}-${formatCurrencyFull(item.highCost)}/hr (${hoursLow}-${hoursHigh}hrs)`;
+    const adjustedLow = Math.round(item.lowCost * multiplier);
+    const adjustedHigh = Math.round(item.highCost * multiplier);
+    displayLow = adjustedLow * hoursLow;
+    displayHigh = adjustedHigh * hoursHigh;
+    unitLabel = `@ ${formatCurrencyFull(adjustedLow)}-${formatCurrencyFull(adjustedHigh)}/hr (${hoursLow}-${hoursHigh}hrs)`;
   } else {
-    displayLow = item.lowCost;
-    displayHigh = item.highCost;
+    displayLow = Math.round(item.lowCost * multiplier);
+    displayHigh = Math.round(item.highCost * multiplier);
     unitLabel = "fixed";
   }
   
@@ -185,9 +202,10 @@ function CostCategoryRow({ item, guestCount }: { item: CeremonyTemplateCostItem;
 interface EventCostCardProps {
   event: Event;
   templateMap: Map<string, CeremonyTemplate>;
+  pricingMultiplier: number;
 }
 
-function EventCostCard({ event, templateMap }: EventCostCardProps) {
+function EventCostCard({ event, templateMap, pricingMultiplier }: EventCostCardProps) {
   const [isOpen, setIsOpen] = useState(false);
   const ceremonyResult = getCeremonyIdFromEvent(event, templateMap);
   
@@ -197,6 +215,8 @@ function EventCostCard({ event, templateMap }: EventCostCardProps) {
   
   const { ceremonyId, useApi } = ceremonyResult;
   const guestCount = event.guestCount || 100;
+  const guestBracketMultiplier = GUEST_BRACKET_MULTIPLIERS[getGuestBracket(guestCount)];
+  const totalMultiplier = pricingMultiplier * guestBracketMultiplier;
   
   if (useApi) {
     const template = templateMap.get(ceremonyId);
@@ -204,7 +224,11 @@ function EventCostCard({ event, templateMap }: EventCostCardProps) {
     
     const breakdown = getCostBreakdownFromTemplate(template);
     const actualGuestCount = guestCount || template.defaultGuests || 100;
-    const totalRange = calculateCeremonyTotal(template, actualGuestCount);
+    const baseRange = calculateCeremonyTotal(template, actualGuestCount);
+    const totalRange = {
+      low: Math.round(baseRange.low * totalMultiplier),
+      high: Math.round(baseRange.high * totalMultiplier),
+    };
     
     return (
       <Card className="overflow-hidden hover-elevate" data-testid={`cost-card-${event.id}`}>
@@ -254,7 +278,7 @@ function EventCostCard({ event, templateMap }: EventCostCardProps) {
               </div>
               <div className="space-y-0">
                 {breakdown.map((item, index) => (
-                  <CostCategoryRow key={index} item={item} guestCount={actualGuestCount} />
+                  <CostCategoryRow key={index} item={item} guestCount={actualGuestCount} multiplier={totalMultiplier} />
                 ))}
               </div>
               <div className="mt-4 pt-3 border-t flex items-center justify-between">
@@ -273,7 +297,11 @@ function EventCostCard({ event, templateMap }: EventCostCardProps) {
   const legacyBreakdown = CEREMONY_COST_BREAKDOWNS[ceremonyId];
   if (!legacyBreakdown) return null;
   
-  const totalRange = calculateCeremonyTotalRange(legacyBreakdown, guestCount);
+  const baseRange = calculateCeremonyTotalRange(legacyBreakdown, guestCount);
+  const totalRange = {
+    low: Math.round(baseRange.low * totalMultiplier),
+    high: Math.round(baseRange.high * totalMultiplier),
+  };
   
   return (
     <Card className="overflow-hidden hover-elevate" data-testid={`cost-card-${event.id}`}>
@@ -323,7 +351,7 @@ function EventCostCard({ event, templateMap }: EventCostCardProps) {
             </div>
             <div className="space-y-0">
               {legacyBreakdown.map((item, index) => (
-                <LegacyCostCategoryRow key={index} item={item} guestCount={guestCount} />
+                <LegacyCostCategoryRow key={index} item={item} guestCount={guestCount} multiplier={totalMultiplier} />
               ))}
             </div>
             <div className="mt-4 pt-3 border-t flex items-center justify-between">
@@ -341,6 +369,13 @@ function EventCostCard({ event, templateMap }: EventCostCardProps) {
 
 export function CeremonyCostBreakdown({ events, className = "" }: CeremonyCostBreakdownProps) {
   const { data: templates, isLoading } = useCeremonyTemplates();
+  const [venueClass, setVenueClass] = useState<VenueClass>("community_hall");
+  const [vendorTier, setVendorTier] = useState<VendorTier>("standard");
+  const [showPricingSettings, setShowPricingSettings] = useState(false);
+  
+  const pricingMultiplier = useMemo(() => {
+    return VENUE_CLASS_MULTIPLIERS[venueClass] * VENDOR_TIER_MULTIPLIERS[vendorTier];
+  }, [venueClass, vendorTier]);
   
   const templateMap = useMemo(() => {
     const map = new Map<string, CeremonyTemplate>();
@@ -363,17 +398,19 @@ export function CeremonyCostBreakdown({ events, className = "" }: CeremonyCostBr
     let low = 0;
     let high = 0;
     for (const event of eventsWithBreakdowns) {
-      const ceremonyId = getCeremonyIdFromEvent(event, templateMap);
-      if (!ceremonyId) continue;
-      const template = templateMap.get(ceremonyId);
+      const ceremonyResult = getCeremonyIdFromEvent(event, templateMap);
+      if (!ceremonyResult) continue;
+      const template = templateMap.get(ceremonyResult.ceremonyId);
       if (!template) continue;
       const guestCount = event.guestCount || template.defaultGuests || 100;
+      const guestBracketMultiplier = GUEST_BRACKET_MULTIPLIERS[getGuestBracket(guestCount)];
+      const totalMultiplier = pricingMultiplier * guestBracketMultiplier;
       const range = calculateCeremonyTotal(template, guestCount);
-      low += range.low;
-      high += range.high;
+      low += Math.round(range.low * totalMultiplier);
+      high += Math.round(range.high * totalMultiplier);
     }
     return { totalLow: low, totalHigh: high };
-  }, [eventsWithBreakdowns, templateMap]);
+  }, [eventsWithBreakdowns, templateMap, pricingMultiplier]);
   
   if (isLoading) {
     return (
@@ -410,17 +447,54 @@ export function CeremonyCostBreakdown({ events, className = "" }: CeremonyCostBr
             Expand each event to see detailed vendor category breakdowns
           </p>
         </div>
-        <div className="text-right bg-gradient-to-br from-orange-50 to-pink-50 dark:from-orange-950/30 dark:to-pink-950/30 px-4 py-2 rounded-lg">
-          <p className="text-sm text-muted-foreground">Total Estimated Budget</p>
-          <p className="text-xl font-bold text-orange-600 dark:text-orange-400">
-            {formatCurrency(totalLow)} - {formatCurrency(totalHigh)}
-          </p>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowPricingSettings(!showPricingSettings)}
+            className="gap-2"
+            data-testid="button-pricing-settings"
+          >
+            <Settings2 className="w-4 h-4" />
+            Refine
+          </Button>
+          <div className="text-right bg-gradient-to-br from-orange-50 to-pink-50 dark:from-orange-950/30 dark:to-pink-950/30 px-4 py-2 rounded-lg">
+            <p className="text-sm text-muted-foreground">Total Estimated Budget</p>
+            <p className="text-xl font-bold text-orange-600 dark:text-orange-400">
+              {formatCurrency(totalLow)} - {formatCurrency(totalHigh)}
+            </p>
+          </div>
         </div>
       </div>
       
+      {showPricingSettings && (
+        <Card className="p-4 mb-4 bg-muted/30">
+          <div className="mb-3">
+            <h4 className="text-sm font-medium">Refine Your Estimate</h4>
+            <p className="text-xs text-muted-foreground">Select your venue style and vendor tier for more accurate pricing</p>
+          </div>
+          <PricingAdjuster
+            venueClass={venueClass}
+            vendorTier={vendorTier}
+            onVenueClassChange={setVenueClass}
+            onVendorTierChange={setVendorTier}
+          />
+          {pricingMultiplier !== 1 && (
+            <div className="mt-3 pt-3 border-t">
+              <Badge variant="outline" className="text-xs">
+                {pricingMultiplier < 1 
+                  ? `${Math.round((1 - pricingMultiplier) * 100)}% savings applied`
+                  : `${Math.round((pricingMultiplier - 1) * 100)}% premium applied`
+                }
+              </Badge>
+            </div>
+          )}
+        </Card>
+      )}
+      
       <div className="space-y-3">
         {eventsWithBreakdowns.map(event => (
-          <EventCostCard key={event.id} event={event} templateMap={templateMap} />
+          <EventCostCard key={event.id} event={event} templateMap={templateMap} pricingMultiplier={pricingMultiplier} />
         ))}
       </div>
     </div>

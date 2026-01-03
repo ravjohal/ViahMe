@@ -6,9 +6,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Lightbulb, Calculator, Plus, Minus, DollarSign, Users, Info, Loader2 } from "lucide-react";
+import { Lightbulb, Calculator, Plus, Minus, DollarSign, Users, Info, Loader2, MapPin } from "lucide-react";
 import type { Wedding, Event, CeremonyTemplate } from "@shared/schema";
 import { useCeremonyTemplatesByTradition } from "@/hooks/use-ceremony-templates";
+import { PricingAdjuster } from "@/components/pricing-adjuster";
+import {
+  type VenueClass,
+  type VendorTier,
+  VENUE_CLASS_MULTIPLIERS,
+  VENDOR_TIER_MULTIPLIERS,
+  GUEST_BRACKET_MULTIPLIERS,
+  getGuestBracket,
+  CITY_MULTIPLIERS,
+} from "@shared/pricing";
 
 interface EventEstimate {
   id: string;
@@ -19,6 +29,14 @@ interface EventEstimate {
   totalLow: number;
   totalHigh: number;
   isFromWedding?: boolean;
+}
+
+interface CustomEventBase {
+  id: string;
+  name: string;
+  guests: number;
+  baseCostPerGuestLow: number;
+  baseCostPerGuestHigh: number;
 }
 
 interface BudgetEstimatorProps {
@@ -40,13 +58,32 @@ const TRADITION_LABELS: Record<string, string> = {
   other: "Other",
 };
 
+const CITY_LABELS: Record<string, string> = {
+  bay_area: "Bay Area",
+  nyc: "New York City",
+  la: "Los Angeles",
+  chicago: "Chicago",
+  seattle: "Seattle",
+  other: "Other",
+};
+
 export function BudgetEstimator({ wedding, events = [], onUpdateBudget }: BudgetEstimatorProps) {
   const [open, setOpen] = useState(false);
   const [selectedTradition, setSelectedTradition] = useState<string>(wedding?.tradition || "hindu");
-  const [customEvents, setCustomEvents] = useState<EventEstimate[]>([]);
+  const [customEventsBase, setCustomEventsBase] = useState<CustomEventBase[]>([]);
   const [useWeddingEvents, setUseWeddingEvents] = useState(true);
+  const [venueClass, setVenueClass] = useState<VenueClass>("community_hall");
+  const [vendorTier, setVendorTier] = useState<VendorTier>("standard");
+  const [selectedCity, setSelectedCity] = useState<string>(wedding?.city || "other");
 
   const { data: traditionCeremonies = [], isLoading } = useCeremonyTemplatesByTradition(selectedTradition);
+
+  const pricingMultiplier = useMemo(() => {
+    const venueMultiplier = VENUE_CLASS_MULTIPLIERS[venueClass];
+    const vendorMultiplier = VENDOR_TIER_MULTIPLIERS[vendorTier];
+    const cityMultiplier = CITY_MULTIPLIERS[selectedCity] || 1.0;
+    return venueMultiplier * vendorMultiplier * cityMultiplier;
+  }, [venueClass, vendorTier, selectedCity]);
 
   const weddingEventEstimates: EventEstimate[] = useMemo(() => {
     if (!useWeddingEvents || events.length === 0) return [];
@@ -57,9 +94,13 @@ export function BudgetEstimator({ wedding, events = [], onUpdateBudget }: Budget
         c.ceremonyId.includes(event.name.toLowerCase().replace(/\s+/g, '_'))
       );
       
-      const costLow = ceremony ? parseFloat(ceremony.costPerGuestLow) : 50;
-      const costHigh = ceremony ? parseFloat(ceremony.costPerGuestHigh) : 100;
+      const baseCostLow = ceremony ? parseFloat(ceremony.costPerGuestLow) : 50;
+      const baseCostHigh = ceremony ? parseFloat(ceremony.costPerGuestHigh) : 100;
       const guestCount = event.guestCount || ceremony?.defaultGuests || 150;
+      const guestBracketMultiplier = GUEST_BRACKET_MULTIPLIERS[getGuestBracket(guestCount)];
+      
+      const costLow = Math.round(baseCostLow * pricingMultiplier * guestBracketMultiplier);
+      const costHigh = Math.round(baseCostHigh * pricingMultiplier * guestBracketMultiplier);
       
       return {
         id: event.id,
@@ -72,11 +113,28 @@ export function BudgetEstimator({ wedding, events = [], onUpdateBudget }: Budget
         isFromWedding: true,
       };
     });
-  }, [events, useWeddingEvents, traditionCeremonies]);
+  }, [events, useWeddingEvents, traditionCeremonies, pricingMultiplier]);
+
+  const customEventEstimates: EventEstimate[] = useMemo(() => {
+    return customEventsBase.map(ce => {
+      const guestBracketMultiplier = GUEST_BRACKET_MULTIPLIERS[getGuestBracket(ce.guests)];
+      const costLow = Math.round(ce.baseCostPerGuestLow * pricingMultiplier * guestBracketMultiplier);
+      const costHigh = Math.round(ce.baseCostPerGuestHigh * pricingMultiplier * guestBracketMultiplier);
+      return {
+        id: ce.id,
+        name: ce.name,
+        guests: ce.guests,
+        costPerGuestLow: costLow,
+        costPerGuestHigh: costHigh,
+        totalLow: costLow * ce.guests,
+        totalHigh: costHigh * ce.guests,
+      };
+    });
+  }, [customEventsBase, pricingMultiplier]);
 
   const allEstimates = useMemo(() => {
-    return [...weddingEventEstimates, ...customEvents];
-  }, [weddingEventEstimates, customEvents]);
+    return [...weddingEventEstimates, ...customEventEstimates];
+  }, [weddingEventEstimates, customEventEstimates]);
 
   const totals = useMemo(() => {
     return allEstimates.reduce(
@@ -94,36 +152,24 @@ export function BudgetEstimator({ wedding, events = [], onUpdateBudget }: Budget
   }, [traditionCeremonies, allEstimates]);
 
   const addCeremony = (ceremony: CeremonyTemplate) => {
-    const costLow = parseFloat(ceremony.costPerGuestLow);
-    const costHigh = parseFloat(ceremony.costPerGuestHigh);
-    const newEvent: EventEstimate = {
+    const newEvent: CustomEventBase = {
       id: `custom-${Date.now()}`,
       name: ceremony.name,
       guests: ceremony.defaultGuests,
-      costPerGuestLow: costLow,
-      costPerGuestHigh: costHigh,
-      totalLow: costLow * ceremony.defaultGuests,
-      totalHigh: costHigh * ceremony.defaultGuests,
+      baseCostPerGuestLow: parseFloat(ceremony.costPerGuestLow),
+      baseCostPerGuestHigh: parseFloat(ceremony.costPerGuestHigh),
     };
-    setCustomEvents([...customEvents, newEvent]);
+    setCustomEventsBase([...customEventsBase, newEvent]);
   };
 
   const updateGuestCount = (eventId: string, guests: number) => {
-    setCustomEvents(customEvents.map(e => {
-      if (e.id === eventId) {
-        return {
-          ...e,
-          guests,
-          totalLow: e.costPerGuestLow * guests,
-          totalHigh: e.costPerGuestHigh * guests,
-        };
-      }
-      return e;
-    }));
+    setCustomEventsBase(customEventsBase.map(e => 
+      e.id === eventId ? { ...e, guests } : e
+    ));
   };
 
   const removeEvent = (eventId: string) => {
-    setCustomEvents(customEvents.filter(e => e.id !== eventId));
+    setCustomEventsBase(customEventsBase.filter(e => e.id !== eventId));
   };
 
   const handleApplyBudget = () => {
@@ -150,8 +196,8 @@ export function BudgetEstimator({ wedding, events = [], onUpdateBudget }: Budget
         </DialogHeader>
 
         <div className="space-y-6">
-          <div className="flex items-center gap-4">
-            <div className="flex-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
               <Label className="text-sm font-medium mb-2 block">Tradition</Label>
               <Select value={selectedTradition} onValueChange={setSelectedTradition}>
                 <SelectTrigger data-testid="select-tradition">
@@ -166,21 +212,63 @@ export function BudgetEstimator({ wedding, events = [], onUpdateBudget }: Budget
                 </SelectContent>
               </Select>
             </div>
-            {events.length > 0 && (
-              <div className="flex items-center gap-2 pt-6">
-                <input
-                  type="checkbox"
-                  id="use-wedding-events"
-                  checked={useWeddingEvents}
-                  onChange={(e) => setUseWeddingEvents(e.target.checked)}
-                  className="rounded border-gray-300"
-                />
-                <Label htmlFor="use-wedding-events" className="text-sm cursor-pointer">
-                  Use my wedding events
-                </Label>
+            <div>
+              <Label className="text-sm font-medium mb-2 block flex items-center gap-2">
+                <MapPin className="w-4 h-4" />
+                City
+              </Label>
+              <Select value={selectedCity} onValueChange={setSelectedCity}>
+                <SelectTrigger data-testid="select-city">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(CITY_LABELS).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <Card className="p-4 bg-muted/30 border">
+            <div className="mb-3">
+              <h4 className="text-sm font-medium mb-1">Refine Your Estimate</h4>
+              <p className="text-xs text-muted-foreground">Select your venue style and vendor tier for more accurate pricing</p>
+            </div>
+            <PricingAdjuster
+              venueClass={venueClass}
+              vendorTier={vendorTier}
+              onVenueClassChange={setVenueClass}
+              onVendorTierChange={setVendorTier}
+            />
+            {pricingMultiplier !== 1 && (
+              <div className="mt-3 pt-3 border-t">
+                <Badge variant="outline" className="text-xs">
+                  {pricingMultiplier < 1 
+                    ? `${Math.round((1 - pricingMultiplier) * 100)}% savings applied`
+                    : `${Math.round((pricingMultiplier - 1) * 100)}% premium applied`
+                  }
+                </Badge>
               </div>
             )}
-          </div>
+          </Card>
+
+          {events.length > 0 && (
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="use-wedding-events"
+                checked={useWeddingEvents}
+                onChange={(e) => setUseWeddingEvents(e.target.checked)}
+                className="rounded border-gray-300"
+              />
+              <Label htmlFor="use-wedding-events" className="text-sm cursor-pointer">
+                Use my wedding events
+              </Label>
+            </div>
+          )}
 
           <Card className="p-4 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 border-emerald-200 dark:border-emerald-800">
             <div className="flex items-start gap-3 mb-4">
