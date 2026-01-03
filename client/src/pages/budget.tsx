@@ -85,6 +85,8 @@ export default function Budget() {
   const [editBudgetOpen, setEditBudgetOpen] = useState(false);
   const [showSavingsCalculator, setShowSavingsCalculator] = useState(false);
   const [showCategories, setShowCategories] = useState(false);
+  const [editingExpense, setEditingExpense] = useState<ExpenseWithAllocations | null>(null);
+  const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null);
 
   const { data: weddings, isLoading: weddingsLoading } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
@@ -535,6 +537,36 @@ export default function Budget() {
     },
   });
 
+  const deleteExpenseMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiRequest("DELETE", `/api/expenses/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/expenses", wedding?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budget-categories", wedding?.id] });
+      setDeletingExpenseId(null);
+      toast({ title: "Expense deleted", description: "The expense has been removed" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to delete expense", variant: "destructive" });
+    },
+  });
+
+  const updateExpenseMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      return await apiRequest("PATCH", `/api/expenses/${id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/expenses", wedding?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budget-categories", wedding?.id] });
+      setEditingExpense(null);
+      toast({ title: "Expense updated", description: "The expense has been saved" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to update expense", variant: "destructive" });
+    },
+  });
+
   useEffect(() => {
     if (!weddingsLoading && !wedding) {
       setLocation("/onboarding");
@@ -922,7 +954,7 @@ export default function Budget() {
                                       return (
                                         <div 
                                           key={expense.id || idx}
-                                          className={`flex items-center justify-between py-1 text-sm pl-4 ${isPartial ? "bg-orange-50/50 dark:bg-orange-950/20 rounded -mx-2 px-2" : ""}`}
+                                          className={`group flex items-center justify-between py-1 text-sm pl-4 ${isPartial ? "bg-orange-50/50 dark:bg-orange-950/20 rounded -mx-2 px-2" : ""}`}
                                           data-testid={`expense-item-${expense.id}`}
                                         >
                                           <div className="flex items-center gap-2 flex-wrap">
@@ -939,9 +971,31 @@ export default function Budget() {
                                               </span>
                                             )}
                                           </div>
-                                          <span className="font-mono text-muted-foreground">
-                                            ${amount.toLocaleString()}
-                                          </span>
+                                          <div className="flex items-center gap-2">
+                                            <div className="invisible group-hover:visible flex items-center gap-1">
+                                              <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-6 w-6"
+                                                onClick={() => setEditingExpense(expense)}
+                                                data-testid={`button-edit-expense-${expense.id}`}
+                                              >
+                                                <Edit2 className="h-3 w-3" />
+                                              </Button>
+                                              <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-6 w-6 text-destructive hover:text-destructive"
+                                                onClick={() => setDeletingExpenseId(expense.id)}
+                                                data-testid={`button-delete-expense-${expense.id}`}
+                                              >
+                                                <Trash2 className="h-3 w-3" />
+                                              </Button>
+                                            </div>
+                                            <span className="font-mono text-muted-foreground">
+                                              ${amount.toLocaleString()}
+                                            </span>
+                                          </div>
                                         </div>
                                       );
                                     })}
@@ -1029,7 +1083,7 @@ export default function Budget() {
                                   return (
                                     <div 
                                       key={expense.id || idx}
-                                      className={`flex items-center justify-between py-1 text-sm pl-4 ${isPartial ? "bg-orange-50/50 dark:bg-orange-950/20 rounded -mx-2 px-2" : ""}`}
+                                      className={`group flex items-center justify-between py-1 text-sm pl-4 ${isPartial ? "bg-orange-50/50 dark:bg-orange-950/20 rounded -mx-2 px-2" : ""}`}
                                     >
                                       <div className="flex items-center gap-2 flex-wrap">
                                         <span>{expense.description}</span>
@@ -1045,9 +1099,31 @@ export default function Budget() {
                                           </span>
                                         )}
                                       </div>
-                                      <span className="font-mono text-muted-foreground">
-                                        ${amount.toLocaleString()}
-                                      </span>
+                                      <div className="flex items-center gap-2">
+                                        <div className="invisible group-hover:visible flex items-center gap-1">
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-6 w-6"
+                                            onClick={() => setEditingExpense(expense)}
+                                            data-testid={`button-edit-expense-unassigned-${expense.id}`}
+                                          >
+                                            <Edit2 className="h-3 w-3" />
+                                          </Button>
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-6 w-6 text-destructive hover:text-destructive"
+                                            onClick={() => setDeletingExpenseId(expense.id)}
+                                            data-testid={`button-delete-expense-unassigned-${expense.id}`}
+                                          >
+                                            <Trash2 className="h-3 w-3" />
+                                          </Button>
+                                        </div>
+                                        <span className="font-mono text-muted-foreground">
+                                          ${amount.toLocaleString()}
+                                        </span>
+                                      </div>
                                     </div>
                                   );
                                 })}
@@ -1310,7 +1386,254 @@ export default function Budget() {
             </Form>
           </DialogContent>
         </Dialog>
+
+        {/* Delete Expense Confirmation Dialog */}
+        <Dialog open={!!deletingExpenseId} onOpenChange={(open) => !open && setDeletingExpenseId(null)}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Delete Expense</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this expense? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex gap-2 justify-end pt-4">
+              <Button variant="outline" onClick={() => setDeletingExpenseId(null)}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => deletingExpenseId && deleteExpenseMutation.mutate(deletingExpenseId)}
+                disabled={deleteExpenseMutation.isPending}
+                data-testid="button-confirm-delete-expense"
+              >
+                {deleteExpenseMutation.isPending ? "Deleting..." : "Delete"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Expense Dialog */}
+        <EditExpenseDialog
+          expense={editingExpense}
+          open={!!editingExpense}
+          onOpenChange={(open) => !open && setEditingExpense(null)}
+          categories={categories}
+          events={events}
+          onSave={(data) => {
+            if (editingExpense) {
+              updateExpenseMutation.mutate({ id: editingExpense.id, data });
+            }
+          }}
+          isPending={updateExpenseMutation.isPending}
+        />
       </main>
     </div>
+  );
+}
+
+// Edit Expense Dialog Component
+function EditExpenseDialog({
+  expense,
+  open,
+  onOpenChange,
+  categories,
+  events,
+  onSave,
+  isPending,
+}: {
+  expense: ExpenseWithAllocations | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  categories: BudgetCategory[];
+  events: Event[];
+  onSave: (data: any) => void;
+  isPending: boolean;
+}) {
+  const [description, setDescription] = useState("");
+  const [amount, setAmount] = useState("");
+  const [amountPaid, setAmountPaid] = useState("");
+  const [expenseDate, setExpenseDate] = useState("");
+  const [categoryId, setCategoryId] = useState<string | null>(null);
+  const [paymentStatus, setPaymentStatus] = useState<"partial" | "paid">("partial");
+
+  useEffect(() => {
+    if (expense) {
+      setDescription(expense.description || "");
+      setAmount(expense.amount?.toString() || "");
+      setAmountPaid(expense.amountPaid?.toString() || "0");
+      setExpenseDate(expense.expenseDate || new Date().toISOString().split('T')[0]);
+      setCategoryId(expense.categoryId || null);
+      setPaymentStatus((expense.paymentStatus as "partial" | "paid") || "partial");
+    }
+  }, [expense]);
+
+  const handleSubmit = () => {
+    const parsedAmount = parseFloat(amount.replace(/,/g, ""));
+    if (isNaN(parsedAmount) || parsedAmount <= 0) return;
+    
+    const finalAmountPaid = paymentStatus === "paid" 
+      ? parsedAmount 
+      : (parseFloat(amountPaid.replace(/,/g, "")) || 0);
+
+    onSave({
+      description: description.trim(),
+      amount: parsedAmount.toFixed(2),
+      amountPaid: finalAmountPaid.toFixed(2),
+      expenseDate,
+      categoryId,
+      paymentStatus,
+    });
+  };
+
+  const parsedAmount = parseFloat(amount.replace(/,/g, "")) || 0;
+  const parsedAmountPaid = parseFloat(amountPaid.replace(/,/g, "")) || 0;
+  const remainingAmount = Math.max(0, parsedAmount - parsedAmountPaid);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Edit Expense</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 pt-4">
+          <div className="space-y-2">
+            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Description
+            </Label>
+            <Input
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="What was this expense for?"
+              data-testid="input-edit-expense-description"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                How much total?
+              </Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">$</span>
+                <Input
+                  type="text"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value.replace(/[^0-9.,]/g, ""))}
+                  placeholder="0.00"
+                  className="pl-7"
+                  data-testid="input-edit-expense-amount"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                Date
+              </Label>
+              <Input
+                type="date"
+                value={expenseDate}
+                onChange={(e) => setExpenseDate(e.target.value)}
+                data-testid="input-edit-expense-date"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Category <span className="text-destructive">*</span>
+            </Label>
+            <div className="flex flex-wrap gap-2">
+              {categories.map((cat) => {
+                const label = CATEGORY_LABELS[cat.category] || cat.category;
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setCategoryId(cat.id)}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                      categoryId === cat.id
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground hover-elevate"
+                    }`}
+                    data-testid={`button-edit-category-${cat.id}`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Payment Status
+            </Label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setPaymentStatus("partial")}
+                className={`flex-1 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  paymentStatus === "partial"
+                    ? "bg-orange-500 text-white"
+                    : "bg-muted text-muted-foreground hover-elevate"
+                }`}
+                data-testid="button-edit-status-partial"
+              >
+                Partially Paid
+              </button>
+              <button
+                type="button"
+                onClick={() => setPaymentStatus("paid")}
+                className={`flex-1 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  paymentStatus === "paid"
+                    ? "bg-emerald-500 text-white"
+                    : "bg-muted text-muted-foreground hover-elevate"
+                }`}
+                data-testid="button-edit-status-paid"
+              >
+                Fully Paid
+              </button>
+            </div>
+          </div>
+
+          {paymentStatus === "partial" && (
+            <div className="space-y-2">
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                Amount Paid So Far
+              </Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">$</span>
+                <Input
+                  type="text"
+                  value={amountPaid}
+                  onChange={(e) => setAmountPaid(e.target.value.replace(/[^0-9.,]/g, ""))}
+                  placeholder="0.00"
+                  className="pl-7"
+                  data-testid="input-edit-expense-amount-paid"
+                />
+              </div>
+              {parsedAmount > 0 && (
+                <p className="text-sm text-orange-600 dark:text-orange-400">
+                  Remaining: ${remainingAmount.toLocaleString()}
+                </p>
+              )}
+            </div>
+          )}
+
+          <div className="flex gap-2 justify-end pt-4">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={isPending || !description.trim() || !categoryId}
+              data-testid="button-save-edit-expense"
+            >
+              {isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
