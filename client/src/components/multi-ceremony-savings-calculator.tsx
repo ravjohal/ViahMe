@@ -112,14 +112,17 @@ export function MultiCeremonySavingsCalculator({ events, className = "" }: Multi
       const ceremonyId = getCeremonyIdFromEvent(event)!;
       const ceremony = CEREMONY_CATALOG.find(c => c.id === ceremonyId);
       const originalGuests = event.guestCount || ceremony?.defaultGuests || 100;
+      const minGuests = Math.max(20, Math.floor(originalGuests * 0.3));
+      // Ensure maxGuests is always greater than minGuests and at least equal to originalGuests
+      const maxGuests = Math.max(minGuests + 50, originalGuests, Math.ceil(originalGuests * 1.5));
       return {
         eventId: event.id,
         eventName: event.name,
         ceremonyId,
         originalGuests,
         currentGuests: originalGuests,
-        minGuests: Math.max(20, Math.floor(originalGuests * 0.3)),
-        maxGuests: Math.min(500, Math.ceil(originalGuests * 1.5)),
+        minGuests,
+        maxGuests,
       };
     });
   }, [events]);
