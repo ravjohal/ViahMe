@@ -625,40 +625,38 @@ export default function EngagementGamesPage() {
                       </Button>
                     </div>
                   </div>
-                  {selectedGame.status === 'active' && (
-                    <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                      <div className="flex items-start gap-3">
-                        <Share2 className="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5" />
-                        <div className="flex-1">
-                          <h4 className="font-medium text-green-800 dark:text-green-300">Game is Live!</h4>
-                          <p className="text-sm text-green-700 dark:text-green-400 mt-1">
-                            Guests can play this game from their RSVP link. Each guest's personalized invitation link includes access to all active games.
-                          </p>
-                          <div className="mt-3 flex items-center gap-2">
-                            <code className="text-xs bg-green-100 dark:bg-green-900/40 px-2 py-1 rounded text-green-800 dark:text-green-300">
-                              {window.location.origin}/games/[guest-token]
-                            </code>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-7 text-xs"
-                              onClick={() => {
-                                navigator.clipboard.writeText(`${window.location.origin}/games/`);
-                                toast({ title: "Link prefix copied!", description: "Add each guest's token to share their personalized game link." });
-                              }}
-                              data-testid="button-copy-game-link"
-                            >
-                              <Copy className="h-3 w-3 mr-1" />
-                              Copy
-                            </Button>
-                          </div>
-                          <p className="text-xs text-green-600 dark:text-green-500 mt-2">
-                            Tip: Include "Play Games" in your invitation emails, or send game links via the Communication Hub.
-                          </p>
+                  <div className="mt-4 p-4 bg-muted/50 rounded-lg border">
+                    <div className="flex items-start gap-3">
+                      <Share2 className="h-5 w-5 text-primary mt-0.5" />
+                      <div className="flex-1">
+                        <h4 className="font-medium">How Guests Play</h4>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Guests access games through their personalized RSVP link. Each household's magic link includes access to all active games.
+                        </p>
+                        <div className="mt-3 flex items-center gap-2 flex-wrap">
+                          <code className="text-xs bg-muted px-2 py-1 rounded">
+                            {window.location.origin}/games/[guest-token]
+                          </code>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-xs"
+                            onClick={() => {
+                              navigator.clipboard.writeText(`${window.location.origin}/games/`);
+                              toast({ title: "Link prefix copied!", description: "Add each guest's token to share their personalized game link." });
+                            }}
+                            data-testid="button-copy-game-link"
+                          >
+                            <Copy className="h-3 w-3 mr-1" />
+                            Copy
+                          </Button>
                         </div>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Tip: Include game links in your invitation emails or share via the Communication Hub.
+                        </p>
                       </div>
                     </div>
-                  )}
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <Tabs defaultValue="content">
