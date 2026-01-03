@@ -65,11 +65,10 @@ export default function Expenses() {
     enabled: !!weddingId,
   });
 
-  // Build team members list: use partner names for the couple, plus collaborators
-  // The logged-in user is one of the partners, so we don't add them separately
+  // Build team members list: Bride & Groom by default, plus any collaborators
   const teamMembers = [
-    ...(wedding?.partner1Name ? [{ id: "partner1", name: wedding.partner1Name }] : []),
-    ...(wedding?.partner2Name ? [{ id: "partner2", name: wedding.partner2Name }] : []),
+    { id: "bride", name: "Bride" },
+    { id: "groom", name: "Groom" },
     ...collaborators.map((c: any) => ({ id: c.userId, name: c.user?.name || c.user?.email || "Team Member" })),
   ];
 
@@ -390,6 +389,10 @@ export default function Expenses() {
               <Users className="h-5 w-5 text-primary" />
               {teamMembers.length}
             </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Bride & Groom by default. Add more via{" "}
+              <a href="/team" className="text-primary hover:underline">Team Settings</a>.
+            </p>
           </CardContent>
         </Card>
       </div>
