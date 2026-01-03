@@ -83,6 +83,34 @@ export function DuplicatesManager({ weddingId }: DuplicatesManagerProps) {
     },
   });
 
+  const deleteGuestMutation = useMutation({
+    mutationFn: async (guestId: string) => {
+      return await apiRequest('DELETE', `/api/guest/${guestId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/weddings', weddingId, 'duplicate-households'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/guests', weddingId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/households', weddingId] });
+      setMergeDialogOpen(false);
+      setSelectedPair(null);
+      toast({
+        title: "Duplicate resolved",
+        description: "The duplicate guest has been deleted.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Delete failed",
+        description: error.message || "Failed to delete guest",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const isIntraHouseholdDuplicate = (pair: DuplicateCandidate) => {
+    return pair.household1.id === pair.household2.id;
+  };
+
   const handleMerge = (pair: DuplicateCandidate) => {
     setSelectedPair(pair);
     setMergeDialogOpen(true);
@@ -212,93 +240,181 @@ export function DuplicatesManager({ weddingId }: DuplicatesManagerProps) {
 
       <Dialog open={mergeDialogOpen} onOpenChange={setMergeDialogOpen}>
         <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-xl">
-              <Trash2 className="h-5 w-5" />
-              Resolve Duplicate
-            </DialogTitle>
-            <DialogDescription className="text-base">
-              Choose which family to keep. The other will be permanently deleted.
-            </DialogDescription>
-          </DialogHeader>
-          
-          {selectedPair && (() => {
-            const h1Date = new Date(selectedPair.household1.createdAt);
-            const h2Date = new Date(selectedPair.household2.createdAt);
-            const h1IsOlder = h1Date < h2Date;
-            const olderHousehold = h1IsOlder ? selectedPair.household1 : selectedPair.household2;
-            const newerHousehold = h1IsOlder ? selectedPair.household2 : selectedPair.household1;
-            const olderGuests = h1IsOlder ? selectedPair.guests1 : selectedPair.guests2;
-            const newerGuests = h1IsOlder ? selectedPair.guests2 : selectedPair.guests1;
-            
-            return (
+          {selectedPair && isIntraHouseholdDuplicate(selectedPair) ? (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-xl">
+                  <Trash2 className="h-5 w-5" />
+                  Duplicate Guests in Same Household
+                </DialogTitle>
+                <DialogDescription className="text-base">
+                  These two guests in "{selectedPair.household1.name}" appear to be duplicates. Choose which one to keep.
+                </DialogDescription>
+              </DialogHeader>
+              
               <div className="space-y-4 py-4">
                 <div className="space-y-3">
                   <div className="border rounded-lg p-4 bg-muted/30">
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="font-semibold text-lg">{olderHousehold.name}</p>
-                      <Badge variant="outline">Added first</Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {olderGuests.length} guest{olderGuests.length !== 1 ? "s" : ""} · 
-                      Added {h1IsOlder ? h1Date.toLocaleDateString() : h2Date.toLocaleDateString()}
-                    </p>
+                    <p className="font-semibold text-lg mb-1">{selectedPair.guests1[0]?.name}</p>
+                    {selectedPair.guests1[0]?.email && (
+                      <p className="text-sm text-muted-foreground flex items-center gap-2">
+                        <Mail className="h-4 w-4" /> {selectedPair.guests1[0].email}
+                      </p>
+                    )}
+                    {selectedPair.guests1[0]?.phone && (
+                      <p className="text-sm text-muted-foreground flex items-center gap-2">
+                        <Phone className="h-4 w-4" /> {selectedPair.guests1[0].phone}
+                      </p>
+                    )}
                     <Button
                       variant="default"
-                      onClick={() => executeMerge(true)}
-                      disabled={mergeMutation.isPending}
+                      onClick={() => deleteGuestMutation.mutate(selectedPair.guests2[0]?.id)}
+                      disabled={deleteGuestMutation.isPending}
                       className="w-full mt-3 min-h-[44px]"
-                      data-testid="button-keep-older"
+                      data-testid="button-keep-guest-1"
                     >
-                      Keep This One (Delete the other)
+                      Keep This Guest (Delete the other)
                     </Button>
                   </div>
                   
                   <div className="border rounded-lg p-4 bg-muted/30">
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="font-semibold text-lg">{newerHousehold.name}</p>
-                      <Badge variant="outline">Added later</Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {newerGuests.length} guest{newerGuests.length !== 1 ? "s" : ""} · 
-                      Added {h1IsOlder ? h2Date.toLocaleDateString() : h1Date.toLocaleDateString()}
-                    </p>
+                    <p className="font-semibold text-lg mb-1">{selectedPair.guests2[0]?.name}</p>
+                    {selectedPair.guests2[0]?.email && (
+                      <p className="text-sm text-muted-foreground flex items-center gap-2">
+                        <Mail className="h-4 w-4" /> {selectedPair.guests2[0].email}
+                      </p>
+                    )}
+                    {selectedPair.guests2[0]?.phone && (
+                      <p className="text-sm text-muted-foreground flex items-center gap-2">
+                        <Phone className="h-4 w-4" /> {selectedPair.guests2[0].phone}
+                      </p>
+                    )}
                     <Button
                       variant="default"
-                      onClick={() => executeMerge(false)}
-                      disabled={mergeMutation.isPending}
+                      onClick={() => deleteGuestMutation.mutate(selectedPair.guests1[0]?.id)}
+                      disabled={deleteGuestMutation.isPending}
                       className="w-full mt-3 min-h-[44px]"
-                      data-testid="button-keep-newer"
+                      data-testid="button-keep-guest-2"
                     >
-                      Keep This One (Delete the other)
+                      Keep This Guest (Delete the other)
                     </Button>
                   </div>
                 </div>
                 
                 <div className="border-t pt-4 mt-4">
                   <p className="text-sm text-muted-foreground text-center mb-3">
-                    Or if these are actually different families:
+                    Or if these are actually different people:
                   </p>
                   <Button
                     variant="outline"
-                    onClick={() => keepBothMutation.mutate({
-                      householdId1: selectedPair.household1.id,
-                      householdId2: selectedPair.household2.id,
-                    })}
-                    disabled={keepBothMutation.isPending || mergeMutation.isPending}
+                    onClick={() => {
+                      setMergeDialogOpen(false);
+                      setSelectedPair(null);
+                      toast({
+                        title: "Skipped",
+                        description: "You can rename one of the guests to distinguish them.",
+                      });
+                    }}
                     className="w-full min-h-[44px] gap-2"
-                    data-testid="button-keep-both"
+                    data-testid="button-keep-both-guests"
                   >
                     <Check className="h-4 w-4" />
-                    Keep Both (Not Duplicates)
+                    Keep Both (Different People)
                   </Button>
-                  <p className="text-xs text-muted-foreground text-center mt-2">
-                    This pair will no longer appear in duplicate reports.
-                  </p>
                 </div>
               </div>
-            );
-          })()}
+            </>
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-xl">
+                  <Trash2 className="h-5 w-5" />
+                  Resolve Duplicate
+                </DialogTitle>
+                <DialogDescription className="text-base">
+                  Choose which family to keep. The other will be permanently deleted.
+                </DialogDescription>
+              </DialogHeader>
+              
+              {selectedPair && (() => {
+                const h1Date = new Date(selectedPair.household1.createdAt);
+                const h2Date = new Date(selectedPair.household2.createdAt);
+                const h1IsOlder = h1Date < h2Date;
+                const olderHousehold = h1IsOlder ? selectedPair.household1 : selectedPair.household2;
+                const newerHousehold = h1IsOlder ? selectedPair.household2 : selectedPair.household1;
+                const olderGuests = h1IsOlder ? selectedPair.guests1 : selectedPair.guests2;
+                const newerGuests = h1IsOlder ? selectedPair.guests2 : selectedPair.guests1;
+                
+                return (
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-3">
+                      <div className="border rounded-lg p-4 bg-muted/30">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="font-semibold text-lg">{olderHousehold.name}</p>
+                          <Badge variant="outline">Added first</Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {olderGuests.length} guest{olderGuests.length !== 1 ? "s" : ""} · 
+                          Added {h1IsOlder ? h1Date.toLocaleDateString() : h2Date.toLocaleDateString()}
+                        </p>
+                        <Button
+                          variant="default"
+                          onClick={() => executeMerge(true)}
+                          disabled={mergeMutation.isPending}
+                          className="w-full mt-3 min-h-[44px]"
+                          data-testid="button-keep-older"
+                        >
+                          Keep This One (Delete the other)
+                        </Button>
+                      </div>
+                      
+                      <div className="border rounded-lg p-4 bg-muted/30">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="font-semibold text-lg">{newerHousehold.name}</p>
+                          <Badge variant="outline">Added later</Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {newerGuests.length} guest{newerGuests.length !== 1 ? "s" : ""} · 
+                          Added {h1IsOlder ? h2Date.toLocaleDateString() : h1Date.toLocaleDateString()}
+                        </p>
+                        <Button
+                          variant="default"
+                          onClick={() => executeMerge(false)}
+                          disabled={mergeMutation.isPending}
+                          className="w-full mt-3 min-h-[44px]"
+                          data-testid="button-keep-newer"
+                        >
+                          Keep This One (Delete the other)
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="border-t pt-4 mt-4">
+                      <p className="text-sm text-muted-foreground text-center mb-3">
+                        Or if these are actually different families:
+                      </p>
+                      <Button
+                        variant="outline"
+                        onClick={() => keepBothMutation.mutate({
+                          householdId1: selectedPair.household1.id,
+                          householdId2: selectedPair.household2.id,
+                        })}
+                        disabled={keepBothMutation.isPending || mergeMutation.isPending}
+                        className="w-full min-h-[44px] gap-2"
+                        data-testid="button-keep-both"
+                      >
+                        <Check className="h-4 w-4" />
+                        Keep Both (Not Duplicates)
+                      </Button>
+                      <p className="text-xs text-muted-foreground text-center mt-2">
+                        This pair will no longer appear in duplicate reports.
+                      </p>
+                    </div>
+                  </div>
+                );
+              })()}
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>

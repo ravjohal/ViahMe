@@ -9373,7 +9373,37 @@ export class DBStorage implements IStorage {
       householdGuests.set(household.id, guests);
     }
 
-    // Compare each pair of households
+    // FIRST: Check for duplicate guests WITHIN the same household
+    for (const household of households) {
+      const guests = householdGuests.get(household.id) || [];
+      if (guests.length < 2) continue;
+      
+      // Compare each pair of guests within the same household
+      for (let i = 0; i < guests.length; i++) {
+        for (let j = i + 1; j < guests.length; j++) {
+          const g1 = guests[i];
+          const g2 = guests[j];
+          
+          const nameSim = this.calculateStringSimilarity(g1.name, g2.name);
+          
+          // High similarity threshold for same-household duplicates
+          if (nameSim >= 0.9) {
+            // Create a "virtual" duplicate entry showing the same household twice
+            // with the specific duplicate guests highlighted
+            duplicates.push({
+              household1: household,
+              household2: household,
+              guests1: [g1],
+              guests2: [g2],
+              confidence: nameSim,
+              matchReasons: [`Duplicate guests within same household: "${g1.name}" and "${g2.name}" (${Math.round(nameSim * 100)}% match)`],
+            });
+          }
+        }
+      }
+    }
+
+    // SECOND: Compare each pair of different households
     for (let i = 0; i < households.length; i++) {
       for (let j = i + 1; j < households.length; j++) {
         const h1 = households[i];
