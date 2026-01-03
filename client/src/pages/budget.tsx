@@ -12,11 +12,11 @@ import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertBudgetCategorySchema, type Wedding, type BudgetCategory, type Event } from "@shared/schema";
+import { insertBudgetCategorySchema, type Wedding, type BudgetCategory, type Event, type Contract, type Vendor } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
-import { DollarSign, Edit2, Trash2, Plus, CheckCircle2, AlertCircle, TrendingUp, HelpCircle, PiggyBank, FolderPlus, PieChart, BarChart3, Check, X, Users, Calculator, Sparkles, Loader2 } from "lucide-react";
+import { DollarSign, Edit2, Trash2, Plus, CheckCircle2, AlertCircle, TrendingUp, HelpCircle, PiggyBank, FolderPlus, PieChart, BarChart3, Check, X, Users, Calculator, Sparkles, Loader2, Calendar, Clock, Building2, ChevronRight } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { MultiCeremonySavingsCalculator } from "@/components/multi-ceremony-savings-calculator";
 
@@ -104,10 +104,97 @@ export default function Budget() {
     enabled: !!wedding?.id,
   });
 
+  // Fetch contracts for upcoming payments
+  const { data: contracts = [] } = useQuery<Contract[]>({
+    queryKey: ["/api/contracts", wedding?.id],
+    enabled: !!wedding?.id,
+  });
+
+  // Fetch vendors to display names in upcoming payments
+  const { data: vendors = [] } = useQuery<Vendor[]>({
+    queryKey: ["/api/vendors"],
+  });
+
   // Helper to check if a category has linked expenses
   const hasLinkedExpenses = (categoryId: string) => {
     return expenses.some((e) => e.categoryId === categoryId);
   };
+
+  // Get vendor name by ID
+  const getVendorName = (vendorId: string) => {
+    const vendor = vendors.find(v => v.id === vendorId);
+    return vendor?.businessName || "Vendor";
+  };
+
+  // Extract upcoming payments from contracts
+  interface PaymentMilestone {
+    name: string;
+    amount: number | string;
+    dueDate: string;
+    status: string;
+    paidDate?: string;
+  }
+
+  interface UpcomingPayment {
+    vendorId: string;
+    vendorName: string;
+    contractId: string;
+    milestoneName: string;
+    amount: number;
+    dueDate: Date;
+    status: string;
+    daysUntilDue: number;
+  }
+
+  const upcomingPayments: UpcomingPayment[] = contracts
+    .flatMap((contract) => {
+      // Handle paymentMilestones that might be null, string, or array
+      let milestones: PaymentMilestone[] = [];
+      if (contract.paymentMilestones) {
+        if (typeof contract.paymentMilestones === "string") {
+          try {
+            milestones = JSON.parse(contract.paymentMilestones);
+          } catch {
+            milestones = [];
+          }
+        } else if (Array.isArray(contract.paymentMilestones)) {
+          milestones = contract.paymentMilestones as PaymentMilestone[];
+        }
+      }
+
+      return milestones
+        .filter((m) => m && m.status !== "paid" && m.dueDate)
+        .map((milestone) => {
+          const dueDate = new Date(milestone.dueDate);
+          // Validate date
+          if (isNaN(dueDate.getTime())) {
+            return null;
+          }
+          const now = new Date();
+          const daysUntilDue = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+          const amount = parseFloat(String(milestone.amount));
+          return {
+            vendorId: contract.vendorId,
+            vendorName: getVendorName(contract.vendorId),
+            contractId: contract.id,
+            milestoneName: milestone.name || "Payment",
+            amount: isNaN(amount) ? 0 : amount,
+            dueDate,
+            status: milestone.status || "pending",
+            daysUntilDue,
+          };
+        })
+        .filter((p): p is UpcomingPayment => p !== null);
+    })
+    .filter((p) => p.daysUntilDue >= -30) // Show overdue up to 30 days
+    .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime())
+    .slice(0, 10); // Show top 10 upcoming
+
+  const totalUpcoming30Days = upcomingPayments
+    .filter((p) => p.daysUntilDue >= 0 && p.daysUntilDue <= 30)
+    .reduce((sum, p) => sum + p.amount, 0);
+
+  const overduePayments = upcomingPayments.filter((p) => p.daysUntilDue < 0);
 
   const form = useForm<BudgetFormData>({
     resolver: zodResolver(budgetFormSchema),
@@ -586,6 +673,118 @@ export default function Budget() {
               </div>
             </Card>
           </div>
+
+          {/* Upcoming Payments Timeline */}
+          {upcomingPayments.length > 0 && (
+            <Card className="p-6" data-testid="card-upcoming-payments">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                    <Calendar className="w-5 h-5 text-amber-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold">Upcoming Payments</h2>
+                    <p className="text-sm text-muted-foreground">
+                      {totalUpcoming30Days > 0 ? (
+                        <><span className="font-semibold text-amber-600">${totalUpcoming30Days.toLocaleString()}</span> due in next 30 days</>
+                      ) : (
+                        "Vendor payment milestones from contracts"
+                      )}
+                    </p>
+                  </div>
+                </div>
+                {overduePayments.length > 0 && (
+                  <Badge variant="destructive" className="gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    {overduePayments.length} Overdue
+                  </Badge>
+                )}
+              </div>
+
+              <div className="space-y-3">
+                {upcomingPayments.map((payment, index) => {
+                  const isOverdue = payment.daysUntilDue < 0;
+                  const isUrgent = payment.daysUntilDue >= 0 && payment.daysUntilDue <= 7;
+                  const isSoon = payment.daysUntilDue > 7 && payment.daysUntilDue <= 30;
+
+                  return (
+                    <div
+                      key={`${payment.contractId}-${index}`}
+                      className={`flex items-center gap-4 p-4 rounded-lg border ${
+                        isOverdue
+                          ? "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800"
+                          : isUrgent
+                          ? "bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800"
+                          : "bg-muted/30"
+                      }`}
+                      data-testid={`payment-item-${index}`}
+                    >
+                      <div className="flex-shrink-0">
+                        <div className={`w-12 h-12 rounded-lg flex flex-col items-center justify-center text-center ${
+                          isOverdue
+                            ? "bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300"
+                            : isUrgent
+                            ? "bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300"
+                            : isSoon
+                            ? "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300"
+                            : "bg-muted text-muted-foreground"
+                        }`}>
+                          <span className="text-xs font-medium">
+                            {payment.dueDate.toLocaleDateString("en-US", { month: "short" })}
+                          </span>
+                          <span className="text-lg font-bold leading-none">
+                            {payment.dueDate.getDate()}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <Building2 className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          <span className="font-medium truncate">{payment.vendorName}</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground truncate">
+                          {payment.milestoneName}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        <div className="text-right">
+                          <p className="font-mono font-bold text-lg">
+                            ${payment.amount.toLocaleString()}
+                          </p>
+                          <p className={`text-xs ${
+                            isOverdue
+                              ? "text-red-600 dark:text-red-400 font-medium"
+                              : isUrgent
+                              ? "text-amber-600 dark:text-amber-400 font-medium"
+                              : "text-muted-foreground"
+                          }`}>
+                            {isOverdue
+                              ? `${Math.abs(payment.daysUntilDue)} days overdue`
+                              : payment.daysUntilDue === 0
+                              ? "Due today"
+                              : payment.daysUntilDue === 1
+                              ? "Due tomorrow"
+                              : `In ${payment.daysUntilDue} days`}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {upcomingPayments.length >= 10 && (
+                <div className="mt-4 text-center">
+                  <Button variant="ghost" size="sm" onClick={() => setLocation("/contracts")}>
+                    View All Contracts
+                    <ChevronRight className="w-4 h-4 ml-1" />
+                  </Button>
+                </div>
+              )}
+            </Card>
+          )}
 
           {/* Multi-Ceremony Guest Savings Calculator */}
           {events.length > 0 && (
