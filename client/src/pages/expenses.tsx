@@ -269,12 +269,12 @@ export default function Expenses() {
               </div>
               <div>
                 <Label htmlFor="event">Event (Optional)</Label>
-                <Select value={formData.eventId} onValueChange={(v) => setFormData({ ...formData, eventId: v })}>
+                <Select value={formData.eventId || "none"} onValueChange={(v) => setFormData({ ...formData, eventId: v === "none" ? "" : v })}>
                   <SelectTrigger data-testid="select-expense-event">
                     <SelectValue placeholder="Select event" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No specific event</SelectItem>
+                    <SelectItem value="none">No specific event</SelectItem>
                     {events.map((event) => (
                       <SelectItem key={event.id} value={event.id}>{event.name}</SelectItem>
                     ))}
