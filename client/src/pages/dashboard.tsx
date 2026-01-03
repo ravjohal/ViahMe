@@ -340,8 +340,6 @@ export default function Dashboard() {
   const hasEvents = events.length > 0;
   const hasVendors = bookings.length > 0;
   const hasGuests = guests.length > 0;
-  const budgetConfirmed = wedding.budgetConfirmed === true;
-  const eventsConfirmed = wedding.eventsConfirmed === true;
 
   // Helper to get ceremony ID from event (matching ceremony-cost-breakdown logic)
   const getCeremonyIdFromEvent = (event: Event): string | null => {
@@ -404,7 +402,7 @@ export default function Dashboard() {
     return sum + range.high;
   }, 0);
   
-  const hasEstimates = budgetConfirmed;
+  const hasEstimates = hasBudget && hasCategories;
   const hasCeremonyBreakdowns = eventsWithBreakdowns.length > 0;
   
   // Format currency for display
@@ -420,24 +418,24 @@ export default function Dashboard() {
     {
       id: "budget",
       number: 1,
-      title: budgetConfirmed ? "Budget Set" : "Confirm Budget",
-      description: budgetConfirmed 
-        ? "Your budget allocation is locked in" 
-        : "Approve the auto-generated budget split",
-      completed: hasBudget && hasCategories && budgetConfirmed,
-      inProgress: hasBudget && hasCategories && !budgetConfirmed,
+      title: hasBudget && hasCategories ? "Budget Set" : "Set Budget",
+      description: hasBudget && hasCategories
+        ? `$${(totalBudget / 1000).toFixed(0)}k allocated across categories`
+        : "Set your wedding budget to start tracking",
+      completed: hasBudget && hasCategories,
+      inProgress: false,
       path: "/budget",
       color: "emerald",
     },
     {
       id: "events",
       number: 2,
-      title: eventsConfirmed ? "Events Locked" : "Confirm Events",
-      description: eventsConfirmed
-        ? "Your ceremony schedule is set"
-        : "Approve the auto-generated event list",
-      completed: hasEvents && eventsConfirmed,
-      inProgress: hasEvents && !eventsConfirmed,
+      title: hasEvents ? "Events Planned" : "Plan Events",
+      description: hasEvents
+        ? `${events.length} ceremony${events.length > 1 ? ' days' : ''} scheduled`
+        : "Add your wedding ceremonies and events",
+      completed: hasEvents,
+      inProgress: false,
       path: "/timeline",
       color: "orange",
     },
@@ -666,8 +664,8 @@ export default function Dashboard() {
 
         {/* Main Dashboard Content - Mobile First Single View */}
         <div className="space-y-6">
-          {/* Budget Preview (only shown if budget confirmed) */}
-          {hasBudget && hasCategories && budgetConfirmed && (
+          {/* Budget Preview */}
+          {hasBudget && hasCategories && (
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg md:text-xl font-semibold">Budget Overview</h2>
@@ -706,29 +704,6 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Prompt to confirm budget if not done yet */}
-          {(!budgetConfirmed) && (
-            <Card className="p-4 md:p-6 border-dashed border-2 border-orange-300 dark:border-orange-700 bg-orange-50/50 dark:bg-orange-950/20">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                <div className="p-3 rounded-full bg-orange-100 dark:bg-orange-900/30 flex-shrink-0">
-                  <DollarSign className="w-6 h-6 text-orange-600" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold">Confirm Your Budget First</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Complete Step 1 to unlock detailed ceremony cost estimates.
-                  </p>
-                </div>
-                <Button 
-                  onClick={() => setLocation("/budget")}
-                  className="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white"
-                  data-testid="button-confirm-budget"
-                >
-                  Confirm Budget
-                </Button>
-              </div>
-            </Card>
-          )}
 
           {/* Event Timeline */}
           {hasEvents && (

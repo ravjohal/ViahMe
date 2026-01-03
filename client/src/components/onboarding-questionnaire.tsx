@@ -645,17 +645,18 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                       </FormItem>
                     )}
 
-                    {selectedMainTradition !== "mixed" && selectedMainTradition !== "other" && availableSubTraditions.length > 0 && (
+                    {/* Only show sub-tradition selector for Hindu and South Indian where regional variations meaningfully affect ceremonies */}
+                    {(selectedMainTradition === "hindu" || selectedMainTradition === "south_indian") && availableSubTraditions.length > 0 && (
                       <FormField
                         control={form.control}
                         name="subTradition"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-lg font-semibold tracking-wide" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-                              Specific Tradition
+                              Regional Tradition (Optional)
                             </FormLabel>
                             <p className="text-sm text-muted-foreground mb-2">
-                              Help us personalize your experience with the specific regional tradition
+                              Different regions have unique ceremony variations - this helps us customize your planning
                             </p>
                             <Select onValueChange={field.onChange} value={field.value || ""}>
                               <FormControl>
