@@ -35,7 +35,8 @@ function getCeremonyIdFromEvent(event: Event): string | null {
   const mappings: Record<string, string[]> = {
     hindu_mehndi: ["mehndi", "henna"],
     hindu_sangeet: ["sangeet", "lady sangeet"],
-    hindu_haldi: ["haldi", "maiyan"],
+    hindu_haldi: ["haldi"],
+    sikh_maiyan: ["maiyan"],
     hindu_baraat: ["baraat"],
     hindu_wedding: ["hindu wedding", "wedding ceremony"],
     reception: ["reception"],

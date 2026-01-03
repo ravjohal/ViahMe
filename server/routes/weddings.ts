@@ -219,6 +219,7 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
             type: "maiyan" as const,
             description: "Traditional turmeric ceremony",
             order: 3,
+            ceremonyId: "sikh_maiyan",
           },
           {
             weddingId: wedding.id,
@@ -233,6 +234,7 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
             type: "anand_karaj" as const,
             description: "Sacred Sikh wedding ceremony at Gurdwara",
             order: 5,
+            ceremonyId: "sikh_anand_karaj",
           },
           {
             weddingId: wedding.id,

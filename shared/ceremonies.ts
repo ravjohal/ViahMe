@@ -79,6 +79,14 @@ export const CEREMONY_COST_BREAKDOWNS: Record<string, CostCategory[]> = {
     { category: "Photography/Video", lowCost: 2000, highCost: 5000, unit: "fixed", notes: "Ceremony coverage" },
     { category: "Transportation", lowCost: 500, highCost: 1500, unit: "fixed", notes: "Couple and family transport" },
   ],
+  sikh_maiyan: [
+    { category: "Home Setup", lowCost: 0, highCost: 500, unit: "fixed", notes: "Traditionally held at home with close family" },
+    { category: "Maiyan Supplies", lowCost: 50, highCost: 150, unit: "fixed", notes: "Vatna paste, mustard oil, gaaney (red threads), decorated thaal" },
+    { category: "Phulkari & Decor", lowCost: 200, highCost: 800, unit: "fixed", notes: "Traditional phulkari fabrics, marigolds, simple rangoli" },
+    { category: "Refreshments", lowCost: 15, highCost: 30, unit: "per_person", notes: "Tea, snacks, and traditional sweets (gogley)" },
+    { category: "Dhol Player", lowCost: 200, highCost: 500, unit: "fixed", notes: "Optional single dhol for folk songs" },
+    { category: "Photography", lowCost: 300, highCost: 800, unit: "fixed", notes: "2-3 hour coverage, often same photographer as other events" },
+  ],
   muslim_nikah: [
     { category: "Venue Rental", lowCost: 2000, highCost: 10000, unit: "fixed", notes: "Mosque, banquet hall, or home" },
     { category: "Imam/Officiant", lowCost: 300, highCost: 800, unit: "fixed", notes: "For performing the Nikah" },
@@ -266,6 +274,15 @@ export const CEREMONY_CATALOG: CeremonyDefinition[] = [
     defaultGuests: 200,
     traditions: ["sikh"],
   },
+  {
+    id: "sikh_maiyan",
+    name: "Maiyan",
+    description: "Vatna/turmeric ceremony held at home with close family",
+    costPerGuestLow: 25,
+    costPerGuestHigh: 50,
+    defaultGuests: 40,
+    traditions: ["sikh"],
+  },
 
   // Muslim ceremonies
   {
@@ -377,7 +394,7 @@ export function getCeremonyById(id: string): CeremonyDefinition | undefined {
 export function getDefaultCeremoniesForTradition(tradition: string): string[] {
   const defaults: Record<string, string[]> = {
     hindu: ["hindu_wedding", "reception"],
-    sikh: ["sikh_anand_karaj", "reception"],
+    sikh: ["sikh_maiyan", "sikh_anand_karaj", "reception"],
     muslim: ["muslim_nikah", "muslim_walima"],
     gujarati: ["gujarati_wedding", "reception"],
     south_indian: ["south_indian_muhurtham", "reception"],
