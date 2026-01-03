@@ -86,12 +86,18 @@ export async function registerExpenseRoutes(router: Router, storage: IStorage) {
 
   router.patch("/:id", async (req, res) => {
     try {
-      const { splits, eventAllocations, ...expenseData } = req.body;
+      const { splits, eventAllocations, expenseDate, ...expenseData } = req.body;
       // Get old expense to check if category changed
       const oldExpense = await storage.getExpense(req.params.id);
       const oldCategoryId = oldExpense?.categoryId;
       
-      const expense = await storage.updateExpense(req.params.id, expenseData);
+      // Convert expenseDate string to Date object if provided
+      const updateData = {
+        ...expenseData,
+        ...(expenseDate && { expenseDate: new Date(expenseDate) }),
+      };
+      
+      const expense = await storage.updateExpense(req.params.id, updateData);
       if (!expense) {
         return res.status(404).json({ error: "Expense not found" });
       }
