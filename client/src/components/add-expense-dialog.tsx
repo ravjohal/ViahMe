@@ -131,6 +131,11 @@ export function AddExpenseDialog({
       return;
     }
 
+    if (!selectedCategoryId) {
+      toast({ title: "Please select a category", variant: "destructive" });
+      return;
+    }
+
     const payerIdMap: Record<PayerType, string> = {
       couple: "bride",
       bride_family: "bride-parents",
@@ -304,24 +309,12 @@ export function AddExpenseDialog({
             </div>
           </div>
 
-          {budgetCategories.length > 0 && (
-            <div className="space-y-3">
-              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Category (optional)
-              </Label>
+          <div className="space-y-3">
+            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Category <span className="text-destructive">*</span>
+            </Label>
+            {budgetCategories.length > 0 ? (
               <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => setSelectedCategoryId(null)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                    selectedCategoryId === null
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground hover-elevate"
-                  }`}
-                  data-testid="button-category-none"
-                >
-                  None
-                </button>
                 {budgetCategories.map((cat) => {
                   const label = CATEGORY_LABELS[cat.category] || cat.category;
                   return (
@@ -341,8 +334,12 @@ export function AddExpenseDialog({
                   );
                 })}
               </div>
-            </div>
-          )}
+            ) : (
+              <p className="text-sm text-muted-foreground p-3 bg-muted/50 rounded-lg">
+                No categories configured yet. Please add budget categories first in the Budget page.
+              </p>
+            )}
+          </div>
 
           <div className="space-y-3">
             <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
