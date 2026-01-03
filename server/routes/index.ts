@@ -49,6 +49,7 @@ import { createRolesRouter, createCollaboratorsRouter, createCollaboratorInvites
 import { createGuestSourcesRouter } from "./guest-sources";
 import { createGuestSideRouter, createGuestConsensusRouter, createScenariosRouter, createGuestBudgetRouter, createHouseholdPriorityRouter } from "./guest-planning";
 import { createTimelineRouter, createEventTimeRouter, createTimelineChangesRouter, createVendorAcknowledgmentsRouter } from "./timeline";
+import { createCeremonyTemplatesRouter, createRegionalPricingRouter, createCeremonyEstimateRouter } from "./ceremony-templates";
 import { seedVendors, seedBudgetBenchmarks } from "../seed-data";
 
 let defaultStorageSeeded = false;
@@ -101,6 +102,11 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   }
   
   registerAuthRoutes(app, storage);
+
+  // Public ceremony templates and regional pricing (public read, admin write)
+  app.use("/api/ceremony-templates", createCeremonyTemplatesRouter(storage));
+  app.use("/api/regional-pricing", createRegionalPricingRouter(storage));
+  app.use("/api/ceremony-estimate", createCeremonyEstimateRouter(storage));
 
   // Public endpoint - Address autocomplete using Geoapify (no auth required for collector)
   app.get("/api/address-autocomplete", async (req, res) => {

@@ -55,6 +55,7 @@ export const users = pgTable("users", {
   resetToken: text("reset_token"),
   resetTokenExpires: timestamp("reset_token_expires"),
   lastLoginAt: timestamp("last_login_at"),
+  isSiteAdmin: boolean("is_site_admin").notNull().default(false), // Platform-wide admin access
   createdAt: timestamp("created_at").notNull().defaultNow(),
   // Deprecated fields - keeping for backward compatibility
   username: text("username"),

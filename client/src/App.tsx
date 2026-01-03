@@ -53,6 +53,7 @@ import VendorReminders from "@/pages/vendor-reminders";
 import ClaimProfile from "@/pages/claim-profile";
 import ClaimYourBusiness from "@/pages/claim-your-business";
 import AdminVendorClaims from "@/pages/admin-vendor-claims";
+import AdminCeremonyTemplates from "@/pages/admin-ceremony-templates";
 import AiPlanner from "@/pages/ai-planner";
 import LiveTimeline from "@/pages/live-timeline";
 import VendorTeam from "@/pages/vendor-team";
@@ -218,6 +219,7 @@ function Router() {
           <AdminVendorClaims />
         </CoupleRoute>
       </Route>
+      <Route path="/admin/ceremony-templates" component={AdminCeremonyTemplates} />
       <Route path="/settings" component={Settings} />
       
       {/* Vendor pages */}
