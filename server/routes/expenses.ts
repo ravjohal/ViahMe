@@ -209,6 +209,15 @@ export async function registerExpenseSplitRoutes(router: Router, storage: IStora
       if (!split) {
         return res.status(404).json({ error: "Expense split not found" });
       }
+      
+      // Recalculate parent expense's paymentStatus based on all splits
+      const allSplits = await storage.getExpenseSplitsByExpense(split.expenseId);
+      const allPaid = allSplits.length > 0 && allSplits.every(s => s.isPaid);
+      const newPaymentStatus = allPaid ? 'paid' : 'partial';
+      
+      // Update parent expense paymentStatus
+      await storage.updateExpense(split.expenseId, { paymentStatus: newPaymentStatus });
+      
       res.json(split);
     } catch (error) {
       console.error("Error updating expense split:", error);
