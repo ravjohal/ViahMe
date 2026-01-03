@@ -214,7 +214,7 @@ export async function registerGuestRoutes(router: Router, storage: IStorage) {
     }
   });
 
-  router.get("/guests/:weddingId", await requireAuth(storage, false), ensureCoupleAccess(storage, (req) => req.params.weddingId), async (req, res) => {
+  router.get("/by-wedding/:weddingId", await requireAuth(storage, false), ensureCoupleAccess(storage, (req) => req.params.weddingId), async (req, res) => {
     try {
       const guests = await storage.getGuestsByWedding(req.params.weddingId);
       res.json(guests);
@@ -223,7 +223,7 @@ export async function registerGuestRoutes(router: Router, storage: IStorage) {
     }
   });
 
-  router.get("/guests/by-household/:householdId", async (req, res) => {
+  router.get("/by-household/:householdId", async (req, res) => {
     try {
       const guests = await storage.getGuestsByHousehold(req.params.householdId);
       res.json(guests);
@@ -232,7 +232,7 @@ export async function registerGuestRoutes(router: Router, storage: IStorage) {
     }
   });
 
-  router.post("/guests", await requireAuth(storage, false), async (req, res) => {
+  router.post("/", await requireAuth(storage, false), async (req, res) => {
     try {
       const authReq = req as AuthRequest;
       if (!authReq.session.userId) {
@@ -263,7 +263,7 @@ export async function registerGuestRoutes(router: Router, storage: IStorage) {
     }
   });
 
-  router.patch("/guests/:id", await requireAuth(storage, false), async (req, res) => {
+  router.patch("/:id", await requireAuth(storage, false), async (req, res) => {
     try {
       const authReq = req as AuthRequest;
       if (!authReq.session.userId) {
@@ -339,7 +339,7 @@ export async function registerGuestRoutes(router: Router, storage: IStorage) {
     }
   });
 
-  router.delete("/guests/:id", await requireAuth(storage, false), async (req, res) => {
+  router.delete("/:id", await requireAuth(storage, false), async (req, res) => {
     try {
       const authReq = req as AuthRequest;
       if (!authReq.session.userId) {
@@ -379,7 +379,7 @@ export async function registerGuestRoutes(router: Router, storage: IStorage) {
   });
 
   // Plus-One Management
-  router.post("/guests/:id/plus-one", await requireAuth(storage, false), async (req, res) => {
+  router.post("/:id/plus-one", await requireAuth(storage, false), async (req, res) => {
     try {
       const authReq = req as AuthRequest;
       if (!authReq.session.userId) {
@@ -416,7 +416,7 @@ export async function registerGuestRoutes(router: Router, storage: IStorage) {
     }
   });
 
-  router.delete("/guests/:id/plus-one", await requireAuth(storage, false), async (req, res) => {
+  router.delete("/:id/plus-one", await requireAuth(storage, false), async (req, res) => {
     try {
       const authReq = req as AuthRequest;
       if (!authReq.session.userId) {
@@ -448,7 +448,7 @@ export async function registerGuestRoutes(router: Router, storage: IStorage) {
     }
   });
 
-  router.get("/guests/:id/plus-one", async (req, res) => {
+  router.get("/:id/plus-one", async (req, res) => {
     try {
       const plusOne = await storage.getPlusOneForGuest(req.params.id);
       res.json(plusOne || null);
