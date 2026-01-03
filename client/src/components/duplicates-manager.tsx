@@ -85,7 +85,7 @@ export function DuplicatesManager({ weddingId }: DuplicatesManagerProps) {
 
   const deleteGuestMutation = useMutation({
     mutationFn: async (guestId: string) => {
-      return await apiRequest('DELETE', `/api/guest/guests/${guestId}`);
+      return await apiRequest('DELETE', `/api/guests/${guestId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/weddings', weddingId, 'duplicate-households'] });
