@@ -1,12 +1,12 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronUp, DollarSign, Users, Clock, Info } from "lucide-react";
+import { ChevronDown, ChevronUp, DollarSign, Users, Clock, Info, Loader2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import type { Event } from "@shared/schema";
-import { CEREMONY_COST_BREAKDOWNS, CEREMONY_CATALOG, calculateCeremonyTotalRange, type CostCategory } from "@shared/ceremonies";
+import type { Event, CeremonyTemplate, CeremonyTemplateCostItem } from "@shared/schema";
+import { useCeremonyTemplates, getCostBreakdownFromTemplate, calculateCeremonyTotal } from "@/hooks/use-ceremony-templates";
 
 interface CeremonyCostBreakdownProps {
   events: Event[];
@@ -24,49 +24,57 @@ function formatCurrencyFull(amount: number): string {
   return `$${amount.toLocaleString()}`;
 }
 
-function getCeremonyIdFromEvent(event: Event): string | null {
-  if ((event as any).ceremonyId && CEREMONY_COST_BREAKDOWNS[(event as any).ceremonyId]) {
+const CEREMONY_MAPPINGS: Record<string, string[]> = {
+  hindu_mehndi: ["mehndi", "henna"],
+  hindu_sangeet: ["sangeet", "lady sangeet"],
+  hindu_haldi: ["haldi"],
+  sikh_maiyan: ["maiyan"],
+  sikh_roka: ["roka"],
+  sikh_kurmai: ["kurmai", "engagement"],
+  sikh_chooda: ["chooda", "kalire"],
+  sikh_jaggo: ["jaggo"],
+  sikh_baraat: ["baraat"],
+  sikh_milni: ["milni"],
+  hindu_baraat: ["baraat"],
+  hindu_wedding: ["hindu wedding", "wedding ceremony"],
+  reception: ["reception"],
+  sikh_anand_karaj: ["anand karaj", "anand_karaj"],
+  muslim_nikah: ["nikah"],
+  muslim_walima: ["walima"],
+  muslim_dholki: ["dholki"],
+  gujarati_pithi: ["pithi"],
+  gujarati_garba: ["garba"],
+  gujarati_wedding: ["gujarati wedding"],
+  south_indian_muhurtham: ["muhurtham"],
+  general_wedding: ["general wedding", "western wedding"],
+  rehearsal_dinner: ["rehearsal dinner", "rehearsal"],
+  cocktail_hour: ["cocktail hour", "cocktail"],
+};
+
+function getCeremonyIdFromEvent(event: Event, templateMap: Map<string, CeremonyTemplate>): string | null {
+  if ((event as any).ceremonyId && templateMap.has((event as any).ceremonyId)) {
     return (event as any).ceremonyId;
   }
   
   const eventType = event.type?.toLowerCase() || "";
   const eventName = event.name?.toLowerCase() || "";
   
-  const mappings: Record<string, string[]> = {
-    hindu_mehndi: ["mehndi", "henna"],
-    hindu_sangeet: ["sangeet", "lady sangeet"],
-    hindu_haldi: ["haldi"],
-    sikh_maiyan: ["maiyan"],
-    hindu_baraat: ["baraat"],
-    hindu_wedding: ["hindu wedding", "wedding ceremony"],
-    reception: ["reception"],
-    sikh_anand_karaj: ["anand karaj", "anand_karaj"],
-    muslim_nikah: ["nikah"],
-    muslim_walima: ["walima"],
-    muslim_dholki: ["dholki"],
-    gujarati_pithi: ["pithi"],
-    gujarati_garba: ["garba"],
-    gujarati_wedding: ["gujarati wedding"],
-    south_indian_muhurtham: ["muhurtham"],
-    general_wedding: ["general wedding", "western wedding"],
-    rehearsal_dinner: ["rehearsal dinner", "rehearsal"],
-    cocktail_hour: ["cocktail hour", "cocktail"],
-  };
-  
-  for (const [ceremonyId, keywords] of Object.entries(mappings)) {
+  for (const [ceremonyId, keywords] of Object.entries(CEREMONY_MAPPINGS)) {
     if (keywords.some(kw => eventName.includes(kw) || eventType.includes(kw))) {
-      return ceremonyId;
+      if (templateMap.has(ceremonyId)) {
+        return ceremonyId;
+      }
     }
   }
   
-  if (CEREMONY_COST_BREAKDOWNS[eventType]) {
+  if (templateMap.has(eventType)) {
     return eventType;
   }
   
   return null;
 }
 
-function CostCategoryRow({ item, guestCount }: { item: CostCategory; guestCount: number }) {
+function CostCategoryRow({ item, guestCount }: { item: CeremonyTemplateCostItem; guestCount: number }) {
   let displayLow: number;
   let displayHigh: number;
   let unitLabel: string;
@@ -112,18 +120,23 @@ function CostCategoryRow({ item, guestCount }: { item: CostCategory; guestCount:
   );
 }
 
-function EventCostCard({ event }: { event: Event }) {
+interface EventCostCardProps {
+  event: Event;
+  templateMap: Map<string, CeremonyTemplate>;
+}
+
+function EventCostCard({ event, templateMap }: EventCostCardProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const ceremonyId = getCeremonyIdFromEvent(event);
-  const breakdown = ceremonyId ? CEREMONY_COST_BREAKDOWNS[ceremonyId] : null;
-  const ceremony = ceremonyId ? CEREMONY_CATALOG.find(c => c.id === ceremonyId) : null;
-  const guestCount = event.guestCount || ceremony?.defaultGuests || 100;
+  const ceremonyId = getCeremonyIdFromEvent(event, templateMap);
+  const template = ceremonyId ? templateMap.get(ceremonyId) : null;
   
-  if (!breakdown) {
+  if (!template) {
     return null;
   }
   
-  const totalRange = calculateCeremonyTotalRange(ceremonyId!, guestCount);
+  const breakdown = getCostBreakdownFromTemplate(template);
+  const guestCount = event.guestCount || template.defaultGuests || 100;
+  const totalRange = calculateCeremonyTotal(template, guestCount);
   
   return (
     <Card className="overflow-hidden hover-elevate" data-testid={`cost-card-${event.id}`}>
@@ -190,32 +203,52 @@ function EventCostCard({ event }: { event: Event }) {
 }
 
 export function CeremonyCostBreakdown({ events, className = "" }: CeremonyCostBreakdownProps) {
-  const eventsWithBreakdowns = events.filter(event => {
-    const ceremonyId = getCeremonyIdFromEvent(event);
-    return ceremonyId && CEREMONY_COST_BREAKDOWNS[ceremonyId];
-  });
+  const { data: templates, isLoading } = useCeremonyTemplates();
+  
+  const templateMap = useMemo(() => {
+    const map = new Map<string, CeremonyTemplate>();
+    if (templates) {
+      for (const t of templates) {
+        map.set(t.ceremonyId, t);
+      }
+    }
+    return map;
+  }, [templates]);
+  
+  const eventsWithBreakdowns = useMemo(() => {
+    return events.filter(event => {
+      const ceremonyId = getCeremonyIdFromEvent(event, templateMap);
+      return ceremonyId && templateMap.has(ceremonyId);
+    });
+  }, [events, templateMap]);
+  
+  const { totalLow, totalHigh } = useMemo(() => {
+    let low = 0;
+    let high = 0;
+    for (const event of eventsWithBreakdowns) {
+      const ceremonyId = getCeremonyIdFromEvent(event, templateMap);
+      if (!ceremonyId) continue;
+      const template = templateMap.get(ceremonyId);
+      if (!template) continue;
+      const guestCount = event.guestCount || template.defaultGuests || 100;
+      const range = calculateCeremonyTotal(template, guestCount);
+      low += range.low;
+      high += range.high;
+    }
+    return { totalLow: low, totalHigh: high };
+  }, [eventsWithBreakdowns, templateMap]);
+  
+  if (isLoading) {
+    return (
+      <div className={`flex items-center justify-center p-8 ${className}`}>
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
   
   if (eventsWithBreakdowns.length === 0) {
     return null;
   }
-  
-  const totalLow = eventsWithBreakdowns.reduce((sum, event) => {
-    const ceremonyId = getCeremonyIdFromEvent(event);
-    if (!ceremonyId) return sum;
-    const ceremony = CEREMONY_CATALOG.find(c => c.id === ceremonyId);
-    const guestCount = event.guestCount || ceremony?.defaultGuests || 100;
-    const range = calculateCeremonyTotalRange(ceremonyId, guestCount);
-    return sum + range.low;
-  }, 0);
-  
-  const totalHigh = eventsWithBreakdowns.reduce((sum, event) => {
-    const ceremonyId = getCeremonyIdFromEvent(event);
-    if (!ceremonyId) return sum;
-    const ceremony = CEREMONY_CATALOG.find(c => c.id === ceremonyId);
-    const guestCount = event.guestCount || ceremony?.defaultGuests || 100;
-    const range = calculateCeremonyTotalRange(ceremonyId, guestCount);
-    return sum + range.high;
-  }, 0);
   
   return (
     <div className={className} data-testid="ceremony-cost-breakdown-section">
@@ -250,7 +283,7 @@ export function CeremonyCostBreakdown({ events, className = "" }: CeremonyCostBr
       
       <div className="space-y-3">
         {eventsWithBreakdowns.map(event => (
-          <EventCostCard key={event.id} event={event} />
+          <EventCostCard key={event.id} event={event} templateMap={templateMap} />
         ))}
       </div>
     </div>
