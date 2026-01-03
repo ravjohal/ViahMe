@@ -46,12 +46,6 @@ export async function registerGuestPublicRoutes(router: Router, storage: IStorag
         return res.json({ success: 0, failed: 0, guests: [], errors: undefined });
       }
 
-      // Debug logging
-      console.log("=== BULK IMPORT DEBUG (guests-public.ts) ===");
-      console.log("Number of guests:", guestsArray.length);
-      console.log("First guest householdName:", guestsArray[0]?.householdName);
-      console.log("=============================================");
-
       const weddingId = guestsArray[0].weddingId;
       const createdGuests = [];
       const errors = [];
@@ -85,7 +79,6 @@ export async function registerGuestPublicRoutes(router: Router, storage: IStorag
               householdId = householdMap.get(normalizedName);
             } else {
               const guestCount = guestCountByHousehold.get(normalizedName) || 1;
-              console.log(`Creating household: "${householdName}" with maxCount: ${guestCount}`);
               const household = await storage.createHousehold({
                 weddingId: guestData.weddingId,
                 name: householdName,
@@ -96,7 +89,6 @@ export async function registerGuestPublicRoutes(router: Router, storage: IStorag
               });
               householdId = household.id;
               householdMap.set(normalizedName, household.id);
-              console.log(`Created household "${householdName}" with id: ${household.id}`);
             }
           }
 
@@ -111,7 +103,6 @@ export async function registerGuestPublicRoutes(router: Router, storage: IStorag
           const guest = await storage.createGuest(validatedData);
           createdGuests.push(guest);
         } catch (error) {
-          console.error(`Error importing guest at index ${i}:`, error);
           errors.push({
             index: i,
             data: guestsArray[i],
@@ -127,7 +118,6 @@ export async function registerGuestPublicRoutes(router: Router, storage: IStorag
         errors: errors.length > 0 ? errors : undefined
       });
     } catch (error) {
-      console.error("Bulk import error:", error);
       res.status(500).json({ error: "Failed to bulk import guests" });
     }
   });
