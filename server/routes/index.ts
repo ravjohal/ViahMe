@@ -158,7 +158,7 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
 
   const guestRouter = Router();
   await registerGuestRoutes(guestRouter, storage);
-  app.use("/api/guest", guestRouter);
+  app.use("/api/guests", guestRouter);
 
   const vendorRouter = Router();
   await registerVendorRoutes(vendorRouter, storage);
