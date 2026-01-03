@@ -198,12 +198,20 @@ export async function registerExpenseRoutes(router: Router, storage: IStorage) {
 export async function registerExpenseSplitRoutes(router: Router, storage: IStorage) {
   router.patch("/:id", async (req, res) => {
     try {
-      const split = await storage.updateExpenseSplit(req.params.id, req.body);
+      const updateData = { ...req.body };
+      
+      // Convert paidAt string to Date if provided
+      if (updateData.paidAt && typeof updateData.paidAt === "string") {
+        updateData.paidAt = new Date(updateData.paidAt);
+      }
+      
+      const split = await storage.updateExpenseSplit(req.params.id, updateData);
       if (!split) {
         return res.status(404).json({ error: "Expense split not found" });
       }
       res.json(split);
     } catch (error) {
+      console.error("Error updating expense split:", error);
       res.status(500).json({ error: "Failed to update expense split" });
     }
   });
