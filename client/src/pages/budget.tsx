@@ -16,7 +16,9 @@ import { insertBudgetCategorySchema, type Wedding, type BudgetCategory, type Eve
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
-import { DollarSign, Edit2, Trash2, Plus, CheckCircle2, AlertCircle, TrendingUp, HelpCircle, PiggyBank, FolderPlus, PieChart, BarChart3, Check, X, Users, Calculator, Sparkles, Loader2, Calendar, Clock, Building2, ChevronRight } from "lucide-react";
+import { DollarSign, Edit2, Trash2, Plus, CheckCircle2, AlertCircle, TrendingUp, HelpCircle, PiggyBank, FolderPlus, PieChart, BarChart3, Check, X, Users, Calculator, Sparkles, Loader2, Calendar, Clock, Building2, ChevronRight, Copy, Share2, FileText } from "lucide-react";
+import { SiWhatsapp } from "react-icons/si";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { MultiCeremonySavingsCalculator } from "@/components/multi-ceremony-savings-calculator";
 
@@ -195,6 +197,207 @@ export default function Budget() {
     .reduce((sum, p) => sum + p.amount, 0);
 
   const overduePayments = upcomingPayments.filter((p) => p.daysUntilDue < 0);
+
+  // Generate budget summary for sharing
+  const generateBudgetSummary = () => {
+    const weddingName = wedding?.partner1Name && wedding?.partner2Name 
+      ? `${wedding.partner1Name} & ${wedding.partner2Name}'s Wedding` 
+      : "Wedding";
+    const weddingDate = wedding?.weddingDate 
+      ? new Date(wedding.weddingDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+      : "";
+
+    let summary = `${weddingName} Budget Summary\n`;
+    if (weddingDate) summary += `Date: ${weddingDate}\n`;
+    summary += `${"─".repeat(30)}\n\n`;
+    
+    summary += `TOTAL BUDGET: $${total.toLocaleString()}\n`;
+    summary += `SPENT SO FAR: $${totalSpent.toLocaleString()} (${total > 0 ? ((totalSpent / total) * 100).toFixed(0) : 0}%)\n`;
+    summary += `REMAINING: $${remainingBudget.toLocaleString()}\n\n`;
+    
+    if (categories.length > 0) {
+      summary += `BREAKDOWN BY CATEGORY:\n`;
+      summary += `${"─".repeat(30)}\n`;
+      categories.forEach((cat) => {
+        const allocated = parseFloat(cat.allocatedAmount.toString());
+        const spent = parseFloat(cat.spentAmount?.toString() || "0");
+        const eventCost = costSummary?.categories?.[cat.id]?.total || 0;
+        const totalCatSpent = spent + eventCost;
+        const catName = CATEGORY_LABELS[cat.category] || cat.category;
+        summary += `${catName}:\n`;
+        summary += `  Allocated: $${allocated.toLocaleString()}\n`;
+        summary += `  Spent: $${totalCatSpent.toLocaleString()}\n`;
+        summary += `  ${totalCatSpent <= allocated ? "On track" : "Over budget"}\n\n`;
+      });
+    }
+
+    if (upcomingPayments.length > 0) {
+      summary += `UPCOMING PAYMENTS:\n`;
+      summary += `${"─".repeat(30)}\n`;
+      upcomingPayments.slice(0, 5).forEach((payment) => {
+        const dateStr = payment.dueDate.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+        summary += `${dateStr}: $${payment.amount.toLocaleString()} to ${payment.vendorName}\n`;
+      });
+      if (totalUpcoming30Days > 0) {
+        summary += `\nTotal due in next 30 days: $${totalUpcoming30Days.toLocaleString()}\n`;
+      }
+    }
+
+    summary += `\n─ Generated via Viah.me`;
+    return summary;
+  };
+
+  const handleCopyBudget = async () => {
+    const summary = generateBudgetSummary();
+    try {
+      await navigator.clipboard.writeText(summary);
+      toast({
+        title: "Copied to clipboard",
+        description: "Budget summary ready to paste",
+      });
+    } catch {
+      toast({
+        title: "Failed to copy",
+        description: "Please try again",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleWhatsAppShare = () => {
+    const summary = generateBudgetSummary();
+    const encoded = encodeURIComponent(summary);
+    window.open(`https://wa.me/?text=${encoded}`, "_blank");
+  };
+
+  const handlePrintPDF = () => {
+    // Create a printable version
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      toast({
+        title: "Popup blocked",
+        description: "Please allow popups to generate PDF",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const weddingName = wedding?.partner1Name && wedding?.partner2Name 
+      ? `${wedding.partner1Name} & ${wedding.partner2Name}'s Wedding` 
+      : "Wedding";
+    const weddingDate = wedding?.weddingDate 
+      ? new Date(wedding.weddingDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+      : "";
+
+    let categoriesHtml = "";
+    categories.forEach((cat) => {
+      const allocated = parseFloat(cat.allocatedAmount.toString());
+      const spent = parseFloat(cat.spentAmount?.toString() || "0");
+      const eventCost = costSummary?.categories?.[cat.id]?.total || 0;
+      const totalCatSpent = spent + eventCost;
+      const percentage = allocated > 0 ? (totalCatSpent / allocated) * 100 : 0;
+      const catName = CATEGORY_LABELS[cat.category] || cat.category;
+      const isOver = totalCatSpent > allocated;
+      categoriesHtml += `
+        <tr>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">${catName}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">$${allocated.toLocaleString()}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right; ${isOver ? 'color: #dc2626;' : ''}">$${totalCatSpent.toLocaleString()}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${percentage.toFixed(0)}%</td>
+        </tr>
+      `;
+    });
+
+    let paymentsHtml = "";
+    if (upcomingPayments.length > 0) {
+      paymentsHtml = `
+        <h3 style="margin-top: 24px; color: #666;">Upcoming Payments</h3>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 8px;">
+          <thead>
+            <tr style="background: #f5f5f5;">
+              <th style="padding: 8px; text-align: left;">Due Date</th>
+              <th style="padding: 8px; text-align: left;">Vendor</th>
+              <th style="padding: 8px; text-align: right;">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${upcomingPayments.slice(0, 10).map((p) => `
+              <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #eee;">${p.dueDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</td>
+                <td style="padding: 8px; border-bottom: 1px solid #eee;">${p.vendorName}</td>
+                <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">$${p.amount.toLocaleString()}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
+    }
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>${weddingName} - Budget Summary</title>
+        <style>
+          body { font-family: system-ui, -apple-system, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
+          h1 { color: #059669; margin-bottom: 4px; }
+          h2 { color: #333; margin-top: 24px; }
+          .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 24px 0; }
+          .summary-card { background: #f9fafb; padding: 16px; border-radius: 8px; }
+          .summary-label { font-size: 12px; color: #666; margin-bottom: 4px; }
+          .summary-value { font-size: 24px; font-weight: bold; }
+          .over-budget { color: #dc2626; }
+          table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+          th { text-align: left; padding: 8px; background: #f5f5f5; }
+          .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #eee; font-size: 12px; color: #999; }
+        </style>
+      </head>
+      <body>
+        <h1>${weddingName}</h1>
+        ${weddingDate ? `<p style="color: #666; margin-top: 0;">Wedding Date: ${weddingDate}</p>` : ""}
+        <h2>Budget Summary</h2>
+        
+        <div class="summary-grid">
+          <div class="summary-card">
+            <div class="summary-label">Total Budget</div>
+            <div class="summary-value">$${total.toLocaleString()}</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Spent So Far</div>
+            <div class="summary-value">$${totalSpent.toLocaleString()}</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Remaining</div>
+            <div class="summary-value ${remainingBudget < 0 ? 'over-budget' : ''}">$${remainingBudget.toLocaleString()}</div>
+          </div>
+        </div>
+
+        <h3 style="color: #666;">Spending by Category</h3>
+        <table>
+          <thead>
+            <tr style="background: #f5f5f5;">
+              <th style="padding: 8px;">Category</th>
+              <th style="padding: 8px; text-align: right;">Allocated</th>
+              <th style="padding: 8px; text-align: right;">Spent</th>
+              <th style="padding: 8px; text-align: right;">% Used</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${categoriesHtml}
+          </tbody>
+        </table>
+
+        ${paymentsHtml}
+
+        <div class="footer">
+          Generated on ${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })} via Viah.me
+        </div>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+  };
 
   const form = useForm<BudgetFormData>({
     resolver: zodResolver(budgetFormSchema),
@@ -1035,14 +1238,38 @@ export default function Budget() {
             {/* Tab 4: Track Spending */}
             <TabsContent value="track" className="mt-6">
               <Card className="p-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                    <BarChart3 className="w-6 h-6 text-emerald-600" />
+                <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                      <BarChart3 className="w-6 h-6 text-emerald-600" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold">Track Your Spending</h2>
+                      <p className="text-muted-foreground">Monitor actual expenses vs. planned amounts</p>
+                    </div>
                   </div>
-                  <div>
-                    <h2 className="text-2xl font-bold">Track Your Spending</h2>
-                    <p className="text-muted-foreground">Monitor actual expenses vs. planned amounts</p>
-                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" data-testid="button-share-budget">
+                        <Share2 className="w-4 h-4 mr-2" />
+                        Share Budget
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={handleCopyBudget} data-testid="button-copy-budget">
+                        <Copy className="w-4 h-4 mr-2" />
+                        Copy to Clipboard
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleWhatsAppShare} data-testid="button-whatsapp-budget">
+                        <SiWhatsapp className="w-4 h-4 mr-2 text-green-600" />
+                        Share via WhatsApp
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handlePrintPDF} data-testid="button-pdf-budget">
+                        <FileText className="w-4 h-4 mr-2" />
+                        Print / Save as PDF
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
 
                 {/* Spending Summary Cards */}

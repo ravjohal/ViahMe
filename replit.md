@@ -20,6 +20,7 @@ Key architectural decisions and features include:
 - **Budget Intelligence System**: Provides smart budget recommendations based on cultural spending benchmarks, real-time comparisons, and interactive visualizations.
   - **Upcoming Payments Timeline**: Cash flow calendar on budget landing page showing upcoming vendor payment milestones from contracts, with overdue/urgent/soon indicators and 30-day totals
   - **Multi-Event Expense Allocation**: Support for vendor packages spanning multiple events with equal, percentage, or custom allocation strategies via `expense_event_allocations` table
+  - **Share Budget Feature**: Export budget breakdown via Copy to Clipboard, WhatsApp share, or Print/PDF for easy family communication
 - **Guest List Management**: Frictionless bulk guest import (CSV, Excel), advanced guest invitation & RSVP system with household grouping, magic link authentication, per-event RSVP tracking, and bulk invitation sender. Includes an Allocation View Dashboard for analytics.
 - **Household-First Architecture**: Mobile-first guest management designed for South Asian wedding culture:
   - **Head of House (HoH)**: Every household has a designated primary contact with quick-action WhatsApp/SMS/Email buttons
