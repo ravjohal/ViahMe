@@ -13,6 +13,17 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Plus, ChevronDown, X } from "lucide-react";
 import type { Event, BudgetCategory } from "@shared/schema";
 
+const CATEGORY_LABELS: Record<string, string> = {
+  catering: "Catering & Food",
+  venue: "Venue & Rentals",
+  entertainment: "Entertainment",
+  photography: "Photography & Video",
+  decoration: "Decoration & Flowers",
+  attire: "Attire & Beauty",
+  transportation: "Transportation",
+  other: "Other Expenses",
+};
+
 interface AddExpenseDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -36,6 +47,7 @@ export function AddExpenseDialog({
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [payer, setPayer] = useState<PayerType>("couple");
   const [notes, setNotes] = useState("");
   const [paymentStatus, setPaymentStatus] = useState<"pending" | "deposit_paid" | "paid">("pending");
@@ -62,6 +74,7 @@ export function AddExpenseDialog({
     setDescription("");
     setAmount("");
     setSelectedEvents([]);
+    setSelectedCategoryId(null);
     setPayer("couple");
     setNotes("");
     setPaymentStatus("pending");
@@ -186,7 +199,7 @@ export function AddExpenseDialog({
       description: description.trim(),
       amount: parsedAmount.toFixed(2),
       eventId,
-      categoryId: null,
+      categoryId: selectedCategoryId,
       paidById: payerId,
       paidByName: payerName,
       splitType: splitType === "split" ? "custom" : "full",
@@ -283,6 +296,46 @@ export function AddExpenseDialog({
               )}
             </div>
           </div>
+
+          {budgetCategories.length > 0 && (
+            <div className="space-y-3">
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                Category (optional)
+              </Label>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategoryId(null)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                    selectedCategoryId === null
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground hover-elevate"
+                  }`}
+                  data-testid="button-category-none"
+                >
+                  None
+                </button>
+                {budgetCategories.map((cat) => {
+                  const label = CATEGORY_LABELS[cat.category] || cat.category;
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setSelectedCategoryId(cat.id)}
+                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                        selectedCategoryId === cat.id
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground hover-elevate"
+                      }`}
+                      data-testid={`button-category-${cat.id}`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           <div className="space-y-3">
             <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
