@@ -6,6 +6,7 @@ import { storage as defaultStorage, type IStorage } from "../storage";
 import { registerAuthRoutes } from "./auth";
 import { registerAiRoutes } from "./ai";
 import { registerBudgetRoutes } from "./budget";
+import { registerDashboardRoutes } from "./dashboard";
 import { registerGuestRoutes } from "./guests";
 import { registerVendorRoutes } from "./vendors";
 import { registerCommunicationRoutes } from "./communications";
@@ -155,6 +156,10 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   const budgetRouter = Router();
   await registerBudgetRoutes(budgetRouter, storage);
   app.use("/api/budget", budgetRouter);
+
+  const dashboardRouter = Router();
+  await registerDashboardRoutes(dashboardRouter, storage);
+  app.use("/api/dashboard", dashboardRouter);
 
   // Guest routes (authenticated) - includes households, plus-ones, etc.
   const guestRouter = Router();

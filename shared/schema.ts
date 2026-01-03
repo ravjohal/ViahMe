@@ -3211,3 +3211,65 @@ export type GameWithStats = EngagementGame & {
   participantCount: number;
   event?: Event;
 };
+
+// ============================================================================
+// BUDGET ALERTS - Threshold-based alerts for budget monitoring
+// ============================================================================
+
+export const budgetAlerts = pgTable("budget_alerts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  name: text("name").notNull(), // e.g., "Catering Over Budget"
+  alertType: text("alert_type").notNull(), // 'category_threshold' | 'total_threshold' | 'payment_due' | 'overspend'
+  categoryId: varchar("category_id"), // Optional - for category-specific alerts
+  thresholdPercent: integer("threshold_percent"), // e.g., 80 = alert at 80% of budget
+  thresholdAmount: decimal("threshold_amount", { precision: 10, scale: 2 }), // Fixed amount threshold
+  isEnabled: boolean("is_enabled").notNull().default(true),
+  isTriggered: boolean("is_triggered").notNull().default(false),
+  triggeredAt: timestamp("triggered_at"),
+  lastCheckedAt: timestamp("last_checked_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertBudgetAlertSchema = createInsertSchema(budgetAlerts).omit({
+  id: true,
+  isTriggered: true,
+  triggeredAt: true,
+  lastCheckedAt: true,
+  createdAt: true,
+}).extend({
+  alertType: z.enum(['category_threshold', 'total_threshold', 'payment_due', 'overspend']),
+  thresholdPercent: z.number().min(1).max(200).optional(),
+  thresholdAmount: z.string().optional(),
+});
+
+export type InsertBudgetAlert = z.infer<typeof insertBudgetAlertSchema>;
+export type BudgetAlert = typeof budgetAlerts.$inferSelect;
+
+// ============================================================================
+// DASHBOARD WIDGETS - User preferences for financial dashboard layout
+// ============================================================================
+
+export const dashboardWidgets = pgTable("dashboard_widgets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  widgetType: text("widget_type").notNull(), // 'budget_overview' | 'spending_by_category' | 'recent_expenses' | 'upcoming_payments' | 'alerts' | 'spending_trend'
+  position: integer("position").notNull().default(0), // Order in the dashboard
+  isVisible: boolean("is_visible").notNull().default(true),
+  config: jsonb("config"), // Widget-specific configuration
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertDashboardWidgetSchema = createInsertSchema(dashboardWidgets).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  widgetType: z.enum(['budget_overview', 'spending_by_category', 'recent_expenses', 'upcoming_payments', 'alerts', 'spending_trend']),
+  position: z.number().optional(),
+  config: z.record(z.any()).optional(),
+});
+
+export type InsertDashboardWidget = z.infer<typeof insertDashboardWidgetSchema>;
+export type DashboardWidget = typeof dashboardWidgets.$inferSelect;

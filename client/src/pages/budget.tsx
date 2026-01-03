@@ -21,7 +21,7 @@ import { z } from "zod";
 import { 
   DollarSign, Edit2, Trash2, Plus, CheckCircle2, AlertCircle, 
   ChevronDown, ChevronRight, ArrowLeft, Copy, Share2, FileText, 
-  Calendar, Clock, Building2, Users, Calculator, Sparkles, Loader2
+  Calendar, Clock, Building2, Users, Calculator, Sparkles, Loader2, BarChart3
 } from "lucide-react";
 import { SiWhatsapp } from "react-icons/si";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -675,28 +675,39 @@ export default function Budget() {
             </Button>
             <h1 className="text-2xl font-bold" data-testid="text-budget-title">Budget Planner</h1>
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" data-testid="button-share-budget">
-                <Share2 className="w-4 h-4 mr-2" />
-                Share
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleCopyBudget} data-testid="button-copy-budget">
-                <Copy className="w-4 h-4 mr-2" />
-                Copy to Clipboard
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleWhatsAppShare} data-testid="button-whatsapp-budget">
-                <SiWhatsapp className="w-4 h-4 mr-2 text-green-600" />
-                Share via WhatsApp
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handlePrintPDF} data-testid="button-pdf-budget">
-                <FileText className="w-4 h-4 mr-2" />
-                Print / Save as PDF
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setLocation("/financial-dashboard")}
+              data-testid="button-financial-dashboard"
+            >
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Dashboard
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" data-testid="button-share-budget">
+                  <Share2 className="w-4 h-4 mr-2" />
+                  Share
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleCopyBudget} data-testid="button-copy-budget">
+                  <Copy className="w-4 h-4 mr-2" />
+                  Copy to Clipboard
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleWhatsAppShare} data-testid="button-whatsapp-budget">
+                  <SiWhatsapp className="w-4 h-4 mr-2 text-green-600" />
+                  Share via WhatsApp
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handlePrintPDF} data-testid="button-pdf-budget">
+                  <FileText className="w-4 h-4 mr-2" />
+                  Print / Save as PDF
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
         {/* Budget Summary Card */}

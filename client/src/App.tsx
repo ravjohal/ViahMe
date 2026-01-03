@@ -23,6 +23,7 @@ import Tasks from "@/pages/tasks";
 import Timeline from "@/pages/timeline";
 import Budget from "@/pages/budget";
 import BudgetIntelligence from "@/pages/budget-intelligence";
+import FinancialDashboard from "@/pages/financial-dashboard";
 import Contracts from "@/pages/contracts";
 import VendorDashboard from "@/pages/vendor-dashboard";
 import Messages from "@/pages/messages";
@@ -164,6 +165,11 @@ function Router() {
       <Route path="/budget-intelligence">
         <ProtectedRoute requiredPermission="budget">
           <BudgetIntelligence />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/financial-dashboard">
+        <ProtectedRoute requiredPermission="budget">
+          <FinancialDashboard />
         </ProtectedRoute>
       </Route>
       <Route path="/expenses">

@@ -183,6 +183,12 @@ import {
   type InsertTriviaAnswer,
   type LeaderboardEntry,
   type GameWithStats,
+  type BudgetAlert,
+  type InsertBudgetAlert,
+  type DashboardWidget,
+  type InsertDashboardWidget,
+  budgetAlerts,
+  dashboardWidgets,
 } from "@shared/schema";
 import { randomUUID, randomBytes } from "crypto";
 import bcrypt from "bcrypt";
@@ -1015,6 +1021,22 @@ export interface IStorage {
   getAnswersByQuestionAndGuest(questionId: string, guestId: string): Promise<TriviaAnswer | undefined>;
   getAnswersByParticipation(participationId: string): Promise<TriviaAnswer[]>;
   createTriviaAnswer(answer: InsertTriviaAnswer): Promise<TriviaAnswer>;
+
+  // Budget Alerts
+  getBudgetAlert(id: string): Promise<BudgetAlert | undefined>;
+  getBudgetAlertsByWedding(weddingId: string): Promise<BudgetAlert[]>;
+  createBudgetAlert(alert: InsertBudgetAlert): Promise<BudgetAlert>;
+  updateBudgetAlert(id: string, alert: Partial<InsertBudgetAlert>): Promise<BudgetAlert | undefined>;
+  deleteBudgetAlert(id: string): Promise<boolean>;
+  getTriggeredAlerts(weddingId: string): Promise<BudgetAlert[]>;
+
+  // Dashboard Widgets
+  getDashboardWidget(id: string): Promise<DashboardWidget | undefined>;
+  getDashboardWidgetsByWedding(weddingId: string): Promise<DashboardWidget[]>;
+  createDashboardWidget(widget: InsertDashboardWidget): Promise<DashboardWidget>;
+  updateDashboardWidget(id: string, widget: Partial<InsertDashboardWidget>): Promise<DashboardWidget | undefined>;
+  deleteDashboardWidget(id: string): Promise<boolean>;
+  updateDashboardWidgetPositions(widgetIds: string[], positions: number[]): Promise<DashboardWidget[]>;
 }
 
 // Guest Planning Snapshot - comprehensive view of all guests and per-event costs
@@ -10163,6 +10185,101 @@ export class DBStorage implements IStorage {
     }
 
     return result[0];
+  }
+
+  // Budget Alerts
+  async getBudgetAlert(id: string): Promise<BudgetAlert | undefined> {
+    const result = await this.db.select()
+      .from(budgetAlerts)
+      .where(eq(budgetAlerts.id, id));
+    return result[0];
+  }
+
+  async getBudgetAlertsByWedding(weddingId: string): Promise<BudgetAlert[]> {
+    return await this.db.select()
+      .from(budgetAlerts)
+      .where(eq(budgetAlerts.weddingId, weddingId))
+      .orderBy(sql`${budgetAlerts.createdAt} DESC`);
+  }
+
+  async createBudgetAlert(alert: InsertBudgetAlert): Promise<BudgetAlert> {
+    const result = await this.db.insert(budgetAlerts)
+      .values(alert)
+      .returning();
+    return result[0];
+  }
+
+  async updateBudgetAlert(id: string, alert: Partial<InsertBudgetAlert>): Promise<BudgetAlert | undefined> {
+    const result = await this.db.update(budgetAlerts)
+      .set(alert)
+      .where(eq(budgetAlerts.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteBudgetAlert(id: string): Promise<boolean> {
+    await this.db.delete(budgetAlerts)
+      .where(eq(budgetAlerts.id, id));
+    return true;
+  }
+
+  async getTriggeredAlerts(weddingId: string): Promise<BudgetAlert[]> {
+    return await this.db.select()
+      .from(budgetAlerts)
+      .where(and(
+        eq(budgetAlerts.weddingId, weddingId),
+        eq(budgetAlerts.isTriggered, true),
+        eq(budgetAlerts.isEnabled, true)
+      ))
+      .orderBy(sql`${budgetAlerts.triggeredAt} DESC`);
+  }
+
+  // Dashboard Widgets
+  async getDashboardWidget(id: string): Promise<DashboardWidget | undefined> {
+    const result = await this.db.select()
+      .from(dashboardWidgets)
+      .where(eq(dashboardWidgets.id, id));
+    return result[0];
+  }
+
+  async getDashboardWidgetsByWedding(weddingId: string): Promise<DashboardWidget[]> {
+    return await this.db.select()
+      .from(dashboardWidgets)
+      .where(eq(dashboardWidgets.weddingId, weddingId))
+      .orderBy(sql`${dashboardWidgets.position} ASC`);
+  }
+
+  async createDashboardWidget(widget: InsertDashboardWidget): Promise<DashboardWidget> {
+    const result = await this.db.insert(dashboardWidgets)
+      .values(widget)
+      .returning();
+    return result[0];
+  }
+
+  async updateDashboardWidget(id: string, widget: Partial<InsertDashboardWidget>): Promise<DashboardWidget | undefined> {
+    const result = await this.db.update(dashboardWidgets)
+      .set({ ...widget, updatedAt: new Date() })
+      .where(eq(dashboardWidgets.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteDashboardWidget(id: string): Promise<boolean> {
+    await this.db.delete(dashboardWidgets)
+      .where(eq(dashboardWidgets.id, id));
+    return true;
+  }
+
+  async updateDashboardWidgetPositions(widgetIds: string[], positions: number[]): Promise<DashboardWidget[]> {
+    const results: DashboardWidget[] = [];
+    for (let i = 0; i < widgetIds.length; i++) {
+      const result = await this.db.update(dashboardWidgets)
+        .set({ position: positions[i], updatedAt: new Date() })
+        .where(eq(dashboardWidgets.id, widgetIds[i]))
+        .returning();
+      if (result[0]) results.push(result[0]);
+    }
+    return results;
   }
 }
 

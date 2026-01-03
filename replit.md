@@ -24,6 +24,14 @@ Key architectural decisions and features include:
   - **Upcoming Payments Timeline**: Cash flow calendar showing vendor payment milestones from contracts, with overdue/urgent/soon indicators
   - **Multi-Event Expense Allocation**: Support for vendor packages spanning multiple events with equal, percentage, or custom allocation strategies via `expense_event_allocations` table
   - **Share Budget Feature**: Export budget breakdown via Copy to Clipboard, WhatsApp share, or Print/PDF for easy family communication
+  - **Financial Dashboard**: Real-time budget monitoring dashboard with customizable widgets:
+    - **6 Widget Types**: Budget Overview, Budget Alerts, Spending by Category, Spending Trend, Recent Expenses, Upcoming Payments
+    - **Drag-and-Drop Reordering**: Widgets can be rearranged using dnd-kit with positions persisted to database
+    - **Widget Visibility Toggle**: Show/hide individual widgets with preferences saved per wedding
+    - **Automatic Budget Alerts**: Threshold-based alerts (80% warning, 100% danger) for total budget and category budgets
+    - **Alert Check System**: API endpoint `/api/dashboard/alerts/:weddingId/check` evaluates spending against thresholds and triggers alerts
+    - **Recharts Visualizations**: Area chart for spending trends, pie chart for category breakdown
+    - **Database Tables**: `budget_alerts` and `dashboard_widgets` tables store alert configs and widget preferences
 - **Guest List Management**: Frictionless bulk guest import (CSV, Excel), advanced guest invitation & RSVP system with household grouping, magic link authentication, per-event RSVP tracking, and bulk invitation sender. Includes an Allocation View Dashboard for analytics.
 - **Household-First Architecture**: Mobile-first guest management designed for South Asian wedding culture:
   - **Head of House (HoH)**: Every household has a designated primary contact with quick-action WhatsApp/SMS/Email buttons
