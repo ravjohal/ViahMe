@@ -110,13 +110,24 @@ export async function registerGuestGameRoutes(router: Router, storage: IStorage)
         });
       }
       
-      // Get completed items for this participant
+      // Get item statuses for this participant
       let completedItemIds: string[] = [];
+      let pendingItemIds: string[] = [];
+      let rejectedItemIds: string[] = [];
+      
       if (game.gameType === 'scavenger_hunt') {
         for (const item of items) {
           const submissions = await storage.getSubmissionsByChallengeAndGuest(item.id, primaryGuest.id);
-          if (submissions.length > 0) {
+          const hasApproved = submissions.some(s => s.status === 'approved');
+          const hasPending = submissions.some(s => s.status === 'pending');
+          const hasRejected = submissions.some(s => s.status === 'rejected');
+          
+          if (hasApproved) {
             completedItemIds.push(item.id);
+          } else if (hasPending) {
+            pendingItemIds.push(item.id);
+          } else if (hasRejected) {
+            rejectedItemIds.push(item.id);
           }
         }
       } else if (game.gameType === 'trivia') {
@@ -129,6 +140,8 @@ export async function registerGuestGameRoutes(router: Router, storage: IStorage)
         items,
         participation,
         completedItemIds,
+        pendingItemIds,
+        rejectedItemIds,
         guestId: primaryGuest.id,
         guestName: primaryGuest.name,
       });
@@ -158,10 +171,16 @@ export async function registerGuestGameRoutes(router: Router, storage: IStorage)
       
       const primaryGuest = guests[0];
       
-      // Check if already submitted
+      // Check for existing submissions - only block if there's an approved or pending submission
       const existingSubmissions = await storage.getSubmissionsByChallengeAndGuest(challengeId, primaryGuest.id);
-      if (existingSubmissions.length > 0) {
-        return res.status(400).json({ error: "Already submitted for this challenge" });
+      const hasApprovedOrPending = existingSubmissions.some(s => s.status === 'approved' || s.status === 'pending');
+      if (hasApprovedOrPending) {
+        const status = existingSubmissions.find(s => s.status === 'approved' || s.status === 'pending')?.status;
+        return res.status(400).json({ 
+          error: status === 'approved' 
+            ? "Already completed this challenge" 
+            : "Your submission is pending review"
+        });
       }
       
       // Get or create participation

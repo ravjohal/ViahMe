@@ -67,6 +67,7 @@ import GuestCollector from "@/pages/guest-collector";
 import CostBreakdown from "@/pages/cost-breakdown";
 import CommunicationHub from "@/pages/communication-hub";
 import EngagementGames from "@/pages/engagement-games";
+import GamePortal from "@/pages/game-portal";
 import { VendorRoute } from "@/components/VendorRoute";
 import { CoupleRoute } from "@/components/CoupleRoute";
 import { CouplePlannerChatbot } from "@/components/CouplePlannerChatbot";
@@ -93,6 +94,7 @@ function Router() {
       <Route path="/order-confirmation" component={OrderConfirmation} />
       <Route path="/pay-deposit/:bookingId" component={VendorDeposit} />
       <Route path="/collect/:token" component={GuestCollector} />
+      <Route path="/games/:token" component={GamePortal} />
       
       {/* Dashboard - no specific permission, just authentication */}
       <Route path="/dashboard" component={Dashboard} />
