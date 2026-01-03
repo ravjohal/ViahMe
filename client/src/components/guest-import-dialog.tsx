@@ -5,15 +5,33 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, X, Copy, Check, ClipboardPaste, Trash2 } from "lucide-react";
+import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, X, Copy, Check, ClipboardPaste, Trash2, AlertTriangle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
 import type { Event } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
+
+interface DuplicateMatch {
+  importIndex: number;
+  matchedGuestId: string;
+  matchedGuestName: string;
+  confidence: number;
+  matchReasons: string[];
+}
+
+interface IntraBatchDuplicate {
+  index1: number;
+  index2: number;
+  confidence: number;
+  matchReasons: string[];
+}
 
 interface GuestImportDialogProps {
   open: boolean;
@@ -70,6 +88,9 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
   const [pastedData, setPastedData] = useState("");
   const [importMethod, setImportMethod] = useState<'file' | 'paste'>('file');
   const [previewGuests, setPreviewGuests] = useState<ParsedGuest[]>([]);
+  const [duplicatesWithExisting, setDuplicatesWithExisting] = useState<DuplicateMatch[]>([]);
+  const [duplicatesInBatch, setDuplicatesInBatch] = useState<IntraBatchDuplicate[]>([]);
+  const [checkingDuplicates, setCheckingDuplicates] = useState(false);
 
   const handlePastedData = (text: string) => {
     setPastedData(text);
@@ -257,7 +278,7 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
     return mapping;
   };
 
-  const validateAndPreview = () => {
+  const validateAndPreview = async () => {
     const validationErrors: ValidationError[] = [];
     
     rawData.forEach((row, index) => {
@@ -295,10 +316,24 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
     setErrors(validationErrors);
     
     if (validationErrors.length === 0) {
-      // Parse guests and set preview data for editing
       const guests = parseGuests();
       setPreviewGuests(guests);
       setStep('preview');
+      
+      setCheckingDuplicates(true);
+      try {
+        const response = await apiRequest('POST', '/api/guests/bulk/preview', {
+          weddingId,
+          guests: guests.map(g => ({ name: g.name, email: g.email, phone: g.phone, householdName: g.householdName }))
+        });
+        const data = await response.json();
+        setDuplicatesWithExisting(data.duplicatesWithExisting || []);
+        setDuplicatesInBatch(data.duplicatesInBatch || []);
+      } catch (error) {
+        console.error("Failed to check for duplicates:", error);
+      } finally {
+        setCheckingDuplicates(false);
+      }
     }
   };
 
@@ -381,6 +416,33 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
     setPastedData("");
     setImportMethod('file');
     setPreviewGuests([]);
+    setDuplicatesWithExisting([]);
+    setDuplicatesInBatch([]);
+    setCheckingDuplicates(false);
+  };
+
+  const getDuplicateWarningForIndex = (index: number): { type: 'existing' | 'batch'; message: string; confidence: number } | null => {
+    const existingMatch = duplicatesWithExisting.find(d => d.importIndex === index);
+    if (existingMatch) {
+      return {
+        type: 'existing',
+        message: `Possible duplicate of "${existingMatch.matchedGuestName}" (${Math.round(existingMatch.confidence * 100)}% match: ${existingMatch.matchReasons.join(', ')})`,
+        confidence: existingMatch.confidence,
+      };
+    }
+    
+    const batchMatch = duplicatesInBatch.find(d => d.index1 === index || d.index2 === index);
+    if (batchMatch) {
+      const otherIndex = batchMatch.index1 === index ? batchMatch.index2 : batchMatch.index1;
+      const otherName = previewGuests[otherIndex]?.name || `Row ${otherIndex + 1}`;
+      return {
+        type: 'batch',
+        message: `Possible duplicate of "${otherName}" in this import (${Math.round(batchMatch.confidence * 100)}% match: ${batchMatch.matchReasons.join(', ')})`,
+        confidence: batchMatch.confidence,
+      };
+    }
+    
+    return null;
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -866,9 +928,29 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-5 h-5 text-primary" />
                 <span className="font-semibold">Review and edit {previewGuests.length} guests before importing</span>
+                {checkingDuplicates && (
+                  <span className="text-sm text-muted-foreground">(Checking for duplicates...)</span>
+                )}
               </div>
               <span className="text-sm text-muted-foreground">Click any field to edit</span>
             </div>
+
+            {(duplicatesWithExisting.length > 0 || duplicatesInBatch.length > 0) && (
+              <Alert className="border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20">
+                <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                <AlertDescription className="text-yellow-800 dark:text-yellow-200">
+                  <span className="font-semibold">Potential duplicates detected:</span>{' '}
+                  {duplicatesWithExisting.length > 0 && (
+                    <span>{duplicatesWithExisting.length} match existing guests</span>
+                  )}
+                  {duplicatesWithExisting.length > 0 && duplicatesInBatch.length > 0 && ', '}
+                  {duplicatesInBatch.length > 0 && (
+                    <span>{duplicatesInBatch.length} duplicates within import</span>
+                  )}
+                  . Review rows marked with a warning icon and remove duplicates if needed.
+                </AlertDescription>
+              </Alert>
+            )}
 
             <div className="border rounded-lg overflow-hidden">
               <div className="max-h-[400px] overflow-auto">
@@ -901,12 +983,26 @@ export function GuestImportDialog({ open, onOpenChange, weddingId, events, onImp
                           </Button>
                         </TableCell>
                         <TableCell className="p-1">
-                          <Input
-                            value={guest.name}
-                            onChange={(e) => updatePreviewGuest(index, 'name', e.target.value)}
-                            className="h-8 text-sm"
-                            data-testid={`input-name-${index}`}
-                          />
+                          <div className="flex items-center gap-1">
+                            <Input
+                              value={guest.name}
+                              onChange={(e) => updatePreviewGuest(index, 'name', e.target.value)}
+                              className={`h-8 text-sm ${getDuplicateWarningForIndex(index) ? 'border-yellow-500' : ''}`}
+                              data-testid={`input-name-${index}`}
+                            />
+                            {getDuplicateWarningForIndex(index) && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="cursor-help">
+                                    <AlertTriangle className="w-4 h-4 text-yellow-600 flex-shrink-0" />
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent side="right" className="max-w-xs">
+                                  <p className="text-sm">{getDuplicateWarningForIndex(index)?.message}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell className="p-1">
                           <Input

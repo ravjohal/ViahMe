@@ -2,6 +2,7 @@ import { Router } from "express";
 import type { IStorage } from "../storage";
 import { insertGuestSchema } from "@shared/schema";
 import { sendRsvpConfirmationEmail } from "../email";
+import { detectImportDuplicates } from "../services/duplicate-detector";
 
 export async function registerGuestPublicRoutes(router: Router, storage: IStorage) {
   router.get("/:weddingId", async (req, res) => {
@@ -32,6 +33,26 @@ export async function registerGuestPublicRoutes(router: Router, storage: IStorag
         return res.status(400).json({ error: "Validation failed", details: error });
       }
       res.status(500).json({ error: "Failed to create guest" });
+    }
+  });
+
+  router.post("/bulk/preview", async (req, res) => {
+    try {
+      const { weddingId, guests: importGuests } = req.body;
+      if (!weddingId || !Array.isArray(importGuests)) {
+        return res.status(400).json({ error: "Request must contain 'weddingId' and 'guests' array" });
+      }
+
+      if (importGuests.length === 0) {
+        return res.json({ duplicatesWithExisting: [], duplicatesInBatch: [] });
+      }
+
+      const existingGuests = await storage.getGuestsByWedding(weddingId);
+      const result = detectImportDuplicates(importGuests, existingGuests);
+      
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to check for duplicates" });
     }
   });
 
