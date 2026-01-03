@@ -2350,11 +2350,6 @@ export const PERMISSION_CATEGORIES = {
     description: "Manage the public wedding website",
     permissions: ["view", "edit", "manage"] as const,
   },
-  photos: {
-    label: "Photos & Media",
-    description: "Upload and manage photos",
-    permissions: ["view", "edit", "manage"] as const,
-  },
   documents: {
     label: "Documents",
     description: "Access and manage documents",

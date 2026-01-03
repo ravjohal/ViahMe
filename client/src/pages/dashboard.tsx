@@ -49,7 +49,6 @@ const COLLABORATOR_FEATURES: FeatureCard[] = [
   { permission: "tasks", label: "Tasks", description: "View and manage wedding tasks", icon: CheckSquare, path: "/tasks", color: "purple" },
   { permission: "contracts", label: "Contracts", description: "View and sign vendor contracts", icon: FileText, path: "/contracts", color: "indigo" },
   { permission: "website", label: "Wedding Website", description: "Manage the public wedding website", icon: Globe, path: "/website-builder", color: "cyan" },
-  { permission: "photos", label: "Photos & Media", description: "Upload and manage photos", icon: Image, path: "/photo-gallery", color: "amber" },
   { permission: "documents", label: "Documents", description: "Access wedding documents", icon: FileText, path: "/documents", color: "gray" },
   { permission: "playlists", label: "Music & Playlists", description: "Manage music selections", icon: Music, path: "/playlists", color: "violet" },
   { permission: "messages", label: "Messages", description: "Communicate with vendors and team", icon: MessageSquare, path: "/messages", color: "sky" },
