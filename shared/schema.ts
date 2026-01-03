@@ -2370,12 +2370,6 @@ export const PERMISSION_CATEGORIES = {
     description: "Communicate with vendors and team",
     permissions: ["view", "manage"] as const,
   },
-  // Guest Communications
-  concierge: {
-    label: "Guest Communications Manager",
-    description: "Manage guest communications and engagement",
-    permissions: ["view", "edit", "manage"] as const,
-  },
   // Shopping
   shopping: {
     label: "Shopping & Measurements",
