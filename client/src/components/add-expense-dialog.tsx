@@ -47,6 +47,7 @@ export function AddExpenseDialog({
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [amountPaid, setAmountPaid] = useState("");
+  const [expenseDate, setExpenseDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [payer, setPayer] = useState<PayerType>("couple");
@@ -75,6 +76,7 @@ export function AddExpenseDialog({
     setDescription("");
     setAmount("");
     setAmountPaid("");
+    setExpenseDate(new Date().toISOString().split('T')[0]);
     setSelectedEvents([]);
     setSelectedCategoryId(null);
     setPayer("couple");
@@ -217,7 +219,7 @@ export function AddExpenseDialog({
       splitType: splitType === "split" ? "custom" : "full",
       paymentStatus,
       notes: notes.trim() || null,
-      expenseDate: new Date().toISOString().split("T")[0],
+      expenseDate,
       splits,
       allocationStrategy: selectedEvents.length > 1 ? "equal" : "single",
       eventAllocations: eventAllocations.length > 0 ? eventAllocations : undefined,
@@ -252,22 +254,36 @@ export function AddExpenseDialog({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              How much?
-            </Label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">$</span>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                How much total?
+              </Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">$</span>
+                <Input
+                  type="text"
+                  value={amount}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/[^0-9.,]/g, "");
+                    setAmount(val);
+                  }}
+                  placeholder="0.00"
+                  className="pl-7 text-base font-medium"
+                  data-testid="input-expense-amount"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                Date
+              </Label>
               <Input
-                type="text"
-                value={amount}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/[^0-9.,]/g, "");
-                  setAmount(val);
-                }}
-                placeholder="0.00"
-                className="pl-7 text-base font-medium"
-                data-testid="input-expense-amount"
+                type="date"
+                value={expenseDate}
+                onChange={(e) => setExpenseDate(e.target.value)}
+                className="text-base"
+                data-testid="input-expense-date"
               />
             </div>
           </div>
