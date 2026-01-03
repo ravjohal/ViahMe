@@ -71,10 +71,12 @@ export default function Expenses() {
     enabled: !!weddingId,
   });
 
-  // Build team members list: Bride & Groom by default, plus any collaborators
+  // Build team members list: Bride, Groom, and Parents by default, plus any collaborators
   const teamMembers = [
     { id: "bride", name: "Bride" },
     { id: "groom", name: "Groom" },
+    { id: "bride-parents", name: "Bride's Parents" },
+    { id: "groom-parents", name: "Groom's Parents" },
     ...collaborators.map((c: any) => ({ id: c.userId, name: c.user?.name || c.user?.email || "Team Member" })),
   ];
 
@@ -419,7 +421,7 @@ export default function Expenses() {
               {teamMembers.length}
             </div>
             <p className="text-xs text-muted-foreground mt-2">
-              Bride & Groom by default. Add more via{" "}
+              Bride, Groom, and Parents by default. Add more via{" "}
               <a href="/collaborators" className="text-primary hover:underline">Team Settings</a>.
             </p>
           </CardContent>
