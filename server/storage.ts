@@ -167,6 +167,20 @@ import {
   communicationRecipients,
   type IgnoredDuplicatePair,
   type InsertIgnoredDuplicatePair,
+  type EngagementGame,
+  type InsertEngagementGame,
+  type ScavengerChallenge,
+  type InsertScavengerChallenge,
+  type TriviaQuestion,
+  type InsertTriviaQuestion,
+  type GameParticipation,
+  type InsertGameParticipation,
+  type ScavengerSubmission,
+  type InsertScavengerSubmission,
+  type TriviaAnswer,
+  type InsertTriviaAnswer,
+  type LeaderboardEntry,
+  type GameWithStats,
 } from "@shared/schema";
 import { randomUUID, randomBytes } from "crypto";
 import bcrypt from "bcrypt";
@@ -939,6 +953,57 @@ export interface IStorage {
   // Ignored duplicate pairs (keep both)
   ignoreHouseholdDuplicatePair(weddingId: string, householdId1: string, householdId2: string, ignoredById: string): Promise<IgnoredDuplicatePair>;
   getIgnoredDuplicatePairs(weddingId: string): Promise<IgnoredDuplicatePair[]>;
+
+  // ============================================================================
+  // GUEST ENGAGEMENT GAMES - Scavenger hunts and trivia
+  // ============================================================================
+
+  // Engagement Games
+  getEngagementGame(id: string): Promise<EngagementGame | undefined>;
+  getEngagementGamesByWedding(weddingId: string): Promise<EngagementGame[]>;
+  getActiveGamesByWedding(weddingId: string): Promise<EngagementGame[]>;
+  getGameWithStats(id: string): Promise<GameWithStats | undefined>;
+  createEngagementGame(game: InsertEngagementGame): Promise<EngagementGame>;
+  updateEngagementGame(id: string, game: Partial<InsertEngagementGame>): Promise<EngagementGame | undefined>;
+  deleteEngagementGame(id: string): Promise<boolean>;
+
+  // Scavenger Challenges
+  getScavengerChallenge(id: string): Promise<ScavengerChallenge | undefined>;
+  getScavengerChallengesByGame(gameId: string): Promise<ScavengerChallenge[]>;
+  createScavengerChallenge(challenge: InsertScavengerChallenge): Promise<ScavengerChallenge>;
+  updateScavengerChallenge(id: string, challenge: Partial<InsertScavengerChallenge>): Promise<ScavengerChallenge | undefined>;
+  deleteScavengerChallenge(id: string): Promise<boolean>;
+  reorderScavengerChallenges(gameId: string, orderedIds: string[]): Promise<ScavengerChallenge[]>;
+
+  // Trivia Questions
+  getTriviaQuestion(id: string): Promise<TriviaQuestion | undefined>;
+  getTriviaQuestionsByGame(gameId: string): Promise<TriviaQuestion[]>;
+  createTriviaQuestion(question: InsertTriviaQuestion): Promise<TriviaQuestion>;
+  updateTriviaQuestion(id: string, question: Partial<InsertTriviaQuestion>): Promise<TriviaQuestion | undefined>;
+  deleteTriviaQuestion(id: string): Promise<boolean>;
+  reorderTriviaQuestions(gameId: string, orderedIds: string[]): Promise<TriviaQuestion[]>;
+
+  // Game Participation
+  getGameParticipation(id: string): Promise<GameParticipation | undefined>;
+  getParticipationByGuestAndGame(guestId: string, gameId: string): Promise<GameParticipation | undefined>;
+  getParticipationsByGame(gameId: string): Promise<GameParticipation[]>;
+  createGameParticipation(participation: InsertGameParticipation): Promise<GameParticipation>;
+  updateGameParticipation(id: string, participation: Partial<GameParticipation>): Promise<GameParticipation | undefined>;
+  getLeaderboard(gameId: string, limit?: number): Promise<LeaderboardEntry[]>;
+
+  // Scavenger Submissions
+  getScavengerSubmission(id: string): Promise<ScavengerSubmission | undefined>;
+  getSubmissionsByChallengeAndGuest(challengeId: string, guestId: string): Promise<ScavengerSubmission[]>;
+  getSubmissionsByChallenge(challengeId: string): Promise<ScavengerSubmission[]>;
+  getPendingSubmissionsByGame(gameId: string): Promise<ScavengerSubmission[]>;
+  createScavengerSubmission(submission: InsertScavengerSubmission): Promise<ScavengerSubmission>;
+  reviewScavengerSubmission(id: string, status: 'approved' | 'rejected', reviewerId: string, note?: string): Promise<ScavengerSubmission>;
+
+  // Trivia Answers
+  getTriviaAnswer(id: string): Promise<TriviaAnswer | undefined>;
+  getAnswersByQuestionAndGuest(questionId: string, guestId: string): Promise<TriviaAnswer | undefined>;
+  getAnswersByParticipation(participationId: string): Promise<TriviaAnswer[]>;
+  createTriviaAnswer(answer: InsertTriviaAnswer): Promise<TriviaAnswer>;
 }
 
 // Guest Planning Snapshot - comprehensive view of all guests and per-event costs
@@ -9590,6 +9655,370 @@ export class DBStorage implements IStorage {
     return await this.db.select()
       .from(schema.ignoredDuplicatePairs)
       .where(eq(schema.ignoredDuplicatePairs.weddingId, weddingId));
+  }
+
+  // ============================================================================
+  // GUEST ENGAGEMENT GAMES - Scavenger hunts and trivia
+  // ============================================================================
+
+  async getEngagementGame(id: string): Promise<EngagementGame | undefined> {
+    const result = await this.db.select()
+      .from(schema.engagementGames)
+      .where(eq(schema.engagementGames.id, id));
+    return result[0];
+  }
+
+  async getEngagementGamesByWedding(weddingId: string): Promise<EngagementGame[]> {
+    return await this.db.select()
+      .from(schema.engagementGames)
+      .where(eq(schema.engagementGames.weddingId, weddingId))
+      .orderBy(sql`${schema.engagementGames.createdAt} DESC`);
+  }
+
+  async getActiveGamesByWedding(weddingId: string): Promise<EngagementGame[]> {
+    return await this.db.select()
+      .from(schema.engagementGames)
+      .where(and(
+        eq(schema.engagementGames.weddingId, weddingId),
+        eq(schema.engagementGames.status, 'active')
+      ))
+      .orderBy(sql`${schema.engagementGames.createdAt} DESC`);
+  }
+
+  async getGameWithStats(id: string): Promise<GameWithStats | undefined> {
+    const game = await this.getEngagementGame(id);
+    if (!game) return undefined;
+
+    let challengeCount = 0;
+    if (game.gameType === 'scavenger_hunt') {
+      const challenges = await this.getScavengerChallengesByGame(id);
+      challengeCount = challenges.length;
+    } else if (game.gameType === 'trivia') {
+      const questions = await this.getTriviaQuestionsByGame(id);
+      challengeCount = questions.length;
+    }
+
+    const participations = await this.getParticipationsByGame(id);
+    const participantCount = participations.length;
+
+    let event: Event | undefined;
+    if (game.eventId) {
+      event = await this.getEvent(game.eventId);
+    }
+
+    return {
+      ...game,
+      challengeCount,
+      participantCount,
+      event,
+    };
+  }
+
+  async createEngagementGame(game: InsertEngagementGame): Promise<EngagementGame> {
+    const result = await this.db.insert(schema.engagementGames)
+      .values(game)
+      .returning();
+    return result[0];
+  }
+
+  async updateEngagementGame(id: string, game: Partial<InsertEngagementGame>): Promise<EngagementGame | undefined> {
+    const result = await this.db.update(schema.engagementGames)
+      .set({ ...game, updatedAt: new Date() })
+      .where(eq(schema.engagementGames.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteEngagementGame(id: string): Promise<boolean> {
+    const result = await this.db.delete(schema.engagementGames)
+      .where(eq(schema.engagementGames.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async getScavengerChallenge(id: string): Promise<ScavengerChallenge | undefined> {
+    const result = await this.db.select()
+      .from(schema.scavengerChallenges)
+      .where(eq(schema.scavengerChallenges.id, id));
+    return result[0];
+  }
+
+  async getScavengerChallengesByGame(gameId: string): Promise<ScavengerChallenge[]> {
+    return await this.db.select()
+      .from(schema.scavengerChallenges)
+      .where(eq(schema.scavengerChallenges.gameId, gameId))
+      .orderBy(schema.scavengerChallenges.sortOrder);
+  }
+
+  async createScavengerChallenge(challenge: InsertScavengerChallenge): Promise<ScavengerChallenge> {
+    const result = await this.db.insert(schema.scavengerChallenges)
+      .values(challenge)
+      .returning();
+    return result[0];
+  }
+
+  async updateScavengerChallenge(id: string, challenge: Partial<InsertScavengerChallenge>): Promise<ScavengerChallenge | undefined> {
+    const result = await this.db.update(schema.scavengerChallenges)
+      .set(challenge)
+      .where(eq(schema.scavengerChallenges.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteScavengerChallenge(id: string): Promise<boolean> {
+    const result = await this.db.delete(schema.scavengerChallenges)
+      .where(eq(schema.scavengerChallenges.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async reorderScavengerChallenges(gameId: string, orderedIds: string[]): Promise<ScavengerChallenge[]> {
+    for (let i = 0; i < orderedIds.length; i++) {
+      await this.db.update(schema.scavengerChallenges)
+        .set({ sortOrder: i })
+        .where(eq(schema.scavengerChallenges.id, orderedIds[i]));
+    }
+    return this.getScavengerChallengesByGame(gameId);
+  }
+
+  async getTriviaQuestion(id: string): Promise<TriviaQuestion | undefined> {
+    const result = await this.db.select()
+      .from(schema.triviaQuestions)
+      .where(eq(schema.triviaQuestions.id, id));
+    return result[0];
+  }
+
+  async getTriviaQuestionsByGame(gameId: string): Promise<TriviaQuestion[]> {
+    return await this.db.select()
+      .from(schema.triviaQuestions)
+      .where(eq(schema.triviaQuestions.gameId, gameId))
+      .orderBy(schema.triviaQuestions.sortOrder);
+  }
+
+  async createTriviaQuestion(question: InsertTriviaQuestion): Promise<TriviaQuestion> {
+    const result = await this.db.insert(schema.triviaQuestions)
+      .values(question)
+      .returning();
+    return result[0];
+  }
+
+  async updateTriviaQuestion(id: string, question: Partial<InsertTriviaQuestion>): Promise<TriviaQuestion | undefined> {
+    const result = await this.db.update(schema.triviaQuestions)
+      .set(question)
+      .where(eq(schema.triviaQuestions.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteTriviaQuestion(id: string): Promise<boolean> {
+    const result = await this.db.delete(schema.triviaQuestions)
+      .where(eq(schema.triviaQuestions.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async reorderTriviaQuestions(gameId: string, orderedIds: string[]): Promise<TriviaQuestion[]> {
+    for (let i = 0; i < orderedIds.length; i++) {
+      await this.db.update(schema.triviaQuestions)
+        .set({ sortOrder: i })
+        .where(eq(schema.triviaQuestions.id, orderedIds[i]));
+    }
+    return this.getTriviaQuestionsByGame(gameId);
+  }
+
+  async getGameParticipation(id: string): Promise<GameParticipation | undefined> {
+    const result = await this.db.select()
+      .from(schema.gameParticipation)
+      .where(eq(schema.gameParticipation.id, id));
+    return result[0];
+  }
+
+  async getParticipationByGuestAndGame(guestId: string, gameId: string): Promise<GameParticipation | undefined> {
+    const result = await this.db.select()
+      .from(schema.gameParticipation)
+      .where(and(
+        eq(schema.gameParticipation.guestId, guestId),
+        eq(schema.gameParticipation.gameId, gameId)
+      ));
+    return result[0];
+  }
+
+  async getParticipationsByGame(gameId: string): Promise<GameParticipation[]> {
+    return await this.db.select()
+      .from(schema.gameParticipation)
+      .where(eq(schema.gameParticipation.gameId, gameId))
+      .orderBy(sql`${schema.gameParticipation.totalPoints} DESC`);
+  }
+
+  async createGameParticipation(participation: InsertGameParticipation): Promise<GameParticipation> {
+    const result = await this.db.insert(schema.gameParticipation)
+      .values(participation)
+      .returning();
+    return result[0];
+  }
+
+  async updateGameParticipation(id: string, participation: Partial<GameParticipation>): Promise<GameParticipation | undefined> {
+    const result = await this.db.update(schema.gameParticipation)
+      .set({ ...participation, lastActivityAt: new Date() })
+      .where(eq(schema.gameParticipation.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async getLeaderboard(gameId: string, limit: number = 10): Promise<LeaderboardEntry[]> {
+    const participations = await this.db.select()
+      .from(schema.gameParticipation)
+      .where(eq(schema.gameParticipation.gameId, gameId))
+      .orderBy(sql`${schema.gameParticipation.totalPoints} DESC`)
+      .limit(limit);
+
+    const entries: LeaderboardEntry[] = [];
+    for (let i = 0; i < participations.length; i++) {
+      const p = participations[i];
+      const guest = await this.getGuest(p.guestId);
+      let householdName: string | undefined;
+      if (p.householdId) {
+        const household = await this.getHousehold(p.householdId);
+        householdName = household?.name;
+      }
+      entries.push({
+        guestId: p.guestId,
+        guestName: guest?.name || 'Unknown Guest',
+        householdName,
+        totalPoints: p.totalPoints,
+        challengesCompleted: p.challengesCompleted,
+        rank: i + 1,
+      });
+    }
+    return entries;
+  }
+
+  async getScavengerSubmission(id: string): Promise<ScavengerSubmission | undefined> {
+    const result = await this.db.select()
+      .from(schema.scavengerSubmissions)
+      .where(eq(schema.scavengerSubmissions.id, id));
+    return result[0];
+  }
+
+  async getSubmissionsByChallengeAndGuest(challengeId: string, guestId: string): Promise<ScavengerSubmission[]> {
+    return await this.db.select()
+      .from(schema.scavengerSubmissions)
+      .where(and(
+        eq(schema.scavengerSubmissions.challengeId, challengeId),
+        eq(schema.scavengerSubmissions.guestId, guestId)
+      ));
+  }
+
+  async getSubmissionsByChallenge(challengeId: string): Promise<ScavengerSubmission[]> {
+    return await this.db.select()
+      .from(schema.scavengerSubmissions)
+      .where(eq(schema.scavengerSubmissions.challengeId, challengeId))
+      .orderBy(sql`${schema.scavengerSubmissions.submittedAt} DESC`);
+  }
+
+  async getPendingSubmissionsByGame(gameId: string): Promise<ScavengerSubmission[]> {
+    const challenges = await this.getScavengerChallengesByGame(gameId);
+    const challengeIds = challenges.map(c => c.id);
+    if (challengeIds.length === 0) return [];
+
+    return await this.db.select()
+      .from(schema.scavengerSubmissions)
+      .where(and(
+        inArray(schema.scavengerSubmissions.challengeId, challengeIds),
+        eq(schema.scavengerSubmissions.status, 'pending')
+      ))
+      .orderBy(sql`${schema.scavengerSubmissions.submittedAt} ASC`);
+  }
+
+  async createScavengerSubmission(submission: InsertScavengerSubmission): Promise<ScavengerSubmission> {
+    const result = await this.db.insert(schema.scavengerSubmissions)
+      .values(submission)
+      .returning();
+    return result[0];
+  }
+
+  async reviewScavengerSubmission(
+    id: string,
+    status: 'approved' | 'rejected',
+    reviewerId: string,
+    note?: string
+  ): Promise<ScavengerSubmission> {
+    const submission = await this.getScavengerSubmission(id);
+    if (!submission) throw new Error('Submission not found');
+
+    let pointsAwarded = 0;
+    if (status === 'approved') {
+      const challenge = await this.getScavengerChallenge(submission.challengeId);
+      pointsAwarded = challenge?.points || 0;
+
+      // Update participation
+      const participation = await this.getGameParticipation(submission.participationId);
+      if (participation) {
+        await this.updateGameParticipation(participation.id, {
+          totalPoints: participation.totalPoints + pointsAwarded,
+          challengesCompleted: participation.challengesCompleted + 1,
+        });
+      }
+    }
+
+    const result = await this.db.update(schema.scavengerSubmissions)
+      .set({
+        status,
+        pointsAwarded,
+        reviewedById: reviewerId,
+        reviewNote: note,
+        reviewedAt: new Date(),
+      })
+      .where(eq(schema.scavengerSubmissions.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async getTriviaAnswer(id: string): Promise<TriviaAnswer | undefined> {
+    const result = await this.db.select()
+      .from(schema.triviaAnswers)
+      .where(eq(schema.triviaAnswers.id, id));
+    return result[0];
+  }
+
+  async getAnswersByQuestionAndGuest(questionId: string, guestId: string): Promise<TriviaAnswer | undefined> {
+    const result = await this.db.select()
+      .from(schema.triviaAnswers)
+      .where(and(
+        eq(schema.triviaAnswers.questionId, questionId),
+        eq(schema.triviaAnswers.guestId, guestId)
+      ));
+    return result[0];
+  }
+
+  async getAnswersByParticipation(participationId: string): Promise<TriviaAnswer[]> {
+    return await this.db.select()
+      .from(schema.triviaAnswers)
+      .where(eq(schema.triviaAnswers.participationId, participationId))
+      .orderBy(sql`${schema.triviaAnswers.answeredAt} ASC`);
+  }
+
+  async createTriviaAnswer(answer: InsertTriviaAnswer): Promise<TriviaAnswer> {
+    // Check if already answered
+    const existing = await this.getAnswersByQuestionAndGuest(answer.questionId, answer.guestId);
+    if (existing) {
+      throw new Error('Question already answered');
+    }
+
+    // Insert answer
+    const result = await this.db.insert(schema.triviaAnswers)
+      .values(answer)
+      .returning();
+
+    // Update participation points if correct
+    if (answer.isCorrect && answer.pointsAwarded > 0) {
+      const participation = await this.getGameParticipation(answer.participationId);
+      if (participation) {
+        await this.updateGameParticipation(participation.id, {
+          totalPoints: participation.totalPoints + answer.pointsAwarded,
+          challengesCompleted: participation.challengesCompleted + 1,
+        });
+      }
+    }
+
+    return result[0];
   }
 }
 
