@@ -355,8 +355,17 @@ export async function registerGuestRoutes(router: Router, storage: IStorage) {
       if (!wedding) {
         return res.status(404).json({ error: "Wedding not found" });
       }
+      
+      console.log("DELETE guest auth check:", {
+        userId: authReq.session.userId,
+        coupleId: wedding.coupleId,
+        weddingId: existingGuest.weddingId,
+        isOwner: wedding.coupleId === authReq.session.userId
+      });
+      
       if (wedding.coupleId !== authReq.session.userId) {
         const roles = await storage.getWeddingRoles(existingGuest.weddingId);
+        console.log("Checking roles:", roles.map(r => ({ userId: r.userId, role: r.role })));
         const hasAccess = roles.some(role => role.userId === authReq.session.userId);
         if (!hasAccess) {
           return res.status(403).json({ error: "Access denied" });

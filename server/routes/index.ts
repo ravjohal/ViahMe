@@ -156,6 +156,7 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   await registerBudgetRoutes(budgetRouter, storage);
   app.use("/api/budget", budgetRouter);
 
+  // Guest routes (authenticated) - includes households, plus-ones, etc.
   const guestRouter = Router();
   await registerGuestRoutes(guestRouter, storage);
   app.use("/api/guests", guestRouter);
