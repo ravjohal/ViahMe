@@ -10,7 +10,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Calendar, DollarSign, Users, Briefcase, FileText, Camera, CheckCircle2, ArrowRight, Sparkles, UserPlus, Heart, Clock, Bot, CheckSquare, Globe, Package, Music, Image, MessageSquare, Radio, ShoppingBag, ChevronDown, ChevronUp, Map } from "lucide-react";
+import { Calendar, DollarSign, Users, Briefcase, FileText, Camera, CheckCircle2, ArrowRight, Sparkles, UserPlus, Heart, Clock, Bot, CheckSquare, Globe, Package, Music, Image, MessageSquare, Radio, ShoppingBag, ChevronDown, ChevronUp, Map, Receipt } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CEREMONY_COST_BREAKDOWNS, CEREMONY_CATALOG, calculateCeremonyTotalRange } from "@shared/ceremonies";
 import { useLocation } from "wouter";
@@ -784,21 +784,23 @@ export default function Dashboard() {
         {/* More to Explore */}
         <Card className="p-6 mt-8 bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-orange-950/20 dark:via-pink-950/20 dark:to-purple-950/20 border-orange-200 dark:border-orange-800">
           <h3 className="text-lg font-semibold mb-4">More to Explore</h3>
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-4 gap-4">
             <Button
               variant="outline"
               className="justify-start h-auto py-3 px-4"
-              onClick={() => setLocation("/website-builder")}
+              data-testid="button-explore-collaborators"
+              onClick={() => setLocation("/collaborators")}
             >
-              <Globe className="w-5 h-5 mr-3 text-cyan-600" />
+              <UserPlus className="w-5 h-5 mr-3 text-blue-600" />
               <div className="text-left">
-                <p className="font-medium">Wedding Website</p>
-                <p className="text-xs text-muted-foreground">Create your wedding site</p>
+                <p className="font-medium">Add Teammates</p>
+                <p className="text-xs text-muted-foreground">Collaborate on planning</p>
               </div>
             </Button>
             <Button
               variant="outline"
               className="justify-start h-auto py-3 px-4"
+              data-testid="button-explore-cultural"
               onClick={() => setLocation("/cultural-info")}
             >
               <Sparkles className="w-5 h-5 mr-3 text-purple-600" />
@@ -810,12 +812,25 @@ export default function Dashboard() {
             <Button
               variant="outline"
               className="justify-start h-auto py-3 px-4"
-              onClick={() => setLocation("/shopping")}
+              data-testid="button-explore-playlist"
+              onClick={() => setLocation("/playlist")}
             >
-              <Briefcase className="w-5 h-5 mr-3 text-pink-600" />
+              <Music className="w-5 h-5 mr-3 text-pink-600" />
               <div className="text-left">
-                <p className="font-medium">Shopping Tracker</p>
-                <p className="text-xs text-muted-foreground">Attire & accessories</p>
+                <p className="font-medium">Playlist</p>
+                <p className="text-xs text-muted-foreground">Manage your music</p>
+              </div>
+            </Button>
+            <Button
+              variant="outline"
+              className="justify-start h-auto py-3 px-4"
+              data-testid="button-explore-expenses"
+              onClick={() => setLocation("/expenses")}
+            >
+              <Receipt className="w-5 h-5 mr-3 text-green-600" />
+              <div className="text-left">
+                <p className="font-medium">Split Expenses</p>
+                <p className="text-xs text-muted-foreground">Track who paid what</p>
               </div>
             </Button>
           </div>
