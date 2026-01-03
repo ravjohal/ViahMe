@@ -8,6 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -81,6 +84,7 @@ export default function Budget() {
   const [contributorFilter, setContributorFilter] = useState<ContributorFilter>("all");
   const [editBudgetOpen, setEditBudgetOpen] = useState(false);
   const [showSavingsCalculator, setShowSavingsCalculator] = useState(false);
+  const [showCategories, setShowCategories] = useState(false);
 
   const { data: weddings, isLoading: weddingsLoading } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
@@ -485,6 +489,52 @@ export default function Budget() {
     },
   });
 
+  const createCategoryMutation = useMutation({
+    mutationFn: async (data: BudgetFormData) => {
+      return await apiRequest("POST", "/api/budget-categories", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/budget-categories", wedding?.id] });
+      setDialogOpen(false);
+      form.reset();
+      setUseCustomCategory(false);
+      setCustomCategoryInput("");
+      toast({ title: "Category created", description: "Budget category has been added" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to create category", variant: "destructive" });
+    },
+  });
+
+  const updateCategoryMutation = useMutation({
+    mutationFn: async (data: { id: string; updates: Partial<BudgetFormData> }) => {
+      return await apiRequest("PATCH", `/api/budget-categories/${data.id}`, data.updates);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/budget-categories", wedding?.id] });
+      setDialogOpen(false);
+      setEditingCategory(null);
+      form.reset();
+      toast({ title: "Category updated", description: "Budget category has been updated" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to update category", variant: "destructive" });
+    },
+  });
+
+  const deleteCategoryMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiRequest("DELETE", `/api/budget-categories/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/budget-categories", wedding?.id] });
+      toast({ title: "Category deleted", description: "Budget category has been removed" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to delete category", variant: "destructive" });
+    },
+  });
+
   useEffect(() => {
     if (!weddingsLoading && !wedding) {
       setLocation("/onboarding");
@@ -506,6 +556,48 @@ export default function Budget() {
       return;
     }
     updateWeddingBudgetMutation.mutate(newTotalBudget);
+  };
+
+  const handleOpenCategoryDialog = (category?: BudgetCategory) => {
+    if (category) {
+      setEditingCategory(category);
+      form.setValue("category", category.category);
+      form.setValue("allocatedAmount", category.allocatedAmount?.toString() || "0");
+      form.setValue("spentAmount", category.spentAmount?.toString() || "0");
+      form.setValue("weddingId", wedding?.id || "");
+      if (!Object.keys(CATEGORY_LABELS).includes(category.category)) {
+        setUseCustomCategory(true);
+        setCustomCategoryInput(category.category);
+      }
+    } else {
+      setEditingCategory(null);
+      form.reset({
+        category: "catering",
+        allocatedAmount: "0",
+        spentAmount: "0",
+        weddingId: wedding?.id || "",
+      });
+      setUseCustomCategory(false);
+      setCustomCategoryInput("");
+    }
+    setDialogOpen(true);
+  };
+
+  const handleCategorySubmit = (data: BudgetFormData) => {
+    const finalCategory = useCustomCategory && customCategoryInput ? customCategoryInput : data.category;
+    const submitData = { ...data, category: finalCategory };
+
+    if (editingCategory) {
+      updateCategoryMutation.mutate({ id: editingCategory.id, updates: submitData });
+    } else {
+      createCategoryMutation.mutate(submitData);
+    }
+  };
+
+  const handleDeleteCategory = (id: string) => {
+    if (confirm("Are you sure you want to delete this budget category?")) {
+      deleteCategoryMutation.mutate(id);
+    }
   };
 
   // Get expense payment status
@@ -661,6 +753,95 @@ export default function Budget() {
             </CollapsibleTrigger>
             <CollapsibleContent className="mt-4">
               <MultiCeremonySavingsCalculator events={events} />
+            </CollapsibleContent>
+          </Collapsible>
+        </Card>
+
+        {/* Budget Categories Management */}
+        <Card className="p-4 mb-6">
+          <Collapsible open={showCategories} onOpenChange={setShowCategories}>
+            <CollapsibleTrigger asChild>
+              <button className="flex items-center justify-between w-full" data-testid="toggle-categories">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
+                    <DollarSign className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="font-semibold">Manage Budget Categories</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {categories.length} categories configured
+                    </p>
+                  </div>
+                </div>
+                {showCategories ? (
+                  <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                ) : (
+                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                )}
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-4">
+              <div className="space-y-3">
+                {categories.map((cat) => {
+                  const allocated = Number(cat.allocatedAmount) || 0;
+                  const spent = Number(cat.spentAmount) || 0;
+                  const remaining = allocated - spent;
+                  const percentSpent = allocated > 0 ? (spent / allocated) * 100 : 0;
+                  const categoryLabel = CATEGORY_LABELS[cat.category] || cat.category;
+
+                  return (
+                    <div 
+                      key={cat.id} 
+                      className="p-4 rounded-lg border bg-card"
+                      data-testid={`category-${cat.id}`}
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <p className="font-medium">{categoryLabel}</p>
+                          <p className="text-sm text-muted-foreground">
+                            ${spent.toLocaleString()} of ${allocated.toLocaleString()} spent
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => handleOpenCategoryDialog(cat)}
+                            data-testid={`button-edit-category-${cat.id}`}
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => handleDeleteCategory(cat.id)}
+                            data-testid={`button-delete-category-${cat.id}`}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </div>
+                      <Progress value={Math.min(percentSpent, 100)} className="h-2" />
+                      <div className="flex justify-between mt-1 text-xs text-muted-foreground">
+                        <span>{percentSpent.toFixed(0)}% spent</span>
+                        <span className={remaining < 0 ? "text-destructive" : "text-emerald-600"}>
+                          ${remaining.toLocaleString()} remaining
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => handleOpenCategoryDialog()}
+                  data-testid="button-add-category"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Budget Category
+                </Button>
+              </div>
             </CollapsibleContent>
           </Collapsible>
         </Card>
@@ -963,6 +1144,149 @@ export default function Budget() {
             defaultEventId={addExpenseEventId}
           />
         )}
+
+        {/* Add/Edit Budget Category Dialog */}
+        <Dialog open={dialogOpen} onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) {
+            setEditingCategory(null);
+            setUseCustomCategory(false);
+            setCustomCategoryInput("");
+            form.reset();
+          }
+        }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {editingCategory ? "Edit Budget Category" : "Add Budget Category"}
+              </DialogTitle>
+              <DialogDescription>
+                {editingCategory 
+                  ? "Update the allocated budget for this category" 
+                  : "Create a new budget category to track your spending"
+                }
+              </DialogDescription>
+            </DialogHeader>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleCategorySubmit)} className="space-y-4 py-4">
+                <FormField
+                  control={form.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Category</FormLabel>
+                      {!useCustomCategory ? (
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          disabled={!!editingCategory}
+                        >
+                          <FormControl>
+                            <SelectTrigger data-testid="select-category">
+                              <SelectValue placeholder="Select a category" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
+                              <SelectItem key={value} value={value}>
+                                {label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <FormControl>
+                          <Input
+                            placeholder="Enter custom category name"
+                            value={customCategoryInput}
+                            onChange={(e) => setCustomCategoryInput(e.target.value)}
+                            data-testid="input-custom-category"
+                          />
+                        </FormControl>
+                      )}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {!editingCategory && (
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="custom-category"
+                      checked={useCustomCategory}
+                      onCheckedChange={(checked) => setUseCustomCategory(checked === true)}
+                      data-testid="checkbox-custom-category"
+                    />
+                    <label
+                      htmlFor="custom-category"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      Use custom category name
+                    </label>
+                  </div>
+                )}
+
+                <FormField
+                  control={form.control}
+                  name="allocatedAmount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Allocated Budget</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input
+                            type="number"
+                            placeholder="10000"
+                            className="pl-8"
+                            {...field}
+                            data-testid="input-allocated-amount"
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {aiEstimate?.hasEstimate && (
+                  <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 text-sm">
+                    <div className="flex items-center gap-2 font-medium text-emerald-700 dark:text-emerald-400 mb-1">
+                      <Sparkles className="w-4 h-4" />
+                      AI Budget Estimate
+                    </div>
+                    <p className="text-emerald-600 dark:text-emerald-300">
+                      ${aiEstimate.lowEstimate.toLocaleString()} - ${aiEstimate.highEstimate.toLocaleString()}
+                    </p>
+                    {aiEstimate.notes && (
+                      <p className="text-xs text-muted-foreground mt-1">{aiEstimate.notes}</p>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex gap-2 justify-end pt-2">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={createCategoryMutation.isPending || updateCategoryMutation.isPending}
+                    data-testid="button-save-category"
+                  >
+                    {(createCategoryMutation.isPending || updateCategoryMutation.isPending) 
+                      ? "Saving..." 
+                      : editingCategory ? "Update Category" : "Add Category"
+                    }
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
