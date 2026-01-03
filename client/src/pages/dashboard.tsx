@@ -465,6 +465,18 @@ export default function Dashboard() {
       path: "/guests",
       color: "pink",
     },
+    {
+      id: "website",
+      number: 5,
+      title: wedding.guestWebsiteEnabled ? "Website Live" : "Create Website",
+      description: wedding.guestWebsiteEnabled 
+        ? "Your wedding website is published"
+        : "Build your guest-facing wedding site",
+      completed: wedding.guestWebsiteEnabled || false,
+      inProgress: false,
+      path: "/website-builder",
+      color: "cyan",
+    },
   ];
 
   const completedSteps = steps.filter(s => s.completed).length;
@@ -495,6 +507,11 @@ export default function Dashboard() {
         active: "bg-gradient-to-br from-pink-100 to-rose-100 dark:from-pink-900/40 dark:to-rose-900/40 border-pink-400 dark:border-pink-600",
         inactive: "bg-gradient-to-br from-pink-50 to-rose-50 dark:from-pink-950/30 dark:to-rose-950/30 border-pink-200 dark:border-pink-800",
         circle: "bg-pink-600",
+      },
+      cyan: {
+        active: "bg-gradient-to-br from-cyan-100 to-teal-100 dark:from-cyan-900/40 dark:to-teal-900/40 border-cyan-400 dark:border-cyan-600",
+        inactive: "bg-gradient-to-br from-cyan-50 to-teal-50 dark:from-cyan-950/30 dark:to-teal-950/30 border-cyan-200 dark:border-cyan-800",
+        circle: "bg-cyan-600",
       },
     };
     return colors[step.color] || colors.orange;
