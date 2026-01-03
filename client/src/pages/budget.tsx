@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
@@ -8,19 +8,33 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertBudgetCategorySchema, type Wedding, type BudgetCategory, type Event, type Contract, type Vendor } from "@shared/schema";
+import { insertBudgetCategorySchema, type Wedding, type BudgetCategory, type Event, type Contract, type Vendor, type Expense } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
-import { DollarSign, Edit2, Trash2, Plus, CheckCircle2, AlertCircle, TrendingUp, HelpCircle, PiggyBank, FolderPlus, PieChart, BarChart3, Check, X, Users, Calculator, Sparkles, Loader2, Calendar, Clock, Building2, ChevronRight, Copy, Share2, FileText } from "lucide-react";
+import { 
+  DollarSign, Edit2, Trash2, Plus, CheckCircle2, AlertCircle, 
+  ChevronDown, ChevronRight, ArrowLeft, Copy, Share2, FileText, 
+  Calendar, Clock, Building2, Users, Calculator, Sparkles, Loader2
+} from "lucide-react";
 import { SiWhatsapp } from "react-icons/si";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { MultiCeremonySavingsCalculator } from "@/components/multi-ceremony-savings-calculator";
+
+// Extended expense type that includes event allocations from API
+interface ExpenseWithAllocations extends Expense {
+  eventAllocations?: Array<{
+    id: string;
+    expenseId: string;
+    eventId: string;
+    allocatedAmount: string | number;
+    allocatedPercent?: string | number | null;
+  }>;
+}
 
 const budgetFormSchema = insertBudgetCategorySchema.extend({
   allocatedAmount: z.string().transform((val) => val),
@@ -40,16 +54,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   other: "Other Expenses",
 };
 
-const BUDGET_TO_VENDOR_CATEGORIES: Record<string, string[]> = {
-  catering: ['caterer', 'halal_caterer', 'mobile_food'],
-  venue: ['banquet_hall', 'gurdwara', 'temple', 'tent_service'],
-  entertainment: ['dj', 'dhol_player', 'baraat_band', 'garba_instructor', 'dandiya_equipment', 'nadaswaram_player'],
-  photography: ['photographer', 'videographer'],
-  decoration: ['decorator', 'florist', 'mandap_decorator', 'nikah_decorator', 'rangoli_artist', 'kolam_artist', 'garland_maker', 'haldi_supplies', 'pooja_items'],
-  attire: ['makeup_artist', 'turban_tier', 'mehndi_artist', 'silk_saree_rental'],
-  transportation: ['limo_service', 'horse_rental'],
-};
-
 interface AIBudgetEstimate {
   lowEstimate: number;
   highEstimate: number;
@@ -58,19 +62,22 @@ interface AIBudgetEstimate {
   hasEstimate: boolean;
 }
 
+type ContributorFilter = "all" | "bride" | "groom";
+
 export default function Budget() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("budget");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<BudgetCategory | null>(null);
   const [newTotalBudget, setNewTotalBudget] = useState("");
   const [customCategoryInput, setCustomCategoryInput] = useState("");
   const [useCustomCategory, setUseCustomCategory] = useState(false);
-  const [quickEditId, setQuickEditId] = useState<string | null>(null);
-  const [quickEditValue, setQuickEditValue] = useState("");
   const [aiEstimate, setAiEstimate] = useState<AIBudgetEstimate | null>(null);
   const [aiEstimateLoading, setAiEstimateLoading] = useState(false);
+  const [expandedEvents, setExpandedEvents] = useState<Set<string>>(new Set());
+  const [contributorFilter, setContributorFilter] = useState<ContributorFilter>("all");
+  const [editBudgetOpen, setEditBudgetOpen] = useState(false);
+  const [showSavingsCalculator, setShowSavingsCalculator] = useState(false);
 
   const { data: weddings, isLoading: weddingsLoading } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
@@ -83,44 +90,32 @@ export default function Budget() {
     enabled: !!wedding?.id,
   });
 
-  const { data: costSummary } = useQuery<{
-    categories: Record<string, { fixed: number; perHead: number; total: number; items: any[] }>;
-    grandTotal: number;
-    grandTotalFixed: number;
-    grandTotalPerHead: number;
-    eventCount: number;
-    itemCount: number;
-  }>({
-    queryKey: ["/api/weddings", wedding?.id, "cost-summary"],
-    enabled: !!wedding?.id,
-  });
-
   const { data: events = [] } = useQuery<Event[]>({
     queryKey: ["/api/events", wedding?.id],
     enabled: !!wedding?.id,
   });
 
-  // Fetch expenses to check which categories have linked expenses
-  const { data: expenses = [] } = useQuery<{ categoryId?: string | null }[]>({
+  const { data: allExpenses = [] } = useQuery<ExpenseWithAllocations[]>({
     queryKey: ["/api/expenses", wedding?.id],
     enabled: !!wedding?.id,
   });
 
-  // Fetch contracts for upcoming payments
   const { data: contracts = [] } = useQuery<Contract[]>({
     queryKey: ["/api/contracts", wedding?.id],
     enabled: !!wedding?.id,
   });
 
-  // Fetch vendors to display names in upcoming payments
   const { data: vendors = [] } = useQuery<Vendor[]>({
     queryKey: ["/api/vendors"],
   });
 
-  // Helper to check if a category has linked expenses
-  const hasLinkedExpenses = (categoryId: string) => {
-    return expenses.some((e) => e.categoryId === categoryId);
-  };
+  const { data: costSummary } = useQuery<{
+    categories: Record<string, { fixed: number; perHead: number; total: number; items: any[] }>;
+    grandTotal: number;
+  }>({
+    queryKey: ["/api/weddings", wedding?.id, "cost-summary"],
+    enabled: !!wedding?.id,
+  });
 
   // Get vendor name by ID
   const getVendorName = (vendorId: string) => {
@@ -134,7 +129,6 @@ export default function Budget() {
     amount: number | string;
     dueDate: string;
     status: string;
-    paidDate?: string;
   }
 
   interface UpcomingPayment {
@@ -146,57 +140,164 @@ export default function Budget() {
     dueDate: Date;
     status: string;
     daysUntilDue: number;
+    isCash?: boolean;
   }
 
-  const upcomingPayments: UpcomingPayment[] = contracts
-    .flatMap((contract) => {
-      // Handle paymentMilestones that might be null, string, or array
-      let milestones: PaymentMilestone[] = [];
-      if (contract.paymentMilestones) {
-        if (typeof contract.paymentMilestones === "string") {
-          try {
-            milestones = JSON.parse(contract.paymentMilestones);
-          } catch {
-            milestones = [];
+  const upcomingPayments: UpcomingPayment[] = useMemo(() => {
+    return contracts
+      .flatMap((contract) => {
+        let milestones: PaymentMilestone[] = [];
+        if (contract.paymentMilestones) {
+          if (typeof contract.paymentMilestones === "string") {
+            try {
+              milestones = JSON.parse(contract.paymentMilestones);
+            } catch {
+              milestones = [];
+            }
+          } else if (Array.isArray(contract.paymentMilestones)) {
+            milestones = contract.paymentMilestones as PaymentMilestone[];
           }
-        } else if (Array.isArray(contract.paymentMilestones)) {
-          milestones = contract.paymentMilestones as PaymentMilestone[];
         }
+
+        return milestones
+          .filter((m) => m && m.status !== "paid" && m.dueDate)
+          .map((milestone) => {
+            const dueDate = new Date(milestone.dueDate);
+            if (isNaN(dueDate.getTime())) return null;
+            const now = new Date();
+            const daysUntilDue = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+            const amount = parseFloat(String(milestone.amount));
+            return {
+              vendorId: contract.vendorId,
+              vendorName: getVendorName(contract.vendorId),
+              contractId: contract.id,
+              milestoneName: milestone.name || "Payment",
+              amount: isNaN(amount) ? 0 : amount,
+              dueDate,
+              status: milestone.status || "pending",
+              daysUntilDue,
+              isCash: milestone.name?.toLowerCase().includes("cash"),
+            };
+          })
+          .filter((p): p is UpcomingPayment => p !== null);
+      })
+      .filter((p) => p.daysUntilDue >= -30)
+      .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime())
+      .slice(0, 10);
+  }, [contracts, vendors]);
+
+  // Compute expenses grouped by event with contributor filtering
+  const expensesByEvent = useMemo(() => {
+    const eventMap: Record<string, { 
+      event: Event | null; 
+      expenses: Array<ExpenseWithAllocations & { allocatedAmount?: number; paymentStatus?: string }>;
+      total: number;
+      estimatedTotal?: number;
+    }> = {};
+
+    // Initialize with all events
+    events.forEach((event) => {
+      eventMap[event.id] = {
+        event,
+        expenses: [],
+        total: 0,
+        estimatedTotal: costSummary?.categories?.[event.id]?.total || 0,
+      };
+    });
+
+    // Add "Unassigned" category for expenses without events
+    eventMap["unassigned"] = {
+      event: null,
+      expenses: [],
+      total: 0,
+    };
+
+    // Filter expenses by contributor
+    // Uses paidById to match team member IDs, or falls back to name matching
+    const filteredExpenses = allExpenses.filter((expense) => {
+      if (contributorFilter === "all") return true;
+      
+      const paidByName = expense.paidByName?.toLowerCase() || "";
+      const paidById = expense.paidById?.toLowerCase() || "";
+      
+      // Check common patterns for bride's side
+      if (contributorFilter === "bride") {
+        const bridePatterns = ["bride", "wife", "partner1", wedding?.partner1Name?.toLowerCase() || ""].filter(Boolean);
+        return bridePatterns.some(pattern => 
+          paidByName.includes(pattern) || paidById.includes(pattern)
+        );
       }
+      
+      // Check common patterns for groom's side
+      if (contributorFilter === "groom") {
+        const groomPatterns = ["groom", "husband", "partner2", wedding?.partner2Name?.toLowerCase() || ""].filter(Boolean);
+        return groomPatterns.some(pattern => 
+          paidByName.includes(pattern) || paidById.includes(pattern)
+        );
+      }
+      
+      return true;
+    });
 
-      return milestones
-        .filter((m) => m && m.status !== "paid" && m.dueDate)
-        .map((milestone) => {
-          const dueDate = new Date(milestone.dueDate);
-          // Validate date
-          if (isNaN(dueDate.getTime())) {
-            return null;
+    // Assign expenses to events
+    filteredExpenses.forEach((expense) => {
+      // Check for multi-event allocations (embedded in expense object from API)
+      const allocations = expense.eventAllocations || [];
+      
+      if (allocations.length > 0) {
+        // Multi-event expense
+        allocations.forEach((allocation) => {
+          const eventId = allocation.eventId || "unassigned";
+          if (!eventMap[eventId]) {
+            eventMap[eventId] = { event: null, expenses: [], total: 0 };
           }
-          const now = new Date();
-          const daysUntilDue = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-          const amount = parseFloat(String(milestone.amount));
-          return {
-            vendorId: contract.vendorId,
-            vendorName: getVendorName(contract.vendorId),
-            contractId: contract.id,
-            milestoneName: milestone.name || "Payment",
-            amount: isNaN(amount) ? 0 : amount,
-            dueDate,
-            status: milestone.status || "pending",
-            daysUntilDue,
-          };
-        })
-        .filter((p): p is UpcomingPayment => p !== null);
-    })
-    .filter((p) => p.daysUntilDue >= -30) // Show overdue up to 30 days
-    .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime())
-    .slice(0, 10); // Show top 10 upcoming
+          const allocatedAmount = parseFloat(allocation.allocatedAmount?.toString() || "0");
+          eventMap[eventId].expenses.push({
+            ...expense,
+            allocatedAmount,
+          });
+          eventMap[eventId].total += allocatedAmount;
+        });
+      } else if (expense.eventId) {
+        // Single event expense
+        const eventId = expense.eventId;
+        if (!eventMap[eventId]) {
+          eventMap[eventId] = { event: null, expenses: [], total: 0 };
+        }
+        const amount = parseFloat(expense.amount?.toString() || "0");
+        eventMap[eventId].expenses.push(expense);
+        eventMap[eventId].total += amount;
+      } else {
+        // Unassigned expense
+        const amount = parseFloat(expense.amount?.toString() || "0");
+        eventMap["unassigned"].expenses.push(expense);
+        eventMap["unassigned"].total += amount;
+      }
+    });
 
-  const totalUpcoming30Days = upcomingPayments
-    .filter((p) => p.daysUntilDue >= 0 && p.daysUntilDue <= 30)
-    .reduce((sum, p) => sum + p.amount, 0);
+    return eventMap;
+  }, [events, allExpenses, contributorFilter, wedding, costSummary]);
 
-  const overduePayments = upcomingPayments.filter((p) => p.daysUntilDue < 0);
+  // Calculate totals
+  const total = parseFloat(wedding?.totalBudget || "0");
+  const totalSpent = useMemo(() => {
+    return Object.values(expensesByEvent).reduce((sum, e) => sum + e.total, 0);
+  }, [expensesByEvent]);
+  const remainingBudget = total - totalSpent;
+  const spentPercentage = total > 0 ? (totalSpent / total) * 100 : 0;
+
+  // Toggle event expansion
+  const toggleEvent = (eventId: string) => {
+    setExpandedEvents((prev) => {
+      const next = new Set(prev);
+      if (next.has(eventId)) {
+        next.delete(eventId);
+      } else {
+        next.add(eventId);
+      }
+      return next;
+    });
+  };
 
   // Generate budget summary for sharing
   const generateBudgetSummary = () => {
@@ -212,35 +313,40 @@ export default function Budget() {
     summary += `${"─".repeat(30)}\n\n`;
     
     summary += `TOTAL BUDGET: $${total.toLocaleString()}\n`;
-    summary += `SPENT SO FAR: $${totalSpent.toLocaleString()} (${total > 0 ? ((totalSpent / total) * 100).toFixed(0) : 0}%)\n`;
+    summary += `SPENT SO FAR: $${totalSpent.toLocaleString()} (${spentPercentage.toFixed(0)}%)\n`;
     summary += `REMAINING: $${remainingBudget.toLocaleString()}\n\n`;
     
-    if (categories.length > 0) {
-      summary += `BREAKDOWN BY CATEGORY:\n`;
-      summary += `${"─".repeat(30)}\n`;
-      categories.forEach((cat) => {
-        const allocated = parseFloat(cat.allocatedAmount.toString());
-        const spent = parseFloat(cat.spentAmount?.toString() || "0");
-        const eventCost = costSummary?.categories?.[cat.id]?.total || 0;
-        const totalCatSpent = spent + eventCost;
-        const catName = CATEGORY_LABELS[cat.category] || cat.category;
-        summary += `${catName}:\n`;
-        summary += `  Allocated: $${allocated.toLocaleString()}\n`;
-        summary += `  Spent: $${totalCatSpent.toLocaleString()}\n`;
-        summary += `  ${totalCatSpent <= allocated ? "On track" : "Over budget"}\n\n`;
+    summary += `BREAKDOWN BY EVENT:\n`;
+    summary += `${"─".repeat(30)}\n`;
+    
+    events.forEach((event) => {
+      const eventData = expensesByEvent[event.id];
+      if (eventData && eventData.total > 0) {
+        summary += `\n${event.name}: $${eventData.total.toLocaleString()}\n`;
+        eventData.expenses.forEach((exp) => {
+          const amount = exp.allocatedAmount || parseFloat(exp.amount?.toString() || "0");
+          summary += `  - ${exp.description}: $${amount.toLocaleString()}\n`;
+        });
+      }
+    });
+
+    // Include unassigned expenses
+    const unassigned = expensesByEvent["unassigned"];
+    if (unassigned && unassigned.total > 0) {
+      summary += `\nGeneral/Unassigned: $${unassigned.total.toLocaleString()}\n`;
+      unassigned.expenses.forEach((exp) => {
+        const amount = exp.allocatedAmount || parseFloat(exp.amount?.toString() || "0");
+        summary += `  - ${exp.description}: $${amount.toLocaleString()}\n`;
       });
     }
 
     if (upcomingPayments.length > 0) {
-      summary += `UPCOMING PAYMENTS:\n`;
+      summary += `\nUPCOMING PAYMENTS:\n`;
       summary += `${"─".repeat(30)}\n`;
       upcomingPayments.slice(0, 5).forEach((payment) => {
         const dateStr = payment.dueDate.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-        summary += `${dateStr}: $${payment.amount.toLocaleString()} to ${payment.vendorName}\n`;
+        summary += `${dateStr}: $${payment.amount.toLocaleString()} - ${payment.vendorName}\n`;
       });
-      if (totalUpcoming30Days > 0) {
-        summary += `\nTotal due in next 30 days: $${totalUpcoming30Days.toLocaleString()}\n`;
-      }
     }
 
     summary += `\n─ Generated via Viah.me`;
@@ -251,85 +357,65 @@ export default function Budget() {
     const summary = generateBudgetSummary();
     try {
       await navigator.clipboard.writeText(summary);
-      toast({
-        title: "Copied to clipboard",
-        description: "Budget summary ready to paste",
-      });
+      toast({ title: "Copied to clipboard", description: "Budget summary ready to paste" });
     } catch {
-      toast({
-        title: "Failed to copy",
-        description: "Please try again",
-        variant: "destructive",
-      });
+      toast({ title: "Failed to copy", variant: "destructive" });
     }
   };
 
   const handleWhatsAppShare = () => {
     const summary = generateBudgetSummary();
-    const encoded = encodeURIComponent(summary);
-    window.open(`https://wa.me/?text=${encoded}`, "_blank");
+    window.open(`https://wa.me/?text=${encodeURIComponent(summary)}`, "_blank");
   };
 
   const handlePrintPDF = () => {
-    // Create a printable version
     const printWindow = window.open("", "_blank");
     if (!printWindow) {
-      toast({
-        title: "Popup blocked",
-        description: "Please allow popups to generate PDF",
-        variant: "destructive",
-      });
+      toast({ title: "Popup blocked", description: "Please allow popups", variant: "destructive" });
       return;
     }
 
     const weddingName = wedding?.partner1Name && wedding?.partner2Name 
       ? `${wedding.partner1Name} & ${wedding.partner2Name}'s Wedding` 
       : "Wedding";
-    const weddingDate = wedding?.weddingDate 
-      ? new Date(wedding.weddingDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
-      : "";
 
-    let categoriesHtml = "";
-    categories.forEach((cat) => {
-      const allocated = parseFloat(cat.allocatedAmount.toString());
-      const spent = parseFloat(cat.spentAmount?.toString() || "0");
-      const eventCost = costSummary?.categories?.[cat.id]?.total || 0;
-      const totalCatSpent = spent + eventCost;
-      const percentage = allocated > 0 ? (totalCatSpent / allocated) * 100 : 0;
-      const catName = CATEGORY_LABELS[cat.category] || cat.category;
-      const isOver = totalCatSpent > allocated;
-      categoriesHtml += `
-        <tr>
-          <td style="padding: 8px; border-bottom: 1px solid #eee;">${catName}</td>
-          <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">$${allocated.toLocaleString()}</td>
-          <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right; ${isOver ? 'color: #dc2626;' : ''}">$${totalCatSpent.toLocaleString()}</td>
-          <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${percentage.toFixed(0)}%</td>
-        </tr>
-      `;
+    let eventsHtml = "";
+    events.forEach((event) => {
+      const eventData = expensesByEvent[event.id];
+      if (eventData && eventData.expenses.length > 0) {
+        eventsHtml += `
+          <div style="margin-bottom: 16px; border-bottom: 1px solid #eee; padding-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 8px;">
+              <span>${event.name}</span>
+              <span>$${eventData.total.toLocaleString()}</span>
+            </div>
+            ${eventData.expenses.map(exp => `
+              <div style="display: flex; justify-content: space-between; padding-left: 16px; font-size: 14px; color: #666;">
+                <span>${exp.description}</span>
+                <span>$${(exp.allocatedAmount || parseFloat(exp.amount?.toString() || "0")).toLocaleString()}</span>
+              </div>
+            `).join("")}
+          </div>
+        `;
+      }
     });
 
-    let paymentsHtml = "";
-    if (upcomingPayments.length > 0) {
-      paymentsHtml = `
-        <h3 style="margin-top: 24px; color: #666;">Upcoming Payments</h3>
-        <table style="width: 100%; border-collapse: collapse; margin-top: 8px;">
-          <thead>
-            <tr style="background: #f5f5f5;">
-              <th style="padding: 8px; text-align: left;">Due Date</th>
-              <th style="padding: 8px; text-align: left;">Vendor</th>
-              <th style="padding: 8px; text-align: right;">Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${upcomingPayments.slice(0, 10).map((p) => `
-              <tr>
-                <td style="padding: 8px; border-bottom: 1px solid #eee;">${p.dueDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</td>
-                <td style="padding: 8px; border-bottom: 1px solid #eee;">${p.vendorName}</td>
-                <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">$${p.amount.toLocaleString()}</td>
-              </tr>
-            `).join("")}
-          </tbody>
-        </table>
+    // Add unassigned expenses
+    const unassigned = expensesByEvent["unassigned"];
+    if (unassigned && unassigned.expenses.length > 0) {
+      eventsHtml += `
+        <div style="margin-bottom: 16px; border-bottom: 1px solid #eee; padding-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 8px; color: #666;">
+            <span>General / Unassigned</span>
+            <span>$${unassigned.total.toLocaleString()}</span>
+          </div>
+          ${unassigned.expenses.map(exp => `
+            <div style="display: flex; justify-content: space-between; padding-left: 16px; font-size: 14px; color: #666;">
+              <span>${exp.description}</span>
+              <span>$${(exp.allocatedAmount || parseFloat(exp.amount?.toString() || "0")).toLocaleString()}</span>
+            </div>
+          `).join("")}
+        </div>
       `;
     }
 
@@ -337,61 +423,26 @@ export default function Budget() {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>${weddingName} - Budget Summary</title>
+        <title>${weddingName} - Budget</title>
         <style>
-          body { font-family: system-ui, -apple-system, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
-          h1 { color: #059669; margin-bottom: 4px; }
-          h2 { color: #333; margin-top: 24px; }
-          .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 24px 0; }
-          .summary-card { background: #f9fafb; padding: 16px; border-radius: 8px; }
-          .summary-label { font-size: 12px; color: #666; margin-bottom: 4px; }
-          .summary-value { font-size: 24px; font-weight: bold; }
-          .over-budget { color: #dc2626; }
-          table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-          th { text-align: left; padding: 8px; background: #f5f5f5; }
-          .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #eee; font-size: 12px; color: #999; }
+          body { font-family: system-ui, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
+          h1 { color: #059669; }
+          .summary { background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 24px; }
+          .footer { margin-top: 40px; font-size: 12px; color: #999; }
         </style>
       </head>
       <body>
         <h1>${weddingName}</h1>
-        ${weddingDate ? `<p style="color: #666; margin-top: 0;">Wedding Date: ${weddingDate}</p>` : ""}
-        <h2>Budget Summary</h2>
-        
-        <div class="summary-grid">
-          <div class="summary-card">
-            <div class="summary-label">Total Budget</div>
-            <div class="summary-value">$${total.toLocaleString()}</div>
-          </div>
-          <div class="summary-card">
-            <div class="summary-label">Spent So Far</div>
-            <div class="summary-value">$${totalSpent.toLocaleString()}</div>
-          </div>
-          <div class="summary-card">
-            <div class="summary-label">Remaining</div>
-            <div class="summary-value ${remainingBudget < 0 ? 'over-budget' : ''}">$${remainingBudget.toLocaleString()}</div>
+        <div class="summary">
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+            <div><strong>Total Budget</strong><br/>$${total.toLocaleString()}</div>
+            <div><strong>Spent</strong><br/>$${totalSpent.toLocaleString()}</div>
+            <div><strong>Remaining</strong><br/>$${remainingBudget.toLocaleString()}</div>
           </div>
         </div>
-
-        <h3 style="color: #666;">Spending by Category</h3>
-        <table>
-          <thead>
-            <tr style="background: #f5f5f5;">
-              <th style="padding: 8px;">Category</th>
-              <th style="padding: 8px; text-align: right;">Allocated</th>
-              <th style="padding: 8px; text-align: right;">Spent</th>
-              <th style="padding: 8px; text-align: right;">% Used</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${categoriesHtml}
-          </tbody>
-        </table>
-
-        ${paymentsHtml}
-
-        <div class="footer">
-          Generated on ${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })} via Viah.me
-        </div>
+        <h2>Breakdown by Event</h2>
+        ${eventsHtml}
+        <div class="footer">Generated via Viah.me</div>
       </body>
       </html>
     `);
@@ -409,183 +460,18 @@ export default function Budget() {
     },
   });
 
-  const createMutation = useMutation({
-    mutationFn: async (data: BudgetFormData) => {
-      const response = await apiRequest("POST", "/api/budget-categories", {
-        ...data,
-        allocatedAmount: data.allocatedAmount,
-        spentAmount: data.spentAmount || "0",
-      });
-      return await response.json() as BudgetCategory;
-    },
-    onSuccess: async (newCategory: BudgetCategory) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/budget-categories", wedding?.id] });
-      setDialogOpen(false);
-      form.reset();
-      toast({
-        title: "Category added",
-        description: "Your category is ready to track expenses",
-      });
-      
-      // Fetch and save AI estimate in background for the new category
-      if (wedding?.location && newCategory.category) {
-        try {
-          const response = await apiRequest("POST", "/api/budget-categories/estimate", {
-            category: newCategory.category,
-            city: wedding.location,
-            tradition: wedding.tradition || undefined,
-            guestCount: wedding.guestCountEstimate || undefined,
-          });
-          const estimate = await response.json();
-          if (estimate.hasEstimate) {
-            await apiRequest("PATCH", `/api/budget-categories/${newCategory.id}`, {
-              aiEstimate: estimate,
-              lastEstimatedAt: new Date().toISOString(),
-            });
-            queryClient.invalidateQueries({ queryKey: ["/api/budget-categories", wedding?.id] });
-          }
-        } catch (error) {
-          console.error("Failed to fetch AI estimate for new category:", error);
-        }
-      }
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to add budget category",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<BudgetFormData> }) => {
-      const payload = {
-        ...data,
-        allocatedAmount: data.allocatedAmount,
-        spentAmount: data.spentAmount,
-      };
-      return await apiRequest("PATCH", `/api/budget-categories/${id}`, payload);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/budget-categories", wedding?.id] });
-      setDialogOpen(false);
-      setEditingCategory(null);
-      form.reset();
-      toast({
-        title: "Category updated",
-        description: "Your changes have been saved",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to update budget category",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      return await apiRequest("DELETE", `/api/budget-categories/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/budget-categories", wedding?.id] });
-      setDialogOpen(false);
-      setEditingCategory(null);
-      form.reset();
-      toast({
-        title: "Category deleted",
-        description: "Budget category has been removed",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to delete budget category",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const quickUpdateSpentMutation = useMutation({
-    mutationFn: async ({ id, spentAmount }: { id: string; spentAmount: string }) => {
-      return await apiRequest("PATCH", `/api/budget-categories/${id}`, { spentAmount });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/budget-categories", wedding?.id] });
-      setQuickEditId(null);
-      setQuickEditValue("");
-      toast({
-        title: "Spent amount updated",
-        description: "Your actual spending has been recorded",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to update spent amount",
-        variant: "destructive",
-      });
-    },
-  });
-
   const updateWeddingBudgetMutation = useMutation({
     mutationFn: async (totalBudget: string) => {
-      if (!wedding?.id) {
-        throw new Error("Wedding ID not found");
-      }
-      return await apiRequest("PATCH", `/api/weddings/${wedding.id}`, {
-        totalBudget,
-      });
-    },
-    onSuccess: () => {
-      queryClient.setQueryData<Wedding[]>(["/api/weddings"], (oldData) => {
-        if (!oldData || !wedding?.id) return oldData;
-        return oldData.map(w => 
-          w.id === wedding.id 
-            ? { ...w, totalBudget: newTotalBudget }
-            : w
-        );
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/weddings"] });
-      toast({
-        title: "Budget updated",
-        description: "Your total wedding budget has been saved",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to update budget",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const confirmBudgetMutation = useMutation({
-    mutationFn: async () => {
-      if (!wedding?.id) {
-        throw new Error("Wedding ID not found");
-      }
-      return await apiRequest("PATCH", `/api/weddings/${wedding.id}`, {
-        budgetConfirmed: true,
-      });
+      if (!wedding?.id) throw new Error("Wedding ID not found");
+      return await apiRequest("PATCH", `/api/weddings/${wedding.id}`, { totalBudget });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/weddings"] });
-      toast({
-        title: "Budget confirmed",
-        description: "Your budget categories have been confirmed. You can still make changes anytime.",
-      });
+      setEditBudgetOpen(false);
+      toast({ title: "Budget updated", description: "Your total wedding budget has been saved" });
     },
     onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to confirm budget",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Failed to update budget", variant: "destructive" });
     },
   });
 
@@ -604,155 +490,23 @@ export default function Budget() {
     }
   }, [wedding?.id, wedding?.totalBudget, form]);
 
-  const fetchAndSaveAIEstimate = async (category: BudgetCategory) => {
-    if (!wedding?.location || !category.category) return;
-    
-    setAiEstimateLoading(true);
-    
-    try {
-      const response = await apiRequest("POST", "/api/budget-categories/estimate", {
-        category: category.category,
-        city: wedding.location,
-        tradition: wedding.tradition || undefined,
-        guestCount: wedding.guestCountEstimate || undefined,
-      });
-      const data = await response.json() as AIBudgetEstimate;
-      setAiEstimate(data);
-      
-      // Save the estimate to the category so we don't fetch again
-      if (data.hasEstimate) {
-        await apiRequest("PATCH", `/api/budget-categories/${category.id}`, {
-          aiEstimate: data,
-          lastEstimatedAt: new Date().toISOString(),
-        });
-        // Invalidate cache to reflect the saved estimate
-        queryClient.invalidateQueries({ queryKey: ["/api/budget-categories", wedding.id] });
-      }
-    } catch (error) {
-      console.error("Failed to fetch AI estimate:", error);
-      setAiEstimate({ lowEstimate: 0, highEstimate: 0, averageEstimate: 0, notes: "", hasEstimate: false });
-    } finally {
-      setAiEstimateLoading(false);
-    }
-  };
-
-  const handleAddCategory = () => {
-    setEditingCategory(null);
-    setUseCustomCategory(true);
-    setCustomCategoryInput("");
-    setAiEstimate(null);
-    form.reset({
-      category: "",
-      allocatedAmount: "0",
-      spentAmount: "0",
-      weddingId: wedding?.id || "",
-    });
-    setDialogOpen(true);
-  };
-
-  const handleEditCategory = (category: BudgetCategory) => {
-    setEditingCategory(category);
-    setUseCustomCategory(false);
-    setCustomCategoryInput("");
-    
-    // Check if we already have a cached AI estimate
-    const cachedEstimate = category.aiEstimate as AIBudgetEstimate | null;
-    if (cachedEstimate?.hasEstimate) {
-      setAiEstimate(cachedEstimate);
-    } else {
-      setAiEstimate(null);
-      // Fetch from AI and save it
-      fetchAndSaveAIEstimate(category);
-    }
-    
-    form.reset({
-      category: category.category as any,
-      allocatedAmount: category.allocatedAmount.toString(),
-      spentAmount: category.spentAmount?.toString() || "0",
-      weddingId: category.weddingId,
-    });
-    setDialogOpen(true);
-  };
-
-  const handleSubmit = (data: BudgetFormData) => {
-    const finalData = {
-      ...data,
-      category: useCustomCategory ? customCategoryInput : data.category,
-    };
-
-    if (useCustomCategory && !customCategoryInput.trim()) {
-      toast({
-        title: "Invalid Category",
-        description: "Please enter a category name",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const currentAllocated = categories
-      .filter(cat => editingCategory ? cat.id !== editingCategory.id : true)
-      .reduce((sum, cat) => sum + parseFloat(cat.allocatedAmount.toString()), 0);
-    
-    const newAllocation = parseFloat(finalData.allocatedAmount);
-    const totalAfterChange = currentAllocated + newAllocation;
-    const totalBudget = parseFloat(wedding?.totalBudget || "0");
-    
-    if (totalAfterChange > totalBudget) {
-      const excess = totalAfterChange - totalBudget;
-      toast({
-        title: "Budget Exceeded",
-        description: `This would exceed your budget by $${excess.toLocaleString()}`,
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (editingCategory) {
-      updateMutation.mutate({ id: editingCategory.id, data: finalData });
-    } else {
-      createMutation.mutate(finalData);
-    }
-  };
-
-  const handleDelete = () => {
-    if (editingCategory) {
-      deleteMutation.mutate(editingCategory.id);
-    }
-  };
-
   const handleSaveBudget = () => {
     if (!newTotalBudget || parseFloat(newTotalBudget) <= 0) {
-      toast({
-        title: "Please enter a budget",
-        description: "Enter your total wedding budget to continue",
-        variant: "destructive",
-      });
+      toast({ title: "Please enter a budget", variant: "destructive" });
       return;
     }
     updateWeddingBudgetMutation.mutate(newTotalBudget);
   };
 
-  const total = parseFloat(wedding?.totalBudget || "0");
-  
-  const getEventCostForCategory = (categoryId: string): number => {
-    if (!costSummary?.categories) return 0;
-    return costSummary.categories[categoryId]?.total || 0;
+  // Get expense payment status
+  const getPaymentStatus = (expense: Expense): { label: string; variant: "default" | "secondary" | "destructive" | "outline" } => {
+    // This would ideally come from linked contracts or a status field
+    // For now, derive from notes or a status field if available
+    const notes = expense.notes?.toLowerCase() || "";
+    if (notes.includes("paid")) return { label: "PAID", variant: "default" };
+    if (notes.includes("deposit")) return { label: "DEPOSIT REQ", variant: "outline" };
+    return { label: "PENDING", variant: "secondary" };
   };
-  
-  const totalEventCosts = costSummary?.grandTotal || 0;
-  const totalManualSpent = categories.reduce(
-    (sum, cat) => sum + parseFloat(cat.spentAmount?.toString() || "0"),
-    0
-  );
-  const totalSpent = totalManualSpent + totalEventCosts;
-  
-  const totalAllocated = categories.reduce(
-    (sum, cat) => sum + parseFloat(cat.allocatedAmount.toString()),
-    0
-  );
-  
-  const remainingBudget = total - totalSpent;
-  const unallocated = Math.max(0, total - totalAllocated);
 
   if (weddingsLoading || categoriesLoading) {
     return (
@@ -770,849 +524,381 @@ export default function Budget() {
 
   return (
     <div className="min-h-screen bg-background">
-      <main className="container mx-auto px-6 py-8 max-w-6xl">
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent mb-2" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-                Wedding Budget
-              </h1>
-              <p className="text-muted-foreground">
-                Plan and track your wedding finances step by step
+      <main className="container mx-auto px-4 py-6 max-w-4xl">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setLocation("/")}
+              data-testid="button-back"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <h1 className="text-2xl font-bold" data-testid="text-budget-title">Budget Planner</h1>
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" data-testid="button-share-budget">
+                <Share2 className="w-4 h-4 mr-2" />
+                Share
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleCopyBudget} data-testid="button-copy-budget">
+                <Copy className="w-4 h-4 mr-2" />
+                Copy to Clipboard
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleWhatsAppShare} data-testid="button-whatsapp-budget">
+                <SiWhatsapp className="w-4 h-4 mr-2 text-green-600" />
+                Share via WhatsApp
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handlePrintPDF} data-testid="button-pdf-budget">
+                <FileText className="w-4 h-4 mr-2" />
+                Print / Save as PDF
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {/* Budget Summary Card */}
+        <Card className="p-6 mb-6" data-testid="card-budget-summary">
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+            <div className="flex items-center gap-6">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Budget</p>
+                <button 
+                  onClick={() => setEditBudgetOpen(true)}
+                  className="text-3xl font-bold font-mono hover:text-primary transition-colors"
+                  data-testid="button-edit-total-budget"
+                >
+                  ${total.toLocaleString()}
+                </button>
+              </div>
+              <div className="h-12 w-px bg-border" />
+              <div>
+                <p className="text-sm text-muted-foreground">Spent</p>
+                <p className="text-2xl font-bold font-mono" data-testid="text-total-spent">
+                  ${totalSpent.toLocaleString()}
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-muted-foreground">Remaining</p>
+              <p className={`text-2xl font-bold font-mono ${remainingBudget < 0 ? "text-destructive" : "text-emerald-600"}`} data-testid="text-remaining">
+                ${remainingBudget.toLocaleString()}
               </p>
             </div>
           </div>
+          <Progress value={Math.min(spentPercentage, 100)} className="h-3" />
+          <p className="text-sm text-muted-foreground mt-2 text-center">
+            {spentPercentage.toFixed(0)}% of budget spent
+          </p>
+        </Card>
 
-          {/* One-time confirmation banner */}
-          {!wedding.budgetConfirmed && categories.length > 0 && (
-            <Card className="p-4 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 border-emerald-300 dark:border-emerald-700">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-emerald-800 dark:text-emerald-200">Review Your Budget Categories</h3>
-                    <p className="text-sm text-emerald-700 dark:text-emerald-300">
-                      We've allocated your ${parseFloat(wedding.totalBudget || "0").toLocaleString()} budget across {categories.length} categories based on typical wedding spending. Review and confirm when ready.
-                    </p>
-                  </div>
-                </div>
-                <Button 
-                  onClick={() => confirmBudgetMutation.mutate()}
-                  disabled={confirmBudgetMutation.isPending}
-                  className="bg-emerald-600 text-white shrink-0"
-                  data-testid="button-confirm-budget"
-                >
-                  {confirmBudgetMutation.isPending ? "Confirming..." : "Confirm Budget"}
-                </Button>
-              </div>
-            </Card>
-          )}
-
-          {/* Getting Started Guide - Clickable Steps (same design as Team section) */}
-          <div className="grid md:grid-cols-4 gap-4 cursor-pointer">
-            <Card 
-              className={`p-6 transition-all hover-elevate ${activeTab === "budget" ? "bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/40 dark:to-teal-900/40 border-emerald-400 dark:border-emerald-600" : "bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 border-emerald-200 dark:border-emerald-800"}`}
-              onClick={() => setActiveTab("budget")}
-              data-testid="step-card-1"
+        {/* Contributor Filter */}
+        <div className="flex items-center gap-2 mb-6 flex-wrap">
+          <span className="text-sm font-medium text-muted-foreground">Contributors:</span>
+          <div className="flex gap-2">
+            <Button
+              variant={contributorFilter === "all" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setContributorFilter("all")}
+              data-testid="filter-all"
             >
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="bg-emerald-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">1</div>
-                  <span className="font-semibold">Set Budget</span>
-                </div>
-                <p className="text-sm text-muted-foreground ml-10">
-                  Enter your total wedding budget amount.
-                </p>
-              </div>
-            </Card>
-
-            <Card 
-              className={`p-6 transition-all hover-elevate ${activeTab === "categories" ? "bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/40 dark:to-teal-900/40 border-emerald-400 dark:border-emerald-600" : "bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 border-emerald-200 dark:border-emerald-800"}`}
-              onClick={() => setActiveTab("categories")}
-              data-testid="step-card-2"
+              All
+            </Button>
+            <Button
+              variant={contributorFilter === "bride" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setContributorFilter("bride")}
+              className={contributorFilter === "bride" ? "bg-rose-500 hover:bg-rose-600" : ""}
+              data-testid="filter-bride"
             >
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="bg-emerald-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">2</div>
-                  <span className="font-semibold">Create Categories</span>
-                </div>
-                <p className="text-sm text-muted-foreground ml-10">
-                  Add categories like Catering, Venue, Photography, etc.
-                </p>
-              </div>
-            </Card>
-
-            <Card 
-              className={`p-6 transition-all hover-elevate ${activeTab === "allocate" ? "bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/40 dark:to-teal-900/40 border-emerald-400 dark:border-emerald-600" : "bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 border-emerald-200 dark:border-emerald-800"}`}
-              onClick={() => setActiveTab("allocate")}
-              data-testid="step-card-3"
+              {wedding.partner1Name || "Bride"}'s Family
+            </Button>
+            <Button
+              variant={contributorFilter === "groom" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setContributorFilter("groom")}
+              className={contributorFilter === "groom" ? "bg-amber-500 hover:bg-amber-600" : ""}
+              data-testid="filter-groom"
             >
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="bg-emerald-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">3</div>
-                  <span className="font-semibold">Divide Budget</span>
-                </div>
-                <p className="text-sm text-muted-foreground ml-10">
-                  Assign amounts to each category from your total budget.
-                </p>
-              </div>
-            </Card>
-
-            <Card 
-              className={`p-6 transition-all hover-elevate ${activeTab === "track" ? "bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/40 dark:to-teal-900/40 border-emerald-400 dark:border-emerald-600" : "bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 border-emerald-200 dark:border-emerald-800"}`}
-              onClick={() => setActiveTab("track")}
-              data-testid="step-card-4"
-            >
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="bg-emerald-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">4</div>
-                  <span className="font-semibold">Track Spending</span>
-                </div>
-                <p className="text-sm text-muted-foreground ml-10">
-                  Monitor actual spending vs. planned amounts.
-                </p>
-              </div>
-            </Card>
+              {wedding.partner2Name || "Groom"}'s Family
+            </Button>
           </div>
-
-          {/* Upcoming Payments Timeline */}
-          {upcomingPayments.length > 0 && (
-            <Card className="p-6" data-testid="card-upcoming-payments">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                    <Calendar className="w-5 h-5 text-amber-600" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-bold">Upcoming Payments</h2>
-                    <p className="text-sm text-muted-foreground">
-                      {totalUpcoming30Days > 0 ? (
-                        <><span className="font-semibold text-amber-600">${totalUpcoming30Days.toLocaleString()}</span> due in next 30 days</>
-                      ) : (
-                        "Vendor payment milestones from contracts"
-                      )}
-                    </p>
-                  </div>
-                </div>
-                {overduePayments.length > 0 && (
-                  <Badge variant="destructive" className="gap-1">
-                    <AlertCircle className="w-3 h-3" />
-                    {overduePayments.length} Overdue
-                  </Badge>
-                )}
-              </div>
-
-              <div className="space-y-3">
-                {upcomingPayments.map((payment, index) => {
-                  const isOverdue = payment.daysUntilDue < 0;
-                  const isUrgent = payment.daysUntilDue >= 0 && payment.daysUntilDue <= 7;
-                  const isSoon = payment.daysUntilDue > 7 && payment.daysUntilDue <= 30;
-
-                  return (
-                    <div
-                      key={`${payment.contractId}-${index}`}
-                      className={`flex items-center gap-4 p-4 rounded-lg border ${
-                        isOverdue
-                          ? "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800"
-                          : isUrgent
-                          ? "bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800"
-                          : "bg-muted/30"
-                      }`}
-                      data-testid={`payment-item-${index}`}
-                    >
-                      <div className="flex-shrink-0">
-                        <div className={`w-12 h-12 rounded-lg flex flex-col items-center justify-center text-center ${
-                          isOverdue
-                            ? "bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300"
-                            : isUrgent
-                            ? "bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300"
-                            : isSoon
-                            ? "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300"
-                            : "bg-muted text-muted-foreground"
-                        }`}>
-                          <span className="text-xs font-medium">
-                            {payment.dueDate.toLocaleDateString("en-US", { month: "short" })}
-                          </span>
-                          <span className="text-lg font-bold leading-none">
-                            {payment.dueDate.getDate()}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <Building2 className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                          <span className="font-medium truncate">{payment.vendorName}</span>
-                        </div>
-                        <p className="text-sm text-muted-foreground truncate">
-                          {payment.milestoneName}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-3 flex-shrink-0">
-                        <div className="text-right">
-                          <p className="font-mono font-bold text-lg">
-                            ${payment.amount.toLocaleString()}
-                          </p>
-                          <p className={`text-xs ${
-                            isOverdue
-                              ? "text-red-600 dark:text-red-400 font-medium"
-                              : isUrgent
-                              ? "text-amber-600 dark:text-amber-400 font-medium"
-                              : "text-muted-foreground"
-                          }`}>
-                            {isOverdue
-                              ? `${Math.abs(payment.daysUntilDue)} days overdue`
-                              : payment.daysUntilDue === 0
-                              ? "Due today"
-                              : payment.daysUntilDue === 1
-                              ? "Due tomorrow"
-                              : `In ${payment.daysUntilDue} days`}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {upcomingPayments.length >= 10 && (
-                <div className="mt-4 text-center">
-                  <Button variant="ghost" size="sm" onClick={() => setLocation("/contracts")}>
-                    View All Contracts
-                    <ChevronRight className="w-4 h-4 ml-1" />
-                  </Button>
-                </div>
-              )}
-            </Card>
-          )}
-
-          {/* Multi-Ceremony Guest Savings Calculator */}
-          {events.length > 0 && (
-            <MultiCeremonySavingsCalculator events={events} />
-          )}
-
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            {/* Tab 1: Set Budget */}
-            <TabsContent value="budget" className="mt-6">
-              <Card className="p-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                    <PiggyBank className="w-6 h-6 text-emerald-600" />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold">Set Your Total Budget</h2>
-                    <p className="text-muted-foreground">What's your overall wedding budget?</p>
-                  </div>
-                </div>
-
-                <div className="max-w-md space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="totalBudget" className="text-base">Total Wedding Budget</Label>
-                    <div className="relative">
-                      <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                      <Input
-                        id="totalBudget"
-                        type="number"
-                        step="1"
-                        min="0"
-                        value={newTotalBudget}
-                        onChange={(e) => setNewTotalBudget(e.target.value)}
-                        placeholder="e.g., 100000"
-                        className="pl-12 text-xl h-14 font-mono"
-                        data-testid="input-total-budget"
-                      />
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Typical South Asian weddings range from $50,000 to $200,000+
-                    </p>
-                  </div>
-
-                  {/* Hidden Costs Warning */}
-                  <div className="p-4 rounded-lg bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 border border-amber-200 dark:border-amber-800">
-                    <div className="flex items-start gap-3">
-                      <div className="p-1.5 rounded-full bg-amber-100 dark:bg-amber-900">
-                        <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-amber-900 dark:text-amber-100 text-sm mb-1">Don't Forget Hidden Costs!</h4>
-                        <p className="text-sm text-amber-700 dark:text-amber-300">
-                          Set aside <span className="font-bold">15%</span> of your budget for hidden costs like service charges (often 22%), taxes, tips, and last-minute additions.
-                        </p>
-                        <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 italic">
-                          A $50,000 wedding may actually cost ~$57,500 after these fees
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <Button 
-                    onClick={handleSaveBudget}
-                    disabled={updateWeddingBudgetMutation.isPending || !newTotalBudget || parseFloat(newTotalBudget) <= 0}
-                    className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
-                    data-testid="button-save-budget"
-                  >
-                    {updateWeddingBudgetMutation.isPending ? "Saving..." : "Save Budget"}
-                  </Button>
-
-                  {total > 0 && (
-                    <div className="bg-emerald-50 dark:bg-emerald-950/20 rounded-lg p-4 flex items-center gap-3">
-                      <CheckCircle2 className="w-6 h-6 text-emerald-600" />
-                      <div>
-                        <p className="font-semibold text-emerald-900 dark:text-emerald-100">Current Budget: ${total.toLocaleString()}</p>
-                        <p className="text-sm text-emerald-800 dark:text-emerald-200">You can update this anytime</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </Card>
-            </TabsContent>
-
-            {/* Tab 2: Create Categories */}
-            <TabsContent value="categories" className="mt-6">
-              <Card className="p-8">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                      <FolderPlus className="w-6 h-6 text-emerald-600" />
-                    </div>
-                    <div>
-                      <h2 className="text-2xl font-bold">Create Spending Categories</h2>
-                      <p className="text-muted-foreground">What will you be spending money on?</p>
-                    </div>
-                  </div>
-                  <Button
-                    onClick={handleAddCategory}
-                    className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
-                    data-testid="button-add-category"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Category
-                  </Button>
-                </div>
-
-                {categories.length === 0 ? (
-                  <div className="text-center py-12 bg-muted/30 rounded-lg border-2 border-dashed">
-                    <FolderPlus className="w-12 h-12 mx-auto mb-3 text-muted-foreground/30" />
-                    <p className="text-muted-foreground mb-2">No categories yet</p>
-                    <p className="text-sm text-muted-foreground mb-4">Add categories like Catering, Venue, Photography, etc.</p>
-                    <Button onClick={handleAddCategory}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Your First Category
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {categories.map((cat) => (
-                      <div
-                        key={cat.id}
-                        className="flex items-center justify-between p-4 rounded-lg border hover-elevate cursor-pointer"
-                        onClick={() => handleEditCategory(cat)}
-                        data-testid={`card-category-${cat.id}`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                          <span className="font-medium text-lg">
-                            {CATEGORY_LABELS[cat.category] || cat.category}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className="font-mono text-muted-foreground">
-                            ${parseFloat(cat.allocatedAmount.toString()).toLocaleString()}
-                          </span>
-                          <Edit2 className="w-4 h-4 text-muted-foreground" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </Card>
-            </TabsContent>
-
-            {/* Tab 3: Divide Budget */}
-            <TabsContent value="allocate" className="mt-6">
-              <Card className="p-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                    <PieChart className="w-6 h-6 text-emerald-600" />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold">Divide Your Budget</h2>
-                    <p className="text-muted-foreground">How much to set aside for each category?</p>
-                  </div>
-                </div>
-
-                {/* Budget Summary */}
-                <div className="bg-muted/50 rounded-lg p-6 mb-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground mb-1">Total Budget</p>
-                      <p className="text-3xl font-bold font-mono">${total.toLocaleString()}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground mb-1">Already Assigned</p>
-                      <p className="text-3xl font-bold font-mono">${totalAllocated.toLocaleString()}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground mb-1">Still to Assign</p>
-                      <p className={`text-3xl font-bold font-mono ${unallocated === 0 ? 'text-emerald-600' : ''}`}>
-                        ${unallocated.toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                  <Progress value={total > 0 ? (totalAllocated / total) * 100 : 0} className="h-3 mt-4" />
-                  <p className="text-sm text-muted-foreground mt-2 text-center">
-                    {total > 0 ? `${((totalAllocated / total) * 100).toFixed(0)}%` : '0%'} of budget assigned
-                  </p>
-                </div>
-
-                {categories.length === 0 ? (
-                  <div className="text-center py-8 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-200 dark:border-amber-800">
-                    <AlertCircle className="w-8 h-8 mx-auto mb-2 text-amber-600" />
-                    <p className="font-medium text-amber-900 dark:text-amber-100">No categories to assign budget to</p>
-                    <p className="text-sm text-amber-800 dark:text-amber-200 mb-3">Create categories first, then come back here to assign amounts</p>
-                    <Button variant="outline" onClick={() => setActiveTab("categories")}>
-                      Go to Create Categories
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {categories.map((cat) => {
-                      const allocated = parseFloat(cat.allocatedAmount.toString());
-                      const percentage = total > 0 ? (allocated / total) * 100 : 0;
-                      
-                      return (
-                        <div
-                          key={cat.id}
-                          className="p-4 rounded-lg border hover-elevate cursor-pointer"
-                          onClick={() => handleEditCategory(cat)}
-                          data-testid={`card-allocate-${cat.id}`}
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="font-medium text-lg">
-                              {CATEGORY_LABELS[cat.category] || cat.category}
-                            </span>
-                            <div className="flex items-center gap-2">
-                              <span className="font-mono font-semibold text-lg">
-                                ${allocated.toLocaleString()}
-                              </span>
-                              <Badge variant="secondary">{percentage.toFixed(0)}%</Badge>
-                              <Edit2 className="w-4 h-4 text-muted-foreground" />
-                            </div>
-                          </div>
-                          <Progress value={percentage} className="h-2" />
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {unallocated === 0 && categories.length > 0 && (
-                  <div className="bg-emerald-50 dark:bg-emerald-950/20 rounded-lg p-4 mt-6 flex items-center gap-3">
-                    <CheckCircle2 className="w-6 h-6 text-emerald-600" />
-                    <div>
-                      <p className="font-semibold text-emerald-900 dark:text-emerald-100">All budget assigned!</p>
-                      <p className="text-sm text-emerald-800 dark:text-emerald-200">You've divided your entire budget across categories</p>
-                    </div>
-                  </div>
-                )}
-
-                {unallocated > 0 && categories.length > 0 && (
-                  <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-4 mt-6 flex items-start gap-3">
-                    <AlertCircle className="w-6 h-6 text-blue-600 flex-shrink-0" />
-                    <div>
-                      <p className="font-semibold text-blue-900 dark:text-blue-100">
-                        ${unallocated.toLocaleString()} not yet assigned
-                      </p>
-                      <p className="text-sm text-blue-800 dark:text-blue-200">
-                        Click on any category above to adjust its budget
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </Card>
-            </TabsContent>
-
-            {/* Tab 4: Track Spending */}
-            <TabsContent value="track" className="mt-6">
-              <Card className="p-8">
-                <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                      <BarChart3 className="w-6 h-6 text-emerald-600" />
-                    </div>
-                    <div>
-                      <h2 className="text-2xl font-bold">Track Your Spending</h2>
-                      <p className="text-muted-foreground">Monitor actual expenses vs. planned amounts</p>
-                    </div>
-                  </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" data-testid="button-share-budget">
-                        <Share2 className="w-4 h-4 mr-2" />
-                        Share Budget
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={handleCopyBudget} data-testid="button-copy-budget">
-                        <Copy className="w-4 h-4 mr-2" />
-                        Copy to Clipboard
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={handleWhatsAppShare} data-testid="button-whatsapp-budget">
-                        <SiWhatsapp className="w-4 h-4 mr-2 text-green-600" />
-                        Share via WhatsApp
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={handlePrintPDF} data-testid="button-pdf-budget">
-                        <FileText className="w-4 h-4 mr-2" />
-                        Print / Save as PDF
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-
-                {/* Spending Summary Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                  <div className="bg-muted/50 rounded-lg p-4">
-                    <p className="text-xs font-medium text-muted-foreground mb-1">Total Spent</p>
-                    <p className="text-3xl font-mono font-bold mb-2" data-testid="text-total-spent">
-                      ${totalSpent.toLocaleString()}
-                    </p>
-                    <Progress value={total > 0 ? (totalSpent / total) * 100 : 0} className="h-2" />
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {total > 0 ? `${((totalSpent / total) * 100).toFixed(0)}%` : '0%'} of total budget
-                    </p>
-                  </div>
-
-                  <div className="bg-muted/50 rounded-lg p-4">
-                    <p className="text-xs font-medium text-muted-foreground mb-1">Remaining</p>
-                    <p className={`text-3xl font-mono font-bold mb-2 ${remainingBudget < 0 ? 'text-destructive' : ''}`} data-testid="text-remaining-budget">
-                      ${remainingBudget.toLocaleString()}
-                    </p>
-                    {remainingBudget < 0 && (
-                      <Badge variant="destructive" className="text-xs">Over Budget</Badge>
-                    )}
-                  </div>
-
-                  {totalEventCosts > 0 && (
-                    <div className="bg-muted/50 rounded-lg p-4">
-                      <p className="text-xs font-medium text-muted-foreground mb-1">From Events</p>
-                      <p className="text-3xl font-mono font-bold mb-2">
-                        ${totalEventCosts.toLocaleString()}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Linked to timeline</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Spending by Category */}
-                {categories.length === 0 ? (
-                  <div className="text-center py-8 bg-muted/30 rounded-lg border-2 border-dashed">
-                    <BarChart3 className="w-12 h-12 mx-auto mb-3 text-muted-foreground/30" />
-                    <p className="text-muted-foreground mb-2">No categories to track yet</p>
-                    <p className="text-sm text-muted-foreground">Create categories and assign budget first</p>
-                  </div>
-                ) : (
-                  <div>
-                    <h3 className="font-semibold mb-4 flex items-center gap-2">
-                      <TrendingUp className="w-5 h-5" />
-                      Spending by Category
-                    </h3>
-                    <div className="space-y-4">
-                      {categories.map((category) => {
-                        const allocated = parseFloat(category.allocatedAmount.toString());
-                        const manualSpent = parseFloat(category.spentAmount?.toString() || "0");
-                        const eventCost = getEventCostForCategory(category.id);
-                        const totalCategorySpent = manualSpent + eventCost;
-                        const percentage = allocated > 0 ? (totalCategorySpent / allocated) * 100 : 0;
-                        const isOverBudget = totalCategorySpent > allocated;
-                        const isQuickEditing = quickEditId === category.id;
-
-                        return (
-                          <div
-                            key={category.id}
-                            className="p-5 rounded-lg border transition-all"
-                            data-testid={`category-spending-${category.id}`}
-                          >
-                            <div className="flex items-center justify-between mb-3">
-                              <div className="flex items-center gap-2 flex-1">
-                                <span className="font-semibold text-lg">
-                                  {CATEGORY_LABELS[category.category] || category.category}
-                                </span>
-                                {isOverBudget && (
-                                  <Badge variant="destructive" className="text-xs">Over Budget</Badge>
-                                )}
-                              </div>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleEditCategory(category)}
-                                data-testid={`button-edit-category-${category.id}`}
-                              >
-                                <Edit2 className="w-4 h-4 mr-1" />
-                                Edit All
-                              </Button>
-                            </div>
-
-                            {/* Prominent Spent Amount Section */}
-                            <div className="bg-muted/50 rounded-lg p-4 mb-3">
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <p className="text-xs font-medium text-muted-foreground mb-1">Actual Spent</p>
-                                  {isQuickEditing ? (
-                                    <div className="flex items-center gap-2">
-                                      <div className="relative">
-                                        <DollarSign className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                                        <Input
-                                          type="number"
-                                          step="0.01"
-                                          min="0"
-                                          value={quickEditValue}
-                                          onChange={(e) => setQuickEditValue(e.target.value)}
-                                          className="w-32 pl-7 h-9"
-                                          autoFocus
-                                          data-testid={`input-quick-spent-${category.id}`}
-                                          onKeyDown={(e) => {
-                                            if (e.key === 'Enter') {
-                                              e.preventDefault();
-                                              quickUpdateSpentMutation.mutate({ id: category.id, spentAmount: quickEditValue });
-                                            } else if (e.key === 'Escape') {
-                                              setQuickEditId(null);
-                                              setQuickEditValue("");
-                                            }
-                                          }}
-                                        />
-                                      </div>
-                                      <Button
-                                        size="icon"
-                                        variant="ghost"
-                                        className="h-9 w-9 text-emerald-600"
-                                        onClick={() => quickUpdateSpentMutation.mutate({ id: category.id, spentAmount: quickEditValue })}
-                                        disabled={quickUpdateSpentMutation.isPending}
-                                        data-testid={`button-save-quick-spent-${category.id}`}
-                                      >
-                                        <Check className="w-4 h-4" />
-                                      </Button>
-                                      <Button
-                                        size="icon"
-                                        variant="ghost"
-                                        className="h-9 w-9 text-muted-foreground"
-                                        onClick={() => {
-                                          setQuickEditId(null);
-                                          setQuickEditValue("");
-                                        }}
-                                        data-testid={`button-cancel-quick-spent-${category.id}`}
-                                      >
-                                        <X className="w-4 h-4" />
-                                      </Button>
-                                    </div>
-                                  ) : (
-                                    <p className={`text-2xl font-bold font-mono ${isOverBudget ? 'text-destructive' : 'text-foreground'}`}>
-                                      ${totalCategorySpent.toLocaleString()}
-                                    </p>
-                                  )}
-                                </div>
-                                <div className="text-right">
-                                  <p className="text-xs font-medium text-muted-foreground mb-1">Budget</p>
-                                  <p className="text-lg font-mono text-muted-foreground">
-                                    ${allocated.toLocaleString()}
-                                  </p>
-                                </div>
-                              </div>
-                              {!isQuickEditing && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="mt-3 w-full"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setQuickEditId(category.id);
-                                    setQuickEditValue(manualSpent.toString());
-                                  }}
-                                  data-testid={`button-update-spent-${category.id}`}
-                                >
-                                  <DollarSign className="w-4 h-4 mr-1" />
-                                  Update Spent Amount
-                                </Button>
-                              )}
-                            </div>
-
-                            <div className="flex items-center gap-3">
-                              <Progress
-                                value={Math.min(percentage, 100)}
-                                className={`flex-1 h-3 ${isOverBudget ? 'bg-destructive/20' : ''}`}
-                              />
-                              <span className={`font-mono text-sm font-semibold min-w-[50px] text-right ${isOverBudget ? 'text-destructive' : ''}`}>
-                                {percentage.toFixed(0)}%
-                              </span>
-                            </div>
-                            {eventCost > 0 && (
-                              <p className="text-xs text-muted-foreground mt-2">
-                                Includes ${eventCost.toLocaleString()} from linked event costs
-                              </p>
-                            )}
-                            {hasLinkedExpenses(category.id) && (
-                              <p className="text-xs text-muted-foreground mt-2">
-                                Synced from linked expenses. <a href="/expenses" className="text-primary hover:underline">View expenses</a>
-                              </p>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </Card>
-            </TabsContent>
-          </Tabs>
         </div>
-      </main>
 
-      {/* Add/Edit Category Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle data-testid="dialog-title-category">
-              {editingCategory ? "Edit Category" : "Add Budget Category"}
-            </DialogTitle>
-            <DialogDescription>
-              {editingCategory
-                ? "Update your budget for this category"
-                : "What's this spending for?"}
-            </DialogDescription>
-          </DialogHeader>
-
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="category">Category Name</Label>
-              {useCustomCategory ? (
-                <Input
-                  placeholder="e.g., Wedding Gifts, Travel, Hair & Makeup"
-                  value={customCategoryInput}
-                  onChange={(e) => setCustomCategoryInput(e.target.value)}
-                  data-testid="input-custom-category"
-                />
-              ) : editingCategory ? (
-                <div className="p-3 bg-muted rounded-lg">
-                  <p className="font-medium">{CATEGORY_LABELS[editingCategory.category] || editingCategory.category}</p>
-                </div>
-              ) : null}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="allocatedAmount" className="flex items-center gap-2">
-                How much to set aside?
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    This is your planned budget for this category. It's separate from what you actually spend.
-                  </TooltipContent>
-                </Tooltip>
-              </Label>
-              <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  id="allocatedAmount"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  {...form.register("allocatedAmount")}
-                  placeholder="e.g., 15000"
-                  className="pl-9"
-                  data-testid="input-allocated-amount"
-                />
-              </div>
-            </div>
-
-            {editingCategory && (
-              <div className="rounded-lg border bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-950/20 dark:to-indigo-950/20 p-4" data-testid="ai-estimate-section">
-                <div className="flex items-center gap-2 mb-3">
-                  <Sparkles className="w-4 h-4 text-purple-600" />
-                  <span className="text-sm font-semibold text-purple-900 dark:text-purple-100">AI Cost Estimate</span>
-                  <Badge variant="secondary" className="text-xs">for {wedding?.location || "your area"}</Badge>
-                </div>
-                
-                {aiEstimateLoading ? (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground" data-testid="ai-estimate-loading">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Calculating estimate...</span>
+        {/* Guest Savings Calculator Toggle */}
+        <Card className="p-4 mb-6 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-950/30 dark:to-indigo-950/30">
+          <Collapsible open={showSavingsCalculator} onOpenChange={setShowSavingsCalculator}>
+            <CollapsibleTrigger asChild>
+              <button className="flex items-center justify-between w-full" data-testid="toggle-savings-calculator">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
+                    <Calculator className="w-5 h-5 text-purple-600" />
                   </div>
-                ) : aiEstimate?.hasEstimate ? (
-                  <div className="space-y-2" data-testid="ai-estimate-result">
-                    <div className="grid grid-cols-3 gap-2 text-center">
-                      <div className="bg-white/50 dark:bg-black/20 rounded p-2">
-                        <p className="text-xs text-muted-foreground">Low</p>
-                        <p className="font-mono font-semibold text-sm">${aiEstimate.lowEstimate.toLocaleString()}</p>
+                  <div className="text-left">
+                    <h3 className="font-semibold">Guest Savings Calculator</h3>
+                    <p className="text-sm text-muted-foreground">See how trimming guest counts can save money</p>
+                  </div>
+                </div>
+                {showSavingsCalculator ? (
+                  <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                ) : (
+                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                )}
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-4">
+              <MultiCeremonySavingsCalculator events={events} />
+            </CollapsibleContent>
+          </Collapsible>
+        </Card>
+
+        {/* Breakdown by Event */}
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Calendar className="w-5 h-5" />
+            Breakdown by Event
+          </h2>
+
+          <div className="space-y-3">
+            {events.map((event) => {
+              const eventData = expensesByEvent[event.id];
+              const isExpanded = expandedEvents.has(event.id);
+              const eventTotal = eventData?.total || 0;
+
+              return (
+                <Collapsible 
+                  key={event.id} 
+                  open={isExpanded} 
+                  onOpenChange={() => toggleEvent(event.id)}
+                >
+                  <Card className="overflow-hidden" data-testid={`card-event-${event.id}`}>
+                    <CollapsibleTrigger asChild>
+                      <button className="w-full p-4 flex items-center justify-between hover-elevate">
+                        <div className="flex items-center gap-3">
+                          {isExpanded ? (
+                            <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                          ) : (
+                            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                          )}
+                          <span className="font-medium">{event.name}</span>
+                          {eventData?.expenses.length ? (
+                            <Badge variant="secondary" className="text-xs">
+                              {eventData.expenses.length} items
+                            </Badge>
+                          ) : null}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-semibold">
+                            ${eventTotal.toLocaleString()}
+                          </span>
+                        </div>
+                      </button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="border-t px-4 py-3 bg-muted/30">
+                        {eventData?.expenses.length ? (
+                          <div className="space-y-2">
+                            {eventData.expenses.map((expense, idx) => {
+                              const amount = expense.allocatedAmount || parseFloat(expense.amount?.toString() || "0");
+                              const status = getPaymentStatus(expense);
+                              return (
+                                <div 
+                                  key={expense.id || idx}
+                                  className="flex items-center justify-between py-2 text-sm"
+                                  data-testid={`expense-item-${expense.id}`}
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-muted-foreground">-</span>
+                                    <span>{expense.description}</span>
+                                    <Badge variant={status.variant} className="text-xs">
+                                      {status.label}
+                                    </Badge>
+                                  </div>
+                                  <span className="font-mono">
+                                    ${amount.toLocaleString()}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-muted-foreground py-2">
+                            No expenses recorded for this event yet.
+                          </p>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="mt-2 text-xs"
+                          onClick={() => setLocation(`/expenses?eventId=${event.id}`)}
+                          data-testid={`button-add-expense-${event.id}`}
+                        >
+                          <Plus className="w-3 h-3 mr-1" />
+                          Add Expense
+                        </Button>
                       </div>
-                      <div className="bg-white/50 dark:bg-black/20 rounded p-2 ring-2 ring-purple-300 dark:ring-purple-700">
-                        <p className="text-xs text-muted-foreground">Average</p>
-                        <p className="font-mono font-bold text-sm text-purple-700 dark:text-purple-300">${aiEstimate.averageEstimate.toLocaleString()}</p>
+                    </CollapsibleContent>
+                  </Card>
+                </Collapsible>
+              );
+            })}
+
+            {/* Unassigned Expenses */}
+            {expensesByEvent["unassigned"]?.expenses.length > 0 && (
+              <Collapsible 
+                open={expandedEvents.has("unassigned")} 
+                onOpenChange={() => toggleEvent("unassigned")}
+              >
+                <Card className="overflow-hidden border-dashed" data-testid="card-event-unassigned">
+                  <CollapsibleTrigger asChild>
+                    <button className="w-full p-4 flex items-center justify-between hover-elevate">
+                      <div className="flex items-center gap-3">
+                        {expandedEvents.has("unassigned") ? (
+                          <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                        ) : (
+                          <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                        )}
+                        <span className="font-medium text-muted-foreground">General / Unassigned</span>
+                        <Badge variant="outline" className="text-xs">
+                          {expensesByEvent["unassigned"].expenses.length} items
+                        </Badge>
                       </div>
-                      <div className="bg-white/50 dark:bg-black/20 rounded p-2">
-                        <p className="text-xs text-muted-foreground">High</p>
-                        <p className="font-mono font-semibold text-sm">${aiEstimate.highEstimate.toLocaleString()}</p>
+                      <span className="font-mono font-semibold">
+                        ${expensesByEvent["unassigned"].total.toLocaleString()}
+                      </span>
+                    </button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="border-t px-4 py-3 bg-muted/30">
+                      <div className="space-y-2">
+                        {expensesByEvent["unassigned"].expenses.map((expense, idx) => {
+                          const amount = expense.allocatedAmount || parseFloat(expense.amount?.toString() || "0");
+                          const status = getPaymentStatus(expense);
+                          return (
+                            <div 
+                              key={expense.id || idx}
+                              className="flex items-center justify-between py-2 text-sm"
+                            >
+                              <div className="flex items-center gap-2">
+                                <span className="text-muted-foreground">-</span>
+                                <span>{expense.description}</span>
+                                <Badge variant={status.variant} className="text-xs">
+                                  {status.label}
+                                </Badge>
+                              </div>
+                              <span className="font-mono">
+                                ${amount.toLocaleString()}
+                              </span>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
-                    {aiEstimate.notes && (
-                      <p className="text-xs text-muted-foreground mt-2 italic" data-testid="ai-estimate-notes">
-                        {aiEstimate.notes}
-                      </p>
-                    )}
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="w-full mt-2 text-xs"
-                      onClick={() => form.setValue("allocatedAmount", aiEstimate.averageEstimate.toString())}
-                      data-testid="button-use-ai-estimate"
-                    >
-                      <Sparkles className="w-3 h-3 mr-1" />
-                      Use average estimate
-                    </Button>
-                  </div>
-                ) : (
-                  <p className="text-xs text-muted-foreground" data-testid="ai-estimate-unavailable">
-                    AI estimate not available for this category
-                  </p>
-                )}
-              </div>
+                  </CollapsibleContent>
+                </Card>
+              </Collapsible>
             )}
 
-            <div className="flex gap-2 justify-end pt-2">
-              {editingCategory && (
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onClick={handleDelete}
-                  disabled={deleteMutation.isPending}
-                  data-testid="button-delete-category"
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete
+            {events.length === 0 && (
+              <Card className="p-8 text-center border-dashed">
+                <Calendar className="w-12 h-12 mx-auto mb-3 text-muted-foreground/30" />
+                <p className="text-muted-foreground mb-2">No events created yet</p>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Create events in your timeline to track expenses by ceremony
+                </p>
+                <Button onClick={() => setLocation("/timeline")} variant="outline">
+                  Go to Timeline
                 </Button>
-              )}
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setDialogOpen(false)}
-                data-testid="button-cancel-category"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={createMutation.isPending || updateMutation.isPending}
-                data-testid="button-save-category"
-              >
-                {editingCategory ? "Update" : "Add"}
-              </Button>
+              </Card>
+            )}
+          </div>
+        </div>
+
+        {/* Upcoming Payments */}
+        {upcomingPayments.length > 0 && (
+          <Card className="p-6" data-testid="card-upcoming-payments">
+            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Clock className="w-5 h-5" />
+              Upcoming Payments
+            </h2>
+            <div className="space-y-3">
+              {upcomingPayments.map((payment, idx) => {
+                const isOverdue = payment.daysUntilDue < 0;
+                const isUrgent = payment.daysUntilDue >= 0 && payment.daysUntilDue <= 7;
+                return (
+                  <div 
+                    key={`${payment.contractId}-${idx}`}
+                    className="flex items-center justify-between py-2"
+                    data-testid={`payment-item-${idx}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-2 h-2 rounded-full ${isOverdue ? "bg-destructive" : isUrgent ? "bg-amber-500" : "bg-emerald-500"}`} />
+                      <div>
+                        <p className="font-medium">
+                          {payment.dueDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}: {payment.vendorName}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {payment.milestoneName}
+                          {payment.isCash && <Badge variant="outline" className="ml-2 text-xs">CASH</Badge>}
+                        </p>
+                      </div>
+                    </div>
+                    <span className={`font-mono font-semibold ${isOverdue ? "text-destructive" : ""}`}>
+                      ${payment.amount.toLocaleString()}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+          </Card>
+        )}
+
+        {/* Edit Total Budget Dialog */}
+        <Dialog open={editBudgetOpen} onOpenChange={setEditBudgetOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Total Budget</DialogTitle>
+              <DialogDescription>
+                Set your overall wedding budget
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div>
+                <Label htmlFor="total-budget">Total Budget</Label>
+                <div className="relative mt-1">
+                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="total-budget"
+                    type="number"
+                    value={newTotalBudget}
+                    onChange={(e) => setNewTotalBudget(e.target.value)}
+                    className="pl-8"
+                    placeholder="100000"
+                    data-testid="input-total-budget"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" onClick={() => setEditBudgetOpen(false)}>
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleSaveBudget}
+                  disabled={updateWeddingBudgetMutation.isPending}
+                  data-testid="button-save-budget"
+                >
+                  {updateWeddingBudgetMutation.isPending ? "Saving..." : "Save Budget"}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </main>
     </div>
   );
 }

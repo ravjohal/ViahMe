@@ -18,7 +18,10 @@ Key architectural decisions and features include:
 - **Cultural Templates**: Pre-populated event timelines and task templates for 9 wedding traditions with auto-seeding. Task templates are stored in the `task_templates` database table (199 templates across Hindu, Sikh, Muslim, Gujarati, South Indian, Christian, Jain, Parsi, and General traditions) and are fetched via `storage.getTaskTemplatesByTradition(tradition)`. Migration script: `scripts/migrate-task-templates.ts`.
 - **Vendor Specialization**: Support for 32 distinct vendor categories, including culturally-specific services.
 - **Budget Intelligence System**: Provides smart budget recommendations based on cultural spending benchmarks, real-time comparisons, and interactive visualizations.
-  - **Upcoming Payments Timeline**: Cash flow calendar on budget landing page showing upcoming vendor payment milestones from contracts, with overdue/urgent/soon indicators and 30-day totals
+  - **Event-Centric Budget View**: Collapsible breakdown by wedding event (Sangeet, Ceremony, Reception, etc.) showing expenses per event with payment status badges
+  - **Contributor Filtering**: Filter expenses by who paid (All, Bride's Family, Groom's Family) for transparent family contribution tracking
+  - **Guest Savings Calculator**: Integrated collapsible calculator showing how trimming guest counts per ceremony can reduce costs
+  - **Upcoming Payments Timeline**: Cash flow calendar showing vendor payment milestones from contracts, with overdue/urgent/soon indicators
   - **Multi-Event Expense Allocation**: Support for vendor packages spanning multiple events with equal, percentage, or custom allocation strategies via `expense_event_allocations` table
   - **Share Budget Feature**: Export budget breakdown via Copy to Clipboard, WhatsApp share, or Print/PDF for easy family communication
 - **Guest List Management**: Frictionless bulk guest import (CSV, Excel), advanced guest invitation & RSVP system with household grouping, magic link authentication, per-event RSVP tracking, and bulk invitation sender. Includes an Allocation View Dashboard for analytics.
