@@ -98,6 +98,17 @@ export default function Budget() {
     enabled: !!wedding?.id,
   });
 
+  // Fetch expenses to check which categories have linked expenses
+  const { data: expenses = [] } = useQuery<{ categoryId?: string | null }[]>({
+    queryKey: ["/api/expenses", wedding?.id],
+    enabled: !!wedding?.id,
+  });
+
+  // Helper to check if a category has linked expenses
+  const hasLinkedExpenses = (categoryId: string) => {
+    return expenses.some((e) => e.categoryId === categoryId);
+  };
+
   const form = useForm<BudgetFormData>({
     resolver: zodResolver(budgetFormSchema),
     defaultValues: {
@@ -1013,6 +1024,11 @@ export default function Budget() {
                             {eventCost > 0 && (
                               <p className="text-xs text-muted-foreground mt-2">
                                 Includes ${eventCost.toLocaleString()} from linked event costs
+                              </p>
+                            )}
+                            {hasLinkedExpenses(category.id) && (
+                              <p className="text-xs text-muted-foreground mt-2">
+                                Synced from linked expenses. <a href="/expenses" className="text-primary hover:underline">View expenses</a>
                               </p>
                             )}
                           </div>

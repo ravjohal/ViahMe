@@ -1610,7 +1610,10 @@ export class MemStorage implements IStorage {
 
   async getExpenseTotalByBudgetCategory(categoryId: string): Promise<number> {
     const expenses = await this.getExpensesByBudgetCategory(categoryId);
-    return expenses.reduce((sum, e) => sum + parseFloat(e.amount), 0);
+    return expenses.reduce((sum, e) => {
+      const amount = parseFloat(e.amount?.toString() || "0");
+      return sum + (isNaN(amount) ? 0 : amount);
+    }, 0);
   }
 
   async createExpense(insertExpense: InsertExpense): Promise<Expense> {
@@ -4642,7 +4645,10 @@ export class DBStorage implements IStorage {
 
   async getExpenseTotalByBudgetCategory(categoryId: string): Promise<number> {
     const expenses = await this.getExpensesByBudgetCategory(categoryId);
-    return expenses.reduce((sum, e) => sum + parseFloat(e.amount), 0);
+    return expenses.reduce((sum, e) => {
+      const amount = parseFloat(e.amount?.toString() || "0");
+      return sum + (isNaN(amount) ? 0 : amount);
+    }, 0);
   }
 
   async createExpense(insertExpense: InsertExpense): Promise<Expense> {

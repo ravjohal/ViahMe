@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Trash2, Pencil, DollarSign, Users, ArrowRightLeft, Check, Receipt, Share2, Copy } from "lucide-react";
-import type { Expense, ExpenseSplit, Event, Wedding } from "@shared/schema";
+import type { Expense, ExpenseSplit, Event, Wedding, BudgetCategory } from "@shared/schema";
 
 type ExpenseWithSplits = Expense & { splits: ExpenseSplit[] };
 type SettlementBalance = Record<string, { name: string; paid: number; owes: number; balance: number }>;
@@ -29,6 +29,7 @@ export default function Expenses() {
     description: "",
     amount: "",
     eventId: "",
+    categoryId: "",
     splitType: "equal" as "equal" | "percentage" | "custom" | "full",
     paidById: "",
     notes: "",
@@ -55,6 +56,11 @@ export default function Expenses() {
     enabled: !!weddingId,
   });
 
+  const { data: budgetCategories = [] } = useQuery<BudgetCategory[]>({
+    queryKey: ["/api/budget-categories", weddingId],
+    enabled: !!weddingId,
+  });
+
   const { data: settlement } = useQuery<SettlementBalance>({
     queryKey: ["/api/expenses", weddingId, "settlement"],
     enabled: !!weddingId,
@@ -78,6 +84,7 @@ export default function Expenses() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/expenses", weddingId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budget-categories", weddingId] });
       setIsAddDialogOpen(false);
       resetForm();
       toast({ title: "Expense added successfully" });
@@ -93,6 +100,7 @@ export default function Expenses() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/expenses", weddingId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budget-categories", weddingId] });
       setEditingExpense(null);
       resetForm();
       toast({ title: "Expense updated successfully" });
@@ -108,6 +116,7 @@ export default function Expenses() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/expenses", weddingId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budget-categories", weddingId] });
       toast({ title: "Expense deleted successfully" });
     },
     onError: () => {
@@ -130,6 +139,7 @@ export default function Expenses() {
       description: "",
       amount: "",
       eventId: "",
+      categoryId: "",
       splitType: "equal",
       paidById: user?.id || "",
       notes: "",
@@ -174,6 +184,7 @@ export default function Expenses() {
       paidByName: teamMembers.find(m => m.id === payerId)?.name || user.email,
       splitType: formData.splitType,
       eventId: formData.eventId || null,
+      categoryId: formData.categoryId || null,
       notes: formData.notes || null,
       expenseDate: formData.expenseDate,
       splits,
@@ -192,6 +203,7 @@ export default function Expenses() {
       description: expense.description,
       amount: expense.amount,
       eventId: expense.eventId || "",
+      categoryId: expense.categoryId || "",
       splitType: expense.splitType as any,
       paidById: expense.paidById || "",
       notes: expense.notes || "",
@@ -278,6 +290,23 @@ export default function Expenses() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+              <div>
+                <Label htmlFor="category">Budget Category (Optional)</Label>
+                <Select value={formData.categoryId || "none"} onValueChange={(v) => setFormData({ ...formData, categoryId: v === "none" ? "" : v })}>
+                  <SelectTrigger data-testid="select-expense-category">
+                    <SelectValue placeholder="Link to budget category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Don't link to budget</SelectItem>
+                    {budgetCategories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>{cat.category}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Linked expenses automatically update budget spending
+                </p>
               </div>
               <div>
                 <Label htmlFor="paidBy">Who Paid?</Label>
@@ -499,6 +528,7 @@ export default function Expenses() {
             <div className="space-y-4">
               {expenses.map((expense) => {
                 const event = events.find((e) => e.id === expense.eventId);
+                const category = budgetCategories.find((c) => c.id === expense.categoryId);
                 return (
                   <div
                     key={expense.id}
@@ -507,8 +537,9 @@ export default function Expenses() {
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="font-medium">{expense.description}</h3>
+                          {category && <Badge variant="default" data-testid={`badge-category-${expense.id}`}>{category.category}</Badge>}
                           {event && <Badge variant="outline">{event.name}</Badge>}
                           <Badge variant="secondary">{expense.splitType}</Badge>
                         </div>

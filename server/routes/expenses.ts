@@ -6,7 +6,8 @@ import { insertExpenseSchema } from "@shared/schema";
 async function syncBudgetCategorySpent(storage: IStorage, categoryId: string | null | undefined) {
   if (!categoryId) return;
   const total = await storage.getExpenseTotalByBudgetCategory(categoryId);
-  await storage.updateBudgetCategory(categoryId, { spentAmount: total.toFixed(2) });
+  const safeTotal = isNaN(total) ? 0 : total;
+  await storage.updateBudgetCategory(categoryId, { spentAmount: safeTotal.toFixed(2) });
 }
 
 export async function registerExpenseRoutes(router: Router, storage: IStorage) {
