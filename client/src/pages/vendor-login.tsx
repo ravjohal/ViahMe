@@ -90,11 +90,13 @@ export default function VendorLogin() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <img
-            src={logoUrl}
-            alt="Viah.me"
-            className="h-20 mx-auto object-contain mb-4"
-          />
+          <Link href="/" data-testid="link-logo-home">
+            <img
+              src={logoUrl}
+              alt="Viah.me"
+              className="h-20 mx-auto object-contain mb-4 cursor-pointer hover:opacity-80 transition-opacity"
+            />
+          </Link>
           <div className="flex items-center justify-center gap-2 mb-2">
             <Briefcase className="h-8 w-8 text-purple-600" />
             <h1 className="font-display text-4xl font-bold bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 bg-clip-text text-transparent">

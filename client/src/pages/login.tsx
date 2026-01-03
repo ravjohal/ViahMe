@@ -85,11 +85,13 @@ export default function Login() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <img
-            src={logoUrl}
-            alt="Viah.me"
-            className="h-20 mx-auto object-contain mb-4"
-          />
+          <Link href="/" data-testid="link-logo-home">
+            <img
+              src={logoUrl}
+              alt="Viah.me"
+              className="h-20 mx-auto object-contain mb-4 cursor-pointer hover:opacity-80 transition-opacity"
+            />
+          </Link>
           <h1 className="font-display text-4xl font-bold bg-gradient-to-r from-orange-600 via-pink-600 to-purple-600 bg-clip-text text-transparent">
             Welcome Back
           </h1>

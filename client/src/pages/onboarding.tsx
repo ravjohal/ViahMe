@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { OnboardingQuestionnaire } from "@/components/onboarding-questionnaire";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -139,11 +139,13 @@ export default function Onboarding() {
       <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 flex items-center justify-center p-4">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <img
-              src={logoUrl}
-              alt="Viah.me"
-              className="h-20 mx-auto object-contain mb-4"
-            />
+            <Link href="/" data-testid="link-logo-home">
+              <img
+                src={logoUrl}
+                alt="Viah.me"
+                className="h-20 mx-auto object-contain mb-4 cursor-pointer hover:opacity-80 transition-opacity"
+              />
+            </Link>
           </div>
 
           <Card className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-orange-100 p-8 text-center">
@@ -176,11 +178,13 @@ export default function Onboarding() {
       <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 flex items-center justify-center p-4">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <img
-              src={logoUrl}
-              alt="Viah.me"
-              className="h-20 mx-auto object-contain mb-4"
-            />
+            <Link href="/" data-testid="link-logo-home">
+              <img
+                src={logoUrl}
+                alt="Viah.me"
+                className="h-20 mx-auto object-contain mb-4 cursor-pointer hover:opacity-80 transition-opacity"
+              />
+            </Link>
             <h1 className="font-display text-4xl font-bold bg-gradient-to-r from-orange-600 via-pink-600 to-purple-600 bg-clip-text text-transparent">
               Create Your Account
             </h1>
