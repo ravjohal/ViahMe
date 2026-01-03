@@ -30,6 +30,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { MultiCeremonySavingsCalculator } from "@/components/multi-ceremony-savings-calculator";
 import { AddExpenseDialog } from "@/components/add-expense-dialog";
 import { EditExpenseDialog, type ExpenseWithDetails } from "@/components/edit-expense-dialog";
+import { BudgetEstimator } from "@/components/budget-estimator";
 
 // Use shared expense type from the edit dialog component
 type ExpenseWithAllocations = ExpenseWithDetails;
@@ -669,7 +670,15 @@ export default function Budget() {
             </Button>
             <h1 className="text-2xl font-bold" data-testid="text-budget-title">Budget Planner</h1>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <BudgetEstimator 
+              wedding={wedding} 
+              events={events}
+              onUpdateBudget={(budget) => {
+                setNewTotalBudget(budget.toString());
+                updateBudgetMutation.mutate(budget);
+              }}
+            />
             <Button
               variant="outline"
               size="sm"
