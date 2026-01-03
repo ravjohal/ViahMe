@@ -14,11 +14,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Trash2, Pencil, DollarSign, Users, ArrowRightLeft, Check, Receipt, Share2, Copy } from "lucide-react";
-import type { Expense, ExpenseSplit, Event, Wedding, BudgetCategory } from "@shared/schema";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, Trash2, Pencil, DollarSign, Users, ArrowRightLeft, Check, Receipt, Share2, Copy, Calendar } from "lucide-react";
+import type { Expense, ExpenseSplit, Event, Wedding, BudgetCategory, ExpenseEventAllocation } from "@shared/schema";
 
-type ExpenseWithSplits = Expense & { splits: ExpenseSplit[] };
+type ExpenseWithSplits = Expense & { splits: ExpenseSplit[]; eventAllocations?: ExpenseEventAllocation[] };
 type SettlementBalance = Record<string, { name: string; paid: number; owes: number; balance: number }>;
+type AllocationStrategy = "single" | "equal" | "percentage" | "custom";
 
 export default function Expenses() {
   const { user } = useAuth();
@@ -34,8 +36,11 @@ export default function Expenses() {
     paidById: "",
     notes: "",
     expenseDate: new Date().toISOString().split("T")[0],
+    allocationStrategy: "single" as AllocationStrategy,
   });
   const [splitAmounts, setSplitAmounts] = useState<Record<string, string>>({});
+  const [selectedEventIds, setSelectedEventIds] = useState<string[]>([]);
+  const [eventAllocations, setEventAllocations] = useState<Record<string, { amount: string; percent: string }>>({});
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
 
   const { data: weddings = [] } = useQuery<Wedding[]>({
@@ -146,8 +151,11 @@ export default function Expenses() {
       paidById: user?.id || "",
       notes: "",
       expenseDate: new Date().toISOString().split("T")[0],
+      allocationStrategy: "single",
     });
     setSplitAmounts({});
+    setSelectedEventIds([]);
+    setEventAllocations({});
   };
 
   const handleSubmit = () => {
@@ -178,6 +186,32 @@ export default function Expenses() {
       };
     }).filter((s) => parseFloat(s.shareAmount) > 0);
 
+    // Build event allocations based on strategy
+    let allocationsToSend: { eventId: string; allocatedAmount: string; allocatedPercent: string | null }[] = [];
+    
+    if (formData.allocationStrategy === "single" && formData.eventId) {
+      // Legacy single-event: no allocations needed, eventId is on the expense itself
+    } else if (formData.allocationStrategy === "equal" && selectedEventIds.length > 0) {
+      const perEvent = (amount / selectedEventIds.length).toFixed(2);
+      const percent = (100 / selectedEventIds.length).toFixed(2);
+      allocationsToSend = selectedEventIds.map(eventId => ({
+        eventId,
+        allocatedAmount: perEvent,
+        allocatedPercent: percent,
+      }));
+    } else if ((formData.allocationStrategy === "percentage" || formData.allocationStrategy === "custom") && selectedEventIds.length > 0) {
+      allocationsToSend = selectedEventIds.map(eventId => {
+        const alloc = eventAllocations[eventId] || { amount: "0", percent: "0" };
+        return {
+          eventId,
+          allocatedAmount: formData.allocationStrategy === "percentage" 
+            ? ((parseFloat(alloc.percent || "0") / 100) * amount).toFixed(2)
+            : alloc.amount,
+          allocatedPercent: alloc.percent || null,
+        };
+      });
+    }
+
     const expenseData = {
       weddingId,
       description: formData.description,
@@ -185,11 +219,13 @@ export default function Expenses() {
       paidById: payerId,
       paidByName: teamMembers.find(m => m.id === payerId)?.name || user.email,
       splitType: formData.splitType,
-      eventId: formData.eventId || null,
+      eventId: formData.allocationStrategy === "single" ? (formData.eventId || null) : null,
+      allocationStrategy: formData.allocationStrategy,
       categoryId: formData.categoryId || null,
       notes: formData.notes || null,
       expenseDate: formData.expenseDate,
       splits,
+      eventAllocations: allocationsToSend.length > 0 ? allocationsToSend : undefined,
     };
 
     if (editingExpense) {
@@ -201,6 +237,11 @@ export default function Expenses() {
 
   const openEditDialog = (expense: ExpenseWithSplits) => {
     setEditingExpense(expense);
+    
+    // Determine allocation strategy from existing data
+    const hasAllocations = expense.eventAllocations && expense.eventAllocations.length > 0;
+    let strategy: AllocationStrategy = (expense.allocationStrategy as AllocationStrategy) || "single";
+    
     setFormData({
       description: expense.description,
       amount: expense.amount,
@@ -210,12 +251,31 @@ export default function Expenses() {
       paidById: expense.paidById || "",
       notes: expense.notes || "",
       expenseDate: expense.expenseDate ? new Date(expense.expenseDate).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+      allocationStrategy: strategy,
     });
+    
     const amounts: Record<string, string> = {};
     expense.splits.forEach((s) => {
       amounts[s.userId] = s.shareAmount;
     });
     setSplitAmounts(amounts);
+    
+    // Populate event allocations if present
+    if (hasAllocations) {
+      const allocIds = expense.eventAllocations!.map(a => a.eventId);
+      setSelectedEventIds(allocIds);
+      const allocData: Record<string, { amount: string; percent: string }> = {};
+      expense.eventAllocations!.forEach(a => {
+        allocData[a.eventId] = {
+          amount: a.allocatedAmount || "0",
+          percent: a.allocatedPercent || "0",
+        };
+      });
+      setEventAllocations(allocData);
+    } else {
+      setSelectedEventIds([]);
+      setEventAllocations({});
+    }
   };
 
   const totalExpenses = expenses.reduce((sum, e) => sum + parseFloat(e.amount), 0);
@@ -280,19 +340,150 @@ export default function Expenses() {
                 />
               </div>
               <div>
-                <Label htmlFor="event">Event (Optional)</Label>
-                <Select value={formData.eventId || "none"} onValueChange={(v) => setFormData({ ...formData, eventId: v === "none" ? "" : v })}>
-                  <SelectTrigger data-testid="select-expense-event">
-                    <SelectValue placeholder="Select event" />
+                <Label htmlFor="allocationStrategy">Event Allocation</Label>
+                <Select 
+                  value={formData.allocationStrategy} 
+                  onValueChange={(v: AllocationStrategy) => {
+                    setFormData({ ...formData, allocationStrategy: v, eventId: "" });
+                    if (v === "single") {
+                      setSelectedEventIds([]);
+                      setEventAllocations({});
+                    }
+                  }}
+                >
+                  <SelectTrigger data-testid="select-allocation-strategy">
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">No specific event</SelectItem>
-                    {events.map((event) => (
-                      <SelectItem key={event.id} value={event.id}>{event.name}</SelectItem>
-                    ))}
+                    <SelectItem value="single">Single Event</SelectItem>
+                    <SelectItem value="equal">Split Equally Across Events</SelectItem>
+                    <SelectItem value="percentage">Split by Percentage</SelectItem>
+                    <SelectItem value="custom">Custom Amounts per Event</SelectItem>
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {formData.allocationStrategy === "single" && "Assign this expense to one event (or no event)"}
+                  {formData.allocationStrategy === "equal" && "Split cost equally across selected events"}
+                  {formData.allocationStrategy === "percentage" && "Specify % of cost for each event"}
+                  {formData.allocationStrategy === "custom" && "Enter exact amounts for each event"}
+                </p>
               </div>
+              
+              {formData.allocationStrategy === "single" && (
+                <div>
+                  <Label htmlFor="event">Event (Optional)</Label>
+                  <Select value={formData.eventId || "none"} onValueChange={(v) => setFormData({ ...formData, eventId: v === "none" ? "" : v })}>
+                    <SelectTrigger data-testid="select-expense-event">
+                      <SelectValue placeholder="Select event" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No specific event</SelectItem>
+                      {events.map((event) => (
+                        <SelectItem key={event.id} value={event.id}>{event.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              
+              {formData.allocationStrategy !== "single" && (
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    Select Events
+                  </Label>
+                  <div className="border rounded-md p-3 space-y-2 max-h-40 overflow-y-auto">
+                    {events.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">No events found. Create events first.</p>
+                    ) : (
+                      events.map((event) => (
+                        <div key={event.id} className="flex items-center gap-3">
+                          <Checkbox
+                            id={`event-${event.id}`}
+                            checked={selectedEventIds.includes(event.id)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSelectedEventIds([...selectedEventIds, event.id]);
+                                setEventAllocations({
+                                  ...eventAllocations,
+                                  [event.id]: { amount: "0", percent: "0" },
+                                });
+                              } else {
+                                setSelectedEventIds(selectedEventIds.filter(id => id !== event.id));
+                                const newAllocs = { ...eventAllocations };
+                                delete newAllocs[event.id];
+                                setEventAllocations(newAllocs);
+                              }
+                            }}
+                            data-testid={`checkbox-event-${event.id}`}
+                          />
+                          <label htmlFor={`event-${event.id}`} className="text-sm flex-1 cursor-pointer">
+                            {event.name}
+                          </label>
+                          {formData.allocationStrategy === "percentage" && selectedEventIds.includes(event.id) && (
+                            <div className="flex items-center gap-1">
+                              <Input
+                                type="number"
+                                step="1"
+                                min="0"
+                                max="100"
+                                className="w-16 h-8 text-sm"
+                                value={eventAllocations[event.id]?.percent || ""}
+                                onChange={(e) => setEventAllocations({
+                                  ...eventAllocations,
+                                  [event.id]: { ...eventAllocations[event.id], percent: e.target.value },
+                                })}
+                                placeholder="0"
+                                data-testid={`input-percent-${event.id}`}
+                              />
+                              <span className="text-sm text-muted-foreground">%</span>
+                            </div>
+                          )}
+                          {formData.allocationStrategy === "custom" && selectedEventIds.includes(event.id) && (
+                            <div className="flex items-center gap-1">
+                              <span className="text-sm text-muted-foreground">$</span>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                className="w-20 h-8 text-sm"
+                                value={eventAllocations[event.id]?.amount || ""}
+                                onChange={(e) => setEventAllocations({
+                                  ...eventAllocations,
+                                  [event.id]: { ...eventAllocations[event.id], amount: e.target.value },
+                                })}
+                                placeholder="0.00"
+                                data-testid={`input-amount-${event.id}`}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  {formData.allocationStrategy === "equal" && selectedEventIds.length > 0 && formData.amount && (
+                    <p className="text-xs text-muted-foreground">
+                      ${(parseFloat(formData.amount) / selectedEventIds.length).toFixed(2)} per event
+                    </p>
+                  )}
+                  {formData.allocationStrategy === "percentage" && selectedEventIds.length > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      Total: {selectedEventIds.reduce((sum, id) => sum + parseFloat(eventAllocations[id]?.percent || "0"), 0)}%
+                      {selectedEventIds.reduce((sum, id) => sum + parseFloat(eventAllocations[id]?.percent || "0"), 0) !== 100 && 
+                        <span className="text-destructive ml-1">(should equal 100%)</span>
+                      }
+                    </p>
+                  )}
+                  {formData.allocationStrategy === "custom" && selectedEventIds.length > 0 && formData.amount && (
+                    <p className="text-xs text-muted-foreground">
+                      Allocated: ${selectedEventIds.reduce((sum, id) => sum + parseFloat(eventAllocations[id]?.amount || "0"), 0).toFixed(2)}
+                      {Math.abs(selectedEventIds.reduce((sum, id) => sum + parseFloat(eventAllocations[id]?.amount || "0"), 0) - parseFloat(formData.amount)) > 0.01 && 
+                        <span className="text-destructive ml-1">(should equal ${parseFloat(formData.amount).toFixed(2)})</span>
+                      }
+                    </p>
+                  )}
+                </div>
+              )}
               <div>
                 <Label htmlFor="category">Budget Category (Optional)</Label>
                 <Select value={formData.categoryId || "none"} onValueChange={(v) => setFormData({ ...formData, categoryId: v === "none" ? "" : v })}>
@@ -531,6 +722,14 @@ export default function Expenses() {
               {expenses.map((expense) => {
                 const event = events.find((e) => e.id === expense.eventId);
                 const category = budgetCategories.find((c) => c.id === expense.categoryId);
+                const hasAllocations = expense.eventAllocations && expense.eventAllocations.length > 0;
+                const allocatedEvents = hasAllocations
+                  ? expense.eventAllocations!.map(a => ({
+                      event: events.find(e => e.id === a.eventId),
+                      amount: a.allocatedAmount,
+                      percent: a.allocatedPercent,
+                    })).filter(a => a.event)
+                  : [];
                 return (
                   <div
                     key={expense.id}
@@ -542,12 +741,29 @@ export default function Expenses() {
                         <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="font-medium">{expense.description}</h3>
                           {category && <Badge variant="default" data-testid={`badge-category-${expense.id}`}>{category.category}</Badge>}
-                          {event && <Badge variant="outline">{event.name}</Badge>}
+                          {event && !hasAllocations && <Badge variant="outline">{event.name}</Badge>}
+                          {hasAllocations && (
+                            <Badge variant="outline" className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              {allocatedEvents.length} events
+                            </Badge>
+                          )}
                           <Badge variant="secondary">{expense.splitType}</Badge>
                         </div>
                         <p className="text-sm text-muted-foreground mt-1">
                           Paid by {expense.paidByName} on {format(new Date(expense.expenseDate), "MMM d, yyyy")}
                         </p>
+                        {hasAllocations && allocatedEvents.length > 0 && (
+                          <div className="mt-2 text-sm text-muted-foreground">
+                            <span className="font-medium">Event breakdown: </span>
+                            {allocatedEvents.map((a, i) => (
+                              <span key={a.event!.id}>
+                                {a.event!.name}: ${parseFloat(a.amount || "0").toFixed(2)}
+                                {i < allocatedEvents.length - 1 ? " • " : ""}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                         {expense.notes && (
                           <p className="text-sm text-muted-foreground mt-1">{expense.notes}</p>
                         )}
