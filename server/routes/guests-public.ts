@@ -42,15 +42,76 @@ export async function registerGuestPublicRoutes(router: Router, storage: IStorag
         return res.status(400).json({ error: "Request body must contain a 'guests' array" });
       }
 
+      if (guestsArray.length === 0) {
+        return res.json({ success: 0, failed: 0, guests: [], errors: undefined });
+      }
+
+      // Debug logging
+      console.log("=== BULK IMPORT DEBUG (guests-public.ts) ===");
+      console.log("Number of guests:", guestsArray.length);
+      console.log("First guest householdName:", guestsArray[0]?.householdName);
+      console.log("=============================================");
+
+      const weddingId = guestsArray[0].weddingId;
       const createdGuests = [];
       const errors = [];
+      const householdMap = new Map<string, string>();
+
+      // Load existing households to avoid duplicates
+      const existingHouseholds = await storage.getHouseholdsByWedding(weddingId);
+      for (const household of existingHouseholds) {
+        householdMap.set(household.name.toLowerCase(), household.id);
+      }
+
+      // Count guests per household for maxCount
+      const guestCountByHousehold = new Map<string, number>();
+      for (const guest of guestsArray) {
+        const name = guest.householdName?.trim()?.toLowerCase();
+        if (name) {
+          guestCountByHousehold.set(name, (guestCountByHousehold.get(name) || 0) + 1);
+        }
+      }
 
       for (let i = 0; i < guestsArray.length; i++) {
         try {
-          const validatedData = insertGuestSchema.parse(guestsArray[i]);
+          const guestData = guestsArray[i];
+          const householdName = guestData.householdName?.trim();
+          let householdId: string | undefined;
+
+          // Create household if householdName is provided
+          if (householdName) {
+            const normalizedName = householdName.toLowerCase();
+            if (householdMap.has(normalizedName)) {
+              householdId = householdMap.get(normalizedName);
+            } else {
+              const guestCount = guestCountByHousehold.get(normalizedName) || 1;
+              console.log(`Creating household: "${householdName}" with maxCount: ${guestCount}`);
+              const household = await storage.createHousehold({
+                weddingId: guestData.weddingId,
+                name: householdName,
+                affiliation: guestData.side || 'mutual',
+                relationshipTier: 'friend',
+                priorityTier: 'nice_to_have',
+                maxCount: guestCount,
+              });
+              householdId = household.id;
+              householdMap.set(normalizedName, household.id);
+              console.log(`Created household "${householdName}" with id: ${household.id}`);
+            }
+          }
+
+          // Remove householdName from data before validation (not in schema)
+          const { householdName: _, address, ...guestWithoutHouseholdName } = guestData;
+          const validatedData = insertGuestSchema.parse({
+            ...guestWithoutHouseholdName,
+            householdId,
+            // Map 'address' from import to 'addressStreet' in schema
+            addressStreet: address || guestWithoutHouseholdName.addressStreet,
+          });
           const guest = await storage.createGuest(validatedData);
           createdGuests.push(guest);
         } catch (error) {
+          console.error(`Error importing guest at index ${i}:`, error);
           errors.push({
             index: i,
             data: guestsArray[i],
@@ -66,6 +127,7 @@ export async function registerGuestPublicRoutes(router: Router, storage: IStorag
         errors: errors.length > 0 ? errors : undefined
       });
     } catch (error) {
+      console.error("Bulk import error:", error);
       res.status(500).json({ error: "Failed to bulk import guests" });
     }
   });
