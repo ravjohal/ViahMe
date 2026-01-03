@@ -312,6 +312,8 @@ export interface IStorage {
   // Expenses
   getExpense(id: string): Promise<Expense | undefined>;
   getExpensesByWedding(weddingId: string): Promise<Expense[]>;
+  getExpensesByBudgetCategory(categoryId: string): Promise<Expense[]>;
+  getExpenseTotalByBudgetCategory(categoryId: string): Promise<number>;
   createExpense(expense: InsertExpense): Promise<Expense>;
   updateExpense(id: string, expense: Partial<InsertExpense>): Promise<Expense | undefined>;
   deleteExpense(id: string): Promise<boolean>;
@@ -1600,6 +1602,15 @@ export class MemStorage implements IStorage {
 
   async getExpensesByWedding(weddingId: string): Promise<Expense[]> {
     return Array.from(this.expenses.values()).filter((e) => e.weddingId === weddingId);
+  }
+
+  async getExpensesByBudgetCategory(categoryId: string): Promise<Expense[]> {
+    return Array.from(this.expenses.values()).filter((e) => e.categoryId === categoryId);
+  }
+
+  async getExpenseTotalByBudgetCategory(categoryId: string): Promise<number> {
+    const expenses = await this.getExpensesByBudgetCategory(categoryId);
+    return expenses.reduce((sum, e) => sum + parseFloat(e.amount), 0);
   }
 
   async createExpense(insertExpense: InsertExpense): Promise<Expense> {
@@ -4623,6 +4634,15 @@ export class DBStorage implements IStorage {
 
   async getExpensesByWedding(weddingId: string): Promise<Expense[]> {
     return await this.db.select().from(schema.expenses).where(eq(schema.expenses.weddingId, weddingId));
+  }
+
+  async getExpensesByBudgetCategory(categoryId: string): Promise<Expense[]> {
+    return await this.db.select().from(schema.expenses).where(eq(schema.expenses.categoryId, categoryId));
+  }
+
+  async getExpenseTotalByBudgetCategory(categoryId: string): Promise<number> {
+    const expenses = await this.getExpensesByBudgetCategory(categoryId);
+    return expenses.reduce((sum, e) => sum + parseFloat(e.amount), 0);
   }
 
   async createExpense(insertExpense: InsertExpense): Promise<Expense> {

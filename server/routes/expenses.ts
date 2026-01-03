@@ -2,6 +2,13 @@ import { Router } from "express";
 import type { IStorage } from "../storage";
 import { insertExpenseSchema } from "@shared/schema";
 
+// Helper to sync budget category spent amount from linked expenses
+async function syncBudgetCategorySpent(storage: IStorage, categoryId: string | null | undefined) {
+  if (!categoryId) return;
+  const total = await storage.getExpenseTotalByBudgetCategory(categoryId);
+  await storage.updateBudgetCategory(categoryId, { spentAmount: total.toFixed(2) });
+}
+
 export async function registerExpenseRoutes(router: Router, storage: IStorage) {
   router.get("/:weddingId", async (req, res) => {
     try {
@@ -46,6 +53,9 @@ export async function registerExpenseRoutes(router: Router, storage: IStorage) {
         }
       }
       
+      // Sync budget category spent amount if linked
+      await syncBudgetCategorySpent(storage, expense.categoryId);
+      
       const createdSplits = await storage.getExpenseSplitsByExpense(expense.id);
       res.json({ ...expense, splits: createdSplits });
     } catch (error) {
@@ -60,6 +70,10 @@ export async function registerExpenseRoutes(router: Router, storage: IStorage) {
   router.patch("/:id", async (req, res) => {
     try {
       const { splits, ...expenseData } = req.body;
+      // Get old expense to check if category changed
+      const oldExpense = await storage.getExpense(req.params.id);
+      const oldCategoryId = oldExpense?.categoryId;
+      
       const expense = await storage.updateExpense(req.params.id, expenseData);
       if (!expense) {
         return res.status(404).json({ error: "Expense not found" });
@@ -75,6 +89,12 @@ export async function registerExpenseRoutes(router: Router, storage: IStorage) {
         }
       }
       
+      // Sync both old and new budget categories if they changed
+      if (oldCategoryId !== expense.categoryId) {
+        await syncBudgetCategorySpent(storage, oldCategoryId);
+      }
+      await syncBudgetCategorySpent(storage, expense.categoryId);
+      
       const updatedSplits = await storage.getExpenseSplitsByExpense(expense.id);
       res.json({ ...expense, splits: updatedSplits });
     } catch (error) {
@@ -84,8 +104,16 @@ export async function registerExpenseRoutes(router: Router, storage: IStorage) {
 
   router.delete("/:id", async (req, res) => {
     try {
+      // Get expense before deleting to sync budget category
+      const expense = await storage.getExpense(req.params.id);
+      const categoryId = expense?.categoryId;
+      
       await storage.deleteExpenseSplitsByExpense(req.params.id);
       await storage.deleteExpense(req.params.id);
+      
+      // Sync budget category after deletion
+      await syncBudgetCategorySpent(storage, categoryId);
+      
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete expense" });
