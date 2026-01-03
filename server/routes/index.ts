@@ -370,6 +370,14 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   app.use("/api/timeline-changes", createTimelineChangesRouter(storage));
   app.use("/api/vendor", createVendorAcknowledgmentsRouter(storage));
 
+  // Guest engagement games
+  const gamesRouter = await import('./games');
+  app.use("/api", gamesRouter.default);
+  
+  // Guest-facing game routes (accessed via household magic link)
+  const gamesGuestRouter = await import('./games-guest');
+  app.use("/api", gamesGuestRouter.default);
+
   const httpServer = createServer(app);
 
   // WebSocket Server for live feed (guest updates)
