@@ -267,8 +267,8 @@ export default function Expenses() {
       const allocData: Record<string, { amount: string; percent: string }> = {};
       expense.eventAllocations!.forEach(a => {
         allocData[a.eventId] = {
-          amount: a.allocatedAmount || "0",
-          percent: a.allocatedPercent || "0",
+          amount: String(a.allocatedAmount || "0"),
+          percent: String(a.allocatedPercent || "0"),
         };
       });
       setEventAllocations(allocData);
@@ -372,7 +372,20 @@ export default function Expenses() {
               {formData.allocationStrategy === "single" && (
                 <div>
                   <Label htmlFor="event">Event (Optional)</Label>
-                  <Select value={formData.eventId || "none"} onValueChange={(v) => setFormData({ ...formData, eventId: v === "none" ? "" : v })}>
+                  <Select 
+                    value={formData.eventId || "none"} 
+                    onValueChange={(v) => {
+                      const selectedEvent = events.find(e => e.id === v);
+                      const eventDate = selectedEvent?.date 
+                        ? new Date(selectedEvent.date).toISOString().split("T")[0]
+                        : formData.expenseDate;
+                      setFormData({ 
+                        ...formData, 
+                        eventId: v === "none" ? "" : v,
+                        expenseDate: v === "none" ? formData.expenseDate : eventDate
+                      });
+                    }}
+                  >
                     <SelectTrigger data-testid="select-expense-event">
                       <SelectValue placeholder="Select event" />
                     </SelectTrigger>
