@@ -545,13 +545,14 @@ export type BudgetCategory = typeof budgetCategories.$inferSelect;
 export const expenses = pgTable("expenses", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   weddingId: varchar("wedding_id").notNull(),
-  eventId: varchar("event_id"), // Optional - link to specific event
+  eventId: varchar("event_id"), // Optional - link to specific event (legacy, use allocations for multi-event)
   categoryId: varchar("category_id"), // Optional - link to budget category
   description: text("description").notNull(),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
   paidById: varchar("paid_by_id").notNull(), // User ID who paid
   paidByName: text("paid_by_name").notNull(), // Cached name for display
   splitType: text("split_type").notNull().default('equal'), // 'equal' | 'percentage' | 'custom' | 'full'
+  allocationStrategy: text("allocation_strategy").default('single'), // 'single' | 'equal' | 'percentage' | 'custom'
   receiptUrl: text("receipt_url"), // Optional receipt image/document
   notes: text("notes"),
   expenseDate: timestamp("expense_date").notNull().defaultNow(),
@@ -564,6 +565,7 @@ export const insertExpenseSchema = createInsertSchema(expenses).omit({
 }).extend({
   amount: z.string().regex(/^\d+(\.\d{1,2})?$/, "Amount must be a valid decimal"),
   splitType: z.enum(['equal', 'percentage', 'custom', 'full']),
+  allocationStrategy: z.enum(['single', 'equal', 'percentage', 'custom']).optional(),
   expenseDate: z.string().optional().transform(val => val ? new Date(val) : new Date()),
 });
 
@@ -596,6 +598,30 @@ export const insertExpenseSplitSchema = createInsertSchema(expenseSplits).omit({
 
 export type InsertExpenseSplit = z.infer<typeof insertExpenseSplitSchema>;
 export type ExpenseSplit = typeof expenseSplits.$inferSelect;
+
+// ============================================================================
+// EXPENSE EVENT ALLOCATIONS - Distribute expense across multiple events
+// ============================================================================
+
+export const expenseEventAllocations = pgTable("expense_event_allocations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  expenseId: varchar("expense_id").notNull(),
+  eventId: varchar("event_id").notNull(),
+  allocatedAmount: decimal("allocated_amount", { precision: 10, scale: 2 }).notNull(),
+  allocatedPercent: integer("allocated_percent"), // Optional percentage for UI display
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertExpenseEventAllocationSchema = createInsertSchema(expenseEventAllocations).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  allocatedAmount: z.string().regex(/^\d+(\.\d{1,2})?$/, "Amount must be a valid decimal"),
+  allocatedPercent: z.number().optional(),
+});
+
+export type InsertExpenseEventAllocation = z.infer<typeof insertExpenseEventAllocationSchema>;
+export type ExpenseEventAllocation = typeof expenseEventAllocations.$inferSelect;
 
 // ============================================================================
 // HOUSEHOLDS - Family/group management for unified RSVPs
