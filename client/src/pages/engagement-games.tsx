@@ -447,14 +447,14 @@ export default function EngagementGamesPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Linked Event (Optional)</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
+                      <Select onValueChange={(val) => field.onChange(val === "none" ? null : val)} defaultValue={field.value || "none"}>
                         <FormControl>
                           <SelectTrigger data-testid="select-game-event">
                             <SelectValue placeholder="Select an event" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">No specific event</SelectItem>
+                          <SelectItem value="none">No specific event</SelectItem>
                           {events.map((event) => (
                             <SelectItem key={event.id} value={event.id}>
                               {event.name}
