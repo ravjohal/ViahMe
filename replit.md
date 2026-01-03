@@ -25,6 +25,12 @@ Key architectural decisions and features include:
   - **Ceremony Mapping**: `CEREMONY_MAPPINGS` object maps event names/types to ceremony IDs for matching events to templates
 - **Vendor Specialization**: Support for 32 distinct vendor categories, including culturally-specific services.
 - **Budget Intelligence System**: Provides smart budget recommendations, event-centric views, contributor filtering, guest savings calculator, upcoming payments timeline, multi-event expense allocation, and a share budget feature. Includes a customizable financial dashboard with 6 widget types, drag-and-drop reordering, and automatic budget alerts.
+  - **Refined Pricing Engine**: Three-factor multiplier system in `shared/pricing.ts` for precise cost estimates:
+    - Venue class multipliers (Home 0.6x → Hotel Ballroom 1.0x)
+    - Vendor tier multipliers (Budget 0.65x → Premium 1.0x)
+    - Guest bracket multipliers (Small <50 guests 0.9x → XL 400+ guests 1.05x)
+  - **Pricing Adjuster Component**: Reusable `PricingAdjuster` component with venue/vendor selectors for Budget Estimator and Ceremony Cost Breakdown
+  - **Synchronized Pricing**: All three estimation surfaces (Budget Estimator, Ceremony Cost Breakdown, Multi-Ceremony Savings Calculator) apply consistent multipliers to both totals and line-item breakdowns
 - **Guest List Management**: Frictionless bulk guest import, advanced invitation & RSVP system with household grouping, magic link authentication, per-event RSVP tracking, and bulk invitation sender. Features a Household-First Architecture with Head of House contacts, side filters, event filter pills, summary headers, gift tracking, and WhatsApp template blasts.
 - **Integrated Guest Management Module**: Two-tier UI for managing final guest lists ("Guest List") and a simplified planning workflow ("Guest Planning") including collector links for family submissions, per-event cost & capacity tracking.
 - **Communication & Collaboration**: Messaging system, review system, document storage, and team collaboration with granular role-based access control.
