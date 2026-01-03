@@ -276,7 +276,7 @@ export function AddExpenseDialog({
             </div>
             <div className="space-y-2">
               <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Date
+                Date of Expense
               </Label>
               <Input
                 type="date"
