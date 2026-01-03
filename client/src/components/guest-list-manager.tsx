@@ -210,7 +210,6 @@ export function GuestListManager({ guests, households = [], onAddGuest, onImport
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Household</TableHead>
-                  <TableHead>Main Contact</TableHead>
                   <TableHead>Side</TableHead>
                   <TableHead>Contact</TableHead>
                   <TableHead>RSVP Status</TableHead>
@@ -232,15 +231,20 @@ export function GuestListManager({ guests, households = [], onAddGuest, onImport
                           <>
                             <span className="text-muted-foreground">{guest.name}</span>
                             <Badge variant="secondary" className="text-xs">
-                              Plus One
+                              +1
                             </Badge>
                           </>
                         ) : (
                           <>
                             {guest.name}
+                            {guest.isMainHouseholdContact && guest.householdId && (
+                              <Badge variant="outline" className="text-xs text-green-600 border-green-600">
+                                Main
+                              </Badge>
+                            )}
                             {guest.plusOne && (
                               <Badge variant="outline" className="text-xs text-primary border-primary">
-                                Has +1
+                                +1
                               </Badge>
                             )}
                           </>
@@ -254,15 +258,6 @@ export function GuestListManager({ guests, households = [], onAddGuest, onImport
                         </span>
                       ) : (
                         <span className="text-sm text-muted-foreground">Unassigned</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {guest.householdId && guest.isMainHouseholdContact ? (
-                        <Badge variant="outline" className="text-green-600 border-green-600">Yes</Badge>
-                      ) : guest.householdId ? (
-                        <span className="text-sm text-muted-foreground">No</span>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">—</span>
                       )}
                     </TableCell>
                     <TableCell>
