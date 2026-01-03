@@ -722,7 +722,12 @@ export default function Dashboard() {
                 </Card>
               ) : (
                 <Card className="divide-y" data-testid="event-timeline">
-                  {events.slice(0, 5).map((event) => (
+                  {[...events].sort((a, b) => {
+                    if (!a.date && !b.date) return 0;
+                    if (!a.date) return 1;
+                    if (!b.date) return -1;
+                    return new Date(a.date).getTime() - new Date(b.date).getTime();
+                  }).slice(0, 5).map((event) => (
                     <button
                       key={event.id}
                       onClick={() => setSelectedEvent(event)}
