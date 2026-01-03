@@ -3021,3 +3021,174 @@ export const insertIgnoredDuplicatePairSchema = createInsertSchema(ignoredDuplic
 
 export type InsertIgnoredDuplicatePair = z.infer<typeof insertIgnoredDuplicatePairSchema>;
 export type IgnoredDuplicatePair = typeof ignoredDuplicatePairs.$inferSelect;
+
+// ============================================================================
+// GUEST ENGAGEMENT GAMES - Scavenger hunts and trivia for wedding events
+// ============================================================================
+
+export const GAME_TYPES = ['scavenger_hunt', 'trivia'] as const;
+export type GameType = typeof GAME_TYPES[number];
+
+export const GAME_STATUSES = ['draft', 'active', 'paused', 'completed'] as const;
+export type GameStatus = typeof GAME_STATUSES[number];
+
+// Main games table
+export const engagementGames = pgTable("engagement_games", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  eventId: varchar("event_id"), // Optional - can be tied to specific event
+  name: text("name").notNull(),
+  description: text("description"),
+  gameType: text("game_type").notNull(), // 'scavenger_hunt' | 'trivia'
+  status: text("status").notNull().default("draft"), // 'draft' | 'active' | 'paused' | 'completed'
+  pointsPerChallenge: integer("points_per_challenge").default(10), // Default points per item
+  startTime: timestamp("start_time"), // When the game becomes available
+  endTime: timestamp("end_time"), // When the game closes
+  showLeaderboard: boolean("show_leaderboard").default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertEngagementGameSchema = createInsertSchema(engagementGames).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  gameType: z.enum(GAME_TYPES),
+  status: z.enum(GAME_STATUSES).optional(),
+});
+
+export type InsertEngagementGame = z.infer<typeof insertEngagementGameSchema>;
+export type EngagementGame = typeof engagementGames.$inferSelect;
+
+// Scavenger hunt challenges
+export const scavengerChallenges = pgTable("scavenger_challenges", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  gameId: varchar("game_id").notNull(),
+  prompt: text("prompt").notNull(), // e.g., "Take a photo with the bride"
+  description: text("description"), // Additional instructions
+  points: integer("points").notNull().default(10),
+  requiresPhoto: boolean("requires_photo").default(true),
+  verificationMode: text("verification_mode").notNull().default("auto"), // 'auto' | 'manual' (manual = couple reviews)
+  sortOrder: integer("sort_order").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertScavengerChallengeSchema = createInsertSchema(scavengerChallenges).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  verificationMode: z.enum(['auto', 'manual']).optional(),
+});
+
+export type InsertScavengerChallenge = z.infer<typeof insertScavengerChallengeSchema>;
+export type ScavengerChallenge = typeof scavengerChallenges.$inferSelect;
+
+// Trivia questions
+export const triviaQuestions = pgTable("trivia_questions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  gameId: varchar("game_id").notNull(),
+  question: text("question").notNull(),
+  options: jsonb("options").notNull(), // Array of answer options: ["Option A", "Option B", "Option C", "Option D"]
+  correctAnswer: integer("correct_answer").notNull(), // Index of correct option (0-based)
+  points: integer("points").notNull().default(10),
+  explanation: text("explanation"), // Optional explanation shown after answering
+  sortOrder: integer("sort_order").default(0),
+  timeLimitSeconds: integer("time_limit_seconds"), // Optional time limit per question
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertTriviaQuestionSchema = createInsertSchema(triviaQuestions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertTriviaQuestion = z.infer<typeof insertTriviaQuestionSchema>;
+export type TriviaQuestion = typeof triviaQuestions.$inferSelect;
+
+// Guest participation tracking
+export const gameParticipation = pgTable("game_participation", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  gameId: varchar("game_id").notNull(),
+  guestId: varchar("guest_id").notNull(),
+  householdId: varchar("household_id"), // For grouping by household in leaderboard
+  totalPoints: integer("total_points").notNull().default(0),
+  challengesCompleted: integer("challenges_completed").notNull().default(0),
+  lastActivityAt: timestamp("last_activity_at").notNull().defaultNow(),
+  startedAt: timestamp("started_at").notNull().defaultNow(),
+});
+
+export const insertGameParticipationSchema = createInsertSchema(gameParticipation).omit({
+  id: true,
+  startedAt: true,
+  lastActivityAt: true,
+});
+
+export type InsertGameParticipation = z.infer<typeof insertGameParticipationSchema>;
+export type GameParticipation = typeof gameParticipation.$inferSelect;
+
+// Scavenger hunt submissions (photo/activity proof)
+export const scavengerSubmissions = pgTable("scavenger_submissions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  challengeId: varchar("challenge_id").notNull(),
+  guestId: varchar("guest_id").notNull(),
+  participationId: varchar("participation_id").notNull(),
+  photoUrl: text("photo_url"), // Object storage URL
+  textResponse: text("text_response"), // For non-photo challenges
+  status: text("status").notNull().default("pending"), // 'pending' | 'approved' | 'rejected'
+  pointsAwarded: integer("points_awarded").default(0),
+  reviewedById: varchar("reviewed_by_id"), // User who reviewed (for manual verification)
+  reviewNote: text("review_note"), // Optional feedback
+  submittedAt: timestamp("submitted_at").notNull().defaultNow(),
+  reviewedAt: timestamp("reviewed_at"),
+});
+
+export const insertScavengerSubmissionSchema = createInsertSchema(scavengerSubmissions).omit({
+  id: true,
+  submittedAt: true,
+  reviewedAt: true,
+}).extend({
+  status: z.enum(['pending', 'approved', 'rejected']).optional(),
+});
+
+export type InsertScavengerSubmission = z.infer<typeof insertScavengerSubmissionSchema>;
+export type ScavengerSubmission = typeof scavengerSubmissions.$inferSelect;
+
+// Trivia answers
+export const triviaAnswers = pgTable("trivia_answers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  questionId: varchar("question_id").notNull(),
+  guestId: varchar("guest_id").notNull(),
+  participationId: varchar("participation_id").notNull(),
+  selectedOption: integer("selected_option").notNull(), // Index of selected answer
+  isCorrect: boolean("is_correct").notNull(),
+  pointsAwarded: integer("points_awarded").notNull().default(0),
+  responseTimeMs: integer("response_time_ms"), // How fast they answered
+  answeredAt: timestamp("answered_at").notNull().defaultNow(),
+});
+
+export const insertTriviaAnswerSchema = createInsertSchema(triviaAnswers).omit({
+  id: true,
+  answeredAt: true,
+});
+
+export type InsertTriviaAnswer = z.infer<typeof insertTriviaAnswerSchema>;
+export type TriviaAnswer = typeof triviaAnswers.$inferSelect;
+
+// Extended types for leaderboard
+export type LeaderboardEntry = {
+  guestId: string;
+  guestName: string;
+  householdName?: string;
+  totalPoints: number;
+  challengesCompleted: number;
+  rank: number;
+};
+
+export type GameWithStats = EngagementGame & {
+  challengeCount: number;
+  participantCount: number;
+  event?: Event;
+};
