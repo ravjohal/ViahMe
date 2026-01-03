@@ -1048,6 +1048,7 @@ export interface GuestPlanningSnapshot {
     
     // Budget impact
     confirmedCost: number;
+    actualExpenseSpend: number;
     
     // Capacity status
     capacityUsed: number;
@@ -8166,7 +8167,7 @@ export class DBStorage implements IStorage {
     const numEvents = allEvents.length || 1;
     const defaultEventAllocation = guestBudget > 0 ? guestBudget / numEvents : null;
     
-    const eventAnalysis = allEvents.map(event => {
+    const eventAnalysis = await Promise.all(allEvents.map(async (event) => {
       const costPerHead = event.costPerHead ? parseFloat(event.costPerHead) : defaultCostPerHead;
       
       // Determine event capacity
@@ -8200,8 +8201,11 @@ export class DBStorage implements IStorage {
       const invitedGuestIds = guestEventMap.get(event.id) || new Set();
       const confirmedInvited = confirmedGuests.filter(g => invitedGuestIds.has(g.id)).length;
       
-      // Budget impact
+      // Budget impact (estimated based on guest count)
       const confirmedCost = confirmedInvited * costPerHead;
+      
+      // Get actual expense spend for this event (includes multi-event allocations)
+      const actualExpenseSpend = await this.getExpenseTotalByEvent(event.id);
       
       // Capacity status
       const capacityUsed = confirmedInvited;
@@ -8219,12 +8223,13 @@ export class DBStorage implements IStorage {
         budgetAllocation,
         confirmedInvited,
         confirmedCost,
+        actualExpenseSpend,
         capacityUsed,
         capacityRemaining,
         isOverCapacity,
         isOverBudget,
       };
-    });
+    }));
 
     // Calculate overall budget
     const confirmedSpend = confirmedSeats * defaultCostPerHead;
