@@ -50,7 +50,6 @@ export const COUPLE_NAV_SECTIONS: NavSection[] = [
     label: "Website & Media",
     items: [
       { path: "/website-builder", label: "Website", icon: Globe, permission: "website", description: "Your wedding site" },
-      { path: "/photo-gallery", label: "Photos", icon: Image, permission: "photos", description: "Photo gallery" },
       { path: "/playlists", label: "Playlists", icon: Music, permission: "playlists", description: "Music picks" },
       { path: "/documents", label: "Documents", icon: FileText, permission: "documents", description: "Important files" },
     ],

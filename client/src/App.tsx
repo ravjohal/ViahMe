@@ -30,7 +30,6 @@ import Playlists from "@/pages/playlists";
 import Documents from "@/pages/documents";
 import WebsiteBuilder from "@/pages/website-builder";
 import GuestWebsite from "@/pages/guest-website";
-import PhotoGallery from "@/pages/photo-gallery";
 import VendorAvailabilityCalendar from "@/pages/vendor-availability";
 import Settings from "@/pages/settings";
 import Landing from "@/pages/landing";
@@ -191,11 +190,6 @@ function Router() {
       <Route path="/website-builder">
         <ProtectedRoute requiredPermission="website">
           <WebsiteBuilder />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/photo-gallery">
-        <ProtectedRoute requiredPermission="photos">
-          <PhotoGallery />
         </ProtectedRoute>
       </Route>
       <Route path="/shopping">
