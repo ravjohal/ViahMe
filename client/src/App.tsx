@@ -41,7 +41,6 @@ import OrderConfirmation from "@/pages/order-confirmation";
 import RsvpPortal from "@/pages/rsvp-portal";
 import Shopping from "@/pages/shopping";
 import CulturalInfo from "@/pages/cultural-info";
-import RitualControl from "@/pages/ritual-control";
 import GuestLiveFeed from "@/pages/guest-live-feed";
 import Collaborators from "@/pages/collaborators";
 import VendorCalendar from "@/pages/vendor-calendar";
@@ -202,11 +201,6 @@ function Router() {
       <Route path="/shopping">
         <ProtectedRoute requiredPermission="shopping">
           <Shopping />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/ritual-control">
-        <ProtectedRoute requiredPermission="concierge">
-          <RitualControl />
         </ProtectedRoute>
       </Route>
       <Route path="/collaborators">

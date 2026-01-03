@@ -33,7 +33,6 @@ export const COUPLE_NAV_SECTIONS: NavSection[] = [
       { path: "/vendors", label: "Vendors", icon: UserCircle, permission: "vendors", priority: 4, description: "Find services" },
       { path: "/guests", label: "Guests", icon: Users, permission: "guests", priority: 5, description: "Manage guest list" },
       { path: "/tasks", label: "Tasks", icon: CheckSquare, permission: "tasks", priority: 6, description: "Things to do" },
-      { path: "/ritual-control", label: "Live Control", icon: Radio, permission: "concierge", priority: 7, description: "Day-of coordination" },
     ],
   },
   {
