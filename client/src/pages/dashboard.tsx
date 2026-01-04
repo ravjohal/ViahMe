@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Calendar, DollarSign, Users, Briefcase, FileText, Camera, CheckCircle2, ArrowRight, Sparkles, UserPlus, Heart, Clock, Bot, CheckSquare, Globe, Package, Music, Image, MessageSquare, Radio, ShoppingBag, ChevronDown, ChevronUp, Map, Receipt } from "lucide-react";
+import { Calendar, DollarSign, Users, Briefcase, FileText, Camera, CheckCircle2, ArrowRight, Sparkles, UserPlus, Heart, Clock, Bot, CheckSquare, Globe, Package, Music, Image, MessageSquare, Radio, ShoppingBag, ChevronDown, ChevronUp, Map, Receipt, Link2, Copy, Send, ExternalLink } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -17,7 +17,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { usePermissions } from "@/hooks/use-permissions";
 import { useAuth } from "@/hooks/use-auth";
 import { PERMISSION_CATEGORIES, type PermissionCategory } from "@shared/schema";
-import type { Wedding, Event, BudgetCategory, Contract, Booking, EventCostItem, Guest, WeddingRole, Task } from "@shared/schema";
+import type { Wedding, Event, BudgetCategory, Contract, Booking, EventCostItem, Guest, WeddingRole, Task, WeddingCollaborator } from "@shared/schema";
 
 const CATEGORY_LABELS: Record<string, string> = {
   catering: "Catering & Food",
@@ -262,6 +262,11 @@ export default function Dashboard() {
     enabled: !!wedding?.id,
   });
 
+  const { data: collaborators = [] } = useQuery<WeddingCollaborator[]>({
+    queryKey: ["/api/weddings", wedding?.id, "collaborators"],
+    enabled: !!wedding?.id,
+  });
+
   const deleteEventMutation = useMutation({
     mutationFn: async (id: string) => {
       return await apiRequest("DELETE", `/api/events/${id}`);
@@ -392,11 +397,9 @@ export default function Dashboard() {
     {
       id: "website",
       number: 5,
-      title: wedding.guestWebsiteEnabled ? "Website Live" : "Create Website",
-      description: wedding.guestWebsiteEnabled 
-        ? "Your wedding website is published"
-        : "Build your guest-facing wedding site",
-      completed: wedding.guestWebsiteEnabled || false,
+      title: "Create Website",
+      description: "Build your guest-facing wedding site",
+      completed: false,
       inProgress: false,
       path: "/website-builder",
       color: "cyan",
@@ -453,6 +456,52 @@ export default function Dashboard() {
             Plan your beautiful {wedding.tradition} celebration step by step
           </p>
         </div>
+
+        {/* Partner Invite Card - Show prominently if no partner collaborator exists */}
+        {collaborators.length === 0 && (
+          <Card className="p-4 md:p-6 mb-6 bg-gradient-to-r from-rose-50 via-pink-50 to-orange-50 dark:from-rose-950/30 dark:via-pink-950/30 dark:to-orange-950/30 border-2 border-pink-300 dark:border-pink-700 shadow-lg" data-testid="partner-invite-card">
+            <div className="flex flex-col md:flex-row md:items-center gap-4">
+              <div className="flex items-center gap-4 flex-1">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center flex-shrink-0 shadow-md">
+                  <Heart className="w-7 h-7 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-lg md:text-xl font-bold text-foreground flex items-center gap-2">
+                    <span>Invite Your Partner</span>
+                    <Badge className="bg-pink-500 text-white text-xs">Important</Badge>
+                  </h2>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {wedding.partner2Name 
+                      ? `Send ${wedding.partner2Name} an invite so they can help plan your wedding together!`
+                      : "Send your partner an invite so you can plan your wedding together!"}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    They'll get their own account to add guests, track expenses from their side, and collaborate on all the details.
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2 md:flex-col lg:flex-row">
+                <Button
+                  onClick={() => setLocation("/collaborators")}
+                  className="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white shadow-md"
+                  data-testid="button-invite-partner"
+                >
+                  <Send className="w-4 h-4 mr-2" />
+                  Send Invite
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setLocation("/collaborators")}
+                  className="border-pink-300 text-pink-700 dark:border-pink-700 dark:text-pink-300"
+                  data-testid="button-manage-team"
+                >
+                  <Users className="w-4 h-4 mr-2" />
+                  Manage Team
+                </Button>
+              </div>
+            </div>
+          </Card>
+        )}
 
         {/* At a Glance Stats - Mobile First */}
         <div className="mb-6">

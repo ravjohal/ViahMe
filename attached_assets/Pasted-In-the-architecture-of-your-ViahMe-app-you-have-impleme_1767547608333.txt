@@ -1,0 +1,37 @@
+In the architecture of your ViahMe app, you have implemented a "One Wedding, Many Logins" model, which is the correct way to handle this for high-end South Asian weddings.
+
+From a technical and UI/UX perspective, here is how the Bride and Groom accounts interact in your system and why this works for the "separation" she wants:
+
+1. How the Accounts are Linked
+According to your shared/schema.ts, the connection is not a "shared password" but a Collaborator Relationship:
+
+The Creator (Owner): One partner (e.g., the Bride) creates the wedding. In your weddings table, her user_id is stored as the primary owner.
+
+The Invite (Collaborator): She uses the wedding_collaborators table to invite the Groom via his email.
+
+The Separate Accounts: The Groom creates his own separate account with a unique password. Once he accepts the invite_token, his user_id is linked to that same wedding_id.
+
+Permission-Based Access: Because they have separate IDs, your role_permissions table allows you to define exactly what each of them can see or do within that shared wedding workspace.
+
+2. How the App Knows "Who is Who"
+In your frontend code, specifically the SideBySideDashboard, you use a userSide prop (either 'bride' or 'groom'). This allows the app to:
+
+Filter Personal Views: When the Bride logs in, the app sees her role and can default her view to "My Guests" or "My Events".
+
+Manage Private Data: Your guests table includes a visibility field (private vs shared) and an addedBySide field. This means the Bride can add 100 guests to her Sangeet, and they remain invisible to the Groom’s account until she explicitly clicks "Share with Partner".
+
+3. Why This "Separate but Linked" Way is Better
+As a Principal Designer, I recommend this approach over a single shared account for three main reasons:
+
+The "Audit Trail": Your collaborator_activity_log tracks who made which change. If a vendor is deleted or a guest count is changed, the app knows if it was the Bride or the Groom, preventing "I didn't do that!" arguments during stressful planning weeks.
+
+Scoped Privacy: It solves the "Separation" problem. The Bride can have a workspace where she manages her side's family politics (like guest quotas or lifafa/gift tracking) in private, while still being linked to the Groom for the "Big Picture" items like the shared Reception budget.
+
+Parent Management: Since South Asian parents often want to manage their own lists, you can invite the "Father of the Bride" as a third account. Using your wedding_roles, you can restrict him so he only sees the Bride's side data and cannot see the Groom's side at all.
+
+My Design Recommendation for Improvement:
+While your schema supports this, your Onboarding Flow should make this clearer.
+
+"Invite your Partner": Immediately after a user creates a wedding, the very first "Task" should be to invite their partner as a collaborator.
+
+Define Sides: During that invite process, ask the user to assign the "Side" (e.g., "I am the Bride, I am inviting the Groom"). This sets the addedBySide logic for all future data entry.

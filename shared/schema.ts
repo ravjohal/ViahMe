@@ -148,6 +148,9 @@ export const events = pgTable("events", {
   guestCount: integer("guest_count"),
   description: text("description"),
   order: integer("order").notNull(), // For sorting timeline
+  // Side-based separation for multi-family planning
+  side: text("side").notNull().default("mutual"), // 'bride' | 'groom' | 'mutual' - which side owns/manages this event
+  visibility: text("visibility").notNull().default("shared"), // 'private' | 'shared' - can the other side see this event
   // Budget & capacity planning fields
   costPerHead: decimal("cost_per_head", { precision: 8, scale: 2 }), // Cost per guest for this event
   allocatedBudget: decimal("allocated_budget", { precision: 10, scale: 2 }), // User-set budget allocation for this ceremony
@@ -183,6 +186,8 @@ export const insertEventSchema = createInsertSchema(events).omit({
   costPerHead: z.string().nullable().optional(),
   allocatedBudget: z.string().nullable().optional(),
   venueCapacity: z.number().nullable().optional(),
+  side: z.enum(['bride', 'groom', 'mutual']).optional(),
+  visibility: z.enum(['private', 'shared']).optional(),
 });
 
 export type InsertEvent = z.infer<typeof insertEventSchema>;
