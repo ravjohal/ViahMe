@@ -53,6 +53,8 @@ Key architectural decisions and features include:
 - **Interactive Task Checklist**: Comprehensive task management with circular progress visualization, automated reminders via email/SMS, task assignment, on-demand reminders, filtered views, phase-based organization, and auto-completion upon vendor booking.
 - **Expense Splitting**: Shared cost management for couples with expense tracking, "who paid" selection, various split types, event association, settlement summary, and payment tracking.
 - **Vendor Lead Management System**: Automated lead qualification and nurturing with lead scoring, priority classification (hot/warm/medium/cold), auto-lead creation, a vendor-facing lead dashboard, activity tracking, nurturing sequences, and email integration.
+- **Side-Based Event Separation**: Multi-family planning support where bride/groom sides can have private events and expenses. Events have `side` ('bride'|'groom'|'mutual') and `visibility` ('private'|'shared') attributes for granular control.
+- **Partner Collaboration Flow**: Prominent "Invite Your Partner" card on dashboard immediately after onboarding, encouraging collaborative wedding planning.
 
 ## External Dependencies
 - **PostgreSQL (Neon)**: Relational database.
