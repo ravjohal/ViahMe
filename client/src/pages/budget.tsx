@@ -297,6 +297,32 @@ export default function Budget() {
   const remainingBudget = total - totalSpent;
   const spentPercentage = total > 0 ? (totalSpent / total) * 100 : 0;
 
+  // Calculate totals by event side
+  const spentBySide = useMemo(() => {
+    const sideTotals = { bride: 0, groom: 0, mutual: 0 };
+    
+    Object.entries(expensesByEvent).forEach(([eventId, data]) => {
+      if (eventId === "unassigned") {
+        sideTotals.mutual += data.total;
+      } else if (data.event) {
+        // Treat undefined/null side as "mutual" for backward compatibility
+        const side = (data.event.side as "bride" | "groom" | "mutual") || "mutual";
+        sideTotals[side] += data.total;
+      }
+    });
+    
+    return sideTotals;
+  }, [expensesByEvent]);
+
+  // Count events by side for display
+  const eventCountsBySide = useMemo(() => {
+    return {
+      bride: events.filter(e => e.side === "bride").length,
+      groom: events.filter(e => e.side === "groom").length,
+      mutual: events.filter(e => !e.side || e.side === "mutual").length,
+    };
+  }, [events]);
+
   // Toggle event expansion
   const toggleEvent = (eventId: string) => {
     setExpandedEvents((prev) => {
@@ -763,6 +789,52 @@ export default function Budget() {
             {spentPercentage.toFixed(0)}% of budget spent
           </p>
         </Card>
+
+        {/* Side-Based Spending Breakdown */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <Card className="p-4 border-l-4 border-l-pink-500" data-testid="card-bride-spending">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 rounded-full bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center">
+                <Users className="w-4 h-4 text-pink-600" />
+              </div>
+              <span className="font-medium text-pink-700 dark:text-pink-300">
+                {wedding?.partner1Name || "Bride"}'s Side
+              </span>
+            </div>
+            <p className="text-2xl font-bold font-mono">${spentBySide.bride.toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground">
+              {eventCountsBySide.bride} events
+            </p>
+          </Card>
+
+          <Card className="p-4 border-l-4 border-l-amber-500" data-testid="card-mutual-spending">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                <Users className="w-4 h-4 text-amber-600" />
+              </div>
+              <span className="font-medium text-amber-700 dark:text-amber-300">Shared Expenses</span>
+            </div>
+            <p className="text-2xl font-bold font-mono">${spentBySide.mutual.toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground">
+              {eventCountsBySide.mutual} events
+            </p>
+          </Card>
+
+          <Card className="p-4 border-l-4 border-l-blue-500" data-testid="card-groom-spending">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                <Users className="w-4 h-4 text-blue-600" />
+              </div>
+              <span className="font-medium text-blue-700 dark:text-blue-300">
+                {wedding?.partner2Name || "Groom"}'s Side
+              </span>
+            </div>
+            <p className="text-2xl font-bold font-mono">${spentBySide.groom.toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground">
+              {eventCountsBySide.groom} events
+            </p>
+          </Card>
+        </div>
 
         {/* Contributor Filter */}
         <div className="flex items-center gap-2 mb-6 flex-wrap">

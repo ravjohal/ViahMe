@@ -46,6 +46,7 @@ import { insertEventSchema } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { CEREMONY_COST_BREAKDOWNS, CEREMONY_CATALOG, calculateCeremonyTotalRange } from "@shared/ceremonies";
+import { SideFilter, SideBadge, VisibilityBadge, type SideViewMode } from "@/components/side-filter";
 
 const COST_PRESETS = [
   { name: "Catering", type: "per_head" as const, defaultCategory: "catering" },
@@ -207,6 +208,12 @@ function DraggableEventNode({ event, isLast, onView, onEdit, onDelete, getEventS
                   <TimeIcon className="w-3 h-3" />
                   {todConfig.label}
                 </Badge>
+                {(event.side === "bride" || event.side === "groom") && (
+                  <SideBadge side={event.side} />
+                )}
+                {event.visibility === "private" && (
+                  <VisibilityBadge visibility="private" />
+                )}
                 {status === "completed" && (
                   <Badge variant="secondary" className="gap-1">
                     <CheckCircle2 className="w-3 h-3" />
@@ -437,6 +444,8 @@ interface WizardData {
   location: string;
   guestCount: number | undefined;
   description: string;
+  side: "bride" | "groom" | "mutual";
+  visibility: "private" | "shared";
 }
 
 const WIZARD_STEPS = [
@@ -460,6 +469,7 @@ export default function TimelinePage() {
   const [addDayDialogOpen, setAddDayDialogOpen] = useState(false);
   const [newDayDate, setNewDayDate] = useState("");
   const [showCostEstimates, setShowCostEstimates] = useState(false);
+  const [sideViewMode, setSideViewMode] = useState<SideViewMode>("all");
   
   const [wizardOpen, setWizardOpen] = useState(false);
   const [wizardStep, setWizardStep] = useState(1);
@@ -471,6 +481,8 @@ export default function TimelinePage() {
     location: "",
     guestCount: undefined,
     description: "",
+    side: "mutual",
+    visibility: "shared",
   });
   
   const sensors = useSensors(
@@ -758,6 +770,8 @@ export default function TimelinePage() {
   const resetWizard = () => {
     setWizardStep(1);
     setWizardData({
+      side: "mutual",
+      visibility: "shared",
       type: "",
       name: "",
       date: "",
@@ -798,6 +812,8 @@ export default function TimelinePage() {
       guestCount: wizardData.guestCount || undefined,
       description: wizardData.description || undefined,
       order: events.length + 1,
+      side: wizardData.side,
+      visibility: wizardData.visibility,
     };
     
     wizardCreateMutation.mutate(eventData as unknown as InsertEvent);
@@ -846,7 +862,16 @@ export default function TimelinePage() {
     }
   }, [events]);
 
-  const sortedEvents = [...events].sort((a, b) => {
+  const filteredEvents = useMemo(() => {
+    if (sideViewMode === "all") return events;
+    // Treat undefined/null side as "mutual" (shared) for backward compatibility
+    return events.filter(e => {
+      const eventSide = e.side || "mutual";
+      return eventSide === sideViewMode || eventSide === "mutual";
+    });
+  }, [events, sideViewMode]);
+
+  const sortedEvents = [...filteredEvents].sort((a, b) => {
     const aKey = toDateKey(a.date);
     const bKey = toDateKey(b.date);
     if (aKey && bKey) {
@@ -1026,7 +1051,16 @@ export default function TimelinePage() {
             {dayGroups.filter(d => d.date !== "unscheduled").length} days of celebration with {events.length} events
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-3">
+          <SideFilter 
+            value={sideViewMode} 
+            onChange={setSideViewMode}
+            counts={{
+              all: events.length,
+              bride: events.filter(e => e.side === "bride").length + events.filter(e => !e.side || e.side === "mutual").length,
+              groom: events.filter(e => e.side === "groom").length + events.filter(e => !e.side || e.side === "mutual").length,
+            }}
+          />
           <Button 
             onClick={openWizard}
             data-testid="button-add-event-wizard" 
@@ -1320,6 +1354,40 @@ export default function TimelinePage() {
                       rows={3}
                       data-testid="wizard-input-description"
                     />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Which side is hosting?</label>
+                      <Select
+                        value={wizardData.side}
+                        onValueChange={(v) => setWizardData(prev => ({ ...prev, side: v as "bride" | "groom" | "mutual" }))}
+                      >
+                        <SelectTrigger data-testid="wizard-select-side">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="mutual">Both Sides</SelectItem>
+                          <SelectItem value="bride">Bride's Side</SelectItem>
+                          <SelectItem value="groom">Groom's Side</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Visibility</label>
+                      <Select
+                        value={wizardData.visibility}
+                        onValueChange={(v) => setWizardData(prev => ({ ...prev, visibility: v as "private" | "shared" }))}
+                      >
+                        <SelectTrigger data-testid="wizard-select-visibility">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="shared">Shared (visible to both)</SelectItem>
+                          <SelectItem value="private">Private (host side only)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
 
                   <Card className="bg-muted/50">
