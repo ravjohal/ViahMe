@@ -10,7 +10,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Lightbulb, Calculator, Plus, Minus, DollarSign, Users, Info, Loader2, MapPin, ChevronDown, ChevronUp, Settings2, Check } from "lucide-react";
 import type { Wedding, Event, CeremonyTemplate } from "@shared/schema";
 import { useCeremonyTemplatesByTradition } from "@/hooks/use-ceremony-templates";
-import { PricingAdjuster } from "@/components/pricing-adjuster";
 import {
   type VenueClass,
   type VendorTier,
@@ -93,7 +92,7 @@ export function BudgetEstimator({ wedding, events = [], onUpdateBudget }: Budget
     return "other";
   });
   const [weddingEventOverrides, setWeddingEventOverrides] = useState<Record<string, CeremonyPricingOverride>>({});
-  const [expandedCeremonyId, setExpandedCeremonyId] = useState<string | null>(null);
+  const [collapsedCeremonyIds, setCollapsedCeremonyIds] = useState<Set<string>>(new Set());
 
   const { data: traditionCeremonies = [], isLoading } = useCeremonyTemplatesByTradition(selectedTradition);
   
@@ -108,13 +107,6 @@ export function BudgetEstimator({ wedding, events = [], onUpdateBudget }: Budget
     
     return VENUE_CLASS_MULTIPLIERS[effectiveVenue] * VENDOR_TIER_MULTIPLIERS[effectiveVendor] * cityMultiplier;
   };
-
-  const pricingMultiplier = useMemo(() => {
-    const venueMultiplier = VENUE_CLASS_MULTIPLIERS[venueClass];
-    const vendorMultiplier = VENDOR_TIER_MULTIPLIERS[vendorTier];
-    const cityMultiplier = CITY_MULTIPLIERS[selectedCity] || 1.0;
-    return venueMultiplier * vendorMultiplier * cityMultiplier;
-  }, [venueClass, vendorTier, selectedCity]);
 
   const weddingEventEstimates: EventEstimate[] = useMemo(() => {
     if (!useWeddingEvents || events.length === 0) return [];
@@ -306,29 +298,6 @@ export function BudgetEstimator({ wedding, events = [], onUpdateBudget }: Budget
             </div>
           </div>
 
-          <Card className="p-4 bg-muted/30 border">
-            <div className="mb-3">
-              <h4 className="text-sm font-medium mb-1">Default Pricing Settings</h4>
-              <p className="text-xs text-muted-foreground">Set defaults for all ceremonies. Expand any ceremony below to customize its pricing individually.</p>
-            </div>
-            <PricingAdjuster
-              venueClass={venueClass}
-              vendorTier={vendorTier}
-              onVenueClassChange={setVenueClass}
-              onVendorTierChange={setVendorTier}
-            />
-            {pricingMultiplier !== 1 && (
-              <div className="mt-3 pt-3 border-t">
-                <Badge variant="outline" className="text-xs">
-                  {pricingMultiplier < 1 
-                    ? `${Math.round((1 - pricingMultiplier) * 100)}% savings applied`
-                    : `${Math.round((pricingMultiplier - 1) * 100)}% premium applied`
-                  }
-                </Badge>
-              </div>
-            )}
-          </Card>
-
           {events.length > 0 && (
             <div className="flex items-center gap-2">
               <input
@@ -369,13 +338,25 @@ export function BudgetEstimator({ wedding, events = [], onUpdateBudget }: Budget
                   const isCustom = !event.isFromWedding;
                   const override = getEventOverride(event.id, isCustom);
                   const hasOverride = override?.venueClass || override?.vendorTier;
-                  const isExpanded = expandedCeremonyId === event.id;
+                  const isExpanded = !collapsedCeremonyIds.has(event.id);
+                  
+                  const toggleExpanded = (open: boolean) => {
+                    setCollapsedCeremonyIds(prev => {
+                      const next = new Set(prev);
+                      if (open) {
+                        next.delete(event.id);
+                      } else {
+                        next.add(event.id);
+                      }
+                      return next;
+                    });
+                  };
                   
                   return (
                     <Collapsible
                       key={event.id}
                       open={isExpanded}
-                      onOpenChange={(open) => setExpandedCeremonyId(open ? event.id : null)}
+                      onOpenChange={toggleExpanded}
                     >
                       <div className="bg-white/60 dark:bg-white/10 rounded-lg border border-emerald-100 dark:border-emerald-800 overflow-hidden">
                         <div className="flex items-center justify-between p-3">

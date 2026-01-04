@@ -676,7 +676,7 @@ export default function Budget() {
               events={events}
               onUpdateBudget={(budget) => {
                 setNewTotalBudget(budget.toString());
-                updateBudgetMutation.mutate(budget);
+                updateWeddingBudgetMutation.mutate(budget.toString());
               }}
             />
             <Button
