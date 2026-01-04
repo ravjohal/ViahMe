@@ -410,15 +410,6 @@ export const CEREMONY_CATALOG: CeremonyDefinition[] = [
     defaultGuests: 40,
     traditions: ["sikh"],
   },
-  {
-    id: "sikh_misc",
-    name: "Miscellaneous",
-    description: "Invitations, wedding planner, and other shared costs",
-    costPerGuestLow: 20,
-    costPerGuestHigh: 50,
-    defaultGuests: 1,
-    traditions: ["sikh"],
-  },
 
   // Muslim ceremonies
   {
@@ -530,7 +521,7 @@ export function getCeremonyById(id: string): CeremonyDefinition | undefined {
 export function getDefaultCeremoniesForTradition(tradition: string): string[] {
   const defaults: Record<string, string[]> = {
     hindu: ["hindu_wedding", "reception"],
-    sikh: ["sikh_engagement_roka", "sikh_paath", "sikh_mehndi", "sikh_maiyan", "sikh_sangeet", "sikh_anand_karaj", "sikh_reception", "sikh_day_after", "sikh_misc"],
+    sikh: ["sikh_engagement_roka", "sikh_paath", "sikh_mehndi", "sikh_maiyan", "sikh_sangeet", "sikh_anand_karaj", "sikh_reception", "sikh_day_after"],
     muslim: ["muslim_nikah", "muslim_walima"],
     gujarati: ["gujarati_wedding", "reception"],
     south_indian: ["south_indian_muhurtham", "reception"],
