@@ -1271,6 +1271,7 @@ export default function Budget() {
             weddingId={wedding.id}
             events={events}
             defaultEventId={addExpenseEventId}
+            weddingTradition={wedding.tradition}
           />
         )}
 

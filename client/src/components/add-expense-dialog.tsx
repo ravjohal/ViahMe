@@ -27,25 +27,61 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 const CEREMONY_MAPPINGS: Record<string, string[]> = {
   sikh_roka: ["roka", "sikh roka"],
-  sikh_kurmai: ["kurmai", "engagement", "sikh engagement"],
-  sikh_chunni_chadana: ["chunni chadana", "chunni", "chunni ceremony"],
-  sikh_sangeet: ["sangeet", "lady sangeet", "sikh sangeet"],
-  sikh_mehndi: ["mehndi", "henna", "sikh mehndi"],
+  sikh_kurmai: ["kurmai", "sikh engagement", "sikh kurmai"],
+  sikh_chunni_chadana: ["chunni chadana", "chunni ceremony"],
+  sikh_sangeet: ["sikh sangeet", "lady sangeet"],
+  sikh_mehndi: ["sikh mehndi", "sikh henna"],
   sikh_maiyan: ["maiyan", "sikh maiyan", "mayian"],
   sikh_chooda_kalire: ["chooda", "kalire", "chooda kalire", "chooda & kalire", "chooda ceremony"],
   sikh_jaggo: ["jaggo", "sikh jaggo"],
-  sikh_anand_karaj: ["anand karaj", "anand_karaj", "sikh wedding", "wedding ceremony"],
-  sikh_baraat: ["baraat", "sikh baraat"],
+  sikh_anand_karaj: ["anand karaj", "anand_karaj", "sikh wedding"],
+  sikh_baraat: ["sikh baraat"],
   sikh_milni: ["milni", "sikh milni"],
-  sikh_reception: ["reception", "sikh reception", "wedding reception"],
+  sikh_reception: ["sikh reception"],
   sikh_bakra_party: ["bakra party", "bakra", "bachelor party"],
-  hindu_wedding: ["hindu wedding", "pheras", "wedding"],
-  hindu_sangeet: ["hindu sangeet", "sangeet hindu"],
-  hindu_mehndi: ["hindu mehndi", "mehendi"],
-  hindu_haldi: ["haldi", "hindu haldi"],
 };
 
-function getCeremonyIdFromEvent(event: Event): string | null {
+const COMMON_CEREMONY_FALLBACKS: Record<string, string> = {
+  engagement: "sikh_kurmai",
+  sangeet: "sikh_sangeet",
+  mehndi: "sikh_mehndi",
+  mehendi: "sikh_mehndi",
+  henna: "sikh_mehndi",
+  reception: "sikh_reception",
+  baraat: "sikh_baraat",
+  wedding: "sikh_anand_karaj",
+  ceremony: "sikh_anand_karaj",
+  roka: "sikh_roka",
+  maiyan: "sikh_maiyan",
+  haldi: "sikh_maiyan",
+  jaggo: "sikh_jaggo",
+  milni: "sikh_milni",
+  chooda: "sikh_chooda_kalire",
+  kalire: "sikh_chooda_kalire",
+  chunni: "sikh_chunni_chadana",
+  bakra: "sikh_bakra_party",
+  bachelor: "sikh_bakra_party",
+  pheras: "sikh_anand_karaj",
+  nikah: "sikh_anand_karaj",
+  walima: "sikh_reception",
+  garba: "sikh_sangeet",
+  muhurtham: "sikh_anand_karaj",
+  tilak: "sikh_roka",
+  vidaai: "sikh_reception",
+  vidai: "sikh_reception",
+  rukhsati: "sikh_reception",
+  mangni: "sikh_kurmai",
+  pithi: "sikh_maiyan",
+  nalugu: "sikh_maiyan",
+  vratham: "sikh_maiyan",
+  oonjal: "sikh_anand_karaj",
+  mandvo: "sikh_mehndi",
+  jaan: "sikh_baraat",
+  grihapravesh: "sikh_reception",
+  send: "sikh_reception",
+};
+
+function getCeremonyIdFromEvent(event: Event, _tradition: string = "sikh"): string | null {
   const eventType = event.type?.toLowerCase() || "";
   const eventName = event.name?.toLowerCase() || "";
   
@@ -55,7 +91,13 @@ function getCeremonyIdFromEvent(event: Event): string | null {
     }
   }
   
-  return eventType ? `sikh_${eventType}` : null;
+  for (const [genericType, ceremonyId] of Object.entries(COMMON_CEREMONY_FALLBACKS)) {
+    if (eventName.includes(genericType) || eventType.includes(genericType)) {
+      return ceremonyId;
+    }
+  }
+  
+  return null;
 }
 
 interface CeremonySpendCategoryWithDetails {
@@ -77,6 +119,7 @@ interface AddExpenseDialogProps {
   weddingId: string;
   events: Event[];
   defaultEventId?: string;
+  weddingTradition?: string;
 }
 
 type PayerType = "couple" | "bride_family" | "groom_family";
@@ -86,7 +129,8 @@ export function AddExpenseDialog({
   onOpenChange, 
   weddingId, 
   events,
-  defaultEventId 
+  defaultEventId,
+  weddingTradition = "sikh"
 }: AddExpenseDialogProps) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -123,10 +167,10 @@ export function AddExpenseDialog({
 
   const ceremonyId = useMemo(() => {
     if (selectedEvent) {
-      return getCeremonyIdFromEvent(selectedEvent);
+      return getCeremonyIdFromEvent(selectedEvent, weddingTradition);
     }
     return null;
-  }, [selectedEvent]);
+  }, [selectedEvent, weddingTradition]);
 
   const { data: ceremonySpendCategories = [] } = useQuery<CeremonySpendCategoryWithDetails[]>({
     queryKey: ["/api/ceremony-spend-categories/ceremony", ceremonyId],
