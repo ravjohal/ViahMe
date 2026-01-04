@@ -101,8 +101,6 @@ export default function CostBreakdown() {
     );
   }
 
-  const budgetConfirmed = wedding.budgetConfirmed === true;
-  
   const eventsWithBreakdowns = events.filter(event => {
     const ceremonyId = getCeremonyIdFromEvent(event);
     return ceremonyId && CEREMONY_COST_BREAKDOWNS[ceremonyId];
@@ -146,29 +144,6 @@ export default function CostBreakdown() {
           <p className="text-sm text-muted-foreground">Detailed estimates by event and category</p>
         </div>
       </div>
-
-      {!budgetConfirmed && (
-        <Card className="p-6 mb-6 bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <h3 className="font-semibold text-amber-900 dark:text-amber-100">Budget Not Confirmed</h3>
-              <p className="text-sm text-amber-800 dark:text-amber-200 mt-1">
-                Confirm your budget to see personalized cost estimates based on your events and guest counts.
-              </p>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="mt-3"
-                onClick={() => setLocation("/budget")}
-                data-testid="button-go-to-budget"
-              >
-                Go to Budget
-              </Button>
-            </div>
-          </div>
-        </Card>
-      )}
 
       <Card className="p-4 md:p-6 mb-6">
         <div className="flex items-center gap-2 mb-4">
