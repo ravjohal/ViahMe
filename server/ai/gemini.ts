@@ -1408,3 +1408,175 @@ export async function chatWithGuestAssistant(
     return "Sorry, I had trouble understanding. Could you try asking again?";
   }
 }
+
+// ============================================================================
+// WEDDING SPEECH GENERATOR - AI-powered personalized speech generation
+// ============================================================================
+
+const SPEECH_GENERATOR_PROMPT = `You are an expert wedding speechwriter specializing in South Asian weddings. You craft heartfelt, memorable speeches that blend cultural traditions with personal stories.
+
+Your role is to:
+1. Generate personalized wedding speeches based on the couple's story and wedding context
+2. Incorporate cultural elements appropriate to the tradition (Sikh, Hindu, Muslim, etc.)
+3. Balance humor, emotion, and sincerity appropriately based on the speech type
+4. Include specific details and anecdotes provided about the couple
+5. Respect the tone and formality level requested
+
+Speech guidelines:
+- Start with an engaging opening that captures attention
+- Include personal anecdotes and specific memories when provided
+- Reference the couple's journey together authentically
+- Include cultural touches and blessings appropriate to the tradition
+- End with a meaningful toast or well-wishes
+- Keep the length appropriate (3-5 minutes for most speeches)
+- Use inclusive language and be sensitive to diverse family structures
+
+Cultural awareness:
+- For Sikh weddings: Reference the Anand Karaj, Waheguru's blessings
+- For Hindu weddings: Reference the Saat Phere, sacred fire, family blessings
+- For Muslim weddings: Reference the Nikah, duas, and family values
+- For fusion/mixed weddings: Blend traditions respectfully`;
+
+export interface SpeechGeneratorRequest {
+  // Who is giving the speech
+  speakerRole: "best_man" | "maid_of_honor" | "father_of_bride" | "mother_of_bride" | "father_of_groom" | "mother_of_groom" | "sibling" | "friend" | "grandparent" | "other";
+  speakerName?: string;
+  speakerRelationshipDetail?: string; // e.g., "childhood friend since 5th grade"
+  
+  // Who the speech is directed to
+  recipientFocus: "both_partners" | "bride" | "groom" | "couple_and_guests";
+  
+  // Wedding context
+  partner1Name: string;
+  partner2Name: string;
+  tradition?: string;
+  weddingDate?: string;
+  
+  // Content for personalization
+  coupleStory?: string; // From wedding website
+  keyMemories?: string; // Speaker's memories with the couple
+  personalAnecdotes?: string; // Specific stories to include
+  
+  // Tone and style preferences
+  tone: "formal" | "heartfelt" | "humorous" | "mix";
+  length: "short" | "medium" | "long"; // 2-3 min, 4-5 min, 6-8 min
+  
+  // Additional context
+  culturalElements?: boolean; // Include cultural blessings and references
+  additionalInstructions?: string;
+}
+
+export interface GeneratedSpeech {
+  speech: string;
+  estimatedDuration: string;
+  speakingTips: string[];
+}
+
+export async function generateWeddingSpeech(
+  request: SpeechGeneratorRequest,
+): Promise<GeneratedSpeech> {
+  const functionName = 'generateWeddingSpeech';
+  const startTime = Date.now();
+  
+  logAIRequest(functionName, request);
+
+  // Map speaker roles to readable descriptions
+  const speakerRoleLabels: Record<string, string> = {
+    best_man: "Best Man",
+    maid_of_honor: "Maid of Honor",
+    father_of_bride: "Father of the Bride",
+    mother_of_bride: "Mother of the Bride",
+    father_of_groom: "Father of the Groom",
+    mother_of_groom: "Mother of the Groom",
+    sibling: "Sibling",
+    friend: "Friend",
+    grandparent: "Grandparent",
+    other: "Guest",
+  };
+
+  const recipientLabels: Record<string, string> = {
+    both_partners: "the couple together",
+    bride: request.partner1Name || "the bride",
+    groom: request.partner2Name || "the groom",
+    couple_and_guests: "the couple and all the guests",
+  };
+
+  const lengthGuidance: Record<string, string> = {
+    short: "approximately 2-3 minutes (300-450 words)",
+    medium: "approximately 4-5 minutes (500-700 words)",
+    long: "approximately 6-8 minutes (800-1000 words)",
+  };
+
+  const prompt = `Please generate a wedding speech with the following details:
+
+SPEAKER INFORMATION:
+- Role: ${speakerRoleLabels[request.speakerRole] || "Guest"}
+${request.speakerName ? `- Name: ${request.speakerName}` : ""}
+${request.speakerRelationshipDetail ? `- Relationship: ${request.speakerRelationshipDetail}` : ""}
+
+SPEECH DIRECTED TO: ${recipientLabels[request.recipientFocus] || "the couple"}
+
+COUPLE DETAILS:
+- Partner 1: ${request.partner1Name}
+- Partner 2: ${request.partner2Name}
+${request.tradition ? `- Wedding Tradition: ${request.tradition}` : ""}
+${request.weddingDate ? `- Wedding Date: ${request.weddingDate}` : ""}
+
+PERSONALIZATION:
+${request.coupleStory ? `Their Story:\n${request.coupleStory}\n` : ""}
+${request.keyMemories ? `Key Memories to Include:\n${request.keyMemories}\n` : ""}
+${request.personalAnecdotes ? `Personal Anecdotes:\n${request.personalAnecdotes}\n` : ""}
+
+STYLE PREFERENCES:
+- Tone: ${request.tone}
+- Length: ${lengthGuidance[request.length] || lengthGuidance.medium}
+- Include cultural elements: ${request.culturalElements ? "Yes, include appropriate cultural blessings and references" : "Keep it universal"}
+${request.additionalInstructions ? `Additional Instructions: ${request.additionalInstructions}` : ""}
+
+Please generate:
+1. A complete, ready-to-deliver speech
+2. The estimated speaking duration
+3. 3-5 speaking tips for delivery
+
+Return as JSON with keys: "speech" (string), "estimatedDuration" (string like "4-5 minutes"), "speakingTips" (array of strings).`;
+
+  try {
+    const contents = [
+      {
+        role: "user" as const,
+        parts: [{ text: prompt }],
+      },
+    ];
+
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      config: {
+        systemInstruction: SPEECH_GENERATOR_PROMPT,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "object",
+          properties: {
+            speech: { type: "string" },
+            estimatedDuration: { type: "string" },
+            speakingTips: { type: "array", items: { type: "string" } },
+          },
+          required: ["speech", "estimatedDuration", "speakingTips"],
+        },
+      },
+      contents,
+    });
+
+    const rawJson = response.text;
+    
+    if (rawJson) {
+      const result = JSON.parse(rawJson) as GeneratedSpeech;
+      logAIResponse(functionName, `Generated ${result.estimatedDuration} speech`, Date.now() - startTime);
+      return result;
+    }
+    
+    throw new Error("Empty response from model");
+  } catch (error) {
+    logAIError(functionName, error);
+    throw new Error("Failed to generate speech. Please try again.");
+  }
+}

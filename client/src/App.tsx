@@ -55,6 +55,7 @@ import ClaimYourBusiness from "@/pages/claim-your-business";
 import AdminVendorClaims from "@/pages/admin-vendor-claims";
 import AdminCeremonyTemplates from "@/pages/admin-ceremony-templates";
 import AiPlanner from "@/pages/ai-planner";
+import SpeechGenerator from "@/pages/speech-generator";
 import LiveTimeline from "@/pages/live-timeline";
 import VendorTeam from "@/pages/vendor-team";
 import VendorInviteAccept from "@/pages/vendor-invite-accept";
@@ -210,6 +211,11 @@ function Router() {
       <Route path="/ai-planner">
         <CoupleRoute>
           <AiPlanner />
+        </CoupleRoute>
+      </Route>
+      <Route path="/speech-generator">
+        <CoupleRoute>
+          <SpeechGenerator />
         </CoupleRoute>
       </Route>
       <Route path="/admin/vendor-claims">

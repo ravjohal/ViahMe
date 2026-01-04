@@ -3,6 +3,7 @@ import {
   MessageSquare, Music, Image, UserCircle, ShoppingBag, 
   Package, BookOpen, Radio, UsersRound, Globe, Bot, 
   Calendar, Wallet, BarChart3, Briefcase, Star, Send, Gamepad2,
+  Mic,
   type LucideIcon
 } from "lucide-react";
 import type { PermissionCategory } from "@shared/schema";
@@ -40,6 +41,7 @@ export const COUPLE_NAV_SECTIONS: NavSection[] = [
     label: "Plan Your Wedding",
     items: [
       { path: "/ai-planner", label: "AI Planner", icon: Bot, permission: "ai_planner", description: "Smart planning assistant" },
+      { path: "/speech-generator", label: "Speech Writer", icon: Mic, permission: "ai_planner", description: "AI-powered speeches" },
       { path: "/expenses", label: "Expenses", icon: Wallet, permission: "budget", description: "Split costs" },
       { path: "/contracts", label: "Contracts", icon: FileText, permission: "contracts", description: "Vendor agreements" },
       { path: "/collaborators", label: "Team", icon: UsersRound, permission: "collaborators", description: "Family helpers" },

@@ -11,6 +11,7 @@ import {
   generateVendorReplySuggestions,
   generateCoupleMessageSuggestions,
   generateWebsiteContentSuggestions,
+  generateWeddingSpeech,
   type ContractDraftRequest,
   type ContractReviewRequest,
   type ChatMessage,
@@ -18,6 +19,7 @@ import {
   type GuestAssistantContext,
   type VendorReplySuggestionRequest,
   type CoupleMessageSuggestionRequest,
+  type SpeechGeneratorRequest,
 } from "../ai/gemini";
 
 export async function registerAiRoutes(router: Router, storage: IStorage) {
@@ -329,6 +331,42 @@ export async function registerAiRoutes(router: Router, storage: IStorage) {
       console.error("Error generating website content:", error);
       res.status(500).json({ 
         error: "Failed to generate content",
+        message: error instanceof Error ? error.message : "Please try again later"
+      });
+    }
+  });
+
+  // Speech Generator - Generate personalized wedding speeches
+  router.post("/speech/generate", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      if (!authReq.session.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const requestBody = req.body;
+      
+      // Validate required fields
+      if (!requestBody.speakerRole || !requestBody.recipientFocus || !requestBody.partner1Name || !requestBody.partner2Name) {
+        return res.status(400).json({ 
+          error: "Missing required fields",
+          message: "Speaker role, recipient focus, and partner names are required" 
+        });
+      }
+
+      // Build request with defaults (don't mutate original)
+      const request: SpeechGeneratorRequest = {
+        ...requestBody,
+        tone: requestBody.tone || "mix",
+        length: requestBody.length || "medium",
+      };
+
+      const result = await generateWeddingSpeech(request);
+      res.json(result);
+    } catch (error) {
+      console.error("Error generating speech:", error);
+      res.status(500).json({ 
+        error: "Failed to generate speech",
         message: error instanceof Error ? error.message : "Please try again later"
       });
     }
