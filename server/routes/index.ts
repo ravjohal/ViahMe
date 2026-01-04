@@ -50,6 +50,7 @@ import { createGuestSourcesRouter } from "./guest-sources";
 import { createGuestSideRouter, createGuestConsensusRouter, createScenariosRouter, createGuestBudgetRouter, createHouseholdPriorityRouter } from "./guest-planning";
 import { createTimelineRouter, createEventTimeRouter, createTimelineChangesRouter, createVendorAcknowledgmentsRouter } from "./timeline";
 import { createCeremonyTemplatesRouter, createRegionalPricingRouter, createCeremonyEstimateRouter } from "./ceremony-templates";
+import { createSpendCategoriesRouter, createCeremonySpendCategoriesRouter, seedSpendCategoriesFromCeremonies } from "./spend-categories";
 import { seedVendors, seedBudgetBenchmarks } from "../seed-data";
 
 let defaultStorageSeeded = false;
@@ -98,6 +99,15 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
     if (existingBenchmarks.length === 0) {
       await seedBudgetBenchmarks(storage);
     }
+    
+    // Seed spend categories from ceremony cost breakdowns
+    const existingSpendCategories = await storage.getAllSpendCategories();
+    if (existingSpendCategories.length === 0) {
+      console.log("Seeding spend categories from ceremony cost breakdowns...");
+      const result = await seedSpendCategoriesFromCeremonies(storage);
+      console.log(`Seeded ${result.spendCategoriesCreated} spend categories and ${result.ceremonyMappingsCreated} ceremony mappings`);
+    }
+    
     defaultStorageSeeded = true;
   }
   
@@ -107,6 +117,10 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   app.use("/api/ceremony-templates", createCeremonyTemplatesRouter(storage));
   app.use("/api/regional-pricing", createRegionalPricingRouter(storage));
   app.use("/api/ceremony-estimate", createCeremonyEstimateRouter(storage));
+  
+  // Spend categories (metadata table for ceremony-specific expenses)
+  app.use("/api/spend-categories", createSpendCategoriesRouter(storage));
+  app.use("/api/ceremony-spend-categories", createCeremonySpendCategoriesRouter(storage));
 
   // Public endpoint - Address autocomplete using Geoapify (no auth required for collector)
   app.get("/api/address-autocomplete", async (req, res) => {
