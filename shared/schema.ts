@@ -542,6 +542,57 @@ export type InsertBudgetCategory = z.infer<typeof insertBudgetCategorySchema>;
 export type BudgetCategory = typeof budgetCategories.$inferSelect;
 
 // ============================================================================
+// SPEND CATEGORIES - Metadata table for spend categories that can be associated with ceremonies
+// ============================================================================
+
+export const spendCategories = pgTable("spend_categories", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(), // e.g., "Photographer", "DJ", "Dhol Player"
+  parentBudgetCategory: text("parent_budget_category").notNull(), // Maps to main categories: catering, venue, entertainment, photography, decoration, attire, transportation, other
+  description: text("description"),
+  isSystemDefault: boolean("is_system_default").default(true), // System-defined vs user-created
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertSpendCategorySchema = createInsertSchema(spendCategories).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertSpendCategory = z.infer<typeof insertSpendCategorySchema>;
+export type SpendCategory = typeof spendCategories.$inferSelect;
+
+// ============================================================================
+// CEREMONY SPEND CATEGORIES - Junction table linking ceremonies to spend categories with default costs
+// ============================================================================
+
+export const ceremonySpendCategories = pgTable("ceremony_spend_categories", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  ceremonyId: text("ceremony_id").notNull(), // e.g., 'sikh_mehndi', 'sikh_sangeet'
+  spendCategoryId: varchar("spend_category_id").notNull(),
+  lowCost: decimal("low_cost", { precision: 10, scale: 2 }).notNull(),
+  highCost: decimal("high_cost", { precision: 10, scale: 2 }).notNull(),
+  unit: text("unit").notNull().default('fixed'), // 'fixed' | 'per_hour' | 'per_person'
+  hoursLow: integer("hours_low"),
+  hoursHigh: integer("hours_high"),
+  notes: text("notes"),
+}, (table) => ({
+  ceremonyIdx: index("ceremony_spend_categories_ceremony_idx").on(table.ceremonyId),
+  spendCategoryIdx: index("ceremony_spend_categories_spend_category_idx").on(table.spendCategoryId),
+}));
+
+export const insertCeremonySpendCategorySchema = createInsertSchema(ceremonySpendCategories).omit({
+  id: true,
+}).extend({
+  lowCost: z.string(),
+  highCost: z.string(),
+  unit: z.enum(['fixed', 'per_hour', 'per_person']),
+});
+
+export type InsertCeremonySpendCategory = z.infer<typeof insertCeremonySpendCategorySchema>;
+export type CeremonySpendCategory = typeof ceremonySpendCategories.$inferSelect;
+
+// ============================================================================
 // EXPENSES - Shared expense tracking for couples
 // ============================================================================
 
@@ -550,6 +601,7 @@ export const expenses = pgTable("expenses", {
   weddingId: varchar("wedding_id").notNull(),
   eventId: varchar("event_id"), // Optional - link to specific event (legacy, use allocations for multi-event)
   categoryId: varchar("category_id"), // Optional - link to budget category
+  spendCategoryId: varchar("spend_category_id"), // Optional - link to spend category for ceremony-specific tracking
   description: text("description").notNull(),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
   amountPaid: decimal("amount_paid", { precision: 10, scale: 2 }).default('0'), // Amount paid so far
