@@ -64,6 +64,7 @@ export const CEREMONY_COST_BREAKDOWNS: Record<string, CostCategory[]> = {
     { category: "Gurdwara Bheta / Donation", lowCost: 200, highCost: 1000, unit: "fixed", notes: "Donation to the Gurdwara" },
     { category: "Rumalla Sahib", lowCost: 100, highCost: 500, unit: "fixed", notes: "Sacred cloth for Guru Granth Sahib" },
     { category: "Raagi Jatha / Kirtan Musicians", lowCost: 500, highCost: 1500, unit: "fixed", notes: "Professional kirtan musicians" },
+    { category: "Turban Tier", lowCost: 150, highCost: 500, unit: "fixed", notes: "Professional turban tying service for groom and male family" },
   ],
   
   // 5. Mehndi - Separate (Bride & Groom)
@@ -119,6 +120,7 @@ export const CEREMONY_COST_BREAKDOWNS: Record<string, CostCategory[]> = {
     { category: "Car Rental", lowCost: 300, highCost: 1000, unit: "fixed", notes: "Luxury vehicle for couple" },
     { category: "Makeup", lowCost: 300, highCost: 800, unit: "fixed", notes: "Bride's makeup and styling" },
     { category: "Dhol Player", lowCost: 400, highCost: 1000, unit: "fixed", notes: "2-4 dhol players for baraat" },
+    { category: "Turban Tier", lowCost: 300, highCost: 1200, unit: "fixed", notes: "Professional turban tying service for groom and male family members" },
     { category: "Attire for Groom", lowCost: 500, highCost: 3000, unit: "fixed", notes: "Sherwani, turban, accessories" },
     { category: "Attire for Bride", lowCost: 1000, highCost: 8000, unit: "fixed", notes: "Lehenga, jewelry, dupatta" },
     { category: "Attire for Groom's side", lowCost: 500, highCost: 2000, unit: "fixed", notes: "Family attire" },
