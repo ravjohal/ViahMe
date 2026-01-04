@@ -113,40 +113,81 @@ export function BudgetEstimator({ wedding, events = [], onUpdateBudget }: Budget
     const normalizedName = eventName.toLowerCase().trim();
     
     const ceremonyNameMap: Record<string, string> = {
-      'anand karaj': 'sikh_anand_karaj',
+      // Sikh ceremonies (prioritize Sikh-specific mappings)
+      'engagement / roka': 'sikh_engagement_roka',
+      'engagement or roka': 'sikh_engagement_roka',
+      'engagement': 'sikh_engagement_roka',
+      'roka': 'sikh_engagement_roka',
+      'paath': 'sikh_paath',
+      'akhand paath': 'sikh_paath',
+      'sehaj paath': 'sikh_paath',
       'maiyan': 'sikh_maiyan',
-      'mehndi': 'hindu_mehndi',
-      'sangeet': 'hindu_sangeet',
+      'choora': 'sikh_maiyan',
+      'vatna': 'sikh_maiyan',
+      'anand karaj': 'sikh_anand_karaj',
+      'day after visit': 'sikh_day_after',
+      'day after': 'sikh_day_after',
+      'miscellaneous': 'sikh_misc',
+      'misc': 'sikh_misc',
+      // Hindu ceremonies
       'haldi': 'hindu_haldi',
       'baraat': 'hindu_baraat',
       'wedding ceremony': 'hindu_wedding',
-      'wedding': 'hindu_wedding',
-      'reception': 'reception',
-      'reception dinner': 'reception',
+      // Muslim ceremonies
       'nikah': 'muslim_nikah',
       'walima': 'muslim_walima',
       'dholki': 'muslim_dholki',
+      // Gujarati ceremonies
       'pithi': 'gujarati_pithi',
       'garba': 'gujarati_garba',
       'grahshanti': 'gujarati_grahshanti',
+      // South Indian ceremonies
       'vidhi mandap': 'south_indian_vidhi_mandap',
       'muhurtham': 'south_indian_muhurtham',
       'saree ceremony': 'south_indian_saree_ceremony',
     };
     
+    // First check exact matches
+    for (const [keyword, ceremonyId] of Object.entries(ceremonyNameMap)) {
+      if (normalizedName === keyword && CEREMONY_COST_BREAKDOWNS[ceremonyId]) {
+        return { ceremonyId, breakdown: CEREMONY_COST_BREAKDOWNS[ceremonyId] };
+      }
+    }
+    
+    // Then check partial matches
     for (const [keyword, ceremonyId] of Object.entries(ceremonyNameMap)) {
       if (normalizedName.includes(keyword) && CEREMONY_COST_BREAKDOWNS[ceremonyId]) {
         return { ceremonyId, breakdown: CEREMONY_COST_BREAKDOWNS[ceremonyId] };
       }
     }
     
+    // For generic ceremony names (Mehndi, Sangeet, Reception), default to Sikh-specific versions
+    // since this is primarily a Sikh wedding planning app
+    const sikhDefaultMap: Record<string, string> = {
+      'mehndi': 'sikh_mehndi',
+      'sangeet': 'sikh_sangeet',
+      'reception': 'sikh_reception',
+    };
+    
+    for (const [keyword, ceremonyId] of Object.entries(sikhDefaultMap)) {
+      if (normalizedName.includes(keyword) && CEREMONY_COST_BREAKDOWNS[ceremonyId]) {
+        return { ceremonyId, breakdown: CEREMONY_COST_BREAKDOWNS[ceremonyId] };
+      }
+    }
+    
+    // Check CEREMONY_CATALOG for direct ID match as final fallback
     const ceremony = CEREMONY_CATALOG.find(c => 
       c.name.toLowerCase() === normalizedName ||
-      normalizedName.includes(c.name.toLowerCase())
+      c.id === normalizedName
     );
     
     if (ceremony && CEREMONY_COST_BREAKDOWNS[ceremony.id]) {
       return { ceremonyId: ceremony.id, breakdown: CEREMONY_COST_BREAKDOWNS[ceremony.id] };
+    }
+    
+    // Fallback to generic reception
+    if (normalizedName.includes('reception') && CEREMONY_COST_BREAKDOWNS['reception']) {
+      return { ceremonyId: 'reception', breakdown: CEREMONY_COST_BREAKDOWNS['reception'] };
     }
     
     return null;
