@@ -797,7 +797,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                           Your Wedding Events
                         </h3>
                         <p className="text-sm text-muted-foreground">
-                          Add the ceremonies and events you're planning. You can specify guest counts for each.
+                          Add the ceremonies and events you're planning. Guest counts are optional — we'll use typical defaults if left blank.
                         </p>
                       </div>
 
@@ -839,7 +839,8 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                                 </Select>
                                 <Input
                                   type="number"
-                                  placeholder="Guest count"
+                                  placeholder="Guests (optional)"
+                                  title="Leave blank to use default guest count for this ceremony"
                                   value={event.guestCount || ""}
                                   onChange={(e) => handleEventChange(index, "guestCount", e.target.value)}
                                   data-testid={`input-event-guests-${index}`}
