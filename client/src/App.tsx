@@ -63,7 +63,6 @@ import VendorPortfolio from "@/pages/vendor-portfolio";
 import VendorLeads from "@/pages/vendor-leads";
 import Expenses from "@/pages/expenses";
 import GuestCollector from "@/pages/guest-collector";
-import CostBreakdown from "@/pages/cost-breakdown";
 import CommunicationHub from "@/pages/communication-hub";
 import EngagementGames from "@/pages/engagement-games";
 import GamePortal from "@/pages/game-portal";
@@ -97,7 +96,6 @@ function Router() {
       
       {/* Dashboard - no specific permission, just authentication */}
       <Route path="/dashboard" component={Dashboard} />
-      <Route path="/cost-breakdown" component={CostBreakdown} />
       <Route path="/vendor-dashboard">
         <VendorRoute>
           <VendorDashboard />

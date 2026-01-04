@@ -4,7 +4,6 @@ import { TimelineView } from "@/components/timeline-view";
 import { BudgetDashboard } from "@/components/budget-dashboard";
 import { WelcomeTour } from "@/components/welcome-tour";
 import { EventDetailModal } from "@/components/event-detail-modal";
-import { CeremonyCostBreakdown } from "@/components/ceremony-cost-breakdown";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,7 +11,6 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Calendar, DollarSign, Users, Briefcase, FileText, Camera, CheckCircle2, ArrowRight, Sparkles, UserPlus, Heart, Clock, Bot, CheckSquare, Globe, Package, Music, Image, MessageSquare, Radio, ShoppingBag, ChevronDown, ChevronUp, Map, Receipt } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { CEREMONY_COST_BREAKDOWNS, CEREMONY_CATALOG, calculateCeremonyTotalRange } from "@shared/ceremonies";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -341,79 +339,6 @@ export default function Dashboard() {
   const hasVendors = bookings.length > 0;
   const hasGuests = guests.length > 0;
 
-  // Helper to get ceremony ID from event (matching ceremony-cost-breakdown logic)
-  const getCeremonyIdFromEvent = (event: Event): string | null => {
-    if ((event as any).ceremonyId && CEREMONY_COST_BREAKDOWNS[(event as any).ceremonyId]) {
-      return (event as any).ceremonyId;
-    }
-    const eventType = event.type?.toLowerCase() || "";
-    const eventName = event.name?.toLowerCase() || "";
-    const mappings: Record<string, string[]> = {
-      hindu_mehndi: ["mehndi", "henna"],
-      hindu_sangeet: ["sangeet", "lady sangeet"],
-      hindu_haldi: ["haldi"],
-      sikh_maiyan: ["maiyan"],
-      hindu_baraat: ["baraat"],
-      hindu_wedding: ["hindu wedding", "wedding ceremony"],
-      reception: ["reception"],
-      sikh_anand_karaj: ["anand karaj", "anand_karaj"],
-      muslim_nikah: ["nikah"],
-      muslim_walima: ["walima"],
-      muslim_dholki: ["dholki"],
-      gujarati_pithi: ["pithi"],
-      gujarati_garba: ["garba"],
-      gujarati_wedding: ["gujarati wedding"],
-      south_indian_muhurtham: ["muhurtham"],
-      general_wedding: ["general wedding", "western wedding"],
-      rehearsal_dinner: ["rehearsal dinner", "rehearsal"],
-      cocktail_hour: ["cocktail hour", "cocktail"],
-    };
-    for (const [ceremonyId, keywords] of Object.entries(mappings)) {
-      if (keywords.some(kw => eventName.includes(kw) || eventType.includes(kw))) {
-        return ceremonyId;
-      }
-    }
-    if (CEREMONY_COST_BREAKDOWNS[eventType]) {
-      return eventType;
-    }
-    return null;
-  };
-
-  // Calculate total estimate range across all ceremonies (only if budget confirmed)
-  const eventsWithBreakdowns = events.filter(event => {
-    const ceremonyId = getCeremonyIdFromEvent(event);
-    return ceremonyId && CEREMONY_COST_BREAKDOWNS[ceremonyId];
-  });
-  
-  const estimateTotalLow = eventsWithBreakdowns.reduce((sum, event) => {
-    const ceremonyId = getCeremonyIdFromEvent(event);
-    if (!ceremonyId) return sum;
-    const ceremony = CEREMONY_CATALOG.find(c => c.id === ceremonyId);
-    const guestCount = event.guestCount || ceremony?.defaultGuests || 100;
-    const range = calculateCeremonyTotalRange(ceremonyId, guestCount);
-    return sum + range.low;
-  }, 0);
-  
-  const estimateTotalHigh = eventsWithBreakdowns.reduce((sum, event) => {
-    const ceremonyId = getCeremonyIdFromEvent(event);
-    if (!ceremonyId) return sum;
-    const ceremony = CEREMONY_CATALOG.find(c => c.id === ceremonyId);
-    const guestCount = event.guestCount || ceremony?.defaultGuests || 100;
-    const range = calculateCeremonyTotalRange(ceremonyId, guestCount);
-    return sum + range.high;
-  }, 0);
-  
-  const hasEstimates = hasBudget && hasCategories;
-  const hasCeremonyBreakdowns = eventsWithBreakdowns.length > 0;
-  
-  // Format currency for display
-  const formatEstimate = (amount: number): string => {
-    if (amount >= 1000) {
-      return `$${(amount / 1000).toFixed(amount % 1000 === 0 ? 0 : 1)}k`;
-    }
-    return `$${amount.toLocaleString()}`;
-  };
-
   // Step definitions - action-focused to differentiate from nav
   const steps = [
     {
@@ -686,20 +611,6 @@ export default function Dashboard() {
                     totalBudget={wedding.totalBudget || "0"}
                     onNavigate={() => setLocation("/budget")}
                   />
-                  {hasCeremonyBreakdowns && (
-                    <div className="mt-3 text-center">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => setLocation("/cost-breakdown")}
-                        className="text-primary"
-                        data-testid="link-cost-breakdown"
-                      >
-                        <Sparkles className="w-3 h-3 mr-1" />
-                        See full cost breakdown ({formatEstimate(estimateTotalLow)} - {formatEstimate(estimateTotalHigh)} estimated)
-                      </Button>
-                    </div>
-                  )}
                 </>
               )}
             </div>
