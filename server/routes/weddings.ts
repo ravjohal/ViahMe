@@ -207,70 +207,143 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
           });
         }
       } else if (wedding.tradition === "sikh") {
-        // Full Sikh wedding ceremony lineup with cost breakdown-matching names
+        // Full Sikh wedding ceremony lineup - 11 ceremonies, 15 events total
+        // Separate events for: Paath, Mehndi, Mayian, Sangeet (bride & groom sides)
+        // Bakra Party is groom's side only
         const sikhEvents = [
+          // 1. Roka - Together
           {
             weddingId: wedding.id,
-            name: "Engagement / Roka",
-            type: "engagement" as const,
-            description: "Formal engagement ceremony with gift exchange between families",
+            name: "Roka",
+            type: "roka" as const,
+            description: "Formal blessing and acceptance ceremony between families",
             order: 1,
+            daysOffset: -90, // 3 months before
+          },
+          // 2. Engagement - Together
+          {
+            weddingId: wedding.id,
+            name: "Engagement",
+            type: "engagement" as const,
+            description: "Formal engagement ceremony with ring exchange and celebrations",
+            order: 2,
             daysOffset: -60, // 2 months before
           },
+          // 3. Chunni Chadana - Together
           {
             weddingId: wedding.id,
-            name: "Paath (Akhand Paath / Sehaj Paath)",
+            name: "Chunni Chadana",
+            type: "chunni_chadana" as const,
+            description: "Ceremony where groom's family presents chunni to the bride",
+            order: 3,
+            daysOffset: -45,
+          },
+          // 4. Paath - Separate (Bride's Side)
+          {
+            weddingId: wedding.id,
+            name: "Paath (Bride's Side)",
             type: "paath" as const,
-            description: "Sacred prayer reading at Gurdwara or home",
-            order: 2,
+            description: "Sacred prayer reading at Gurdwara or home - Bride's family",
+            order: 4,
             daysOffset: -7,
           },
+          // 4. Paath - Separate (Groom's Side)
           {
             weddingId: wedding.id,
-            name: "Mehndi",
+            name: "Paath (Groom's Side)",
+            type: "paath" as const,
+            description: "Sacred prayer reading at Gurdwara or home - Groom's family",
+            order: 5,
+            daysOffset: -7,
+          },
+          // 5. Mehndi - Separate (Bride's Side)
+          {
+            weddingId: wedding.id,
+            name: "Mehndi (Bride's Side)",
             type: "mehndi" as const,
-            description: "Henna application ceremony for the bride",
-            order: 3,
+            description: "Henna application ceremony - Bride's family",
+            order: 6,
             daysOffset: -3,
           },
+          // 5. Mehndi - Separate (Groom's Side)
           {
             weddingId: wedding.id,
-            name: "Maiyan (Choora / Vatna)",
-            type: "maiyan" as const,
-            description: "Turmeric ceremony with choora (red bangles) for the bride",
-            order: 4,
+            name: "Mehndi (Groom's Side)",
+            type: "mehndi" as const,
+            description: "Henna application ceremony - Groom's family",
+            order: 7,
+            daysOffset: -3,
+          },
+          // 6. Bakra Party - Groom's Side Only
+          {
+            weddingId: wedding.id,
+            name: "Bakra Party",
+            type: "bakra_party" as const,
+            description: "Groom's side pre-wedding celebration with meat feast",
+            order: 8,
             daysOffset: -2,
           },
+          // 7. Mayian - Separate (Bride's Side)
           {
             weddingId: wedding.id,
-            name: "Sangeet",
-            type: "sangeet" as const,
-            description: "Musical night with performances and Bhangra dancing",
-            order: 5,
+            name: "Mayian (Bride's Side)",
+            type: "mayian" as const,
+            description: "Turmeric ceremony with choora - Bride's family",
+            order: 9,
             daysOffset: -1,
           },
+          // 7. Mayian - Separate (Groom's Side)
+          {
+            weddingId: wedding.id,
+            name: "Mayian (Groom's Side)",
+            type: "mayian" as const,
+            description: "Turmeric ceremony - Groom's family",
+            order: 10,
+            daysOffset: -1,
+          },
+          // 8. Sangeet - Separate (Bride's Side)
+          {
+            weddingId: wedding.id,
+            name: "Sangeet (Bride's Side)",
+            type: "sangeet" as const,
+            description: "Musical night with performances - Bride's family",
+            order: 11,
+            daysOffset: -1,
+          },
+          // 8. Sangeet - Separate (Groom's Side)
+          {
+            weddingId: wedding.id,
+            name: "Sangeet (Groom's Side)",
+            type: "sangeet" as const,
+            description: "Musical night with performances - Groom's family",
+            order: 12,
+            daysOffset: -1,
+          },
+          // 9. Anand Karaj - Together
           {
             weddingId: wedding.id,
             name: "Anand Karaj",
             type: "anand_karaj" as const,
             description: "Sikh wedding ceremony at the Gurdwara",
-            order: 6,
+            order: 13,
             daysOffset: 0,
           },
+          // 10. Reception - Together
           {
             weddingId: wedding.id,
             name: "Reception",
             type: "reception" as const,
             description: "Post-wedding celebration with dinner and entertainment",
-            order: 7,
+            order: 14,
             daysOffset: 0,
           },
+          // 11. Day After Visit - Together
           {
             weddingId: wedding.id,
             name: "Day After Visit",
             type: "day_after" as const,
             description: "Post-wedding family visit and brunch",
-            order: 8,
+            order: 15,
             daysOffset: 1,
           },
         ];

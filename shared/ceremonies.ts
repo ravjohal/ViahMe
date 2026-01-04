@@ -20,18 +20,42 @@ export interface CeremonyDefinition {
 }
 
 export const CEREMONY_COST_BREAKDOWNS: Record<string, CostCategory[]> = {
-  // ============ SIKH CEREMONIES ============
-  sikh_engagement_roka: [
+  // ============ SIKH CEREMONIES (11 Total) ============
+  
+  // 1. Roka - Together
+  sikh_roka: [
+    { category: "Venue (typically at home)", lowCost: 0, highCost: 1500, unit: "fixed", notes: "Usually held at home" },
+    { category: "Photographer", lowCost: 500, highCost: 1500, unit: "fixed", notes: "2-3 hour coverage" },
+    { category: "Caterer", lowCost: 30, highCost: 60, unit: "per_person", notes: "Snacks and light meal" },
+    { category: "Decoration", lowCost: 300, highCost: 1500, unit: "fixed", notes: "Simple home decor" },
+    { category: "Makeup", lowCost: 150, highCost: 400, unit: "fixed", notes: "Bride's makeup" },
+    { category: "Shagun / Gifts", lowCost: 500, highCost: 3000, unit: "fixed", notes: "Traditional gifts exchanged" },
+  ],
+  
+  // 2. Engagement - Together
+  sikh_engagement: [
     { category: "Venue", lowCost: 1500, highCost: 6000, unit: "fixed", notes: "Banquet hall or restaurant" },
     { category: "Photographer", lowCost: 800, highCost: 2000, unit: "fixed", notes: "3-4 hour coverage" },
-    { category: "Caterer", lowCost: 35, highCost: 75, unit: "per_person", notes: "Full meal service" },
-    { category: "Decoration", lowCost: 800, highCost: 3000, unit: "fixed", notes: "Stage setup and florals" },
+    { category: "Caterer", lowCost: 40, highCost: 80, unit: "per_person", notes: "Full meal service" },
+    { category: "Decoration", lowCost: 1000, highCost: 4000, unit: "fixed", notes: "Stage setup and florals" },
     { category: "DJ", lowCost: 500, highCost: 1500, unit: "fixed", notes: "Music and sound system" },
     { category: "Makeup", lowCost: 200, highCost: 500, unit: "fixed", notes: "Bride's makeup and styling" },
-    { category: "Shagun / Gifts", lowCost: 500, highCost: 3000, unit: "fixed", notes: "Traditional gifts exchanged between families" },
+    { category: "Shagun / Gifts for other side", lowCost: 500, highCost: 3000, unit: "fixed", notes: "Gifts for the other family" },
     { category: "Dhol Player", lowCost: 200, highCost: 600, unit: "fixed", notes: "1-2 dhol players" },
+    { category: "Bartenders", lowCost: 200, highCost: 500, unit: "fixed", notes: "Professional bartender service" },
+    { category: "Alcohol / Drinks", lowCost: 500, highCost: 2000, unit: "fixed", notes: "Bar service and beverages" },
   ],
-
+  
+  // 3. Chunni Chadana - Together
+  sikh_chunni_chadana: [
+    { category: "Venue (typically a home)", lowCost: 0, highCost: 1500, unit: "fixed", notes: "Usually held at bride's home" },
+    { category: "Photographer", lowCost: 500, highCost: 1500, unit: "fixed", notes: "2-3 hour coverage" },
+    { category: "Caterer", lowCost: 25, highCost: 50, unit: "per_person", notes: "Snacks and light meal" },
+    { category: "Decoration", lowCost: 300, highCost: 1500, unit: "fixed", notes: "Simple elegant decor" },
+    { category: "Gifts / Shagun", lowCost: 500, highCost: 3000, unit: "fixed", notes: "Chunni and traditional gifts" },
+  ],
+  
+  // 4. Paath (Akhand Paath / Sehaj Paath) - Separate (Bride & Groom)
   sikh_paath: [
     { category: "Venue", lowCost: 0, highCost: 1000, unit: "fixed", notes: "Often at Gurdwara or home" },
     { category: "Photographer", lowCost: 500, highCost: 1500, unit: "fixed", notes: "2-3 hour coverage" },
@@ -41,32 +65,48 @@ export const CEREMONY_COST_BREAKDOWNS: Record<string, CostCategory[]> = {
     { category: "Rumalla Sahib", lowCost: 100, highCost: 500, unit: "fixed", notes: "Sacred cloth for Guru Granth Sahib" },
     { category: "Raagi Jatha / Kirtan Musicians", lowCost: 500, highCost: 1500, unit: "fixed", notes: "Professional kirtan musicians" },
   ],
-
+  
+  // 5. Mehndi - Separate (Bride & Groom)
   sikh_mehndi: [
     { category: "Venue (typically home)", lowCost: 0, highCost: 2000, unit: "fixed", notes: "Often held at home or small venue" },
     { category: "Photographer", lowCost: 800, highCost: 2000, unit: "fixed", notes: "3-4 hour coverage" },
     { category: "Caterer", lowCost: 30, highCost: 60, unit: "per_person", notes: "Chaat and finger foods" },
     { category: "Decoration", lowCost: 1000, highCost: 4000, unit: "fixed", notes: "Colorful drapes, cushions, florals" },
   ],
-
-  sikh_maiyan: [
+  
+  // 6. Bakra Party - Groom's Side Only
+  sikh_bakra_party: [
+    { category: "Venue (typically home)", lowCost: 0, highCost: 2000, unit: "fixed", notes: "Often held at home or backyard" },
+    { category: "Photographer", lowCost: 500, highCost: 1500, unit: "fixed", notes: "2-3 hour coverage" },
+    { category: "Caterer", lowCost: 40, highCost: 80, unit: "per_person", notes: "Meat-based feast" },
+    { category: "Decoration", lowCost: 300, highCost: 1500, unit: "fixed", notes: "Simple party decor" },
+    { category: "Alcohol / Drinks", lowCost: 500, highCost: 2500, unit: "fixed", notes: "Full bar service" },
+    { category: "DJ", lowCost: 500, highCost: 1500, unit: "fixed", notes: "Music and sound system" },
+  ],
+  
+  // 7. Mayian (Choora / Vatna) - Separate (Bride & Groom)
+  sikh_mayian: [
     { category: "Venue (typically home)", lowCost: 0, highCost: 500, unit: "fixed", notes: "Traditionally held at home" },
     { category: "Photographer", lowCost: 500, highCost: 1200, unit: "fixed", notes: "2-3 hour coverage" },
     { category: "Caterer", lowCost: 20, highCost: 40, unit: "per_person", notes: "Tea, snacks, traditional sweets" },
     { category: "Decoration", lowCost: 300, highCost: 1000, unit: "fixed", notes: "Phulkari fabrics, marigolds, rangoli" },
   ],
-
+  
+  // 8. Sangeet - Separate (Bride & Groom)
   sikh_sangeet: [
     { category: "Venue", lowCost: 2500, highCost: 10000, unit: "fixed", notes: "Banquet hall or hotel ballroom" },
     { category: "Photographer", lowCost: 1500, highCost: 4000, unit: "fixed", notes: "Full event coverage" },
     { category: "Caterer", lowCost: 50, highCost: 100, unit: "per_person", notes: "Full dinner service" },
     { category: "Decoration", lowCost: 2000, highCost: 6000, unit: "fixed", notes: "Stage, lighting, backdrop" },
-    { category: "Dhol Player", lowCost: 300, highCost: 800, unit: "fixed", notes: "1-2 dhol players" },
-    { category: "Makeup", lowCost: 200, highCost: 600, unit: "fixed", notes: "Bride's makeup and styling" },
     { category: "DJ", lowCost: 1000, highCost: 3000, unit: "fixed", notes: "DJ with sound and lights" },
+    { category: "Dhol Player", lowCost: 300, highCost: 800, unit: "fixed", notes: "1-2 dhol players" },
+    { category: "Makeup", lowCost: 200, highCost: 600, unit: "fixed", notes: "Makeup and styling" },
     { category: "Entertainment (Singers, Bands, Bhangra Teams)", lowCost: 1500, highCost: 6000, unit: "fixed", notes: "Live performers or dance teams" },
+    { category: "Bartenders", lowCost: 200, highCost: 500, unit: "fixed", notes: "Professional bartender service" },
+    { category: "Alcohol / Drinks", lowCost: 1000, highCost: 4000, unit: "fixed", notes: "Full bar service" },
   ],
-
+  
+  // 9. Anand Karaj (The Wedding Ceremony) - Together
   sikh_anand_karaj: [
     { category: "Venue (typically a Sikh Temple)", lowCost: 0, highCost: 2000, unit: "fixed", notes: "Gurdwara venue (often by donation)" },
     { category: "Photographer", lowCost: 2500, highCost: 6000, unit: "fixed", notes: "Full ceremony coverage" },
@@ -81,8 +121,13 @@ export const CEREMONY_COST_BREAKDOWNS: Record<string, CostCategory[]> = {
     { category: "Dhol Player", lowCost: 400, highCost: 1000, unit: "fixed", notes: "2-4 dhol players for baraat" },
     { category: "Attire for Groom", lowCost: 500, highCost: 3000, unit: "fixed", notes: "Sherwani, turban, accessories" },
     { category: "Attire for Bride", lowCost: 1000, highCost: 8000, unit: "fixed", notes: "Lehenga, jewelry, dupatta" },
+    { category: "Attire for Groom's side", lowCost: 500, highCost: 2000, unit: "fixed", notes: "Family attire" },
+    { category: "Attire for Bride's side", lowCost: 500, highCost: 2000, unit: "fixed", notes: "Family attire" },
+    { category: "Hotels for Guests", lowCost: 1000, highCost: 5000, unit: "fixed", notes: "Room blocks for out-of-town guests" },
+    { category: "Transportation for Guests", lowCost: 500, highCost: 2000, unit: "fixed", notes: "Shuttle or bus service" },
   ],
-
+  
+  // 10. Reception - Together
   sikh_reception: [
     { category: "Venue", lowCost: 5000, highCost: 25000, unit: "fixed", notes: "Hotel ballroom or banquet hall" },
     { category: "Photographer", lowCost: 3000, highCost: 8000, unit: "fixed", notes: "Full reception coverage" },
@@ -92,19 +137,20 @@ export const CEREMONY_COST_BREAKDOWNS: Record<string, CostCategory[]> = {
     { category: "Dhol Player", lowCost: 400, highCost: 1000, unit: "fixed", notes: "For couple's entrance" },
     { category: "Makeup", lowCost: 300, highCost: 800, unit: "fixed", notes: "Bride's reception look" },
     { category: "Entertainment (Singers, Bands, Bhangra Teams)", lowCost: 2000, highCost: 8000, unit: "fixed", notes: "Live band or performers" },
+    { category: "Bartenders", lowCost: 300, highCost: 800, unit: "fixed", notes: "Professional bartender service" },
+    { category: "Alcohol / Drinks", lowCost: 2000, highCost: 8000, unit: "fixed", notes: "Full bar service" },
+    { category: "Attire for Groom", lowCost: 300, highCost: 1500, unit: "fixed", notes: "Reception outfit" },
+    { category: "Attire for Bride", lowCost: 500, highCost: 3000, unit: "fixed", notes: "Reception lehenga or gown" },
+    { category: "Transportation for Guests", lowCost: 500, highCost: 2000, unit: "fixed", notes: "Shuttle or bus service" },
+    { category: "Limo rental", lowCost: 300, highCost: 1000, unit: "fixed", notes: "Luxury vehicle for couple" },
   ],
-
+  
+  // 11. Day After Visit - Together
   sikh_day_after: [
-    { category: "Venue (typically home)", lowCost: 0, highCost: 500, unit: "fixed", notes: "Usually at in-laws' home" },
     { category: "Caterer", lowCost: 25, highCost: 50, unit: "per_person", notes: "Brunch or lunch" },
-    { category: "Photographer", lowCost: 300, highCost: 800, unit: "fixed", notes: "2-3 hour coverage (optional)" },
     { category: "Decoration", lowCost: 100, highCost: 400, unit: "fixed", notes: "Simple home decor" },
-  ],
-
-  sikh_misc: [
-    { category: "Invitation Cards", lowCost: 500, highCost: 3000, unit: "fixed", notes: "Printed invitations for all events" },
-    { category: "Wedding Planner", lowCost: 2000, highCost: 10000, unit: "fixed", notes: "Partial or full planning services" },
-    { category: "Sweets to Hand Out", lowCost: 300, highCost: 1500, unit: "fixed", notes: "Mithai boxes for guests" },
+    { category: "DJ", lowCost: 0, highCost: 500, unit: "fixed", notes: "Optional background music" },
+    { category: "Alcohol / Drinks", lowCost: 200, highCost: 800, unit: "fixed", notes: "Light refreshments" },
   ],
 
   // ============ HINDU CEREMONIES ============
@@ -337,14 +383,32 @@ export const CEREMONY_CATALOG: CeremonyDefinition[] = [
     traditions: ["hindu", "muslim", "gujarati", "south_indian", "mixed", "general"],
   },
 
-  // Sikh ceremonies
+  // Sikh ceremonies (11 total)
   {
-    id: "sikh_engagement_roka",
-    name: "Engagement / Roka",
-    description: "Formal engagement ceremony with gift exchange between families",
+    id: "sikh_roka",
+    name: "Roka",
+    description: "Formal blessing and acceptance ceremony between families",
+    costPerGuestLow: 40,
+    costPerGuestHigh: 80,
+    defaultGuests: 50,
+    traditions: ["sikh"],
+  },
+  {
+    id: "sikh_engagement",
+    name: "Engagement",
+    description: "Formal engagement ceremony with ring exchange and celebrations",
     costPerGuestLow: 60,
     costPerGuestHigh: 120,
     defaultGuests: 100,
+    traditions: ["sikh"],
+  },
+  {
+    id: "sikh_chunni_chadana",
+    name: "Chunni Chadana",
+    description: "Ceremony where groom's family presents chunni to the bride",
+    costPerGuestLow: 35,
+    costPerGuestHigh: 70,
+    defaultGuests: 50,
     traditions: ["sikh"],
   },
   {
@@ -359,16 +423,25 @@ export const CEREMONY_CATALOG: CeremonyDefinition[] = [
   {
     id: "sikh_mehndi",
     name: "Mehndi",
-    description: "Henna application ceremony for the bride",
+    description: "Henna application ceremony",
     costPerGuestLow: 35,
     costPerGuestHigh: 75,
     defaultGuests: 80,
     traditions: ["sikh"],
   },
   {
-    id: "sikh_maiyan",
-    name: "Maiyan (Choora / Vatna)",
-    description: "Turmeric ceremony with choora (red bangles) for the bride",
+    id: "sikh_bakra_party",
+    name: "Bakra Party",
+    description: "Groom's side pre-wedding celebration with meat feast",
+    costPerGuestLow: 50,
+    costPerGuestHigh: 100,
+    defaultGuests: 75,
+    traditions: ["sikh"],
+  },
+  {
+    id: "sikh_mayian",
+    name: "Mayian (Choora / Vatna)",
+    description: "Turmeric ceremony with choora (red bangles)",
     costPerGuestLow: 25,
     costPerGuestHigh: 50,
     defaultGuests: 50,
@@ -521,7 +594,19 @@ export function getCeremonyById(id: string): CeremonyDefinition | undefined {
 export function getDefaultCeremoniesForTradition(tradition: string): string[] {
   const defaults: Record<string, string[]> = {
     hindu: ["hindu_wedding", "reception"],
-    sikh: ["sikh_engagement_roka", "sikh_paath", "sikh_mehndi", "sikh_maiyan", "sikh_sangeet", "sikh_anand_karaj", "sikh_reception", "sikh_day_after"],
+    sikh: [
+      "sikh_roka",
+      "sikh_engagement",
+      "sikh_chunni_chadana",
+      "sikh_paath",
+      "sikh_mehndi",
+      "sikh_bakra_party",
+      "sikh_mayian",
+      "sikh_sangeet",
+      "sikh_anand_karaj",
+      "sikh_reception",
+      "sikh_day_after"
+    ],
     muslim: ["muslim_nikah", "muslim_walima"],
     gujarati: ["gujarati_wedding", "reception"],
     south_indian: ["south_indian_muhurtham", "reception"],

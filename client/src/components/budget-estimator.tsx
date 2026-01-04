@@ -114,22 +114,23 @@ export function BudgetEstimator({ wedding, events = [], onUpdateBudget, onUpdate
     const normalizedName = eventName.toLowerCase().trim();
     
     const ceremonyNameMap: Record<string, string> = {
-      // Sikh ceremonies (prioritize Sikh-specific mappings)
-      'engagement / roka': 'sikh_engagement_roka',
-      'engagement or roka': 'sikh_engagement_roka',
-      'engagement': 'sikh_engagement_roka',
-      'roka': 'sikh_engagement_roka',
+      // Sikh ceremonies (11 total - prioritize Sikh-specific mappings)
+      'roka': 'sikh_roka',
+      'engagement': 'sikh_engagement',
+      'chunni chadana': 'sikh_chunni_chadana',
+      'chunni': 'sikh_chunni_chadana',
       'paath': 'sikh_paath',
       'akhand paath': 'sikh_paath',
       'sehaj paath': 'sikh_paath',
-      'maiyan': 'sikh_maiyan',
-      'choora': 'sikh_maiyan',
-      'vatna': 'sikh_maiyan',
+      'bakra party': 'sikh_bakra_party',
+      'bakra': 'sikh_bakra_party',
+      'mayian': 'sikh_mayian',
+      'maiyan': 'sikh_mayian',
+      'choora': 'sikh_mayian',
+      'vatna': 'sikh_mayian',
       'anand karaj': 'sikh_anand_karaj',
       'day after visit': 'sikh_day_after',
       'day after': 'sikh_day_after',
-      'miscellaneous': 'sikh_misc',
-      'misc': 'sikh_misc',
       // Hindu ceremonies
       'haldi': 'hindu_haldi',
       'baraat': 'hindu_baraat',
@@ -162,12 +163,14 @@ export function BudgetEstimator({ wedding, events = [], onUpdateBudget, onUpdate
       }
     }
     
-    // For generic ceremony names (Mehndi, Sangeet, Reception), default to Sikh-specific versions
+    // For generic ceremony names, default to Sikh-specific versions
     // since this is primarily a Sikh wedding planning app
     const sikhDefaultMap: Record<string, string> = {
       'mehndi': 'sikh_mehndi',
       'sangeet': 'sikh_sangeet',
       'reception': 'sikh_reception',
+      'mayian': 'sikh_mayian',
+      'maiyan': 'sikh_mayian',
     };
     
     for (const [keyword, ceremonyId] of Object.entries(sikhDefaultMap)) {
