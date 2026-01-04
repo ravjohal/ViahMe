@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
@@ -10,8 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Plus, ChevronDown, X } from "lucide-react";
-import type { Event, BudgetCategory } from "@shared/schema";
+import { Badge } from "@/components/ui/badge";
+import { Plus, ChevronDown, Sparkles, X } from "lucide-react";
+import type { Event, BudgetCategory, SpendCategory, CeremonySpendCategory } from "@shared/schema";
 
 const CATEGORY_LABELS: Record<string, string> = {
   catering: "Catering & Food",
@@ -23,6 +24,52 @@ const CATEGORY_LABELS: Record<string, string> = {
   transportation: "Transportation",
   other: "Other Expenses",
 };
+
+const CEREMONY_MAPPINGS: Record<string, string[]> = {
+  sikh_roka: ["roka", "sikh roka"],
+  sikh_kurmai: ["kurmai", "engagement", "sikh engagement"],
+  sikh_chunni_chadana: ["chunni chadana", "chunni", "chunni ceremony"],
+  sikh_sangeet: ["sangeet", "lady sangeet", "sikh sangeet"],
+  sikh_mehndi: ["mehndi", "henna", "sikh mehndi"],
+  sikh_maiyan: ["maiyan", "sikh maiyan", "mayian"],
+  sikh_chooda_kalire: ["chooda", "kalire", "chooda kalire", "chooda & kalire", "chooda ceremony"],
+  sikh_jaggo: ["jaggo", "sikh jaggo"],
+  sikh_anand_karaj: ["anand karaj", "anand_karaj", "sikh wedding", "wedding ceremony"],
+  sikh_baraat: ["baraat", "sikh baraat"],
+  sikh_milni: ["milni", "sikh milni"],
+  sikh_reception: ["reception", "sikh reception", "wedding reception"],
+  sikh_bakra_party: ["bakra party", "bakra", "bachelor party"],
+  hindu_wedding: ["hindu wedding", "pheras", "wedding"],
+  hindu_sangeet: ["hindu sangeet", "sangeet hindu"],
+  hindu_mehndi: ["hindu mehndi", "mehendi"],
+  hindu_haldi: ["haldi", "hindu haldi"],
+};
+
+function getCeremonyIdFromEvent(event: Event): string | null {
+  const eventType = event.type?.toLowerCase() || "";
+  const eventName = event.name?.toLowerCase() || "";
+  
+  for (const [ceremonyId, keywords] of Object.entries(CEREMONY_MAPPINGS)) {
+    if (keywords.some(kw => eventName.includes(kw) || eventType.includes(kw))) {
+      return ceremonyId;
+    }
+  }
+  
+  return eventType ? `sikh_${eventType}` : null;
+}
+
+interface CeremonySpendCategoryWithDetails {
+  id: string;
+  ceremonyId: string;
+  spendCategoryId: string;
+  lowCost: string;
+  highCost: string;
+  unit: string;
+  hoursLow: number | null;
+  hoursHigh: number | null;
+  notes: string | null;
+  spendCategory: SpendCategory;
+}
 
 interface AddExpenseDialogProps {
   open: boolean;
@@ -60,10 +107,30 @@ export function AddExpenseDialog({
     bride_family: "25",
     groom_family: "25",
   });
+  const [selectedSpendCategory, setSelectedSpendCategory] = useState<CeremonySpendCategoryWithDetails | null>(null);
 
   const { data: budgetCategories = [] } = useQuery<BudgetCategory[]>({
     queryKey: ["/api/budget-categories", weddingId],
     enabled: !!weddingId,
+  });
+
+  const selectedEvent = useMemo(() => {
+    if (selectedEvents.length === 1) {
+      return events.find(e => e.id === selectedEvents[0]) || null;
+    }
+    return null;
+  }, [selectedEvents, events]);
+
+  const ceremonyId = useMemo(() => {
+    if (selectedEvent) {
+      return getCeremonyIdFromEvent(selectedEvent);
+    }
+    return null;
+  }, [selectedEvent]);
+
+  const { data: ceremonySpendCategories = [] } = useQuery<CeremonySpendCategoryWithDetails[]>({
+    queryKey: ["/api/ceremony-spend-categories/ceremony", ceremonyId],
+    enabled: !!ceremonyId,
   });
 
   useEffect(() => {
@@ -85,6 +152,23 @@ export function AddExpenseDialog({
     setShowNotesSection(false);
     setSplitType("full");
     setSplitPercentages({ couple: "50", bride_family: "25", groom_family: "25" });
+    setSelectedSpendCategory(null);
+  };
+
+  const handleSpendCategorySelect = (spendCat: CeremonySpendCategoryWithDetails) => {
+    setSelectedSpendCategory(spendCat);
+    setDescription(spendCat.spendCategory.name);
+    
+    const parentCategory = spendCat.spendCategory.parentBudgetCategory;
+    const matchingBudgetCat = budgetCategories.find(bc => bc.category === parentCategory);
+    if (matchingBudgetCat) {
+      setSelectedCategoryId(matchingBudgetCat.id);
+    }
+    
+    const avgCost = (parseFloat(spendCat.lowCost) + parseFloat(spendCat.highCost)) / 2;
+    if (avgCost > 0) {
+      setAmount(avgCost.toFixed(0));
+    }
   };
 
   const createExpenseMutation = useMutation({
@@ -324,6 +408,83 @@ export function AddExpenseDialog({
               )}
             </div>
           </div>
+
+          {ceremonySpendCategories.length > 0 && selectedEvents.length === 1 && (
+            <div className="space-y-3">
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-primary" />
+                Suggested for {selectedEvent?.name}
+              </Label>
+              <div className="flex flex-wrap gap-2">
+                {ceremonySpendCategories.slice(0, 8).map((spendCat) => {
+                  const isSelected = selectedSpendCategory?.id === spendCat.id;
+                  const lowCost = parseFloat(spendCat.lowCost) || 0;
+                  const highCost = parseFloat(spendCat.highCost) || 0;
+                  const hasEstimate = lowCost > 0 || highCost > 0;
+                  
+                  return (
+                    <button
+                      key={spendCat.id}
+                      type="button"
+                      onClick={() => handleSpendCategorySelect(spendCat)}
+                      className={`group flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                        isSelected
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-accent/50 text-accent-foreground hover-elevate"
+                      }`}
+                      data-testid={`button-spend-category-${spendCat.id}`}
+                    >
+                      <span>{spendCat.spendCategory.name}</span>
+                      {hasEstimate && (
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                          ${Math.round((lowCost + highCost) / 2).toLocaleString()}
+                        </Badge>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              {ceremonySpendCategories.length > 8 && (
+                <Collapsible>
+                  <CollapsibleTrigger className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1">
+                    <ChevronDown className="w-3 h-3" />
+                    Show {ceremonySpendCategories.length - 8} more
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-2">
+                    <div className="flex flex-wrap gap-2">
+                      {ceremonySpendCategories.slice(8).map((spendCat) => {
+                        const isSelected = selectedSpendCategory?.id === spendCat.id;
+                        const lowCost = parseFloat(spendCat.lowCost) || 0;
+                        const highCost = parseFloat(spendCat.highCost) || 0;
+                        const hasEstimate = lowCost > 0 || highCost > 0;
+                        
+                        return (
+                          <button
+                            key={spendCat.id}
+                            type="button"
+                            onClick={() => handleSpendCategorySelect(spendCat)}
+                            className={`group flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                              isSelected
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-accent/50 text-accent-foreground hover-elevate"
+                            }`}
+                            data-testid={`button-spend-category-${spendCat.id}`}
+                          >
+                            <span>{spendCat.spendCategory.name}</span>
+                            {hasEstimate && (
+                              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                                ${Math.round((lowCost + highCost) / 2).toLocaleString()}
+                              </Badge>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
+            </div>
+          )}
 
           <div className="space-y-3">
             <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
