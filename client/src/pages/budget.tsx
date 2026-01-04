@@ -486,6 +486,19 @@ export default function Budget() {
     },
   });
 
+  const updateEventBudgetMutation = useMutation({
+    mutationFn: async ({ eventId, budget }: { eventId: string; budget: number }) => {
+      return await apiRequest("PATCH", `/api/events/${eventId}`, { allocatedBudget: budget.toString() });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/events", wedding?.id] });
+      toast({ title: "Ceremony budget set", description: "Budget allocation has been saved for this ceremony" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to set ceremony budget", variant: "destructive" });
+    },
+  });
+
   const createCategoryMutation = useMutation({
     mutationFn: async (data: BudgetFormData) => {
       return await apiRequest("POST", "/api/budget-categories", data);
@@ -677,6 +690,9 @@ export default function Budget() {
               onUpdateBudget={(budget) => {
                 setNewTotalBudget(budget.toString());
                 updateWeddingBudgetMutation.mutate(budget.toString());
+              }}
+              onUpdateEventBudget={(eventId, budget) => {
+                updateEventBudgetMutation.mutate({ eventId, budget });
               }}
             />
             <Button

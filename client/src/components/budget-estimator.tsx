@@ -52,6 +52,7 @@ interface BudgetEstimatorProps {
   wedding?: Wedding;
   events?: Event[];
   onUpdateBudget?: (budget: number) => void;
+  onUpdateEventBudget?: (eventId: string, budget: number) => void;
 }
 
 const TRADITION_LABELS: Record<string, string> = {
@@ -76,7 +77,7 @@ const CITY_LABELS: Record<string, string> = {
   other: "Other",
 };
 
-export function BudgetEstimator({ wedding, events = [], onUpdateBudget }: BudgetEstimatorProps) {
+export function BudgetEstimator({ wedding, events = [], onUpdateBudget, onUpdateEventBudget }: BudgetEstimatorProps) {
   const [open, setOpen] = useState(false);
   const [selectedTradition, setSelectedTradition] = useState<string>(wedding?.tradition || "hindu");
   const [customEventsBase, setCustomEventsBase] = useState<CustomEventBase[]>([]);
@@ -383,9 +384,9 @@ export function BudgetEstimator({ wedding, events = [], onUpdateBudget }: Budget
   };
 
   const handleApplySingleCeremonyBudget = (event: EventEstimate) => {
-    if (onUpdateBudget) {
-      onUpdateBudget(event.totalLow);
-      setOpen(false);
+    if (onUpdateEventBudget && event.isFromWedding) {
+      // Apply budget to this specific ceremony
+      onUpdateEventBudget(event.id, Math.round(event.totalLow));
     }
   };
 
@@ -696,7 +697,7 @@ export function BudgetEstimator({ wedding, events = [], onUpdateBudget }: Budget
                                     Reset to Default
                                   </Button>
                                 )}
-                                {onUpdateBudget && (
+                                {onUpdateEventBudget && event.isFromWedding && (
                                   <Button
                                     size="sm"
                                     className="text-xs h-7 ml-auto"
@@ -704,7 +705,7 @@ export function BudgetEstimator({ wedding, events = [], onUpdateBudget }: Budget
                                     data-testid={`button-apply-single-${event.id}`}
                                   >
                                     <Check className="w-3 h-3 mr-1" />
-                                    Apply ${event.totalLow.toLocaleString()} as Budget
+                                    Set ${event.totalLow.toLocaleString()} as Ceremony Budget
                                   </Button>
                                 )}
                               </div>
