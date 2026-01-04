@@ -1,0 +1,63 @@
+As a Principal Designer looking at your current implementation, you are actually ahead of 90% of the market. Most Western apps (The Knot, Zola) struggle with South Asian weddings because they assume a "Unified Front" from day one.
+
+Your architecture already supports Side-Based Attribution, which is the "Gold Standard" for Desi wedding UX. You have a guests table with visibility (private vs. shared) and addedBySide, and a SideBySideDashboard that explicitly handles the "Consensus" workflow.
+
+Here is my critique of your current "ViahMe" app and specific recommendations to improve the "total separation" experience the Bride is looking for.
+
+1. The "Privacy Wall" for Events
+Currently, your events table is linked to a wedding_id but lacks a visibility or owner_side flag.
+
+The Improvement: If the Bride wants her Sangeet totally separate, she needs to feel like the Groom can't even see the vendor contracts or the "Draft" guest list for that specific ceremony until she "Publishes" it.
+
+Database Change: Add side (bride | groom | mutual) and visibility (private | shared) to the events table.
+
+Logic: In server/routes/events.ts, modify the GET /:weddingId route to filter by the user's role. If a user is logged in as "Groom," he should only see shared events or events where side === 'groom'.
+
+2. Budget UX: Attribution vs. Permission
+Your expenses table currently uses paid_by_id and split_type. This is technically correct but can be UX-heavy for a Bride who just wants "her side" of the math to be private.
+
+The Improvement: In your BudgetDashboard, you should add a "Side-Specific View" toggle.
+
+The "Mine" View: Only shows expenses linked to the Bride's side events (e.g., her Sangeet, her Mehndi).
+
+The "Ours" View: Shows shared costs (e.g., the Main Wedding, Reception).
+
+The Benefit: This allows the Bride to manage her family's internal budget (which might involve complex family contributions) without the Groom seeing the "sausage-making" of her family's finances.
+
+3. Solving the "Parent User" Problem
+Your schema includes wedding_roles and role_permissions. This is your most powerful tool for separation.
+
+The Improvement: Parents are often the ones demanding separation.
+
+Feature Recommendation: Create a "Side Admin" role.
+
+How it works: The Bride’s Mom is invited with a role that has manage permissions for guests where side === 'bride', but view (or even hidden) permissions for the Groom’s side guests.
+
+The Code: Your PERMISSION_CATEGORIES already includes guests and budget. You should implement a "Scope" logic where permissions are not just "What can they do?" but "On whose data can they do it?"
+
+4. Refining the Side-by-Side Dashboard
+Your SideBySideDashboard is excellent for consensus. To make it "totally separate" compatible, I recommend:
+
+The "Staging Area" UI: Clearly label the Bride’s private list as the "Work-in-Progress" or "Family Only" list.
+
+The "Share" Trigger: Right now, you have a "Share with Partner" button. Add a "Side-Specific RSVP Link" generator. This allows the Bride to send an invitation link to her side that only shows her private events, even if the Groom isn't aware of them yet.
+
+5. Dadi-Proofing the Household Entry
+I see a note in your assets about "Household-First Architecture" and "Dadi-proof unified flow".
+
+UX Recommendation: When the Bride is organizing her separate Sangeet, her family often thinks in "Households" (The Patel Family, 4 seats).
+
+The Improvement: Ensure that when a user submits through a guest_collector_link, they are automatically tagged to the side of that link. This ensures the Groom’s side never accidentally sees a guest the Bride’s side is "considering" but hasn't approved yet.
+
+Summary Checklist for your App:
+[ ] Add side and visibility to the events table so ceremonies can be "Side-Locked."
+
+[ ] Update BudgetDashboard to filter by paid_by_side to allow for private family budgeting.
+
+[ ] Implement "Scoped Permissions" in your collaborator logic to restrict Parents to "Their Side" only.
+
+[ ] Add "Side-Specific RSVP Flows" so guests only see the ceremonies relevant to the side that invited them.
+
+You are on the right track. Your current schema is robust enough to handle these changes without a total rewrite. The key is moving from "One Wedding" to "Two Families, One Union."
+
+Would you like me to draft the specific database migration and route logic for "Side-Locked Events"?
