@@ -21,6 +21,7 @@ import {
   VENUE_CLASS_LABELS,
   VENDOR_TIER_LABELS,
 } from "@shared/pricing";
+import { CEREMONY_COST_BREAKDOWNS, CEREMONY_CATALOG, type CostCategory } from "@shared/ceremonies";
 
 interface EventEstimate {
   id: string;
@@ -108,6 +109,83 @@ export function BudgetEstimator({ wedding, events = [], onUpdateBudget }: Budget
     return VENUE_CLASS_MULTIPLIERS[effectiveVenue] * VENDOR_TIER_MULTIPLIERS[effectiveVendor] * cityMultiplier;
   };
 
+  const getCeremonyBreakdown = (eventName: string): { ceremonyId: string; breakdown: CostCategory[] } | null => {
+    const normalizedName = eventName.toLowerCase().trim();
+    
+    const ceremonyNameMap: Record<string, string> = {
+      'anand karaj': 'sikh_anand_karaj',
+      'maiyan': 'sikh_maiyan',
+      'mehndi': 'hindu_mehndi',
+      'sangeet': 'hindu_sangeet',
+      'haldi': 'hindu_haldi',
+      'baraat': 'hindu_baraat',
+      'wedding ceremony': 'hindu_wedding',
+      'wedding': 'hindu_wedding',
+      'reception': 'reception',
+      'reception dinner': 'reception',
+      'nikah': 'muslim_nikah',
+      'walima': 'muslim_walima',
+      'dholki': 'muslim_dholki',
+      'pithi': 'gujarati_pithi',
+      'garba': 'gujarati_garba',
+      'grahshanti': 'gujarati_grahshanti',
+      'vidhi mandap': 'south_indian_vidhi_mandap',
+      'muhurtham': 'south_indian_muhurtham',
+      'saree ceremony': 'south_indian_saree_ceremony',
+    };
+    
+    for (const [keyword, ceremonyId] of Object.entries(ceremonyNameMap)) {
+      if (normalizedName.includes(keyword) && CEREMONY_COST_BREAKDOWNS[ceremonyId]) {
+        return { ceremonyId, breakdown: CEREMONY_COST_BREAKDOWNS[ceremonyId] };
+      }
+    }
+    
+    const ceremony = CEREMONY_CATALOG.find(c => 
+      c.name.toLowerCase() === normalizedName ||
+      normalizedName.includes(c.name.toLowerCase())
+    );
+    
+    if (ceremony && CEREMONY_COST_BREAKDOWNS[ceremony.id]) {
+      return { ceremonyId: ceremony.id, breakdown: CEREMONY_COST_BREAKDOWNS[ceremony.id] };
+    }
+    
+    return null;
+  };
+
+  const calculateBreakdownCost = (item: CostCategory, guests: number, multiplier: number, guestBracketMultiplier: number): { low: number; high: number } => {
+    let low = 0;
+    let high = 0;
+    const totalMultiplier = multiplier * guestBracketMultiplier;
+    
+    if (item.unit === "per_person") {
+      low = Math.round(item.lowCost * guests * totalMultiplier);
+      high = Math.round(item.highCost * guests * totalMultiplier);
+    } else if (item.unit === "per_hour") {
+      const hoursLow = item.hoursLow ?? 3;
+      const hoursHigh = item.hoursHigh ?? 4;
+      low = Math.round(item.lowCost * hoursLow * totalMultiplier);
+      high = Math.round(item.highCost * hoursHigh * totalMultiplier);
+    } else {
+      low = Math.round(item.lowCost * totalMultiplier);
+      high = Math.round(item.highCost * totalMultiplier);
+    }
+    
+    return { low, high };
+  };
+
+  const calculateBreakdownTotal = (breakdown: CostCategory[], guests: number, multiplier: number, guestBracketMultiplier: number): { low: number; high: number } => {
+    let totalLow = 0;
+    let totalHigh = 0;
+    
+    for (const item of breakdown) {
+      const costs = calculateBreakdownCost(item, guests, multiplier, guestBracketMultiplier);
+      totalLow += costs.low;
+      totalHigh += costs.high;
+    }
+    
+    return { low: totalLow, high: totalHigh };
+  };
+
   const weddingEventEstimates: EventEstimate[] = useMemo(() => {
     if (!useWeddingEvents || events.length === 0) return [];
     
@@ -117,12 +195,28 @@ export function BudgetEstimator({ wedding, events = [], onUpdateBudget }: Budget
         c.ceremonyId.includes(event.name.toLowerCase().replace(/\s+/g, '_'))
       );
       
-      const baseCostLow = ceremony ? parseFloat(ceremony.costPerGuestLow) : 50;
-      const baseCostHigh = ceremony ? parseFloat(ceremony.costPerGuestHigh) : 100;
       const guestCount = event.guestCount || ceremony?.defaultGuests || 150;
       const guestBracketMultiplier = GUEST_BRACKET_MULTIPLIERS[getGuestBracket(guestCount)];
-      
       const eventMultiplier = getEffectiveMultiplier(event.id, false);
+      
+      const breakdownData = getCeremonyBreakdown(event.name);
+      
+      if (breakdownData) {
+        const breakdownTotals = calculateBreakdownTotal(breakdownData.breakdown, guestCount, eventMultiplier, guestBracketMultiplier);
+        return {
+          id: event.id,
+          name: event.name,
+          guests: guestCount,
+          costPerGuestLow: Math.round(breakdownTotals.low / guestCount),
+          costPerGuestHigh: Math.round(breakdownTotals.high / guestCount),
+          totalLow: breakdownTotals.low,
+          totalHigh: breakdownTotals.high,
+          isFromWedding: true,
+        };
+      }
+      
+      const baseCostLow = ceremony ? parseFloat(ceremony.costPerGuestLow) : 50;
+      const baseCostHigh = ceremony ? parseFloat(ceremony.costPerGuestHigh) : 100;
       const costLow = Math.round(baseCostLow * eventMultiplier * guestBracketMultiplier);
       const costHigh = Math.round(baseCostHigh * eventMultiplier * guestBracketMultiplier);
       
@@ -143,6 +237,22 @@ export function BudgetEstimator({ wedding, events = [], onUpdateBudget }: Budget
     return customEventsBase.map(ce => {
       const guestBracketMultiplier = GUEST_BRACKET_MULTIPLIERS[getGuestBracket(ce.guests)];
       const eventMultiplier = getEffectiveMultiplier(ce.id, true);
+      
+      const breakdownData = getCeremonyBreakdown(ce.name);
+      
+      if (breakdownData) {
+        const breakdownTotals = calculateBreakdownTotal(breakdownData.breakdown, ce.guests, eventMultiplier, guestBracketMultiplier);
+        return {
+          id: ce.id,
+          name: ce.name,
+          guests: ce.guests,
+          costPerGuestLow: Math.round(breakdownTotals.low / ce.guests),
+          costPerGuestHigh: Math.round(breakdownTotals.high / ce.guests),
+          totalLow: breakdownTotals.low,
+          totalHigh: breakdownTotals.high,
+        };
+      }
+      
       const costLow = Math.round(ce.baseCostPerGuestLow * eventMultiplier * guestBracketMultiplier);
       const costHigh = Math.round(ce.baseCostPerGuestHigh * eventMultiplier * guestBracketMultiplier);
       return {
@@ -423,88 +533,140 @@ export function BudgetEstimator({ wedding, events = [], onUpdateBudget }: Budget
                         </div>
                         
                         <CollapsibleContent>
-                          <div className="px-3 pb-3 pt-1 border-t border-emerald-100 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-900/10">
-                            <div className="flex items-center gap-2 mb-3">
-                              <Settings2 className="w-4 h-4 text-emerald-600" />
-                              <span className="text-sm font-medium text-emerald-800 dark:text-emerald-200">
-                                Customize Pricing for {event.name}
-                              </span>
-                            </div>
+                          <div className="px-3 pb-3 pt-2 border-t border-emerald-100 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-900/10">
+                            {(() => {
+                              const breakdownData = getCeremonyBreakdown(event.name);
+                              const eventMultiplier = getEffectiveMultiplier(event.id, isCustom);
+                              const guestBracketMult = GUEST_BRACKET_MULTIPLIERS[getGuestBracket(event.guests)];
+                              
+                              if (breakdownData) {
+                                return (
+                                  <div className="space-y-3">
+                                    <div className="text-xs font-medium text-emerald-700 dark:text-emerald-300 mb-2">
+                                      Cost Breakdown ({event.guests} guests)
+                                    </div>
+                                    <div className="space-y-1.5">
+                                      {breakdownData.breakdown.map((item, idx) => {
+                                        const costs = calculateBreakdownCost(item, event.guests, eventMultiplier, guestBracketMult);
+                                        return (
+                                          <div key={idx} className="flex items-center justify-between text-xs">
+                                            <div className="flex-1">
+                                              <span className="text-emerald-800 dark:text-emerald-200">{item.category}</span>
+                                              {item.notes && (
+                                                <span className="text-emerald-600/70 dark:text-emerald-400/70 ml-1 text-[10px]">
+                                                  ({item.unit === 'per_person' ? 'per guest' : item.unit === 'per_hour' ? `${item.hoursLow}-${item.hoursHigh}hrs` : 'fixed'})
+                                                </span>
+                                              )}
+                                            </div>
+                                            <span className="font-medium text-emerald-700 dark:text-emerald-300">
+                                              ${costs.low.toLocaleString()} - ${costs.high.toLocaleString()}
+                                            </span>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                    <div className="border-t border-emerald-200 dark:border-emerald-700 pt-2 mt-2">
+                                      <div className="flex items-center justify-between text-xs font-semibold">
+                                        <span className="text-emerald-800 dark:text-emerald-200">Total</span>
+                                        <span className="text-emerald-700 dark:text-emerald-300">
+                                          ${event.totalLow.toLocaleString()} - ${event.totalHigh.toLocaleString()}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              }
+                              
+                              return (
+                                <div className="text-xs text-emerald-600 dark:text-emerald-400 italic">
+                                  Detailed breakdown not available for this ceremony type.
+                                </div>
+                              );
+                            })()}
                             
-                            <div className="grid grid-cols-2 gap-3 mb-3">
-                              <div>
-                                <Label className="text-xs mb-1 block">Venue Type</Label>
-                                <Select 
-                                  value={override?.venueClass ?? venueClass} 
-                                  onValueChange={(v) => {
-                                    if (isCustom) {
-                                      updateCustomEventPricing(event.id, { venueClass: v as VenueClass });
-                                    } else {
-                                      updateWeddingEventPricing(event.id, { venueClass: v as VenueClass });
-                                    }
-                                  }}
-                                >
-                                  <SelectTrigger className="h-8 text-xs" data-testid={`select-venue-${event.id}`}>
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {Object.entries(VENUE_CLASS_LABELS).map(([value, label]) => (
-                                      <SelectItem key={value} value={value} className="text-xs">
-                                        {label}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
+                            <div className="mt-3 pt-3 border-t border-emerald-200 dark:border-emerald-700">
+                              <div className="flex items-center gap-2 mb-3">
+                                <Settings2 className="w-4 h-4 text-emerald-600" />
+                                <span className="text-xs font-medium text-emerald-800 dark:text-emerald-200">
+                                  Adjust Pricing
+                                </span>
                               </div>
-                              <div>
-                                <Label className="text-xs mb-1 block">Vendor Tier</Label>
-                                <Select 
-                                  value={override?.vendorTier ?? vendorTier} 
-                                  onValueChange={(v) => {
-                                    if (isCustom) {
-                                      updateCustomEventPricing(event.id, { vendorTier: v as VendorTier });
-                                    } else {
-                                      updateWeddingEventPricing(event.id, { vendorTier: v as VendorTier });
-                                    }
-                                  }}
-                                >
-                                  <SelectTrigger className="h-8 text-xs" data-testid={`select-vendor-${event.id}`}>
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {Object.entries(VENDOR_TIER_LABELS).map(([value, label]) => (
-                                      <SelectItem key={value} value={value} className="text-xs">
-                                        {label}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
+                              
+                              <div className="grid grid-cols-2 gap-3 mb-3">
+                                <div>
+                                  <Label className="text-xs mb-1 block">Venue Type</Label>
+                                  <Select 
+                                    value={override?.venueClass ?? venueClass} 
+                                    onValueChange={(v) => {
+                                      if (isCustom) {
+                                        updateCustomEventPricing(event.id, { venueClass: v as VenueClass });
+                                      } else {
+                                        updateWeddingEventPricing(event.id, { venueClass: v as VenueClass });
+                                      }
+                                    }}
+                                  >
+                                    <SelectTrigger className="h-8 text-xs" data-testid={`select-venue-${event.id}`}>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {Object.entries(VENUE_CLASS_LABELS).map(([value, label]) => (
+                                        <SelectItem key={value} value={value} className="text-xs">
+                                          {label}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div>
+                                  <Label className="text-xs mb-1 block">Vendor Tier</Label>
+                                  <Select 
+                                    value={override?.vendorTier ?? vendorTier} 
+                                    onValueChange={(v) => {
+                                      if (isCustom) {
+                                        updateCustomEventPricing(event.id, { vendorTier: v as VendorTier });
+                                      } else {
+                                        updateWeddingEventPricing(event.id, { vendorTier: v as VendorTier });
+                                      }
+                                    }}
+                                  >
+                                    <SelectTrigger className="h-8 text-xs" data-testid={`select-vendor-${event.id}`}>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {Object.entries(VENDOR_TIER_LABELS).map(([value, label]) => (
+                                        <SelectItem key={value} value={value} className="text-xs">
+                                          {label}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
                               </div>
-                            </div>
-                            
-                            <div className="flex items-center justify-between gap-2">
-                              {hasOverride && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-xs h-7"
-                                  onClick={() => clearEventOverride(event.id, isCustom)}
-                                  data-testid={`button-reset-${event.id}`}
-                                >
-                                  Reset to Default
-                                </Button>
-                              )}
-                              {onUpdateBudget && (
-                                <Button
-                                  size="sm"
-                                  className="text-xs h-7 ml-auto"
-                                  onClick={() => handleApplySingleCeremonyBudget(event)}
-                                  data-testid={`button-apply-single-${event.id}`}
-                                >
-                                  <Check className="w-3 h-3 mr-1" />
-                                  Apply ${event.totalLow.toLocaleString()} as Budget
-                                </Button>
-                              )}
+                              
+                              <div className="flex items-center justify-between gap-2">
+                                {hasOverride && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-xs h-7"
+                                    onClick={() => clearEventOverride(event.id, isCustom)}
+                                    data-testid={`button-reset-${event.id}`}
+                                  >
+                                    Reset to Default
+                                  </Button>
+                                )}
+                                {onUpdateBudget && (
+                                  <Button
+                                    size="sm"
+                                    className="text-xs h-7 ml-auto"
+                                    onClick={() => handleApplySingleCeremonyBudget(event)}
+                                    data-testid={`button-apply-single-${event.id}`}
+                                  >
+                                    <Check className="w-3 h-3 mr-1" />
+                                    Apply ${event.totalLow.toLocaleString()} as Budget
+                                  </Button>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </CollapsibleContent>
