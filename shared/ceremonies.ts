@@ -517,17 +517,6 @@ export const CEREMONY_CATALOG: CeremonyDefinition[] = [
     defaultGuests: 150,
     traditions: ["general", "mixed", "hindu", "gujarati", "south_indian"],
   },
-  
-  // Custom event option for all traditions
-  {
-    id: "custom",
-    name: "Custom Event",
-    description: "Add your own ceremony or event",
-    costPerGuestLow: 50,
-    costPerGuestHigh: 100,
-    defaultGuests: 100,
-    traditions: ["sikh", "hindu", "muslim", "gujarati", "south_indian", "mixed", "general"],
-  },
 ];
 
 export function getCeremoniesForTradition(tradition: string): CeremonyDefinition[] {
