@@ -61,39 +61,116 @@ const CEREMONY_MAPPINGS: Record<string, string[]> = {
   cocktail_hour: ["cocktail hour", "cocktail"],
 };
 
+const TRADITION_FALLBACKS: Record<string, Record<string, string>> = {
+  sikh: {
+    engagement: "sikh_engagement",
+    sangeet: "sikh_sangeet",
+    mehndi: "sikh_mehndi",
+    reception: "sikh_reception",
+    wedding: "sikh_anand_karaj",
+    ceremony: "sikh_anand_karaj",
+    haldi: "sikh_mayian",
+    bachelor: "sikh_bakra_party",
+  },
+  hindu: {
+    engagement: "sikh_engagement",
+    sangeet: "hindu_sangeet",
+    mehndi: "hindu_mehndi",
+    reception: "reception",
+    wedding: "hindu_wedding",
+    ceremony: "hindu_wedding",
+    haldi: "hindu_haldi",
+    baraat: "hindu_baraat",
+  },
+  muslim: {
+    engagement: "sikh_engagement",
+    sangeet: "muslim_dholki",
+    mehndi: "hindu_mehndi",
+    reception: "muslim_walima",
+    wedding: "muslim_nikah",
+    ceremony: "muslim_nikah",
+    dholki: "muslim_dholki",
+  },
+  gujarati: {
+    engagement: "sikh_engagement",
+    sangeet: "gujarati_garba",
+    garba: "gujarati_garba",
+    mehndi: "hindu_mehndi",
+    reception: "reception",
+    wedding: "gujarati_wedding",
+    ceremony: "gujarati_wedding",
+    pithi: "gujarati_pithi",
+    haldi: "gujarati_pithi",
+  },
+  south_indian: {
+    engagement: "sikh_engagement",
+    sangeet: "hindu_sangeet",
+    mehndi: "hindu_mehndi",
+    reception: "reception",
+    wedding: "south_indian_muhurtham",
+    ceremony: "south_indian_muhurtham",
+    muhurtham: "south_indian_muhurtham",
+  },
+};
+
 const COMMON_CEREMONY_FALLBACKS: Record<string, string> = {
-  // Generic types that map to their tradition-specific counterparts when tradition is known
-  engagement: "sikh_engagement",
-  sangeet: "hindu_sangeet",
-  mehndi: "hindu_mehndi",
-  mehendi: "hindu_mehndi",
-  henna: "hindu_mehndi",
   reception: "reception",
-  baraat: "hindu_baraat",
-  wedding: "general_wedding",
-  ceremony: "general_wedding",
+  rehearsal: "rehearsal_dinner",
+  cocktail: "cocktail_hour",
   roka: "sikh_roka",
-  maiyan: "sikh_mayian",
-  haldi: "hindu_haldi",
   chunni: "sikh_chunni_chadana",
-  bachelor: "sikh_bakra_party",
-  pheras: "hindu_wedding",
   nikah: "muslim_nikah",
   walima: "muslim_walima",
   garba: "gujarati_garba",
   muhurtham: "south_indian_muhurtham",
   pithi: "gujarati_pithi",
   dholki: "muslim_dholki",
-  rehearsal: "rehearsal_dinner",
-  cocktail: "cocktail_hour",
+  pheras: "hindu_wedding",
+  maiyan: "sikh_mayian",
+  paath: "sikh_paath",
+  mehendi: "hindu_mehndi",
+  mehndi: "hindu_mehndi",
+  henna: "hindu_mehndi",
+  sangeet: "hindu_sangeet",
+  haldi: "hindu_haldi",
+  baraat: "hindu_baraat",
+  engagement: "sikh_engagement",
+  wedding: "general_wedding",
+  ceremony: "general_wedding",
+  bachelor: "sikh_bakra_party",
 };
 
-function getCeremonyIdFromEvent(event: Event, _tradition: string = "sikh"): string | null {
+function getBaseTradition(tradition: string): string {
+  const normalized = tradition.toLowerCase().replace(/[- ]/g, '_');
+  if (normalized.startsWith('sikh')) return 'sikh';
+  if (normalized.startsWith('hindu')) return 'hindu';
+  if (normalized.startsWith('muslim')) return 'muslim';
+  if (normalized.startsWith('gujarati')) return 'gujarati';
+  if (normalized.startsWith('south_indian')) return 'south_indian';
+  if (normalized.includes('sikh')) return 'sikh';
+  if (normalized.includes('hindu')) return 'hindu';
+  if (normalized.includes('muslim')) return 'muslim';
+  if (normalized.includes('punjabi')) return 'sikh';
+  if (normalized.includes('bengali')) return 'hindu';
+  if (normalized.includes('tamil') || normalized.includes('telugu') || normalized.includes('kannada') || normalized.includes('malayali')) return 'south_indian';
+  if (normalized.includes('marathi') || normalized.includes('rajasthani')) return 'hindu';
+  return 'sikh';
+}
+
+function getCeremonyIdFromEvent(event: Event, tradition: string = "sikh"): string | null {
   const eventType = event.type?.toLowerCase() || "";
   const eventName = event.name?.toLowerCase() || "";
+  const baseTradition = getBaseTradition(tradition);
   
   for (const [ceremonyId, keywords] of Object.entries(CEREMONY_MAPPINGS)) {
     if (keywords.some(kw => eventName.includes(kw) || eventType.includes(kw))) {
+      return ceremonyId;
+    }
+  }
+  
+  const traditionFallbacks = TRADITION_FALLBACKS[baseTradition] || TRADITION_FALLBACKS.sikh;
+  for (const [genericType, ceremonyId] of Object.entries(traditionFallbacks)) {
+    if (eventName.includes(genericType) || eventType.includes(genericType)) {
       return ceremonyId;
     }
   }
