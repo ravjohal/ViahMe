@@ -298,7 +298,7 @@ export const CEREMONY_CATALOG: CeremonyDefinition[] = [
     costPerGuestLow: 60,
     costPerGuestHigh: 120,
     defaultGuests: 150,
-    traditions: ["hindu", "sikh", "south_indian", "mixed"],
+    traditions: ["hindu", "south_indian", "mixed"],
   },
   {
     id: "hindu_mehndi",
@@ -307,7 +307,7 @@ export const CEREMONY_CATALOG: CeremonyDefinition[] = [
     costPerGuestLow: 40,
     costPerGuestHigh: 80,
     defaultGuests: 100,
-    traditions: ["hindu", "sikh", "muslim", "gujarati", "south_indian", "mixed"],
+    traditions: ["hindu", "muslim", "gujarati", "south_indian", "mixed"],
   },
   {
     id: "hindu_haldi",
@@ -325,7 +325,7 @@ export const CEREMONY_CATALOG: CeremonyDefinition[] = [
     costPerGuestLow: 20,
     costPerGuestHigh: 40,
     defaultGuests: 100,
-    traditions: ["hindu", "sikh"],
+    traditions: ["hindu"],
   },
   {
     id: "reception",
@@ -334,7 +334,7 @@ export const CEREMONY_CATALOG: CeremonyDefinition[] = [
     costPerGuestLow: 100,
     costPerGuestHigh: 200,
     defaultGuests: 300,
-    traditions: ["hindu", "sikh", "muslim", "gujarati", "south_indian", "mixed", "general"],
+    traditions: ["hindu", "muslim", "gujarati", "south_indian", "mixed", "general"],
   },
 
   // Sikh ceremonies
@@ -515,7 +515,18 @@ export const CEREMONY_CATALOG: CeremonyDefinition[] = [
     costPerGuestLow: 50,
     costPerGuestHigh: 100,
     defaultGuests: 150,
-    traditions: ["general", "mixed", "hindu", "sikh", "gujarati", "south_indian"],
+    traditions: ["general", "mixed", "hindu", "gujarati", "south_indian"],
+  },
+  
+  // Custom event option for all traditions
+  {
+    id: "custom",
+    name: "Custom Event",
+    description: "Add your own ceremony or event",
+    costPerGuestLow: 50,
+    costPerGuestHigh: 100,
+    defaultGuests: 100,
+    traditions: ["sikh", "hindu", "muslim", "gujarati", "south_indian", "mixed", "general"],
   },
 ];
 
