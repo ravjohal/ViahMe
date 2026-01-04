@@ -39,11 +39,15 @@ function calculateEventDate(weddingDate: Date, ceremonyId: string, eventType: st
   
   // Pre-wedding ceremonies with typical scheduling
   const preWeddingOffsets: Record<string, number> = {
+    // 60 days before (engagement typically months before)
+    'engagement': 60,
+    'sikh_engagement_roka': 60,
+    'roka': 60,
+    
     // 7 days before
     'paath': 7,
-    'roka': 7,
+    'sikh_paath': 7,
     'sagai': 7,
-    'engagement': 7,
     
     // 3-4 days before
     'mehndi': 3,
@@ -51,6 +55,7 @@ function calculateEventDate(weddingDate: Date, ceremonyId: string, eventType: st
     'sikh_mehndi': 3,
     'muslim_mehndi': 3,
     'maiyan': 3,
+    'sikh_maiyan': 3,
     'haldi': 2,
     'hindu_haldi': 2,
     'pithi': 3,
@@ -70,6 +75,10 @@ function calculateEventDate(weddingDate: Date, ceremonyId: string, eventType: st
     'hindu_baraat': 1,
     'milni': 1,
     'cocktail': 1,
+    
+    // Day after
+    'day_after': -1, // Negative means after wedding
+    'sikh_day_after': -1,
   };
   
   const offset = preWeddingOffsets[eventType] || preWeddingOffsets[ceremonyId] || 1;
@@ -198,75 +207,83 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
           });
         }
       } else if (wedding.tradition === "sikh") {
+        // Full Sikh wedding ceremony lineup with cost breakdown-matching names
         const sikhEvents = [
           {
             weddingId: wedding.id,
-            name: "Paath",
-            type: "paath" as const,
-            description: "3-day prayer ceremony at home or Gurdwara",
+            name: "Engagement / Roka",
+            type: "engagement" as const,
+            description: "Formal engagement ceremony with gift exchange between families",
             order: 1,
+            daysOffset: -60, // 2 months before
+          },
+          {
+            weddingId: wedding.id,
+            name: "Paath (Akhand Paath / Sehaj Paath)",
+            type: "paath" as const,
+            description: "Sacred prayer reading at Gurdwara or home",
+            order: 2,
+            daysOffset: -7,
           },
           {
             weddingId: wedding.id,
             name: "Mehndi",
             type: "mehndi" as const,
-            description: "Henna ceremony with close family and friends",
-            order: 2,
-          },
-          {
-            weddingId: wedding.id,
-            name: "Maiyan",
-            type: "maiyan" as const,
-            description: "Traditional turmeric ceremony",
+            description: "Henna application ceremony for the bride",
             order: 3,
-            ceremonyId: "sikh_maiyan",
+            daysOffset: -3,
           },
           {
             weddingId: wedding.id,
-            name: "Lady Sangeet",
-            type: "sangeet" as const,
-            description: "Grand celebration with music and dance",
+            name: "Maiyan (Choora / Vatna)",
+            type: "maiyan" as const,
+            description: "Turmeric ceremony with choora (red bangles) for the bride",
             order: 4,
+            daysOffset: -2,
+          },
+          {
+            weddingId: wedding.id,
+            name: "Sangeet",
+            type: "sangeet" as const,
+            description: "Musical night with performances and Bhangra dancing",
+            order: 5,
+            daysOffset: -1,
           },
           {
             weddingId: wedding.id,
             name: "Anand Karaj",
             type: "anand_karaj" as const,
-            description: "Sacred Sikh wedding ceremony at Gurdwara",
-            order: 5,
-            ceremonyId: "sikh_anand_karaj",
+            description: "Sikh wedding ceremony at the Gurdwara",
+            order: 6,
+            daysOffset: 0,
           },
           {
             weddingId: wedding.id,
             name: "Reception",
             type: "reception" as const,
-            description: "Grand celebration with all guests",
-            order: 6,
+            description: "Post-wedding celebration with dinner and entertainment",
+            order: 7,
+            daysOffset: 0,
+          },
+          {
+            weddingId: wedding.id,
+            name: "Day After Visit",
+            type: "day_after" as const,
+            description: "Post-wedding family visit and brunch",
+            order: 8,
+            daysOffset: 1,
           },
         ];
 
         const eventsWithDates = sikhEvents.map((event) => {
+          const { daysOffset, ...eventData } = event;
           if (wedding.weddingDate) {
             const weddingDate = new Date(wedding.weddingDate);
-            let eventDate = new Date(weddingDate);
-            
-            if (event.type === "paath") {
-              eventDate.setDate(weddingDate.getDate() - 7);
-            } else if (event.type === "mehndi") {
-              eventDate.setDate(weddingDate.getDate() - 3);
-            } else if (event.type === "maiyan") {
-              eventDate.setDate(weddingDate.getDate() - 3);
-            } else if (event.type === "sangeet") {
-              eventDate.setDate(weddingDate.getDate() - 2);
-            } else if (event.type === "anand_karaj") {
-              eventDate = weddingDate;
-            } else if (event.type === "reception") {
-              eventDate = weddingDate;
-            }
-            
-            return { ...event, date: eventDate };
+            const eventDate = new Date(weddingDate);
+            eventDate.setDate(weddingDate.getDate() + daysOffset);
+            return { ...eventData, date: eventDate };
           }
-          return event;
+          return eventData;
         });
 
         for (const eventData of eventsWithDates) {
