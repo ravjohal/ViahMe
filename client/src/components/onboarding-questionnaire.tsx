@@ -13,6 +13,7 @@ import { Calendar, MapPin, Users, DollarSign, Crown, Gift, Lightbulb, TrendingUp
 import { motion, AnimatePresence } from "framer-motion";
 import { TRADITION_HIERARCHY, getSubTraditionsForMain, getAllSubTraditions, getMainTraditionByValue } from "@/lib/tradition-hierarchy";
 import { getCeremoniesForTradition, getCeremonyById, getDefaultCeremoniesForTradition, type CeremonyDefinition } from "@shared/ceremonies";
+import { useCeremonyTemplatesByTradition, useRegionalPricing, calculateCeremonyTotal } from "@/hooks/use-ceremony-templates";
 
 const customEventSchema = z.object({
   ceremonyId: z.string().optional(),
@@ -292,6 +293,30 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
     const tradition = form.watch("tradition") || "general";
     return getCeremoniesForTradition(tradition);
   }, [selectedMainTradition]);
+
+  // Fetch ceremony templates from database for budget estimation
+  const { data: ceremonyTemplates } = useCeremonyTemplatesByTradition(selectedMainTradition);
+  const { data: regionalPricingData } = useRegionalPricing();
+  
+  // Get regional multiplier based on selected location
+  const regionalMultiplier = useMemo(() => {
+    if (!regionalPricingData) return 1.0;
+    const locationToCity: Record<string, string> = {
+      "San Francisco Bay Area": "bay_area",
+      "New York City": "nyc",
+      "Los Angeles": "la",
+      "Chicago": "chicago",
+      "Seattle": "seattle",
+    };
+    const cityKey = locationToCity[selectedLocation];
+    // Default to 1.0 (no multiplier) for locations not in our pricing database
+    if (!cityKey) return 1.0;
+    const pricing = regionalPricingData.find(p => p.city === cityKey);
+    return pricing?.multiplier || 1.0;
+  }, [regionalPricingData, selectedLocation]);
+  
+  // Get user's role (bride or groom) for messaging
+  const userRole = form.watch("role");
 
   // Initialize default ceremonies on mount only
   useEffect(() => {
@@ -939,7 +964,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
 
                 {currentStep === 5 && (
                   <div className="space-y-6">
-                    {/* Dynamic Budget Calculator Based on Events - Uses shared ceremonies catalog */}
+                    {/* Overall Budget Estimate - Uses ceremony templates from database */}
                     {(() => {
                       // Include all events with a ceremonyId selected (excluding empty/unselected ones)
                       const validEvents = customEvents.filter(e => 
@@ -948,61 +973,50 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                       
                       let totalLow = 0;
                       let totalHigh = 0;
-                      const chosenCeremonyIds = new Set<string>();
+                      let ceremonyCount = 0;
 
-                      const eventBreakdown = validEvents.map(event => {
-                        let ceremony: CeremonyDefinition | undefined;
-                        let displayName = "";
-                        
+                      // Calculate totals from database ceremony templates
+                      validEvents.forEach(event => {
                         if (event.ceremonyId && event.ceremonyId !== "custom") {
-                          ceremony = getCeremonyById(event.ceremonyId);
-                          chosenCeremonyIds.add(event.ceremonyId);
-                          displayName = ceremony?.name || event.ceremonyId;
+                          // Try to find template in database first
+                          const template = ceremonyTemplates?.find(t => t.ceremonyId === event.ceremonyId);
+                          
+                          if (template) {
+                            // Use database template with regional multiplier
+                            const ceremony = getCeremonyById(event.ceremonyId);
+                            const defaultGuests = Number(ceremony?.defaultGuests) || 150;
+                            const parsedGuests = Number(event.guestCount) || 0;
+                            const guestCount = parsedGuests > 0 ? parsedGuests : defaultGuests;
+                            
+                            const costs = calculateCeremonyTotal(template, guestCount, regionalMultiplier);
+                            totalLow += costs.low;
+                            totalHigh += costs.high;
+                            ceremonyCount++;
+                          } else {
+                            // Fallback to shared ceremonies catalog if template not in database
+                            const ceremony = getCeremonyById(event.ceremonyId);
+                            if (ceremony) {
+                              const defaultGuests = Number(ceremony.defaultGuests) || 150;
+                              const parsedGuests = Number(event.guestCount) || 0;
+                              const guestCount = parsedGuests > 0 ? parsedGuests : defaultGuests;
+                              const lowCost = Math.round(Number(ceremony.costPerGuestLow) * guestCount * regionalMultiplier);
+                              const highCost = Math.round(Number(ceremony.costPerGuestHigh) * guestCount * regionalMultiplier);
+                              totalLow += lowCost;
+                              totalHigh += highCost;
+                              ceremonyCount++;
+                            }
+                          }
                         } else if (event.ceremonyId === "custom" && event.customName) {
-                          displayName = event.customName;
+                          // Custom ceremony - use default estimates
+                          const parsedGuests = Number(event.guestCount) || 0;
+                          const guestCount = parsedGuests > 0 ? parsedGuests : 150;
+                          const lowCost = Math.round(50 * guestCount * regionalMultiplier);
+                          const highCost = Math.round(100 * guestCount * regionalMultiplier);
+                          totalLow += lowCost;
+                          totalHigh += highCost;
+                          ceremonyCount++;
                         }
-
-                        const costLow = ceremony?.costPerGuestLow || 50;
-                        const costHigh = ceremony?.costPerGuestHigh || 100;
-                        const defaultGuests = ceremony?.defaultGuests || 150;
-                        
-                        const guestCount = event.guestCount && parseInt(event.guestCount) > 0 
-                          ? parseInt(event.guestCount) 
-                          : defaultGuests;
-                        const lowCost = costLow * guestCount;
-                        const highCost = costHigh * guestCount;
-                        totalLow += lowCost;
-                        totalHigh += highCost;
-                        
-                        return {
-                          name: displayName,
-                          guests: guestCount,
-                          isDefault: !event.guestCount || parseInt(event.guestCount) === 0,
-                          costPerGuestLow: costLow,
-                          costPerGuestHigh: costHigh,
-                          totalLow: lowCost,
-                          totalHigh: highCost,
-                        };
                       });
-
-                      // Find ceremonies not chosen based on tradition (using shared catalog)
-                      const selectedTradition = form.watch("tradition") || "general";
-                      const traditionalCeremonies = getCeremoniesForTradition(selectedTradition);
-                      const unchosenCeremonies = traditionalCeremonies
-                        .filter(c => !chosenCeremonyIds.has(c.id))
-                        .map(ceremony => {
-                          const lowCost = ceremony.costPerGuestLow * ceremony.defaultGuests;
-                          const highCost = ceremony.costPerGuestHigh * ceremony.defaultGuests;
-                          return {
-                            id: ceremony.id,
-                            name: ceremony.name,
-                            guests: ceremony.defaultGuests,
-                            costPerGuestLow: ceremony.costPerGuestLow,
-                            costPerGuestHigh: ceremony.costPerGuestHigh,
-                            totalLow: lowCost,
-                            totalHigh: highCost,
-                          };
-                        });
 
                       // Auto-set budget to minimum total if not already set
                       const currentBudget = form.watch("totalBudget");
@@ -1012,89 +1026,74 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                         }, 0);
                       }
 
+                      // Determine partner term based on user's role (handle planner role with neutral language)
+                      const isPlanner = userRole === "planner";
+                      const partnerTerm = isPlanner ? "them" : (userRole === "bride" ? "him" : "her");
+                      const partnerSide = isPlanner ? "other" : (userRole === "bride" ? "groom" : "bride");
+
                       return (
                         <div className="p-4 rounded-lg bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 border border-emerald-200 dark:border-emerald-800">
                           <div className="flex items-start gap-3 mb-4">
                             <div className="p-2 rounded-full bg-emerald-100 dark:bg-emerald-900">
-                              <Lightbulb className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                              <DollarSign className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                             </div>
                             <div>
-                              <h4 className="font-semibold text-emerald-900 dark:text-emerald-100 mb-1">Budget Estimate Based on Your Events</h4>
+                              <h4 className="font-semibold text-emerald-900 dark:text-emerald-100 mb-1">Your Estimated Wedding Budget</h4>
                               <p className="text-sm text-emerald-700 dark:text-emerald-300">
-                                Here's a cost breakdown per event. Each estimate is based on cost per guest for that specific event type.
+                                Based on {ceremonyCount} {ceremonyCount === 1 ? "ceremony" : "ceremonies"} in {selectedLocation}
                               </p>
                             </div>
                           </div>
                           
-                          {eventBreakdown.length > 0 ? (
-                            <div className="space-y-2">
-                              {eventBreakdown.map((event, idx) => (
-                                <div key={idx} className="flex items-center justify-between p-2 bg-white/60 dark:bg-white/10 rounded border border-emerald-100 dark:border-emerald-800">
-                                  <div className="flex-1">
-                                    <span className="font-medium text-emerald-900 dark:text-emerald-100">{event.name}</span>
-                                    <span className="text-xs text-emerald-600 dark:text-emerald-400 ml-2">
-                                      ({event.guests} guests{event.isDefault ? " - typical" : ""})
-                                    </span>
-                                  </div>
-                                  <div className="text-right">
-                                    <span className="text-xs text-emerald-600 dark:text-emerald-400 block">
-                                      ${event.costPerGuestLow}-${event.costPerGuestHigh}/guest
-                                    </span>
-                                    <span className="font-semibold text-emerald-800 dark:text-emerald-200">
-                                      ${event.totalLow.toLocaleString()} - ${event.totalHigh.toLocaleString()}
-                                    </span>
-                                  </div>
-                                </div>
-                              ))}
-                              
-                              <div className="mt-3 pt-3 border-t border-emerald-200 dark:border-emerald-700">
-                                <div className="flex items-center justify-between">
-                                  <span className="font-semibold text-emerald-900 dark:text-emerald-100">Estimated Total:</span>
-                                  <span className="text-lg font-bold text-emerald-700 dark:text-emerald-300">
+                          {ceremonyCount > 0 ? (
+                            <div className="space-y-4">
+                              {/* Overall Total - Prominent Display */}
+                              <div className="p-4 bg-white/80 dark:bg-white/10 rounded-lg border border-emerald-200 dark:border-emerald-700">
+                                <div className="text-center">
+                                  <span className="text-sm text-emerald-600 dark:text-emerald-400 block mb-1">
+                                    {isPlanner ? "Estimated Total for Selected Ceremonies" : "Estimated Total for Your Side"}
+                                  </span>
+                                  <span className="text-2xl font-bold text-emerald-800 dark:text-emerald-200" data-testid="text-budget-estimate">
                                     ${totalLow.toLocaleString()} - ${totalHigh.toLocaleString()}
                                   </span>
+                                  <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-2">
+                                    We recommend adding 10-15% buffer for unexpected costs
+                                  </p>
                                 </div>
-                                <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">
-                                  Add 10-15% buffer for unexpected costs
-                                </p>
+                              </div>
+
+                              {/* Partner Invitation Note - Show different message for planners */}
+                              {!isPlanner && (
+                                <div className="p-3 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-700">
+                                  <div className="flex items-start gap-2">
+                                    <Info className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                                    <div className="text-sm text-amber-800 dark:text-amber-200">
+                                      <p className="font-medium mb-1">This estimate is for your side only</p>
+                                      <p className="text-xs text-amber-700 dark:text-amber-300">
+                                        If you want to include your partner's estimates for {partnerSide}-side ceremonies, invite {partnerTerm} after creating your account. The invite link will be generated once you complete this onboarding.
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Post-Registration Note */}
+                              <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-700">
+                                <div className="flex items-start gap-2">
+                                  <TrendingUp className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                                  <div className="text-sm text-blue-800 dark:text-blue-200">
+                                    <p className="font-medium mb-1">Detailed breakdowns available after registration</p>
+                                    <p className="text-xs text-blue-700 dark:text-blue-300">
+                                      Once you create your account, you'll be able to view ceremony estimates broken down by each expense category (venue, catering, decor, etc.) to help you plan more precisely.
+                                    </p>
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           ) : (
                             <p className="text-sm text-emerald-700 dark:text-emerald-300 italic">
-                              Add events in the previous step to see a budget breakdown.
+                              Add events in the previous step to see your budget estimate.
                             </p>
-                          )}
-
-                          {/* Other ceremonies you might consider */}
-                          {unchosenCeremonies.length > 0 && (
-                            <div className="mt-4 pt-4 border-t border-emerald-200 dark:border-emerald-700">
-                              <h5 className="text-sm font-semibold text-emerald-800 dark:text-emerald-200 mb-2">
-                                Other traditional ceremonies you might consider:
-                              </h5>
-                              <div className="space-y-1.5">
-                                {unchosenCeremonies.map((ceremony: any, idx: number) => (
-                                  <div key={idx} className="flex items-center justify-between p-2 bg-emerald-50/50 dark:bg-emerald-900/20 rounded border border-dashed border-emerald-200 dark:border-emerald-700">
-                                    <div className="flex-1">
-                                      <span className="text-sm text-emerald-700 dark:text-emerald-300">{ceremony.name}</span>
-                                      <span className="text-xs text-emerald-500 dark:text-emerald-500 ml-2">
-                                        (~{ceremony.guests} guests typical)
-                                      </span>
-                                    </div>
-                                    <div className="text-right">
-                                      <span className="text-xs text-emerald-500 dark:text-emerald-500 block">
-                                        ${ceremony.costPerGuestLow}-${ceremony.costPerGuestHigh}/guest
-                                      </span>
-                                      <span className="text-sm text-emerald-600 dark:text-emerald-400">
-                                        +${ceremony.totalLow.toLocaleString()} - ${ceremony.totalHigh.toLocaleString()}
-                                      </span>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                              <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-2 italic">
-                                You can add these ceremonies in the Events step if you'd like to include them.
-                              </p>
-                            </div>
                           )}
                         </div>
                       );
