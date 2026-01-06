@@ -259,7 +259,7 @@ export async function registerDashboardRoutes(router: Router, storage: IStorage)
       }
 
       const expenses = await storage.getExpensesByWedding(weddingId);
-      const categories = await storage.getBudgetCategoriesByWedding(weddingId);
+      const allocations = await storage.getBudgetAllocationsByWedding(weddingId);
       const alerts = await storage.getBudgetAlertsByWedding(weddingId);
 
       const totalBudget = parseFloat(wedding.totalBudget?.toString() || "0");
@@ -277,22 +277,22 @@ export async function registerDashboardRoutes(router: Router, storage: IStorage)
         if (alert.alertType === "total_threshold") {
           shouldTrigger = totalPercent >= threshold;
         } else if (alert.alertType === "category_threshold" && alert.categoryId) {
-          const category = categories.find(c => c.id === alert.categoryId);
-          if (category) {
-            const catExpenses = expenses.filter(e => e.categoryId === alert.categoryId);
-            const catSpent = catExpenses.reduce((sum, e) => sum + parseFloat(e.amount?.toString() || "0"), 0);
-            const catBudget = parseFloat(category.allocatedAmount?.toString() || "0");
-            const catPercent = catBudget > 0 ? (catSpent / catBudget) * 100 : 0;
-            shouldTrigger = catPercent >= threshold;
+          const allocation = allocations.find(a => a.bucket === alert.categoryId);
+          if (allocation) {
+            const bucketExpenses = expenses.filter(e => e.parentCategory === allocation.bucket);
+            const bucketSpent = bucketExpenses.reduce((sum, e) => sum + parseFloat(e.amount?.toString() || "0"), 0);
+            const bucketBudget = parseFloat(allocation.allocatedAmount?.toString() || "0");
+            const bucketPercent = bucketBudget > 0 ? (bucketSpent / bucketBudget) * 100 : 0;
+            shouldTrigger = bucketPercent >= threshold;
           }
         } else if (alert.alertType === "overspend") {
           if (alert.categoryId) {
-            const category = categories.find(c => c.id === alert.categoryId);
-            if (category) {
-              const catExpenses = expenses.filter(e => e.categoryId === alert.categoryId);
-              const catSpent = catExpenses.reduce((sum, e) => sum + parseFloat(e.amount?.toString() || "0"), 0);
-              const catBudget = parseFloat(category.allocatedAmount?.toString() || "0");
-              shouldTrigger = catSpent > catBudget;
+            const allocation = allocations.find(a => a.bucket === alert.categoryId);
+            if (allocation) {
+              const bucketExpenses = expenses.filter(e => e.parentCategory === allocation.bucket);
+              const bucketSpent = bucketExpenses.reduce((sum, e) => sum + parseFloat(e.amount?.toString() || "0"), 0);
+              const bucketBudget = parseFloat(allocation.allocatedAmount?.toString() || "0");
+              shouldTrigger = bucketSpent > bucketBudget;
             }
           } else {
             shouldTrigger = totalSpent > totalBudget;

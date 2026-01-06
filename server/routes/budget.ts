@@ -1,27 +1,50 @@
 import { Router } from "express";
 import { requireAuth, type AuthRequest } from "../auth-middleware";
 import type { IStorage } from "../storage";
-import { insertBudgetCategorySchema, insertExpenseSchema, insertBudgetBenchmarkSchema } from "@shared/schema";
+import { insertExpenseSchema, insertBudgetAllocationSchema, insertBudgetBenchmarkSchema, BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket } from "@shared/schema";
 import { ensureCoupleAccess } from "./middleware";
 
 export async function registerBudgetRoutes(router: Router, storage: IStorage) {
-  router.get("/categories/:weddingId", await requireAuth(storage, false), ensureCoupleAccess(storage, (req) => req.params.weddingId), async (req, res) => {
+  router.get("/buckets", async (_req, res) => {
     try {
-      const categories = await storage.getBudgetCategoriesByWedding(req.params.weddingId);
-      res.json(categories);
+      const buckets = BUDGET_BUCKETS.map(bucket => ({
+        id: bucket,
+        label: BUDGET_BUCKET_LABELS[bucket],
+      }));
+      res.json(buckets);
     } catch (error) {
-      res.status(500).json({ error: "Failed to fetch budget categories" });
+      res.status(500).json({ error: "Failed to fetch budget buckets" });
     }
   });
 
-  router.post("/categories", await requireAuth(storage, false), async (req, res) => {
+  router.get("/allocations/:weddingId", await requireAuth(storage, false), ensureCoupleAccess(storage, (req) => req.params.weddingId), async (req, res) => {
+    try {
+      const allocations = await storage.getBudgetAllocationsByWedding(req.params.weddingId);
+      
+      const bucketsWithAllocations = BUDGET_BUCKETS.map(bucket => {
+        const allocation = allocations.find(a => a.bucket === bucket);
+        return {
+          bucket,
+          label: BUDGET_BUCKET_LABELS[bucket],
+          allocatedAmount: allocation?.allocatedAmount || "0",
+          allocationId: allocation?.id || null,
+        };
+      });
+      
+      res.json(bucketsWithAllocations);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch budget allocations" });
+    }
+  });
+
+  router.post("/allocations", await requireAuth(storage, false), async (req, res) => {
     try {
       const authReq = req as AuthRequest;
       if (!authReq.session.userId) {
         return res.status(401).json({ error: "Authentication required" });
       }
 
-      const validatedData = insertBudgetCategorySchema.parse(req.body);
+      const validatedData = insertBudgetAllocationSchema.parse(req.body);
       
       const wedding = await storage.getWedding(validatedData.weddingId);
       if (!wedding) {
@@ -35,92 +58,97 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
         }
       }
 
-      const category = await storage.createBudgetCategory(validatedData);
-      res.json(category);
+      const allocation = await storage.upsertBudgetAllocation(
+        validatedData.weddingId,
+        validatedData.bucket as BudgetBucket,
+        validatedData.allocatedAmount
+      );
+      res.json(allocation);
     } catch (error) {
       if (error instanceof Error && "issues" in error) {
         return res.status(400).json({ error: "Validation failed", details: error });
       }
-      res.status(500).json({ error: "Failed to create budget category" });
+      res.status(500).json({ error: "Failed to create budget allocation" });
     }
   });
 
-  router.patch("/categories/:id", await requireAuth(storage, false), async (req, res) => {
+  router.patch("/allocations/:id", await requireAuth(storage, false), async (req, res) => {
     try {
       const authReq = req as AuthRequest;
       if (!authReq.session.userId) {
         return res.status(401).json({ error: "Authentication required" });
       }
 
-      const existingCategory = await storage.getBudgetCategory(req.params.id);
-      if (!existingCategory) {
-        return res.status(404).json({ error: "Budget category not found" });
+      const existingAllocation = await storage.getBudgetAllocation(req.params.id);
+      if (!existingAllocation) {
+        return res.status(404).json({ error: "Budget allocation not found" });
       }
 
-      const wedding = await storage.getWedding(existingCategory.weddingId);
+      const wedding = await storage.getWedding(existingAllocation.weddingId);
       if (!wedding) {
         return res.status(404).json({ error: "Wedding not found" });
       }
       if (wedding.userId !== authReq.session.userId) {
-        const roles = await storage.getWeddingRoles(existingCategory.weddingId);
+        const roles = await storage.getWeddingRoles(existingAllocation.weddingId);
         const hasAccess = roles.some(role => role.userId === authReq.session.userId);
         if (!hasAccess) {
           return res.status(403).json({ error: "Access denied" });
         }
       }
 
-      const category = await storage.updateBudgetCategory(req.params.id, req.body);
-      res.json(category);
+      const allocation = await storage.updateBudgetAllocation(req.params.id, req.body);
+      res.json(allocation);
     } catch (error) {
-      res.status(500).json({ error: "Failed to update budget category" });
+      res.status(500).json({ error: "Failed to update budget allocation" });
     }
   });
 
-  router.delete("/categories/:id", await requireAuth(storage, false), async (req, res) => {
+  router.delete("/allocations/:id", await requireAuth(storage, false), async (req, res) => {
     try {
       const authReq = req as AuthRequest;
       if (!authReq.session.userId) {
         return res.status(401).json({ error: "Authentication required" });
       }
 
-      const existingCategory = await storage.getBudgetCategory(req.params.id);
-      if (!existingCategory) {
-        return res.status(404).json({ error: "Budget category not found" });
+      const existingAllocation = await storage.getBudgetAllocation(req.params.id);
+      if (!existingAllocation) {
+        return res.status(404).json({ error: "Budget allocation not found" });
       }
 
-      const wedding = await storage.getWedding(existingCategory.weddingId);
+      const wedding = await storage.getWedding(existingAllocation.weddingId);
       if (!wedding) {
         return res.status(404).json({ error: "Wedding not found" });
       }
       if (wedding.userId !== authReq.session.userId) {
-        const roles = await storage.getWeddingRoles(existingCategory.weddingId);
+        const roles = await storage.getWeddingRoles(existingAllocation.weddingId);
         const hasAccess = roles.some(role => role.userId === authReq.session.userId);
         if (!hasAccess) {
           return res.status(403).json({ error: "Access denied" });
         }
       }
 
-      await storage.deleteBudgetCategory(req.params.id);
+      await storage.deleteBudgetAllocation(req.params.id);
       res.json({ success: true });
     } catch (error) {
-      res.status(500).json({ error: "Failed to delete budget category" });
+      res.status(500).json({ error: "Failed to delete budget allocation" });
     }
   });
 
-  router.post("/categories/estimate", async (req, res) => {
+  router.post("/allocations/estimate", async (req, res) => {
     try {
       const { budget, city, tradition, guestCount } = req.body;
       const benchmarks = await storage.getBudgetBenchmarksByCityAndTradition(city, tradition);
       
-      const categories = benchmarks.map((b) => ({
-        name: b.categoryName,
+      const allocations = benchmarks.map((b) => ({
+        bucket: b.categoryName,
+        label: BUDGET_BUCKET_LABELS[b.categoryName as BudgetBucket] || b.categoryName,
         allocatedAmount: Math.round((budget * (b.percentageOfBudget || 0)) / 100),
         percentageOfBudget: b.percentageOfBudget,
         priority: b.priority,
         typicalRange: b.typicalRange,
       }));
       
-      res.json({ categories, guestCount });
+      res.json({ allocations, guestCount });
     } catch (error) {
       res.status(500).json({ error: "Failed to generate budget estimate" });
     }
@@ -140,6 +168,40 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
       res.json(expensesWithSplits);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch expenses" });
+    }
+  });
+
+  router.get("/expenses/:weddingId/by-bucket/:bucket", await requireAuth(storage, false), ensureCoupleAccess(storage, (req) => req.params.weddingId), async (req, res) => {
+    try {
+      const expenses = await storage.getExpensesByBucket(req.params.weddingId, req.params.bucket as BudgetBucket);
+      
+      const expensesWithSplits = await Promise.all(
+        expenses.map(async (expense) => {
+          const splits = await storage.getExpenseSplitsByExpense(expense.id);
+          return { ...expense, splits };
+        })
+      );
+      
+      res.json(expensesWithSplits);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch expenses by bucket" });
+    }
+  });
+
+  router.get("/expenses/:weddingId/by-ceremony/:ceremonyId", await requireAuth(storage, false), ensureCoupleAccess(storage, (req) => req.params.weddingId), async (req, res) => {
+    try {
+      const expenses = await storage.getExpensesByCeremony(req.params.weddingId, req.params.ceremonyId);
+      
+      const expensesWithSplits = await Promise.all(
+        expenses.map(async (expense) => {
+          const splits = await storage.getExpenseSplitsByExpense(expense.id);
+          return { ...expense, splits };
+        })
+      );
+      
+      res.json(expensesWithSplits);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch expenses by ceremony" });
     }
   });
 
@@ -243,12 +305,12 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
         }
       }
 
-      const { splits, expenseDate, ...expenseData } = req.body;
+      const { splits, expenseDate, paymentDueDate, ...expenseData } = req.body;
       
-      // Convert expenseDate string to Date object if provided
       const updateData = {
         ...expenseData,
         ...(expenseDate && { expenseDate: new Date(expenseDate) }),
+        ...(paymentDueDate && { paymentDueDate: new Date(paymentDueDate) }),
       };
       
       const expense = await storage.updateExpense(req.params.id, updateData);
@@ -368,7 +430,7 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
     }
   });
 
-  router.get("/benchmarks", async (req, res) => {
+  router.get("/benchmarks", async (_req, res) => {
     try {
       const benchmarks = await storage.getAllBudgetBenchmarks();
       res.json(benchmarks);
@@ -391,9 +453,10 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
     try {
       const weddingId = req.params.weddingId;
       
-      const [wedding, categories, events, bookings, benchmarks] = await Promise.all([
+      const [wedding, allocations, expenses, events, bookings, benchmarks] = await Promise.all([
         storage.getWedding(weddingId),
-        storage.getBudgetCategoriesByWedding(weddingId),
+        storage.getBudgetAllocationsByWedding(weddingId),
+        storage.getExpensesByWedding(weddingId),
         storage.getEventsByWedding(weddingId),
         storage.getBookingsByWedding(weddingId),
         storage.getAllBudgetBenchmarks(),
@@ -404,17 +467,24 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
       }
 
       const totalBudget = wedding.budget || 0;
-      const totalAllocated = categories.reduce((sum, c) => sum + (c.allocatedAmount || 0), 0);
-      const totalSpent = categories.reduce((sum, c) => sum + (c.spentAmount || 0), 0);
+      const totalAllocated = allocations.reduce((sum, a) => sum + parseFloat(a.allocatedAmount || '0'), 0);
+      const totalSpent = expenses.reduce((sum, e) => sum + parseFloat(e.amount || '0'), 0);
 
-      const categoryBreakdown = categories.map(cat => ({
-        id: cat.id,
-        name: cat.name,
-        allocated: cat.allocatedAmount || 0,
-        spent: cat.spentAmount || 0,
-        remaining: (cat.allocatedAmount || 0) - (cat.spentAmount || 0),
-        percentUsed: cat.allocatedAmount ? Math.round(((cat.spentAmount || 0) / cat.allocatedAmount) * 100) : 0,
-      }));
+      const bucketBreakdown = BUDGET_BUCKETS.map(bucket => {
+        const allocation = allocations.find(a => a.bucket === bucket);
+        const bucketExpenses = expenses.filter(e => e.parentCategory === bucket);
+        const allocated = parseFloat(allocation?.allocatedAmount || '0');
+        const spent = bucketExpenses.reduce((sum, e) => sum + parseFloat(e.amount || '0'), 0);
+        
+        return {
+          bucket,
+          label: BUDGET_BUCKET_LABELS[bucket],
+          allocated,
+          spent,
+          remaining: allocated - spent,
+          percentUsed: allocated ? Math.round((spent / allocated) * 100) : 0,
+        };
+      });
 
       const traditionBenchmarks = benchmarks.filter(b => 
         b.tradition === wedding.tradition && 
@@ -429,7 +499,7 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
           remaining: totalBudget - totalSpent,
           percentSpent: totalBudget ? Math.round((totalSpent / totalBudget) * 100) : 0,
         },
-        categoryBreakdown,
+        bucketBreakdown,
         eventCount: events.length,
         vendorBookings: bookings.length,
         benchmarks: traditionBenchmarks,

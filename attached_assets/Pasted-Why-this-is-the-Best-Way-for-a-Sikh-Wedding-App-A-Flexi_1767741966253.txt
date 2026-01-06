@@ -1,0 +1,36 @@
+Why this is the "Best Way" for a Sikh Wedding App
+A. Flexibility for South Asian Nuances
+A system-defined list will never capture everything. One family might have an expense for "Money for Milni" while another has "Dhol Player Tip." * The System's Perspective: Both are just parentCategory: "other".
+
+The User's Perspective: They see exactly what they typed: "Dhol Player Tip."
+
+B. Powerful Aggregation (Performance Win)
+When you want to show the couple their dashboard, you don't have to join multiple tables. You run a single query that "funnels" everything up:
+
+TypeScript
+
+// Example: Get total spent on 'Decor' across ALL ceremonies
+const decorTotal = await db
+  .select({ total: sum(expenses.amount) })
+  .from(expenses)
+  .where(
+    and(
+      eq(expenses.weddingId, currentWeddingId),
+      eq(expenses.parentCategory, "decoration")
+    )
+  );
+C. Handling the "Ceremony vs. Budget" Confusion
+Couples often get confused: "Is the Sangeet Decor part of my 'Sangeet' budget or my 'Decor' budget?" With this structure, the answer is Both. Because you save both ceremonyId and parentCategory on the same row, you can show the user:
+
+View by Ceremony: "Here is everything you spent on the Sangeet."
+
+View by Category: "Here is everything you spent on Decor across the whole week."
+
+4. Implementation Checklist for your App
+Keep the metadata: Use your spend_categories.json only as a "Suggestion Box." When a user starts typing "Tur...", show them "Turban Tying" from your list, but let them finish typing whatever they want.
+
+Fix the High-Level: In your shared/schema.ts, use a text field with a restricted list of values (Enum) for the parentCategory. This prevents the user from accidentally creating a "Catering" bucket and a "Food" bucket.
+
+Automatic Mapping: When a user selects a suggestion from your metadata (like "Giani/Priest"), your code should automatically know that it belongs to the "Religious Services" parent category.
+
+Summary: System owns the Groupings (The Buckets). User owns the Label (The Expense Name). This gives you the best of both worlds: clean data for your charts and 100% personalization for the couple.

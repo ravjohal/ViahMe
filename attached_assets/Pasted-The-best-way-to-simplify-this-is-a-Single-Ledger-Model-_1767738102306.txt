@@ -1,0 +1,52 @@
+The best way to simplify this is a Single Ledger Model where everything funnels through a common Hierarchy: Budget Bucket (High) → Expense Category (Granular) → Line Item (Transaction).
+
+Updated Schema (Drizzle ORM)
+TypeScript
+
+// 1. High-level planning buckets (The "Envelopes")
+export const budgetCategories = pgTable("budget_categories", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  weddingId: uuid("wedding_id").references(() => weddings.id),
+  name: text("name").notNull(), // e.g., "Photography & Video"
+  allocatedAmount: decimal("allocated_amount", { precision: 12, scale: 2 }),
+});
+
+// 2. Granular categories (The "Items") - Linked to parent bucket
+export const expenseCategories = pgTable("expense_categories", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(), // e.g., "Drone Coverage"
+  parentBudgetId: uuid("parent_budget_id").references(() => budgetCategories.id),
+  // Reference IDs for your system-default benchmarks
+  isSystemDefault: boolean("is_system_default").default(false),
+});
+
+// 3. The actual money spent (The "Ledger")
+export const expenses = pgTable("expenses", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  weddingId: uuid("wedding_id").references(() => weddings.id),
+  ceremonyId: text("ceremony_id").notNull(), // e.g., 'sikh_sangeet'
+  categoryId: uuid("category_id").references(() => expenseCategories.id),
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  description: text("description"),
+  status: text("status"), // 'estimated', 'booked', 'paid'
+});
+4. How this solves your confusion
+Estimating: When a user starts, you use the expense_categories (which contain your low/high ranges) to create "Estimated" rows in the expenses table for each ceremony.
+
+Budgeting: The budget_categories table holds the total amount the couple wants to spend on that high-level group.
+
+Tracking: To see how much they spent on the Anand Karaj, you simply query expenses WHERE ceremonyId = 'sikh_anand_karaj'.
+
+Simplicity: To see the high-level budget progress, you run a single SQL aggregation:
+
+SQL
+
+SELECT bc.name, bc.allocatedAmount, SUM(e.amount) as spent
+FROM budget_categories bc
+JOIN expense_categories ec ON ec.parentBudgetId = bc.id
+LEFT JOIN expenses e ON e.categoryId = ec.id
+GROUP BY bc.id
+Trade-off Analysis
+Performance: You gain massive read performance on dashboards by using SQL joins instead of mapping JSON objects in the frontend.
+
+Maintainability: By linking everything to a categoryId, you can rename categories or ceremonies in one place without breaking the financial history of the wedding.

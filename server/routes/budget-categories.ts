@@ -1,11 +1,28 @@
 import { Router } from "express";
 import type { IStorage } from "../storage";
-import { insertBudgetCategorySchema } from "@shared/schema";
+import { insertBudgetAllocationSchema, BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket } from "@shared/schema";
 
 export async function registerBudgetCategoryRoutes(router: Router, storage: IStorage) {
   router.get("/:weddingId", async (req, res) => {
     try {
-      const categories = await storage.getBudgetCategoriesByWedding(req.params.weddingId);
+      const allocations = await storage.getBudgetAllocationsByWedding(req.params.weddingId);
+      const expenses = await storage.getExpensesByWedding(req.params.weddingId);
+      
+      const categories = BUDGET_BUCKETS.map(bucket => {
+        const allocation = allocations.find(a => a.bucket === bucket);
+        const bucketExpenses = expenses.filter(e => e.parentCategory === bucket);
+        const spentAmount = bucketExpenses.reduce((sum, e) => sum + parseFloat(e.amount || '0'), 0);
+        
+        return {
+          id: allocation?.id || bucket,
+          name: BUDGET_BUCKET_LABELS[bucket],
+          bucket,
+          allocatedAmount: parseFloat(allocation?.allocatedAmount || '0'),
+          spentAmount,
+          weddingId: req.params.weddingId,
+        };
+      });
+      
       res.json(categories);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch budget categories" });
@@ -14,9 +31,16 @@ export async function registerBudgetCategoryRoutes(router: Router, storage: ISto
 
   router.post("/", async (req, res) => {
     try {
-      const validatedData = insertBudgetCategorySchema.parse(req.body);
-      const category = await storage.createBudgetCategory(validatedData);
-      res.json(category);
+      const { weddingId, bucket, allocatedAmount } = req.body;
+      const allocation = await storage.upsertBudgetAllocation(weddingId, bucket as BudgetBucket, String(allocatedAmount));
+      res.json({
+        id: allocation.id,
+        name: BUDGET_BUCKET_LABELS[bucket as BudgetBucket],
+        bucket,
+        allocatedAmount: parseFloat(allocation.allocatedAmount),
+        spentAmount: 0,
+        weddingId,
+      });
     } catch (error) {
       if (error instanceof Error && "issues" in error) {
         return res.status(400).json({ error: "Validation failed", details: error });
@@ -27,18 +51,26 @@ export async function registerBudgetCategoryRoutes(router: Router, storage: ISto
 
   router.patch("/:id", async (req, res) => {
     try {
-      const updateData = { ...req.body };
+      const { allocatedAmount } = req.body;
       
-      // Convert ISO string to Date for lastEstimatedAt if present
-      if (updateData.lastEstimatedAt && typeof updateData.lastEstimatedAt === 'string') {
-        updateData.lastEstimatedAt = new Date(updateData.lastEstimatedAt);
+      const allocation = await storage.updateBudgetAllocation(req.params.id, { 
+        allocatedAmount: String(allocatedAmount) 
+      });
+      if (!allocation) {
+        return res.status(404).json({ error: "Budget allocation not found" });
       }
       
-      const category = await storage.updateBudgetCategory(req.params.id, updateData);
-      if (!category) {
-        return res.status(404).json({ error: "Budget category not found" });
-      }
-      res.json(category);
+      const expenses = await storage.getExpensesByBucket(allocation.weddingId, allocation.bucket as BudgetBucket);
+      const spentAmount = expenses.reduce((sum, e) => sum + parseFloat(e.amount || '0'), 0);
+      
+      res.json({
+        id: allocation.id,
+        name: BUDGET_BUCKET_LABELS[allocation.bucket as BudgetBucket],
+        bucket: allocation.bucket,
+        allocatedAmount: parseFloat(allocation.allocatedAmount),
+        spentAmount,
+        weddingId: allocation.weddingId,
+      });
     } catch (error) {
       console.error("[Budget Category PATCH] Error:", error);
       res.status(500).json({ error: "Failed to update budget category" });
@@ -47,7 +79,7 @@ export async function registerBudgetCategoryRoutes(router: Router, storage: ISto
 
   router.delete("/:id", async (req, res) => {
     try {
-      await storage.deleteBudgetCategory(req.params.id);
+      await storage.deleteBudgetAllocation(req.params.id);
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete budget category" });

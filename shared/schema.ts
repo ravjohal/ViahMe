@@ -41,6 +41,44 @@ export function getDietaryLabel(value: string | null | undefined): string {
 }
 
 // ============================================================================
+// BUDGET BUCKETS - System-defined high-level spending categories
+// ============================================================================
+
+// The fixed list of budget buckets (system-defined, not user-editable)
+export const BUDGET_BUCKETS = [
+  "venue", "catering", "decoration", "photography", "attire", 
+  "jewelry", "religious", "entertainment", "stationery", 
+  "transportation", "planning", "other"
+] as const;
+
+export type BudgetBucket = typeof BUDGET_BUCKETS[number];
+
+// Human-readable labels for budget buckets
+export const BUDGET_BUCKET_LABELS: Record<BudgetBucket, string> = {
+  venue: "Venue",
+  catering: "Catering & Food",
+  decoration: "Decoration & Flowers",
+  photography: "Photography & Video",
+  attire: "Attire & Beauty",
+  jewelry: "Jewelry & Accessories",
+  religious: "Religious & Ceremonial",
+  entertainment: "Music & Entertainment",
+  stationery: "Invitations & Gifts",
+  transportation: "Transportation",
+  planning: "Professional Services",
+  other: "Other"
+};
+
+// Zod schema for budget bucket validation
+export const budgetBucketSchema = z.enum(BUDGET_BUCKETS);
+
+// Helper function to get bucket label
+export function getBucketLabel(bucket: string | null | undefined): string {
+  if (!bucket) return 'Other';
+  return BUDGET_BUCKET_LABELS[bucket as BudgetBucket] || bucket;
+}
+
+// ============================================================================
 // USERS & AUTHENTICATION
 // ============================================================================
 
@@ -512,125 +550,62 @@ export type InsertVendorFavorite = z.infer<typeof insertVendorFavoriteSchema>;
 export type VendorFavorite = typeof vendorFavorites.$inferSelect;
 
 // ============================================================================
-// BUDGET CATEGORIES - Cultural budget allocation
-// ============================================================================
-
-export const budgetCategories = pgTable("budget_categories", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  weddingId: varchar("wedding_id").notNull(),
-  category: text("category").notNull(),
-  allocatedAmount: decimal("allocated_amount", { precision: 10, scale: 2 }).notNull(),
-  spentAmount: decimal("spent_amount", { precision: 10, scale: 2 }).default('0'),
-  percentage: integer("percentage"),
-  aiEstimate: jsonb("ai_estimate"),
-  lastEstimatedAt: timestamp("last_estimated_at"),
-}, (table) => ({
-  weddingIdIdx: index("budget_categories_wedding_id_idx").on(table.weddingId),
-}));
-
-export const insertBudgetCategorySchema = createInsertSchema(budgetCategories).omit({
-  id: true,
-}).extend({
-  allocatedAmount: z.string(),
-  spentAmount: z.string().optional(),
-  aiEstimate: z.object({
-    lowEstimate: z.number(),
-    highEstimate: z.number(),
-    averageEstimate: z.number(),
-    notes: z.string(),
-    hasEstimate: z.boolean(),
-  }).optional().nullable(),
-  lastEstimatedAt: z.date().optional().nullable(),
-});
-
-export type InsertBudgetCategory = z.infer<typeof insertBudgetCategorySchema>;
-export type BudgetCategory = typeof budgetCategories.$inferSelect;
-
-// ============================================================================
-// SPEND CATEGORIES - Metadata table for spend categories that can be associated with ceremonies
-// ============================================================================
-
-export const spendCategories = pgTable("spend_categories", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  name: text("name").notNull(), // e.g., "Photographer", "DJ", "Dhol Player"
-  parentBudgetCategory: text("parent_budget_category").notNull(), // Maps to main categories: catering, venue, entertainment, photography, decoration, attire, transportation, other
-  description: text("description"),
-  isSystemDefault: boolean("is_system_default").default(true), // System-defined vs user-created
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
-
-export const insertSpendCategorySchema = createInsertSchema(spendCategories).omit({
-  id: true,
-  createdAt: true,
-});
-
-export type InsertSpendCategory = z.infer<typeof insertSpendCategorySchema>;
-export type SpendCategory = typeof spendCategories.$inferSelect;
-
-// ============================================================================
-// CEREMONY SPEND CATEGORIES - Junction table linking ceremonies to spend categories with default costs
-// ============================================================================
-
-export const ceremonySpendCategories = pgTable("ceremony_spend_categories", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  ceremonyId: text("ceremony_id").notNull(), // e.g., 'sikh_mehndi', 'sikh_sangeet'
-  spendCategoryId: varchar("spend_category_id").notNull(),
-  lowCost: decimal("low_cost", { precision: 10, scale: 2 }).notNull(),
-  highCost: decimal("high_cost", { precision: 10, scale: 2 }).notNull(),
-  unit: text("unit").notNull().default('fixed'), // 'fixed' | 'per_hour' | 'per_person'
-  hoursLow: integer("hours_low"),
-  hoursHigh: integer("hours_high"),
-  notes: text("notes"),
-}, (table) => ({
-  ceremonyIdx: index("ceremony_spend_categories_ceremony_idx").on(table.ceremonyId),
-  spendCategoryIdx: index("ceremony_spend_categories_spend_category_idx").on(table.spendCategoryId),
-}));
-
-export const insertCeremonySpendCategorySchema = createInsertSchema(ceremonySpendCategories).omit({
-  id: true,
-}).extend({
-  lowCost: z.string(),
-  highCost: z.string(),
-  unit: z.enum(['fixed', 'per_hour', 'per_person']),
-});
-
-export type InsertCeremonySpendCategory = z.infer<typeof insertCeremonySpendCategorySchema>;
-export type CeremonySpendCategory = typeof ceremonySpendCategories.$inferSelect;
-
-// ============================================================================
-// EXPENSES - Shared expense tracking for couples
+// EXPENSES - Single Ledger Model for expense tracking
+// Uses BUDGET_BUCKETS (code constant) for high-level categories
+// User provides custom expense names for granular tracking
 // ============================================================================
 
 export const expenses = pgTable("expenses", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   weddingId: varchar("wedding_id").notNull(),
-  eventId: varchar("event_id"), // Optional - link to specific event (legacy, use allocations for multi-event)
-  categoryId: varchar("category_id"), // Optional - link to budget category
-  spendCategoryId: varchar("spend_category_id"), // Optional - link to spend category for ceremony-specific tracking
-  description: text("description").notNull(),
-  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
-  amountPaid: decimal("amount_paid", { precision: 10, scale: 2 }).default('0'), // Amount paid so far
-  paidById: varchar("paid_by_id").notNull(), // User ID who paid
-  paidByName: text("paid_by_name").notNull(), // Cached name for display
-  splitType: text("split_type").notNull().default('equal'), // 'equal' | 'percentage' | 'custom' | 'full'
-  allocationStrategy: text("allocation_strategy").default('single'), // 'single' | 'equal' | 'percentage' | 'custom'
-  paymentStatus: text("payment_status").notNull().default('partial'), // 'partial' | 'paid' (fully paid)
-  receiptUrl: text("receipt_url"), // Optional receipt image/document
+  
+  // Tie to ceremony from events table (e.g., event ID or ceremony type like 'sikh_sangeet')
+  ceremonyId: text("ceremony_id"), // Optional - which ceremony this expense belongs to
+  
+  // Tie to HIGH-LEVEL system category from BUDGET_BUCKETS
+  parentCategory: text("parent_category").notNull(), // e.g., "attire", "catering", "venue"
+  
+  // User-defined granular name for this expense
+  expenseName: text("expense_name").notNull(), // e.g., "Custom Pink Pagg Turbans"
+  
+  // Financial fields
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull().default('0'),
+  amountPaid: decimal("amount_paid", { precision: 12, scale: 2 }).default('0'),
+  
+  // Status tracking
+  status: text("status").notNull().default('estimated'), // 'estimated' | 'booked' | 'paid'
+  
+  // Who paid
+  paidById: varchar("paid_by_id").notNull(),
+  paidByName: text("paid_by_name").notNull(),
+  
+  // Optional vendor link
+  vendorId: varchar("vendor_id"),
+  
+  // Optional fields
   notes: text("notes"),
+  receiptUrl: text("receipt_url"),
+  paymentDueDate: timestamp("payment_due_date"),
+  
+  // Timestamps
   expenseDate: timestamp("expense_date").notNull().defaultNow(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (table) => ({
+  weddingIdIdx: index("expenses_wedding_id_idx").on(table.weddingId),
+  parentCategoryIdx: index("expenses_parent_category_idx").on(table.parentCategory),
+  ceremonyIdIdx: index("expenses_ceremony_id_idx").on(table.ceremonyId),
+}));
 
 export const insertExpenseSchema = createInsertSchema(expenses).omit({
   id: true,
   createdAt: true,
 }).extend({
+  parentCategory: budgetBucketSchema,
   amount: z.string().regex(/^\d+(\.\d{1,2})?$/, "Amount must be a valid decimal"),
   amountPaid: z.string().regex(/^\d+(\.\d{1,2})?$/, "Amount paid must be a valid decimal").optional(),
-  splitType: z.enum(['equal', 'percentage', 'custom', 'full']),
-  allocationStrategy: z.enum(['single', 'equal', 'percentage', 'custom']).optional(),
-  paymentStatus: z.enum(['partial', 'paid']).optional(),
+  status: z.enum(['estimated', 'booked', 'paid']).optional(),
   expenseDate: z.string().optional().transform(val => val ? new Date(val) : new Date()),
+  paymentDueDate: z.string().optional().transform(val => val ? new Date(val) : undefined),
 });
 
 export type InsertExpense = z.infer<typeof insertExpenseSchema>;
@@ -643,11 +618,11 @@ export type Expense = typeof expenses.$inferSelect;
 export const expenseSplits = pgTable("expense_splits", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   expenseId: varchar("expense_id").notNull(),
-  userId: varchar("user_id").notNull(), // User who owes this portion
-  userName: text("user_name").notNull(), // Cached name for display
-  shareAmount: decimal("share_amount", { precision: 10, scale: 2 }).notNull(), // Amount this user owes
-  sharePercentage: integer("share_percentage"), // Optional percentage (for percentage splits)
-  isPaid: boolean("is_paid").notNull().default(false), // Has this person settled their share?
+  userId: varchar("user_id").notNull(),
+  userName: text("user_name").notNull(),
+  shareAmount: decimal("share_amount", { precision: 10, scale: 2 }).notNull(),
+  sharePercentage: integer("share_percentage"),
+  isPaid: boolean("is_paid").notNull().default(false),
   paidAt: timestamp("paid_at"),
 });
 
@@ -664,28 +639,30 @@ export type InsertExpenseSplit = z.infer<typeof insertExpenseSplitSchema>;
 export type ExpenseSplit = typeof expenseSplits.$inferSelect;
 
 // ============================================================================
-// EXPENSE EVENT ALLOCATIONS - Distribute expense across multiple events
+// BUDGET ALLOCATIONS - Per-bucket budget targets for a wedding
+// Simple table to store how much each wedding wants to allocate per bucket
 // ============================================================================
 
-export const expenseEventAllocations = pgTable("expense_event_allocations", {
+export const budgetAllocations = pgTable("budget_allocations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  expenseId: varchar("expense_id").notNull(),
-  eventId: varchar("event_id").notNull(),
-  allocatedAmount: decimal("allocated_amount", { precision: 10, scale: 2 }).notNull(),
-  allocatedPercent: integer("allocated_percent"), // Optional percentage for UI display
+  weddingId: varchar("wedding_id").notNull(),
+  bucket: text("bucket").notNull(), // From BUDGET_BUCKETS
+  allocatedAmount: decimal("allocated_amount", { precision: 12, scale: 2 }).notNull().default('0'),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (table) => ({
+  weddingBucketIdx: index("budget_allocations_wedding_bucket_idx").on(table.weddingId, table.bucket),
+}));
 
-export const insertExpenseEventAllocationSchema = createInsertSchema(expenseEventAllocations).omit({
+export const insertBudgetAllocationSchema = createInsertSchema(budgetAllocations).omit({
   id: true,
   createdAt: true,
 }).extend({
+  bucket: budgetBucketSchema,
   allocatedAmount: z.string().regex(/^\d+(\.\d{1,2})?$/, "Amount must be a valid decimal"),
-  allocatedPercent: z.number().optional(),
 });
 
-export type InsertExpenseEventAllocation = z.infer<typeof insertExpenseEventAllocationSchema>;
-export type ExpenseEventAllocation = typeof expenseEventAllocations.$inferSelect;
+export type InsertBudgetAllocation = z.infer<typeof insertBudgetAllocationSchema>;
+export type BudgetAllocation = typeof budgetAllocations.$inferSelect;
 
 // ============================================================================
 // HOUSEHOLDS - Family/group management for unified RSVPs
@@ -3280,8 +3257,8 @@ export const budgetAlerts = pgTable("budget_alerts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   weddingId: varchar("wedding_id").notNull(),
   name: text("name").notNull(), // e.g., "Catering Over Budget"
-  alertType: text("alert_type").notNull(), // 'category_threshold' | 'total_threshold' | 'payment_due' | 'overspend'
-  categoryId: varchar("category_id"), // Optional - for category-specific alerts
+  alertType: text("alert_type").notNull(), // 'bucket_threshold' | 'total_threshold' | 'payment_due' | 'overspend'
+  bucket: text("bucket"), // Optional - for bucket-specific alerts (from BUDGET_BUCKETS)
   thresholdPercent: integer("threshold_percent"), // e.g., 80 = alert at 80% of budget
   thresholdAmount: decimal("threshold_amount", { precision: 10, scale: 2 }), // Fixed amount threshold
   isEnabled: boolean("is_enabled").notNull().default(true),
@@ -3298,7 +3275,8 @@ export const insertBudgetAlertSchema = createInsertSchema(budgetAlerts).omit({
   lastCheckedAt: true,
   createdAt: true,
 }).extend({
-  alertType: z.enum(['category_threshold', 'total_threshold', 'payment_due', 'overspend']),
+  alertType: z.enum(['bucket_threshold', 'total_threshold', 'payment_due', 'overspend']),
+  bucket: budgetBucketSchema.optional(),
   thresholdPercent: z.number().min(1).max(200).optional(),
   thresholdAmount: z.string().optional(),
 });

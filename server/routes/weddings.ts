@@ -366,26 +366,20 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
 
       if (wedding.totalBudget && parseFloat(wedding.totalBudget) > 0) {
         const totalBudget = parseFloat(wedding.totalBudget);
-        const budgetAllocations = [
-          { category: "catering", percentage: 40 },
-          { category: "venue", percentage: 15 },
-          { category: "entertainment", percentage: 12 },
-          { category: "photography", percentage: 10 },
-          { category: "decoration", percentage: 8 },
-          { category: "attire", percentage: 8 },
-          { category: "transportation", percentage: 4 },
-          { category: "other", percentage: 3 },
+        const bucketAllocations = [
+          { bucket: "catering" as const, percentage: 40 },
+          { bucket: "venue" as const, percentage: 15 },
+          { bucket: "entertainment" as const, percentage: 12 },
+          { bucket: "photography" as const, percentage: 10 },
+          { bucket: "decor" as const, percentage: 8 },
+          { bucket: "attire" as const, percentage: 8 },
+          { bucket: "transportation" as const, percentage: 4 },
+          { bucket: "other" as const, percentage: 3 },
         ];
 
-        for (const allocation of budgetAllocations) {
+        for (const allocation of bucketAllocations) {
           const allocatedAmount = ((totalBudget * allocation.percentage) / 100).toFixed(2);
-          await storage.createBudgetCategory({
-            weddingId: wedding.id,
-            category: allocation.category,
-            allocatedAmount,
-            spentAmount: "0",
-            percentage: allocation.percentage,
-          });
+          await storage.upsertBudgetAllocation(wedding.id, allocation.bucket, allocatedAmount);
         }
       }
 

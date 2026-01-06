@@ -24,7 +24,11 @@ Key architectural decisions and features include:
   - **Hybrid Data Approach**: Frontend components (ceremony-cost-breakdown, multi-ceremony-savings-calculator) try API templates first, then fall back to `shared/ceremonies.ts` hardcoded data for backward compatibility
   - **Ceremony Mapping**: `CEREMONY_MAPPINGS` object maps event names/types to ceremony IDs for matching events to templates
 - **Vendor Specialization**: Support for 32 distinct vendor categories, including culturally-specific services.
-- **Budget Intelligence System**: Provides smart budget recommendations, event-centric views, contributor filtering, guest savings calculator, upcoming payments timeline, multi-event expense allocation, and a share budget feature. Includes a customizable financial dashboard with 6 widget types, drag-and-drop reordering, and automatic budget alerts.
+- **Budget Intelligence System**: Uses a **Single Ledger Model** for simplified budget and expense tracking. Provides smart budget recommendations, dual-view aggregation (by bucket and by ceremony), contributor filtering, guest savings calculator, upcoming payments timeline, and automatic budget alerts.
+  - **Fixed BUDGET_BUCKETS**: 12 code-level budget categories defined in `shared/schema.ts`: venue, catering, photography, videography, decor, entertainment, attire, beauty, stationery, transportation, favors, other. Eliminates database joins and duplicate bucket issues.
+  - **Budget Allocations Table**: `budgetAllocations` stores per-bucket budget targets with upsert capability. Unique constraint on (weddingId, bucket).
+  - **Expenses Table**: Expenses link directly to buckets via `parentCategory` field and optionally to ceremonies via `ceremonyId`. Fields include: `expenseName` (user-defined), `parentCategory` (bucket), `ceremonyId`, `status` ('estimated' | 'booked' | 'paid'), `paidBy` (me | partner | me_partner | bride_family | groom_family).
+  - **Dual-View Aggregation**: Expenses can be viewed/totaled by bucket OR by ceremony using `getExpensesByBucket()` and `getExpensesByCeremony()` storage methods.
   - **Refined Pricing Engine**: Three-factor multiplier system in `shared/pricing.ts` for precise cost estimates:
     - Venue class multipliers (Home 0.6x → Hotel Ballroom 1.0x)
     - Vendor tier multipliers (Budget 0.65x → Premium 1.0x)

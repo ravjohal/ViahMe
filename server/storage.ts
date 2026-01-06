@@ -13,8 +13,6 @@ import {
   type InsertServicePackage,
   type Booking,
   type InsertBooking,
-  type BudgetCategory,
-  type InsertBudgetCategory,
   type Guest,
   type InsertGuest,
   type Household,
@@ -133,8 +131,6 @@ import {
   type InsertExpense,
   type ExpenseSplit,
   type InsertExpenseSplit,
-  type ExpenseEventAllocation,
-  type InsertExpenseEventAllocation,
   type QuoteRequest,
   type InsertQuoteRequest,
   type ConversationStatus,
@@ -191,16 +187,16 @@ import {
   type InsertCeremonyTemplate,
   type RegionalPricing,
   type InsertRegionalPricing,
-  type SpendCategory,
-  type InsertSpendCategory,
-  type CeremonySpendCategory,
-  type InsertCeremonySpendCategory,
+  type BudgetAllocation,
+  type InsertBudgetAllocation,
+  budgetAllocations,
   budgetAlerts,
   dashboardWidgets,
   ceremonyTemplates,
   regionalPricing,
-  spendCategories,
-  ceremonySpendCategories,
+  BUDGET_BUCKETS,
+  type BudgetBucket,
+  getBucketLabel,
 } from "@shared/schema";
 import { randomUUID, randomBytes } from "crypto";
 import bcrypt from "bcrypt";
@@ -322,35 +318,22 @@ export interface IStorage {
   addVendorFavorite(favorite: InsertVendorFavorite): Promise<VendorFavorite>;
   removeVendorFavorite(weddingId: string, vendorId: string): Promise<boolean>;
 
-  // Budget Categories
-  getBudgetCategory(id: string): Promise<BudgetCategory | undefined>;
-  getBudgetCategoriesByWedding(weddingId: string): Promise<BudgetCategory[]>;
-  createBudgetCategory(category: InsertBudgetCategory): Promise<BudgetCategory>;
-  updateBudgetCategory(id: string, category: Partial<InsertBudgetCategory>): Promise<BudgetCategory | undefined>;
-  deleteBudgetCategory(id: string): Promise<boolean>;
+  // Budget Allocations (per-bucket budget targets)
+  getBudgetAllocation(id: string): Promise<BudgetAllocation | undefined>;
+  getBudgetAllocationsByWedding(weddingId: string): Promise<BudgetAllocation[]>;
+  getBudgetAllocationByBucket(weddingId: string, bucket: BudgetBucket): Promise<BudgetAllocation | undefined>;
+  createBudgetAllocation(allocation: InsertBudgetAllocation): Promise<BudgetAllocation>;
+  updateBudgetAllocation(id: string, allocation: Partial<InsertBudgetAllocation>): Promise<BudgetAllocation | undefined>;
+  upsertBudgetAllocation(weddingId: string, bucket: BudgetBucket, allocatedAmount: string): Promise<BudgetAllocation>;
+  deleteBudgetAllocation(id: string): Promise<boolean>;
 
-  // Spend Categories (Metadata)
-  getSpendCategory(id: string): Promise<SpendCategory | undefined>;
-  getSpendCategoryByName(name: string): Promise<SpendCategory | undefined>;
-  getAllSpendCategories(): Promise<SpendCategory[]>;
-  getSpendCategoriesByParent(parentBudgetCategory: string): Promise<SpendCategory[]>;
-  createSpendCategory(category: InsertSpendCategory): Promise<SpendCategory>;
-  updateSpendCategory(id: string, category: Partial<InsertSpendCategory>): Promise<SpendCategory | undefined>;
-  deleteSpendCategory(id: string): Promise<boolean>;
-
-  // Ceremony Spend Categories (Junction table)
-  getCeremonySpendCategories(ceremonyId: string): Promise<CeremonySpendCategory[]>;
-  getCeremonySpendCategoriesWithDetails(ceremonyId: string): Promise<Array<CeremonySpendCategory & { spendCategory: SpendCategory }>>;
-  createCeremonySpendCategory(mapping: InsertCeremonySpendCategory): Promise<CeremonySpendCategory>;
-  updateCeremonySpendCategory(id: string, mapping: Partial<InsertCeremonySpendCategory>): Promise<CeremonySpendCategory | undefined>;
-  deleteCeremonySpendCategory(id: string): Promise<boolean>;
-  deleteCeremonySpendCategoriesByCeremony(ceremonyId: string): Promise<boolean>;
-
-  // Expenses
+  // Expenses (Single Ledger Model)
   getExpense(id: string): Promise<Expense | undefined>;
   getExpensesByWedding(weddingId: string): Promise<Expense[]>;
-  getExpensesByBudgetCategory(categoryId: string): Promise<Expense[]>;
-  getExpenseTotalByBudgetCategory(categoryId: string): Promise<number>;
+  getExpensesByBucket(weddingId: string, bucket: BudgetBucket): Promise<Expense[]>;
+  getExpenseTotalByBucket(weddingId: string, bucket: BudgetBucket): Promise<number>;
+  getExpensesByCeremony(weddingId: string, ceremonyId: string): Promise<Expense[]>;
+  getExpenseTotalByCeremony(weddingId: string, ceremonyId: string): Promise<number>;
   createExpense(expense: InsertExpense): Promise<Expense>;
   updateExpense(id: string, expense: Partial<InsertExpense>): Promise<Expense | undefined>;
   deleteExpense(id: string): Promise<boolean>;
@@ -362,13 +345,6 @@ export interface IStorage {
   updateExpenseSplit(id: string, split: Partial<InsertExpenseSplit>): Promise<ExpenseSplit | undefined>;
   deleteExpenseSplit(id: string): Promise<boolean>;
   deleteExpenseSplitsByExpense(expenseId: string): Promise<boolean>;
-
-  // Expense Event Allocations (for multi-event vendor packages)
-  getExpenseEventAllocationsByExpense(expenseId: string): Promise<ExpenseEventAllocation[]>;
-  getExpenseEventAllocationsByEvent(eventId: string): Promise<ExpenseEventAllocation[]>;
-  createExpenseEventAllocation(allocation: InsertExpenseEventAllocation): Promise<ExpenseEventAllocation>;
-  deleteExpenseEventAllocationsByExpense(expenseId: string): Promise<boolean>;
-  getExpenseTotalByEvent(eventId: string): Promise<number>;
 
   // Households
   getHousehold(id: string): Promise<Household | undefined>;
@@ -1141,9 +1117,7 @@ export class MemStorage implements IStorage {
   private vendors: Map<string, Vendor>;
   private servicePackages: Map<string, ServicePackage>;
   private bookings: Map<string, Booking>;
-  private budgetCategories: Map<string, BudgetCategory>;
-  private spendCategoriesMap: Map<string, SpendCategory>;
-  private ceremonySpendCategoriesMap: Map<string, CeremonySpendCategory>;
+  private budgetAllocationsMap: Map<string, BudgetAllocation>;
   private households: Map<string, Household>;
   private guests: Map<string, Guest>;
   private invitations: Map<string, Invitation>;
@@ -1171,7 +1145,6 @@ export class MemStorage implements IStorage {
   private shoppingOrderItems: Map<string, ShoppingOrderItem>;
   private expenses: Map<string, Expense>;
   private expenseSplits: Map<string, ExpenseSplit>;
-  private expenseEventAllocations: Map<string, ExpenseEventAllocation>;
 
   constructor() {
     this.users = new Map();
@@ -1181,9 +1154,7 @@ export class MemStorage implements IStorage {
     this.vendors = new Map();
     this.servicePackages = new Map();
     this.bookings = new Map();
-    this.budgetCategories = new Map();
-    this.spendCategoriesMap = new Map();
-    this.ceremonySpendCategoriesMap = new Map();
+    this.budgetAllocationsMap = new Map();
     this.households = new Map();
     this.guests = new Map();
     this.invitations = new Map();
@@ -1211,7 +1182,6 @@ export class MemStorage implements IStorage {
     this.shoppingOrderItems = new Map();
     this.expenses = new Map();
     this.expenseSplits = new Map();
-    this.expenseEventAllocations = new Map();
   }
 
   // Users
@@ -1640,140 +1610,53 @@ export class MemStorage implements IStorage {
     return this.vendorFavorites.delete(favorite.id);
   }
 
-  // Budget Categories
-  async getBudgetCategory(id: string): Promise<BudgetCategory | undefined> {
-    return this.budgetCategories.get(id);
+  // Budget Allocations (per-bucket budget targets)
+  async getBudgetAllocation(id: string): Promise<BudgetAllocation | undefined> {
+    return this.budgetAllocationsMap.get(id);
   }
 
-  async getBudgetCategoriesByWedding(weddingId: string): Promise<BudgetCategory[]> {
-    return Array.from(this.budgetCategories.values()).filter((c) => c.weddingId === weddingId);
+  async getBudgetAllocationsByWedding(weddingId: string): Promise<BudgetAllocation[]> {
+    return Array.from(this.budgetAllocationsMap.values()).filter((a) => a.weddingId === weddingId);
   }
 
-  async createBudgetCategory(insertCategory: InsertBudgetCategory): Promise<BudgetCategory> {
-    const id = randomUUID();
-    const category: BudgetCategory = {
-      ...insertCategory,
-      id,
-      spentAmount: insertCategory.spentAmount || "0",
-    } as BudgetCategory;
-    this.budgetCategories.set(id, category);
-    return category;
-  }
-
-  async updateBudgetCategory(
-    id: string,
-    update: Partial<InsertBudgetCategory>
-  ): Promise<BudgetCategory | undefined> {
-    const category = this.budgetCategories.get(id);
-    if (!category) return undefined;
-
-    const updated = { ...category, ...update } as BudgetCategory;
-    this.budgetCategories.set(id, updated);
-    return updated;
-  }
-
-  async deleteBudgetCategory(id: string): Promise<boolean> {
-    return this.budgetCategories.delete(id);
-  }
-
-  // Spend Categories (Metadata)
-  async getSpendCategory(id: string): Promise<SpendCategory | undefined> {
-    return this.spendCategoriesMap.get(id);
-  }
-
-  async getSpendCategoryByName(name: string): Promise<SpendCategory | undefined> {
-    return Array.from(this.spendCategoriesMap.values()).find(
-      (c) => c.name.toLowerCase() === name.toLowerCase()
+  async getBudgetAllocationByBucket(weddingId: string, bucket: BudgetBucket): Promise<BudgetAllocation | undefined> {
+    return Array.from(this.budgetAllocationsMap.values()).find(
+      (a) => a.weddingId === weddingId && a.bucket === bucket
     );
   }
 
-  async getAllSpendCategories(): Promise<SpendCategory[]> {
-    return Array.from(this.spendCategoriesMap.values());
-  }
-
-  async getSpendCategoriesByParent(parentBudgetCategory: string): Promise<SpendCategory[]> {
-    return Array.from(this.spendCategoriesMap.values()).filter(
-      (c) => c.parentBudgetCategory === parentBudgetCategory
-    );
-  }
-
-  async createSpendCategory(insertCategory: InsertSpendCategory): Promise<SpendCategory> {
+  async createBudgetAllocation(insertAllocation: InsertBudgetAllocation): Promise<BudgetAllocation> {
     const id = randomUUID();
-    const category: SpendCategory = {
-      ...insertCategory,
+    const allocation: BudgetAllocation = {
+      ...insertAllocation,
       id,
-      description: insertCategory.description ?? null,
-      isSystemDefault: insertCategory.isSystemDefault ?? true,
       createdAt: new Date(),
-    };
-    this.spendCategoriesMap.set(id, category);
-    return category;
+    } as BudgetAllocation;
+    this.budgetAllocationsMap.set(id, allocation);
+    return allocation;
   }
 
-  async updateSpendCategory(id: string, update: Partial<InsertSpendCategory>): Promise<SpendCategory | undefined> {
-    const category = this.spendCategoriesMap.get(id);
-    if (!category) return undefined;
-    const updated = { ...category, ...update } as SpendCategory;
-    this.spendCategoriesMap.set(id, updated);
+  async updateBudgetAllocation(id: string, update: Partial<InsertBudgetAllocation>): Promise<BudgetAllocation | undefined> {
+    const allocation = this.budgetAllocationsMap.get(id);
+    if (!allocation) return undefined;
+    const updated = { ...allocation, ...update } as BudgetAllocation;
+    this.budgetAllocationsMap.set(id, updated);
     return updated;
   }
 
-  async deleteSpendCategory(id: string): Promise<boolean> {
-    return this.spendCategoriesMap.delete(id);
+  async upsertBudgetAllocation(weddingId: string, bucket: BudgetBucket, allocatedAmount: string): Promise<BudgetAllocation> {
+    const existing = await this.getBudgetAllocationByBucket(weddingId, bucket);
+    if (existing) {
+      return (await this.updateBudgetAllocation(existing.id, { allocatedAmount }))!;
+    }
+    return this.createBudgetAllocation({ weddingId, bucket, allocatedAmount });
   }
 
-  // Ceremony Spend Categories (Junction table)
-  async getCeremonySpendCategories(ceremonyId: string): Promise<CeremonySpendCategory[]> {
-    return Array.from(this.ceremonySpendCategoriesMap.values()).filter(
-      (c) => c.ceremonyId === ceremonyId
-    );
+  async deleteBudgetAllocation(id: string): Promise<boolean> {
+    return this.budgetAllocationsMap.delete(id);
   }
 
-  async getCeremonySpendCategoriesWithDetails(ceremonyId: string): Promise<Array<CeremonySpendCategory & { spendCategory: SpendCategory }>> {
-    const ceremonySpendCats = await this.getCeremonySpendCategories(ceremonyId);
-    return ceremonySpendCats.map((csc) => {
-      const spendCategory = this.spendCategoriesMap.get(csc.spendCategoryId);
-      return {
-        ...csc,
-        spendCategory: spendCategory!,
-      };
-    }).filter((csc) => csc.spendCategory);
-  }
-
-  async createCeremonySpendCategory(mapping: InsertCeremonySpendCategory): Promise<CeremonySpendCategory> {
-    const id = randomUUID();
-    const ceremonyCat: CeremonySpendCategory = {
-      ...mapping,
-      id,
-      hoursLow: mapping.hoursLow ?? null,
-      hoursHigh: mapping.hoursHigh ?? null,
-      notes: mapping.notes ?? null,
-    } as CeremonySpendCategory;
-    this.ceremonySpendCategoriesMap.set(id, ceremonyCat);
-    return ceremonyCat;
-  }
-
-  async updateCeremonySpendCategory(id: string, update: Partial<InsertCeremonySpendCategory>): Promise<CeremonySpendCategory | undefined> {
-    const mapping = this.ceremonySpendCategoriesMap.get(id);
-    if (!mapping) return undefined;
-    const updated = { ...mapping, ...update } as CeremonySpendCategory;
-    this.ceremonySpendCategoriesMap.set(id, updated);
-    return updated;
-  }
-
-  async deleteCeremonySpendCategory(id: string): Promise<boolean> {
-    return this.ceremonySpendCategoriesMap.delete(id);
-  }
-
-  async deleteCeremonySpendCategoriesByCeremony(ceremonyId: string): Promise<boolean> {
-    const toDelete = Array.from(this.ceremonySpendCategoriesMap.entries())
-      .filter(([_, v]) => v.ceremonyId === ceremonyId)
-      .map(([k, _]) => k);
-    toDelete.forEach((id) => this.ceremonySpendCategoriesMap.delete(id));
-    return true;
-  }
-
-  // Expenses
+  // Expenses (Single Ledger Model)
   async getExpense(id: string): Promise<Expense | undefined> {
     return this.expenses.get(id);
   }
@@ -1782,16 +1665,26 @@ export class MemStorage implements IStorage {
     return Array.from(this.expenses.values()).filter((e) => e.weddingId === weddingId);
   }
 
-  async getExpensesByBudgetCategory(categoryId: string): Promise<Expense[]> {
-    return Array.from(this.expenses.values()).filter((e) => e.categoryId === categoryId);
+  async getExpensesByBucket(weddingId: string, bucket: BudgetBucket): Promise<Expense[]> {
+    return Array.from(this.expenses.values()).filter(
+      (e) => e.weddingId === weddingId && e.parentCategory === bucket
+    );
   }
 
-  async getExpenseTotalByBudgetCategory(categoryId: string): Promise<number> {
-    const expenses = await this.getExpensesByBudgetCategory(categoryId);
-    return expenses.reduce((sum, e) => {
-      const amount = parseFloat(e.amount?.toString() || "0");
-      return sum + (isNaN(amount) ? 0 : amount);
-    }, 0);
+  async getExpenseTotalByBucket(weddingId: string, bucket: BudgetBucket): Promise<number> {
+    const expenses = await this.getExpensesByBucket(weddingId, bucket);
+    return expenses.reduce((sum, e) => sum + parseFloat(e.amount || '0'), 0);
+  }
+
+  async getExpensesByCeremony(weddingId: string, ceremonyId: string): Promise<Expense[]> {
+    return Array.from(this.expenses.values()).filter(
+      (e) => e.weddingId === weddingId && e.ceremonyId === ceremonyId
+    );
+  }
+
+  async getExpenseTotalByCeremony(weddingId: string, ceremonyId: string): Promise<number> {
+    const expenses = await this.getExpensesByCeremony(weddingId, ceremonyId);
+    return expenses.reduce((sum, e) => sum + parseFloat(e.amount || '0'), 0);
   }
 
   async createExpense(insertExpense: InsertExpense): Promise<Expense> {
@@ -1799,10 +1692,11 @@ export class MemStorage implements IStorage {
     const expense: Expense = {
       ...insertExpense,
       id,
-      eventId: insertExpense.eventId ?? null,
-      categoryId: insertExpense.categoryId ?? null,
+      ceremonyId: insertExpense.ceremonyId ?? null,
+      vendorId: insertExpense.vendorId ?? null,
       receiptUrl: insertExpense.receiptUrl ?? null,
       notes: insertExpense.notes ?? null,
+      paymentDueDate: insertExpense.paymentDueDate ?? null,
       expenseDate: insertExpense.expenseDate ?? new Date(),
       createdAt: new Date(),
     } as Expense;
@@ -1862,61 +1756,6 @@ export class MemStorage implements IStorage {
       .map(([id]) => id);
     toDelete.forEach((id) => this.expenseSplits.delete(id));
     return true;
-  }
-
-  // Expense Event Allocations
-  async getExpenseEventAllocationsByExpense(expenseId: string): Promise<ExpenseEventAllocation[]> {
-    return Array.from(this.expenseEventAllocations.values()).filter(a => a.expenseId === expenseId);
-  }
-
-  async getExpenseEventAllocationsByEvent(eventId: string): Promise<ExpenseEventAllocation[]> {
-    return Array.from(this.expenseEventAllocations.values()).filter(a => a.eventId === eventId);
-  }
-
-  async createExpenseEventAllocation(allocation: InsertExpenseEventAllocation): Promise<ExpenseEventAllocation> {
-    const id = crypto.randomUUID();
-    const newAllocation: ExpenseEventAllocation = {
-      id,
-      expenseId: allocation.expenseId,
-      eventId: allocation.eventId,
-      allocatedAmount: allocation.allocatedAmount,
-      allocatedPercent: allocation.allocatedPercent || null,
-      createdAt: new Date(),
-    };
-    this.expenseEventAllocations.set(id, newAllocation);
-    return newAllocation;
-  }
-
-  async deleteExpenseEventAllocationsByExpense(expenseId: string): Promise<boolean> {
-    const toDelete = Array.from(this.expenseEventAllocations.entries())
-      .filter(([_, allocation]) => allocation.expenseId === expenseId)
-      .map(([id]) => id);
-    toDelete.forEach((id) => this.expenseEventAllocations.delete(id));
-    return true;
-  }
-
-  async getExpenseTotalByEvent(eventId: string): Promise<number> {
-    const allocations = await this.getExpenseEventAllocationsByEvent(eventId);
-    let total = 0;
-    for (const allocation of allocations) {
-      const amount = parseFloat(allocation.allocatedAmount?.toString() || "0");
-      if (!isNaN(amount)) {
-        total += amount;
-      }
-    }
-    // Also include expenses with direct eventId link (legacy single-event expenses)
-    const expenses = Array.from(this.expenses.values()).filter(e => e.eventId === eventId);
-    for (const expense of expenses) {
-      // Only count if not already allocated via allocations table
-      const hasAllocations = allocations.some(a => a.expenseId === expense.id);
-      if (!hasAllocations) {
-        const amount = parseFloat(expense.amount?.toString() || "0");
-        if (!isNaN(amount)) {
-          total += amount;
-        }
-      }
-    }
-    return total;
   }
 
   // Households
@@ -4851,123 +4690,47 @@ export class DBStorage implements IStorage {
     return true;
   }
 
-  // Budget Categories
-  async getBudgetCategory(id: string): Promise<BudgetCategory | undefined> {
-    const result = await this.db.select().from(schema.budgetCategories).where(eq(schema.budgetCategories.id, id));
+  // Budget Allocations (per-bucket budget targets)
+  async getBudgetAllocation(id: string): Promise<BudgetAllocation | undefined> {
+    const result = await this.db.select().from(budgetAllocations).where(eq(budgetAllocations.id, id));
     return result[0];
   }
 
-  async getBudgetCategoriesByWedding(weddingId: string): Promise<BudgetCategory[]> {
-    return await this.db.select().from(schema.budgetCategories).where(eq(schema.budgetCategories.weddingId, weddingId));
+  async getBudgetAllocationsByWedding(weddingId: string): Promise<BudgetAllocation[]> {
+    return await this.db.select().from(budgetAllocations).where(eq(budgetAllocations.weddingId, weddingId));
   }
 
-  async createBudgetCategory(insertCategory: InsertBudgetCategory): Promise<BudgetCategory> {
-    const result = await this.db.insert(schema.budgetCategories).values(insertCategory).returning();
+  async getBudgetAllocationByBucket(weddingId: string, bucket: BudgetBucket): Promise<BudgetAllocation | undefined> {
+    const result = await this.db.select().from(budgetAllocations).where(
+      and(eq(budgetAllocations.weddingId, weddingId), eq(budgetAllocations.bucket, bucket))
+    );
     return result[0];
   }
 
-  async updateBudgetCategory(id: string, update: Partial<InsertBudgetCategory>): Promise<BudgetCategory | undefined> {
-    const result = await this.db.update(schema.budgetCategories).set(update).where(eq(schema.budgetCategories.id, id)).returning();
+  async createBudgetAllocation(insertAllocation: InsertBudgetAllocation): Promise<BudgetAllocation> {
+    const result = await this.db.insert(budgetAllocations).values(insertAllocation).returning();
     return result[0];
   }
 
-  async deleteBudgetCategory(id: string): Promise<boolean> {
-    await this.db.delete(schema.budgetCategories).where(eq(schema.budgetCategories.id, id));
+  async updateBudgetAllocation(id: string, update: Partial<InsertBudgetAllocation>): Promise<BudgetAllocation | undefined> {
+    const result = await this.db.update(budgetAllocations).set(update).where(eq(budgetAllocations.id, id)).returning();
+    return result[0];
+  }
+
+  async upsertBudgetAllocation(weddingId: string, bucket: BudgetBucket, allocatedAmount: string): Promise<BudgetAllocation> {
+    const existing = await this.getBudgetAllocationByBucket(weddingId, bucket);
+    if (existing) {
+      return (await this.updateBudgetAllocation(existing.id, { allocatedAmount }))!;
+    }
+    return this.createBudgetAllocation({ weddingId, bucket, allocatedAmount });
+  }
+
+  async deleteBudgetAllocation(id: string): Promise<boolean> {
+    await this.db.delete(budgetAllocations).where(eq(budgetAllocations.id, id));
     return true;
   }
 
-  // Spend Categories (Metadata)
-  async getSpendCategory(id: string): Promise<SpendCategory | undefined> {
-    const result = await this.db.select().from(spendCategories).where(eq(spendCategories.id, id));
-    return result[0];
-  }
-
-  async getSpendCategoryByName(name: string): Promise<SpendCategory | undefined> {
-    const result = await this.db.select().from(spendCategories).where(eq(spendCategories.name, name));
-    return result[0];
-  }
-
-  async getAllSpendCategories(): Promise<SpendCategory[]> {
-    return await this.db.select().from(spendCategories);
-  }
-
-  async getSpendCategoriesByParent(parentBudgetCategory: string): Promise<SpendCategory[]> {
-    return await this.db.select().from(spendCategories).where(eq(spendCategories.parentBudgetCategory, parentBudgetCategory));
-  }
-
-  async createSpendCategory(insertCategory: InsertSpendCategory): Promise<SpendCategory> {
-    const result = await this.db.insert(spendCategories).values(insertCategory).returning();
-    return result[0];
-  }
-
-  async updateSpendCategory(id: string, update: Partial<InsertSpendCategory>): Promise<SpendCategory | undefined> {
-    const result = await this.db.update(spendCategories).set(update).where(eq(spendCategories.id, id)).returning();
-    return result[0];
-  }
-
-  async deleteSpendCategory(id: string): Promise<boolean> {
-    await this.db.delete(spendCategories).where(eq(spendCategories.id, id));
-    return true;
-  }
-
-  // Ceremony Spend Categories (Junction table)
-  async getCeremonySpendCategories(ceremonyId: string): Promise<CeremonySpendCategory[]> {
-    return await this.db.select().from(ceremonySpendCategories).where(eq(ceremonySpendCategories.ceremonyId, ceremonyId));
-  }
-
-  async getCeremonySpendCategoriesWithDetails(ceremonyId: string): Promise<Array<CeremonySpendCategory & { spendCategory: SpendCategory }>> {
-    const result = await this.db
-      .select({
-        id: ceremonySpendCategories.id,
-        ceremonyId: ceremonySpendCategories.ceremonyId,
-        spendCategoryId: ceremonySpendCategories.spendCategoryId,
-        lowCost: ceremonySpendCategories.lowCost,
-        highCost: ceremonySpendCategories.highCost,
-        unit: ceremonySpendCategories.unit,
-        hoursLow: ceremonySpendCategories.hoursLow,
-        hoursHigh: ceremonySpendCategories.hoursHigh,
-        notes: ceremonySpendCategories.notes,
-        spendCategory: spendCategories,
-      })
-      .from(ceremonySpendCategories)
-      .innerJoin(spendCategories, eq(ceremonySpendCategories.spendCategoryId, spendCategories.id))
-      .where(eq(ceremonySpendCategories.ceremonyId, ceremonyId));
-    
-    return result.map((r) => ({
-      id: r.id,
-      ceremonyId: r.ceremonyId,
-      spendCategoryId: r.spendCategoryId,
-      lowCost: r.lowCost,
-      highCost: r.highCost,
-      unit: r.unit,
-      hoursLow: r.hoursLow,
-      hoursHigh: r.hoursHigh,
-      notes: r.notes,
-      spendCategory: r.spendCategory,
-    }));
-  }
-
-  async createCeremonySpendCategory(mapping: InsertCeremonySpendCategory): Promise<CeremonySpendCategory> {
-    const result = await this.db.insert(ceremonySpendCategories).values(mapping).returning();
-    return result[0];
-  }
-
-  async updateCeremonySpendCategory(id: string, update: Partial<InsertCeremonySpendCategory>): Promise<CeremonySpendCategory | undefined> {
-    const result = await this.db.update(ceremonySpendCategories).set(update).where(eq(ceremonySpendCategories.id, id)).returning();
-    return result[0];
-  }
-
-  async deleteCeremonySpendCategory(id: string): Promise<boolean> {
-    await this.db.delete(ceremonySpendCategories).where(eq(ceremonySpendCategories.id, id));
-    return true;
-  }
-
-  async deleteCeremonySpendCategoriesByCeremony(ceremonyId: string): Promise<boolean> {
-    await this.db.delete(ceremonySpendCategories).where(eq(ceremonySpendCategories.ceremonyId, ceremonyId));
-    return true;
-  }
-
-  // Expenses
+  // Expenses (Single Ledger Model)
   async getExpense(id: string): Promise<Expense | undefined> {
     const result = await this.db.select().from(schema.expenses).where(eq(schema.expenses.id, id));
     return result[0];
@@ -4977,16 +4740,26 @@ export class DBStorage implements IStorage {
     return await this.db.select().from(schema.expenses).where(eq(schema.expenses.weddingId, weddingId));
   }
 
-  async getExpensesByBudgetCategory(categoryId: string): Promise<Expense[]> {
-    return await this.db.select().from(schema.expenses).where(eq(schema.expenses.categoryId, categoryId));
+  async getExpensesByBucket(weddingId: string, bucket: BudgetBucket): Promise<Expense[]> {
+    return await this.db.select().from(schema.expenses).where(
+      and(eq(schema.expenses.weddingId, weddingId), eq(schema.expenses.parentCategory, bucket))
+    );
   }
 
-  async getExpenseTotalByBudgetCategory(categoryId: string): Promise<number> {
-    const expenses = await this.getExpensesByBudgetCategory(categoryId);
-    return expenses.reduce((sum, e) => {
-      const amount = parseFloat(e.amount?.toString() || "0");
-      return sum + (isNaN(amount) ? 0 : amount);
-    }, 0);
+  async getExpenseTotalByBucket(weddingId: string, bucket: BudgetBucket): Promise<number> {
+    const expenses = await this.getExpensesByBucket(weddingId, bucket);
+    return expenses.reduce((sum, e) => sum + parseFloat(e.amount || '0'), 0);
+  }
+
+  async getExpensesByCeremony(weddingId: string, ceremonyId: string): Promise<Expense[]> {
+    return await this.db.select().from(schema.expenses).where(
+      and(eq(schema.expenses.weddingId, weddingId), eq(schema.expenses.ceremonyId, ceremonyId))
+    );
+  }
+
+  async getExpenseTotalByCeremony(weddingId: string, ceremonyId: string): Promise<number> {
+    const expenses = await this.getExpensesByCeremony(weddingId, ceremonyId);
+    return expenses.reduce((sum, e) => sum + parseFloat(e.amount || '0'), 0);
   }
 
   async createExpense(insertExpense: InsertExpense): Promise<Expense> {
@@ -5032,53 +4805,6 @@ export class DBStorage implements IStorage {
   async deleteExpenseSplitsByExpense(expenseId: string): Promise<boolean> {
     await this.db.delete(schema.expenseSplits).where(eq(schema.expenseSplits.expenseId, expenseId));
     return true;
-  }
-
-  // Expense Event Allocations
-  async getExpenseEventAllocationsByExpense(expenseId: string): Promise<ExpenseEventAllocation[]> {
-    return await this.db.select().from(schema.expenseEventAllocations).where(eq(schema.expenseEventAllocations.expenseId, expenseId));
-  }
-
-  async getExpenseEventAllocationsByEvent(eventId: string): Promise<ExpenseEventAllocation[]> {
-    return await this.db.select().from(schema.expenseEventAllocations).where(eq(schema.expenseEventAllocations.eventId, eventId));
-  }
-
-  async createExpenseEventAllocation(allocation: InsertExpenseEventAllocation): Promise<ExpenseEventAllocation> {
-    const result = await this.db.insert(schema.expenseEventAllocations).values(allocation).returning();
-    return result[0];
-  }
-
-  async deleteExpenseEventAllocationsByExpense(expenseId: string): Promise<boolean> {
-    await this.db.delete(schema.expenseEventAllocations).where(eq(schema.expenseEventAllocations.expenseId, expenseId));
-    return true;
-  }
-
-  async getExpenseTotalByEvent(eventId: string): Promise<number> {
-    // First get allocations for this event
-    const allocations = await this.getExpenseEventAllocationsByEvent(eventId);
-    let total = 0;
-    const allocatedExpenseIds = new Set<string>();
-    
-    for (const allocation of allocations) {
-      const amount = parseFloat(allocation.allocatedAmount?.toString() || "0");
-      if (!isNaN(amount)) {
-        total += amount;
-      }
-      allocatedExpenseIds.add(allocation.expenseId);
-    }
-    
-    // Also include expenses with direct eventId link (legacy single-event expenses)
-    const directExpenses = await this.db.select().from(schema.expenses).where(eq(schema.expenses.eventId, eventId));
-    for (const expense of directExpenses) {
-      // Only count if not already allocated via allocations table
-      if (!allocatedExpenseIds.has(expense.id)) {
-        const amount = parseFloat(expense.amount?.toString() || "0");
-        if (!isNaN(amount)) {
-          total += amount;
-        }
-      }
-    }
-    return total;
   }
 
   // Households

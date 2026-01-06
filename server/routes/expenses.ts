@@ -1,27 +1,18 @@
 import { Router } from "express";
 import type { IStorage } from "../storage";
-import { insertExpenseSchema } from "@shared/schema";
-
-// Helper to sync budget category spent amount from linked expenses
-async function syncBudgetCategorySpent(storage: IStorage, categoryId: string | null | undefined) {
-  if (!categoryId) return;
-  const total = await storage.getExpenseTotalByBudgetCategory(categoryId);
-  const safeTotal = isNaN(total) ? 0 : total;
-  await storage.updateBudgetCategory(categoryId, { spentAmount: safeTotal.toFixed(2) });
-}
+import { insertExpenseSchema, BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket } from "@shared/schema";
 
 export async function registerExpenseRoutes(router: Router, storage: IStorage) {
   router.get("/:weddingId", async (req, res) => {
     try {
       const expenses = await storage.getExpensesByWedding(req.params.weddingId);
-      const expensesWithSplitsAndAllocations = await Promise.all(
+      const expensesWithSplits = await Promise.all(
         expenses.map(async (expense) => {
           const splits = await storage.getExpenseSplitsByExpense(expense.id);
-          const eventAllocations = await storage.getExpenseEventAllocationsByExpense(expense.id);
-          return { ...expense, splits, eventAllocations };
+          return { ...expense, splits };
         })
       );
-      res.json(expensesWithSplitsAndAllocations);
+      res.json(expensesWithSplits);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch expenses" });
     }
@@ -34,20 +25,81 @@ export async function registerExpenseRoutes(router: Router, storage: IStorage) {
         return res.status(404).json({ error: "Expense not found" });
       }
       const splits = await storage.getExpenseSplitsByExpense(expense.id);
-      const eventAllocations = await storage.getExpenseEventAllocationsByExpense(expense.id);
-      res.json({ ...expense, splits, eventAllocations });
+      res.json({ ...expense, splits });
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch expense" });
     }
   });
 
+  router.get("/:weddingId/by-bucket/:bucket", async (req, res) => {
+    try {
+      const expenses = await storage.getExpensesByBucket(req.params.weddingId, req.params.bucket as BudgetBucket);
+      const expensesWithSplits = await Promise.all(
+        expenses.map(async (expense) => {
+          const splits = await storage.getExpenseSplitsByExpense(expense.id);
+          return { ...expense, splits };
+        })
+      );
+      res.json(expensesWithSplits);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch expenses by bucket" });
+    }
+  });
+
+  router.get("/:weddingId/by-ceremony/:ceremonyId", async (req, res) => {
+    try {
+      const expenses = await storage.getExpensesByCeremony(req.params.weddingId, req.params.ceremonyId);
+      const expensesWithSplits = await Promise.all(
+        expenses.map(async (expense) => {
+          const splits = await storage.getExpenseSplitsByExpense(expense.id);
+          return { ...expense, splits };
+        })
+      );
+      res.json(expensesWithSplits);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch expenses by ceremony" });
+    }
+  });
+
+  router.get("/:weddingId/totals", async (req, res) => {
+    try {
+      const expenses = await storage.getExpensesByWedding(req.params.weddingId);
+      const allocations = await storage.getBudgetAllocationsByWedding(req.params.weddingId);
+      
+      const bucketTotals = BUDGET_BUCKETS.map(bucket => {
+        const allocation = allocations.find(a => a.bucket === bucket);
+        const bucketExpenses = expenses.filter(e => e.parentCategory === bucket);
+        const spent = bucketExpenses.reduce((sum, e) => sum + parseFloat(e.amount || '0'), 0);
+        const allocated = parseFloat(allocation?.allocatedAmount || '0');
+        return {
+          bucket,
+          label: BUDGET_BUCKET_LABELS[bucket],
+          allocated,
+          spent,
+          remaining: allocated - spent,
+        };
+      });
+      
+      const totalSpent = expenses.reduce((sum, e) => sum + parseFloat(e.amount || '0'), 0);
+      const totalAllocated = allocations.reduce((sum, a) => sum + parseFloat(a.allocatedAmount || '0'), 0);
+      
+      res.json({
+        bucketTotals,
+        totalSpent,
+        totalAllocated,
+        totalRemaining: totalAllocated - totalSpent,
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch expense totals" });
+    }
+  });
+
   router.post("/", async (req, res) => {
     try {
-      const { splits, eventAllocations, ...expenseData } = req.body;
+      const { splits, ...expenseData } = req.body;
       const validatedData = insertExpenseSchema.parse(expenseData);
       const expense = await storage.createExpense(validatedData);
       
-      // Create expense splits (who pays what share)
       if (splits && Array.isArray(splits)) {
         for (const split of splits) {
           await storage.createExpenseSplit({
@@ -57,26 +109,9 @@ export async function registerExpenseRoutes(router: Router, storage: IStorage) {
         }
       }
       
-      // Create event allocations (multi-event cost distribution)
-      if (eventAllocations && Array.isArray(eventAllocations)) {
-        for (const allocation of eventAllocations) {
-          await storage.createExpenseEventAllocation({
-            expenseId: expense.id,
-            eventId: allocation.eventId,
-            allocatedAmount: allocation.allocatedAmount,
-            allocatedPercent: allocation.allocatedPercent,
-          });
-        }
-      }
-      
-      // Sync budget category spent amount if linked
-      await syncBudgetCategorySpent(storage, expense.categoryId);
-      
       const createdSplits = await storage.getExpenseSplitsByExpense(expense.id);
-      const createdAllocations = await storage.getExpenseEventAllocationsByExpense(expense.id);
-      res.json({ ...expense, splits: createdSplits, eventAllocations: createdAllocations });
+      res.json({ ...expense, splits: createdSplits });
     } catch (error) {
-      console.error("Error creating expense:", error);
       if (error instanceof Error && "issues" in error) {
         return res.status(400).json({ error: "Validation failed", details: error });
       }
@@ -86,15 +121,12 @@ export async function registerExpenseRoutes(router: Router, storage: IStorage) {
 
   router.patch("/:id", async (req, res) => {
     try {
-      const { splits, eventAllocations, expenseDate, ...expenseData } = req.body;
-      // Get old expense to check if category changed
-      const oldExpense = await storage.getExpense(req.params.id);
-      const oldCategoryId = oldExpense?.categoryId;
+      const { splits, expenseDate, paymentDueDate, ...expenseData } = req.body;
       
-      // Convert expenseDate string to Date object if provided
       const updateData = {
         ...expenseData,
         ...(expenseDate && { expenseDate: new Date(expenseDate) }),
+        ...(paymentDueDate && { paymentDueDate: new Date(paymentDueDate) }),
       };
       
       const expense = await storage.updateExpense(req.params.id, updateData);
@@ -102,7 +134,6 @@ export async function registerExpenseRoutes(router: Router, storage: IStorage) {
         return res.status(404).json({ error: "Expense not found" });
       }
       
-      // Update splits if provided
       if (splits && Array.isArray(splits)) {
         await storage.deleteExpenseSplitsByExpense(expense.id);
         for (const split of splits) {
@@ -113,28 +144,8 @@ export async function registerExpenseRoutes(router: Router, storage: IStorage) {
         }
       }
       
-      // Update event allocations if provided
-      if (eventAllocations && Array.isArray(eventAllocations)) {
-        await storage.deleteExpenseEventAllocationsByExpense(expense.id);
-        for (const allocation of eventAllocations) {
-          await storage.createExpenseEventAllocation({
-            expenseId: expense.id,
-            eventId: allocation.eventId,
-            allocatedAmount: allocation.allocatedAmount,
-            allocatedPercent: allocation.allocatedPercent,
-          });
-        }
-      }
-      
-      // Sync both old and new budget categories if they changed
-      if (oldCategoryId !== expense.categoryId) {
-        await syncBudgetCategorySpent(storage, oldCategoryId);
-      }
-      await syncBudgetCategorySpent(storage, expense.categoryId);
-      
       const updatedSplits = await storage.getExpenseSplitsByExpense(expense.id);
-      const updatedAllocations = await storage.getExpenseEventAllocationsByExpense(expense.id);
-      res.json({ ...expense, splits: updatedSplits, eventAllocations: updatedAllocations });
+      res.json({ ...expense, splits: updatedSplits });
     } catch (error) {
       res.status(500).json({ error: "Failed to update expense" });
     }
@@ -142,85 +153,22 @@ export async function registerExpenseRoutes(router: Router, storage: IStorage) {
 
   router.delete("/:id", async (req, res) => {
     try {
-      // Get expense before deleting to sync budget category
-      const expense = await storage.getExpense(req.params.id);
-      const categoryId = expense?.categoryId;
-      
-      // Delete related data first
       await storage.deleteExpenseSplitsByExpense(req.params.id);
-      await storage.deleteExpenseEventAllocationsByExpense(req.params.id);
       await storage.deleteExpense(req.params.id);
-      
-      // Sync budget category after deletion
-      await syncBudgetCategorySpent(storage, categoryId);
-      
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete expense" });
     }
   });
 
-  router.get("/:weddingId/settlement", async (req, res) => {
+  router.patch("/splits/:id", async (req, res) => {
     try {
-      const expenses = await storage.getExpensesByWedding(req.params.weddingId);
-      
-      const balances: Record<string, { name: string; paid: number; owes: number; balance: number }> = {};
-      
-      for (const expense of expenses) {
-        const splits = await storage.getExpenseSplitsByExpense(expense.id);
-        
-        if (!balances[expense.paidById]) {
-          balances[expense.paidById] = { name: expense.paidByName, paid: 0, owes: 0, balance: 0 };
-        }
-        balances[expense.paidById].paid += parseFloat(expense.amount);
-        
-        for (const split of splits) {
-          if (!balances[split.userId]) {
-            balances[split.userId] = { name: split.userName, paid: 0, owes: 0, balance: 0 };
-          }
-          if (!split.isPaid) {
-            balances[split.userId].owes += parseFloat(split.shareAmount);
-          }
-        }
-      }
-      
-      for (const userId in balances) {
-        balances[userId].balance = balances[userId].paid - balances[userId].owes;
-      }
-      
-      res.json(balances);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to calculate settlement" });
-    }
-  });
-}
-
-export async function registerExpenseSplitRoutes(router: Router, storage: IStorage) {
-  router.patch("/:id", async (req, res) => {
-    try {
-      const updateData = { ...req.body };
-      
-      // Convert paidAt string to Date if provided
-      if (updateData.paidAt && typeof updateData.paidAt === "string") {
-        updateData.paidAt = new Date(updateData.paidAt);
-      }
-      
-      const split = await storage.updateExpenseSplit(req.params.id, updateData);
+      const split = await storage.updateExpenseSplit(req.params.id, req.body);
       if (!split) {
         return res.status(404).json({ error: "Expense split not found" });
       }
-      
-      // Recalculate parent expense's paymentStatus based on all splits
-      const allSplits = await storage.getExpenseSplitsByExpense(split.expenseId);
-      const allPaid = allSplits.length > 0 && allSplits.every(s => s.isPaid);
-      const newPaymentStatus = allPaid ? 'paid' : 'partial';
-      
-      // Update parent expense paymentStatus
-      await storage.updateExpense(split.expenseId, { paymentStatus: newPaymentStatus });
-      
       res.json(split);
     } catch (error) {
-      console.error("Error updating expense split:", error);
       res.status(500).json({ error: "Failed to update expense split" });
     }
   });
