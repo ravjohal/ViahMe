@@ -227,7 +227,7 @@ export function AddExpenseDialog({
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [payer, setPayer] = useState<PayerType>("couple");
   const [notes, setNotes] = useState("");
-  const [paymentStatus, setPaymentStatus] = useState<"partial" | "paid">("partial");
+  const [paymentStatus, setPaymentStatus] = useState<"partial" | "paid">("paid");
   const [showNotesSection, setShowNotesSection] = useState(false);
   const [splitType, setSplitType] = useState<"full" | "split">("full");
   const [splitPercentages, setSplitPercentages] = useState({
@@ -276,7 +276,7 @@ export function AddExpenseDialog({
     setSelectedCategoryId(null);
     setPayer("couple");
     setNotes("");
-    setPaymentStatus("partial");
+    setPaymentStatus("paid");
     setShowNotesSection(false);
     setSplitType("full");
     setSplitPercentages({ couple: "50", bride_family: "25", groom_family: "25" });
