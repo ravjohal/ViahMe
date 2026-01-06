@@ -345,8 +345,14 @@ export function AddExpenseDialog({
       return;
     }
 
+    // When expense categories are available, user must select one (which auto-fills budget category)
+    const hasExpenseCategories = ceremonySpendCategories.length > 0 && selectedEvents.length === 1;
+    if (hasExpenseCategories && !selectedSpendCategory) {
+      toast({ title: "Please select an expense category", variant: "destructive" });
+      return;
+    }
     if (!selectedCategoryId) {
-      toast({ title: "Please select a category", variant: "destructive" });
+      toast({ title: "Please select an expense category", variant: "destructive" });
       return;
     }
 
@@ -541,7 +547,8 @@ export function AddExpenseDialog({
             <div className="space-y-3">
               <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-primary" />
-                Suggested for {selectedEvent?.name}
+                Expense Category <span className="text-destructive">*</span>
+                <span className="text-[10px] font-normal text-muted-foreground ml-1">(for {selectedEvent?.name})</span>
               </Label>
               <div className="flex flex-wrap gap-2">
                 {ceremonySpendCategories.slice(0, 8).map((spendCat) => {
@@ -614,37 +621,40 @@ export function AddExpenseDialog({
             </div>
           )}
 
-          <div className="space-y-3">
-            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Category <span className="text-destructive">*</span>
-            </Label>
-            {budgetCategories.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {budgetCategories.map((cat) => {
-                  const label = CATEGORY_LABELS[cat.category] || cat.category;
-                  return (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      onClick={() => setSelectedCategoryId(cat.id)}
-                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                        selectedCategoryId === cat.id
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-muted-foreground hover-elevate"
-                      }`}
-                      data-testid={`button-category-${cat.id}`}
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground p-3 bg-muted/50 rounded-lg">
-                No categories configured yet. Please add budget categories first in the Budget page.
-              </p>
-            )}
-          </div>
+          {/* Only show budget category selector when no expense categories are available for the selected ceremony */}
+          {!(ceremonySpendCategories.length > 0 && selectedEvents.length === 1) && (
+            <div className="space-y-3">
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                Expense Category <span className="text-destructive">*</span>
+              </Label>
+              {budgetCategories.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {budgetCategories.map((cat) => {
+                    const label = CATEGORY_LABELS[cat.category] || cat.category;
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setSelectedCategoryId(cat.id)}
+                        className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                          selectedCategoryId === cat.id
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground hover-elevate"
+                        }`}
+                        data-testid={`button-category-${cat.id}`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground p-3 bg-muted/50 rounded-lg">
+                  No categories configured yet. Please add budget categories first in the Budget page.
+                </p>
+              )}
+            </div>
+          )}
 
           <div className="space-y-3">
             <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">

@@ -311,7 +311,7 @@ export function EditExpenseDialog({
 
           <div className="space-y-3">
             <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Category <span className="text-destructive">*</span>
+              Expense Category <span className="text-destructive">*</span>
             </Label>
             <div className="flex flex-wrap gap-2">
               {categories.map((cat) => {
