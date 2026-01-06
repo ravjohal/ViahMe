@@ -10,7 +10,7 @@ import { sendBookingConfirmationEmail, sendVendorNotificationEmail } from "../em
 export async function registerVendorRoutes(router: Router, storage: IStorage) {
   router.get("/", async (req, res) => {
     try {
-      const { category, location, includeUnpublished, includeAllApproval } = req.query;
+      const { category, location, includeUnpublished, includeAllApproval, page, pageSize } = req.query;
 
       let vendors = await storage.getAllVendors();
 
@@ -32,6 +32,25 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
         );
       }
 
+      // If pagination params provided, return paginated response
+      if (page && pageSize) {
+        const pageNum = Math.max(1, parseInt(page as string, 10) || 1);
+        const size = Math.min(100, Math.max(1, parseInt(pageSize as string, 10) || 20));
+        const total = vendors.length;
+        const totalPages = Math.ceil(total / size);
+        const startIndex = (pageNum - 1) * size;
+        const paginatedVendors = vendors.slice(startIndex, startIndex + size);
+
+        return res.json({
+          data: paginatedVendors,
+          page: pageNum,
+          pageSize: size,
+          total,
+          totalPages,
+        });
+      }
+
+      // Default: return all vendors (backward compatible)
       res.json(vendors);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch vendors" });

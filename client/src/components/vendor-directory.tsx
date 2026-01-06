@@ -18,6 +18,13 @@ import type { Vendor, Wedding, Event } from "@shared/schema";
 import { VendorCard } from "./vendor-card";
 import { VendorCategoryGuide } from "./vendor-category-guide";
 
+interface ServerPaginationInfo {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+}
+
 interface VendorDirectoryProps {
   vendors: Vendor[];
   onSelectVendor?: (vendor: Vendor) => void;
@@ -36,6 +43,8 @@ interface VendorDirectoryProps {
   isBookingPending?: boolean;
   vendorBookedEventIds?: Record<string, string[]>;
   onViewBookings?: (vendorId: string) => void;
+  serverPagination?: ServerPaginationInfo | null;
+  onServerPageChange?: (page: number) => void;
 }
 
 // Map budget amounts to price range tiers
@@ -208,6 +217,8 @@ export function VendorDirectory({
   isBookingPending = false,
   vendorBookedEventIds = {},
   onViewBookings,
+  serverPagination,
+  onServerPageChange,
 }: VendorDirectoryProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -298,13 +309,13 @@ export function VendorDirectory({
     // Compare normalized city names to handle variations like "Bay Area" vs "San Francisco Bay Area"
     const matchesCity = cityFilter === "all" || normalizeCity(vendor.city || '') === cityFilter;
     
-    // Contact/availability filters
+    // Contact/availability filters - ignore contact filters if not logged in
     const hasAnyContact = !!(vendor.phone || vendor.email || vendor.website || vendor.instagram || vendor.facebook || vendor.twitter);
-    const matchesHasContact = !filterHasContact || hasAnyContact;
+    const matchesHasContact = !isLoggedIn || !filterHasContact || hasAnyContact;
     const matchesBookable = !filterBookable || vendor.claimed === true;
-    const matchesHasInstagram = !filterHasInstagram || !!vendor.instagram;
-    const matchesHasWebsite = !filterHasWebsite || !!vendor.website;
-    const matchesHasEmail = !filterHasEmail || !!vendor.email;
+    const matchesHasInstagram = !isLoggedIn || !filterHasInstagram || !!vendor.instagram;
+    const matchesHasWebsite = !isLoggedIn || !filterHasWebsite || !!vendor.website;
+    const matchesHasEmail = !isLoggedIn || !filterHasEmail || !!vendor.email;
 
     return matchesSearch && matchesCat && matchesPrice && matchesCity && 
            matchesHasContact && matchesBookable && matchesHasInstagram && matchesHasWebsite && matchesHasEmail;
@@ -434,21 +445,9 @@ export function VendorDirectory({
             </Select>
           </div>
 
-          {/* Contact & availability filters */}
+          {/* Contact & availability filters - only shown to logged-in users */}
           <div className={`flex flex-wrap gap-4 pt-2 ${showFilters ? "flex" : "hidden md:flex"}`}>
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="filter-has-contact" 
-                checked={filterHasContact}
-                onCheckedChange={(checked) => setFilterHasContact(checked === true)}
-                data-testid="checkbox-filter-has-contact"
-              />
-              <Label htmlFor="filter-has-contact" className="text-sm cursor-pointer flex items-center gap-1">
-                <Phone className="w-3 h-3" />
-                Has Contact Info
-              </Label>
-            </div>
-            
+            {/* Bookable filter - always visible */}
             <div className="flex items-center space-x-2">
               <Checkbox 
                 id="filter-bookable" 
@@ -462,44 +461,62 @@ export function VendorDirectory({
               </Label>
             </div>
             
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="filter-has-instagram" 
-                checked={filterHasInstagram}
-                onCheckedChange={(checked) => setFilterHasInstagram(checked === true)}
-                data-testid="checkbox-filter-has-instagram"
-              />
-              <Label htmlFor="filter-has-instagram" className="text-sm cursor-pointer flex items-center gap-1">
-                <SiInstagram className="w-3 h-3" />
-                Has Instagram
-              </Label>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="filter-has-website" 
-                checked={filterHasWebsite}
-                onCheckedChange={(checked) => setFilterHasWebsite(checked === true)}
-                data-testid="checkbox-filter-has-website"
-              />
-              <Label htmlFor="filter-has-website" className="text-sm cursor-pointer flex items-center gap-1">
-                <Globe className="w-3 h-3" />
-                Has Website
-              </Label>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="filter-has-email" 
-                checked={filterHasEmail}
-                onCheckedChange={(checked) => setFilterHasEmail(checked === true)}
-                data-testid="checkbox-filter-has-email"
-              />
-              <Label htmlFor="filter-has-email" className="text-sm cursor-pointer flex items-center gap-1">
-                <Mail className="w-3 h-3" />
-                Has Email
-              </Label>
-            </div>
+            {/* Contact info filters - only for logged-in users */}
+            {isLoggedIn && (
+              <>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="filter-has-contact" 
+                    checked={filterHasContact}
+                    onCheckedChange={(checked) => setFilterHasContact(checked === true)}
+                    data-testid="checkbox-filter-has-contact"
+                  />
+                  <Label htmlFor="filter-has-contact" className="text-sm cursor-pointer flex items-center gap-1">
+                    <Phone className="w-3 h-3" />
+                    Has Contact Info
+                  </Label>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="filter-has-instagram" 
+                    checked={filterHasInstagram}
+                    onCheckedChange={(checked) => setFilterHasInstagram(checked === true)}
+                    data-testid="checkbox-filter-has-instagram"
+                  />
+                  <Label htmlFor="filter-has-instagram" className="text-sm cursor-pointer flex items-center gap-1">
+                    <SiInstagram className="w-3 h-3" />
+                    Has Instagram
+                  </Label>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="filter-has-website" 
+                    checked={filterHasWebsite}
+                    onCheckedChange={(checked) => setFilterHasWebsite(checked === true)}
+                    data-testid="checkbox-filter-has-website"
+                  />
+                  <Label htmlFor="filter-has-website" className="text-sm cursor-pointer flex items-center gap-1">
+                    <Globe className="w-3 h-3" />
+                    Has Website
+                  </Label>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="filter-has-email" 
+                    checked={filterHasEmail}
+                    onCheckedChange={(checked) => setFilterHasEmail(checked === true)}
+                    data-testid="checkbox-filter-has-email"
+                  />
+                  <Label htmlFor="filter-has-email" className="text-sm cursor-pointer flex items-center gap-1">
+                    <Mail className="w-3 h-3" />
+                    Has Email
+                  </Label>
+                </div>
+              </>
+            )}
           </div>
 
           {(categoryFilter !== "all" || priceFilter !== "all" || cityFilter !== "all" || searchTerm || filterHasContact || filterBookable || filterHasInstagram || filterHasWebsite || filterHasEmail) && (
@@ -820,6 +837,33 @@ export function VendorDirectory({
                 <span className="text-sm text-muted-foreground ml-4">
                   Showing {startIndex + 1}-{Math.min(endIndex, regularVendors.length)} of {regularVendors.length}
                 </span>
+              </div>
+            )}
+            
+            {/* Server-side pagination for non-logged-in users */}
+            {serverPagination && serverPagination.totalPages > 1 && onServerPageChange && (
+              <div className="flex items-center justify-center gap-2 pt-4 border-t mt-4">
+                <span className="text-sm text-muted-foreground mr-4">
+                  Page {serverPagination.page} of {serverPagination.totalPages} ({serverPagination.total} total vendors)
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onServerPageChange(serverPagination.page - 1)}
+                  disabled={serverPagination.page <= 1}
+                  data-testid="button-server-page-prev"
+                >
+                  Previous {serverPagination.pageSize}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onServerPageChange(serverPagination.page + 1)}
+                  disabled={serverPagination.page >= serverPagination.totalPages}
+                  data-testid="button-server-page-next"
+                >
+                  Next {serverPagination.pageSize}
+                </Button>
               </div>
             )}
           </>

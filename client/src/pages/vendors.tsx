@@ -44,9 +44,43 @@ export default function Vendors() {
 
   const wedding = weddings?.[0];
 
-  const { data: vendors = [], isLoading: vendorsLoading } = useQuery<Vendor[]>({
-    queryKey: ["/api/vendors"],
+  // Pagination state for non-logged-in users
+  const [vendorPage, setVendorPage] = useState(1);
+  const VENDORS_PAGE_SIZE = 50;
+
+  // For logged-in users, fetch all vendors (needed for favorites/bookings matching)
+  // For non-logged-in users, use paginated API
+  const vendorQueryKey = user 
+    ? "/api/vendors" 
+    : `/api/vendors?page=${vendorPage}&pageSize=${VENDORS_PAGE_SIZE}`;
+    
+  const { data: vendorsData, isLoading: vendorsLoading } = useQuery<
+    Vendor[] | { data: Vendor[]; page: number; pageSize: number; total: number; totalPages: number }
+  >({
+    queryKey: [vendorQueryKey],
   });
+
+  // Normalize vendor data for both paginated and non-paginated responses
+  const vendors: Vendor[] = useMemo(() => {
+    if (!vendorsData) return [];
+    // Check if it's a paginated response
+    if ('data' in vendorsData && Array.isArray(vendorsData.data)) {
+      return vendorsData.data;
+    }
+    // Non-paginated response (array)
+    return vendorsData as Vendor[];
+  }, [vendorsData]);
+
+  // Pagination info for non-logged-in users
+  const vendorPagination = useMemo(() => {
+    if (!vendorsData || !('data' in vendorsData)) return null;
+    return {
+      page: vendorsData.page,
+      pageSize: vendorsData.pageSize,
+      total: vendorsData.total,
+      totalPages: vendorsData.totalPages,
+    };
+  }, [vendorsData]);
 
   const { data: events = [] } = useQuery<Event[]>({
     queryKey: ["/api/events", wedding?.id],
@@ -684,6 +718,8 @@ export default function Vendors() {
             isLoggedIn={!!user}
             onSubmitVendor={() => setShowSubmitVendor(true)}
             events={events}
+            serverPagination={vendorPagination}
+            onServerPageChange={setVendorPage}
           />
         )}
       </main>
