@@ -44,6 +44,7 @@ export default function Expenses() {
   const [selectedEventIds, setSelectedEventIds] = useState<string[]>([]);
   const [eventAllocations, setEventAllocations] = useState<Record<string, { amount: string; percent: string }>>({});
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+  const [payerFilter, setPayerFilter] = useState<string>("all");
 
   const { data: weddings = [] } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
@@ -687,8 +688,37 @@ export default function Expenses() {
 
       <Card>
         <CardHeader>
-          <CardTitle>All Expenses</CardTitle>
-          <CardDescription>View and manage all shared expenses</CardDescription>
+          <div className="flex flex-col gap-4">
+            <div>
+              <CardTitle>All Expenses</CardTitle>
+              <CardDescription>View and manage all shared expenses</CardDescription>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <span className="text-sm font-medium text-muted-foreground mr-2">Filter by payer:</span>
+              {[
+                { value: "all", label: "All" },
+                { value: "me", label: "Me" },
+                { value: "partner", label: "Partner" },
+                { value: "me-partner", label: "Me/Partner" },
+                { value: "bride-parents", label: "Bride's Family" },
+                { value: "groom-parents", label: "Groom's Family" },
+              ].map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setPayerFilter(option.value)}
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                    payerFilter === option.value
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground hover-elevate"
+                  }`}
+                  data-testid={`button-filter-payer-${option.value}`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {expensesLoading ? (
@@ -701,9 +731,33 @@ export default function Expenses() {
             <div className="text-center py-8 text-muted-foreground" data-testid="text-no-expenses">
               No expenses yet. Add your first expense to start tracking.
             </div>
-          ) : (
-            <div className="space-y-4">
-              {expenses.map((expense) => {
+          ) : (() => {
+              const filteredExpenses = expenses.filter((expense) => {
+                if (payerFilter === "all") return true;
+                // Handle legacy "bride"/"groom" paidById (old couple/individual data)
+                if (payerFilter === "me-partner") {
+                  return expense.paidById === "me-partner" || expense.paidById === "bride" || expense.paidById === "couple";
+                }
+                if (payerFilter === "me") {
+                  return expense.paidById === "me" || expense.paidById === "bride";
+                }
+                if (payerFilter === "partner") {
+                  return expense.paidById === "partner" || expense.paidById === "groom";
+                }
+                return expense.paidById === payerFilter;
+              });
+              
+              if (filteredExpenses.length === 0) {
+                return (
+                  <div className="text-center py-8 text-muted-foreground" data-testid="text-no-filtered-expenses">
+                    No expenses match the selected filter. Try selecting "All" or a different payer.
+                  </div>
+                );
+              }
+              
+              return (
+                <div className="space-y-4">
+                  {filteredExpenses.map((expense) => {
                 const event = events.find((e) => e.id === expense.eventId);
                 const category = budgetCategories.find((c) => c.id === expense.categoryId);
                 const hasAllocations = expense.eventAllocations && expense.eventAllocations.length > 0;
@@ -735,7 +789,7 @@ export default function Expenses() {
                           <Badge variant="secondary">{expense.splitType}</Badge>
                         </div>
                         <p className="text-sm text-muted-foreground mt-1">
-                          Paid by {expense.paidByName} on {format(new Date(expense.expenseDate), "MMM d, yyyy")}
+                          Paid by {expense.paidByName === "Couple" ? "Me/Partner" : expense.paidByName} on {format(new Date(expense.expenseDate), "MMM d, yyyy")}
                         </p>
                         {hasAllocations && allocatedEvents.length > 0 && (
                           <div className="mt-2 text-sm text-muted-foreground">
@@ -809,8 +863,9 @@ export default function Expenses() {
                   </div>
                 );
               })}
-            </div>
-          )}
+                </div>
+              );
+            })()}
         </CardContent>
       </Card>
 

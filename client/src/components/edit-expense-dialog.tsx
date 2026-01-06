@@ -17,7 +17,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   other: "Other Expenses",
 };
 
-type PayerType = "couple" | "bride_family" | "groom_family";
+type PayerType = "me" | "partner" | "me_partner" | "bride_family" | "groom_family";
 
 export interface ExpenseWithDetails extends Expense {
   eventAllocations?: ExpenseEventAllocation[];
@@ -49,7 +49,7 @@ export function EditExpenseDialog({
   const [expenseDate, setExpenseDate] = useState("");
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [paymentStatus, setPaymentStatus] = useState<"partial" | "paid">("partial");
-  const [payer, setPayer] = useState<PayerType>("couple");
+  const [payer, setPayer] = useState<PayerType>("me_partner");
   const [notes, setNotes] = useState("");
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
   const [splitType, setSplitType] = useState<"full" | "split">("full");
@@ -74,12 +74,18 @@ export function EditExpenseDialog({
       setPaymentStatus((expense.paymentStatus as "partial" | "paid") || "partial");
       setNotes(expense.notes || "");
       
-      if (expense.paidById === "bride-parents") {
+      if (expense.paidById === "me") {
+        setPayer("me");
+      } else if (expense.paidById === "partner") {
+        setPayer("partner");
+      } else if (expense.paidById === "me-partner" || expense.paidById === "bride") {
+        setPayer("me_partner");
+      } else if (expense.paidById === "bride-parents") {
         setPayer("bride_family");
       } else if (expense.paidById === "groom-parents") {
         setPayer("groom_family");
       } else {
-        setPayer("couple");
+        setPayer("me_partner");
       }
       
       if (expense.eventAllocations && expense.eventAllocations.length > 0) {
@@ -136,12 +142,16 @@ export function EditExpenseDialog({
       : (parseFloat(amountPaid.replace(/,/g, "")) || 0);
 
     const payerIdMap: Record<PayerType, string> = {
-      couple: "bride",
+      me: "me",
+      partner: "partner",
+      me_partner: "me-partner",
       bride_family: "bride-parents",
       groom_family: "groom-parents",
     };
     const payerNameMap: Record<PayerType, string> = {
-      couple: "Couple",
+      me: "Me",
+      partner: "Partner",
+      me_partner: "Me/Partner",
       bride_family: "Bride's Family",
       groom_family: "Groom's Family",
     };
@@ -157,10 +167,10 @@ export function EditExpenseDialog({
       
       if (couplePercent > 0) {
         splits.push({
-          userId: "bride",
-          userName: "Couple",
+          userId: "me-partner",
+          userName: "Me/Partner",
           shareAmount: ((couplePercent / 100) * parsedAmount).toFixed(2),
-          isPaid: payer === "couple",
+          isPaid: payer === "me" || payer === "partner" || payer === "me_partner",
         });
       }
       if (bridePercent > 0) {
@@ -342,13 +352,37 @@ export function EditExpenseDialog({
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
-                onClick={() => setPayer("couple")}
+                onClick={() => setPayer("me")}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  payer === "couple"
+                  payer === "me"
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted text-muted-foreground hover-elevate"
                 }`}
-                data-testid="button-edit-payer-couple"
+                data-testid="button-edit-payer-me"
+              >
+                Me
+              </button>
+              <button
+                type="button"
+                onClick={() => setPayer("partner")}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  payer === "partner"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover-elevate"
+                }`}
+                data-testid="button-edit-payer-partner"
+              >
+                Partner
+              </button>
+              <button
+                type="button"
+                onClick={() => setPayer("me_partner")}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  payer === "me_partner"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover-elevate"
+                }`}
+                data-testid="button-edit-payer-me-partner"
               >
                 Me/Partner
               </button>
@@ -413,7 +447,7 @@ export function EditExpenseDialog({
             {splitType === "split" && (
               <div className="mt-3 p-4 bg-muted/50 rounded-lg space-y-3">
                 <div className="flex items-center gap-3">
-                  <span className="text-sm w-28">Couple</span>
+                  <span className="text-sm w-28">Me/Partner</span>
                   <Input
                     type="number"
                     min="0"

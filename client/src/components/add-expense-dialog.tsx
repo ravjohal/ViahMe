@@ -206,7 +206,7 @@ interface AddExpenseDialogProps {
   weddingTradition?: string;
 }
 
-type PayerType = "couple" | "bride_family" | "groom_family";
+type PayerType = "me" | "partner" | "me_partner" | "bride_family" | "groom_family";
 
 export function AddExpenseDialog({ 
   open, 
@@ -225,7 +225,7 @@ export function AddExpenseDialog({
   const [expenseDate, setExpenseDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
-  const [payer, setPayer] = useState<PayerType>("couple");
+  const [payer, setPayer] = useState<PayerType>("me_partner");
   const [notes, setNotes] = useState("");
   const [paymentStatus, setPaymentStatus] = useState<"partial" | "paid">("paid");
   const [showNotesSection, setShowNotesSection] = useState(false);
@@ -274,7 +274,7 @@ export function AddExpenseDialog({
     setExpenseDate(new Date().toISOString().split('T')[0]);
     setSelectedEvents([]);
     setSelectedCategoryId(null);
-    setPayer("couple");
+    setPayer("me_partner");
     setNotes("");
     setPaymentStatus("paid");
     setShowNotesSection(false);
@@ -357,12 +357,16 @@ export function AddExpenseDialog({
     }
 
     const payerIdMap: Record<PayerType, string> = {
-      couple: "bride",
+      me: "me",
+      partner: "partner",
+      me_partner: "me-partner",
       bride_family: "bride-parents",
       groom_family: "groom-parents",
     };
     const payerNameMap: Record<PayerType, string> = {
-      couple: "Couple",
+      me: "Me",
+      partner: "Partner",
+      me_partner: "Me/Partner",
       bride_family: "Bride's Family",
       groom_family: "Groom's Family",
     };
@@ -378,10 +382,10 @@ export function AddExpenseDialog({
       
       if (couplePercent > 0) {
         splits.push({
-          userId: "bride",
-          userName: "Couple",
+          userId: "me-partner",
+          userName: "Me/Partner",
           shareAmount: ((couplePercent / 100) * parsedAmount).toFixed(2),
-          isPaid: payer === "couple",
+          isPaid: payer === "me" || payer === "partner" || payer === "me_partner",
         });
       }
       if (bridePercent > 0) {
@@ -663,13 +667,37 @@ export function AddExpenseDialog({
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
-                onClick={() => setPayer("couple")}
+                onClick={() => setPayer("me")}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  payer === "couple"
+                  payer === "me"
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted text-muted-foreground hover-elevate"
                 }`}
-                data-testid="button-payer-couple"
+                data-testid="button-payer-me"
+              >
+                Me
+              </button>
+              <button
+                type="button"
+                onClick={() => setPayer("partner")}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  payer === "partner"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover-elevate"
+                }`}
+                data-testid="button-payer-partner"
+              >
+                Partner
+              </button>
+              <button
+                type="button"
+                onClick={() => setPayer("me_partner")}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  payer === "me_partner"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover-elevate"
+                }`}
+                data-testid="button-payer-me-partner"
               >
                 Me/Partner
               </button>
@@ -734,7 +762,7 @@ export function AddExpenseDialog({
             {splitType === "split" && (
               <div className="mt-3 p-4 bg-muted/50 rounded-lg space-y-3">
                 <div className="flex items-center gap-3">
-                  <span className="text-sm w-28">Couple</span>
+                  <span className="text-sm w-28">Me/Partner</span>
                   <Input
                     type="number"
                     min="0"
