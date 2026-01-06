@@ -233,7 +233,7 @@ export function VendorDirectory({
   const [filterHasEmail, setFilterHasEmail] = useState(false);
   const [showCategoryGuide, setShowCategoryGuide] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const VENDORS_PER_PAGE = 12;
+  const VENDORS_PER_PAGE = 10;
 
   // Calculate available cities first (with normalization to merge duplicates)
   const availableCities = useMemo(() => {

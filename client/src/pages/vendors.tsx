@@ -44,15 +44,12 @@ export default function Vendors() {
 
   const wedding = weddings?.[0];
 
-  // Pagination state for non-logged-in users
+  // Pagination state for non-logged-in users (no longer needed - all fetched, frontend paginates)
   const [vendorPage, setVendorPage] = useState(1);
-  const VENDORS_PAGE_SIZE = 50;
 
-  // For logged-in users, fetch all vendors (needed for favorites/bookings matching)
-  // For non-logged-in users, use paginated API
-  const vendorQueryKey = user 
-    ? "/api/vendors" 
-    : `/api/vendors?page=${vendorPage}&pageSize=${VENDORS_PAGE_SIZE}`;
+  // Fetch all vendors for both logged-in and non-logged-in users
+  // Frontend handles pagination display
+  const vendorQueryKey = "/api/vendors";
     
   const { data: vendorsData, isLoading: vendorsLoading } = useQuery<
     Vendor[] | { data: Vendor[]; page: number; pageSize: number; total: number; totalPages: number }
