@@ -634,7 +634,7 @@ export function VendorDirectory({
 
           <div className="flex items-center justify-between pt-2 border-t">
             <span className="text-sm text-muted-foreground" data-testid="text-vendor-count">
-              Showing <span className="font-semibold text-foreground">{filteredVendors.length}</span> of {vendors.length} vendors
+              Showing <span className="font-semibold text-foreground">{startIndex + 1}-{Math.min(endIndex, regularVendors.length)}</span> of {regularVendors.length} vendors
             </span>
             {(searchTerm || categoryFilter !== "all" || priceFilter !== "all" || cityFilter !== "all" || filterHasContact || filterBookable || filterHasInstagram || filterHasWebsite || filterHasEmail) && (
               <Button
