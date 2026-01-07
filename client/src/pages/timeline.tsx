@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import type { Event, InsertEvent, EventCostItem, Task } from "@shared/schema";
 import { EventDetailModal } from "@/components/event-detail-modal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -555,6 +555,17 @@ export default function TimelinePage() {
 
   const { data: viewingEventTasks = [], isLoading: viewingEventTasksLoading } = useQuery<Task[]>({
     queryKey: ["/api/tasks", wedding?.id],
+    enabled: !!wedding?.id,
+  });
+
+  // Budget summary for timeline page
+  const { data: expenseTotals } = useQuery<{
+    bucketTotals: Array<{ bucket: string; label: string; allocated: number; spent: number; remaining: number }>;
+    totalSpent: number;
+    totalAllocated: number;
+    totalRemaining: number;
+  }>({
+    queryKey: ["/api/expenses", wedding?.id, "totals"],
     enabled: !!wedding?.id,
   });
 
@@ -1155,70 +1166,37 @@ export default function TimelinePage() {
         </Card>
       )}
 
-      {/* Ceremony Cost Estimates - collapsible */}
-      {eventsWithBreakdowns.length > 0 && (
-        <Collapsible open={showCostEstimates} onOpenChange={setShowCostEstimates} className="mb-6">
-          <Card className="overflow-hidden">
-            <CollapsibleTrigger asChild>
-              <button
-                className="w-full p-4 flex items-center justify-between hover-elevate"
-                data-testid="toggle-cost-estimates"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
-                    <DollarSign className="w-5 h-5 text-emerald-600" />
-                  </div>
-                  <div className="text-left">
-                    <h3 className="font-semibold">Ceremony Cost Estimates</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {formatEstimate(totalEstimateLow)} - {formatEstimate(totalEstimateHigh)} total across {eventsWithBreakdowns.length} events
-                    </p>
-                  </div>
+      {/* Budget Summary - links to Budget page */}
+      {wedding && (
+        <Card className="mb-6 overflow-hidden">
+          <Link href="/budget" className="block">
+            <div
+              className="w-full p-4 flex items-center justify-between hover-elevate"
+              data-testid="link-budget-summary"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
+                  <DollarSign className="w-5 h-5 text-emerald-600" />
                 </div>
-                {showCostEstimates ? (
-                  <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                ) : (
-                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                )}
-              </button>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <div className="px-4 pb-4 space-y-3 border-t">
-                <p className="text-xs text-muted-foreground pt-3">
-                  Based on typical costs for your tradition and guest counts. Actual costs may vary by vendor and location.
-                </p>
-                {eventsWithBreakdowns.map(event => {
-                  const estimate = getCeremonyEstimate(event);
-                  if (!estimate) return null;
-                  const colors = EVENT_COLORS[event.type || "custom"] || EVENT_COLORS.custom;
-                  return (
-                    <div
-                      key={event.id}
-                      className={`flex items-center justify-between p-3 rounded-lg ${colors.bg} border ${colors.border}`}
-                      data-testid={`row-event-estimate-${event.id}`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium" data-testid={`text-event-name-${event.id}`}>{event.name}</span>
-                        <Badge variant="secondary" className="text-xs" data-testid={`badge-guest-count-${event.id}`}>
-                          {estimate.guestCount} guests
-                        </Badge>
-                      </div>
-                      <span className="font-semibold" data-testid={`text-event-estimate-${event.id}`}>
-                        {formatEstimate(estimate.low)} - {formatEstimate(estimate.high)}
-                      </span>
-                    </div>
-                  );
-                })}
-                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg font-semibold" data-testid="row-total-estimate">
-                  <span>Total Estimate</span>
-                  <span className="text-lg" data-testid="text-total-estimate">
-                    {formatEstimate(totalEstimateLow)} - {formatEstimate(totalEstimateHigh)}
-                  </span>
+                <div className="text-left">
+                  <h3 className="font-semibold">Budget Overview</h3>
+                  <p className="text-sm text-muted-foreground">
+                    ${(expenseTotals?.totalSpent || 0).toLocaleString()} spent of ${parseFloat(wedding.totalBudget || "0").toLocaleString()} budget
+                  </p>
                 </div>
               </div>
-            </CollapsibleContent>
-          </Card>
-        </Collapsible>
+              <div className="flex items-center gap-3">
+                <div className="text-right">
+                  <p className={`font-bold font-mono ${(expenseTotals?.totalRemaining || 0) < 0 ? 'text-destructive' : 'text-emerald-600'}`}>
+                    ${(expenseTotals?.totalRemaining ?? parseFloat(wedding.totalBudget || "0")).toLocaleString()}
+                  </p>
+                  <p className="text-xs text-muted-foreground">remaining</p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-muted-foreground" />
+              </div>
+            </div>
+          </Link>
+        </Card>
       )}
 
       <Dialog open={wizardOpen} onOpenChange={(open) => {
