@@ -1,6 +1,5 @@
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
 import { DollarSign, TrendingUp, AlertCircle } from "lucide-react";
 import type { BudgetCategory } from "@shared/schema";
 
@@ -9,17 +8,6 @@ interface BudgetDashboardProps {
   totalBudget: string;
   onNavigate?: () => void;
 }
-
-const CATEGORY_LABELS: Record<string, string> = {
-  catering: "Catering & Food",
-  venue: "Venue & Rentals",
-  entertainment: "Entertainment",
-  photography: "Photography & Video",
-  decoration: "Decoration & Flowers",
-  attire: "Attire & Beauty",
-  transportation: "Transportation",
-  other: "Other Expenses",
-};
 
 export function BudgetDashboard({ categories, totalBudget, onNavigate }: BudgetDashboardProps) {
   const total = parseFloat(totalBudget || "0");
@@ -93,59 +81,27 @@ export function BudgetDashboard({ categories, totalBudget, onNavigate }: BudgetD
         </Card>
       </div>
 
-      <Card className="p-6">
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">Overall Budget Usage</span>
-            <span className="font-mono text-sm font-semibold">
-              {budgetPercentage.toFixed(1)}%
-            </span>
-          </div>
-          <Progress value={budgetPercentage} className="h-3" />
+      <Card 
+        className={`p-6 ${onNavigate ? 'cursor-pointer hover-elevate' : ''}`}
+        onClick={onNavigate}
+        data-testid="card-budget-progress"
+      >
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium">Overall Budget Usage</span>
+          <span className="font-mono text-sm font-semibold">
+            {budgetPercentage.toFixed(1)}%
+          </span>
         </div>
-
-        <div className="space-y-4">
-          {categories.map((category) => {
-            const allocated = parseFloat(category.allocatedAmount.toString());
-            const spent = parseFloat(category.spentAmount?.toString() || "0");
-            const percentage = allocated > 0 ? (spent / allocated) * 100 : 0;
-            const isOverBudget = spent > allocated;
-
-            return (
-              <button
-                key={category.id}
-                onClick={onNavigate}
-                className={`w-full text-left space-y-2 p-2 -mx-2 rounded-lg ${onNavigate ? 'cursor-pointer hover-elevate' : ''}`}
-                data-testid={`row-category-${category.category}`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">
-                      {CATEGORY_LABELS[category.category] || category.category}
-                    </span>
-                    {isOverBudget && (
-                      <Badge variant="destructive" className="text-xs">
-                        Over Budget
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono text-sm text-muted-foreground">
-                      ${spent.toLocaleString()} / ${allocated.toLocaleString()}
-                    </span>
-                    <span className="font-mono text-sm font-semibold min-w-[50px] text-right">
-                      {percentage.toFixed(0)}%
-                    </span>
-                  </div>
-                </div>
-                <Progress
-                  value={Math.min(percentage, 100)}
-                  className={`h-2 ${isOverBudget ? "bg-destructive/20" : ""}`}
-                />
-              </button>
-            );
-          })}
-        </div>
+        <Progress 
+          value={budgetPercentage} 
+          className={`h-3 ${budgetPercentage > 100 ? "bg-destructive/20" : ""}`} 
+        />
+        {budgetPercentage > 90 && budgetPercentage <= 100 && (
+          <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">Approaching budget limit</p>
+        )}
+        {budgetPercentage > 100 && (
+          <p className="text-xs text-destructive mt-2">Over budget by ${(totalSpent - total).toLocaleString()}</p>
+        )}
       </Card>
     </div>
   );
