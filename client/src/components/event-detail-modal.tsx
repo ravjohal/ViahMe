@@ -34,12 +34,31 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 const EVENT_TYPES: Record<string, { icon: string; label: string }> = {
+  // Sikh ceremonies
   paath: { icon: "🙏", label: "Paath" },
-  mehndi: { icon: "🎨", label: "Mehndi" },
   maiyan: { icon: "✨", label: "Maiyan" },
-  sangeet: { icon: "🎵", label: "Sangeet" },
+  chunni_chadana: { icon: "🧣", label: "Chunni Chadana" },
+  jaggo: { icon: "🪔", label: "Jaggo" },
+  chooda: { icon: "💍", label: "Chooda" },
+  bakra_party: { icon: "🎊", label: "Bakra Party" },
   anand_karaj: { icon: "🛕", label: "Anand Karaj" },
+  // Hindu ceremonies
+  haldi: { icon: "💛", label: "Haldi" },
+  mehndi: { icon: "🎨", label: "Mehndi" },
+  sangeet: { icon: "🎵", label: "Sangeet" },
+  baraat: { icon: "🐎", label: "Baraat" },
+  milni: { icon: "🤝", label: "Milni" },
+  pheras: { icon: "🔥", label: "Pheras" },
+  vidaai: { icon: "👋", label: "Vidaai" },
+  // Muslim ceremonies
+  nikah: { icon: "💒", label: "Nikah" },
+  walima: { icon: "🍽️", label: "Walima" },
+  // General
   reception: { icon: "🎉", label: "Reception" },
+  cocktail: { icon: "🍸", label: "Cocktail Party" },
+  rehearsal_dinner: { icon: "🍷", label: "Rehearsal Dinner" },
+  bridal_shower: { icon: "🎁", label: "Bridal Shower" },
+  bachelor_party: { icon: "🥳", label: "Bachelor/Bachelorette" },
   custom: { icon: "📅", label: "Custom Event" },
 };
 
