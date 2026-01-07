@@ -1496,9 +1496,9 @@ export default function TimelinePage() {
             });
           }
         }}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
             <DialogHeader>
-              <DialogTitle>{editingEvent ? "Edit Event" : "Create New Event"}</DialogTitle>
+              <DialogTitle className="text-lg sm:text-xl">{editingEvent ? "Edit Event" : "Create New Event"}</DialogTitle>
             </DialogHeader>
 
             <Form {...form}>
@@ -1549,7 +1549,7 @@ export default function TimelinePage() {
                   )}
                 />
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <FormField
                     control={form.control}
                     name="date"
@@ -1648,7 +1648,7 @@ export default function TimelinePage() {
                   )}
                 />
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <FormField
                     control={form.control}
                     name="costPerHead"
@@ -1721,11 +1721,11 @@ export default function TimelinePage() {
                       <FormDescription className="text-xs">
                         Is this event for both families or hosted by one side?
                       </FormDescription>
-                      <div className="flex gap-2 flex-wrap pt-1">
+                      <div className="grid grid-cols-3 gap-2 pt-1">
                         {[
-                          { value: "mutual", label: "Shared", description: "Both families" },
-                          { value: "bride", label: "Bride's Side", description: "Bride's family" },
-                          { value: "groom", label: "Groom's Side", description: "Groom's family" },
+                          { value: "mutual", label: "Shared", description: "Both" },
+                          { value: "bride", label: "Bride", description: "Bride's side" },
+                          { value: "groom", label: "Groom", description: "Groom's side" },
                         ].map((option) => {
                           const colors = SIDE_COLORS[option.value as keyof typeof SIDE_COLORS];
                           const isSelected = field.value === option.value;
@@ -1734,15 +1734,15 @@ export default function TimelinePage() {
                               key={option.value}
                               type="button"
                               onClick={() => field.onChange(option.value)}
-                              className={`flex-1 min-w-[100px] px-3 py-2 rounded-lg border-2 transition-all text-left hover-elevate ${
+                              className={`px-2 sm:px-3 py-2 rounded-lg border-2 transition-all text-center hover-elevate ${
                                 isSelected 
                                   ? `${colors.bg} ${colors.border} ${colors.text}` 
                                   : "border-muted bg-muted/20 text-muted-foreground hover:border-muted-foreground/50"
                               }`}
                               data-testid={`button-side-${option.value}`}
                             >
-                              <div className="font-medium text-sm">{option.label}</div>
-                              <div className="text-xs opacity-75">{option.description}</div>
+                              <div className="font-medium text-xs sm:text-sm">{option.label}</div>
+                              <div className="text-[10px] sm:text-xs opacity-75 hidden sm:block">{option.description}</div>
                             </button>
                           );
                         })}
