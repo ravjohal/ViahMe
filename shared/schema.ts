@@ -209,6 +209,7 @@ export const insertEventSchema = createInsertSchema(events).omit({
   type: z.enum([
     // Sikh events
     'engagement', 'paath', 'mehndi', 'maiyan', 'sangeet', 'anand_karaj', 'reception', 'day_after',
+    'chunni_chadana', 'jaggo', 'chooda', 'bakra_party', 'baraat', 'milni',
     // Hindu events
     'haldi', 'mehendi', 'sangeet_hindu', 'pheras', 'vidaai', 'tilak', 'chunni_ceremony',
     // Muslim events
@@ -217,6 +218,8 @@ export const insertEventSchema = createInsertSchema(events).omit({
     'mandvo_mahurat', 'pithi', 'garba', 'jaan', 'pheras_gujarati', 'vidaai_gujarati',
     // South Indian events
     'vratham', 'nalugu', 'muhurtham', 'oonjal', 'saptapadi', 'arundhati',
+    // General/Western-style
+    'cocktail', 'rehearsal_dinner', 'bridal_shower', 'bachelor_party',
     // Generic
     'custom', 'other'
   ]),
