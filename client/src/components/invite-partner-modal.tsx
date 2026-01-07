@@ -204,27 +204,27 @@ export function InvitePartnerModal({
 
     try {
       let roleId = partnerRole?.id;
-      console.log("[InvitePartnerModal] Starting - existing roleId:", roleId);
       
       if (!roleId) {
-        console.log("[InvitePartnerModal] Creating new partner role...");
         const newRole = await createPartnerRoleMutation.mutateAsync();
-        console.log("[InvitePartnerModal] New role created:", newRole);
+        if (!newRole || !newRole.id) {
+          throw new Error("Role created but no ID returned");
+        }
         roleId = newRole.id;
       } else {
-        console.log("[InvitePartnerModal] Updating existing role permissions...");
         await updateRolePermissionsMutation.mutateAsync(roleId);
-        console.log("[InvitePartnerModal] Permissions updated");
       }
 
-      console.log("[InvitePartnerModal] About to call inviteMutation with:", { email: email.trim(), roleId });
-      inviteMutation.mutate({ email: email.trim(), roleId });
-      console.log("[InvitePartnerModal] inviteMutation.mutate called");
+      if (!roleId) {
+        throw new Error("No role ID available to send invitation");
+      }
+
+      await inviteMutation.mutateAsync({ email: email.trim(), roleId });
     } catch (error: any) {
-      console.error("[InvitePartnerModal] Failed to setup partner role:", error);
+      console.error("[InvitePartnerModal] Error:", error);
       toast({
-        title: "Error Setting Up Partner Role",
-        description: error?.message || "Failed to configure partner permissions. Please try again.",
+        title: "Error",
+        description: error?.message || "Failed to send invitation. Please try again.",
         variant: "destructive",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/weddings", weddingId, "roles"] });
