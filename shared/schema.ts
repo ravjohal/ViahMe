@@ -2562,6 +2562,150 @@ export type CollaboratorWithDetails = WeddingCollaborator & {
 };
 
 // ============================================================================
+// RITUAL ROLES - Ceremony-specific micro-roles for guests
+// ============================================================================
+
+// Ritual Role Assignments - Assign specific ceremonial duties to guests
+export const ritualRoleAssignments = pgTable("ritual_role_assignments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  eventId: varchar("event_id").notNull(), // Which ceremony this role is for
+  guestId: varchar("guest_id").notNull(), // The guest assigned to this role
+  roleName: text("role_name").notNull(), // 'palla_holder', 'milni_coordinator', 'shoe_guardian', etc.
+  roleDisplayName: text("role_display_name").notNull(), // User-friendly name
+  description: text("description"), // What this role entails
+  instructions: text("instructions"), // Detailed instructions for the guest
+  timing: text("timing"), // When they need to perform this duty
+  location: text("location"), // Where they need to be
+  attireNotes: text("attire_notes"), // Special attire requirements
+  priority: text("priority").notNull().default("medium"), // 'high' | 'medium' | 'low'
+  status: text("status").notNull().default("assigned"), // 'assigned' | 'acknowledged' | 'completed'
+  acknowledgedAt: timestamp("acknowledged_at"), // When the guest acknowledged the role
+  notificationSent: boolean("notification_sent").default(false), // Has mission card been sent
+  notificationSentAt: timestamp("notification_sent_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertRitualRoleAssignmentSchema = createInsertSchema(ritualRoleAssignments).omit({
+  id: true,
+  acknowledgedAt: true,
+  notificationSent: true,
+  notificationSentAt: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  priority: z.enum(["high", "medium", "low"]).optional(),
+  status: z.enum(["assigned", "acknowledged", "completed"]).optional(),
+});
+
+export type InsertRitualRoleAssignment = z.infer<typeof insertRitualRoleAssignmentSchema>;
+export type RitualRoleAssignment = typeof ritualRoleAssignments.$inferSelect;
+
+// Predefined ritual role templates by ceremony type
+export const RITUAL_ROLE_TEMPLATES: Record<string, Array<{
+  roleName: string;
+  roleDisplayName: string;
+  description: string;
+  instructions: string;
+  timing: string;
+  priority: "high" | "medium" | "low";
+}>> = {
+  // Sikh ceremonies
+  anand_karaj: [
+    { roleName: "ardas_leader", roleDisplayName: "Ardas Leader", description: "Lead the opening and closing Ardas prayers", instructions: "Stand at the front near the Guru Granth Sahib. Lead the congregation in reciting the Ardas prayer. Speak clearly and with reverence.", timing: "At the beginning and end of the ceremony", priority: "high" },
+    { roleName: "palla_holder", roleDisplayName: "Palla Holder", description: "Hold the groom's palla (scarf) during the ceremony", instructions: "Stand behind the bride. Hold one end of the palla that connects the bride to the groom during the Lavaan (4 circles around the Guru Granth Sahib).", timing: "During the Lavaan ceremony", priority: "high" },
+    { roleName: "rumala_sahib", roleDisplayName: "Rumala Sahib Attendant", description: "Manage the ceremonial cloth covering", instructions: "Gently wave the chaur (ceremonial whisk) over the Guru Granth Sahib. Handle the rumala (cloth covering) with respect.", timing: "Throughout the ceremony", priority: "medium" },
+    { roleName: "langar_coordinator", roleDisplayName: "Langar Coordinator", description: "Oversee the community meal service", instructions: "Coordinate with the Gurdwara kitchen. Ensure guests are seated properly and served promptly. Manage the flow of diners.", timing: "After the ceremony", priority: "medium" },
+    { roleName: "milni_organizer", roleDisplayName: "Milni Organizer", description: "Organize the Milni garland exchange", instructions: "Line up family members from both sides in order (fathers first, then uncles, etc.). Call out names and guide each pair to exchange garlands.", timing: "Before the main ceremony", priority: "high" },
+    { roleName: "shoe_guardian", roleDisplayName: "Joota Chupai Captain", description: "Lead the shoe-hiding game team", instructions: "Coordinate with bride's siblings/cousins to 'steal' the groom's shoes. Negotiate the ransom with groom's side. Keep it fun!", timing: "During the ceremony when groom removes shoes", priority: "low" },
+  ],
+  paath: [
+    { roleName: "paathi", roleDisplayName: "Paathi (Reader)", description: "Read from the Guru Granth Sahib", instructions: "Read the assigned portion of the Sukhmani Sahib or other prayer. Maintain a steady, clear pace.", timing: "As scheduled during the Paath", priority: "high" },
+    { roleName: "degh_server", roleDisplayName: "Degh Server", description: "Serve the blessed prasad", instructions: "Distribute the karah prasad (blessed sweet) to all attendees at the end of the Paath.", timing: "After the Bhog (completion)", priority: "medium" },
+  ],
+  maiyan: [
+    { roleName: "maiyan_leader", roleDisplayName: "Maiyan Ceremony Leader", description: "Lead the turmeric application ceremony", instructions: "Begin by applying the maiyan (turmeric mixture) to the bride/groom's face, hands, and feet. Sing traditional songs!", timing: "Start of the Maiyan ceremony", priority: "high" },
+    { roleName: "vatna_preparer", roleDisplayName: "Vatna Mixture Preparer", description: "Prepare the turmeric paste", instructions: "Mix turmeric, mustard oil, and other traditional ingredients. Have the mixture ready before the ceremony begins.", timing: "Before the ceremony", priority: "medium" },
+    { roleName: "dhol_player_coordinator", roleDisplayName: "Dhol Coordinator", description: "Coordinate with the dhol players", instructions: "Ensure dhol players know the timing. Signal them to start/stop at key moments.", timing: "Throughout the ceremony", priority: "medium" },
+  ],
+  jaggo: [
+    { roleName: "jaggo_pot_carrier", roleDisplayName: "Jaggo Pot Carrier", description: "Carry the decorated brass pot (gaggar) on your head", instructions: "Balance the decorated pot with lit candles on your head. Lead the dancing procession through the neighborhood.", timing: "During the Jaggo procession", priority: "high" },
+    { roleName: "jaggo_song_leader", roleDisplayName: "Jaggo Song Leader", description: "Lead the traditional Jaggo songs", instructions: "Know the traditional Jaggo songs. Lead the group in singing as they dance through the streets.", timing: "Throughout the Jaggo", priority: "high" },
+  ],
+  chooda: [
+    { roleName: "mama_chooda", roleDisplayName: "Maternal Uncle (Chooda Giver)", description: "Present the red and white bangles to the bride", instructions: "Wash the bride's hands ceremonially. Place the chooda (bangles) on her wrists. This is a very emotional moment.", timing: "Morning of the wedding", priority: "high" },
+    { roleName: "kalire_tier", roleDisplayName: "Kalire Tier", description: "Tie the kalire (golden ornaments) to the chooda", instructions: "After the chooda is placed, tie the decorative kalire to the bride's bangles.", timing: "After chooda ceremony", priority: "medium" },
+  ],
+  chunni_chadana: [
+    { roleName: "chunni_presenter", roleDisplayName: "Chunni Presenter", description: "Present the chunni (scarf) to the bride", instructions: "Carry the ceremonial chunni on a decorated tray. Present it to the bride's family.", timing: "During the ceremony", priority: "high" },
+    { roleName: "gift_coordinator", roleDisplayName: "Gift Coordinator", description: "Manage the exchange of gifts", instructions: "Organize the gifts from both families. Ensure proper presentation and documentation.", timing: "Throughout the ceremony", priority: "medium" },
+  ],
+  // Hindu ceremonies
+  haldi: [
+    { roleName: "haldi_applicator_lead", roleDisplayName: "Lead Haldi Applicator", description: "Start the haldi application ceremony", instructions: "Be the first to apply haldi paste to the bride/groom. Apply to face, arms, and feet. Encourage others to join!", timing: "Start of Haldi ceremony", priority: "high" },
+    { roleName: "haldi_mixer", roleDisplayName: "Haldi Paste Preparer", description: "Prepare the turmeric paste", instructions: "Mix fresh turmeric with sandalwood, rose water, and milk. Have bowls ready for family members.", timing: "Before the ceremony", priority: "medium" },
+  ],
+  mehndi: [
+    { roleName: "mehndi_coordinator", roleDisplayName: "Mehndi Night Coordinator", description: "Oversee the mehndi celebration", instructions: "Coordinate with mehndi artists. Manage the queue of guests wanting henna. Keep the energy high!", timing: "Throughout the evening", priority: "medium" },
+    { roleName: "dance_mc", roleDisplayName: "Dance Performance MC", description: "MC for dance performances", instructions: "Announce each dance performance. Keep the crowd engaged between sets.", timing: "During entertainment portion", priority: "medium" },
+  ],
+  sangeet: [
+    { roleName: "sangeet_emcee", roleDisplayName: "Sangeet Emcee", description: "Host and MC the Sangeet night", instructions: "Welcome guests. Introduce each dance performance. Keep energy high. Manage transitions between acts.", timing: "Throughout the event", priority: "high" },
+    { roleName: "performance_coordinator", roleDisplayName: "Performance Coordinator", description: "Manage backstage and performer lineup", instructions: "Ensure performers are ready. Cue each group. Manage costume changes and props.", timing: "Throughout performances", priority: "high" },
+    { roleName: "av_coordinator", roleDisplayName: "AV Coordinator", description: "Manage music and video", instructions: "Work with DJ/sound system. Queue up performance tracks. Handle any AV issues.", timing: "Throughout the event", priority: "medium" },
+  ],
+  baraat: [
+    { roleName: "baraat_leader", roleDisplayName: "Baraat Leader", description: "Lead the groom's procession", instructions: "Dance at the front of the baraat. Keep energy high. Lead the group toward the venue.", timing: "During baraat procession", priority: "high" },
+    { roleName: "horse_handler", roleDisplayName: "Horse/Mare Handler", description: "Guide the groom's horse or vehicle", instructions: "Walk alongside the horse. Ensure groom's safety. Keep the procession moving at the right pace.", timing: "During baraat", priority: "high" },
+    { roleName: "baraat_photographer", roleDisplayName: "Baraat Photography Coordinator", description: "Coordinate candid baraat photos", instructions: "Work with photographer to capture key moments. Gather family for group shots.", timing: "During baraat", priority: "medium" },
+  ],
+  milni: [
+    { roleName: "milni_announcer", roleDisplayName: "Milni Announcer", description: "Announce each family pair for the Milni", instructions: "Call out the names and relationship of each pair (e.g., 'Fathers of the bride and groom'). Guide them to exchange garlands.", timing: "During Milni ceremony", priority: "high" },
+    { roleName: "milni_envelope_manager", roleDisplayName: "Milni Envelope Manager", description: "Manage the gift envelopes", instructions: "Hand out prepared shagun envelopes to each person before their turn. Collect any reciprocal gifts.", timing: "During Milni", priority: "high" },
+  ],
+  pheras: [
+    { roleName: "agni_keeper", roleDisplayName: "Sacred Fire Keeper", description: "Maintain the sacred fire (Agni)", instructions: "Keep the fire burning at the right intensity. Add ghee or samagri as directed by the priest.", timing: "During the pheras", priority: "high" },
+    { roleName: "phera_guide", roleDisplayName: "Phera Guide", description: "Guide the couple during the seven rounds", instructions: "Walk alongside the couple. Ensure they complete each round properly. Hold the bride's veil if needed.", timing: "During the 7 pheras", priority: "medium" },
+  ],
+  vidaai: [
+    { roleName: "vidaai_organizer", roleDisplayName: "Vidaai Organizer", description: "Organize the farewell ceremony", instructions: "Gather family for the emotional farewell. Ensure rice and flower petals are ready. Guide the bride to the car.", timing: "End of wedding day", priority: "high" },
+    { roleName: "getaway_driver", roleDisplayName: "Getaway Driver", description: "Drive the newlyweds away", instructions: "Have the decorated car ready. Drive safely! Take the scenic route if requested.", timing: "After vidaai", priority: "medium" },
+  ],
+  // Muslim ceremonies
+  nikah: [
+    { roleName: "wali", roleDisplayName: "Wali (Guardian)", description: "Represent the bride in the marriage contract", instructions: "Sit with the bride during the Nikah. Sign the Nikahnama on her behalf if required.", timing: "During Nikah ceremony", priority: "high" },
+    { roleName: "witness_bride", roleDisplayName: "Bride's Witness", description: "Witness the marriage contract for the bride", instructions: "Be present during the signing. Verify the bride's consent. Sign the Nikahnama as witness.", timing: "During contract signing", priority: "high" },
+    { roleName: "witness_groom", roleDisplayName: "Groom's Witness", description: "Witness the marriage contract for the groom", instructions: "Be present during the signing. Verify the terms. Sign the Nikahnama as witness.", timing: "During contract signing", priority: "high" },
+    { roleName: "mahr_coordinator", roleDisplayName: "Mahr Coordinator", description: "Manage the mahr (bridal gift) presentation", instructions: "Prepare and present the mahr to the bride. Ensure it is documented properly.", timing: "During Nikah", priority: "medium" },
+  ],
+  walima: [
+    { roleName: "walima_host", roleDisplayName: "Walima Host", description: "Welcome guests to the reception feast", instructions: "Greet guests at the entrance. Direct them to seating. Ensure they feel welcomed.", timing: "As guests arrive", priority: "high" },
+    { roleName: "walima_coordinator", roleDisplayName: "Walima Coordinator", description: "Coordinate the reception feast", instructions: "Work with caterers. Manage food service timing. Handle any issues.", timing: "Throughout the event", priority: "medium" },
+  ],
+  // General events
+  reception: [
+    { roleName: "reception_emcee", roleDisplayName: "Reception Emcee", description: "MC for the reception", instructions: "Welcome guests. Announce the couple's entrance. Introduce speeches and toasts. Keep the program on track.", timing: "Throughout reception", priority: "high" },
+    { roleName: "toast_coordinator", roleDisplayName: "Toast Coordinator", description: "Coordinate speeches and toasts", instructions: "Line up speakers. Give them time warnings. Manage microphone handoffs.", timing: "During toasts", priority: "medium" },
+    { roleName: "guest_book_attendant", roleDisplayName: "Guest Book Attendant", description: "Manage the guest book station", instructions: "Encourage guests to sign. Provide pens. Help elderly guests if needed.", timing: "During cocktail hour and reception", priority: "low" },
+    { roleName: "gift_table_manager", roleDisplayName: "Gift Table Manager", description: "Oversee the gift table", instructions: "Keep gifts organized. Note who gave what. Ensure card stays with gift. Secure valuable items.", timing: "Throughout reception", priority: "medium" },
+    { roleName: "first_dance_cuer", roleDisplayName: "First Dance Cuer", description: "Cue the couple for their first dance", instructions: "Work with DJ. Clear the dance floor. Signal the couple when music starts.", timing: "For first dance", priority: "medium" },
+  ],
+  cocktail: [
+    { roleName: "cocktail_greeter", roleDisplayName: "Cocktail Hour Greeter", description: "Welcome guests to cocktail hour", instructions: "Direct guests to bar and appetizers. Help them find seating. Make introductions.", timing: "During cocktail hour", priority: "medium" },
+  ],
+  custom: [
+    { roleName: "custom_coordinator", roleDisplayName: "Event Coordinator", description: "Help coordinate this event", instructions: "Assist with event logistics as needed.", timing: "As needed", priority: "medium" },
+  ],
+};
+
+// Type for ritual role with guest details
+export type RitualRoleWithGuest = RitualRoleAssignment & {
+  guest: Guest;
+  event: Event;
+};
+
+// ============================================================================
 // GUEST MANAGEMENT SYSTEM - Advanced guest list management
 // ============================================================================
 
