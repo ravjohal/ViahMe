@@ -15,7 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket, type Wedding, type Event, type Contract, type Vendor, type Expense, type BudgetAllocation } from "@shared/schema";
+import { BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket, type Wedding, type Event, type Contract, type Vendor, type Expense, type BudgetAllocation, type CeremonyBudget } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
@@ -70,6 +70,7 @@ export default function Budget() {
   const [showCategories, setShowCategories] = useState(false);
   const [editingExpense, setEditingExpense] = useState<ExpenseWithAllocations | null>(null);
   const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null);
+  const [showCeremonyBudgets, setShowCeremonyBudgets] = useState(false);
 
   const { data: weddings, isLoading: weddingsLoading } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
@@ -116,6 +117,40 @@ export default function Budget() {
     grandTotal: number;
   }>({
     queryKey: ["/api/weddings", wedding?.id, "cost-summary"],
+    enabled: !!wedding?.id,
+  });
+
+  // Ceremony Budgets (Budget Matrix)
+  interface CeremonyAnalyticsResponse {
+    overview: {
+      totalBudget: number;
+      totalCeremonyAllocated: number;
+      unallocatedBudget: number;
+      percentAllocated: number;
+      isOverAllocated: boolean;
+    };
+    ceremonyBreakdown: Array<{
+      eventId: string;
+      eventName: string;
+      eventDate: string | null;
+      eventType: string | null;
+      allocated: number;
+      spent: number;
+      remaining: number;
+      percentUsed: number;
+      isOverBudget: boolean;
+      hasNoBudget: boolean;
+      expenseCount: number;
+    }>;
+    summary: {
+      totalEvents: number;
+      eventsWithBudget: number;
+      eventsOverBudget: number;
+    };
+  }
+
+  const { data: ceremonyAnalytics } = useQuery<CeremonyAnalyticsResponse>({
+    queryKey: ["/api/budget/ceremony-analytics", wedding?.id],
     enabled: !!wedding?.id,
   });
 
@@ -854,6 +889,123 @@ export default function Budget() {
                     </div>
                   );
                 })}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        </Card>
+
+        {/* Budget by Ceremony (Budget Matrix) */}
+        <Card className="p-4 mb-6">
+          <Collapsible open={showCeremonyBudgets} onOpenChange={setShowCeremonyBudgets}>
+            <CollapsibleTrigger asChild>
+              <button className="flex items-center justify-between w-full" data-testid="toggle-ceremony-budgets">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center">
+                    <Calendar className="w-5 h-5 text-orange-600" />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="font-semibold">Budget by Ceremony</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {ceremonyAnalytics?.summary.eventsWithBudget || 0} of {events.length} events have budgets
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  {ceremonyAnalytics?.overview.isOverAllocated && (
+                    <Badge variant="destructive" className="text-xs">
+                      Over-allocated
+                    </Badge>
+                  )}
+                  {showCeremonyBudgets ? (
+                    <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                  ) : (
+                    <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                  )}
+                </div>
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-4">
+              {/* Allocation Overview */}
+              {ceremonyAnalytics && (
+                <div className="p-4 rounded-lg bg-muted/50 mb-4">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Allocated to Ceremonies</p>
+                      <p className="text-xl font-bold font-mono">
+                        ${ceremonyAnalytics.overview.totalCeremonyAllocated.toLocaleString()}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Unallocated</p>
+                      <p className={`text-xl font-bold font-mono ${ceremonyAnalytics.overview.unallocatedBudget < 0 ? 'text-destructive' : ''}`}>
+                        ${ceremonyAnalytics.overview.unallocatedBudget.toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-muted-foreground">
+                        {ceremonyAnalytics.overview.percentAllocated}% of budget allocated
+                      </p>
+                      {ceremonyAnalytics.summary.eventsOverBudget > 0 && (
+                        <p className="text-xs text-destructive">
+                          {ceremonyAnalytics.summary.eventsOverBudget} event(s) over budget
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Ceremony Breakdown */}
+              <div className="space-y-3">
+                {(ceremonyAnalytics?.ceremonyBreakdown || []).map((ceremony) => {
+                  const percentSpent = ceremony.allocated > 0 ? ceremony.percentUsed : 0;
+
+                  return (
+                    <div 
+                      key={ceremony.eventId} 
+                      className={`p-4 rounded-lg border bg-card ${ceremony.isOverBudget ? 'border-destructive/50' : ''}`}
+                      data-testid={`ceremony-budget-${ceremony.eventId}`}
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <p className="font-medium flex items-center gap-2">
+                            {ceremony.eventName}
+                            {ceremony.isOverBudget && (
+                              <Badge variant="destructive" className="text-xs">Over Budget</Badge>
+                            )}
+                            {ceremony.hasNoBudget && ceremony.spent > 0 && (
+                              <Badge variant="outline" className="text-xs">No Budget Set</Badge>
+                            )}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            ${ceremony.spent.toLocaleString()} of ${ceremony.allocated.toLocaleString()} spent
+                            {ceremony.expenseCount > 0 && ` • ${ceremony.expenseCount} expense${ceremony.expenseCount > 1 ? 's' : ''}`}
+                          </p>
+                        </div>
+                      </div>
+                      {ceremony.allocated > 0 && (
+                        <>
+                          <Progress 
+                            value={Math.min(percentSpent, 100)} 
+                            className={`h-2 ${ceremony.isOverBudget ? '[&>div]:bg-destructive' : ''}`} 
+                          />
+                          <div className="flex justify-between mt-1 text-xs text-muted-foreground">
+                            <span>{percentSpent}% spent</span>
+                            <span className={ceremony.remaining < 0 ? "text-destructive" : "text-emerald-600"}>
+                              ${ceremony.remaining.toLocaleString()} remaining
+                            </span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {(!ceremonyAnalytics?.ceremonyBreakdown || ceremonyAnalytics.ceremonyBreakdown.length === 0) && (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No events found. Add events to start budgeting per ceremony.
+                  </p>
+                )}
               </div>
             </CollapsibleContent>
           </Collapsible>
