@@ -3,7 +3,7 @@ import {
   MessageSquare, Music, Image, UserCircle, ShoppingBag, 
   Package, BookOpen, Radio, UsersRound, Globe, Bot, 
   Calendar, Wallet, BarChart3, Briefcase, Star, Send, Gamepad2,
-  Mic,
+  Mic, Shield,
   type LucideIcon
 } from "lucide-react";
 import type { PermissionCategory } from "@shared/schema";
@@ -106,6 +106,15 @@ export const VENDOR_NAV_SECTIONS: NavSection[] = [
     ],
   },
 ];
+
+export const ADMIN_NAV_SECTION: NavSection = {
+  id: "admin",
+  label: "Site Administration",
+  items: [
+    { path: "/admin/ceremony-templates", label: "Ceremony Templates", icon: BookOpen, description: "Manage ceremony cost templates" },
+    { path: "/admin/vendor-claims", label: "Vendor Claims", icon: Shield, description: "Review vendor claim requests" },
+  ],
+};
 
 export function getAllCoupleNavItems(): NavItem[] {
   return COUPLE_NAV_SECTIONS.flatMap(section => section.items);
