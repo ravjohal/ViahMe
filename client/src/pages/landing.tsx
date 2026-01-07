@@ -17,8 +17,15 @@ import {
   Star,
   ArrowRight,
   Shield,
-  Palette
+  Palette,
+  Home,
+  Link2,
+  ShieldCheck,
+  Send,
+  UserCheck,
+  CreditCard
 } from "lucide-react";
+import { SiWhatsapp } from "react-icons/si";
 import logoUrl from "@assets/viah-logo_1763669612969.png";
 
 const FEATURES = [
@@ -158,7 +165,7 @@ export default function Landing() {
           <div className="max-w-4xl mx-auto text-center space-y-6 sm:space-y-8">
             <Badge variant="outline" className="text-xs sm:text-base px-3 sm:px-4 py-1.5 sm:py-2 border-orange-200 dark:border-orange-800">
               <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 text-orange-600" />
-              <span className="break-words">The #1 Platform for South Asian Weddings in the US</span>
+              <span className="break-words">Your Multi-Day Wedding Command Center</span>
             </Badge>
             
             <h1 
@@ -166,12 +173,12 @@ export default function Landing() {
               style={{ fontFamily: 'Cormorant Garamond, serif' }}
               data-testid="text-hero-heading"
             >
-              Start Your Dream Wedding Planning Today
+              Finally, a Wedding App That Understands 5-Day Celebrations
             </h1>
             
             <p className="text-base sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed px-2">
-              The only wedding management platform designed specifically for multi-day South Asian celebrations. 
-              Manage vendors, budgets, guests, and every detail with ease.
+              From Roka to Reception, manage every ceremony, vendor, and 400+ guests in one place.
+              Built for couples navigating the beautiful chaos of South Asian weddings.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center pt-4 sm:pt-6 px-4">
@@ -260,8 +267,212 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* Household-First Guest Management */}
       <section className="py-12 sm:py-20 lg:py-32 bg-muted/30">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="max-w-3xl mx-auto text-center mb-10 sm:mb-16">
+            <Badge variant="outline" className="mb-4 text-xs sm:text-sm px-3 py-1 border-orange-200 dark:border-orange-800">
+              <Home className="w-3 h-3 mr-1 text-orange-600" />
+              Household-First Architecture
+            </Badge>
+            <h2 
+              className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent px-2"
+              style={{ fontFamily: 'Cormorant Garamond, serif' }}
+            >
+              Invitations Go to Families, Not Individuals
+            </h2>
+            <p className="text-base sm:text-xl text-muted-foreground px-2">
+              Unlike generic wedding apps, we understand that in South Asian culture, you invite the Sharma Family—not four separate people.
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-8 max-w-5xl mx-auto items-center">
+            <Card className="p-6 sm:p-8">
+              <div className="text-sm text-muted-foreground uppercase tracking-wide mb-4 flex items-center gap-2">
+                <span className="text-red-500">✕</span> Generic Wedding Apps
+              </div>
+              <div className="space-y-3">
+                {["Rahul Sharma", "Priya Sharma", "Vikram Sharma", "Anita Sharma"].map((name, i) => (
+                  <div key={i} className="p-3 rounded-lg border bg-muted/50 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700" />
+                    <span className="text-sm">{name}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-sm text-muted-foreground mt-4">
+                4 separate rows. 4 separate RSVPs. Confusion.
+              </p>
+            </Card>
+
+            <Card className="p-6 sm:p-8 border-2 border-orange-200 dark:border-orange-800">
+              <div className="text-sm text-orange-600 uppercase tracking-wide mb-4 flex items-center gap-2">
+                <CheckCircle className="w-4 h-4" /> Viah.me
+              </div>
+              <div className="p-4 rounded-lg border-2 border-orange-200 dark:border-orange-800 bg-orange-50/50 dark:bg-orange-950/20">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-pink-400 flex items-center justify-center text-white font-bold">S</div>
+                  <div>
+                    <div className="font-semibold">The Sharma Family</div>
+                    <div className="text-sm text-muted-foreground">4 members • Head: Rahul Sharma</div>
+                  </div>
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  <Badge variant="secondary" className="text-xs">Sangeet</Badge>
+                  <Badge variant="secondary" className="text-xs">Ceremony</Badge>
+                  <Badge variant="secondary" className="text-xs">Reception</Badge>
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground mt-4">
+                1 household. 1 invitation. Clear headcount.
+              </p>
+            </Card>
+          </div>
+
+          <div className="mt-10 text-center">
+            <Card className="inline-flex items-center gap-3 p-4 sm:p-6 bg-gradient-to-r from-orange-50 to-pink-50 dark:from-orange-950/30 dark:to-pink-950/30 border-2">
+              <CreditCard className="w-8 h-8 text-orange-600 shrink-0" />
+              <div className="text-left">
+                <div className="font-semibold text-lg">The Invitation Math</div>
+                <div className="text-sm text-muted-foreground">
+                  Know exactly how many cards to order (<span className="font-bold text-orange-600">120</span>) even when your guest count is <span className="font-bold">400</span>.
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Magic Link & Review Room */}
+      <section className="py-12 sm:py-20 lg:py-32 bg-background">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 max-w-6xl mx-auto">
+            <div>
+              <Badge variant="outline" className="mb-4 text-xs sm:text-sm px-3 py-1 border-orange-200 dark:border-orange-800">
+                <Link2 className="w-3 h-3 mr-1 text-orange-600" />
+                The "Aunty-Proof" Solution
+              </Badge>
+              <h2 
+                className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent"
+                style={{ fontFamily: 'Cormorant Garamond, serif' }}
+              >
+                End the Address Chase Forever
+              </h2>
+              <p className="text-muted-foreground mb-6">
+                Share a simple link with your parents. They can add their friends and family directly—no login, no app download, no tech support calls.
+              </p>
+              <Card className="p-4 bg-muted/50">
+                <div className="text-xs text-muted-foreground mb-2">Magic Collection Link</div>
+                <div className="flex items-center gap-2 p-2 rounded bg-background border text-sm font-mono">
+                  <Link2 className="w-4 h-4 text-orange-600 shrink-0" />
+                  viah.me/collect/sharma-patel-wedding
+                </div>
+                <p className="text-xs text-muted-foreground mt-3">
+                  Parents add guests → You approve → Done.
+                </p>
+              </Card>
+            </div>
+
+            <div>
+              <Badge variant="outline" className="mb-4 text-xs sm:text-sm px-3 py-1 border-orange-200 dark:border-orange-800">
+                <ShieldCheck className="w-3 h-3 mr-1 text-orange-600" />
+                The Review Room
+              </Badge>
+              <h2 
+                className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent"
+                style={{ fontFamily: 'Cormorant Garamond, serif' }}
+              >
+                Let Parents Contribute, Stay in Control
+              </h2>
+              <p className="text-muted-foreground mb-6">
+                Every guest your parents add goes to a "Pending Approval" tab. Review before they hit your main list—no surprise +100 guests.
+              </p>
+              <Card className="p-4 bg-muted/50">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-medium">Pending Approval</span>
+                  <Badge className="bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300">12 new</Badge>
+                </div>
+                <div className="space-y-2">
+                  {["Kapoor Family (4)", "Mehra Family (3)", "Singh Family (5)"].map((fam, i) => (
+                    <div key={i} className="flex items-center justify-between p-2 rounded bg-background border">
+                      <span className="text-sm">{fam}</span>
+                      <div className="flex gap-1">
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          className="h-7 text-green-600 hover:text-green-700 hover:bg-green-50"
+                          data-testid={`button-approve-family-${i}`}
+                        >
+                          <UserCheck className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* WhatsApp Integration */}
+      <section className="py-12 sm:py-20 lg:py-32 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-green-950/20 dark:via-emerald-950/20 dark:to-teal-950/20">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="max-w-3xl mx-auto text-center mb-10 sm:mb-16">
+            <Badge variant="outline" className="mb-4 text-xs sm:text-sm px-3 py-1 border-green-300 dark:border-green-800 bg-white/50 dark:bg-green-950/50">
+              <SiWhatsapp className="w-3 h-3 mr-1 text-green-600" />
+              WhatsApp-Native Communication
+            </Badge>
+            <h2 
+              className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent px-2"
+              style={{ fontFamily: 'Cormorant Garamond, serif' }}
+            >
+              Because 99% of Desi Coordination Happens on WhatsApp
+            </h2>
+            <p className="text-base sm:text-xl text-muted-foreground px-2">
+              Not another app your parents won't use. We meet families where they already are.
+            </p>
+          </div>
+
+          <div className="max-w-md mx-auto">
+            <Card className="p-0 overflow-hidden border-2 border-green-200 dark:border-green-800">
+              <div className="bg-green-600 text-white p-3 flex items-center gap-2">
+                <SiWhatsapp className="w-5 h-5" />
+                <span className="font-medium">WhatsApp</span>
+              </div>
+              <div className="p-4 bg-[#e5ddd5] dark:bg-green-950/30 space-y-3">
+                <div className="bg-white dark:bg-green-900/50 rounded-lg p-3 max-w-[85%] shadow-sm">
+                  <p className="text-sm">
+                    Hi Aunty! We haven't received your RSVP for the <strong>Sangeet</strong> yet. 
+                    Tap here to respond: <span className="text-green-600 underline">viah.me/rsvp/abc123</span>
+                  </p>
+                  <div className="text-xs text-muted-foreground mt-1 text-right">10:30 AM</div>
+                </div>
+                <div className="bg-white dark:bg-green-900/50 rounded-lg p-3 max-w-[85%] shadow-sm ml-auto">
+                  <p className="text-sm">
+                    Beta, we are coming! All 4 of us. Can't wait to dance!
+                  </p>
+                  <div className="text-xs text-muted-foreground mt-1 text-right">10:32 AM</div>
+                </div>
+              </div>
+              <div className="p-4 bg-white dark:bg-green-950/50 border-t">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Send className="w-4 h-4 text-green-600" />
+                  Pre-filled RSVP nudges in one tap
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          <div className="mt-8 text-center">
+            <p className="text-sm text-muted-foreground">
+              Transform from a "Database Tool" into a <span className="font-semibold text-green-600">Communication Hub</span> that parents can actually use.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-12 sm:py-20 lg:py-32 bg-background">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="max-w-3xl mx-auto text-center mb-10 sm:mb-16">
             <h2 
