@@ -827,7 +827,7 @@ export default function Budget() {
             </CollapsibleTrigger>
             <CollapsibleContent className="mt-4">
               <div className="space-y-3">
-                {(expenseTotals?.bucketTotals || []).filter(bt => bt.spent > 0 || bt.allocated > 0).map((bucketTotal) => {
+                {(expenseTotals?.bucketTotals || []).map((bucketTotal) => {
                   const percentSpent = bucketTotal.allocated > 0 ? (bucketTotal.spent / bucketTotal.allocated) * 100 : 0;
 
                   return (
