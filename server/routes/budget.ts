@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { requireAuth, type AuthRequest } from "../auth-middleware";
 import type { IStorage } from "../storage";
-import { insertExpenseSchema, insertBudgetAllocationSchema, insertBudgetBenchmarkSchema, BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket } from "@shared/schema";
+import { insertExpenseSchema, insertBudgetAllocationSchema, insertBudgetBenchmarkSchema, insertCeremonyBudgetSchema, BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket } from "@shared/schema";
 import { ensureCoupleAccess } from "./middleware";
 
 export async function registerBudgetRoutes(router: Router, storage: IStorage) {
@@ -520,6 +520,197 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
         return res.status(400).json({ error: "Validation failed", details: error });
       }
       res.status(500).json({ error: "Failed to create budget benchmark" });
+    }
+  });
+
+  // ============================================================================
+  // CEREMONY BUDGETS - Per-ceremony/event budget targets (Budget Matrix)
+  // ============================================================================
+
+  router.get("/ceremony-budgets/:weddingId", await requireAuth(storage, false), ensureCoupleAccess(storage, (req) => req.params.weddingId), async (req, res) => {
+    try {
+      const ceremonyBudgets = await storage.getCeremonyBudgetsByWedding(req.params.weddingId);
+      const events = await storage.getEventsByWedding(req.params.weddingId);
+      const expenses = await storage.getExpensesByWedding(req.params.weddingId);
+
+      const ceremonyBreakdown = ceremonyBudgets.map(cb => {
+        const event = events.find(e => e.id === cb.ceremonyId);
+        const ceremonyExpenses = expenses.filter(e => e.ceremonyId === cb.ceremonyId);
+        const spent = ceremonyExpenses.reduce((sum, e) => sum + parseFloat(e.amount || '0'), 0);
+        const allocated = parseFloat(cb.allocatedAmount || '0');
+
+        return {
+          ...cb,
+          eventName: event?.name || 'Unknown Event',
+          eventDate: event?.date,
+          spent,
+          remaining: allocated - spent,
+          percentUsed: allocated ? Math.round((spent / allocated) * 100) : 0,
+        };
+      });
+
+      res.json(ceremonyBreakdown);
+    } catch (error) {
+      console.error("Error fetching ceremony budgets:", error);
+      res.status(500).json({ error: "Failed to fetch ceremony budgets" });
+    }
+  });
+
+  router.post("/ceremony-budgets", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      if (!authReq.session.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const validatedData = insertCeremonyBudgetSchema.parse(req.body);
+
+      const wedding = await storage.getWedding(validatedData.weddingId);
+      if (!wedding) {
+        return res.status(404).json({ error: "Wedding not found" });
+      }
+      if (wedding.userId !== authReq.session.userId) {
+        const roles = await storage.getWeddingRoles(validatedData.weddingId);
+        const hasAccess = roles.some(role => role.userId === authReq.session.userId);
+        if (!hasAccess) {
+          return res.status(403).json({ error: "Access denied" });
+        }
+      }
+
+      const ceremonyBudget = await storage.upsertCeremonyBudget(
+        validatedData.weddingId,
+        validatedData.ceremonyId,
+        validatedData.allocatedAmount,
+        validatedData.notes
+      );
+      res.json(ceremonyBudget);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      console.error("Error creating ceremony budget:", error);
+      res.status(500).json({ error: "Failed to create ceremony budget" });
+    }
+  });
+
+  router.patch("/ceremony-budgets/:id", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      if (!authReq.session.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const existingBudget = await storage.getCeremonyBudget(req.params.id);
+      if (!existingBudget) {
+        return res.status(404).json({ error: "Ceremony budget not found" });
+      }
+
+      const wedding = await storage.getWedding(existingBudget.weddingId);
+      if (!wedding) {
+        return res.status(404).json({ error: "Wedding not found" });
+      }
+      if (wedding.userId !== authReq.session.userId) {
+        const roles = await storage.getWeddingRoles(existingBudget.weddingId);
+        const hasAccess = roles.some(role => role.userId === authReq.session.userId);
+        if (!hasAccess) {
+          return res.status(403).json({ error: "Access denied" });
+        }
+      }
+
+      const ceremonyBudget = await storage.updateCeremonyBudget(req.params.id, req.body);
+      res.json(ceremonyBudget);
+    } catch (error) {
+      console.error("Error updating ceremony budget:", error);
+      res.status(500).json({ error: "Failed to update ceremony budget" });
+    }
+  });
+
+  router.delete("/ceremony-budgets/:id", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      if (!authReq.session.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const existingBudget = await storage.getCeremonyBudget(req.params.id);
+      if (!existingBudget) {
+        return res.status(404).json({ error: "Ceremony budget not found" });
+      }
+
+      const wedding = await storage.getWedding(existingBudget.weddingId);
+      if (!wedding) {
+        return res.status(404).json({ error: "Wedding not found" });
+      }
+      if (wedding.userId !== authReq.session.userId) {
+        const roles = await storage.getWeddingRoles(existingBudget.weddingId);
+        const hasAccess = roles.some(role => role.userId === authReq.session.userId);
+        if (!hasAccess) {
+          return res.status(403).json({ error: "Access denied" });
+        }
+      }
+
+      await storage.deleteCeremonyBudget(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting ceremony budget:", error);
+      res.status(500).json({ error: "Failed to delete ceremony budget" });
+    }
+  });
+
+  router.get("/ceremony-analytics/:weddingId", await requireAuth(storage, false), ensureCoupleAccess(storage, (req) => req.params.weddingId), async (req, res) => {
+    try {
+      const weddingId = req.params.weddingId;
+      const ceremonyBudgets = await storage.getCeremonyBudgetsByWedding(weddingId);
+      const events = await storage.getEventsByWedding(weddingId);
+      const expenses = await storage.getExpensesByWedding(weddingId);
+      const wedding = await storage.getWedding(weddingId);
+
+      const totalBudget = parseFloat(wedding?.budget || '0');
+      const totalCeremonyAllocated = ceremonyBudgets.reduce((sum, cb) => sum + parseFloat(cb.allocatedAmount || '0'), 0);
+      const unallocatedBudget = totalBudget - totalCeremonyAllocated;
+
+      const ceremonyBreakdown = events.map(event => {
+        const ceremonyBudget = ceremonyBudgets.find(cb => cb.ceremonyId === event.id);
+        const ceremonyExpenses = expenses.filter(e => e.ceremonyId === event.id);
+        const spent = ceremonyExpenses.reduce((sum, e) => sum + parseFloat(e.amount || '0'), 0);
+        const allocated = parseFloat(ceremonyBudget?.allocatedAmount || '0');
+
+        return {
+          eventId: event.id,
+          eventName: event.name,
+          eventDate: event.date,
+          eventType: event.type,
+          allocated,
+          spent,
+          remaining: allocated - spent,
+          percentUsed: allocated ? Math.round((spent / allocated) * 100) : 0,
+          isOverBudget: spent > allocated && allocated > 0,
+          hasNoBudget: allocated === 0,
+          expenseCount: ceremonyExpenses.length,
+        };
+      });
+
+      const eventsWithBudget = ceremonyBreakdown.filter(c => c.allocated > 0);
+      const eventsOverBudget = ceremonyBreakdown.filter(c => c.isOverBudget);
+
+      res.json({
+        overview: {
+          totalBudget,
+          totalCeremonyAllocated,
+          unallocatedBudget,
+          percentAllocated: totalBudget ? Math.round((totalCeremonyAllocated / totalBudget) * 100) : 0,
+          isOverAllocated: totalCeremonyAllocated > totalBudget,
+        },
+        ceremonyBreakdown,
+        summary: {
+          totalEvents: events.length,
+          eventsWithBudget: eventsWithBudget.length,
+          eventsOverBudget: eventsOverBudget.length,
+        },
+      });
+    } catch (error) {
+      console.error("Error fetching ceremony analytics:", error);
+      res.status(500).json({ error: "Failed to fetch ceremony analytics" });
     }
   });
 
