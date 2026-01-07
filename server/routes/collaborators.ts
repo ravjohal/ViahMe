@@ -4,10 +4,12 @@ import type { IStorage } from "../storage";
 import { insertWeddingRoleSchema } from "@shared/schema";
 import { sendCollaboratorInviteEmail } from "../email";
 
-export function createRolesRouter(storage: IStorage): Router {
+// Wedding-scoped roles router - mount at /api/weddings
+// Routes: GET/POST /:weddingId/roles, POST /:weddingId/roles/initialize
+export function createWeddingRolesRouter(storage: IStorage): Router {
   const router = Router();
 
-  // Route pattern: /:weddingId/roles - matches /api/weddings/:weddingId/roles
+  // GET /api/weddings/:weddingId/roles
   router.get("/:weddingId/roles", async (req, res) => {
     const { weddingId } = req.params;
     const userId = req.session?.userId;
@@ -54,32 +56,7 @@ export function createRolesRouter(storage: IStorage): Router {
     }
   });
 
-  router.get("/:roleId", async (req, res) => {
-    const { roleId } = req.params;
-    const userId = req.session?.userId;
-    
-    if (!userId) {
-      return res.status(401).json({ error: "Authentication required" });
-    }
-    
-    try {
-      const role = await storage.getWeddingRoleWithPermissions(roleId);
-      if (!role) {
-        return res.status(404).json({ error: "Role not found" });
-      }
-      
-      const { isOwner, permissions } = await storage.getUserPermissionsForWedding(userId, role.weddingId);
-      if (!isOwner && permissions.size === 0) {
-        return res.status(403).json({ error: "You do not have access to this wedding" });
-      }
-      
-      res.json(role);
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
-    }
-  });
-
-  // Route pattern: /:weddingId/roles - matches /api/weddings/:weddingId/roles
+  // POST /api/weddings/:weddingId/roles
   router.post("/:weddingId/roles", async (req, res) => {
     const { weddingId } = req.params;
     const userId = req.session?.userId;
@@ -135,99 +112,8 @@ export function createRolesRouter(storage: IStorage): Router {
     }
   });
 
-  router.patch("/:roleId", async (req, res) => {
-    const { roleId } = req.params;
-    const userId = req.session?.userId;
-    
-    if (!userId) {
-      return res.status(401).json({ error: "Authentication required" });
-    }
-    
-    try {
-      const role = await storage.getWeddingRole(roleId);
-      if (!role) {
-        return res.status(404).json({ error: "Role not found" });
-      }
-      
-      const hasPermission = await storage.checkUserPermission(userId, role.weddingId, "collaborators", "manage");
-      if (!hasPermission) {
-        return res.status(403).json({ error: "You do not have permission to manage roles" });
-      }
-      
-      if (role.isSystem && (req.body.name || req.body.isOwner !== undefined)) {
-        return res.status(400).json({ error: "Cannot modify system role core properties" });
-      }
-      
-      const updatedRole = await storage.updateWeddingRole(roleId, req.body);
-      
-      if (req.body.permissions && Array.isArray(req.body.permissions)) {
-        await storage.setRolePermissions(roleId, req.body.permissions);
-      }
-      
-      res.json(updatedRole);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  });
-
-  router.delete("/:roleId", async (req, res) => {
-    const { roleId } = req.params;
-    const userId = req.session?.userId;
-    
-    if (!userId) {
-      return res.status(401).json({ error: "Authentication required" });
-    }
-    
-    try {
-      const role = await storage.getWeddingRole(roleId);
-      if (!role) {
-        return res.status(404).json({ error: "Role not found" });
-      }
-      
-      const hasPermission = await storage.checkUserPermission(userId, role.weddingId, "collaborators", "manage");
-      if (!hasPermission) {
-        return res.status(403).json({ error: "You do not have permission to manage roles" });
-      }
-      
-      const success = await storage.deleteWeddingRole(roleId);
-      if (!success) {
-        return res.status(400).json({ error: "Cannot delete system or owner roles" });
-      }
-      
-      res.status(204).send();
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
-    }
-  });
-
-  router.delete("/:roleId/permissions", async (req, res) => {
-    const { roleId } = req.params;
-    const userId = req.session?.userId;
-    
-    if (!userId) {
-      return res.status(401).json({ error: "Authentication required" });
-    }
-    
-    try {
-      const role = await storage.getWeddingRole(roleId);
-      if (!role) {
-        return res.status(404).json({ error: "Role not found" });
-      }
-      
-      const hasPermission = await storage.checkUserPermission(userId, role.weddingId, "collaborators", "manage");
-      if (!hasPermission) {
-        return res.status(403).json({ error: "You do not have permission to manage roles" });
-      }
-      
-      await storage.deleteRolePermissions(roleId);
-      
-      res.status(204).send();
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
-    }
-  });
-
-  router.post("/weddings/:weddingId/initialize", async (req, res) => {
+  // POST /api/weddings/:weddingId/roles/initialize
+  router.post("/:weddingId/roles/initialize", async (req, res) => {
     const { weddingId } = req.params;
     const userId = req.session?.userId;
     
@@ -265,6 +151,135 @@ export function createRolesRouter(storage: IStorage): Router {
       }
       
       res.status(201).json(roles);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  return router;
+}
+
+// Role-by-ID router - mount at /api/roles
+// Routes: GET/PATCH/DELETE /:roleId, DELETE /:roleId/permissions
+export function createRolesRouter(storage: IStorage): Router {
+  const router = Router();
+
+  // GET /api/roles/:roleId
+  router.get("/:roleId", async (req, res) => {
+    const { roleId } = req.params;
+    const userId = req.session?.userId;
+    
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      const role = await storage.getWeddingRoleWithPermissions(roleId);
+      if (!role) {
+        return res.status(404).json({ error: "Role not found" });
+      }
+      
+      const { isOwner, permissions } = await storage.getUserPermissionsForWedding(userId, role.weddingId);
+      if (!isOwner && permissions.size === 0) {
+        return res.status(403).json({ error: "You do not have access to this wedding" });
+      }
+      
+      res.json(role);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // PATCH /api/roles/:roleId
+  router.patch("/:roleId", async (req, res) => {
+    const { roleId } = req.params;
+    const userId = req.session?.userId;
+    
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      const role = await storage.getWeddingRole(roleId);
+      if (!role) {
+        return res.status(404).json({ error: "Role not found" });
+      }
+      
+      const hasPermission = await storage.checkUserPermission(userId, role.weddingId, "collaborators", "manage");
+      if (!hasPermission) {
+        return res.status(403).json({ error: "You do not have permission to manage roles" });
+      }
+      
+      if (role.isSystem && (req.body.name || req.body.isOwner !== undefined)) {
+        return res.status(400).json({ error: "Cannot modify system role core properties" });
+      }
+      
+      const updatedRole = await storage.updateWeddingRole(roleId, req.body);
+      
+      if (req.body.permissions && Array.isArray(req.body.permissions)) {
+        await storage.setRolePermissions(roleId, req.body.permissions);
+      }
+      
+      res.json(updatedRole);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // DELETE /api/roles/:roleId
+  router.delete("/:roleId", async (req, res) => {
+    const { roleId } = req.params;
+    const userId = req.session?.userId;
+    
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      const role = await storage.getWeddingRole(roleId);
+      if (!role) {
+        return res.status(404).json({ error: "Role not found" });
+      }
+      
+      const hasPermission = await storage.checkUserPermission(userId, role.weddingId, "collaborators", "manage");
+      if (!hasPermission) {
+        return res.status(403).json({ error: "You do not have permission to manage roles" });
+      }
+      
+      const success = await storage.deleteWeddingRole(roleId);
+      if (!success) {
+        return res.status(400).json({ error: "Cannot delete system or owner roles" });
+      }
+      
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // DELETE /api/roles/:roleId/permissions
+  router.delete("/:roleId/permissions", async (req, res) => {
+    const { roleId } = req.params;
+    const userId = req.session?.userId;
+    
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      const role = await storage.getWeddingRole(roleId);
+      if (!role) {
+        return res.status(404).json({ error: "Role not found" });
+      }
+      
+      const hasPermission = await storage.checkUserPermission(userId, role.weddingId, "collaborators", "manage");
+      if (!hasPermission) {
+        return res.status(403).json({ error: "You do not have permission to manage roles" });
+      }
+      
+      await storage.deleteRolePermissions(roleId);
+      
+      res.status(204).send();
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }

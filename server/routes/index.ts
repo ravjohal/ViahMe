@@ -45,7 +45,7 @@ import { createInvitationCardsRouter, createOrdersRouter, createPaymentsRouter, 
 import { createMeasurementProfilesRouter, createShoppingItemsRouter } from "./shopping";
 import { createGapWindowsRouter, createGapRecommendationsRouter } from "./gap-concierge";
 import { createRitualStagesRouter, createRitualStageUpdatesRouter, createGuestNotificationsRouter, createLiveWeddingRouter, createPublicLiveRouter } from "./live-wedding";
-import { createRolesRouter, createCollaboratorsRouter, createCollaboratorInvitesRouter, createCollaboratorActivityRouter, createPermissionsRouter, createMyCollaborationsRouter } from "./collaborators";
+import { createRolesRouter, createWeddingRolesRouter, createCollaboratorsRouter, createCollaboratorInvitesRouter, createCollaboratorActivityRouter, createPermissionsRouter, createMyCollaborationsRouter } from "./collaborators";
 import { createGuestSourcesRouter } from "./guest-sources";
 import { createGuestSideRouter, createGuestConsensusRouter, createScenariosRouter, createGuestBudgetRouter, createHouseholdPriorityRouter } from "./guest-planning";
 import { createTimelineRouter, createEventTimeRouter, createTimelineChangesRouter, createVendorAcknowledgmentsRouter } from "./timeline";
@@ -364,8 +364,11 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   app.use("/api/public/weddings", createPublicLiveRouter(storage, { activeViewers, getViewerCount }));
 
   // Collaborators and roles
+  // Wedding-scoped roles: /api/weddings/:weddingId/roles
+  app.use("/api/weddings", createWeddingRolesRouter(storage));
+  // Role-by-ID operations: /api/roles/:roleId
   app.use("/api/roles", createRolesRouter(storage));
-  app.use("/api/weddings", createRolesRouter(storage));
+  // Collaborators
   app.use("/api/collaborators", createCollaboratorsRouter(storage));
   app.use("/api/weddings", createCollaboratorsRouter(storage));
   app.use("/api/collaborator-invites", createCollaboratorInvitesRouter(storage));
