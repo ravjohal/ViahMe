@@ -17,6 +17,9 @@ export interface CeremonyDefinition {
   defaultGuests: number;
   traditions: string[];
   costBreakdown?: CostCategory[];
+  // Default side assignment: 'mutual' = shared, 'bride' = bride's side only, 'groom' = groom's side only
+  // 'separate' = typically held separately by each side (will create two events)
+  defaultSide: 'mutual' | 'bride' | 'groom' | 'separate';
 }
 
 export const CEREMONY_COST_BREAKDOWNS: Record<string, CostCategory[]> = {
@@ -338,6 +341,7 @@ export const CEREMONY_CATALOG: CeremonyDefinition[] = [
     costPerGuestHigh: 150,
     defaultGuests: 200,
     traditions: ["hindu"],
+    defaultSide: "mutual",
   },
   {
     id: "hindu_sangeet",
@@ -347,6 +351,7 @@ export const CEREMONY_CATALOG: CeremonyDefinition[] = [
     costPerGuestHigh: 120,
     defaultGuests: 150,
     traditions: ["hindu", "south_indian", "mixed"],
+    defaultSide: "separate", // Each side typically hosts their own
   },
   {
     id: "hindu_mehndi",
@@ -356,6 +361,7 @@ export const CEREMONY_CATALOG: CeremonyDefinition[] = [
     costPerGuestHigh: 80,
     defaultGuests: 100,
     traditions: ["hindu", "muslim", "gujarati", "south_indian", "mixed"],
+    defaultSide: "separate", // Each side can host their own
   },
   {
     id: "hindu_haldi",
@@ -365,6 +371,7 @@ export const CEREMONY_CATALOG: CeremonyDefinition[] = [
     costPerGuestHigh: 60,
     defaultGuests: 75,
     traditions: ["hindu"],
+    defaultSide: "separate", // Typically done separately by each family
   },
   {
     id: "hindu_baraat",
@@ -374,6 +381,7 @@ export const CEREMONY_CATALOG: CeremonyDefinition[] = [
     costPerGuestHigh: 40,
     defaultGuests: 100,
     traditions: ["hindu"],
+    defaultSide: "groom", // Groom's side only
   },
   {
     id: "reception",
@@ -383,6 +391,7 @@ export const CEREMONY_CATALOG: CeremonyDefinition[] = [
     costPerGuestHigh: 200,
     defaultGuests: 300,
     traditions: ["hindu", "muslim", "gujarati", "south_indian", "mixed", "general"],
+    defaultSide: "mutual",
   },
 
   // Sikh ceremonies (11 total)
@@ -394,6 +403,7 @@ export const CEREMONY_CATALOG: CeremonyDefinition[] = [
     costPerGuestHigh: 80,
     defaultGuests: 50,
     traditions: ["sikh"],
+    defaultSide: "mutual",
   },
   {
     id: "sikh_engagement",
@@ -403,6 +413,7 @@ export const CEREMONY_CATALOG: CeremonyDefinition[] = [
     costPerGuestHigh: 120,
     defaultGuests: 100,
     traditions: ["sikh"],
+    defaultSide: "mutual",
   },
   {
     id: "sikh_chunni_chadana",
@@ -412,6 +423,7 @@ export const CEREMONY_CATALOG: CeremonyDefinition[] = [
     costPerGuestHigh: 70,
     defaultGuests: 50,
     traditions: ["sikh"],
+    defaultSide: "mutual", // Involves both families
   },
   {
     id: "sikh_paath",
@@ -421,6 +433,7 @@ export const CEREMONY_CATALOG: CeremonyDefinition[] = [
     costPerGuestHigh: 70,
     defaultGuests: 75,
     traditions: ["sikh"],
+    defaultSide: "separate", // Each side holds their own
   },
   {
     id: "sikh_mehndi",
@@ -430,6 +443,7 @@ export const CEREMONY_CATALOG: CeremonyDefinition[] = [
     costPerGuestHigh: 75,
     defaultGuests: 80,
     traditions: ["sikh"],
+    defaultSide: "separate", // Each side hosts their own
   },
   {
     id: "sikh_bakra_party",
@@ -439,6 +453,7 @@ export const CEREMONY_CATALOG: CeremonyDefinition[] = [
     costPerGuestHigh: 100,
     defaultGuests: 75,
     traditions: ["sikh"],
+    defaultSide: "groom", // Groom's side only
   },
   {
     id: "sikh_mayian",
@@ -448,6 +463,7 @@ export const CEREMONY_CATALOG: CeremonyDefinition[] = [
     costPerGuestHigh: 50,
     defaultGuests: 50,
     traditions: ["sikh"],
+    defaultSide: "separate", // Each side holds their own
   },
   {
     id: "sikh_sangeet",
@@ -457,6 +473,7 @@ export const CEREMONY_CATALOG: CeremonyDefinition[] = [
     costPerGuestHigh: 150,
     defaultGuests: 150,
     traditions: ["sikh"],
+    defaultSide: "separate", // Each side hosts their own
   },
   {
     id: "sikh_anand_karaj",
@@ -466,6 +483,7 @@ export const CEREMONY_CATALOG: CeremonyDefinition[] = [
     costPerGuestHigh: 120,
     defaultGuests: 250,
     traditions: ["sikh"],
+    defaultSide: "mutual",
   },
   {
     id: "sikh_reception",
@@ -475,6 +493,7 @@ export const CEREMONY_CATALOG: CeremonyDefinition[] = [
     costPerGuestHigh: 200,
     defaultGuests: 300,
     traditions: ["sikh"],
+    defaultSide: "mutual",
   },
   {
     id: "sikh_day_after",
@@ -484,6 +503,7 @@ export const CEREMONY_CATALOG: CeremonyDefinition[] = [
     costPerGuestHigh: 60,
     defaultGuests: 40,
     traditions: ["sikh"],
+    defaultSide: "mutual",
   },
 
   // Muslim ceremonies
@@ -495,6 +515,7 @@ export const CEREMONY_CATALOG: CeremonyDefinition[] = [
     costPerGuestHigh: 120,
     defaultGuests: 150,
     traditions: ["muslim"],
+    defaultSide: "mutual",
   },
   {
     id: "muslim_walima",
@@ -504,6 +525,7 @@ export const CEREMONY_CATALOG: CeremonyDefinition[] = [
     costPerGuestHigh: 150,
     defaultGuests: 250,
     traditions: ["muslim"],
+    defaultSide: "groom", // Traditionally hosted by groom's family
   },
   {
     id: "muslim_dholki",
@@ -513,6 +535,7 @@ export const CEREMONY_CATALOG: CeremonyDefinition[] = [
     costPerGuestHigh: 80,
     defaultGuests: 80,
     traditions: ["muslim"],
+    defaultSide: "separate", // Each side can host their own
   },
 
   // Gujarati ceremonies
@@ -524,6 +547,7 @@ export const CEREMONY_CATALOG: CeremonyDefinition[] = [
     costPerGuestHigh: 60,
     defaultGuests: 75,
     traditions: ["gujarati"],
+    defaultSide: "separate", // Each side holds their own
   },
   {
     id: "gujarati_garba",
@@ -533,6 +557,7 @@ export const CEREMONY_CATALOG: CeremonyDefinition[] = [
     costPerGuestHigh: 100,
     defaultGuests: 200,
     traditions: ["gujarati"],
+    defaultSide: "mutual", // Often a combined celebration
   },
   {
     id: "gujarati_wedding",
@@ -542,6 +567,7 @@ export const CEREMONY_CATALOG: CeremonyDefinition[] = [
     costPerGuestHigh: 150,
     defaultGuests: 200,
     traditions: ["gujarati"],
+    defaultSide: "mutual",
   },
 
   // South Indian ceremonies
@@ -553,6 +579,7 @@ export const CEREMONY_CATALOG: CeremonyDefinition[] = [
     costPerGuestHigh: 120,
     defaultGuests: 150,
     traditions: ["south_indian"],
+    defaultSide: "mutual",
   },
 
   // General/Western ceremonies
@@ -564,6 +591,7 @@ export const CEREMONY_CATALOG: CeremonyDefinition[] = [
     costPerGuestHigh: 150,
     defaultGuests: 200,
     traditions: ["general", "mixed"],
+    defaultSide: "mutual",
   },
   {
     id: "rehearsal_dinner",
@@ -573,6 +601,7 @@ export const CEREMONY_CATALOG: CeremonyDefinition[] = [
     costPerGuestHigh: 120,
     defaultGuests: 50,
     traditions: ["general", "mixed"],
+    defaultSide: "groom", // Traditionally hosted by groom's family
   },
   {
     id: "cocktail_hour",
@@ -582,6 +611,7 @@ export const CEREMONY_CATALOG: CeremonyDefinition[] = [
     costPerGuestHigh: 100,
     defaultGuests: 150,
     traditions: ["general", "mixed", "hindu", "gujarati", "south_indian"],
+    defaultSide: "mutual",
   },
 ];
 

@@ -3,40 +3,20 @@ import { requireAuth, type AuthRequest } from "../auth-middleware";
 import type { IStorage } from "../storage";
 import { insertWeddingSchema } from "@shared/schema";
 
-// Ceremonies that are typically shared between both families
-const SHARED_CEREMONIES = [
-  'roka', 'sikh_roka',
-  'engagement', 'sikh_engagement', 'hindu_engagement',
-  'chunni_chadana', 'sikh_chunni_chadana',
-  'anand_karaj', 'sikh_anand_karaj',
-  'wedding', 'hindu_wedding',
-  'nikah', 'muslim_nikah',
-  'reception', 'sikh_reception', 'hindu_reception', 'muslim_reception',
-  'day_after', 'sikh_day_after',
-  'walima', 'muslim_walima',
-  'muhurtham', 'south_indian_muhurtham',
-  'christian_ceremony',
-  'jain_wedding',
-  'parsi_lagan',
-];
+import type { CeremonyDefinition } from "@shared/ceremonies";
 
-// Determine the side for a ceremony based on its type
-function getDefaultSideForCeremony(ceremonyId: string, eventType: string): 'bride' | 'groom' | 'mutual' {
-  // Check if it's a shared ceremony
-  if (SHARED_CEREMONIES.includes(ceremonyId) || SHARED_CEREMONIES.includes(eventType)) {
-    return 'mutual';
+// Determine the side for a ceremony using the canonical ceremony catalog
+function getDefaultSideForCeremony(ceremony: CeremonyDefinition | undefined): 'bride' | 'groom' | 'mutual' {
+  if (ceremony) {
+    // For 'separate' ceremonies (like Sangeet, Mehndi), we default to 'mutual' 
+    // during initial creation. The seeding logic in sikhEvents handles creating
+    // separate bride/groom events with explicit side assignments.
+    if (ceremony.defaultSide === 'separate') {
+      return 'mutual';
+    }
+    return ceremony.defaultSide;
   }
-  
-  // Check if the name explicitly indicates a side
-  if (ceremonyId.includes('bride') || eventType.includes('bride')) {
-    return 'bride';
-  }
-  if (ceremonyId.includes('groom') || eventType.includes('groom')) {
-    return 'groom';
-  }
-  
-  // For non-shared ceremonies, default to mutual (user can change later)
-  // This is appropriate for onboarding when we don't know the user's role yet
+  // If ceremony not found in catalog, default to mutual
   return 'mutual';
 }
 
@@ -233,8 +213,8 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
             );
           }
           
-          // Determine the side for this ceremony
-          const side = getDefaultSideForCeremony(customEvent.ceremonyId, eventType);
+          // Determine the side for this ceremony using the ceremony catalog
+          const side = getDefaultSideForCeremony(ceremony);
           
           await storage.createEvent({
             weddingId: wedding.id,
