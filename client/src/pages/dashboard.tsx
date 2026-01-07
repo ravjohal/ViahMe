@@ -19,6 +19,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { PERMISSION_CATEGORIES, type PermissionCategory } from "@shared/schema";
 import type { Wedding, Event, BudgetCategory, Contract, Booking, EventCostItem, Guest, WeddingRole, Task, WeddingCollaborator } from "@shared/schema";
 import { PartnerEventConfirmation } from "@/components/partner-event-confirmation";
+import { InvitePartnerModal } from "@/components/invite-partner-modal";
 
 const CATEGORY_LABELS: Record<string, string> = {
   catering: "Catering & Food",
@@ -271,7 +272,8 @@ export default function Dashboard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-    const [showRoadmap, setShowRoadmap] = useState(false);
+  const [showRoadmap, setShowRoadmap] = useState(false);
+  const [invitePartnerOpen, setInvitePartnerOpen] = useState(false);
   const { isOwner, isLoading: permissionsLoading, weddingId } = usePermissions();
 
   const { data: weddings, isLoading: weddingsLoading } = useQuery<Wedding[]>({
@@ -542,7 +544,7 @@ export default function Dashboard() {
               </div>
               <div className="flex flex-col sm:flex-row gap-2 md:flex-col lg:flex-row">
                 <Button
-                  onClick={() => setLocation("/collaborators")}
+                  onClick={() => setInvitePartnerOpen(true)}
                   className="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white shadow-md"
                   data-testid="button-invite-partner"
                 >
@@ -854,6 +856,13 @@ export default function Dashboard() {
           setSelectedEvent(null);
         }}
         onDelete={handleDeleteEvent}
+      />
+
+      <InvitePartnerModal
+        open={invitePartnerOpen}
+        onOpenChange={setInvitePartnerOpen}
+        weddingId={wedding.id}
+        partnerName={wedding.partner2Name || undefined}
       />
     </div>
   );
