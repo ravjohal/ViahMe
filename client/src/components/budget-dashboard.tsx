@@ -1,5 +1,4 @@
 import { Card } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { DollarSign, TrendingUp, AlertCircle } from "lucide-react";
 import type { BudgetCategory } from "@shared/schema";
 
@@ -21,7 +20,6 @@ export function BudgetDashboard({ categories, totalBudget, onNavigate }: BudgetD
   );
 
   const remainingBudget = total - totalSpent;
-  const budgetPercentage = total > 0 ? (totalSpent / total) * 100 : 0;
 
   return (
     <div className="space-y-4">
@@ -80,29 +78,6 @@ export function BudgetDashboard({ categories, totalBudget, onNavigate }: BudgetD
           </div>
         </Card>
       </div>
-
-      <Card 
-        className={`p-6 ${onNavigate ? 'cursor-pointer hover-elevate' : ''}`}
-        onClick={onNavigate}
-        data-testid="card-budget-progress"
-      >
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium">Overall Budget Usage</span>
-          <span className="font-mono text-sm font-semibold">
-            {budgetPercentage.toFixed(1)}%
-          </span>
-        </div>
-        <Progress 
-          value={budgetPercentage} 
-          className={`h-3 ${budgetPercentage > 100 ? "bg-destructive/20" : ""}`} 
-        />
-        {budgetPercentage > 90 && budgetPercentage <= 100 && (
-          <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">Approaching budget limit</p>
-        )}
-        {budgetPercentage > 100 && (
-          <p className="text-xs text-destructive mt-2">Over budget by ${(totalSpent - total).toLocaleString()}</p>
-        )}
-      </Card>
     </div>
   );
 }
