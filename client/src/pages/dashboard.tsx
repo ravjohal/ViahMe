@@ -18,6 +18,7 @@ import { usePermissions } from "@/hooks/use-permissions";
 import { useAuth } from "@/hooks/use-auth";
 import { PERMISSION_CATEGORIES, type PermissionCategory } from "@shared/schema";
 import type { Wedding, Event, BudgetCategory, Contract, Booking, EventCostItem, Guest, WeddingRole, Task, WeddingCollaborator } from "@shared/schema";
+import { PartnerEventConfirmation } from "@/components/partner-event-confirmation";
 
 const CATEGORY_LABELS: Record<string, string> = {
   catering: "Catering & Food",
@@ -55,10 +56,35 @@ const COLLABORATOR_FEATURES: FeatureCard[] = [
   { permission: "ai_planner", label: "AI Wedding Planner", description: "Get AI-powered planning assistance", icon: Bot, path: "/ai-planner", color: "gradient" },
 ];
 
-function CollaboratorDashboard({ wedding, roleName }: { wedding: Wedding; roleName?: string }) {
+function CollaboratorDashboard({ wedding, roleName, events = [] }: { wedding: Wedding; roleName?: string; events?: Event[] }) {
   const [, setLocation] = useLocation();
   const { canView, canEdit, canManage, permissions } = usePermissions();
   const { user } = useAuth();
+  
+  const storageKey = `partner_event_confirmed_${wedding.id}_${user?.id}`;
+  const [showPartnerConfirmation, setShowPartnerConfirmation] = useState(false);
+  
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const hasConfirmedEvents = localStorage.getItem(storageKey) === "true";
+      if (!hasConfirmedEvents) {
+        setShowPartnerConfirmation(true);
+      }
+    }
+  }, [storageKey]);
+  
+  const isPartnerRole = roleName?.toLowerCase().includes("partner") || roleName?.toLowerCase().includes("fiancé") || roleName?.toLowerCase().includes("fiancee") || roleName?.toLowerCase().includes("bride") || roleName?.toLowerCase().includes("groom") || roleName?.toLowerCase().includes("spouse");
+  
+  const separateEvents = events.filter(e => e.side === "bride" || e.side === "groom");
+  
+  const partnerSide: "bride" | "groom" = roleName?.toLowerCase().includes("bride") ? "bride" : "groom";
+  
+  const handleConfirmationComplete = () => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(storageKey, "true");
+    }
+    setShowPartnerConfirmation(false);
+  };
 
   const getColorClasses = (color: string) => {
     const colors: Record<string, { bg: string; icon: string; border: string }> = {
@@ -93,6 +119,16 @@ function CollaboratorDashboard({ wedding, roleName }: { wedding: Wedding; roleNa
 
   return (
     <div className="min-h-screen bg-background">
+      {isPartnerRole && separateEvents.length > 0 && (
+        <PartnerEventConfirmation
+          open={showPartnerConfirmation}
+          onOpenChange={setShowPartnerConfirmation}
+          weddingId={wedding.id}
+          partnerSide={partnerSide}
+          separateEvents={separateEvents}
+          onComplete={handleConfirmationComplete}
+        />
+      )}
       <main className="container mx-auto px-6 py-8 max-w-5xl">
         <Card className="p-8 mb-8 bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-orange-950/30 dark:via-pink-950/30 dark:to-purple-950/30 border-orange-200 dark:border-orange-800" data-testid="collaborator-welcome-card">
           <div className="flex items-start gap-6">
@@ -123,6 +159,30 @@ function CollaboratorDashboard({ wedding, roleName }: { wedding: Wedding; roleNa
             </div>
           </div>
         </Card>
+
+        {isPartnerRole && separateEvents.length > 0 && !showPartnerConfirmation && (
+          <Card className="p-4 mb-6 border-2 border-dashed border-primary/30 bg-primary/5" data-testid="partner-event-setup-card">
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Calendar className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Set Up Your Events</h3>
+                  <p className="text-sm text-muted-foreground">
+                    There are {separateEvents.length} events that may need your input
+                  </p>
+                </div>
+              </div>
+              <Button 
+                onClick={() => setShowPartnerConfirmation(true)}
+                data-testid="button-open-event-setup"
+              >
+                Review Events
+              </Button>
+            </div>
+          </Card>
+        )}
 
         <div className="mb-8">
           <h2 className="text-xl font-semibold mb-2">What You Can Do</h2>
@@ -333,7 +393,7 @@ export default function Dashboard() {
   }
 
   if (!isOwner) {
-    return <CollaboratorDashboard wedding={wedding} roleName={myRole?.role?.displayName} />;
+    return <CollaboratorDashboard wedding={wedding} roleName={myRole?.role?.displayName} events={events} />;
   }
 
   // Calculate step completion status
