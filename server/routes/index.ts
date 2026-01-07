@@ -50,6 +50,7 @@ import { createGuestSourcesRouter } from "./guest-sources";
 import { createGuestSideRouter, createGuestConsensusRouter, createScenariosRouter, createGuestBudgetRouter, createHouseholdPriorityRouter } from "./guest-planning";
 import { createTimelineRouter, createEventTimeRouter, createTimelineChangesRouter, createVendorAcknowledgmentsRouter } from "./timeline";
 import { createCeremonyTemplatesRouter, createRegionalPricingRouter, createCeremonyEstimateRouter } from "./ceremony-templates";
+import { registerRitualRoleRoutes } from "./ritual-roles";
 import { seedVendors, seedBudgetBenchmarks } from "../seed-data";
 
 let defaultStorageSeeded = false;
@@ -181,6 +182,10 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   const communicationRouter = Router();
   await registerCommunicationRoutes(communicationRouter, storage);
   app.use("/api", communicationRouter);
+
+  const ritualRoleRouter = Router();
+  await registerRitualRoleRoutes(ritualRoleRouter, storage);
+  app.use("/api", ritualRoleRouter);
 
   const collectorRouter = Router();
   await registerCollectorRoutes(collectorRouter, storage);

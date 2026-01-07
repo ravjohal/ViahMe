@@ -189,11 +189,14 @@ import {
   type InsertRegionalPricing,
   type BudgetAllocation,
   type InsertBudgetAllocation,
+  type RitualRoleAssignment,
+  type InsertRitualRoleAssignment,
   budgetAllocations,
   budgetAlerts,
   dashboardWidgets,
   ceremonyTemplates,
   regionalPricing,
+  ritualRoleAssignments,
   BUDGET_BUCKETS,
   type BudgetBucket,
   getBucketLabel,
@@ -1056,6 +1059,17 @@ export interface IStorage {
   getAllRegionalPricing(): Promise<RegionalPricing[]>;
   createRegionalPricing(pricing: InsertRegionalPricing): Promise<RegionalPricing>;
   updateRegionalPricing(city: string, pricing: Partial<InsertRegionalPricing>): Promise<RegionalPricing | undefined>;
+
+  // Ritual Role Assignments
+  getRitualRoleAssignment(id: string): Promise<RitualRoleAssignment | undefined>;
+  getRitualRolesByWedding(weddingId: string): Promise<RitualRoleAssignment[]>;
+  getRitualRolesByEvent(eventId: string): Promise<RitualRoleAssignment[]>;
+  getRitualRolesByGuest(guestId: string): Promise<RitualRoleAssignment[]>;
+  createRitualRoleAssignment(assignment: InsertRitualRoleAssignment): Promise<RitualRoleAssignment>;
+  updateRitualRoleAssignment(id: string, assignment: Partial<InsertRitualRoleAssignment>): Promise<RitualRoleAssignment | undefined>;
+  deleteRitualRoleAssignment(id: string): Promise<boolean>;
+  acknowledgeRitualRole(id: string): Promise<RitualRoleAssignment | undefined>;
+  markRitualRoleNotificationSent(id: string): Promise<RitualRoleAssignment | undefined>;
 }
 
 // Guest Planning Snapshot - comprehensive view of all guests and per-event costs
@@ -10324,6 +10338,72 @@ export class DBStorage implements IStorage {
     const result = await this.db.update(regionalPricing)
       .set(pricing)
       .where(eq(regionalPricing.city, city))
+      .returning();
+    return result[0];
+  }
+
+  // Ritual Role Assignments
+  async getRitualRoleAssignment(id: string): Promise<RitualRoleAssignment | undefined> {
+    const result = await this.db.select()
+      .from(ritualRoleAssignments)
+      .where(eq(ritualRoleAssignments.id, id));
+    return result[0];
+  }
+
+  async getRitualRolesByWedding(weddingId: string): Promise<RitualRoleAssignment[]> {
+    return await this.db.select()
+      .from(ritualRoleAssignments)
+      .where(eq(ritualRoleAssignments.weddingId, weddingId))
+      .orderBy(sql`${ritualRoleAssignments.createdAt} ASC`);
+  }
+
+  async getRitualRolesByEvent(eventId: string): Promise<RitualRoleAssignment[]> {
+    return await this.db.select()
+      .from(ritualRoleAssignments)
+      .where(eq(ritualRoleAssignments.eventId, eventId))
+      .orderBy(sql`${ritualRoleAssignments.priority} DESC, ${ritualRoleAssignments.createdAt} ASC`);
+  }
+
+  async getRitualRolesByGuest(guestId: string): Promise<RitualRoleAssignment[]> {
+    return await this.db.select()
+      .from(ritualRoleAssignments)
+      .where(eq(ritualRoleAssignments.guestId, guestId))
+      .orderBy(sql`${ritualRoleAssignments.createdAt} ASC`);
+  }
+
+  async createRitualRoleAssignment(assignment: InsertRitualRoleAssignment): Promise<RitualRoleAssignment> {
+    const result = await this.db.insert(ritualRoleAssignments)
+      .values(assignment)
+      .returning();
+    return result[0];
+  }
+
+  async updateRitualRoleAssignment(id: string, assignment: Partial<InsertRitualRoleAssignment>): Promise<RitualRoleAssignment | undefined> {
+    const result = await this.db.update(ritualRoleAssignments)
+      .set({ ...assignment, updatedAt: new Date() })
+      .where(eq(ritualRoleAssignments.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteRitualRoleAssignment(id: string): Promise<boolean> {
+    await this.db.delete(ritualRoleAssignments)
+      .where(eq(ritualRoleAssignments.id, id));
+    return true;
+  }
+
+  async acknowledgeRitualRole(id: string): Promise<RitualRoleAssignment | undefined> {
+    const result = await this.db.update(ritualRoleAssignments)
+      .set({ status: "acknowledged", acknowledgedAt: new Date(), updatedAt: new Date() })
+      .where(eq(ritualRoleAssignments.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async markRitualRoleNotificationSent(id: string): Promise<RitualRoleAssignment | undefined> {
+    const result = await this.db.update(ritualRoleAssignments)
+      .set({ notificationSent: true, notificationSentAt: new Date(), updatedAt: new Date() })
+      .where(eq(ritualRoleAssignments.id, id))
       .returning();
     return result[0];
   }
