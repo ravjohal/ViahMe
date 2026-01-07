@@ -705,6 +705,148 @@ Your South Asian Wedding Planning Platform
   }
 }
 
+export async function sendCollaboratorInviteEmail(params: {
+  to: string;
+  inviterName: string;
+  weddingTitle: string;
+  roleName: string;
+  inviteUrl: string;
+}) {
+  const { client, fromEmail } = await getUncachableResendClient();
+  
+  const { to, inviterName, weddingTitle, roleName, inviteUrl } = params;
+  
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+          }
+          .header {
+            background: linear-gradient(135deg, #ec4899 0%, #f97316 100%);
+            color: white;
+            padding: 40px 20px;
+            border-radius: 8px 8px 0 0;
+            text-align: center;
+          }
+          .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+          }
+          .content {
+            background: white;
+            padding: 30px;
+            border: 1px solid #e5e7eb;
+            border-top: none;
+          }
+          .role-badge {
+            display: inline-block;
+            background: #fce7f3;
+            color: #be185d;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            margin: 10px 0;
+          }
+          .button {
+            display: inline-block;
+            background: linear-gradient(135deg, #ec4899 0%, #f97316 100%);
+            color: white;
+            padding: 14px 40px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            margin-top: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          }
+          .footer {
+            text-align: center;
+            padding: 20px;
+            color: #6b7280;
+            font-size: 14px;
+            border-top: 1px solid #e5e7eb;
+            margin-top: 30px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>You're Invited to Plan Together!</h1>
+        </div>
+        <div class="content">
+          <p>Hi there,</p>
+          <p><strong>${inviterName}</strong> has invited you to help plan their wedding on Viah.me!</p>
+          <p>Wedding: <strong>${weddingTitle}</strong></p>
+          <p>Your role: <span class="role-badge">${roleName}</span></p>
+          <p>As a ${roleName}, you'll be able to collaborate on planning tasks, view timelines, and help make this celebration unforgettable.</p>
+          <div style="text-align: center;">
+            <a href="${inviteUrl}" class="button">Accept Invitation</a>
+          </div>
+          <p style="margin-top: 20px; color: #6b7280; font-size: 14px;">
+            Or copy and paste this link into your browser:<br>
+            <span style="word-break: break-all;">${inviteUrl}</span>
+          </p>
+          <p style="margin-top: 30px;">Warm regards,</p>
+          <p><strong>The Viah.me Team</strong></p>
+        </div>
+        <div class="footer">
+          <p>Your South Asian Wedding Planning Platform</p>
+          <p>This invitation link expires in 7 days.</p>
+        </div>
+      </body>
+    </html>
+  `;
+
+  const plaintext = `
+You're Invited to Plan Together!
+
+Hi there,
+
+${inviterName} has invited you to help plan their wedding on Viah.me!
+
+Wedding: ${weddingTitle}
+Your role: ${roleName}
+
+As a ${roleName}, you'll be able to collaborate on planning tasks, view timelines, and help make this celebration unforgettable.
+
+Accept your invitation by visiting:
+${inviteUrl}
+
+This invitation link expires in 7 days.
+
+Warm regards,
+The Viah.me Team
+
+---
+Viah.me - Your South Asian Wedding Planning Platform
+  `.trim();
+
+  try {
+    const result = await client.emails.send({
+      from: fromEmail,
+      to,
+      subject: `${inviterName} invited you to plan their wedding on Viah.me`,
+      html,
+      text: plaintext,
+    });
+    return result;
+  } catch (error) {
+    console.error('Failed to send collaborator invite email:', error);
+    throw error;
+  }
+}
+
 export async function sendEmail(params: {
   to: string;
   subject: string;

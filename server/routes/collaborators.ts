@@ -2,6 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import type { IStorage } from "../storage";
 import { insertWeddingRoleSchema } from "@shared/schema";
+import { sendCollaboratorInviteEmail } from "../email";
 
 export function createRolesRouter(storage: IStorage): Router {
   const router = Router();
@@ -366,12 +367,34 @@ export function createCollaboratorsRouter(storage: IStorage): Router {
       });
       
       const wedding = await storage.getWedding(weddingId);
+      const inviter = await storage.getUser(userId);
+      
+      // Build full invite URL
+      const baseUrl = process.env.REPLIT_DEV_DOMAIN 
+        ? `https://${process.env.REPLIT_DEV_DOMAIN}`
+        : process.env.REPLIT_DEPLOYMENT_URL || 'https://viah.me';
+      const fullInviteUrl = `${baseUrl}/accept-invite?token=${inviteToken}`;
+      
+      // Send invitation email
+      try {
+        await sendCollaboratorInviteEmail({
+          to: email,
+          inviterName: inviter?.name || inviter?.email || "Your partner",
+          weddingTitle: wedding?.title || "Wedding",
+          roleName: role.displayName,
+          inviteUrl: fullInviteUrl,
+        });
+      } catch (emailError) {
+        console.error("Failed to send invitation email:", emailError);
+        // Don't fail the request if email fails - collaborator is still created
+      }
       
       res.status(201).json({
         ...collaborator,
         inviteToken,
         inviteUrl: `/accept-invite?token=${inviteToken}`,
         weddingTitle: wedding?.title || "Wedding",
+        email,
       });
     } catch (error: any) {
       res.status(400).json({ error: error.message });

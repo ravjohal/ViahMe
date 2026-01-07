@@ -163,6 +163,12 @@ export function InvitePartnerModal({
         name: partnerName || "Partner",
         roleId: data.roleId,
       });
+      
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: "Failed to send invitation" }));
+        throw new Error(errorData.error || "Failed to send invitation");
+      }
+      
       return res.json() as Promise<InviteResponse>;
     },
     onSuccess: (data) => {
