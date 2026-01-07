@@ -362,15 +362,15 @@ function RecentExpensesWidget({ expenses }: { expenses: Expense[] }) {
       {recentExpenses.map((expense) => (
         <div key={expense.id} className="flex items-center justify-between py-2 border-b last:border-0">
           <div>
-            <p className="font-medium text-sm">{expense.description}</p>
+            <p className="font-medium text-sm">{expense.expenseName}</p>
             <p className="text-xs text-muted-foreground">
               {new Date(expense.expenseDate || expense.createdAt).toLocaleDateString()}
             </p>
           </div>
           <div className="text-right">
             <p className="font-mono font-medium">${parseFloat(expense.amount?.toString() || "0").toLocaleString()}</p>
-            <Badge variant={expense.paymentStatus === "paid" ? "default" : "secondary"} className="text-xs">
-              {expense.paymentStatus === "paid" ? "Paid" : "Partial"}
+            <Badge variant={expense.status === "paid" ? "default" : "secondary"} className="text-xs">
+              {expense.status === "paid" ? "Paid" : expense.status === "booked" ? "Booked" : "Estimated"}
             </Badge>
           </div>
         </div>

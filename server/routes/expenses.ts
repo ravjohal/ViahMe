@@ -112,6 +112,7 @@ export async function registerExpenseRoutes(router: Router, storage: IStorage) {
       const createdSplits = await storage.getExpenseSplitsByExpense(expense.id);
       res.json({ ...expense, splits: createdSplits });
     } catch (error) {
+      console.error("[Expense POST] Error:", error);
       if (error instanceof Error && "issues" in error) {
         return res.status(400).json({ error: "Validation failed", details: error });
       }

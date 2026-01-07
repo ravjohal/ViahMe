@@ -15,7 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertBudgetCategorySchema, type Wedding, type BudgetCategory, type Event, type Contract, type Vendor, type Expense } from "@shared/schema";
+import { BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket, type Wedding, type Event, type Contract, type Vendor, type Expense, type BudgetAllocation } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
@@ -35,23 +35,13 @@ import { BudgetEstimator } from "@/components/budget-estimator";
 // Use shared expense type from the edit dialog component
 type ExpenseWithAllocations = ExpenseWithDetails;
 
-const budgetFormSchema = insertBudgetCategorySchema.extend({
+// Budget allocation form schema (simplified for Single Ledger Model)
+const allocationFormSchema = z.object({
+  bucket: z.string(),
   allocatedAmount: z.string().transform((val) => val),
-  spentAmount: z.string().optional().transform((val) => val || "0"),
 });
 
-type BudgetFormData = z.infer<typeof budgetFormSchema>;
-
-const CATEGORY_LABELS: Record<string, string> = {
-  catering: "Catering & Food",
-  venue: "Venue & Rentals",
-  entertainment: "Entertainment",
-  photography: "Photography & Video",
-  decoration: "Decoration & Flowers",
-  attire: "Attire & Beauty",
-  transportation: "Transportation",
-  other: "Other Expenses",
-};
+type AllocationFormData = z.infer<typeof allocationFormSchema>;
 
 interface AIBudgetEstimate {
   lowEstimate: number;
@@ -67,10 +57,8 @@ export default function Budget() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<BudgetCategory | null>(null);
+  const [editingBucket, setEditingBucket] = useState<BudgetBucket | null>(null);
   const [newTotalBudget, setNewTotalBudget] = useState("");
-  const [customCategoryInput, setCustomCategoryInput] = useState("");
-  const [useCustomCategory, setUseCustomCategory] = useState(false);
   const [aiEstimate, setAiEstimate] = useState<AIBudgetEstimate | null>(null);
   const [addExpenseDialogOpen, setAddExpenseDialogOpen] = useState(false);
   const [addExpenseEventId, setAddExpenseEventId] = useState<string | undefined>(undefined);
@@ -89,8 +77,18 @@ export default function Budget() {
 
   const wedding = weddings?.[0];
 
-  const { data: categories = [], isLoading: categoriesLoading } = useQuery<BudgetCategory[]>({
-    queryKey: ["/api/budget-categories", wedding?.id],
+  const { data: allocations = [], isLoading: allocationsLoading } = useQuery<BudgetAllocation[]>({
+    queryKey: ["/api/budget/allocations", wedding?.id],
+    enabled: !!wedding?.id,
+  });
+
+  const { data: expenseTotals } = useQuery<{
+    bucketTotals: Array<{ bucket: string; label: string; allocated: number; spent: number; remaining: number }>;
+    totalSpent: number;
+    totalAllocated: number;
+    totalRemaining: number;
+  }>({
+    queryKey: ["/api/expenses", wedding?.id, "totals"],
     enabled: !!wedding?.id,
   });
 
@@ -127,11 +125,10 @@ export default function Budget() {
     return vendor?.name || "Vendor";
   };
 
-  // Get category name by ID
-  const getCategoryName = (categoryId: string | null | undefined) => {
-    if (!categoryId) return "Other";
-    const category = categories.find(c => c.id === categoryId);
-    return category?.category || CATEGORY_LABELS[categoryId] || categoryId;
+  // Get bucket label
+  const getBucketLabel = (bucket: string | null | undefined) => {
+    if (!bucket) return "Other";
+    return BUDGET_BUCKET_LABELS[bucket as BudgetBucket] || bucket;
   };
 
   // Extract upcoming payments from contracts
@@ -269,9 +266,9 @@ export default function Budget() {
           });
           eventMap[eventId].total += allocatedAmount;
         });
-      } else if (expense.eventId) {
-        // Single event expense
-        const eventId = expense.eventId;
+      } else if ((expense as any).ceremonyId || expense.eventId) {
+        // Single event/ceremony expense
+        const eventId = (expense as any).ceremonyId || expense.eventId;
         if (!eventMap[eventId]) {
           eventMap[eventId] = { event: null, expenses: [], total: 0 };
         }
@@ -487,13 +484,11 @@ export default function Budget() {
     printWindow.print();
   };
 
-  const form = useForm<BudgetFormData>({
-    resolver: zodResolver(budgetFormSchema),
+  const form = useForm<AllocationFormData>({
+    resolver: zodResolver(allocationFormSchema),
     defaultValues: {
-      category: "catering",
+      bucket: "venue",
       allocatedAmount: "0",
-      spentAmount: "0",
-      weddingId: wedding?.id || "",
     },
   });
 
@@ -525,59 +520,13 @@ export default function Budget() {
     },
   });
 
-  const createCategoryMutation = useMutation({
-    mutationFn: async (data: BudgetFormData) => {
-      return await apiRequest("POST", "/api/budget-categories", data);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/budget-categories", wedding?.id] });
-      setDialogOpen(false);
-      form.reset();
-      setUseCustomCategory(false);
-      setCustomCategoryInput("");
-      toast({ title: "Category created", description: "Budget category has been added" });
-    },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to create category", variant: "destructive" });
-    },
-  });
-
-  const updateCategoryMutation = useMutation({
-    mutationFn: async (data: { id: string; updates: Partial<BudgetFormData> }) => {
-      return await apiRequest("PATCH", `/api/budget-categories/${data.id}`, data.updates);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/budget-categories", wedding?.id] });
-      setDialogOpen(false);
-      setEditingCategory(null);
-      form.reset();
-      toast({ title: "Category updated", description: "Budget category has been updated" });
-    },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to update category", variant: "destructive" });
-    },
-  });
-
-  const deleteCategoryMutation = useMutation({
-    mutationFn: async (id: string) => {
-      return await apiRequest("DELETE", `/api/budget-categories/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/budget-categories", wedding?.id] });
-      toast({ title: "Category deleted", description: "Budget category has been removed" });
-    },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to delete category", variant: "destructive" });
-    },
-  });
-
   const deleteExpenseMutation = useMutation({
     mutationFn: async (id: string) => {
       return await apiRequest("DELETE", `/api/expenses/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/expenses", wedding?.id] });
-      queryClient.invalidateQueries({ queryKey: ["/api/budget-categories", wedding?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/expenses", wedding?.id, "totals"] });
       setDeletingExpenseId(null);
       toast({ title: "Expense deleted", description: "The expense has been removed" });
     },
@@ -592,7 +541,7 @@ export default function Budget() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/expenses", wedding?.id] });
-      queryClient.invalidateQueries({ queryKey: ["/api/budget-categories", wedding?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/expenses", wedding?.id, "totals"] });
       setEditingExpense(null);
       toast({ title: "Expense updated", description: "The expense has been saved" });
     },
@@ -609,12 +558,11 @@ export default function Budget() {
 
   useEffect(() => {
     if (wedding?.id) {
-      form.setValue("weddingId", wedding.id);
       if (wedding.totalBudget) {
         setNewTotalBudget(wedding.totalBudget.toString());
       }
     }
-  }, [wedding?.id, wedding?.totalBudget, form]);
+  }, [wedding?.id, wedding?.totalBudget]);
 
   const handleSaveBudget = () => {
     if (!newTotalBudget || parseFloat(newTotalBudget) <= 0) {
@@ -622,48 +570,6 @@ export default function Budget() {
       return;
     }
     updateWeddingBudgetMutation.mutate(newTotalBudget);
-  };
-
-  const handleOpenCategoryDialog = (category?: BudgetCategory) => {
-    if (category) {
-      setEditingCategory(category);
-      form.setValue("category", category.category);
-      form.setValue("allocatedAmount", category.allocatedAmount?.toString() || "0");
-      form.setValue("spentAmount", category.spentAmount?.toString() || "0");
-      form.setValue("weddingId", wedding?.id || "");
-      if (!Object.keys(CATEGORY_LABELS).includes(category.category)) {
-        setUseCustomCategory(true);
-        setCustomCategoryInput(category.category);
-      }
-    } else {
-      setEditingCategory(null);
-      form.reset({
-        category: "catering",
-        allocatedAmount: "0",
-        spentAmount: "0",
-        weddingId: wedding?.id || "",
-      });
-      setUseCustomCategory(false);
-      setCustomCategoryInput("");
-    }
-    setDialogOpen(true);
-  };
-
-  const handleCategorySubmit = (data: BudgetFormData) => {
-    const finalCategory = useCustomCategory && customCategoryInput ? customCategoryInput : data.category;
-    const submitData = { ...data, category: finalCategory };
-
-    if (editingCategory) {
-      updateCategoryMutation.mutate({ id: editingCategory.id, updates: submitData });
-    } else {
-      createCategoryMutation.mutate(submitData);
-    }
-  };
-
-  const handleDeleteCategory = (id: string) => {
-    if (confirm("Are you sure you want to delete this budget category?")) {
-      deleteCategoryMutation.mutate(id);
-    }
   };
 
   // Get expense payment status with remaining amount
@@ -679,7 +585,7 @@ export default function Budget() {
     return { label: "PARTIAL", variant: "outline", remaining };
   };
 
-  if (weddingsLoading || categoriesLoading) {
+  if (weddingsLoading || allocationsLoading) {
     return (
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-6 py-8">
@@ -896,7 +802,7 @@ export default function Budget() {
           </Collapsible>
         </Card>
 
-        {/* Budget Categories Management */}
+        {/* Budget Categories Breakdown */}
         <Card className="p-4 mb-6">
           <Collapsible open={showCategories} onOpenChange={setShowCategories}>
             <CollapsibleTrigger asChild>
@@ -906,9 +812,9 @@ export default function Budget() {
                     <DollarSign className="w-5 h-5 text-emerald-600" />
                   </div>
                   <div className="text-left">
-                    <h3 className="font-semibold">Manage Budget Categories</h3>
+                    <h3 className="font-semibold">Budget by Category</h3>
                     <p className="text-sm text-muted-foreground">
-                      {categories.length} categories configured
+                      {BUDGET_BUCKETS.length} categories
                     </p>
                   </div>
                 </div>
@@ -921,65 +827,33 @@ export default function Budget() {
             </CollapsibleTrigger>
             <CollapsibleContent className="mt-4">
               <div className="space-y-3">
-                {categories.map((cat) => {
-                  const allocated = Number(cat.allocatedAmount) || 0;
-                  const spent = Number(cat.spentAmount) || 0;
-                  const remaining = allocated - spent;
-                  const percentSpent = allocated > 0 ? (spent / allocated) * 100 : 0;
-                  const categoryLabel = CATEGORY_LABELS[cat.category] || cat.category;
+                {(expenseTotals?.bucketTotals || []).filter(bt => bt.spent > 0 || bt.allocated > 0).map((bucketTotal) => {
+                  const percentSpent = bucketTotal.allocated > 0 ? (bucketTotal.spent / bucketTotal.allocated) * 100 : 0;
 
                   return (
                     <div 
-                      key={cat.id} 
+                      key={bucketTotal.bucket} 
                       className="p-4 rounded-lg border bg-card"
-                      data-testid={`category-${cat.id}`}
+                      data-testid={`category-${bucketTotal.bucket}`}
                     >
                       <div className="flex items-start justify-between mb-2">
                         <div>
-                          <p className="font-medium">{categoryLabel}</p>
+                          <p className="font-medium">{bucketTotal.label}</p>
                           <p className="text-sm text-muted-foreground">
-                            ${spent.toLocaleString()} of ${allocated.toLocaleString()} spent
+                            ${bucketTotal.spent.toLocaleString()} of ${bucketTotal.allocated.toLocaleString()} spent
                           </p>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => handleOpenCategoryDialog(cat)}
-                            data-testid={`button-edit-category-${cat.id}`}
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => handleDeleteCategory(cat.id)}
-                            data-testid={`button-delete-category-${cat.id}`}
-                          >
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
                         </div>
                       </div>
                       <Progress value={Math.min(percentSpent, 100)} className="h-2" />
                       <div className="flex justify-between mt-1 text-xs text-muted-foreground">
                         <span>{percentSpent.toFixed(0)}% spent</span>
-                        <span className={remaining < 0 ? "text-destructive" : "text-emerald-600"}>
-                          ${remaining.toLocaleString()} remaining
+                        <span className={bucketTotal.remaining < 0 ? "text-destructive" : "text-emerald-600"}>
+                          ${bucketTotal.remaining.toLocaleString()} remaining
                         </span>
                       </div>
                     </div>
                   );
                 })}
-
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => handleOpenCategoryDialog()}
-                  data-testid="button-add-category"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Budget Category
-                </Button>
               </div>
             </CollapsibleContent>
           </Collapsible>
@@ -1031,26 +905,26 @@ export default function Budget() {
                       <div className="border-t px-4 py-3 bg-muted/30">
                         {eventData?.expenses.length ? (
                           <div className="space-y-4">
-                            {/* Group expenses by category */}
+                            {/* Group expenses by category (bucket) */}
                             {(() => {
                               const byCategory: Record<string, typeof eventData.expenses> = {};
                               eventData.expenses.forEach((exp) => {
-                                const cat = exp.categoryId || "Other";
+                                const cat = exp.parentCategory || "other";
                                 if (!byCategory[cat]) byCategory[cat] = [];
                                 byCategory[cat].push(exp);
                               });
-                              return Object.entries(byCategory).map(([categoryId, catExpenses]) => {
+                              return Object.entries(byCategory).map(([bucket, catExpenses]) => {
                                 const categoryTotal = catExpenses.reduce((sum, exp) => {
-                                  return sum + (exp.allocatedAmount || parseFloat(exp.amount?.toString() || "0"));
+                                  return sum + parseFloat(exp.amount?.toString() || "0");
                                 }, 0);
                                 return (
-                                  <div key={categoryId} className="space-y-1">
+                                  <div key={bucket} className="space-y-1">
                                     <div className="flex items-center justify-between text-sm font-medium text-muted-foreground border-b pb-1">
-                                      <span>{getCategoryName(categoryId)}</span>
+                                      <span>{getBucketLabel(bucket)}</span>
                                       <span className="font-mono">${categoryTotal.toLocaleString()}</span>
                                     </div>
                                     {catExpenses.map((expense, idx) => {
-                                      const amount = expense.allocatedAmount || parseFloat(expense.amount?.toString() || "0");
+                                      const amount = parseFloat(expense.amount?.toString() || "0");
                                       const status = getPaymentStatus(expense);
                                       const isPartial = status.remaining > 0;
                                       return (
@@ -1060,7 +934,7 @@ export default function Budget() {
                                           data-testid={`expense-item-${expense.id}`}
                                         >
                                           <div className="flex items-center gap-2 flex-wrap">
-                                            <span>{expense.description}</span>
+                                            <span>{expense.expenseName}</span>
                                             <Badge 
                                               variant={status.variant} 
                                               className={`text-xs ${isPartial ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" : ""}`}
@@ -1159,27 +1033,27 @@ export default function Budget() {
                   <CollapsibleContent>
                     <div className="border-t px-4 py-3 bg-muted/30">
                       <div className="space-y-4">
-                        {/* Group unassigned expenses by category */}
+                        {/* Group unassigned expenses by category (bucket) */}
                         {(() => {
                           const unassignedExpenses = expensesByEvent["unassigned"].expenses;
                           const byCategory: Record<string, typeof unassignedExpenses> = {};
                           unassignedExpenses.forEach((exp) => {
-                            const cat = exp.categoryId || "Other";
+                            const cat = exp.parentCategory || "other";
                             if (!byCategory[cat]) byCategory[cat] = [];
                             byCategory[cat].push(exp);
                           });
-                          return Object.entries(byCategory).map(([categoryId, catExpenses]) => {
+                          return Object.entries(byCategory).map(([bucket, catExpenses]) => {
                             const categoryTotal = catExpenses.reduce((sum, exp) => {
-                              return sum + (exp.allocatedAmount || parseFloat(exp.amount?.toString() || "0"));
+                              return sum + parseFloat(exp.amount?.toString() || "0");
                             }, 0);
                             return (
-                              <div key={categoryId} className="space-y-1">
+                              <div key={bucket} className="space-y-1">
                                 <div className="flex items-center justify-between text-sm font-medium text-muted-foreground border-b pb-1">
-                                  <span>{getCategoryName(categoryId)}</span>
+                                  <span>{getBucketLabel(bucket)}</span>
                                   <span className="font-mono">${categoryTotal.toLocaleString()}</span>
                                 </div>
                                 {catExpenses.map((expense, idx) => {
-                                  const amount = expense.allocatedAmount || parseFloat(expense.amount?.toString() || "0");
+                                  const amount = parseFloat(expense.amount?.toString() || "0");
                                   const status = getPaymentStatus(expense);
                                   const isPartial = status.remaining > 0;
                                   return (
@@ -1188,7 +1062,7 @@ export default function Budget() {
                                       className={`group flex items-center justify-between py-1 text-sm pl-4 ${isPartial ? "bg-orange-50/50 dark:bg-orange-950/20 rounded -mx-2 px-2" : ""}`}
                                     >
                                       <div className="flex items-center gap-2 flex-wrap">
-                                        <span>{expense.description}</span>
+                                        <span>{expense.expenseName}</span>
                                         <Badge 
                                           variant={status.variant} 
                                           className={`text-xs ${isPartial ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" : ""}`}
@@ -1347,148 +1221,6 @@ export default function Budget() {
           />
         )}
 
-        {/* Add/Edit Budget Category Dialog */}
-        <Dialog open={dialogOpen} onOpenChange={(open) => {
-          setDialogOpen(open);
-          if (!open) {
-            setEditingCategory(null);
-            setUseCustomCategory(false);
-            setCustomCategoryInput("");
-            form.reset();
-          }
-        }}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {editingCategory ? "Edit Budget Category" : "Add Budget Category"}
-              </DialogTitle>
-              <DialogDescription>
-                {editingCategory 
-                  ? "Update the allocated budget for this category" 
-                  : "Create a new budget category to track your spending"
-                }
-              </DialogDescription>
-            </DialogHeader>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleCategorySubmit)} className="space-y-4 py-4">
-                <FormField
-                  control={form.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Category</FormLabel>
-                      {!useCustomCategory ? (
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                          disabled={!!editingCategory}
-                        >
-                          <FormControl>
-                            <SelectTrigger data-testid="select-category">
-                              <SelectValue placeholder="Select a category" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
-                              <SelectItem key={value} value={value}>
-                                {label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <FormControl>
-                          <Input
-                            placeholder="Enter custom category name"
-                            value={customCategoryInput}
-                            onChange={(e) => setCustomCategoryInput(e.target.value)}
-                            data-testid="input-custom-category"
-                          />
-                        </FormControl>
-                      )}
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {!editingCategory && (
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="custom-category"
-                      checked={useCustomCategory}
-                      onCheckedChange={(checked) => setUseCustomCategory(checked === true)}
-                      data-testid="checkbox-custom-category"
-                    />
-                    <label
-                      htmlFor="custom-category"
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                      Use custom category name
-                    </label>
-                  </div>
-                )}
-
-                <FormField
-                  control={form.control}
-                  name="allocatedAmount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Allocated Budget</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <Input
-                            type="number"
-                            placeholder="10000"
-                            className="pl-8"
-                            {...field}
-                            data-testid="input-allocated-amount"
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {aiEstimate?.hasEstimate && (
-                  <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 text-sm">
-                    <div className="flex items-center gap-2 font-medium text-emerald-700 dark:text-emerald-400 mb-1">
-                      <Sparkles className="w-4 h-4" />
-                      AI Budget Estimate
-                    </div>
-                    <p className="text-emerald-600 dark:text-emerald-300">
-                      ${aiEstimate.lowEstimate.toLocaleString()} - ${aiEstimate.highEstimate.toLocaleString()}
-                    </p>
-                    {aiEstimate.notes && (
-                      <p className="text-xs text-muted-foreground mt-1">{aiEstimate.notes}</p>
-                    )}
-                  </div>
-                )}
-
-                <div className="flex gap-2 justify-end pt-2">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => setDialogOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={createCategoryMutation.isPending || updateCategoryMutation.isPending}
-                    data-testid="button-save-category"
-                  >
-                    {(createCategoryMutation.isPending || updateCategoryMutation.isPending) 
-                      ? "Saving..." 
-                      : editingCategory ? "Update Category" : "Add Category"
-                    }
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
 
         {/* Delete Expense Confirmation Dialog */}
         <Dialog open={!!deletingExpenseId} onOpenChange={(open) => !open && setDeletingExpenseId(null)}>
@@ -1520,7 +1252,6 @@ export default function Budget() {
           expense={editingExpense}
           open={!!editingExpense}
           onOpenChange={(open) => !open && setEditingExpense(null)}
-          categories={categories}
           events={events}
           onSave={(data) => {
             if (editingExpense) {

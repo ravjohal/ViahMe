@@ -4,23 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import type { Event, BudgetCategory, Expense, ExpenseSplit, ExpenseEventAllocation } from "@shared/schema";
-
-const CATEGORY_LABELS: Record<string, string> = {
-  catering: "Catering & Food",
-  venue: "Venue & Rentals",
-  entertainment: "Entertainment",
-  photography: "Photography & Video",
-  decoration: "Decoration & Flowers",
-  attire: "Attire & Beauty",
-  transportation: "Transportation",
-  other: "Other Expenses",
-};
+import { BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket, type Event, type Expense, type ExpenseSplit } from "@shared/schema";
 
 type PayerType = "me" | "partner" | "me_partner" | "bride_family" | "groom_family";
+type ExpenseStatus = "estimated" | "booked" | "paid";
 
 export interface ExpenseWithDetails extends Expense {
-  eventAllocations?: ExpenseEventAllocation[];
   splits?: ExpenseSplit[];
 }
 
@@ -28,7 +17,6 @@ interface EditExpenseDialogProps {
   expense: ExpenseWithDetails | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  categories: BudgetCategory[];
   events: Event[];
   onSave: (data: any) => void;
   isPending: boolean;
@@ -38,20 +26,19 @@ export function EditExpenseDialog({
   expense,
   open,
   onOpenChange,
-  categories,
   events,
   onSave,
   isPending,
 }: EditExpenseDialogProps) {
-  const [description, setDescription] = useState("");
+  const [expenseName, setExpenseName] = useState("");
   const [amount, setAmount] = useState("");
   const [amountPaid, setAmountPaid] = useState("");
   const [expenseDate, setExpenseDate] = useState("");
-  const [categoryId, setCategoryId] = useState<string | null>(null);
-  const [paymentStatus, setPaymentStatus] = useState<"partial" | "paid">("partial");
+  const [selectedBucket, setSelectedBucket] = useState<BudgetBucket | null>(null);
+  const [selectedCeremonyId, setSelectedCeremonyId] = useState<string | null>(null);
+  const [status, setStatus] = useState<ExpenseStatus>("paid");
   const [payer, setPayer] = useState<PayerType>("me_partner");
   const [notes, setNotes] = useState("");
-  const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
   const [splitType, setSplitType] = useState<"full" | "split">("full");
   const [splitPercentages, setSplitPercentages] = useState({
     couple: "50",
@@ -61,7 +48,7 @@ export function EditExpenseDialog({
 
   useEffect(() => {
     if (expense) {
-      setDescription(expense.description || "");
+      setExpenseName(expense.expenseName || "");
       setAmount(expense.amount?.toString() || "");
       setAmountPaid(expense.amountPaid?.toString() || "0");
       const dateValue = expense.expenseDate 
@@ -70,8 +57,9 @@ export function EditExpenseDialog({
             : new Date(expense.expenseDate).toISOString().split('T')[0])
         : new Date().toISOString().split('T')[0];
       setExpenseDate(dateValue);
-      setCategoryId(expense.categoryId || null);
-      setPaymentStatus((expense.paymentStatus as "partial" | "paid") || "partial");
+      setSelectedBucket((expense.parentCategory as BudgetBucket) || null);
+      setSelectedCeremonyId(expense.ceremonyId || null);
+      setStatus((expense.status as ExpenseStatus) || "paid");
       setNotes(expense.notes || "");
       
       if (expense.paidById === "me") {
@@ -88,21 +76,13 @@ export function EditExpenseDialog({
         setPayer("me_partner");
       }
       
-      if (expense.eventAllocations && expense.eventAllocations.length > 0) {
-        setSelectedEvents(expense.eventAllocations.map((a) => a.eventId));
-      } else if (expense.eventId) {
-        setSelectedEvents([expense.eventId]);
-      } else {
-        setSelectedEvents([]);
-      }
-      
-      if (expense.splitType === "custom" && expense.splits && expense.splits.length > 1) {
+      if (expense.splits && expense.splits.length > 1) {
         setSplitType("split");
-        const totalAmount = parseFloat(expense.amount) || 1;
+        const totalAmount = parseFloat(expense.amount?.toString() || "1") || 1;
         const newPercentages = { couple: "0", bride_family: "0", groom_family: "0" };
         for (const split of expense.splits) {
-          const percent = ((parseFloat(split.shareAmount) / totalAmount) * 100).toFixed(0);
-          if (split.userId === "bride") {
+          const percent = ((parseFloat(split.shareAmount?.toString() || "0") / totalAmount) * 100).toFixed(0);
+          if (split.userId === "me-partner") {
             newPercentages.couple = percent;
           } else if (split.userId === "bride-parents") {
             newPercentages.bride_family = percent;
@@ -117,27 +97,12 @@ export function EditExpenseDialog({
     }
   }, [expense]);
 
-  const handleEventToggle = (eventId: string) => {
-    if (eventId === "all") {
-      if (selectedEvents.length === events.length) {
-        setSelectedEvents([]);
-      } else {
-        setSelectedEvents(events.map(e => e.id));
-      }
-    } else {
-      if (selectedEvents.includes(eventId)) {
-        setSelectedEvents(selectedEvents.filter(id => id !== eventId));
-      } else {
-        setSelectedEvents([...selectedEvents, eventId]);
-      }
-    }
-  };
-
   const handleSubmit = () => {
     const parsedAmount = parseFloat(amount.replace(/,/g, ""));
     if (isNaN(parsedAmount) || parsedAmount <= 0) return;
+    if (!selectedBucket) return;
     
-    const finalAmountPaid = paymentStatus === "paid" 
+    const finalAmountPaid = status === "paid" 
       ? parsedAmount 
       : (parseFloat(amountPaid.replace(/,/g, "")) || 0);
 
@@ -198,40 +163,24 @@ export function EditExpenseDialog({
       }];
     }
 
-    let eventAllocations: any[] = [];
-    const eventId = selectedEvents.length === 1 ? selectedEvents[0] : null;
-    
-    if (selectedEvents.length > 1) {
-      const perEventAmount = parsedAmount / selectedEvents.length;
-      eventAllocations = selectedEvents.map(evId => ({
-        eventId: evId,
-        allocatedAmount: perEventAmount.toFixed(2),
-        allocatedPercent: null,
-      }));
-    }
-
     onSave({
-      description: description.trim(),
+      parentCategory: selectedBucket,
+      expenseName: expenseName.trim(),
       amount: parsedAmount.toFixed(2),
       amountPaid: finalAmountPaid.toFixed(2),
       expenseDate,
-      categoryId,
-      paymentStatus,
+      ceremonyId: selectedCeremonyId,
+      status,
       paidById: payerId,
       paidByName: payerName,
-      splitType: splitType === "split" ? "custom" : "full",
       notes: notes.trim() || null,
-      eventId,
-      allocationStrategy: selectedEvents.length > 1 ? "equal" : "single",
       splits,
-      eventAllocations: eventAllocations.length > 0 ? eventAllocations : undefined,
     });
   };
 
   const parsedAmount = parseFloat(amount.replace(/,/g, "")) || 0;
   const parsedAmountPaid = parseFloat(amountPaid.replace(/,/g, "")) || 0;
   const remainingAmount = Math.max(0, parsedAmount - parsedAmountPaid);
-  const isAllSelected = events.length > 0 && selectedEvents.length === events.length;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -242,13 +191,13 @@ export function EditExpenseDialog({
         <div className="space-y-4 pt-4">
           <div className="space-y-2">
             <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Description
+              Expense Name
             </Label>
             <Input
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              value={expenseName}
+              onChange={(e) => setExpenseName(e.target.value)}
               placeholder="What was this expense for?"
-              data-testid="input-edit-expense-description"
+              data-testid="input-edit-expense-name"
             />
           </div>
 
@@ -284,64 +233,59 @@ export function EditExpenseDialog({
 
           <div className="space-y-3">
             <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Which event?
+              Category <span className="text-destructive">*</span>
             </Label>
             <div className="flex flex-wrap gap-2">
-              {events.map((event) => (
+              {BUDGET_BUCKETS.map((bucket) => (
                 <button
-                  key={event.id}
+                  key={bucket}
                   type="button"
-                  onClick={() => handleEventToggle(event.id)}
+                  onClick={() => setSelectedBucket(bucket)}
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                    selectedEvents.includes(event.id)
+                    selectedBucket === bucket
                       ? "bg-primary text-primary-foreground"
                       : "bg-muted text-muted-foreground hover-elevate"
                   }`}
-                  data-testid={`button-edit-event-${event.id}`}
+                  data-testid={`button-edit-category-${bucket}`}
                 >
-                  {event.name}
+                  {BUDGET_BUCKET_LABELS[bucket]}
                 </button>
               ))}
-              {events.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => handleEventToggle("all")}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                    isAllSelected
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground hover-elevate"
-                  }`}
-                  data-testid="button-edit-event-all"
-                >
-                  All Events
-                </button>
-              )}
             </div>
           </div>
 
           <div className="space-y-3">
             <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Expense Category <span className="text-destructive">*</span>
+              For which ceremony? (Optional)
             </Label>
             <div className="flex flex-wrap gap-2">
-              {categories.map((cat) => {
-                const label = CATEGORY_LABELS[cat.category] || cat.category;
-                return (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => setCategoryId(cat.id)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                      categoryId === cat.id
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-muted-foreground hover-elevate"
-                    }`}
-                    data-testid={`button-edit-category-${cat.id}`}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
+              <button
+                type="button"
+                onClick={() => setSelectedCeremonyId(null)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  selectedCeremonyId === null
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover-elevate"
+                }`}
+                data-testid="button-edit-ceremony-none"
+              >
+                General
+              </button>
+              {events.map((event) => (
+                <button
+                  key={event.id}
+                  type="button"
+                  onClick={() => setSelectedCeremonyId(event.id)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                    selectedCeremonyId === event.id
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground hover-elevate"
+                  }`}
+                  data-testid={`button-edit-ceremony-${event.id}`}
+                >
+                  {event.name}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -504,37 +448,49 @@ export function EditExpenseDialog({
 
           <div className="space-y-3">
             <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Payment Status
+              Status
             </Label>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <button
                 type="button"
-                onClick={() => setPaymentStatus("partial")}
-                className={`flex-1 px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  paymentStatus === "partial"
-                    ? "bg-orange-500 text-white"
+                onClick={() => setStatus("estimated")}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  status === "estimated"
+                    ? "bg-blue-100 text-blue-700 ring-2 ring-blue-300 dark:bg-blue-900/30 dark:text-blue-400"
                     : "bg-muted text-muted-foreground hover-elevate"
                 }`}
-                data-testid="button-edit-status-partial"
+                data-testid="button-edit-status-estimated"
               >
-                Partially Paid
+                Estimated
               </button>
               <button
                 type="button"
-                onClick={() => setPaymentStatus("paid")}
-                className={`flex-1 px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  paymentStatus === "paid"
-                    ? "bg-emerald-500 text-white"
+                onClick={() => setStatus("booked")}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  status === "booked"
+                    ? "bg-orange-100 text-orange-700 ring-2 ring-orange-300 dark:bg-orange-900/30 dark:text-orange-400"
+                    : "bg-muted text-muted-foreground hover-elevate"
+                }`}
+                data-testid="button-edit-status-booked"
+              >
+                Booked
+              </button>
+              <button
+                type="button"
+                onClick={() => setStatus("paid")}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  status === "paid"
+                    ? "bg-green-100 text-green-700 ring-2 ring-green-300 dark:bg-green-900/30 dark:text-green-400"
                     : "bg-muted text-muted-foreground hover-elevate"
                 }`}
                 data-testid="button-edit-status-paid"
               >
-                Fully Paid
+                Paid
               </button>
             </div>
           </div>
 
-          {paymentStatus === "partial" && (
+          {status === "booked" && (
             <div className="space-y-2">
               <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                 Amount Paid So Far
@@ -577,7 +533,7 @@ export function EditExpenseDialog({
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={isPending || !description.trim() || !categoryId}
+              disabled={isPending || !expenseName.trim() || !selectedBucket}
               data-testid="button-save-edit-expense"
             >
               {isPending ? "Saving..." : "Save Changes"}

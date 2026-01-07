@@ -17,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Trash2, Pencil, DollarSign, Users, ArrowRightLeft, Check, Receipt, Share2, Copy, Calendar } from "lucide-react";
 import type { Expense, ExpenseSplit, Event, Wedding, BudgetCategory, ExpenseEventAllocation } from "@shared/schema";
+import { BUDGET_BUCKET_LABELS } from "@shared/schema";
 import { EditExpenseDialog, type ExpenseWithDetails } from "@/components/edit-expense-dialog";
 
 type ExpenseWithSplits = Expense & { splits: ExpenseSplit[]; eventAllocations?: ExpenseEventAllocation[] };
@@ -758,16 +759,7 @@ export default function Expenses() {
               return (
                 <div className="space-y-4">
                   {filteredExpenses.map((expense) => {
-                const event = events.find((e) => e.id === expense.eventId);
-                const category = budgetCategories.find((c) => c.id === expense.categoryId);
-                const hasAllocations = expense.eventAllocations && expense.eventAllocations.length > 0;
-                const allocatedEvents = hasAllocations
-                  ? expense.eventAllocations!.map(a => ({
-                      event: events.find(e => e.id === a.eventId),
-                      amount: a.allocatedAmount,
-                      percent: a.allocatedPercent,
-                    })).filter(a => a.event)
-                  : [];
+                const event = expense.ceremonyId ? events.find((e) => e.id === expense.ceremonyId) : null;
                 return (
                   <div
                     key={expense.id}
@@ -777,31 +769,14 @@ export default function Expenses() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-medium">{expense.description}</h3>
-                          {category && <Badge variant="default" data-testid={`badge-category-${expense.id}`}>{category.category}</Badge>}
-                          {event && !hasAllocations && <Badge variant="outline">{event.name}</Badge>}
-                          {hasAllocations && (
-                            <Badge variant="outline" className="flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
-                              {allocatedEvents.length} events
-                            </Badge>
-                          )}
-                          <Badge variant="secondary">{expense.splitType}</Badge>
+                          <h3 className="font-medium">{expense.expenseName}</h3>
+                          {expense.parentCategory && <Badge variant="default" data-testid={`badge-category-${expense.id}`}>{BUDGET_BUCKET_LABELS[expense.parentCategory as keyof typeof BUDGET_BUCKET_LABELS] || expense.parentCategory}</Badge>}
+                          {event && <Badge variant="outline">{event.name}</Badge>}
+                          <Badge variant="secondary">{expense.status}</Badge>
                         </div>
                         <p className="text-sm text-muted-foreground mt-1">
                           Paid by {expense.paidByName === "Couple" ? "Me/Partner" : expense.paidByName} on {format(new Date(expense.expenseDate), "MMM d, yyyy")}
                         </p>
-                        {hasAllocations && allocatedEvents.length > 0 && (
-                          <div className="mt-2 text-sm text-muted-foreground">
-                            <span className="font-medium">Event breakdown: </span>
-                            {allocatedEvents.map((a, i) => (
-                              <span key={a.event!.id}>
-                                {a.event!.name}: ${parseFloat(a.amount || "0").toFixed(2)}
-                                {i < allocatedEvents.length - 1 ? " • " : ""}
-                              </span>
-                            ))}
-                          </div>
-                        )}
                         {expense.notes && (
                           <p className="text-sm text-muted-foreground mt-1">{expense.notes}</p>
                         )}

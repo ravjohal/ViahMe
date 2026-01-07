@@ -25,6 +25,7 @@ export async function registerBudgetCategoryRoutes(router: Router, storage: ISto
       
       res.json(categories);
     } catch (error) {
+      console.error("[Budget Categories GET] Error:", error);
       res.status(500).json({ error: "Failed to fetch budget categories" });
     }
   });
