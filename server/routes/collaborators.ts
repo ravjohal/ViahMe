@@ -311,14 +311,10 @@ export function createWeddingCollaboratorsRouter(storage: IStorage): Router {
 
   // GET /api/weddings/:weddingId/collaborators
   router.get("/:weddingId/collaborators", async (req, res) => {
-    console.log("[COLLABORATORS] GET /:weddingId/collaborators - Route matched");
-    console.log("[COLLABORATORS] weddingId:", req.params.weddingId);
     const { weddingId } = req.params;
     const userId = req.session?.userId;
-    console.log("[COLLABORATORS] userId from session:", userId);
     
     if (!userId) {
-      console.log("[COLLABORATORS] No userId - returning 401");
       return res.status(401).json({ error: "Authentication required" });
     }
     
@@ -344,15 +340,10 @@ export function createWeddingCollaboratorsRouter(storage: IStorage): Router {
 
   // POST /api/weddings/:weddingId/collaborators
   router.post("/:weddingId/collaborators", async (req, res) => {
-    console.log("[COLLABORATORS] POST /:weddingId/collaborators - Route matched");
-    console.log("[COLLABORATORS] weddingId:", req.params.weddingId);
-    console.log("[COLLABORATORS] Request body:", JSON.stringify(req.body));
     const { weddingId } = req.params;
     const userId = req.session?.userId;
-    console.log("[COLLABORATORS] userId from session:", userId);
     
     if (!userId) {
-      console.log("[COLLABORATORS] No userId - returning 401");
       return res.status(401).json({ error: "Authentication required" });
     }
     
