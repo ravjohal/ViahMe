@@ -45,7 +45,7 @@ import { createInvitationCardsRouter, createOrdersRouter, createPaymentsRouter, 
 import { createMeasurementProfilesRouter, createShoppingItemsRouter } from "./shopping";
 import { createGapWindowsRouter, createGapRecommendationsRouter } from "./gap-concierge";
 import { createRitualStagesRouter, createRitualStageUpdatesRouter, createGuestNotificationsRouter, createLiveWeddingRouter, createPublicLiveRouter } from "./live-wedding";
-import { createRolesRouter, createWeddingRolesRouter, createCollaboratorsRouter, createCollaboratorInvitesRouter, createCollaboratorActivityRouter, createPermissionsRouter, createMyCollaborationsRouter } from "./collaborators";
+import { createRolesRouter, createWeddingRolesRouter, createCollaboratorsRouter, createWeddingCollaboratorsRouter, createCollaboratorInvitesRouter, createCollaboratorActivityRouter, createPermissionsRouter, createMyCollaborationsRouter } from "./collaborators";
 import { createGuestSourcesRouter } from "./guest-sources";
 import { createGuestSideRouter, createGuestConsensusRouter, createScenariosRouter, createGuestBudgetRouter, createHouseholdPriorityRouter } from "./guest-planning";
 import { createTimelineRouter, createEventTimeRouter, createTimelineChangesRouter, createVendorAcknowledgmentsRouter } from "./timeline";
@@ -368,9 +368,10 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   app.use("/api/weddings", createWeddingRolesRouter(storage));
   // Role-by-ID operations: /api/roles/:roleId
   app.use("/api/roles", createRolesRouter(storage));
-  // Collaborators
+  // Wedding-scoped collaborators: /api/weddings/:weddingId/collaborators
+  app.use("/api/weddings", createWeddingCollaboratorsRouter(storage));
+  // Collaborator-by-ID operations: /api/collaborators/:collaboratorId
   app.use("/api/collaborators", createCollaboratorsRouter(storage));
-  app.use("/api/weddings", createCollaboratorsRouter(storage));
   app.use("/api/collaborator-invites", createCollaboratorInvitesRouter(storage));
   app.use("/api/collaborator-activity", createCollaboratorActivityRouter(storage));
   app.use("/api/weddings", createCollaboratorActivityRouter(storage));

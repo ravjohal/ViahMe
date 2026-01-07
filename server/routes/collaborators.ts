@@ -304,10 +304,13 @@ const inviteCollaboratorSchema = z.object({
   roleId: z.string().min(1, "Role ID is required"),
 });
 
-export function createCollaboratorsRouter(storage: IStorage): Router {
+// Wedding-scoped collaborators router - mount at /api/weddings
+// Routes: GET/POST /:weddingId/collaborators
+export function createWeddingCollaboratorsRouter(storage: IStorage): Router {
   const router = Router();
 
-  router.get("/weddings/:weddingId", async (req, res) => {
+  // GET /api/weddings/:weddingId/collaborators
+  router.get("/:weddingId/collaborators", async (req, res) => {
     const { weddingId } = req.params;
     const userId = req.session?.userId;
     
@@ -335,7 +338,8 @@ export function createCollaboratorsRouter(storage: IStorage): Router {
     }
   });
 
-  router.post("/weddings/:weddingId", async (req, res) => {
+  // POST /api/weddings/:weddingId/collaborators
+  router.post("/:weddingId/collaborators", async (req, res) => {
     const { weddingId } = req.params;
     const userId = req.session?.userId;
     
@@ -439,6 +443,15 @@ export function createCollaboratorsRouter(storage: IStorage): Router {
     }
   });
 
+  return router;
+}
+
+// Collaborator-by-ID router - mount at /api/collaborators
+// Routes: PATCH/DELETE /:collaboratorId, POST /:collaboratorId/resend-invite
+export function createCollaboratorsRouter(storage: IStorage): Router {
+  const router = Router();
+
+  // PATCH /api/collaborators/:collaboratorId
   router.patch("/:collaboratorId", async (req, res) => {
     const { collaboratorId } = req.params;
     const userId = req.session?.userId;
