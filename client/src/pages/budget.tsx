@@ -27,10 +27,8 @@ import {
 import { SiWhatsapp } from "react-icons/si";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { MultiCeremonySavingsCalculator } from "@/components/multi-ceremony-savings-calculator";
 import { AddExpenseDialog } from "@/components/add-expense-dialog";
 import { EditExpenseDialog, type ExpenseWithDetails } from "@/components/edit-expense-dialog";
-import { BudgetEstimator } from "@/components/budget-estimator";
 
 // Use shared expense type from the edit dialog component
 type ExpenseWithAllocations = ExpenseWithDetails;
@@ -69,7 +67,6 @@ export default function Budget() {
   const [expandedEvents, setExpandedEvents] = useState<Set<string>>(new Set());
   const [contributorFilter, setContributorFilter] = useState<ContributorFilter>("all");
   const [editBudgetOpen, setEditBudgetOpen] = useState(false);
-  const [showSavingsCalculator, setShowSavingsCalculator] = useState(false);
   const [showCategories, setShowCategories] = useState(false);
   const [editingExpense, setEditingExpense] = useState<ExpenseWithAllocations | null>(null);
   const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null);
@@ -711,17 +708,15 @@ export default function Budget() {
             <h1 className="text-2xl font-bold" data-testid="text-budget-title">Budget Planner</h1>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <BudgetEstimator 
-              wedding={wedding} 
-              events={events}
-              onUpdateBudget={(budget) => {
-                setNewTotalBudget(budget.toString());
-                updateWeddingBudgetMutation.mutate(budget.toString());
-              }}
-              onUpdateEventBudget={(eventId, budget) => {
-                updateEventBudgetMutation.mutate({ eventId, budget });
-              }}
-            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setLocation("/budget-estimator")}
+              data-testid="button-budget-estimator"
+            >
+              <Calculator className="w-4 h-4 mr-2" />
+              Estimator
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -869,33 +864,6 @@ export default function Budget() {
             </Button>
           </div>
         </div>
-
-        {/* Guest Savings Calculator Toggle */}
-        <Card className="p-4 mb-6 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-950/30 dark:to-indigo-950/30">
-          <Collapsible open={showSavingsCalculator} onOpenChange={setShowSavingsCalculator}>
-            <CollapsibleTrigger asChild>
-              <button className="flex items-center justify-between w-full" data-testid="toggle-savings-calculator">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
-                    <Calculator className="w-5 h-5 text-purple-600" />
-                  </div>
-                  <div className="text-left">
-                    <h3 className="font-semibold">Guest Savings Calculator</h3>
-                    <p className="text-sm text-muted-foreground">See how trimming guest counts can save money</p>
-                  </div>
-                </div>
-                {showSavingsCalculator ? (
-                  <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                ) : (
-                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                )}
-              </button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="mt-4">
-              <MultiCeremonySavingsCalculator events={events} />
-            </CollapsibleContent>
-          </Collapsible>
-        </Card>
 
         {/* Budget Matrix Explainer */}
         <Card className="p-4 mb-6 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border-amber-200 dark:border-amber-800">

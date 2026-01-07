@@ -70,6 +70,7 @@ import GamePortal from "@/pages/game-portal";
 import RitualRoles from "@/pages/ritual-roles";
 import VendorAccessPasses from "@/pages/vendor-access-passes";
 import VendorTimeline from "@/pages/vendor-timeline";
+import BudgetEstimatorPage from "@/pages/budget-estimator";
 import { VendorRoute } from "@/components/VendorRoute";
 import { CoupleRoute } from "@/components/CoupleRoute";
 import { CouplePlannerChatbot } from "@/components/CouplePlannerChatbot";
@@ -174,6 +175,11 @@ function Router() {
       <Route path="/budget">
         <ProtectedRoute requiredPermission="budget">
           <Budget />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/budget-estimator">
+        <ProtectedRoute requiredPermission="budget">
+          <BudgetEstimatorPage />
         </ProtectedRoute>
       </Route>
       <Route path="/budget-intelligence">
