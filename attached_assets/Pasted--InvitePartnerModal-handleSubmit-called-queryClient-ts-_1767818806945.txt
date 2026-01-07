@@ -1,0 +1,63 @@
+[InvitePartnerModal] handleSubmit called
+queryClient.ts:15 Fetch finished loading: POST "https://e76cd5b8-a506-42b3-b7a0-a82746885ad6-00-1y6xhgv9ei8r8.spock.replit.dev/api/weddings/c6085dec-6b90-4333-b6d0-0373e29ec3a0/roles".
+apiRequest @ queryClient.ts:15
+mutationFn @ invite-partner-modal.tsx:102
+fn @ @tanstack_react-query.js?v=476c3b48:1189
+run @ @tanstack_react-query.js?v=476c3b48:494
+start @ @tanstack_react-query.js?v=476c3b48:536
+execute @ @tanstack_react-query.js?v=476c3b48:1225
+await in execute
+mutate @ @tanstack_react-query.js?v=476c3b48:2630
+handleSubmit @ invite-partner-modal.tsx:209
+callCallback2 @ chunk-RPCDYKBN.js?v=476c3b48:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=476c3b48:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=476c3b48:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=476c3b48:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=476c3b48:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=476c3b48:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=476c3b48:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=476c3b48:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=476c3b48:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=476c3b48:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=476c3b48:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=476c3b48:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=476c3b48:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=476c3b48:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=476c3b48:5449
+invite-partner-modal.tsx:224 [InvitePartnerModal] Error: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+handleSubmit @ invite-partner-modal.tsx:224
+await in handleSubmit
+callCallback2 @ chunk-RPCDYKBN.js?v=476c3b48:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=476c3b48:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=476c3b48:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=476c3b48:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=476c3b48:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=476c3b48:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=476c3b48:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=476c3b48:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=476c3b48:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=476c3b48:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=476c3b48:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=476c3b48:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=476c3b48:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=476c3b48:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=476c3b48:5449
+2shared-8b6ce66d5a97abe461745a040f68e101.js:1 Fetch finished loading: POST "https://r.stripe.com/b".
+(anonymous) @ shared-8b6ce66d5a97abe461745a040f68e101.js:1
+e @ shared-8b6ce66d5a97abe461745a040f68e101.js:1
+c @ shared-8b6ce66d5a97abe461745a040f68e101.js:1
+value @ shared-8b6ce66d5a97abe461745a040f68e101.js:1
+value @ shared-8b6ce66d5a97abe461745a040f68e101.js:1
+value @ shared-8b6ce66d5a97abe461745a040f68e101.js:1
+value @ shared-8b6ce66d5a97abe461745a040f68e101.js:1
+value @ shared-8b6ce66d5a97abe461745a040f68e101.js:1
+(anonymous) @ shared-8b6ce66d5a97abe461745a040f68e101.js:1
+setTimeout
+value @ shared-8b6ce66d5a97abe461745a040f68e101.js:1
+value @ shared-8b6ce66d5a97abe461745a040f68e101.js:1
+value @ shared-8b6ce66d5a97abe461745a040f68e101.js:1
+(anonymous) @ shared-8b6ce66d5a97abe461745a040f68e101.js:1
+value @ shared-8b6ce66d5a97abe461745a040f68e101.js:1
+value @ shared-8b6ce66d5a97abe461745a040f68e101.js:1
+(anonymous) @ shared-8b6ce66d5a97abe461745a040f68e101.js:1
+2shared-8b6ce66d5a97abe461745a040f68e101.js:1 Fetch finished loading: POST "https://r.stripe.com/b".

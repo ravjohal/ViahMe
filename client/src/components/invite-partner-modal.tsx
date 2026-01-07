@@ -107,12 +107,26 @@ export function InvitePartnerModal({
         permissions: permissionsArray,
       });
       
+      // Read the response text first to debug
+      const responseText = await roleRes.text();
+      
       if (!roleRes.ok) {
-        const errorData = await roleRes.json().catch(() => ({ error: "Failed to create partner role" }));
-        throw new Error(errorData.error || "Failed to create partner role");
+        let errorMessage = "Failed to create partner role";
+        try {
+          const errorData = JSON.parse(responseText);
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          console.error("[createPartnerRole] Non-JSON error response:", responseText.substring(0, 200));
+        }
+        throw new Error(errorMessage);
       }
       
-      return roleRes.json();
+      try {
+        return JSON.parse(responseText);
+      } catch (e) {
+        console.error("[createPartnerRole] Failed to parse response:", responseText.substring(0, 200));
+        throw new Error("Invalid response from server");
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/weddings", weddingId, "roles"] });
