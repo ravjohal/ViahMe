@@ -28,6 +28,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -46,7 +47,7 @@ import { insertEventSchema } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { CEREMONY_COST_BREAKDOWNS, CEREMONY_CATALOG, calculateCeremonyTotalRange } from "@shared/ceremonies";
-import { SideFilter, SideBadge, VisibilityBadge, type SideViewMode } from "@/components/side-filter";
+import { SideFilter, SideBadge, VisibilityBadge, SIDE_COLORS, type SideViewMode } from "@/components/side-filter";
 
 const COST_PRESETS = [
   { name: "Catering", type: "per_head" as const, defaultCategory: "catering" },
@@ -642,6 +643,7 @@ export default function TimelinePage() {
       name: "",
       type: "custom",
       order: events.length + 1,
+      side: "mutual",
     },
   });
 
@@ -686,6 +688,7 @@ export default function TimelinePage() {
       order: event.order,
       costPerHead: event.costPerHead?.toString() || "",
       venueCapacity: event.venueCapacity || undefined,
+      side: (event.side as "bride" | "groom" | "mutual") || "mutual",
     });
     setDialogOpen(true);
   };
@@ -1489,6 +1492,7 @@ export default function TimelinePage() {
               name: "",
               type: "custom",
               order: events.length + 1,
+              side: "mutual",
             });
           }
         }}>
@@ -1708,6 +1712,46 @@ export default function TimelinePage() {
                   />
                 </div>
 
+                <FormField
+                  control={form.control}
+                  name="side"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Family Side</FormLabel>
+                      <FormDescription className="text-xs">
+                        Is this event for both families or hosted by one side?
+                      </FormDescription>
+                      <div className="flex gap-2 flex-wrap pt-1">
+                        {[
+                          { value: "mutual", label: "Shared", description: "Both families" },
+                          { value: "bride", label: "Bride's Side", description: "Bride's family" },
+                          { value: "groom", label: "Groom's Side", description: "Groom's family" },
+                        ].map((option) => {
+                          const colors = SIDE_COLORS[option.value as keyof typeof SIDE_COLORS];
+                          const isSelected = field.value === option.value;
+                          return (
+                            <button
+                              key={option.value}
+                              type="button"
+                              onClick={() => field.onChange(option.value)}
+                              className={`flex-1 min-w-[100px] px-3 py-2 rounded-lg border-2 transition-all text-left hover-elevate ${
+                                isSelected 
+                                  ? `${colors.bg} ${colors.border} ${colors.text}` 
+                                  : "border-muted bg-muted/20 text-muted-foreground hover:border-muted-foreground/50"
+                              }`}
+                              data-testid={`button-side-${option.value}`}
+                            >
+                              <div className="font-medium text-sm">{option.label}</div>
+                              <div className="text-xs opacity-75">{option.description}</div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 {editingEvent && (
                   <Collapsible open={costItemsOpen} onOpenChange={setCostItemsOpen}>
                     <CollapsibleTrigger asChild>
@@ -1852,6 +1896,7 @@ export default function TimelinePage() {
                         name: "",
                         type: "custom",
                         order: events.length + 1,
+                        side: "mutual",
                       });
                     }}
                     data-testid="button-cancel-event"
