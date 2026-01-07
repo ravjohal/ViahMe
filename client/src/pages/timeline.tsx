@@ -73,34 +73,65 @@ const CATEGORY_LABELS: Record<string, string> = {
   other: "Other Expenses",
 };
 
-const EVENT_TYPES = [
-  // Sikh ceremonies
-  { value: "paath", label: "Paath", icon: "🙏" },
-  { value: "maiyan", label: "Maiyan", icon: "✨" },
-  { value: "chunni_chadana", label: "Chunni Chadana", icon: "🧣" },
-  { value: "jaggo", label: "Jaggo", icon: "🪔" },
-  { value: "chooda", label: "Chooda", icon: "💍" },
-  { value: "bakra_party", label: "Bakra Party", icon: "🎊" },
-  { value: "anand_karaj", label: "Anand Karaj", icon: "🛕" },
-  // Hindu ceremonies  
-  { value: "haldi", label: "Haldi", icon: "💛" },
-  { value: "mehndi", label: "Mehndi", icon: "🎨" },
-  { value: "sangeet", label: "Sangeet", icon: "🎵" },
-  { value: "baraat", label: "Baraat", icon: "🐎" },
-  { value: "milni", label: "Milni", icon: "🤝" },
-  { value: "pheras", label: "Pheras", icon: "🔥" },
-  { value: "vidaai", label: "Vidaai", icon: "👋" },
-  // Muslim ceremonies
-  { value: "nikah", label: "Nikah", icon: "💒" },
-  { value: "walima", label: "Walima", icon: "🍽️" },
-  // General
-  { value: "reception", label: "Reception", icon: "🎉" },
-  { value: "cocktail", label: "Cocktail Party", icon: "🍸" },
-  { value: "rehearsal_dinner", label: "Rehearsal Dinner", icon: "🍷" },
-  { value: "bridal_shower", label: "Bridal Shower", icon: "🎁" },
-  { value: "bachelor_party", label: "Bachelor/Bachelorette", icon: "🥳" },
-  { value: "custom", label: "Custom Event", icon: "📅" },
+const EVENT_TYPE_GROUPS = [
+  {
+    id: "general",
+    label: "General Events",
+    description: "Common wedding events",
+    icon: "🎉",
+    events: [
+      { value: "reception", label: "Reception", icon: "🎉" },
+      { value: "cocktail", label: "Cocktail Party", icon: "🍸" },
+      { value: "rehearsal_dinner", label: "Rehearsal Dinner", icon: "🍷" },
+      { value: "bridal_shower", label: "Bridal Shower", icon: "🎁" },
+      { value: "bachelor_party", label: "Bachelor/Bachelorette", icon: "🥳" },
+      { value: "custom", label: "Custom Event", icon: "📅" },
+    ],
+  },
+  {
+    id: "sikh",
+    label: "Sikh Ceremonies",
+    description: "Traditional Sikh wedding rituals",
+    icon: "🙏",
+    events: [
+      { value: "paath", label: "Paath", icon: "🙏" },
+      { value: "maiyan", label: "Maiyan", icon: "✨" },
+      { value: "chunni_chadana", label: "Chunni Chadana", icon: "🧣" },
+      { value: "jaggo", label: "Jaggo", icon: "🪔" },
+      { value: "chooda", label: "Chooda", icon: "💍" },
+      { value: "bakra_party", label: "Bakra Party", icon: "🎊" },
+      { value: "anand_karaj", label: "Anand Karaj", icon: "🛕" },
+    ],
+  },
+  {
+    id: "hindu",
+    label: "Hindu Ceremonies",
+    description: "Traditional Hindu wedding rituals",
+    icon: "🔥",
+    events: [
+      { value: "haldi", label: "Haldi", icon: "💛" },
+      { value: "mehndi", label: "Mehndi", icon: "🎨" },
+      { value: "sangeet", label: "Sangeet", icon: "🎵" },
+      { value: "baraat", label: "Baraat", icon: "🐎" },
+      { value: "milni", label: "Milni", icon: "🤝" },
+      { value: "pheras", label: "Pheras", icon: "🔥" },
+      { value: "vidaai", label: "Vidaai", icon: "👋" },
+    ],
+  },
+  {
+    id: "muslim",
+    label: "Muslim Ceremonies",
+    description: "Traditional Islamic wedding rituals",
+    icon: "💒",
+    events: [
+      { value: "nikah", label: "Nikah", icon: "💒" },
+      { value: "walima", label: "Walima", icon: "🍽️" },
+    ],
+  },
 ];
+
+// Flat list for backwards compatibility
+const EVENT_TYPES = EVENT_TYPE_GROUPS.flatMap(group => group.events);
 
 const EVENT_COLORS: Record<string, { bg: string; border: string; icon: string; gradient: string }> = {
   // Sikh ceremonies
@@ -1239,26 +1270,65 @@ export default function TimelinePage() {
               <p className="text-sm text-muted-foreground">{WIZARD_STEPS[wizardStep - 1]?.description}</p>
             </DialogHeader>
 
-            <div className="py-4">
+            <div className="py-4 max-h-[60vh] overflow-y-auto">
               {wizardStep === 1 && (
-                <div className="grid grid-cols-2 gap-3">
-                  {EVENT_TYPES.map((type) => {
-                    const colors = EVENT_COLORS[type.value] || EVENT_COLORS.custom;
+                <div className="space-y-3">
+                  {EVENT_TYPE_GROUPS.map((group) => {
+                    const isGroupSelected = group.events.some(e => e.value === wizardData.type);
                     return (
-                      <button
-                        key={type.value}
-                        type="button"
-                        onClick={() => setWizardData(prev => ({ ...prev, type: type.value }))}
-                        className={`p-4 rounded-xl border-2 transition-all text-left hover-elevate ${
-                          wizardData.type === type.value 
-                            ? `${colors.border} ${colors.bg} ring-2 ring-orange-400` 
-                            : "border-muted hover:border-muted-foreground/50"
-                        }`}
-                        data-testid={`wizard-event-type-${type.value}`}
-                      >
-                        <div className="text-3xl mb-2">{type.icon}</div>
-                        <div className="font-medium">{type.label}</div>
-                      </button>
+                      <Collapsible key={group.id} defaultOpen={group.id === "general" || isGroupSelected}>
+                        <CollapsibleTrigger asChild>
+                          <button 
+                            type="button"
+                            className={`w-full p-3 rounded-lg border-2 transition-all text-left hover-elevate flex items-center justify-between ${
+                              isGroupSelected 
+                                ? "border-orange-400 bg-orange-50 dark:bg-orange-900/20" 
+                                : "border-muted hover:border-muted-foreground/50"
+                            }`}
+                            data-testid={`wizard-group-${group.id}`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="text-2xl">{group.icon}</span>
+                              <div>
+                                <div className="font-medium">{group.label}</div>
+                                <div className="text-xs text-muted-foreground">{group.description}</div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {isGroupSelected && (
+                                <Badge className="bg-gradient-to-r from-orange-500 to-pink-500 text-white">
+                                  Selected
+                                </Badge>
+                              )}
+                              <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                            </div>
+                          </button>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-2 pl-2">
+                            {group.events.map((type) => {
+                              const colors = EVENT_COLORS[type.value] || EVENT_COLORS.custom;
+                              const isSelected = wizardData.type === type.value;
+                              return (
+                                <button
+                                  key={type.value}
+                                  type="button"
+                                  onClick={() => setWizardData(prev => ({ ...prev, type: type.value }))}
+                                  className={`p-3 rounded-lg border-2 transition-all text-left hover-elevate ${
+                                    isSelected 
+                                      ? `${colors.border} ${colors.bg} ring-2 ring-orange-400` 
+                                      : "border-muted hover:border-muted-foreground/50"
+                                  }`}
+                                  data-testid={`wizard-event-type-${type.value}`}
+                                >
+                                  <div className="text-xl mb-1">{type.icon}</div>
+                                  <div className="text-sm font-medium leading-tight">{type.label}</div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
                     );
                   })}
                 </div>
