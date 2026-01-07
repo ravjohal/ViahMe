@@ -313,7 +313,9 @@ function AppLayout() {
   ];
   
   // Hide header on auth pages, guest websites, and vendor pages (vendors have their own header)
-  const isVendorPage = location.startsWith("/vendor-");
+  // Note: /vendor-collaboration and /vendor-timeline are couple pages, not vendor pages
+  const vendorPortalPages = ["/vendor-dashboard", "/vendor-leads", "/vendor-messages", "/vendor-calendar", "/vendor-analytics", "/vendor-profile", "/vendor-portfolio", "/vendor-login", "/vendor-register", "/vendor-invite"];
+  const isVendorPage = vendorPortalPages.some(page => location.startsWith(page));
   // Hide header on /vendors page for non-logged-in users (they see logo-only header from vendors.tsx)
   const isPublicVendorsPage = location === "/vendors" && !user;
   // Hide header on collector pages (guest contributors shouldn't see app navigation)
