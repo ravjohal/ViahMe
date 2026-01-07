@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import type { Event, InsertEvent, EventCostItem, BudgetCategory, Task } from "@shared/schema";
+import type { Event, InsertEvent, EventCostItem, Task } from "@shared/schema";
 import { EventDetailModal } from "@/components/event-detail-modal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -538,7 +538,7 @@ export default function TimelinePage() {
     enabled: !!wedding?.id,
   });
 
-  const { data: budgetCategories = [] } = useQuery<BudgetCategory[]>({
+  const { data: budgetCategories = [] } = useQuery<{ id: string; name: string; category: string }[]>({
     queryKey: ["/api/budget-categories", wedding?.id],
     enabled: !!wedding?.id,
   });
@@ -946,9 +946,28 @@ export default function TimelinePage() {
 
     const sortedDates = Array.from(groups.keys()).sort();
     
+    // Helper to parse time string to comparable value (events without time come first)
+    const parseTimeForSort = (time: string | null | undefined): number => {
+      if (!time) return -1; // No time = appears first
+      // Parse time formats like "10:00 AM", "2:30 PM", "14:00"
+      const match = time.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+      if (!match) return 0;
+      let hours = parseInt(match[1], 10);
+      const minutes = parseInt(match[2], 10);
+      const period = match[3]?.toUpperCase();
+      if (period === "PM" && hours !== 12) hours += 12;
+      if (period === "AM" && hours === 12) hours = 0;
+      return hours * 60 + minutes;
+    };
+    
     const result: DayGroup[] = sortedDates.map((dateKey, index) => {
       const dateObj = dateKeyToLocalDate(dateKey);
-      const dayEvents = groups.get(dateKey) || [];
+      const dayEvents = (groups.get(dateKey) || []).sort((a, b) => {
+        const aTime = parseTimeForSort(a.time);
+        const bTime = parseTimeForSort(b.time);
+        if (aTime !== bTime) return aTime - bTime;
+        return a.order - b.order; // Fall back to order if times are equal
+      });
       const primaryEvent = dayEvents.find(e => ["sangeet", "anand_karaj", "reception", "mehndi"].includes(e.type));
       
       return {
