@@ -69,12 +69,12 @@ const BENEFITS = [
   },
   {
     title: "Vendor Marketplace",
-    description: "Access 32 specialized vendor categories including culturally-specific services rarely found on traditional platforms.",
+    description: "Access 36 specialized vendor categories including culturally-specific services rarely found on traditional platforms.",
     icon: Star,
   },
   {
     title: "All-in-One Platform",
-    description: "Guest management, budget tracking, vendor contracts, playlists, photo galleries, and website builder—everything you need.",
+    description: "Guest management, budget tracking, vendor contracts, playlists, and website builder—everything you need.",
     icon: CheckCircle,
   },
   {
@@ -564,7 +564,7 @@ export default function Landing() {
               </div>
               <div className="px-2">
                 <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent mb-2">
-                  32
+                  36
                 </div>
                 <div className="text-base sm:text-lg font-semibold mb-1">Vendor Categories</div>
                 <div className="text-xs sm:text-sm text-muted-foreground">Including culturally-specific services</div>
