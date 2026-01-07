@@ -344,7 +344,11 @@ function SpendingTrendWidget({ expenses }: { expenses: Expense[] }) {
 function RecentExpensesWidget({ expenses }: { expenses: Expense[] }) {
   const recentExpenses = useMemo(() => {
     return [...expenses]
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : (a.expenseDate ? new Date(a.expenseDate).getTime() : 0);
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : (b.expenseDate ? new Date(b.expenseDate).getTime() : 0);
+        return dateB - dateA;
+      })
       .slice(0, 5);
   }, [expenses]);
 

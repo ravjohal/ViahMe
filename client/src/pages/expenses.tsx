@@ -780,24 +780,26 @@ export default function Expenses() {
                         {expense.notes && (
                           <p className="text-sm text-muted-foreground mt-1">{expense.notes}</p>
                         )}
-                        <div className="mt-3 space-y-1">
-                          {expense.splits.map((split) => (
-                            <div key={split.id} className="flex items-center gap-2 text-sm">
-                              <Button
-                                variant={split.isPaid ? "default" : "outline"}
-                                size="sm"
-                                className="h-6 w-6 p-0"
-                                onClick={() => markSplitPaidMutation.mutate({ splitId: split.id, isPaid: !split.isPaid })}
-                                data-testid={`button-toggle-paid-${split.id}`}
-                              >
-                                {split.isPaid && <Check className="h-3 w-3" />}
-                              </Button>
-                              <span className={split.isPaid ? "line-through text-muted-foreground" : ""}>
-                                {split.userName}: ${parseFloat(split.shareAmount).toFixed(2)}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
+                        {expense.splits && expense.splits.length > 0 && (
+                          <div className="mt-3 space-y-1">
+                            {expense.splits.map((split) => (
+                              <div key={split.id} className="flex items-center gap-2 text-sm">
+                                <Button
+                                  variant={split.isPaid ? "default" : "outline"}
+                                  size="sm"
+                                  className="h-6 w-6 p-0"
+                                  onClick={() => markSplitPaidMutation.mutate({ splitId: split.id, isPaid: !split.isPaid })}
+                                  data-testid={`button-toggle-paid-${split.id}`}
+                                >
+                                  {split.isPaid && <Check className="h-3 w-3" />}
+                                </Button>
+                                <span className={split.isPaid ? "line-through text-muted-foreground" : ""}>
+                                  {split.userName}: ${parseFloat(split.shareAmount).toFixed(2)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-lg font-bold">${parseFloat(expense.amount).toFixed(2)}</span>
