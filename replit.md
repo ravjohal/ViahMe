@@ -59,6 +59,12 @@ Key architectural decisions and features include:
 - **Vendor Lead Management System**: Automated lead qualification and nurturing with lead scoring, priority classification (hot/warm/medium/cold), auto-lead creation, a vendor-facing lead dashboard, activity tracking, nurturing sequences, and email integration.
 - **Side-Based Event Separation**: Multi-family planning support where bride/groom sides can have private events and expenses. Events have `side` ('bride'|'groom'|'mutual') and `visibility` ('private'|'shared') attributes for granular control.
 - **Partner Collaboration Flow**: Prominent "Invite Your Partner" card on dashboard immediately after onboarding, encouraging collaborative wedding planning.
+- **Ritual Role Assignee Manager**: Couples can assign ceremonial micro-roles to guests with "Mission Card" notifications.
+  - **RITUAL_ROLE_TEMPLATES**: 20+ pre-defined roles (Ardas Leader, Palla Holder, Milni Coordinator, Joota Chupai Captain, etc.) organized by ceremony type in `shared/schema.ts`
+  - **ritual_role_assignments table**: Stores assignments with status tracking (assigned/acknowledged/completed), custom instructions, timing, location, attire notes, and priority (high/medium/low)
+  - **Couples UI**: `/ritual-roles` page with ceremony-by-ceremony role management interface accessible from sidebar under "More Tools"
+  - **Guest Portal Integration**: Mission Cards appear in the RSVP portal (`/rsvp/:token`) showing assigned roles with "Accept Role" acknowledgment flow
+  - **API Endpoints**: `/api/ritual-roles/*` for CRUD operations, guest-facing endpoints for acknowledging roles
 
 ## External Dependencies
 - **PostgreSQL (Neon)**: Relational database.

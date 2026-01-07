@@ -67,6 +67,7 @@ import GuestCollector from "@/pages/guest-collector";
 import CommunicationHub from "@/pages/communication-hub";
 import EngagementGames from "@/pages/engagement-games";
 import GamePortal from "@/pages/game-portal";
+import RitualRoles from "@/pages/ritual-roles";
 import { VendorRoute } from "@/components/VendorRoute";
 import { CoupleRoute } from "@/components/CoupleRoute";
 import { CouplePlannerChatbot } from "@/components/CouplePlannerChatbot";
@@ -133,6 +134,11 @@ function Router() {
       <Route path="/engagement-games">
         <ProtectedRoute requiredPermission="guests">
           <EngagementGames />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/ritual-roles">
+        <ProtectedRoute requiredPermission="guests">
+          <RitualRoles />
         </ProtectedRoute>
       </Route>
       {/* Vendor marketplace is publicly accessible */}

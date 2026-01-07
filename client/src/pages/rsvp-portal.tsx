@@ -2,15 +2,21 @@ import { useParams } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Loader2, CheckCircle, XCircle, Calendar, MapPin, Users, Mail } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Calendar, MapPin, Users, Mail, Sparkles, Clock, AlertTriangle, Shirt } from "lucide-react";
 import { useState } from "react";
-import type { Household, Guest, Invitation, Event } from "@shared/schema";
+import type { Household, Guest, Invitation, Event, RitualRoleAssignment } from "@shared/schema";
+
+interface EnrichedRitualRole extends RitualRoleAssignment {
+  event?: Event;
+  guest?: Guest;
+}
 
 export default function RsvpPortal() {
   const { token } = useParams<{ token: string }>();
@@ -64,6 +70,55 @@ export default function RsvpPortal() {
       return Promise.all(eventsPromises);
     },
     enabled: allInvitations.length > 0,
+  });
+
+  // Build stable query key for ritual roles based on guest IDs
+  const guestIds = guests.map(g => g.id).sort().join(",");
+
+  // Fetch ritual role assignments for all guests in household
+  const { data: ritualRoles = [], isLoading: loadingRitualRoles } = useQuery<EnrichedRitualRole[]>({
+    queryKey: ['/api/ritual-roles', 'guests', guestIds],
+    queryFn: async () => {
+      if (guests.length === 0) return [];
+      
+      const rolesPromises = guests.map(guest => 
+        fetch(`/api/ritual-roles/guest/${guest.id}`).then(res => res.json())
+      );
+      
+      const results = await Promise.all(rolesPromises);
+      return results.flat();
+    },
+    enabled: guests.length > 0,
+  });
+
+  // Acknowledge ritual role mutation
+  const acknowledgeRoleMutation = useMutation({
+    mutationFn: async (roleId: string) => {
+      const response = await fetch(`/api/ritual-roles/${roleId}/acknowledge`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to acknowledge role');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/ritual-roles', 'guests', guestIds] });
+      toast({
+        title: "Role Acknowledged",
+        description: "Thank you for confirming your role!",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to acknowledge role. Please try again.",
+        variant: "destructive",
+      });
+    },
   });
 
   // Submit RSVP mutation
@@ -326,6 +381,145 @@ export default function RsvpPortal() {
             );
           })}
         </div>
+
+        {/* Mission Cards - Ritual Role Assignments */}
+        {loadingRitualRoles && (
+          <Card>
+            <CardContent className="flex items-center justify-center py-8">
+              <Loader2 className="w-8 h-8 animate-spin text-primary mr-3" />
+              <span className="text-muted-foreground">Loading your special roles...</span>
+            </CardContent>
+          </Card>
+        )}
+        {!loadingRitualRoles && ritualRoles.length > 0 && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <Sparkles className="w-6 h-6 text-amber-500" />
+              <h2 className="text-2xl font-serif font-semibold">Your Special Roles</h2>
+            </div>
+            <p className="text-muted-foreground">
+              You've been honored with special ceremonial duties! Please review your "Mission Cards" below.
+            </p>
+            
+            <div className="grid gap-4 md:grid-cols-2">
+              {ritualRoles.map((role) => {
+                const priorityColors: Record<string, string> = {
+                  high: "border-red-300 bg-gradient-to-br from-red-50 to-orange-50",
+                  medium: "border-amber-300 bg-gradient-to-br from-amber-50 to-yellow-50",
+                  low: "border-green-300 bg-gradient-to-br from-green-50 to-emerald-50",
+                };
+                const priorityBadgeColors: Record<string, string> = {
+                  high: "bg-red-100 text-red-800",
+                  medium: "bg-amber-100 text-amber-800",
+                  low: "bg-green-100 text-green-800",
+                };
+                const statusColors: Record<string, string> = {
+                  assigned: "bg-blue-100 text-blue-800",
+                  acknowledged: "bg-emerald-100 text-emerald-800",
+                  completed: "bg-gray-100 text-gray-800",
+                };
+
+                return (
+                  <Card 
+                    key={role.id} 
+                    className={`border-2 ${priorityColors[role.priority || "medium"]}`}
+                    data-testid={`card-mission-${role.id}`}
+                  >
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between gap-2 flex-wrap">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="w-5 h-5 text-amber-500" />
+                          <CardTitle className="text-lg">{role.roleDisplayName}</CardTitle>
+                        </div>
+                        <div className="flex gap-2 flex-wrap">
+                          <Badge className={`text-xs ${priorityBadgeColors[role.priority || "medium"]}`}>
+                            {role.priority === "high" ? "Critical" : role.priority === "medium" ? "Important" : "Optional"}
+                          </Badge>
+                          <Badge className={`text-xs ${statusColors[role.status || "assigned"]}`}>
+                            {role.status === "acknowledged" ? "Confirmed" : role.status === "completed" ? "Done" : "Pending"}
+                          </Badge>
+                        </div>
+                      </div>
+                      <CardDescription className="mt-1">
+                        {role.event?.name && (
+                          <span className="font-medium">{role.event.name}</span>
+                        )}
+                        {role.guest?.name && role.guest.name !== guests[0]?.name && (
+                          <span className="ml-2 text-sm">Assigned to: {role.guest.name}</span>
+                        )}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {role.description && (
+                        <p className="text-sm text-muted-foreground">{role.description}</p>
+                      )}
+                      
+                      {role.instructions && (
+                        <div className="bg-white/50 dark:bg-gray-900/50 rounded-lg p-3 border">
+                          <p className="text-sm font-medium mb-1 flex items-center gap-2">
+                            <AlertTriangle className="w-4 h-4 text-amber-500" />
+                            Instructions
+                          </p>
+                          <p className="text-sm text-muted-foreground whitespace-pre-wrap">{role.instructions}</p>
+                        </div>
+                      )}
+                      
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        {role.timing && (
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Clock className="w-4 h-4 flex-shrink-0" />
+                            <span>{role.timing}</span>
+                          </div>
+                        )}
+                        {role.location && (
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <MapPin className="w-4 h-4 flex-shrink-0" />
+                            <span>{role.location}</span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {role.attireNotes && (
+                        <div className="flex items-start gap-2 text-sm text-muted-foreground bg-white/50 dark:bg-gray-900/50 rounded-lg p-3 border">
+                          <Shirt className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                          <span>{role.attireNotes}</span>
+                        </div>
+                      )}
+                      
+                      {role.status === "assigned" && (
+                        <Button
+                          onClick={() => acknowledgeRoleMutation.mutate(role.id)}
+                          disabled={acknowledgeRoleMutation.isPending}
+                          className="w-full"
+                          data-testid={`button-acknowledge-${role.id}`}
+                        >
+                          {acknowledgeRoleMutation.isPending ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Confirming...
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                              I Accept This Role
+                            </>
+                          )}
+                        </Button>
+                      )}
+                      
+                      {role.status === "acknowledged" && (
+                        <div className="flex items-center justify-center gap-2 text-emerald-600 bg-emerald-50 rounded-lg py-2">
+                          <CheckCircle className="w-5 h-5" />
+                          <span className="font-medium">Role Confirmed</span>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Footer */}
         <Card className="bg-gradient-to-r from-orange-50 to-amber-50">
