@@ -17,7 +17,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { usePermissions } from "@/hooks/use-permissions";
 import { useAuth } from "@/hooks/use-auth";
 import { PERMISSION_CATEGORIES, type PermissionCategory } from "@shared/schema";
-import type { Wedding, Event, BudgetCategory, Contract, Booking, EventCostItem, Guest, WeddingRole, Task, WeddingCollaborator } from "@shared/schema";
+import type { Wedding, Event, BudgetCategory, Contract, Booking, EventCostItem, Guest, WeddingRole, Task, WeddingCollaborator, Vendor } from "@shared/schema";
 import { PartnerEventConfirmation } from "@/components/partner-event-confirmation";
 import { InvitePartnerModal } from "@/components/invite-partner-modal";
 
@@ -302,6 +302,10 @@ export default function Dashboard() {
   const { data: bookings = [] } = useQuery<Booking[]>({
     queryKey: ["/api/bookings", wedding?.id],
     enabled: !!wedding?.id,
+  });
+
+  const { data: vendors = [] } = useQuery<Vendor[]>({
+    queryKey: ["/api/vendors"],
   });
 
   const { data: contracts = [] } = useQuery<Contract[]>({
@@ -749,35 +753,80 @@ export default function Dashboard() {
                     if (!a.date) return 1;
                     if (!b.date) return -1;
                     return new Date(a.date).getTime() - new Date(b.date).getTime();
-                  }).slice(0, 5).map((event) => (
-                    <button
-                      key={event.id}
-                      onClick={() => setSelectedEvent(event)}
-                      className="w-full flex items-center gap-3 p-3 hover-elevate text-left transition-all"
-                      data-testid={`timeline-event-${event.id}`}
-                    >
-                      <div className="w-12 text-center flex-shrink-0">
-                        {event.date ? (
-                          <>
-                            <p className="text-xs text-muted-foreground uppercase">
-                              {new Date(event.date).toLocaleDateString('en-US', { month: 'short' })}
+                  }).slice(0, 5).map((event) => {
+                    const eventBookings = bookings.filter(b => b.eventId === event.id && b.status === 'confirmed');
+                    const eventVendorNames = eventBookings
+                      .map(b => vendors.find(v => v.id === b.vendorId)?.name)
+                      .filter(Boolean);
+                    const budget = event.allocatedBudget ? parseFloat(event.allocatedBudget.toString()) : 0;
+                    
+                    return (
+                      <button
+                        key={event.id}
+                        onClick={() => setSelectedEvent(event)}
+                        className="w-full flex items-start gap-3 p-4 hover-elevate text-left transition-all"
+                        data-testid={`timeline-event-${event.id}`}
+                      >
+                        <div className="w-14 text-center flex-shrink-0 pt-1">
+                          {event.date ? (
+                            <>
+                              <p className="text-xs text-muted-foreground uppercase">
+                                {new Date(event.date).toLocaleDateString('en-US', { month: 'short' })}
+                              </p>
+                              <p className="text-xl font-bold">
+                                {new Date(event.date).getDate()}
+                              </p>
+                            </>
+                          ) : (
+                            <Calendar className="w-5 h-5 mx-auto text-muted-foreground" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold">{event.name}</p>
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-sm text-muted-foreground">
+                            {event.time && (
+                              <span className="flex items-center gap-1">
+                                <Clock className="w-3.5 h-3.5" />
+                                {event.time}
+                              </span>
+                            )}
+                            {event.guestCount && event.guestCount > 0 && (
+                              <span className="flex items-center gap-1">
+                                <Users className="w-3.5 h-3.5" />
+                                {event.guestCount} guests
+                              </span>
+                            )}
+                            {budget > 0 && (
+                              <span className="flex items-center gap-1">
+                                <DollarSign className="w-3.5 h-3.5" />
+                                ${budget.toLocaleString()}
+                              </span>
+                            )}
+                          </div>
+                          {eventVendorNames.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                              {eventVendorNames.slice(0, 3).map((name, idx) => (
+                                <Badge key={idx} variant="secondary" className="text-xs">
+                                  <Briefcase className="w-3 h-3 mr-1" />
+                                  {name}
+                                </Badge>
+                              ))}
+                              {eventVendorNames.length > 3 && (
+                                <Badge variant="outline" className="text-xs">
+                                  +{eventVendorNames.length - 3} more
+                                </Badge>
+                              )}
+                            </div>
+                          )}
+                          {event.location && (
+                            <p className="text-xs text-muted-foreground mt-1 truncate">
+                              {event.location}
                             </p>
-                            <p className="text-lg font-bold">
-                              {new Date(event.date).getDate()}
-                            </p>
-                          </>
-                        ) : (
-                          <Calendar className="w-5 h-5 mx-auto text-muted-foreground" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">{event.name}</p>
-                        <p className="text-sm text-muted-foreground truncate">
-                          {event.time || event.location || 'No details yet'}
-                        </p>
-                      </div>
-                    </button>
-                  ))}
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
                 </Card>
               )}
             </div>
