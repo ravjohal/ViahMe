@@ -47,7 +47,7 @@ const FEATURES = [
   {
     icon: DollarSign,
     title: "Smart Budget Intelligence",
-    description: "Get culturally-aware budget recommendations based on real spending data across 5 major US cities and your chosen tradition.",
+    description: "Get culturally-aware budget recommendations based on real spending data and your chosen tradition.",
   },
   {
     icon: MessageSquare,
@@ -76,11 +76,6 @@ const BENEFITS = [
     title: "All-in-One Platform",
     description: "Guest management, budget tracking, vendor contracts, playlists, and website builder—everything you need.",
     icon: CheckCircle,
-  },
-  {
-    title: "5 Major US Cities",
-    description: "Tailored for South Asian communities in Bay Area, NYC, LA, Chicago, and Seattle with local vendor networks.",
-    icon: Globe,
   },
 ];
 
@@ -554,7 +549,7 @@ export default function Landing() {
       <section className="py-12 sm:py-20 bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-orange-950/20 dark:via-pink-950/20 dark:to-purple-950/20">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="max-w-4xl mx-auto">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 text-center">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 text-center">
               <div className="px-2">
                 <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent mb-2">
                   7
@@ -568,13 +563,6 @@ export default function Landing() {
                 </div>
                 <div className="text-base sm:text-lg font-semibold mb-1">Vendor Categories</div>
                 <div className="text-xs sm:text-sm text-muted-foreground">Including culturally-specific services</div>
-              </div>
-              <div className="px-2">
-                <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent mb-2">
-                  5
-                </div>
-                <div className="text-base sm:text-lg font-semibold mb-1">Major US Cities</div>
-                <div className="text-xs sm:text-sm text-muted-foreground">Bay Area, NYC, LA, Chicago, Seattle</div>
               </div>
             </div>
           </div>
@@ -593,7 +581,7 @@ export default function Landing() {
               Ready to Plan Your Dream Wedding?
             </h2>
             <p className="text-base sm:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto px-2">
-              Join couples across the US who are planning unforgettable South Asian weddings with Viah.me. 
+              Join couples who are planning unforgettable South Asian weddings with Viah.me. 
               Start for free today—no credit card required.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
