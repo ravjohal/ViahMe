@@ -65,6 +65,11 @@ Key architectural decisions and features include:
   - **Couples UI**: `/ritual-roles` page with ceremony-by-ceremony role management interface accessible from sidebar under "More Tools"
   - **Guest Portal Integration**: Mission Cards appear in the RSVP portal (`/rsvp/:token`) showing assigned roles with "Accept Role" acknowledgment flow
   - **API Endpoints**: `/api/ritual-roles/*` for CRUD operations, guest-facing endpoints for acknowledging roles
+- **Vendor Access Pass & Collaboration Hub**: Share filtered timeline views with booked vendors. Eliminates the "15 different PDF versions of the timeline" problem.
+  - **vendor_access_passes table**: Stores access tokens, vendor/event visibility filters, permissions (canViewGuestCount, canViewVendorDetails), access tracking (lastAccessedAt, accessCount), and status (active/revoked/expired)
+  - **Couples UI**: `/vendor-collaboration` page to create, manage, and revoke vendor access passes. Select specific events to share, configure visibility permissions, copy shareable links, and track vendor access usage
+  - **Vendor-Facing View**: `/vendor-timeline/:token` public page for vendors to view their filtered timeline without requiring an account. Shows relevant events with dates, times, locations, and optional guest counts
+  - **API Endpoints**: `/api/vendor-access-passes/*` for CRUD operations, `/api/vendor-collaboration/:token` for public vendor timeline view with usage tracking
 
 ## External Dependencies
 - **PostgreSQL (Neon)**: Relational database.

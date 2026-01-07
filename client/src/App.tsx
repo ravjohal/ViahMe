@@ -68,6 +68,8 @@ import CommunicationHub from "@/pages/communication-hub";
 import EngagementGames from "@/pages/engagement-games";
 import GamePortal from "@/pages/game-portal";
 import RitualRoles from "@/pages/ritual-roles";
+import VendorAccessPasses from "@/pages/vendor-access-passes";
+import VendorTimeline from "@/pages/vendor-timeline";
 import { VendorRoute } from "@/components/VendorRoute";
 import { CoupleRoute } from "@/components/CoupleRoute";
 import { CouplePlannerChatbot } from "@/components/CouplePlannerChatbot";
@@ -95,6 +97,7 @@ function Router() {
       <Route path="/pay-deposit/:bookingId" component={VendorDeposit} />
       <Route path="/collect/:token" component={GuestCollector} />
       <Route path="/games/:token" component={GamePortal} />
+      <Route path="/vendor-timeline/:token" component={VendorTimeline} />
       
       {/* Dashboard - no specific permission, just authentication */}
       <Route path="/dashboard" component={Dashboard} />
@@ -139,6 +142,11 @@ function Router() {
       <Route path="/ritual-roles">
         <ProtectedRoute requiredPermission="guests">
           <RitualRoles />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/vendor-collaboration">
+        <ProtectedRoute requiredPermission="vendors">
+          <VendorAccessPasses />
         </ProtectedRoute>
       </Route>
       {/* Vendor marketplace is publicly accessible */}

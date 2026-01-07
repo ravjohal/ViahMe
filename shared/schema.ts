@@ -2706,6 +2706,66 @@ export type RitualRoleWithGuest = RitualRoleAssignment & {
 };
 
 // ============================================================================
+// VENDOR ACCESS PASS & COLLABORATION HUB - Share filtered timelines with vendors
+// ============================================================================
+
+// Vendor Access Passes - Grant vendors access to filtered timeline views
+export const vendorAccessPasses = pgTable("vendor_access_passes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  vendorId: varchar("vendor_id").notNull(), // The vendor receiving access
+  bookingId: varchar("booking_id"), // Optional - link to specific booking
+  token: varchar("token").notNull().unique(), // Unique access token for URL
+  name: text("name").notNull(), // Display name (e.g., "Sarah's MUA Access")
+  // Access filters - which events/timeline segments they can see
+  eventIds: text("event_ids").array(), // Specific events they can view (null = all booked events)
+  vendorCategories: text("vendor_categories").array(), // Filter by vendor category relevance
+  timelineViewType: text("timeline_view_type").notNull().default("filtered"), // 'filtered' | 'full'
+  // Access permissions
+  canViewGuestCount: boolean("can_view_guest_count").default(false),
+  canViewVendorDetails: boolean("can_view_vendor_details").default(false),
+  canViewBudget: boolean("can_view_budget").default(false),
+  // Status and metadata
+  status: text("status").notNull().default("active"), // 'active' | 'revoked' | 'expired'
+  lastAccessedAt: timestamp("last_accessed_at"),
+  accessCount: integer("access_count").default(0),
+  expiresAt: timestamp("expires_at"), // Optional expiration date
+  notes: text("notes"), // Private notes from couple
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertVendorAccessPassSchema = createInsertSchema(vendorAccessPasses).omit({
+  id: true,
+  token: true,
+  lastAccessedAt: true,
+  accessCount: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  timelineViewType: z.enum(["filtered", "full"]).optional(),
+  status: z.enum(["active", "revoked", "expired"]).optional(),
+  eventIds: z.array(z.string()).optional().nullable(),
+  vendorCategories: z.array(z.string()).optional().nullable(),
+  canViewGuestCount: z.boolean().optional(),
+  canViewVendorDetails: z.boolean().optional(),
+  canViewBudget: z.boolean().optional(),
+  expiresAt: z.coerce.date().optional().nullable(),
+  bookingId: z.string().optional().nullable(),
+  notes: z.string().optional().nullable(),
+});
+
+export type InsertVendorAccessPass = z.infer<typeof insertVendorAccessPassSchema>;
+export type VendorAccessPass = typeof vendorAccessPasses.$inferSelect;
+
+// Extended type with vendor and event details
+export type VendorAccessPassWithDetails = VendorAccessPass & {
+  vendor: Vendor;
+  booking?: Booking;
+  events?: Event[];
+};
+
+// ============================================================================
 // GUEST MANAGEMENT SYSTEM - Advanced guest list management
 // ============================================================================
 

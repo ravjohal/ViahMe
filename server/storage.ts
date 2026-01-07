@@ -191,6 +191,9 @@ import {
   type InsertBudgetAllocation,
   type RitualRoleAssignment,
   type InsertRitualRoleAssignment,
+  vendorAccessPasses,
+  type VendorAccessPass,
+  type InsertVendorAccessPass,
   budgetAllocations,
   budgetAlerts,
   dashboardWidgets,
@@ -1070,6 +1073,17 @@ export interface IStorage {
   deleteRitualRoleAssignment(id: string): Promise<boolean>;
   acknowledgeRitualRole(id: string): Promise<RitualRoleAssignment | undefined>;
   markRitualRoleNotificationSent(id: string): Promise<RitualRoleAssignment | undefined>;
+
+  // Vendor Access Passes
+  getVendorAccessPass(id: string): Promise<VendorAccessPass | undefined>;
+  getVendorAccessPassByToken(token: string): Promise<VendorAccessPass | undefined>;
+  getVendorAccessPassesByWedding(weddingId: string): Promise<VendorAccessPass[]>;
+  getVendorAccessPassesByVendor(vendorId: string): Promise<VendorAccessPass[]>;
+  createVendorAccessPass(pass: InsertVendorAccessPass): Promise<VendorAccessPass>;
+  updateVendorAccessPass(id: string, pass: Partial<InsertVendorAccessPass>): Promise<VendorAccessPass | undefined>;
+  deleteVendorAccessPass(id: string): Promise<boolean>;
+  revokeVendorAccessPass(id: string): Promise<VendorAccessPass | undefined>;
+  recordVendorAccessPassUsage(token: string): Promise<VendorAccessPass | undefined>;
 }
 
 // Guest Planning Snapshot - comprehensive view of all guests and per-event costs
@@ -10404,6 +10418,77 @@ export class DBStorage implements IStorage {
     const result = await this.db.update(ritualRoleAssignments)
       .set({ notificationSent: true, notificationSentAt: new Date(), updatedAt: new Date() })
       .where(eq(ritualRoleAssignments.id, id))
+      .returning();
+    return result[0];
+  }
+
+  // Vendor Access Passes
+  async getVendorAccessPass(id: string): Promise<VendorAccessPass | undefined> {
+    const result = await this.db.select()
+      .from(vendorAccessPasses)
+      .where(eq(vendorAccessPasses.id, id));
+    return result[0];
+  }
+
+  async getVendorAccessPassByToken(token: string): Promise<VendorAccessPass | undefined> {
+    const result = await this.db.select()
+      .from(vendorAccessPasses)
+      .where(eq(vendorAccessPasses.token, token));
+    return result[0];
+  }
+
+  async getVendorAccessPassesByWedding(weddingId: string): Promise<VendorAccessPass[]> {
+    return await this.db.select()
+      .from(vendorAccessPasses)
+      .where(eq(vendorAccessPasses.weddingId, weddingId))
+      .orderBy(sql`${vendorAccessPasses.createdAt} DESC`);
+  }
+
+  async getVendorAccessPassesByVendor(vendorId: string): Promise<VendorAccessPass[]> {
+    return await this.db.select()
+      .from(vendorAccessPasses)
+      .where(eq(vendorAccessPasses.vendorId, vendorId))
+      .orderBy(sql`${vendorAccessPasses.createdAt} DESC`);
+  }
+
+  async createVendorAccessPass(pass: InsertVendorAccessPass): Promise<VendorAccessPass> {
+    const token = randomBytes(24).toString('base64url');
+    const result = await this.db.insert(vendorAccessPasses)
+      .values({ ...pass, token })
+      .returning();
+    return result[0];
+  }
+
+  async updateVendorAccessPass(id: string, pass: Partial<InsertVendorAccessPass>): Promise<VendorAccessPass | undefined> {
+    const result = await this.db.update(vendorAccessPasses)
+      .set({ ...pass, updatedAt: new Date() })
+      .where(eq(vendorAccessPasses.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteVendorAccessPass(id: string): Promise<boolean> {
+    await this.db.delete(vendorAccessPasses)
+      .where(eq(vendorAccessPasses.id, id));
+    return true;
+  }
+
+  async revokeVendorAccessPass(id: string): Promise<VendorAccessPass | undefined> {
+    const result = await this.db.update(vendorAccessPasses)
+      .set({ status: "revoked", updatedAt: new Date() })
+      .where(eq(vendorAccessPasses.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async recordVendorAccessPassUsage(token: string): Promise<VendorAccessPass | undefined> {
+    const result = await this.db.update(vendorAccessPasses)
+      .set({ 
+        lastAccessedAt: new Date(), 
+        accessCount: sql`${vendorAccessPasses.accessCount} + 1`,
+        updatedAt: new Date() 
+      })
+      .where(eq(vendorAccessPasses.token, token))
       .returning();
     return result[0];
   }
