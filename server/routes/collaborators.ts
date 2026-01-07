@@ -214,13 +214,23 @@ export function createRolesRouter(storage: IStorage): Router {
         return res.status(400).json({ error: "Cannot modify system role core properties" });
       }
       
-      const updatedRole = await storage.updateWeddingRole(roleId, req.body);
+      // Extract only valid role fields (not permissions which is stored separately)
+      const { permissions, ...roleUpdates } = req.body;
       
-      if (req.body.permissions && Array.isArray(req.body.permissions)) {
-        await storage.setRolePermissions(roleId, req.body.permissions);
+      // Only update role if there are actual role field changes
+      let updatedRole = role;
+      if (Object.keys(roleUpdates).length > 0) {
+        updatedRole = await storage.updateWeddingRole(roleId, roleUpdates) || role;
       }
       
-      res.json(updatedRole);
+      // Handle permissions update separately
+      if (permissions && Array.isArray(permissions)) {
+        await storage.setRolePermissions(roleId, permissions);
+      }
+      
+      // Return role with updated permissions
+      const roleWithPermissions = await storage.getWeddingRoleWithPermissions(roleId);
+      res.json(roleWithPermissions || updatedRole);
     } catch (error: any) {
       res.status(400).json({ error: error.message });
     }
