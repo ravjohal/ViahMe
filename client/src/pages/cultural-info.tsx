@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Printer, BookOpen, Heart, Users, Sparkles, Gift, Clock, MapPin } from "lucide-react";
+import { Printer, BookOpen, Heart, Users, Sparkles, Gift, Clock, MapPin, Shirt } from "lucide-react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { CeremonyStyleCard } from "@/components/ceremony-style-card";
 
 export default function CulturalInfoPage() {
   const [isPrintMode, setIsPrintMode] = useState(false);
@@ -1206,6 +1207,67 @@ export default function CulturalInfoPage() {
                     </ul>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Ceremony Style Lookbook */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shirt className="w-5 h-5 text-primary" />
+                  Ceremony Style Lookbook
+                </CardTitle>
+                <CardDescription>Detailed dress code guidance for each ceremony type</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Tabs defaultValue="sikh" className="w-full">
+                  <ScrollArea className="w-full whitespace-nowrap">
+                    <TabsList className="inline-flex w-auto mb-4">
+                      <TabsTrigger value="sikh">Sikh Ceremonies</TabsTrigger>
+                      <TabsTrigger value="hindu">Hindu Ceremonies</TabsTrigger>
+                      <TabsTrigger value="muslim">Muslim Ceremonies</TabsTrigger>
+                      <TabsTrigger value="general">General Events</TabsTrigger>
+                    </TabsList>
+                    <ScrollBar orientation="horizontal" />
+                  </ScrollArea>
+
+                  <TabsContent value="sikh" className="space-y-4">
+                    <div className="grid gap-4 lg:grid-cols-2">
+                      <CeremonyStyleCard ceremonyType="anand_karaj" />
+                      <CeremonyStyleCard ceremonyType="paath" />
+                      <CeremonyStyleCard ceremonyType="maiyan" />
+                      <CeremonyStyleCard ceremonyType="chunni_chadana" />
+                      <CeremonyStyleCard ceremonyType="jaggo" />
+                      <CeremonyStyleCard ceremonyType="chooda" />
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="hindu" className="space-y-4">
+                    <div className="grid gap-4 lg:grid-cols-2">
+                      <CeremonyStyleCard ceremonyType="haldi" />
+                      <CeremonyStyleCard ceremonyType="mehndi" />
+                      <CeremonyStyleCard ceremonyType="sangeet" />
+                      <CeremonyStyleCard ceremonyType="baraat" />
+                      <CeremonyStyleCard ceremonyType="milni" />
+                      <CeremonyStyleCard ceremonyType="pheras" />
+                      <CeremonyStyleCard ceremonyType="vidaai" />
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="muslim" className="space-y-4">
+                    <div className="grid gap-4 lg:grid-cols-2">
+                      <CeremonyStyleCard ceremonyType="nikah" />
+                      <CeremonyStyleCard ceremonyType="walima" />
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="general" className="space-y-4">
+                    <div className="grid gap-4 lg:grid-cols-2">
+                      <CeremonyStyleCard ceremonyType="reception" />
+                      <CeremonyStyleCard ceremonyType="cocktail" />
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </CardContent>
             </Card>
           </TabsContent>

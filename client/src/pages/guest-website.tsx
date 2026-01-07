@@ -3,13 +3,16 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, MapPin, Calendar, Clock, Navigation, Info, Hotel, HelpCircle, Camera, Gift, ExternalLink, Video } from "lucide-react";
+import { Loader2, MapPin, Calendar, Clock, Navigation, Info, Hotel, HelpCircle, Camera, Gift, ExternalLink, Video, Shirt, ChevronDown, ChevronUp } from "lucide-react";
 import { format } from "date-fns";
 import type { WeddingWebsite, Wedding, Event, WeddingRegistry, RegistryRetailer } from "@shared/schema";
 import { SiAmazon, SiTarget, SiWalmart, SiEtsy } from "react-icons/si";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ReactMarkdown from "react-markdown";
 import { GuestChatbot } from "@/components/GuestChatbot";
+import { CeremonyStyleCard, CEREMONY_STYLES } from "@/components/ceremony-style-card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useState } from "react";
 
 interface PublicWeddingData {
   website: WeddingWebsite;
@@ -47,6 +50,34 @@ const getYouTubeEmbedUrl = (url: string): string | null => {
   
   return null;
 };
+
+function EventStyleGuide({ event }: { event: Event }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const styleData = CEREMONY_STYLES[event.type || "custom"];
+  
+  if (!styleData) return null;
+  
+  return (
+    <Collapsible open={isOpen} onOpenChange={setIsOpen} className="mt-4">
+      <CollapsibleTrigger asChild>
+        <Button 
+          variant="outline" 
+          className="w-full justify-between"
+          data-testid={`button-style-guide-${event.id}`}
+        >
+          <span className="flex items-center gap-2">
+            <Shirt className="w-4 h-4" />
+            What to Wear
+          </span>
+          {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent className="mt-3">
+        <CeremonyStyleCard ceremonyType={event.type || "custom"} ceremonyName={event.name} />
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
 
 export default function GuestWebsite() {
   const params = useParams();
@@ -253,6 +284,11 @@ export default function GuestWebsite() {
                           Can't join in person? Watch the ceremony live from anywhere.
                         </p>
                       </div>
+                    )}
+                    
+                    {/* What to Wear Style Guide */}
+                    {event.type && CEREMONY_STYLES[event.type] && (
+                      <EventStyleGuide event={event} />
                     )}
                   </div>
                 </div>
