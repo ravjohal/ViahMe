@@ -65,7 +65,7 @@ export const BUDGET_BUCKET_LABELS: Record<BudgetBucket, string> = {
   entertainment: "Music & Entertainment",
   stationery: "Invitations & Gifts",
   transportation: "Transportation",
-  planning: "Professional Services",
+  planning: "Wedding Planning Services",
   other: "Other"
 };
 
