@@ -376,16 +376,27 @@ export function createCollaboratorsRouter(storage: IStorage): Router {
       const fullInviteUrl = `${baseUrl}/accept-invite?token=${inviteToken}`;
       
       // Send invitation email
+      console.log("[Collaborator Invite] Attempting to send email...");
+      console.log("[Collaborator Invite] Email params:", {
+        to: email,
+        inviterName: inviter?.name || inviter?.email || "Your partner",
+        weddingTitle: wedding?.title || "Wedding",
+        roleName: role.displayName,
+        inviteUrl: fullInviteUrl,
+      });
       try {
-        await sendCollaboratorInviteEmail({
+        const emailResult = await sendCollaboratorInviteEmail({
           to: email,
           inviterName: inviter?.name || inviter?.email || "Your partner",
           weddingTitle: wedding?.title || "Wedding",
           roleName: role.displayName,
           inviteUrl: fullInviteUrl,
         });
-      } catch (emailError) {
-        console.error("Failed to send invitation email:", emailError);
+        console.log("[Collaborator Invite] Email sent successfully:", emailResult);
+      } catch (emailError: any) {
+        console.error("[Collaborator Invite] Failed to send invitation email:");
+        console.error("[Collaborator Invite] Error message:", emailError?.message);
+        console.error("[Collaborator Invite] Full error:", emailError);
         // Don't fail the request if email fails - collaborator is still created
       }
       
