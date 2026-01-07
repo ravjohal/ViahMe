@@ -190,8 +190,10 @@ export function InvitePartnerModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("[InvitePartnerModal] handleSubmit called");
     
     if (!email.trim()) {
+      console.log("[InvitePartnerModal] No email provided");
       toast({
         title: "Email Required",
         description: "Please enter your partner's email address.",
@@ -202,23 +204,29 @@ export function InvitePartnerModal({
 
     try {
       let roleId = partnerRole?.id;
+      console.log("[InvitePartnerModal] Starting - existing roleId:", roleId);
       
       if (!roleId) {
+        console.log("[InvitePartnerModal] Creating new partner role...");
         const newRole = await createPartnerRoleMutation.mutateAsync();
+        console.log("[InvitePartnerModal] New role created:", newRole);
         roleId = newRole.id;
       } else {
+        console.log("[InvitePartnerModal] Updating existing role permissions...");
         await updateRolePermissionsMutation.mutateAsync(roleId);
+        console.log("[InvitePartnerModal] Permissions updated");
       }
 
+      console.log("[InvitePartnerModal] About to call inviteMutation with:", { email: email.trim(), roleId });
       inviteMutation.mutate({ email: email.trim(), roleId });
+      console.log("[InvitePartnerModal] inviteMutation.mutate called");
     } catch (error: any) {
-      console.error("Failed to setup partner role:", error);
+      console.error("[InvitePartnerModal] Failed to setup partner role:", error);
       toast({
         title: "Error Setting Up Partner Role",
         description: error?.message || "Failed to configure partner permissions. Please try again.",
         variant: "destructive",
       });
-      // Refresh roles to get the current state after any partial failures
       queryClient.invalidateQueries({ queryKey: ["/api/weddings", weddingId, "roles"] });
     }
   };
