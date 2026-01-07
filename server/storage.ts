@@ -194,6 +194,9 @@ import {
   vendorAccessPasses,
   type VendorAccessPass,
   type InsertVendorAccessPass,
+  ceremonyExplainers,
+  type CeremonyExplainer,
+  type InsertCeremonyExplainer,
   budgetAllocations,
   budgetAlerts,
   dashboardWidgets,
@@ -1084,6 +1087,17 @@ export interface IStorage {
   deleteVendorAccessPass(id: string): Promise<boolean>;
   revokeVendorAccessPass(id: string): Promise<VendorAccessPass | undefined>;
   recordVendorAccessPassUsage(token: string): Promise<VendorAccessPass | undefined>;
+
+  // Ceremony Explainers - Cultural Translator
+  getCeremonyExplainer(id: string): Promise<CeremonyExplainer | undefined>;
+  getCeremonyExplainerByEvent(eventId: string): Promise<CeremonyExplainer | undefined>;
+  getCeremonyExplainersByWedding(weddingId: string): Promise<CeremonyExplainer[]>;
+  getPublishedCeremonyExplainersByWedding(weddingId: string): Promise<CeremonyExplainer[]>;
+  createCeremonyExplainer(explainer: InsertCeremonyExplainer): Promise<CeremonyExplainer>;
+  updateCeremonyExplainer(id: string, explainer: Partial<InsertCeremonyExplainer>): Promise<CeremonyExplainer | undefined>;
+  deleteCeremonyExplainer(id: string): Promise<boolean>;
+  publishCeremonyExplainer(id: string): Promise<CeremonyExplainer | undefined>;
+  unpublishCeremonyExplainer(id: string): Promise<CeremonyExplainer | undefined>;
 }
 
 // Guest Planning Snapshot - comprehensive view of all guests and per-event costs
@@ -10489,6 +10503,77 @@ export class DBStorage implements IStorage {
         updatedAt: new Date() 
       })
       .where(eq(vendorAccessPasses.token, token))
+      .returning();
+    return result[0];
+  }
+
+  // Ceremony Explainers - Cultural Translator
+  async getCeremonyExplainer(id: string): Promise<CeremonyExplainer | undefined> {
+    const result = await this.db.select()
+      .from(ceremonyExplainers)
+      .where(eq(ceremonyExplainers.id, id))
+      .limit(1);
+    return result[0];
+  }
+
+  async getCeremonyExplainerByEvent(eventId: string): Promise<CeremonyExplainer | undefined> {
+    const result = await this.db.select()
+      .from(ceremonyExplainers)
+      .where(eq(ceremonyExplainers.eventId, eventId))
+      .limit(1);
+    return result[0];
+  }
+
+  async getCeremonyExplainersByWedding(weddingId: string): Promise<CeremonyExplainer[]> {
+    return await this.db.select()
+      .from(ceremonyExplainers)
+      .where(eq(ceremonyExplainers.weddingId, weddingId))
+      .orderBy(ceremonyExplainers.createdAt);
+  }
+
+  async getPublishedCeremonyExplainersByWedding(weddingId: string): Promise<CeremonyExplainer[]> {
+    return await this.db.select()
+      .from(ceremonyExplainers)
+      .where(and(
+        eq(ceremonyExplainers.weddingId, weddingId),
+        eq(ceremonyExplainers.isPublished, true)
+      ))
+      .orderBy(ceremonyExplainers.createdAt);
+  }
+
+  async createCeremonyExplainer(explainer: InsertCeremonyExplainer): Promise<CeremonyExplainer> {
+    const result = await this.db.insert(ceremonyExplainers)
+      .values(explainer)
+      .returning();
+    return result[0];
+  }
+
+  async updateCeremonyExplainer(id: string, explainer: Partial<InsertCeremonyExplainer>): Promise<CeremonyExplainer | undefined> {
+    const result = await this.db.update(ceremonyExplainers)
+      .set({ ...explainer, updatedAt: new Date() })
+      .where(eq(ceremonyExplainers.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteCeremonyExplainer(id: string): Promise<boolean> {
+    await this.db.delete(ceremonyExplainers)
+      .where(eq(ceremonyExplainers.id, id));
+    return true;
+  }
+
+  async publishCeremonyExplainer(id: string): Promise<CeremonyExplainer | undefined> {
+    const result = await this.db.update(ceremonyExplainers)
+      .set({ isPublished: true, updatedAt: new Date() })
+      .where(eq(ceremonyExplainers.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async unpublishCeremonyExplainer(id: string): Promise<CeremonyExplainer | undefined> {
+    const result = await this.db.update(ceremonyExplainers)
+      .set({ isPublished: false, updatedAt: new Date() })
+      .where(eq(ceremonyExplainers.id, id))
       .returning();
     return result[0];
   }

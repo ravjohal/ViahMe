@@ -52,6 +52,7 @@ import { createTimelineRouter, createEventTimeRouter, createTimelineChangesRoute
 import { createCeremonyTemplatesRouter, createRegionalPricingRouter, createCeremonyEstimateRouter } from "./ceremony-templates";
 import { registerRitualRoleRoutes } from "./ritual-roles";
 import { createVendorAccessPassesRouter, createVendorCollaborationViewRouter } from "./vendor-access-passes";
+import { createCeremonyExplainersRouter, createPublicCeremonyExplainersRouter } from "./ceremony-explainers";
 import { seedVendors, seedBudgetBenchmarks } from "../seed-data";
 
 let defaultStorageSeeded = false;
@@ -190,6 +191,9 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
 
   app.use("/api/vendor-access-passes", await createVendorAccessPassesRouter(storage));
   app.use("/api/vendor-collaboration", createVendorCollaborationViewRouter(storage));
+
+  app.use("/api/ceremony-explainers", await createCeremonyExplainersRouter(storage));
+  app.use("/api/public/ceremony-explainers", createPublicCeremonyExplainersRouter(storage));
 
   const collectorRouter = Router();
   await registerCollectorRoutes(collectorRouter, storage);

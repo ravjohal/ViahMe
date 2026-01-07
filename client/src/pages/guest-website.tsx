@@ -3,9 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, MapPin, Calendar, Clock, Navigation, Info, Hotel, HelpCircle, Camera, Gift, ExternalLink, Video, Shirt, ChevronDown, ChevronUp } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, MapPin, Calendar, Clock, Navigation, Info, Hotel, HelpCircle, Camera, Gift, ExternalLink, Video, Shirt, ChevronDown, ChevronUp, Sparkles, Users, BookOpen } from "lucide-react";
 import { format } from "date-fns";
-import type { WeddingWebsite, Wedding, Event, WeddingRegistry, RegistryRetailer } from "@shared/schema";
+import type { WeddingWebsite, Wedding, Event, WeddingRegistry, RegistryRetailer, CeremonyExplainer } from "@shared/schema";
 import { SiAmazon, SiTarget, SiWalmart, SiEtsy } from "react-icons/si";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ReactMarkdown from "react-markdown";
@@ -19,6 +20,7 @@ interface PublicWeddingData {
   wedding: Wedding;
   events: Event[];
   registries: (WeddingRegistry & { retailer?: RegistryRetailer })[];
+  ceremonyExplainers?: CeremonyExplainer[];
   isPreview?: boolean;
 }
 
@@ -79,6 +81,109 @@ function EventStyleGuide({ event }: { event: Event }) {
   );
 }
 
+function CeremonyExplainerCard({ explainer, event }: { explainer: CeremonyExplainer; event: Event }) {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  // Safely parse keyMoments with type checking
+  const keyMoments = Array.isArray(explainer.keyMoments) 
+    ? (explainer.keyMoments as { moment: string; explanation: string }[]).filter(km => km?.moment && km?.explanation)
+    : [];
+  
+  // Safely get guestTips
+  const guestTips = Array.isArray(explainer.guestTips) ? explainer.guestTips.filter(Boolean) : [];
+  
+  // Don't render if no content available
+  if (!explainer.title && !explainer.shortExplainer && !explainer.fullExplainer) {
+    return null;
+  }
+  
+  return (
+    <Collapsible open={isOpen} onOpenChange={setIsOpen} className="mt-4">
+      <CollapsibleTrigger asChild>
+        <Button 
+          variant="outline" 
+          className="w-full justify-between bg-primary/5 border-primary/20 hover:bg-primary/10"
+          data-testid={`button-ceremony-explainer-${event.id}`}
+        >
+          <span className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-primary" />
+            <span>Wait, what's happening?</span>
+          </span>
+          {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent className="mt-3">
+        <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-4" data-testid={`explainer-content-${event.id}`}>
+          {(explainer.title || explainer.shortExplainer) && (
+            <div>
+              {explainer.title && (
+                <h4 className="font-semibold text-lg flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-primary" />
+                  {explainer.title}
+                </h4>
+              )}
+              {explainer.shortExplainer && (
+                <p className="text-muted-foreground mt-1">{explainer.shortExplainer}</p>
+              )}
+            </div>
+          )}
+          
+          {explainer.fullExplainer && (
+            <div className="prose prose-sm dark:prose-invert max-w-none">
+              <p className="whitespace-pre-wrap">{explainer.fullExplainer}</p>
+            </div>
+          )}
+          
+          {keyMoments.length > 0 && (
+            <div>
+              <h5 className="font-medium flex items-center gap-2 mb-2">
+                <Info className="w-4 h-4" /> Key Moments to Watch
+              </h5>
+              <ul className="space-y-2">
+                {keyMoments.map((km, i) => (
+                  <li key={i} className="flex gap-2 text-sm">
+                    <span className="font-medium">{km.moment}:</span>
+                    <span className="text-muted-foreground">{km.explanation}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          
+          {guestTips.length > 0 && (
+            <div>
+              <h5 className="font-medium flex items-center gap-2 mb-2">
+                <Users className="w-4 h-4" /> Tips for Guests
+              </h5>
+              <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+                {guestTips.map((tip, i) => (
+                  <li key={i}>{tip}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          
+          {explainer.culturalSignificance && (
+            <div className="text-sm italic text-muted-foreground border-l-2 border-primary/30 pl-3">
+              {explainer.culturalSignificance}
+            </div>
+          )}
+          
+          {explainer.attireGuidance && (
+            <div className="flex items-start gap-2 text-sm bg-background/50 rounded-lg p-3">
+              <Shirt className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+              <div>
+                <span className="font-medium">Attire Tip:</span>{" "}
+                <span className="text-muted-foreground">{explainer.attireGuidance}</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
+
 export default function GuestWebsite() {
   const params = useParams();
   const slug = params.slug;
@@ -110,8 +215,15 @@ export default function GuestWebsite() {
     );
   }
 
-  const { website, wedding, events, registries = [], isPreview } = data;
+  const { website, wedding, events, registries = [], ceremonyExplainers = [], isPreview } = data;
   const primaryColor = website.primaryColor || "#f97316";
+  
+  // Create a map from event ID to published explainer
+  const explainerByEventId = new Map(
+    ceremonyExplainers
+      .filter(e => e.isPublished)
+      .map(e => [e.eventId, e])
+  );
 
   return (
     <div className="min-h-screen">
@@ -289,6 +401,14 @@ export default function GuestWebsite() {
                     {/* What to Wear Style Guide */}
                     {event.type && CEREMONY_STYLES[event.type] && (
                       <EventStyleGuide event={event} />
+                    )}
+                    
+                    {/* Cultural Explainer - "Wait, what's happening?" */}
+                    {explainerByEventId.get(event.id) && (
+                      <CeremonyExplainerCard 
+                        explainer={explainerByEventId.get(event.id)!} 
+                        event={event} 
+                      />
                     )}
                   </div>
                 </div>

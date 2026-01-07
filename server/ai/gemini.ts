@@ -1636,3 +1636,169 @@ Return as JSON with keys: "speech" (string), "estimatedDuration" (string like "4
     throw new Error("Failed to generate speech. Please try again.");
   }
 }
+
+// ============================================================================
+// CEREMONY EXPLAINER - Cultural Translator for Fusion Weddings
+// ============================================================================
+
+const CEREMONY_EXPLAINER_PROMPT = `You are a cultural translator and wedding education specialist for Viah.me, helping guests understand South Asian wedding ceremonies. Your role is to explain traditions warmly and inclusively, especially for guests who may be attending their first South Asian wedding.
+
+Your explanations should:
+1. Be warm, welcoming, and educational without being condescending
+2. Explain the spiritual and cultural significance of each ritual
+3. Help guests understand what they'll witness and when to participate
+4. Provide practical tips for guests (when to stand, what to expect, photography etiquette)
+5. Celebrate the beauty and meaning behind each tradition
+6. Be respectful of religious and cultural significance
+
+For fusion/intercultural weddings, be especially thoughtful about:
+- Explaining traditions for guests who may be new to the culture
+- Highlighting the universal themes of love, family, and commitment
+- Making guests feel included and welcomed regardless of their background
+- Noting any adaptations the couple may have made
+
+Keep explanations accessible but not oversimplified. Guests appreciate learning the depth and meaning behind traditions.`;
+
+export interface CeremonyExplainerRequest {
+  ceremonyType: string;
+  ceremonyName: string;
+  tradition: string;
+  subTraditions?: string[];
+  isFusionWedding: boolean;
+  partnerTraditions?: string[]; // For mixed weddings
+  eventDescription?: string;
+  dressCode?: string;
+}
+
+export interface GeneratedCeremonyExplainer {
+  title: string;
+  shortExplainer: string;
+  fullExplainer: string;
+  keyMoments: { moment: string; explanation: string }[];
+  culturalSignificance: string;
+  guestTips: string[];
+  attireGuidance: string;
+}
+
+export async function generateCeremonyExplainer(
+  request: CeremonyExplainerRequest
+): Promise<GeneratedCeremonyExplainer> {
+  const functionName = 'generateCeremonyExplainer';
+  const startTime = Date.now();
+
+  logAIRequest(functionName, request);
+
+  const fusionContext = request.isFusionWedding
+    ? `This is a fusion/intercultural wedding. ${request.partnerTraditions?.length ? `The couple is blending ${request.partnerTraditions.join(' and ')} traditions.` : ''} Many guests may be attending their first ${request.tradition} ceremony, so explanations should be especially welcoming and educational.`
+    : '';
+
+  const prompt = `Generate a "Wait, what's happening?" cultural guide for guests attending a ${request.tradition} ${request.ceremonyName} ceremony.
+
+CEREMONY DETAILS:
+- Ceremony Type: ${request.ceremonyType}
+- Ceremony Name: ${request.ceremonyName}
+- Tradition: ${request.tradition}
+${request.subTraditions?.length ? `- Sub-traditions: ${request.subTraditions.join(', ')}` : ''}
+${request.eventDescription ? `- Event Description: ${request.eventDescription}` : ''}
+${request.dressCode ? `- Dress Code: ${request.dressCode}` : ''}
+
+${fusionContext}
+
+Please generate a comprehensive but accessible guide that includes:
+
+1. TITLE: A friendly title like "What is the [Ceremony Name]?" or "Understanding the [Ceremony]"
+
+2. SHORT EXPLAINER: A 1-2 sentence summary that captures the essence of the ceremony.
+
+3. FULL EXPLAINER: 2-3 paragraphs explaining:
+   - What the ceremony is and its purpose
+   - The spiritual/cultural significance
+   - What guests will see and experience
+   - How long it typically lasts
+
+4. KEY MOMENTS: 3-5 key moments guests should watch for, with brief explanations of what's happening and why it matters.
+
+5. CULTURAL SIGNIFICANCE: A paragraph explaining why this ceremony is meaningful and what values it represents.
+
+6. GUEST TIPS: 4-6 practical tips for guests (when to stand/sit, photography etiquette, participation expectations, etc.)
+
+7. ATTIRE GUIDANCE: Guidance on what to wear, including cultural context about color choices and appropriate attire.
+
+Return as JSON with keys: title, shortExplainer, fullExplainer, keyMoments (array of {moment, explanation}), culturalSignificance, guestTips (array of strings), attireGuidance.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      config: {
+        systemInstruction: CEREMONY_EXPLAINER_PROMPT,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "object",
+          properties: {
+            title: { type: "string" },
+            shortExplainer: { type: "string" },
+            fullExplainer: { type: "string" },
+            keyMoments: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  moment: { type: "string" },
+                  explanation: { type: "string" },
+                },
+                required: ["moment", "explanation"],
+              },
+            },
+            culturalSignificance: { type: "string" },
+            guestTips: { type: "array", items: { type: "string" } },
+            attireGuidance: { type: "string" },
+          },
+          required: ["title", "shortExplainer", "fullExplainer", "keyMoments", "culturalSignificance", "guestTips", "attireGuidance"],
+        },
+      },
+      contents: prompt,
+    });
+
+    const rawJson = response.text;
+
+    if (rawJson) {
+      const result = JSON.parse(rawJson) as GeneratedCeremonyExplainer;
+      logAIResponse(functionName, `Generated explainer for ${request.ceremonyName}`, Date.now() - startTime);
+      return result;
+    }
+
+    throw new Error("Empty response from model");
+  } catch (error) {
+    logAIError(functionName, error);
+    throw new Error("Failed to generate ceremony explainer. Please try again.");
+  }
+}
+
+// Batch generate explainers for all events in a wedding
+export async function generateCeremonyExplainersForWedding(
+  events: { id: string; name: string; type: string; description?: string; dressCode?: string }[],
+  tradition: string,
+  subTraditions?: string[],
+  isFusionWedding: boolean = false
+): Promise<Map<string, GeneratedCeremonyExplainer>> {
+  const results = new Map<string, GeneratedCeremonyExplainer>();
+
+  for (const event of events) {
+    try {
+      const explainer = await generateCeremonyExplainer({
+        ceremonyType: event.type,
+        ceremonyName: event.name,
+        tradition,
+        subTraditions,
+        isFusionWedding,
+        eventDescription: event.description,
+        dressCode: event.dressCode,
+      });
+      results.set(event.id, explainer);
+    } catch (error) {
+      console.error(`Failed to generate explainer for event ${event.id}:`, error);
+    }
+  }
+
+  return results;
+}

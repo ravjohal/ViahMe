@@ -170,12 +170,22 @@ export function createPublicWeddingRouter(storage: IStorage): Router {
 
       const events = await storage.getEventsByWedding(website.weddingId);
       const registries = await storage.getRegistriesWithRetailersByWedding(website.weddingId);
+      
+      // Fetch only published ceremony explainers for the guest website (filter at storage layer)
+      let ceremonyExplainers: any[] = [];
+      try {
+        ceremonyExplainers = await storage.getPublishedCeremonyExplainersByWedding(website.weddingId);
+      } catch (e) {
+        // Ceremony explainers table may not exist yet - gracefully handle
+        console.log("Could not fetch ceremony explainers:", e);
+      }
 
       res.json({
         website,
         wedding,
         events: events.sort((a, b) => a.order - b.order),
         registries,
+        ceremonyExplainers,
         isPreview: !website.isPublished && isOwner,
       });
     } catch (error) {
