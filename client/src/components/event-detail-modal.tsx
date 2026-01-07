@@ -14,7 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar, Clock, MapPin, Users, DollarSign, Tag, CheckCircle2, Plus, Save, Video } from "lucide-react";
+import { Calendar, Clock, MapPin, Users, DollarSign, Tag, CheckCircle2, Plus, Save, Video, Heart } from "lucide-react";
+import { SideBadge, SIDE_COLORS } from "@/components/side-filter";
 import { format } from "date-fns";
 import type { Event, BudgetCategory, EventCostItem, Task, InsertTask } from "@shared/schema";
 import { useMutation } from "@tanstack/react-query";
@@ -94,6 +95,7 @@ export function EventDetailModal({
   const [eventVenueCapacity, setEventVenueCapacity] = useState("");
   const [eventType, setEventType] = useState("custom");
   const [eventLivestreamUrl, setEventLivestreamUrl] = useState("");
+  const [eventSide, setEventSide] = useState<"bride" | "groom" | "mutual">("mutual");
   
   // Task form state
   const [showNewTaskForm, setShowNewTaskForm] = useState(false);
@@ -125,6 +127,7 @@ export function EventDetailModal({
       setEventVenueCapacity(event.venueCapacity?.toString() || "");
       setEventType(event.type || "custom");
       setEventLivestreamUrl(event.livestreamUrl || "");
+      setEventSide((event.side as "bride" | "groom" | "mutual") || "mutual");
     }
   }, [event]);
 
@@ -202,6 +205,7 @@ export function EventDetailModal({
       venueCapacity: eventVenueCapacity ? parseInt(eventVenueCapacity) : undefined,
       type: eventType,
       livestreamUrl: eventLivestreamUrl || undefined,
+      side: eventSide,
     } as Partial<Event>);
   };
 
@@ -249,6 +253,41 @@ export function EventDetailModal({
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                  <Heart className="w-3 h-3" /> Family Side
+                </Label>
+                <p className="text-xs text-muted-foreground mt-0.5 mb-2">
+                  Is this event for both families or just one side?
+                </p>
+                <div className="flex gap-2 flex-wrap">
+                  {[
+                    { value: "mutual", label: "Shared", description: "Both families attend" },
+                    { value: "bride", label: "Bride's Side", description: "Bride's family event" },
+                    { value: "groom", label: "Groom's Side", description: "Groom's family event" },
+                  ].map((option) => {
+                    const colors = SIDE_COLORS[option.value as keyof typeof SIDE_COLORS];
+                    const isSelected = eventSide === option.value;
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => setEventSide(option.value as "bride" | "groom" | "mutual")}
+                        className={`flex-1 min-w-[100px] px-3 py-2 rounded-lg border-2 transition-all text-left hover-elevate ${
+                          isSelected 
+                            ? `${colors.bg} ${colors.border} ${colors.text}` 
+                            : "border-muted bg-muted/20 text-muted-foreground hover:border-muted-foreground/50"
+                        }`}
+                        data-testid={`button-side-${option.value}`}
+                      >
+                        <div className="font-medium text-sm">{option.label}</div>
+                        <div className="text-xs opacity-75">{option.description}</div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               <div>

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar, Clock, MapPin, Users, Plus } from "lucide-react";
 import type { Event } from "@shared/schema";
 import { format } from "date-fns";
+import { SideBadge } from "@/components/side-filter";
 
 interface TimelineViewProps {
   events: Event[];
@@ -96,9 +97,14 @@ export function TimelineView({ events, onAddEvent, onEditEvent }: TimelineViewPr
                       <h3 className="font-semibold text-lg text-foreground">
                         {event.name}
                       </h3>
-                      <Badge variant="outline" className="mt-1">
-                        {EVENT_LABELS[event.type] || "Custom"}
-                      </Badge>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <Badge variant="outline">
+                          {EVENT_LABELS[event.type] || "Custom"}
+                        </Badge>
+                        {event.side && (
+                          <SideBadge side={event.side as "bride" | "groom" | "mutual"} />
+                        )}
+                      </div>
                     </div>
                   </div>
 
