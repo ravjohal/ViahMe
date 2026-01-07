@@ -3,6 +3,43 @@ import { requireAuth, type AuthRequest } from "../auth-middleware";
 import type { IStorage } from "../storage";
 import { insertWeddingSchema } from "@shared/schema";
 
+// Ceremonies that are typically shared between both families
+const SHARED_CEREMONIES = [
+  'roka', 'sikh_roka',
+  'engagement', 'sikh_engagement', 'hindu_engagement',
+  'chunni_chadana', 'sikh_chunni_chadana',
+  'anand_karaj', 'sikh_anand_karaj',
+  'wedding', 'hindu_wedding',
+  'nikah', 'muslim_nikah',
+  'reception', 'sikh_reception', 'hindu_reception', 'muslim_reception',
+  'day_after', 'sikh_day_after',
+  'walima', 'muslim_walima',
+  'muhurtham', 'south_indian_muhurtham',
+  'christian_ceremony',
+  'jain_wedding',
+  'parsi_lagan',
+];
+
+// Determine the side for a ceremony based on its type
+function getDefaultSideForCeremony(ceremonyId: string, eventType: string): 'bride' | 'groom' | 'mutual' {
+  // Check if it's a shared ceremony
+  if (SHARED_CEREMONIES.includes(ceremonyId) || SHARED_CEREMONIES.includes(eventType)) {
+    return 'mutual';
+  }
+  
+  // Check if the name explicitly indicates a side
+  if (ceremonyId.includes('bride') || eventType.includes('bride')) {
+    return 'bride';
+  }
+  if (ceremonyId.includes('groom') || eventType.includes('groom')) {
+    return 'groom';
+  }
+  
+  // For non-shared ceremonies, default to mutual (user can change later)
+  // This is appropriate for onboarding when we don't know the user's role yet
+  return 'mutual';
+}
+
 function calculateDueDate(weddingDate: Date, daysBeforeWedding: number): Date {
   const dueDate = new Date(weddingDate);
   dueDate.setDate(dueDate.getDate() - daysBeforeWedding);
@@ -196,6 +233,9 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
             );
           }
           
+          // Determine the side for this ceremony
+          const side = getDefaultSideForCeremony(customEvent.ceremonyId, eventType);
+          
           await storage.createEvent({
             weddingId: wedding.id,
             name: eventName,
@@ -204,6 +244,7 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
             order: i + 1,
             guestCount: guestCount,
             date: eventDate,
+            side: side,
           });
         }
       } else if (wedding.tradition === "sikh") {
@@ -211,25 +252,27 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
         // Separate events for: Paath, Mehndi, Mayian, Sangeet (bride & groom sides)
         // Bakra Party is groom's side only
         const sikhEvents = [
-          // 1. Roka - Together
+          // 1. Roka - Shared
           {
             weddingId: wedding.id,
             name: "Roka",
             type: "roka" as const,
             description: "Formal blessing and acceptance ceremony between families",
             order: 1,
-            daysOffset: -90, // 3 months before
+            daysOffset: -90,
+            side: "mutual" as const,
           },
-          // 2. Engagement - Together
+          // 2. Engagement - Shared
           {
             weddingId: wedding.id,
             name: "Engagement",
             type: "engagement" as const,
             description: "Formal engagement ceremony with ring exchange and celebrations",
             order: 2,
-            daysOffset: -60, // 2 months before
+            daysOffset: -60,
+            side: "mutual" as const,
           },
-          // 3. Chunni Chadana - Together
+          // 3. Chunni Chadana - Shared (involves both families)
           {
             weddingId: wedding.id,
             name: "Chunni Chadana",
@@ -237,8 +280,9 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
             description: "Ceremony where groom's family presents chunni to the bride",
             order: 3,
             daysOffset: -45,
+            side: "mutual" as const,
           },
-          // 4. Paath - Separate (Bride's Side)
+          // 4. Paath - Bride's Side
           {
             weddingId: wedding.id,
             name: "Paath (Bride's Side)",
@@ -246,8 +290,9 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
             description: "Sacred prayer reading at Gurdwara or home - Bride's family",
             order: 4,
             daysOffset: -7,
+            side: "bride" as const,
           },
-          // 4. Paath - Separate (Groom's Side)
+          // 4. Paath - Groom's Side
           {
             weddingId: wedding.id,
             name: "Paath (Groom's Side)",
@@ -255,8 +300,9 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
             description: "Sacred prayer reading at Gurdwara or home - Groom's family",
             order: 5,
             daysOffset: -7,
+            side: "groom" as const,
           },
-          // 5. Mehndi - Separate (Bride's Side)
+          // 5. Mehndi - Bride's Side
           {
             weddingId: wedding.id,
             name: "Mehndi (Bride's Side)",
@@ -264,8 +310,9 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
             description: "Henna application ceremony - Bride's family",
             order: 6,
             daysOffset: -3,
+            side: "bride" as const,
           },
-          // 5. Mehndi - Separate (Groom's Side)
+          // 5. Mehndi - Groom's Side
           {
             weddingId: wedding.id,
             name: "Mehndi (Groom's Side)",
@@ -273,6 +320,7 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
             description: "Henna application ceremony - Groom's family",
             order: 7,
             daysOffset: -3,
+            side: "groom" as const,
           },
           // 6. Bakra Party - Groom's Side Only
           {
@@ -282,8 +330,9 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
             description: "Groom's side pre-wedding celebration with meat feast",
             order: 8,
             daysOffset: -2,
+            side: "groom" as const,
           },
-          // 7. Mayian - Separate (Bride's Side)
+          // 7. Mayian - Bride's Side
           {
             weddingId: wedding.id,
             name: "Mayian (Bride's Side)",
@@ -291,8 +340,9 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
             description: "Turmeric ceremony with choora - Bride's family",
             order: 9,
             daysOffset: -1,
+            side: "bride" as const,
           },
-          // 7. Mayian - Separate (Groom's Side)
+          // 7. Mayian - Groom's Side
           {
             weddingId: wedding.id,
             name: "Mayian (Groom's Side)",
@@ -300,8 +350,9 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
             description: "Turmeric ceremony - Groom's family",
             order: 10,
             daysOffset: -1,
+            side: "groom" as const,
           },
-          // 8. Sangeet - Separate (Bride's Side)
+          // 8. Sangeet - Bride's Side
           {
             weddingId: wedding.id,
             name: "Sangeet (Bride's Side)",
@@ -309,8 +360,9 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
             description: "Musical night with performances - Bride's family",
             order: 11,
             daysOffset: -1,
+            side: "bride" as const,
           },
-          // 8. Sangeet - Separate (Groom's Side)
+          // 8. Sangeet - Groom's Side
           {
             weddingId: wedding.id,
             name: "Sangeet (Groom's Side)",
@@ -318,8 +370,9 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
             description: "Musical night with performances - Groom's family",
             order: 12,
             daysOffset: -1,
+            side: "groom" as const,
           },
-          // 9. Anand Karaj - Together
+          // 9. Anand Karaj - Shared
           {
             weddingId: wedding.id,
             name: "Anand Karaj",
@@ -327,8 +380,9 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
             description: "Sikh wedding ceremony at the Gurdwara",
             order: 13,
             daysOffset: 0,
+            side: "mutual" as const,
           },
-          // 10. Reception - Together
+          // 10. Reception - Shared
           {
             weddingId: wedding.id,
             name: "Reception",
@@ -336,8 +390,9 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
             description: "Post-wedding celebration with dinner and entertainment",
             order: 14,
             daysOffset: 0,
+            side: "mutual" as const,
           },
-          // 11. Day After Visit - Together
+          // 11. Day After Visit - Shared
           {
             weddingId: wedding.id,
             name: "Day After Visit",
@@ -345,6 +400,7 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
             description: "Post-wedding family visit and brunch",
             order: 15,
             daysOffset: 1,
+            side: "mutual" as const,
           },
         ];
 
