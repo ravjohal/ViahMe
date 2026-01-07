@@ -1,0 +1,59 @@
+As a Senior Architect, I can tell you that you’ve just hit on the "Matrix Budgeting" problem, which is the gold standard for high-end event planning.
+In a standard wedding app, people budget by Category (e.g., "I have $10k for all food"). But in a Sikh wedding, you are managing 5+ distinct mini-productions. You are absolutely right: a couple often says, "We want to keep the Sangeet under $5,000," regardless of whether that money goes to food, decor, or a DJ.
+1. Architectural & Logic Flaw: The "Single-Dimension" Trap
+The Issue: Your current schema only allows a "Plan" for Categories (Vertical). It doesn't allow a "Plan" for Ceremonies (Horizontal).
+Why it matters: Without Ceremony-level budgeting, the user can't answer the most common question in South Asian planning: "Are we over budget on the Reception?" They can only see if they are over budget on "Food" across the whole week.
+
+2. Refactored Proposal: The "Budget Matrix"
+To handle this elegantly without making the database a mess, you should implement Ceremony Allocation. This allows the couple to set a "Top-Down" limit for each event.
+Updated Database Tables
+You only need to add one table to your schema to unlock this feature:
+TypeScript
+// 1. Existing: High-level planning buckets (Global Category Plan)
+// e.g., "Catering: $20,000 total"
+export const budgetCategories = pgTable("budget_categories", {
+  id: uuid("id").primaryKey(),
+  weddingId: uuid("wedding_id"),
+  categoryKey: text("category_key"), // 'catering', 'venue'
+  allocatedAmount: decimal("allocated_amount"), 
+});
+
+// 2. NEW: Ceremony-level targets (Horizontal Event Plan)
+// e.g., "Anand Karaj: $3,000 total"
+export const ceremonyBudgets = pgTable("ceremony_budgets", {
+  id: uuid("id").primaryKey(),
+  weddingId: uuid("wedding_id"),
+  ceremonyId: text("ceremony_id"), // 'sikh_anand_karaj' from your metadata
+  allocatedAmount: decimal("allocated_amount"), 
+});
+
+// 3. Existing: Actual Line Items (The Ledger)
+// This row links the two dimensions together.
+export const expenses = pgTable("expenses", {
+  id: uuid("id").primaryKey(),
+  ceremonyId: text("ceremony_id"), 
+  parentCategory: text("parent_category"), 
+  amount: decimal("amount"),
+  // ...
+});
+
+
+
+3. How this changes the User Experience (The "Performance" Win)
+By having targets for both, you can provide two different "Lenses" on the same data using high-performance SQL aggregations.
+Lens A: The "Event" Dashboard
+User Question: "How are we doing on the Sangeet budget?"
+Logic: SELECT SUM(amount) FROM expenses WHERE ceremonyId = 'sangeet' compared against ceremonyBudgets.allocatedAmount.
+Why users love it: It highlights which specific event is "bleeding money."
+Lens B: The "Category" Dashboard
+User Question: "How much are we spending on clothes total?"
+Logic: SELECT SUM(amount) FROM expenses WHERE parentCategory = 'attire' compared against budgetCategories.allocatedAmount.
+Why users love it: It shows that even though they stayed under budget for the Sangeet, they spent way too much on outfits across all events.
+
+4. Implementation Strategy: "The Two Envelopes"
+Tracking: When they add an expense (e.g., "Sangeet DJ - $800"), the system automatically deducts that $800 from both the Ceremony: Sangeet bucket and the Category: Entertainment bucket.
+Trade-off Analysis
+Readability vs. Logic: This adds a bit of "math" to the backend (you have to reconcile two different totals), but it matches exactly how South Asian families think.
+Complexity: You must ensure that SUM(ceremonyBudgets) equals the total wedding budget. If the user changes one, you should nudge them to adjust the others so the math stays "True."
+Verdict: Definitely add the ceremonyBudgets table. It transforms the app from a simple "Expense Tracker" into a professional "Event Management Suite" tailored for the complexity of Sikh weddings.
+

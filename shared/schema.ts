@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, decimal, boolean, timestamp, jsonb, index } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, decimal, boolean, timestamp, jsonb, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -666,6 +666,34 @@ export const insertBudgetAllocationSchema = createInsertSchema(budgetAllocations
 
 export type InsertBudgetAllocation = z.infer<typeof insertBudgetAllocationSchema>;
 export type BudgetAllocation = typeof budgetAllocations.$inferSelect;
+
+// ============================================================================
+// CEREMONY BUDGETS - Per-ceremony/event budget targets (Budget Matrix)
+// Allows couples to set "top-down" limits per event (e.g., "Sangeet: $5,000")
+// ============================================================================
+
+export const ceremonyBudgets = pgTable("ceremony_budgets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  ceremonyId: varchar("ceremony_id").notNull(), // References events.id
+  allocatedAmount: decimal("allocated_amount", { precision: 12, scale: 2 }).notNull().default('0'),
+  notes: text("notes"), // Optional notes about this ceremony's budget
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => ({
+  weddingCeremonyIdx: index("ceremony_budgets_wedding_ceremony_idx").on(table.weddingId, table.ceremonyId),
+  uniqueWeddingCeremony: uniqueIndex("ceremony_budgets_unique").on(table.weddingId, table.ceremonyId),
+}));
+
+export const insertCeremonyBudgetSchema = createInsertSchema(ceremonyBudgets).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  allocatedAmount: z.string().regex(/^\d+(\.\d{1,2})?$/, "Amount must be a valid decimal"),
+  notes: z.string().optional(),
+});
+
+export type InsertCeremonyBudget = z.infer<typeof insertCeremonyBudgetSchema>;
+export type CeremonyBudget = typeof ceremonyBudgets.$inferSelect;
 
 // ============================================================================
 // HOUSEHOLDS - Family/group management for unified RSVPs
