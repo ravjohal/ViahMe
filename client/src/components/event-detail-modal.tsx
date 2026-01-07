@@ -234,200 +234,193 @@ export function EventDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-2xl flex items-center gap-2">
-            <span>{currentEventType?.icon || "📅"}</span>
-            Edit Event
-          </DialogTitle>
+      <DialogContent className="max-w-md p-0 gap-0 overflow-hidden">
+        <DialogHeader className="px-6 py-4 border-b bg-muted/30">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">{currentEventType?.icon || "📅"}</span>
+            <DialogTitle className="text-lg font-semibold">Edit Event</DialogTitle>
+          </div>
         </DialogHeader>
 
-        <div className="space-y-6">
-          {/* Editable Event Details */}
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 gap-4">
-              <div>
-                <Label htmlFor="event-name" className="text-sm font-medium text-muted-foreground">Event Name</Label>
-                <Input
-                  id="event-name"
-                  value={eventName}
-                  onChange={(e) => setEventName(e.target.value)}
-                  placeholder="Enter event name"
-                  className="mt-1"
-                  data-testid="input-event-name"
-                />
-              </div>
+        <div className="px-6 py-5 space-y-6 max-h-[70vh] overflow-y-auto">
+          <div className="space-y-2">
+            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Event Name
+            </Label>
+            <Input
+              value={eventName}
+              onChange={(e) => setEventName(e.target.value)}
+              placeholder="Enter event name"
+              className="text-base"
+              data-testid="input-event-name"
+            />
+          </div>
 
-              <div>
-                <Label htmlFor="event-type" className="text-sm font-medium text-muted-foreground">Event Type</Label>
-                <Select value={eventType} onValueChange={setEventType}>
-                  <SelectTrigger className="mt-1" data-testid="select-event-type">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(EVENT_TYPES).map(([key, { icon, label }]) => (
-                      <SelectItem key={key} value={key}>
-                        {icon} {label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+          <div className="space-y-3">
+            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Event Type
+            </Label>
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(EVENT_TYPES).map(([key, { icon, label }]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setEventType(key)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                    eventType === key
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground hover-elevate"
+                  }`}
+                  data-testid={`button-event-type-${key}`}
+                >
+                  {icon} {label}
+                </button>
+              ))}
+            </div>
+          </div>
 
-              <div>
-                <Label className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-                  <Heart className="w-3 h-3" /> Family Side
-                </Label>
-                <p className="text-xs text-muted-foreground mt-0.5 mb-2">
-                  Is this event for both families or just one side?
-                </p>
-                <div className="flex gap-2 flex-wrap">
-                  {[
-                    { value: "mutual", label: "Shared", description: "Both families attend" },
-                    { value: "bride", label: "Bride's Side", description: "Bride's family event" },
-                    { value: "groom", label: "Groom's Side", description: "Groom's family event" },
-                  ].map((option) => {
-                    const colors = SIDE_COLORS[option.value as keyof typeof SIDE_COLORS];
-                    const isSelected = eventSide === option.value;
-                    return (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() => setEventSide(option.value as "bride" | "groom" | "mutual")}
-                        className={`flex-1 min-w-[100px] px-3 py-2 rounded-lg border-2 transition-all text-left hover-elevate ${
-                          isSelected 
-                            ? `${colors.bg} ${colors.border} ${colors.text}` 
-                            : "border-muted bg-muted/20 text-muted-foreground hover:border-muted-foreground/50"
-                        }`}
-                        data-testid={`button-side-${option.value}`}
-                      >
-                        <div className="font-medium text-sm">{option.label}</div>
-                        <div className="text-xs opacity-75">{option.description}</div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+          <div className="space-y-3">
+            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Family Side
+            </Label>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { value: "mutual", label: "Both Sides" },
+                { value: "bride", label: "Bride's Side" },
+                { value: "groom", label: "Groom's Side" },
+              ].map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setEventSide(option.value as "bride" | "groom" | "mutual")}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                    eventSide === option.value
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground hover-elevate"
+                  }`}
+                  data-testid={`button-side-${option.value}`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
-              <div>
-                <Label htmlFor="event-description" className="text-sm font-medium text-muted-foreground">Description</Label>
-                <Textarea
-                  id="event-description"
-                  value={eventDescription}
-                  onChange={(e) => setEventDescription(e.target.value)}
-                  placeholder="Event description (optional)"
-                  className="mt-1 resize-none"
-                  rows={2}
-                  data-testid="input-event-description"
-                />
-              </div>
+          <div className="space-y-2">
+            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Description (Optional)
+            </Label>
+            <Textarea
+              value={eventDescription}
+              onChange={(e) => setEventDescription(e.target.value)}
+              placeholder="Event description"
+              className="resize-none"
+              rows={2}
+              data-testid="input-event-description"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                <Calendar className="w-3 h-3" /> Date
+              </Label>
+              <Input
+                type="date"
+                value={eventDate}
+                onChange={(e) => setEventDate(e.target.value)}
+                className="text-base"
+                data-testid="input-event-date"
+              />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="event-date" className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-                  <Calendar className="w-3 h-3" /> Date
-                </Label>
-                <Input
-                  id="event-date"
-                  type="date"
-                  value={eventDate}
-                  onChange={(e) => setEventDate(e.target.value)}
-                  className="mt-1"
-                  data-testid="input-event-date"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="event-time" className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-                  <Clock className="w-3 h-3" /> Time
-                </Label>
-                <Input
-                  id="event-time"
-                  type="time"
-                  value={eventTime}
-                  onChange={(e) => setEventTime(e.target.value)}
-                  className="mt-1"
-                  data-testid="input-event-time"
-                />
-              </div>
-
-              <div className="col-span-2">
-                <Label htmlFor="event-location" className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-                  <MapPin className="w-3 h-3" /> Location
-                </Label>
-                <Input
-                  id="event-location"
-                  value={eventLocation}
-                  onChange={(e) => setEventLocation(e.target.value)}
-                  placeholder="Venue name or address"
-                  className="mt-1"
-                  data-testid="input-event-location"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="event-guest-count" className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-                  <Users className="w-3 h-3" /> Expected Guests
-                </Label>
-                <Input
-                  id="event-guest-count"
-                  type="number"
-                  value={eventGuestCount}
-                  onChange={(e) => setEventGuestCount(e.target.value)}
-                  placeholder="Number of guests"
-                  className="mt-1"
-                  data-testid="input-event-guest-count"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="event-venue-capacity" className="text-sm font-medium text-muted-foreground">Venue Capacity</Label>
-                <Input
-                  id="event-venue-capacity"
-                  type="number"
-                  value={eventVenueCapacity}
-                  onChange={(e) => setEventVenueCapacity(e.target.value)}
-                  placeholder="Max capacity"
-                  className="mt-1"
-                  data-testid="input-event-venue-capacity"
-                />
-              </div>
-
-              <div className="col-span-2">
-                <Label htmlFor="event-cost-per-head" className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-                  <DollarSign className="w-3 h-3" /> Cost Per Head
-                </Label>
-                <Input
-                  id="event-cost-per-head"
-                  type="number"
-                  step="0.01"
-                  value={eventCostPerHead}
-                  onChange={(e) => setEventCostPerHead(e.target.value)}
-                  placeholder="Cost per guest"
-                  className="mt-1"
-                  data-testid="input-event-cost-per-head"
-                />
-              </div>
-
-              <div className="col-span-2">
-                <Label htmlFor="event-livestream" className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-                  <Video className="w-3 h-3" /> YouTube Livestream
-                </Label>
-                <Input
-                  id="event-livestream"
-                  type="url"
-                  value={eventLivestreamUrl}
-                  onChange={(e) => setEventLivestreamUrl(e.target.value)}
-                  placeholder="https://youtube.com/watch?v=... or https://youtube.com/live/..."
-                  className="mt-1"
-                  data-testid="input-event-livestream"
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Add a YouTube link for guests who can't attend in person
-                </p>
-              </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                <Clock className="w-3 h-3" /> Time
+              </Label>
+              <Input
+                type="time"
+                value={eventTime}
+                onChange={(e) => setEventTime(e.target.value)}
+                className="text-base"
+                data-testid="input-event-time"
+              />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+              <MapPin className="w-3 h-3" /> Location
+            </Label>
+            <Input
+              value={eventLocation}
+              onChange={(e) => setEventLocation(e.target.value)}
+              placeholder="Venue name or address"
+              className="text-base"
+              data-testid="input-event-location"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                <Users className="w-3 h-3" /> Expected Guests
+              </Label>
+              <Input
+                type="number"
+                value={eventGuestCount}
+                onChange={(e) => setEventGuestCount(e.target.value)}
+                placeholder="Number of guests"
+                className="text-base"
+                data-testid="input-event-guest-count"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                Venue Capacity
+              </Label>
+              <Input
+                type="number"
+                value={eventVenueCapacity}
+                onChange={(e) => setEventVenueCapacity(e.target.value)}
+                placeholder="Max capacity"
+                className="text-base"
+                data-testid="input-event-venue-capacity"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+              <DollarSign className="w-3 h-3" /> Cost Per Head
+            </Label>
+            <Input
+              type="number"
+              step="0.01"
+              value={eventCostPerHead}
+              onChange={(e) => setEventCostPerHead(e.target.value)}
+              placeholder="Cost per guest"
+              className="text-base"
+              data-testid="input-event-cost-per-head"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+              <Video className="w-3 h-3" /> YouTube Livestream
+            </Label>
+            <Input
+              type="url"
+              value={eventLivestreamUrl}
+              onChange={(e) => setEventLivestreamUrl(e.target.value)}
+              placeholder="https://youtube.com/watch?v=..."
+              className="text-base"
+              data-testid="input-event-livestream"
+            />
+            <p className="text-xs text-muted-foreground">
+              Add a YouTube link for guests who can't attend in person
+            </p>
           </div>
 
           {/* Cost Breakdown */}
@@ -599,39 +592,42 @@ export function EventDetailModal({
             </CollapsibleContent>
           </Collapsible>
 
-          {/* Action Buttons */}
-          <div className="flex justify-between gap-2">
-            {onDelete && (
-              <Button 
-                variant="destructive"
-                onClick={() => {
-                  if (confirm("Are you sure you want to delete this event?")) {
-                    onDelete(event.id);
-                    onOpenChange(false);
-                  }
-                }}
-                data-testid="button-delete-event-from-modal"
-              >
-                Delete
-              </Button>
-            )}
-            <div className="flex gap-2 ml-auto">
-              <Button 
-                variant="outline" 
-                onClick={() => onOpenChange(false)}
-                data-testid="button-close-event-modal"
-              >
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleSaveEvent}
-                disabled={updateEventMutation.isPending || !eventName.trim()}
-                data-testid="button-save-event"
-              >
-                <Save className="w-4 h-4 mr-2" />
-                {updateEventMutation.isPending ? "Saving..." : "Save Changes"}
-              </Button>
-            </div>
+        </div>
+
+        <div className="px-6 py-4 border-t bg-muted/30 flex justify-between gap-2">
+          {onDelete && (
+            <Button 
+              variant="destructive"
+              size="sm"
+              onClick={() => {
+                if (confirm("Are you sure you want to delete this event?")) {
+                  onDelete(event.id);
+                  onOpenChange(false);
+                }
+              }}
+              data-testid="button-delete-event-from-modal"
+            >
+              Delete
+            </Button>
+          )}
+          <div className="flex gap-2 ml-auto">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => onOpenChange(false)}
+              data-testid="button-close-event-modal"
+            >
+              Cancel
+            </Button>
+            <Button 
+              size="sm"
+              onClick={handleSaveEvent}
+              disabled={updateEventMutation.isPending || !eventName.trim()}
+              data-testid="button-save-event"
+            >
+              <Save className="w-4 h-4 mr-2" />
+              {updateEventMutation.isPending ? "Saving..." : "Save Changes"}
+            </Button>
           </div>
         </div>
       </DialogContent>
