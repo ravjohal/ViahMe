@@ -150,7 +150,7 @@ export default function Budget() {
   }
 
   const { data: ceremonyAnalytics } = useQuery<CeremonyAnalyticsResponse>({
-    queryKey: ["/api/budget/ceremony-analytics", wedding?.id],
+    queryKey: [`/api/budget/ceremony-analytics/${wedding?.id}`],
     enabled: !!wedding?.id,
   });
 
@@ -943,7 +943,7 @@ export default function Budget() {
                     </div>
                     <div className="text-right">
                       <p className="text-sm text-muted-foreground">
-                        {ceremonyAnalytics.overview.percentAllocated}% of budget allocated
+                        {ceremonyAnalytics.overview.percentAllocated.toFixed(0)}% of budget allocated
                       </p>
                       {ceremonyAnalytics.summary.eventsOverBudget > 0 && (
                         <p className="text-xs text-destructive">
@@ -990,7 +990,7 @@ export default function Budget() {
                             className={`h-2 ${ceremony.isOverBudget ? '[&>div]:bg-destructive' : ''}`} 
                           />
                           <div className="flex justify-between mt-1 text-xs text-muted-foreground">
-                            <span>{percentSpent}% spent</span>
+                            <span>{percentSpent.toFixed(0)}% spent</span>
                             <span className={ceremony.remaining < 0 ? "text-destructive" : "text-emerald-600"}>
                               ${ceremony.remaining.toLocaleString()} remaining
                             </span>
