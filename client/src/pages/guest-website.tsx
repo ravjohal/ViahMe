@@ -14,6 +14,7 @@ import { GuestChatbot } from "@/components/GuestChatbot";
 import { CeremonyStyleCard, CEREMONY_STYLES } from "@/components/ceremony-style-card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useState } from "react";
+import { OrnamentalDivider, MandalaIcon } from "@/components/desi-modern";
 
 interface PublicWeddingData {
   website: WeddingWebsite;
@@ -233,9 +234,9 @@ export default function GuestWebsite() {
           Preview Mode - This website is not published yet. Only you can see this.
         </div>
       )}
-      {/* Hero Section - responsive height for mobile */}
+      {/* Hero Section - responsive height for mobile with Desi-Modern styling */}
       <div
-        className="relative min-h-[280px] md:min-h-[384px] flex items-center justify-center text-white py-12 md:py-16"
+        className="relative min-h-[280px] md:min-h-[384px] flex items-center justify-center text-white py-12 md:py-16 bg-mandala-hero overflow-hidden"
         style={{
           background: website.couplePhotoUrl
             ? `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url(${website.couplePhotoUrl})`
@@ -247,8 +248,9 @@ export default function GuestWebsite() {
         }}
         data-testid="hero-section"
       >
-        <div className="text-center space-y-3 md:space-y-4 px-6">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold leading-tight" data-testid="text-wedding-title">
+        <div className="text-center space-y-3 md:space-y-4 px-6 relative z-10">
+          <MandalaIcon className="w-12 h-12 mx-auto text-white/30 animate-float" />
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-serif font-bold leading-tight" data-testid="text-wedding-title">
             {website.welcomeTitle || "Our Wedding"}
           </h1>
           {wedding.weddingDate && (
@@ -263,12 +265,12 @@ export default function GuestWebsite() {
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 sm:px-6 py-8 md:py-12 max-w-4xl">
+      <div className="container mx-auto px-4 sm:px-6 py-8 md:py-12 max-w-4xl bg-mandala-pattern">
         {/* Welcome Message */}
         {website.welcomeMessage && (
-          <Card className="mb-8">
+          <Card className="mb-8 card-warm-accent overflow-hidden">
             <CardHeader>
-              <CardTitle>Welcome</CardTitle>
+              <CardTitle className="font-serif text-gradient-warm">Welcome</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-lg leading-relaxed whitespace-pre-wrap" data-testid="text-welcome-message">
@@ -280,24 +282,28 @@ export default function GuestWebsite() {
 
         {/* Our Story */}
         {website.coupleStory && (
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>Our Story</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="leading-relaxed whitespace-pre-wrap" data-testid="text-couple-story">
-                {website.coupleStory}
-              </p>
-            </CardContent>
-          </Card>
+          <>
+            <OrnamentalDivider />
+            <Card className="mb-8 flourish-corners">
+              <CardHeader>
+                <CardTitle className="font-serif text-gradient-warm">Our Story</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="leading-relaxed whitespace-pre-wrap" data-testid="text-couple-story">
+                  {website.coupleStory}
+                </p>
+              </CardContent>
+            </Card>
+          </>
         )}
 
         {/* Events Schedule */}
-        <Card className="mb-8">
+        <OrnamentalDivider />
+        <Card className="mb-8 card-warm-accent overflow-hidden">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="w-5 h-5" />
-              Event Schedule
+            <CardTitle className="flex items-center gap-2 font-serif">
+              <Calendar className="w-5 h-5 text-primary" />
+              <span className="text-gradient-warm">Event Schedule</span>
             </CardTitle>
             <CardDescription>Celebrate with us across multiple events</CardDescription>
           </CardHeader>

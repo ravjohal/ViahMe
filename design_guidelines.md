@@ -1,219 +1,220 @@
-# Design Guidelines: South Asian Wedding Management Platform
+# Design Guidelines: Viah.me - Desi-Modern Wedding Platform
 
 ## Design Approach
 
-**Hybrid System Approach** - Combining Linear's clean productivity aesthetics with Airbnb's warm marketplace feel, enhanced with culturally-appropriate celebratory elements for South Asian weddings.
+**Culturally-Enhanced Hybrid System** - Linear's productivity clarity meets Airbnb's warmth, elevated with authentic South Asian design language. Think ornate Mughal architecture meets modern minimalism.
 
 **Core Principles:**
-1. **Organized Celebration** - Professional task management that feels joyful, not sterile
-2. **Cultural Authenticity** - Visually honors South Asian wedding traditions without stereotypes
-3. **Clarity Through Chaos** - Multi-event complexity simplified through exceptional information architecture
-4. **Dual Audience Design** - Seamlessly serves both couples (planning) and vendors (showcasing)
+1. **Celebration Through Design** - Every interaction feels festive yet refined
+2. **Cultural Layering** - Phulkari and Mandala patterns as subtle enhancements, not decoration
+3. **Warm Sophistication** - Orange/gold gradients bring joy without sacrificing professionalism
+4. **Purposeful Ornamentation** - Geometric patterns serve as functional dividers and hierarchy markers
 
 ---
 
 ## Typography
 
 **Font Families:**
-- **Primary (UI/Body):** Inter - Clean, highly readable for dense information
-- **Display (Headings):** Playfair Display - Elegant serif that adds celebratory warmth
-- **Accent (Data/Numbers):** JetBrains Mono - For dates, budgets, countdowns
+- **Primary UI:** Inter (400, 500, 600, 700)
+- **Display/Headings:** Playfair Display (600, 700) - Serif elegance for ceremonial feel
+- **Data/Numbers:** JetBrains Mono (600) - Dates, budgets, timers
 
 **Hierarchy:**
-- Hero Headlines: Playfair Display, 48-64px, weight 700
-- Section Headers: Playfair Display, 32-40px, weight 600
-- Card Titles: Inter, 20-24px, weight 600
-- Body Text: Inter, 16px, weight 400
-- Labels/Meta: Inter, 14px, weight 500
-- Data/Numbers: JetBrains Mono, 16-24px, weight 600
+- Hero Headlines: Playfair Display, 56px desktop/40px mobile, weight 700
+- Section Headers: Playfair Display, 36px/28px, weight 600, with decorative divider below
+- Card Titles: Inter, 22px/18px, weight 600
+- Body: Inter, 16px, weight 400, line-height 1.6
+- Labels: Inter, 14px, weight 500
+- Numbers: JetBrains Mono, 18-28px, weight 600
+
+---
+
+## Cultural Pattern System
+
+**Pattern Integration:**
+- **Phulkari Motifs:** Geometric floral patterns as border accents on cards and containers
+- **Mandala Geometry:** Radial patterns for section dividers, loading states, celebration moments
+- **Application Rules:**
+  - Opacity 10-20% for background patterns
+  - Stroke patterns for borders (2px width)
+  - Corner flourishes: 24x24px decorative elements on premium cards
+  - Section dividers: Horizontal ornamental lines with centered mandala icon
+
+**Pattern Placement:**
+- Card corners: Subtle 16px flourishes (top-right or all corners for featured content)
+- Section dividers: Full-width geometric line with centered ornament
+- Hero overlays: Large-scale faded mandala in background (opacity 8%)
+- Form containers: Border patterns on focus state
+- Success states: Mandala burst animation
+
+---
+
+## Color & Gradient System
+
+**Warm Orange/Gold Palette:**
+- Primary gradient: Orange (#FF6B35) to Warm Gold (#FFB627)
+- Accent gold: Metallic gold (#D4AF37) for premium elements
+- Neutral warm: Cream (#FAF8F3) backgrounds, Charcoal (#2C2C2C) text
+- Event-specific gradients: Rose gold (mehndi), Deep orange (sangeet), Golden amber (anand karaj)
+
+**Gradient Applications:**
+- Hero backgrounds: Radial gradient overlay on images
+- CTA buttons: Linear gradient with subtle shift on hover
+- Card accents: Left border gradient (vertical)
+- Section backgrounds: Subtle warm gradient overlays
+- Pattern fills: Gradient strokes for mandala dividers
 
 ---
 
 ## Layout System
 
-**Spacing Scale:** Tailwind units 1, 2, 4, 6, 8, 12, 16, 24
-- Micro spacing (cards/components): p-4, p-6
-- Section padding: py-12, py-16
-- Major gaps: gap-8, gap-12
+**Spacing:** Tailwind units 2, 4, 6, 8, 12, 16, 24
+- Component padding: p-6, p-8
+- Section spacing: py-16, py-24
+- Pattern gaps: gap-8, gap-12
 
-**Grid Structure:**
-- Dashboard: 12-column grid with 16-column sidebar
-- Vendor cards: 3-column grid (lg), 2-column (md), 1-column (base)
-- Event timeline: Horizontal scroll with snap points
-
-**Container Strategy:**
-- App chrome: Full width
-- Content areas: max-w-7xl with px-6
-- Form sections: max-w-3xl
-- Vendor profiles: max-w-6xl
+**Containers:**
+- App width: max-w-7xl
+- Content: max-w-6xl
+- Forms: max-w-3xl
+- All with px-6 responsive padding
 
 ---
 
 ## Component Library
 
 ### Navigation
-**Top Navigation Bar:**
-- Horizontal layout, full-width, sticky positioning
-- Left: Logo (custom "Viah.me" with gradient styling and elegant typography)
-- Center: Main navigation (Dashboard, Vendors, Budget, Timeline, Guests)
-- Right: Notifications bell + countdown timer + profile avatar
-- Height: h-16, backdrop-blur effect when scrolling
+**Top Bar:**
+- Full-width, h-16, sticky with backdrop-blur
+- Left: "Viah.me" logo with gradient gold text effect
+- Center: Dashboard, Vendors, Budget, Timeline, Guests (with subtle border-bottom indicator)
+- Right: Countdown timer (JetBrains Mono) + notification bell + avatar
+- Bottom border: 1px gradient line
 
-**Sidebar (Vendor Dashboard):**
-- Vertical navigation, w-64
-- Sections: Profile, Bookings, Availability, Portfolio, Analytics
-- Collapsible on mobile
+### Enhanced Cards
 
-### Core UI Elements
+**Vendor Profile Cards:**
+- Rounded-2xl with subtle phulkari corner flourishes
+- Left border: 4px gradient accent
+- Image: 16:9 ratio with gradient overlay
+- Hover: Lift effect + corner flourish glow
+- Badge overlays: "Recommended" with mandala icon
 
-**Cards:**
-- Vendor cards: Rounded-2xl, soft shadow, hover lift effect
-- Event cards: Rounded-xl with left accent border (different per event type)
-- Recommendation cards: Rounded-lg with badge overlay
-- Padding: p-6
+**Event Timeline Cards:**
+- Rounded-xl with event-type gradient border
+- Cultural icon at top (mandala-based)
+- Decorative divider between date and details
+- Drag handle with phulkari pattern texture
+
+**Dashboard Widgets:**
+- Glass-morphism effect (backdrop-blur, semi-transparent)
+- Ornamental corner elements
+- Gradient borders on hover
+- Pattern backgrounds at 5% opacity
+
+### Forms & Inputs
+
+**Text Fields:**
+- Rounded-lg, border-2
+- Focus state: Orange gradient border + subtle mandala corner glow
+- Labels with decorative underline accent
 
 **Buttons:**
-- Primary CTA: Large (px-8 py-4), rounded-full, bold weight
-- Secondary: Outlined with rounded-full
-- Tertiary: Text-only with underline on hover
-- Icon buttons: Rounded-lg, p-3
-
-**Form Inputs:**
-- Text fields: Rounded-lg, border-2, p-4, focus ring
-- Dropdowns: Custom styled with Heroicons chevrons
-- Date pickers: Calendar overlay with cultural date format support
-- Budget sliders: Custom track with percentage markers
-
-### Data Display Components
-
-**Timeline View:**
-- Horizontal scroll with date markers
-- Event cards stack vertically at each date
-- Visual connector lines between related events
-- Drag-and-drop zones with visual feedback
-
-**Budget Dashboard:**
-- Donut chart showing category breakdowns
-- Progress bars for each vendor category
-- Comparison view (budgeted vs. actual)
-- Alert badges for over-budget items
-
-**Vendor Profile:**
-- Hero image gallery (carousel, 16:9 aspect ratio)
-- Info grid: Location, pricing tier, cultural specialties
-- Portfolio section: Masonry grid of past work
-- Availability calendar: Month view with booked dates marked
-- Reviews: Card-based with star ratings and event types
-
-**Guest List Manager:**
-- Sortable table with filters
-- Event segmentation tags (visual pills)
-- RSVP status indicators (icons + colors)
-- Bulk actions toolbar
+- Primary: Rounded-full, gradient fill, px-8 py-4, shadow-lg
+- Blurred backgrounds when on images (backdrop-blur-md)
+- Secondary: Gradient border outline
+- Icon buttons: Circular with pattern border on hover
 
 ### Specialized Components
 
-**Smart Questionnaire:**
-- Full-screen step-by-step wizard
-- Progress indicator at top
-- Large form fields with helper text
-- Cultural tradition selector with icon previews
-- Celebration-themed completion animation
+**Cultural Questionnaire Wizard:**
+- Full-screen steps with large mandala background (faded)
+- Progress bar with gradient fill and ornamental markers
+- Tradition selector cards with phulkari borders
+- Completion: Animated mandala burst with gold confetti
 
-**Event Timeline Builder:**
-- Drag-and-drop interface
-- Pre-populated templates (Sikh/Hindu/Custom)
-- Event type selector with cultural icons:
-  - Paath: Prayer hands icon
-  - Mehndi: Henna design icon
-  - Sangeet: Music note icon
-  - Anand Karaj: Temple icon
-  - Reception: Celebration icon
-- Automatic date suggestion chips
+**Timeline Builder:**
+- Horizontal scroll with snap points
+- Date markers with ornamental dividers
+- Event cards with cultural icons (prayer hands, henna, music notes)
+- Connector lines with decorative nodes
 
-**Vendor Recommendations Carousel:**
-- Horizontal scroll with snap
-- Featured badge for top matches
-- Quick-view modal on click
-- "Why recommended" tooltip
-- Save/bookmark icon overlay
+**Budget Dashboard:**
+- Donut chart with gradient segments
+- Ornamental category icons
+- Progress bars with pattern fills
+- Mandala icon for balance/savings indicator
 
-### Overlays & Modals
+**Vendor Gallery:**
+- Masonry grid with ornate borders
+- Lightbox with decorative frame
+- Swipe gestures with pattern transitions
 
-**Vendor Booking Request:**
-- Full-screen on mobile, centered modal on desktop
-- Event selector dropdown
-- Date range picker
-- Guest count input
-- Message textarea
-- Budget range slider
+### Section Dividers
 
-**Confirmation Dialogs:**
-- Centered modal with backdrop blur
-- Icon at top (success/warning/info)
-- Clear action buttons
+**Standard Divider:**
+- 1px horizontal line extending 80% width
+- Centered mandala icon (32px)
+- Gradient fade on line edges
+- py-12 spacing
 
----
-
-## Animations
-
-**Minimal, Purposeful Motion:**
-- Card hover: Subtle lift (translateY -2px) + shadow increase
-- Button interactions: Scale 0.98 on press
-- Timeline drag: Ghost element follows cursor
-- Page transitions: Fade + slight slide (100ms)
-- Loading states: Skeleton screens (no spinners)
-- Success confirmations: Subtle confetti burst for major actions
+**Major Section Break:**
+- Full-width gradient bar (h-1)
+- Large centered ornamental element (64px)
+- Pattern texture overlay
+- py-16 spacing
 
 ---
 
 ## Images
 
 ### Hero Sections
-**Marketing/Landing Pages:**
-- Large hero image (70vh): Authentic South Asian wedding celebration photo
-  - Vibrant colors showing Sangeet or Baraat procession
-  - Diverse representation of traditions
-  - Joyful, authentic moment capture
-- Overlay: Dark gradient from bottom (for text readability)
+**Landing/Marketing Pages:**
+- Large hero (75vh): Authentic South Asian wedding moment - vibrant Sangeet celebration or Baraat procession
+- Overlay: Dark-to-transparent gradient bottom-up
+- Background: Faded mandala pattern (opacity 12%)
+- CTA buttons with blurred backgrounds
 
-### Throughout Application
 **Dashboard:**
-- Event placeholder images: Culturally appropriate stock photos for each ceremony type
-- Vendor profile backgrounds: High-quality portfolio work
+- Event placeholders: Cultural ceremony photos (Mehndi hands, Anand Karaj, Dhol player)
+- Vendor cards: Square thumbnails (1:1) of portfolio work
 
-**Vendor Directory:**
-- Category header images: Representative imagery (Dhol player, Mehndi artist, etc.)
-- Vendor cards: Square thumbnails (1:1) showing their work
-
-**Onboarding Flow:**
-- Cultural tradition selectors: Illustrated icons (modern, respectful representation)
-- Completion screen: Celebratory illustration with South Asian design elements
-
-### Image Treatment
-- Border radius: rounded-xl for all images
-- Aspect ratios: 16:9 (hero), 4:3 (vendor portfolios), 1:1 (thumbnails)
-- Lazy loading for performance
-- Alt text with cultural context
+**Throughout:**
+- Border radius: rounded-xl
+- Aspect ratios: 16:9 (hero), 4:3 (portfolios), 1:1 (cards)
+- Ornamental frames on featured images
+- Lazy loading with skeleton screens
 
 ---
 
-## Mobile Considerations
+## Animation
 
-- Bottom tab navigation (Dashboard, Search, Calendar, Messages, Profile)
-- Full-width cards with horizontal padding p-4
-- Collapsible sections for dense information
-- Swipe gestures for timeline navigation
-- Sticky CTAs on vendor profiles
-- Touch-friendly target sizes (minimum h-12)
+**Purposeful Motion:**
+- Card hover: translateY -4px + shadow increase + corner flourish fade-in
+- Button press: scale 0.97
+- Mandala dividers: Slow rotation on scroll (1deg per 100px)
+- Success states: Radial mandala expansion with gold particles
+- Loading: Rotating mandala instead of spinner
+- Transitions: 200ms ease-out
+
+---
+
+## Mobile Adaptations
+
+- Bottom navigation with gradient active state
+- Single-column layouts with full-width patterns
+- Simplified corner flourishes (16px vs 24px)
+- Touch targets: minimum h-12
+- Swipe-enabled timeline and galleries
+- Reduced pattern density for performance
 
 ---
 
 ## Accessibility
 
-- WCAG AA contrast ratios throughout
-- Focus indicators on all interactive elements
-- Semantic HTML with ARIA labels for cultural terms
-- Screen reader friendly timeline navigation
-- Keyboard shortcuts for power users
-- Cultural term tooltips for accessibility
+- WCAG AA contrast on all gradient overlays
+- Pattern opacity never exceeds 20% for readability
+- Focus indicators with high-contrast borders
+- Cultural term tooltips
+- Semantic HTML with ARIA labels
+- Keyboard navigation through ornamental elements
