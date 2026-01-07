@@ -58,6 +58,7 @@ export default function Budget() {
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingBucket, setEditingBucket] = useState<BudgetBucket | null>(null);
+  const [editingBucketAmount, setEditingBucketAmount] = useState("");
   const [newTotalBudget, setNewTotalBudget] = useState("");
   const [aiEstimate, setAiEstimate] = useState<AIBudgetEstimate | null>(null);
   const [addExpenseDialogOpen, setAddExpenseDialogOpen] = useState(false);
@@ -585,6 +586,27 @@ export default function Budget() {
     },
   });
 
+  const updateCategoryBudgetMutation = useMutation({
+    mutationFn: async ({ bucket, amount }: { bucket: BudgetBucket; amount: string }) => {
+      if (!wedding?.id) throw new Error("Wedding ID not found");
+      return await apiRequest("POST", `/api/budget/allocations`, {
+        weddingId: wedding.id,
+        bucket,
+        allocatedAmount: amount,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/budget/allocations", wedding?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/expenses", wedding?.id, "totals"] });
+      setEditingBucket(null);
+      setEditingBucketAmount("");
+      toast({ title: "Category budget updated", description: "Budget allocation has been saved" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to update category budget", variant: "destructive" });
+    },
+  });
+
   useEffect(() => {
     if (!weddingsLoading && !wedding) {
       setLocation("/onboarding");
@@ -598,6 +620,14 @@ export default function Budget() {
       }
     }
   }, [wedding?.id, wedding?.totalBudget]);
+
+  // Set initial amount when opening category budget editor
+  useEffect(() => {
+    if (editingBucket && expenseTotals?.bucketTotals) {
+      const bucketData = expenseTotals.bucketTotals.find(b => b.bucket === editingBucket);
+      setEditingBucketAmount(bucketData?.allocated?.toString() || "0");
+    }
+  }, [editingBucket, expenseTotals?.bucketTotals]);
 
   const handleSaveBudget = () => {
     if (!newTotalBudget || parseFloat(newTotalBudget) <= 0) {
@@ -878,6 +908,14 @@ export default function Budget() {
                             ${bucketTotal.spent.toLocaleString()} of ${bucketTotal.allocated.toLocaleString()} spent
                           </p>
                         </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setEditingBucket(bucketTotal.bucket as BudgetBucket)}
+                          data-testid={`button-edit-category-${bucketTotal.bucket}`}
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </Button>
                       </div>
                       <Progress value={Math.min(percentSpent, 100)} className="h-2" />
                       <div className="flex justify-between mt-1 text-xs text-muted-foreground">
@@ -1355,6 +1393,51 @@ export default function Budget() {
                   data-testid="button-save-budget"
                 >
                   {updateWeddingBudgetMutation.isPending ? "Saving..." : "Save Budget"}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Category Budget Dialog */}
+        <Dialog open={!!editingBucket} onOpenChange={(open) => !open && setEditingBucket(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Set {editingBucket ? BUDGET_BUCKET_LABELS[editingBucket] : ""} Budget</DialogTitle>
+              <DialogDescription>
+                How much do you want to allocate to this category?
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div>
+                <Label htmlFor="category-budget">Budget Amount</Label>
+                <div className="relative mt-1">
+                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="category-budget"
+                    type="number"
+                    value={editingBucketAmount}
+                    onChange={(e) => setEditingBucketAmount(e.target.value)}
+                    className="pl-8"
+                    placeholder="10000"
+                    data-testid="input-category-budget"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" onClick={() => setEditingBucket(null)}>
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={() => {
+                    if (editingBucket) {
+                      updateCategoryBudgetMutation.mutate({ bucket: editingBucket, amount: editingBucketAmount });
+                    }
+                  }}
+                  disabled={updateCategoryBudgetMutation.isPending}
+                  data-testid="button-save-category-budget"
+                >
+                  {updateCategoryBudgetMutation.isPending ? "Saving..." : "Save Budget"}
                 </Button>
               </div>
             </div>
