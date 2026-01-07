@@ -15,7 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/use-auth";
 import { usePermissions } from "@/hooks/use-permissions";
 import { useQuery } from "@tanstack/react-query";
-import { COUPLE_NAV_SECTIONS, VENDOR_NAV_SECTIONS, type NavSection, type NavItem } from "@/config/navigation";
+import { COUPLE_NAV_SECTIONS, VENDOR_NAV_SECTIONS, ADMIN_NAV_SECTION, type NavSection, type NavItem } from "@/config/navigation";
 import type { Wedding } from "@shared/schema";
 import { differenceInDays } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -52,7 +52,8 @@ export function MobileNavDrawer({ open, onOpenChange }: MobileNavDrawerProps) {
     return canView(item.permission);
   };
 
-  const sections = user?.role === "vendor" ? VENDOR_NAV_SECTIONS : COUPLE_NAV_SECTIONS;
+  const baseSections = user?.role === "vendor" ? VENDOR_NAV_SECTIONS : COUPLE_NAV_SECTIONS;
+  const sections = user?.isSiteAdmin ? [...baseSections, ADMIN_NAV_SECTION] : baseSections;
   
   const getUserInitials = () => {
     if (!user) return "?";

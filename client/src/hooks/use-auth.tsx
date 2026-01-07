@@ -8,6 +8,7 @@ type User = {
   email: string;
   role: "couple" | "vendor";
   emailVerified: boolean;
+  isSiteAdmin?: boolean;
 };
 
 type AuthContextType = {
