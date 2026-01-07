@@ -7,7 +7,8 @@ import { sendCollaboratorInviteEmail } from "../email";
 export function createRolesRouter(storage: IStorage): Router {
   const router = Router();
 
-  router.get("/weddings/:weddingId", async (req, res) => {
+  // Route pattern: /:weddingId/roles - matches /api/weddings/:weddingId/roles
+  router.get("/:weddingId/roles", async (req, res) => {
     const { weddingId } = req.params;
     const userId = req.session?.userId;
     
@@ -78,7 +79,8 @@ export function createRolesRouter(storage: IStorage): Router {
     }
   });
 
-  router.post("/weddings/:weddingId", async (req, res) => {
+  // Route pattern: /:weddingId/roles - matches /api/weddings/:weddingId/roles
+  router.post("/:weddingId/roles", async (req, res) => {
     const { weddingId } = req.params;
     const userId = req.session?.userId;
     
@@ -106,9 +108,9 @@ export function createRolesRouter(storage: IStorage): Router {
       const roleData = insertWeddingRoleSchema.parse({
         weddingId,
         name: req.body.name,
-        displayName: req.body.name,
+        displayName: req.body.displayName || req.body.name,
         description: req.body.description || null,
-        isSystem: false,
+        isSystem: req.body.isSystem || false,
         isOwner: false,
       });
       const role = await storage.createWeddingRole(roleData);
