@@ -22,7 +22,7 @@ import { z } from "zod";
 import { 
   DollarSign, Edit2, Trash2, Plus, CheckCircle2, AlertCircle, 
   ChevronDown, ChevronRight, ArrowLeft, Copy, Share2, FileText, 
-  Calendar, Clock, Building2, Users, Calculator, Sparkles, Loader2, BarChart3
+  Calendar, Clock, Building2, Users, Calculator, Sparkles, Loader2, BarChart3, HelpCircle
 } from "lucide-react";
 import { SiWhatsapp } from "react-icons/si";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -59,6 +59,8 @@ export default function Budget() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingBucket, setEditingBucket] = useState<BudgetBucket | null>(null);
   const [editingBucketAmount, setEditingBucketAmount] = useState("");
+  const [editingCeremony, setEditingCeremony] = useState<{ id: string; name: string } | null>(null);
+  const [editingCeremonyAmount, setEditingCeremonyAmount] = useState("");
   const [newTotalBudget, setNewTotalBudget] = useState("");
   const [aiEstimate, setAiEstimate] = useState<AIBudgetEstimate | null>(null);
   const [addExpenseDialogOpen, setAddExpenseDialogOpen] = useState(false);
@@ -607,6 +609,26 @@ export default function Budget() {
     },
   });
 
+  const updateCeremonyBudgetMutation = useMutation({
+    mutationFn: async ({ ceremonyId, amount }: { ceremonyId: string; amount: string }) => {
+      if (!wedding?.id) throw new Error("Wedding ID not found");
+      return await apiRequest("POST", `/api/budget/ceremony-budgets`, {
+        weddingId: wedding.id,
+        ceremonyId,
+        allocatedAmount: amount,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/budget/ceremony-analytics/${wedding?.id}`] });
+      setEditingCeremony(null);
+      setEditingCeremonyAmount("");
+      toast({ title: "Ceremony budget updated", description: "Budget for this event has been saved" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to update ceremony budget", variant: "destructive" });
+    },
+  });
+
   useEffect(() => {
     if (!weddingsLoading && !wedding) {
       setLocation("/onboarding");
@@ -628,6 +650,14 @@ export default function Budget() {
       setEditingBucketAmount(bucketData?.allocated?.toString() || "0");
     }
   }, [editingBucket, expenseTotals?.bucketTotals]);
+
+  // Set initial amount when opening ceremony budget editor
+  useEffect(() => {
+    if (editingCeremony && ceremonyAnalytics?.ceremonyBreakdown) {
+      const ceremonyData = ceremonyAnalytics.ceremonyBreakdown.find(c => c.eventId === editingCeremony.id);
+      setEditingCeremonyAmount(ceremonyData?.allocated?.toString() || "0");
+    }
+  }, [editingCeremony, ceremonyAnalytics?.ceremonyBreakdown]);
 
   const handleSaveBudget = () => {
     if (!newTotalBudget || parseFloat(newTotalBudget) <= 0) {
@@ -867,30 +897,52 @@ export default function Budget() {
           </Collapsible>
         </Card>
 
+        {/* Budget Matrix Explainer */}
+        <Card className="p-4 mb-6 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border-amber-200 dark:border-amber-800">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 shrink-0 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center">
+              <HelpCircle className="w-5 h-5 text-amber-600" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-amber-800 dark:text-amber-200">Two Ways to Track Your Budget</h3>
+              <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                You can set budgets <strong>by category</strong> (like Venue, Catering, Photography) OR <strong>by ceremony</strong> (like Sangeet, Mehndi, Reception). 
+                Use whichever feels more natural to you — or both! They draw from the same total budget.
+              </p>
+              <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                Tip: Click the pencil icon next to any category or ceremony to set its budget.
+              </p>
+            </div>
+          </div>
+        </Card>
+
         {/* Budget Categories Breakdown */}
         <Card className="p-4 mb-6">
           <Collapsible open={showCategories} onOpenChange={setShowCategories}>
             <CollapsibleTrigger asChild>
               <button className="flex items-center justify-between w-full" data-testid="toggle-categories">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
+                  <div className="w-10 h-10 shrink-0 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
                     <DollarSign className="w-5 h-5 text-emerald-600" />
                   </div>
                   <div className="text-left">
                     <h3 className="font-semibold">Budget by Category</h3>
                     <p className="text-sm text-muted-foreground">
-                      {BUDGET_BUCKETS.length} categories
+                      {BUDGET_BUCKETS.length} categories • Track spending by type
                     </p>
                   </div>
                 </div>
                 {showCategories ? (
-                  <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                  <ChevronDown className="w-5 h-5 text-muted-foreground shrink-0" />
                 ) : (
-                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                  <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
                 )}
               </button>
             </CollapsibleTrigger>
             <CollapsibleContent className="mt-4">
+              <p className="text-xs text-muted-foreground mb-3 px-1">
+                Set how much you want to spend on each type of expense across all your ceremonies.
+              </p>
               <div className="space-y-3">
                 {(expenseTotals?.bucketTotals || []).map((bucketTotal) => {
                   const percentSpent = bucketTotal.allocated > 0 ? (bucketTotal.spent / bucketTotal.allocated) * 100 : 0;
@@ -938,17 +990,17 @@ export default function Budget() {
             <CollapsibleTrigger asChild>
               <button className="flex items-center justify-between w-full" data-testid="toggle-ceremony-budgets">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center">
+                  <div className="w-10 h-10 shrink-0 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center">
                     <Calendar className="w-5 h-5 text-orange-600" />
                   </div>
                   <div className="text-left">
                     <h3 className="font-semibold">Budget by Ceremony</h3>
                     <p className="text-sm text-muted-foreground">
-                      {ceremonyAnalytics?.summary.eventsWithBudget || 0} of {events.length} events have budgets
+                      {ceremonyAnalytics?.summary.eventsWithBudget || 0} of {events.length} events • Track spending by event
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 shrink-0">
                   {ceremonyAnalytics?.overview.isOverAllocated && (
                     <Badge variant="destructive" className="text-xs">
                       Over-allocated
@@ -963,6 +1015,9 @@ export default function Budget() {
               </button>
             </CollapsibleTrigger>
             <CollapsibleContent className="mt-4">
+              <p className="text-xs text-muted-foreground mb-3 px-1">
+                Set a budget for each ceremony or event. Great for tracking costs when different families host different events.
+              </p>
               {/* Allocation Overview */}
               {ceremonyAnalytics && (
                 <div className="p-4 rounded-lg bg-muted/50 mb-4">
@@ -1005,14 +1060,14 @@ export default function Budget() {
                       data-testid={`ceremony-budget-${ceremony.eventId}`}
                     >
                       <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <p className="font-medium flex items-center gap-2">
-                            {ceremony.eventName}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium flex items-center gap-2 flex-wrap">
+                            <span className="truncate">{ceremony.eventName}</span>
                             {ceremony.isOverBudget && (
-                              <Badge variant="destructive" className="text-xs">Over Budget</Badge>
+                              <Badge variant="destructive" className="text-xs shrink-0">Over Budget</Badge>
                             )}
                             {ceremony.hasNoBudget && ceremony.spent > 0 && (
-                              <Badge variant="outline" className="text-xs">No Budget Set</Badge>
+                              <Badge variant="outline" className="text-xs shrink-0">No Budget Set</Badge>
                             )}
                           </p>
                           <p className="text-sm text-muted-foreground">
@@ -1020,6 +1075,15 @@ export default function Budget() {
                             {ceremony.expenseCount > 0 && ` • ${ceremony.expenseCount} expense${ceremony.expenseCount > 1 ? 's' : ''}`}
                           </p>
                         </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="shrink-0"
+                          onClick={() => setEditingCeremony({ id: ceremony.eventId, name: ceremony.eventName })}
+                          data-testid={`button-edit-ceremony-${ceremony.eventId}`}
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </Button>
                       </div>
                       {ceremony.allocated > 0 && (
                         <>
@@ -1424,6 +1488,9 @@ export default function Budget() {
                   />
                 </div>
               </div>
+              <p className="text-xs text-muted-foreground">
+                This sets how much you plan to spend on {editingBucket ? BUDGET_BUCKET_LABELS[editingBucket].toLowerCase() : "this category"} across all your ceremonies.
+              </p>
               <div className="flex gap-2 justify-end">
                 <Button variant="outline" onClick={() => setEditingBucket(null)}>
                   Cancel
@@ -1438,6 +1505,54 @@ export default function Budget() {
                   data-testid="button-save-category-budget"
                 >
                   {updateCategoryBudgetMutation.isPending ? "Saving..." : "Save Budget"}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Ceremony Budget Dialog */}
+        <Dialog open={!!editingCeremony} onOpenChange={(open) => !open && setEditingCeremony(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Set Budget for {editingCeremony?.name || "Ceremony"}</DialogTitle>
+              <DialogDescription>
+                How much do you want to spend on this event?
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div>
+                <Label htmlFor="ceremony-budget">Budget Amount</Label>
+                <div className="relative mt-1">
+                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="ceremony-budget"
+                    type="number"
+                    value={editingCeremonyAmount}
+                    onChange={(e) => setEditingCeremonyAmount(e.target.value)}
+                    className="pl-8"
+                    placeholder="5000"
+                    data-testid="input-ceremony-budget"
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                This sets a spending target for {editingCeremony?.name || "this ceremony"} specifically. You can track expenses against this target.
+              </p>
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" onClick={() => setEditingCeremony(null)}>
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={() => {
+                    if (editingCeremony) {
+                      updateCeremonyBudgetMutation.mutate({ ceremonyId: editingCeremony.id, amount: editingCeremonyAmount });
+                    }
+                  }}
+                  disabled={updateCeremonyBudgetMutation.isPending}
+                  data-testid="button-save-ceremony-budget"
+                >
+                  {updateCeremonyBudgetMutation.isPending ? "Saving..." : "Save Budget"}
                 </Button>
               </div>
             </div>
