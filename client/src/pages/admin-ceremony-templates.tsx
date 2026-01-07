@@ -42,9 +42,10 @@ export default function AdminCeremonyTemplatesPage() {
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
   const [isPricingDialogOpen, setIsPricingDialogOpen] = useState(false);
 
-  const { data: user } = useQuery<{ id: string; email: string; isSiteAdmin: boolean }>({
+  const { data: authData } = useQuery<{ user: { id: string; email: string; isSiteAdmin: boolean } | null }>({
     queryKey: ["/api/auth/me"],
   });
+  const user = authData?.user;
 
   const { data: templates = [], isLoading: templatesLoading } = useQuery<CeremonyTemplate[]>({
     queryKey: ["/api/ceremony-templates"],
