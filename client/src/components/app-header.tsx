@@ -118,9 +118,23 @@ export function AppHeader() {
                         : wedding?.partner1Name || wedding?.partner2Name || user?.email || "Guest")}
                 </p>
                 {user?.role !== "vendor" && wedding && (
-                  <Badge variant="outline" className="text-xs font-mono w-fit" data-testid="badge-tradition">
-                    {wedding.tradition.charAt(0).toUpperCase() + wedding.tradition.slice(1)}
-                  </Badge>
+                  <div className="flex items-center gap-1.5">
+                    <Badge variant="outline" className="text-xs font-mono" data-testid="badge-tradition">
+                      {wedding.tradition.charAt(0).toUpperCase() + wedding.tradition.slice(1)}
+                    </Badge>
+                    {(wedding as any).role && (wedding as any).role !== "planner" && (
+                      <Badge 
+                        className={`text-xs ${
+                          (wedding as any).role === "bride" 
+                            ? "bg-pink-100 text-pink-700 border-pink-200 dark:bg-pink-900/30 dark:text-pink-300 dark:border-pink-800" 
+                            : "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800"
+                        }`}
+                        data-testid="badge-partner-role"
+                      >
+                        {(wedding as any).role === "bride" ? "Bride" : "Groom"}
+                      </Badge>
+                    )}
+                  </div>
                 )}
               </div>
             )}
