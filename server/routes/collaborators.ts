@@ -197,6 +197,33 @@ export function createRolesRouter(storage: IStorage): Router {
     }
   });
 
+  router.delete("/:roleId/permissions", async (req, res) => {
+    const { roleId } = req.params;
+    const userId = req.session?.userId;
+    
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      const role = await storage.getWeddingRole(roleId);
+      if (!role) {
+        return res.status(404).json({ error: "Role not found" });
+      }
+      
+      const hasPermission = await storage.checkUserPermission(userId, role.weddingId, "collaborators", "manage");
+      if (!hasPermission) {
+        return res.status(403).json({ error: "You do not have permission to manage roles" });
+      }
+      
+      await storage.deleteRolePermissions(roleId);
+      
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   router.post("/weddings/:weddingId/initialize", async (req, res) => {
     const { weddingId } = req.params;
     const userId = req.session?.userId;

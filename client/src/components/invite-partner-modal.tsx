@@ -76,28 +76,43 @@ export function InvitePartnerModal({
 
   const partnerRole = roles.find(r => r.name === "partner" || r.displayName === "Partner");
 
+  // Preload existing permissions when partner role exists
+  useEffect(() => {
+    if (partnerRole?.permissions && partnerRole.permissions.length > 0) {
+      const existingPerms = { ...defaultFullAccess() };
+      Object.keys(existingPerms).forEach((key) => {
+        existingPerms[key as PermissionCategory] = "none";
+      });
+      partnerRole.permissions.forEach((p) => {
+        if (p.category in existingPerms) {
+          existingPerms[p.category as PermissionCategory] = p.level as PermissionLevel;
+        }
+      });
+      setPermissions(existingPerms);
+    }
+  }, [partnerRole]);
+
   const createPartnerRoleMutation = useMutation({
     mutationFn: async () => {
+      // Create role with permissions in one atomic request
+      const permissionsArray = Object.entries(permissions)
+        .filter(([_, level]) => level !== "none")
+        .map(([category, level]) => ({ category, level }));
+      
       const roleRes = await apiRequest("POST", `/api/weddings/${weddingId}/roles`, {
         name: "partner",
         displayName: "Partner",
         description: "Your partner with full access to plan the wedding together",
         isSystem: true,
+        permissions: permissionsArray,
       });
-      const role = await roleRes.json();
       
-      const permissionPromises = Object.entries(permissions).map(([category, level]) => {
-        if (level !== "none") {
-          return apiRequest("POST", `/api/roles/${role.id}/permissions`, {
-            category,
-            level,
-          });
-        }
-        return Promise.resolve();
-      });
-      await Promise.all(permissionPromises);
+      if (!roleRes.ok) {
+        const errorData = await roleRes.json().catch(() => ({ error: "Failed to create partner role" }));
+        throw new Error(errorData.error || "Failed to create partner role");
+      }
       
-      return role;
+      return roleRes.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/weddings", weddingId, "roles"] });
@@ -113,18 +128,21 @@ export function InvitePartnerModal({
 
   const updateRolePermissionsMutation = useMutation({
     mutationFn: async (roleId: string) => {
-      const deleteRes = await apiRequest("DELETE", `/api/roles/${roleId}/permissions`);
+      // Use PATCH with permissions array for atomic update
+      const permissionsArray = Object.entries(permissions)
+        .filter(([_, level]) => level !== "none")
+        .map(([category, level]) => ({ category, level }));
       
-      const permissionPromises = Object.entries(permissions).map(([category, level]) => {
-        if (level !== "none") {
-          return apiRequest("POST", `/api/roles/${roleId}/permissions`, {
-            category,
-            level,
-          });
-        }
-        return Promise.resolve();
+      const res = await apiRequest("PATCH", `/api/roles/${roleId}`, {
+        permissions: permissionsArray,
       });
-      await Promise.all(permissionPromises);
+      
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: "Failed to update permissions" }));
+        throw new Error(errorData.error || "Failed to update permissions");
+      }
+      
+      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/weddings", weddingId, "roles"] });
@@ -187,8 +205,15 @@ export function InvitePartnerModal({
       }
 
       inviteMutation.mutate({ email: email.trim(), roleId });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to setup partner role:", error);
+      toast({
+        title: "Error Setting Up Partner Role",
+        description: error?.message || "Failed to configure partner permissions. Please try again.",
+        variant: "destructive",
+      });
+      // Refresh roles to get the current state after any partial failures
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings", weddingId, "roles"] });
     }
   };
 
@@ -207,7 +232,8 @@ export function InvitePartnerModal({
     setEmail("");
     setInviteResult(null);
     setShowPermissions(false);
-    setPermissions(defaultFullAccess());
+    // Don't reset permissions on close - preserve user's selections
+    // Permissions will be reset via useEffect when partnerRole changes or when modal opens fresh
     onOpenChange(false);
   };
 

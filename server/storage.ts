@@ -735,6 +735,7 @@ export interface IStorage {
   setRolePermission(roleId: string, category: PermissionCategory, level: PermissionLevel): Promise<RolePermission>;
   removeRolePermission(roleId: string, category: PermissionCategory): Promise<boolean>;
   setRolePermissions(roleId: string, permissions: { category: PermissionCategory; level: PermissionLevel }[]): Promise<RolePermission[]>;
+  deleteRolePermissions(roleId: string): Promise<void>;
 
   // Wedding Collaborators
   getWeddingCollaborator(id: string): Promise<WeddingCollaborator | undefined>;
@@ -3809,6 +3810,9 @@ export class MemStorage implements IStorage {
   }
   async setRolePermissions(roleId: string, permissions: { category: PermissionCategory; level: PermissionLevel }[]): Promise<RolePermission[]> {
     throw new Error("MemStorage does not support Role Permissions. Use DBStorage.");
+  }
+  async deleteRolePermissions(roleId: string): Promise<void> {
+    // No-op for MemStorage
   }
 
   // Wedding Collaborators - MemStorage stubs
@@ -7480,6 +7484,10 @@ export class DBStorage implements IStorage {
       .values(permissions.map(p => ({ roleId, category: p.category, level: p.level })))
       .returning();
     return result;
+  }
+
+  async deleteRolePermissions(roleId: string): Promise<void> {
+    await this.db.delete(schema.rolePermissions).where(eq(schema.rolePermissions.roleId, roleId));
   }
 
   // ============================================================================
