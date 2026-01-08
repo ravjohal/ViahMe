@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { requireAuth, type AuthRequest } from "../auth-middleware";
 import type { IStorage } from "../storage";
-import { insertExpenseSchema, insertBudgetAllocationSchema, insertBudgetBenchmarkSchema, insertCeremonyBudgetSchema, BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket } from "@shared/schema";
+import { insertExpenseSchema, insertBudgetAllocationSchema, insertBudgetBenchmarkSchema, insertCeremonyBudgetSchema, insertCeremonyCategoryAllocationSchema, BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket } from "@shared/schema";
 import { ensureCoupleAccess } from "./middleware";
 
 export async function registerBudgetRoutes(router: Router, storage: IStorage) {
@@ -711,6 +711,227 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
     } catch (error) {
       console.error("Error fetching ceremony analytics:", error);
       res.status(500).json({ error: "Failed to fetch ceremony analytics" });
+    }
+  });
+
+  // ============================================================================
+  // CEREMONY CATEGORY ALLOCATIONS (Budget Matrix - ceremony x category grid)
+  // ============================================================================
+
+  // POST /api/budget/allocate - Allocate budget to ceremony+category with validation
+  router.post("/allocate", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      if (!authReq.session.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const { weddingId, ceremonyId, categoryKey, amount, notes } = req.body;
+
+      if (!weddingId || !ceremonyId || !categoryKey || amount === undefined) {
+        return res.status(400).json({ error: "Missing required fields: weddingId, ceremonyId, categoryKey, amount" });
+      }
+
+      // Validate categoryKey is a valid budget bucket
+      if (!BUDGET_BUCKETS.includes(categoryKey)) {
+        return res.status(400).json({ error: `Invalid category key. Must be one of: ${BUDGET_BUCKETS.join(', ')}` });
+      }
+
+      const wedding = await storage.getWedding(weddingId);
+      if (!wedding) {
+        return res.status(404).json({ error: "Wedding not found" });
+      }
+
+      // Check access
+      if (wedding.userId !== authReq.session.userId) {
+        const roles = await storage.getWeddingRoles(weddingId);
+        const hasAccess = roles.some(role => role.userId === authReq.session.userId);
+        if (!hasAccess) {
+          return res.status(403).json({ error: "Access denied" });
+        }
+      }
+
+      // Get the global category budget (from budgetAllocations table)
+      const globalCategoryBudget = await storage.getBudgetAllocationByBucket(weddingId, categoryKey as BudgetBucket);
+      const globalLimit = parseFloat(globalCategoryBudget?.allocatedAmount || '0');
+
+      // Calculate current total across all ceremonies for this category (excluding current allocation if updating)
+      const existingAllocation = await storage.getCeremonyCategoryAllocation(weddingId, ceremonyId, categoryKey as BudgetBucket);
+      const currentTotal = await storage.getCategoryTotalAcrossCeremonies(weddingId, categoryKey as BudgetBucket);
+      
+      // Calculate what the new total would be
+      const existingAmount = parseFloat(existingAllocation?.allocatedAmount || '0');
+      const newAmount = parseFloat(amount);
+      const projectedTotal = currentTotal - existingAmount + newAmount;
+
+      // Validation: Check if new total exceeds global category budget
+      if (globalLimit > 0 && projectedTotal > globalLimit) {
+        const remaining = globalLimit - (currentTotal - existingAmount);
+        return res.status(400).json({
+          error: "Allocation exceeds global category budget",
+          details: {
+            categoryKey,
+            categoryLabel: BUDGET_BUCKET_LABELS[categoryKey as BudgetBucket],
+            globalBudget: globalLimit,
+            currentAllocated: currentTotal - existingAmount,
+            requested: newAmount,
+            maxAllowable: Math.max(0, remaining),
+          }
+        });
+      }
+
+      // Upsert the allocation
+      const allocation = await storage.upsertCeremonyCategoryAllocation(
+        weddingId,
+        ceremonyId,
+        categoryKey as BudgetBucket,
+        amount.toString(),
+        notes
+      );
+
+      // Calculate ceremony total after update
+      const ceremonyTotal = await storage.getCeremonyTotalAcrossCategories(weddingId, ceremonyId);
+      const categoryTotal = await storage.getCategoryTotalAcrossCeremonies(weddingId, categoryKey as BudgetBucket);
+
+      res.json({
+        allocation,
+        summary: {
+          ceremonyTotal,
+          categoryTotal,
+          categoryRemaining: globalLimit > 0 ? globalLimit - categoryTotal : null,
+        }
+      });
+    } catch (error) {
+      console.error("Error allocating budget:", error);
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      res.status(500).json({ error: "Failed to allocate budget" });
+    }
+  });
+
+  // GET /api/budget/matrix/:weddingId - Get full budget matrix (ceremonies x categories)
+  router.get("/matrix/:weddingId", await requireAuth(storage, false), ensureCoupleAccess(storage, (req) => req.params.weddingId), async (req, res) => {
+    try {
+      const { weddingId } = req.params;
+
+      // Get all events/ceremonies for this wedding
+      const events = await storage.getEventsByWedding(weddingId);
+      
+      // Get all ceremony-category allocations
+      const allocations = await storage.getCeremonyCategoryAllocationsByWedding(weddingId);
+      
+      // Get global bucket allocations (source of truth for category limits)
+      const bucketAllocations = await storage.getBudgetAllocationsByWedding(weddingId);
+
+      // Build a lookup map: ceremonyId -> categoryKey -> allocation
+      const allocationMap = new Map<string, Map<string, typeof allocations[0]>>();
+      for (const alloc of allocations) {
+        if (!allocationMap.has(alloc.ceremonyId)) {
+          allocationMap.set(alloc.ceremonyId, new Map());
+        }
+        allocationMap.get(alloc.ceremonyId)!.set(alloc.categoryKey, alloc);
+      }
+
+      // Build rows (ceremonies) with their allocations
+      const rows = events.map(event => {
+        const ceremonyAllocations = allocationMap.get(event.id) || new Map();
+        const cells: Record<string, { amount: string; allocationId: string | null }> = {};
+        
+        let ceremonyTotal = 0;
+        for (const bucket of BUDGET_BUCKETS) {
+          const alloc = ceremonyAllocations.get(bucket);
+          const amount = alloc?.allocatedAmount || '0';
+          ceremonyTotal += parseFloat(amount);
+          cells[bucket] = {
+            amount,
+            allocationId: alloc?.id || null,
+          };
+        }
+
+        return {
+          ceremonyId: event.id,
+          ceremonyName: event.name,
+          ceremonyDate: event.date,
+          ceremonyType: event.type,
+          cells,
+          totalPlanned: ceremonyTotal, // Sum of all category allocations for this ceremony
+        };
+      });
+
+      // Build column summaries (category totals and remaining)
+      const columns = BUDGET_BUCKETS.map(bucket => {
+        const bucketAllocation = bucketAllocations.find(a => a.bucket === bucket);
+        const globalBudget = parseFloat(bucketAllocation?.allocatedAmount || '0');
+        
+        let totalAllocated = 0;
+        for (const alloc of allocations) {
+          if (alloc.categoryKey === bucket) {
+            totalAllocated += parseFloat(alloc.allocatedAmount || '0');
+          }
+        }
+
+        return {
+          categoryKey: bucket,
+          categoryLabel: BUDGET_BUCKET_LABELS[bucket],
+          globalBudget,
+          totalAllocated,
+          remaining: globalBudget - totalAllocated,
+          isOverAllocated: totalAllocated > globalBudget && globalBudget > 0,
+        };
+      });
+
+      // Calculate grand totals
+      const totalGlobalBudget = columns.reduce((sum, col) => sum + col.globalBudget, 0);
+      const totalAllocated = columns.reduce((sum, col) => sum + col.totalAllocated, 0);
+
+      res.json({
+        rows,
+        columns,
+        summary: {
+          totalGlobalBudget,
+          totalAllocated,
+          totalRemaining: totalGlobalBudget - totalAllocated,
+          isOverAllocated: totalAllocated > totalGlobalBudget && totalGlobalBudget > 0,
+        }
+      });
+    } catch (error) {
+      console.error("Error fetching budget matrix:", error);
+      res.status(500).json({ error: "Failed to fetch budget matrix" });
+    }
+  });
+
+  // DELETE /api/budget/matrix-allocation/:id - Delete a specific ceremony-category allocation
+  router.delete("/matrix-allocation/:id", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      if (!authReq.session.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const allocation = await storage.getCeremonyCategoryAllocationById(req.params.id);
+      if (!allocation) {
+        return res.status(404).json({ error: "Allocation not found" });
+      }
+
+      const wedding = await storage.getWedding(allocation.weddingId);
+      if (!wedding) {
+        return res.status(404).json({ error: "Wedding not found" });
+      }
+
+      if (wedding.userId !== authReq.session.userId) {
+        const roles = await storage.getWeddingRoles(allocation.weddingId);
+        const hasAccess = roles.some(role => role.userId === authReq.session.userId);
+        if (!hasAccess) {
+          return res.status(403).json({ error: "Access denied" });
+        }
+      }
+
+      await storage.deleteCeremonyCategoryAllocation(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting allocation:", error);
+      res.status(500).json({ error: "Failed to delete allocation" });
     }
   });
 
