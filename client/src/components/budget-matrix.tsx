@@ -242,16 +242,13 @@ export function BudgetMatrix({ weddingId }: BudgetMatrixProps) {
             <table className="w-full border-collapse" data-testid="budget-matrix-table">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left p-2 font-medium text-sm sticky left-0 bg-card z-10 min-w-[140px]">
-                    Ceremony
-                  </th>
-                  <th className="text-center p-2 font-medium text-sm min-w-[90px] bg-amber-50/50 dark:bg-amber-900/20">
+                  <th className="text-left p-2 font-medium text-sm sticky left-0 bg-card z-10 min-w-[160px]">
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <span>Budget</span>
+                        <span>Ceremony</span>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Total budget you've set for each ceremony</p>
+                        <p>Ceremony name and its total budget</p>
                       </TooltipContent>
                     </Tooltip>
                   </th>
@@ -294,17 +291,10 @@ export function BudgetMatrix({ weddingId }: BudgetMatrixProps) {
                     <td className="p-2 font-medium text-sm sticky left-0 bg-card z-10">
                       <div className="flex flex-col">
                         <span>{row.ceremonyName}</span>
-                        {row.ceremonyDate && (
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(row.ceremonyDate).toLocaleDateString()}
-                          </span>
-                        )}
+                        <span className={`text-xs ${row.ceremonyBudget > 0 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"}`}>
+                          {row.ceremonyBudget > 0 ? formatCurrency(row.ceremonyBudget) : "No budget set"}
+                        </span>
                       </div>
-                    </td>
-                    <td className="p-2 text-center text-sm bg-amber-50/50 dark:bg-amber-900/20">
-                      <span className={row.ceremonyBudget > 0 ? "font-medium" : "text-muted-foreground"}>
-                        {formatCurrency(row.ceremonyBudget)}
-                      </span>
                     </td>
                     {visibleCategories.map(categoryKey => {
                       const cell = row.cells[categoryKey] || { amount: "0", allocationId: null };
