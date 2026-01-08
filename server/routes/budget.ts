@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { requireAuth, type AuthRequest } from "../auth-middleware";
 import type { IStorage } from "../storage";
-import { insertExpenseSchema, insertBudgetAllocationSchema, insertBudgetBenchmarkSchema, insertCeremonyBudgetSchema, insertCeremonyCategoryAllocationSchema, BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket } from "@shared/schema";
+import { insertExpenseSchema, insertBudgetAllocationSchema, insertBudgetBenchmarkSchema, insertCeremonyBudgetSchema, insertCeremonyCategoryAllocationSchema, insertCeremonyLineItemBudgetSchema, BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket } from "@shared/schema";
 import { ensureCoupleAccess } from "./middleware";
 
 export async function registerBudgetRoutes(router: Router, storage: IStorage) {
@@ -932,6 +932,150 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
     } catch (error) {
       console.error("Error deleting allocation:", error);
       res.status(500).json({ error: "Failed to delete allocation" });
+    }
+  });
+
+  // ============================================================================
+  // CEREMONY LINE ITEM BUDGETS - Per-ceremony, per-cost-category budgets
+  // These use ceremony-specific line items from CEREMONY_COST_BREAKDOWNS
+  // ============================================================================
+
+  // GET /api/budget/line-items/:weddingId/:eventId - Get line item budgets for a specific event
+  router.get("/line-items/:weddingId/:eventId", await requireAuth(storage, false), ensureCoupleAccess(storage, (req) => req.params.weddingId), async (req, res) => {
+    try {
+      const { weddingId, eventId } = req.params;
+      const lineItems = await storage.getCeremonyLineItemBudgetsByEvent(weddingId, eventId);
+      res.json(lineItems);
+    } catch (error) {
+      console.error("Error fetching line item budgets:", error);
+      res.status(500).json({ error: "Failed to fetch line item budgets" });
+    }
+  });
+
+  // GET /api/budget/line-items/:weddingId - Get all line item budgets for a wedding
+  router.get("/line-items/:weddingId", await requireAuth(storage, false), ensureCoupleAccess(storage, (req) => req.params.weddingId), async (req, res) => {
+    try {
+      const lineItems = await storage.getCeremonyLineItemBudgetsByWedding(req.params.weddingId);
+      res.json(lineItems);
+    } catch (error) {
+      console.error("Error fetching line item budgets:", error);
+      res.status(500).json({ error: "Failed to fetch line item budgets" });
+    }
+  });
+
+  // POST /api/budget/line-items - Upsert a line item budget
+  router.post("/line-items", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      if (!authReq.session.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const validatedData = insertCeremonyLineItemBudgetSchema.parse(req.body);
+
+      const wedding = await storage.getWedding(validatedData.weddingId);
+      if (!wedding) {
+        return res.status(404).json({ error: "Wedding not found" });
+      }
+      if (wedding.userId !== authReq.session.userId) {
+        const roles = await storage.getWeddingRoles(validatedData.weddingId);
+        const hasAccess = roles.some(role => role.userId === authReq.session.userId);
+        if (!hasAccess) {
+          return res.status(403).json({ error: "Access denied" });
+        }
+      }
+
+      const lineItem = await storage.upsertCeremonyLineItemBudget(validatedData);
+      res.json(lineItem);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      console.error("Error saving line item budget:", error);
+      res.status(500).json({ error: "Failed to save line item budget" });
+    }
+  });
+
+  // POST /api/budget/line-items/bulk - Bulk upsert line item budgets for an event
+  router.post("/line-items/bulk", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      if (!authReq.session.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const { weddingId, eventId, ceremonyTypeId, items } = req.body as {
+        weddingId: string;
+        eventId: string;
+        ceremonyTypeId: string;
+        items: Array<{ lineItemCategory: string; budgetedAmount: string; notes?: string }>;
+      };
+
+      if (!weddingId || !eventId || !ceremonyTypeId || !Array.isArray(items)) {
+        return res.status(400).json({ error: "Missing required fields: weddingId, eventId, ceremonyTypeId, items" });
+      }
+
+      const wedding = await storage.getWedding(weddingId);
+      if (!wedding) {
+        return res.status(404).json({ error: "Wedding not found" });
+      }
+      if (wedding.userId !== authReq.session.userId) {
+        const roles = await storage.getWeddingRoles(weddingId);
+        const hasAccess = roles.some(role => role.userId === authReq.session.userId);
+        if (!hasAccess) {
+          return res.status(403).json({ error: "Access denied" });
+        }
+      }
+
+      const results = [];
+      for (const item of items) {
+        if (item.budgetedAmount && parseFloat(item.budgetedAmount) > 0) {
+          const lineItem = await storage.upsertCeremonyLineItemBudget({
+            weddingId,
+            eventId,
+            ceremonyTypeId,
+            lineItemCategory: item.lineItemCategory,
+            budgetedAmount: item.budgetedAmount,
+            notes: item.notes,
+          });
+          results.push(lineItem);
+        }
+      }
+
+      res.json({ success: true, count: results.length, items: results });
+    } catch (error) {
+      console.error("Error bulk saving line item budgets:", error);
+      res.status(500).json({ error: "Failed to save line item budgets" });
+    }
+  });
+
+  // DELETE /api/budget/line-items/:weddingId/:eventId - Delete all line item budgets for an event
+  router.delete("/line-items/:weddingId/:eventId", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      if (!authReq.session.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const { weddingId, eventId } = req.params;
+
+      const wedding = await storage.getWedding(weddingId);
+      if (!wedding) {
+        return res.status(404).json({ error: "Wedding not found" });
+      }
+      if (wedding.userId !== authReq.session.userId) {
+        const roles = await storage.getWeddingRoles(weddingId);
+        const hasAccess = roles.some(role => role.userId === authReq.session.userId);
+        if (!hasAccess) {
+          return res.status(403).json({ error: "Access denied" });
+        }
+      }
+
+      await storage.deleteCeremonyLineItemBudgetsByEvent(weddingId, eventId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting line item budgets:", error);
+      res.status(500).json({ error: "Failed to delete line item budgets" });
     }
   });
 
