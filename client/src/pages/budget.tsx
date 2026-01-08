@@ -15,7 +15,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket, type Wedding, type Event, type Contract, type Vendor, type Expense, type BudgetAllocation, type CeremonyBudget } from "@shared/schema";
+import { BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket, type Wedding, type Event, type Contract, type Vendor, type Expense, type BudgetAllocation, type CeremonyBudget, type CeremonyLineItemBudget } from "@shared/schema";
+import { CEREMONY_COST_BREAKDOWNS, type CostCategory } from "@shared/ceremonies";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
@@ -72,6 +73,8 @@ export default function Budget() {
   const [editingExpense, setEditingExpense] = useState<ExpenseWithAllocations | null>(null);
   const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null);
   const [showCeremonyBudgets, setShowCeremonyBudgets] = useState(false);
+  const [expandedCeremonies, setExpandedCeremonies] = useState<Set<string>>(new Set());
+  const [editingLineItems, setEditingLineItems] = useState<Record<string, Record<string, string>>>({});
 
   const { data: weddings, isLoading: weddingsLoading } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
@@ -120,6 +123,173 @@ export default function Budget() {
     queryKey: ["/api/weddings", wedding?.id, "cost-summary"],
     enabled: !!wedding?.id,
   });
+
+  // Line item budgets for ceremonies
+  const { data: lineItemBudgets = [] } = useQuery<CeremonyLineItemBudget[]>({
+    queryKey: ["/api/budget/line-items", wedding?.id],
+    enabled: !!wedding?.id,
+  });
+
+  // Ceremony keyword mappings - maps ceremony IDs to keywords for matching events
+  const CEREMONY_MAPPINGS: Record<string, string[]> = {
+    // Sikh ceremonies
+    sikh_roka: ["roka", "sikh roka"],
+    sikh_engagement: ["engagement", "sikh engagement", "kurmai"],
+    sikh_chunni_chadana: ["chunni", "chunni chadana"],
+    sikh_paath: ["paath", "akhand paath", "sehaj paath"],
+    sikh_mehndi: ["mehndi", "henna", "sikh mehndi"],
+    sikh_bakra_party: ["bakra", "bakra party"],
+    sikh_mayian: ["maiyan", "mayian", "sikh maiyan", "choora", "vatna"],
+    sikh_sangeet: ["sangeet", "lady sangeet", "sikh sangeet"],
+    sikh_anand_karaj: ["anand karaj", "anand_karaj", "sikh wedding"],
+    sikh_reception: ["sikh reception"],
+    sikh_day_after: ["day after", "day after visit"],
+    // Hindu ceremonies
+    hindu_mehndi: ["hindu mehndi"],
+    hindu_sangeet: ["hindu sangeet"],
+    hindu_haldi: ["haldi", "hindu haldi"],
+    hindu_baraat: ["baraat", "hindu baraat"],
+    hindu_wedding: ["hindu wedding", "wedding ceremony"],
+    // General
+    reception: ["reception"],
+    // Muslim ceremonies
+    muslim_nikah: ["nikah", "muslim nikah", "muslim wedding"],
+    muslim_walima: ["walima", "muslim walima"],
+    muslim_dholki: ["dholki", "muslim dholki"],
+    // Gujarati ceremonies
+    gujarati_pithi: ["pithi", "gujarati pithi"],
+    gujarati_garba: ["garba", "gujarati garba"],
+    gujarati_wedding: ["gujarati wedding"],
+    // South Indian
+    south_indian_muhurtham: ["muhurtham", "south indian muhurtham", "south indian wedding"],
+    // General events
+    general_wedding: ["general wedding", "western wedding", "christian wedding", "civil ceremony"],
+    rehearsal_dinner: ["rehearsal dinner", "rehearsal"],
+    cocktail_hour: ["cocktail hour", "cocktail", "cocktails"],
+  };
+
+  // Get ceremony type ID from event name
+  const getCeremonyTypeId = (eventName: string): string | null => {
+    const normalizedName = eventName.toLowerCase().trim();
+    
+    for (const [ceremonyId, keywords] of Object.entries(CEREMONY_MAPPINGS)) {
+      if (keywords.some(kw => normalizedName === kw)) {
+        if (CEREMONY_COST_BREAKDOWNS[ceremonyId]) {
+          return ceremonyId;
+        }
+      }
+    }
+    
+    for (const [ceremonyId, keywords] of Object.entries(CEREMONY_MAPPINGS)) {
+      if (keywords.some(kw => normalizedName.includes(kw))) {
+        if (CEREMONY_COST_BREAKDOWNS[ceremonyId]) {
+          return ceremonyId;
+        }
+      }
+    }
+    
+    if (normalizedName.includes('reception') && CEREMONY_COST_BREAKDOWNS['reception']) {
+      return 'reception';
+    }
+    
+    return null;
+  };
+
+  // Get line items for an event based on ceremony type
+  const getLineItemsForEvent = (eventId: string, eventName: string): CostCategory[] | null => {
+    const ceremonyTypeId = getCeremonyTypeId(eventName);
+    if (!ceremonyTypeId) return null;
+    return CEREMONY_COST_BREAKDOWNS[ceremonyTypeId] || null;
+  };
+
+  // Toggle ceremony expansion
+  const toggleCeremonyExpansion = (eventId: string) => {
+    setExpandedCeremonies(prev => {
+      const next = new Set(prev);
+      if (next.has(eventId)) {
+        next.delete(eventId);
+      } else {
+        next.add(eventId);
+      }
+      return next;
+    });
+  };
+
+  // Mutation for saving line item budgets
+  const saveLineItemBudgetsMutation = useMutation({
+    mutationFn: async ({ weddingId, eventId, ceremonyTypeId, items }: {
+      weddingId: string;
+      eventId: string;
+      ceremonyTypeId: string;
+      items: Array<{ lineItemCategory: string; budgetedAmount: string }>;
+    }) => {
+      return apiRequest("POST", "/api/budget/line-items/bulk", { weddingId, eventId, ceremonyTypeId, items });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/budget/line-items", wedding?.id] });
+      toast({ title: "Line item budgets saved" });
+    },
+    onError: () => {
+      toast({ title: "Failed to save line item budgets", variant: "destructive" });
+    },
+  });
+
+  // Handle line item budget change
+  const handleLineItemChange = (eventId: string, category: string, value: string) => {
+    setEditingLineItems(prev => ({
+      ...prev,
+      [eventId]: {
+        ...(prev[eventId] || {}),
+        [category]: value,
+      },
+    }));
+  };
+
+  // Save line item budgets for an event
+  const saveEventLineItems = (eventId: string, eventName: string) => {
+    const ceremonyTypeId = getCeremonyTypeId(eventName);
+    if (!wedding?.id || !ceremonyTypeId) return;
+    
+    const eventLineItems = editingLineItems[eventId] || {};
+    const items = Object.entries(eventLineItems)
+      .filter(([_, value]) => value && parseFloat(value) > 0)
+      .map(([category, value]) => ({
+        lineItemCategory: category,
+        budgetedAmount: value,
+      }));
+
+    if (items.length > 0) {
+      saveLineItemBudgetsMutation.mutate({
+        weddingId: wedding.id,
+        eventId,
+        ceremonyTypeId,
+        items,
+      });
+    }
+  };
+
+  // Get existing budget for a line item
+  const getExistingLineItemBudget = (eventId: string, category: string): string => {
+    // Check local edits first
+    if (editingLineItems[eventId]?.[category] !== undefined) {
+      return editingLineItems[eventId][category];
+    }
+    // Then check saved budgets
+    const saved = lineItemBudgets.find(
+      b => b.eventId === eventId && b.lineItemCategory === category
+    );
+    return saved?.budgetedAmount || "";
+  };
+
+  // Calculate total line item budget for an event
+  const getEventLineItemTotal = (eventId: string, lineItems: CostCategory[]): number => {
+    let total = 0;
+    for (const item of lineItems) {
+      const amount = getExistingLineItemBudget(eventId, item.category);
+      total += parseFloat(amount) || 0;
+    }
+    return total;
+  };
 
   // Ceremony Budgets (Budget Matrix)
   interface CeremonyAnalyticsResponse {
@@ -1021,52 +1191,142 @@ export default function Budget() {
               <div className="space-y-3">
                 {(ceremonyAnalytics?.ceremonyBreakdown || []).map((ceremony) => {
                   const percentSpent = ceremony.allocated > 0 ? ceremony.percentUsed : 0;
+                  const lineItems = getLineItemsForEvent(ceremony.eventId, ceremony.eventName);
+                  const isExpanded = expandedCeremonies.has(ceremony.eventId);
+                  const lineItemTotal = lineItems ? getEventLineItemTotal(ceremony.eventId, lineItems) : 0;
+                  const hasUnsavedChanges = !!editingLineItems[ceremony.eventId] && Object.keys(editingLineItems[ceremony.eventId]).length > 0;
 
                   return (
                     <div 
                       key={ceremony.eventId} 
-                      className={`p-4 rounded-lg border bg-card ${ceremony.isOverBudget ? 'border-destructive/50' : ''}`}
+                      className={`rounded-lg border bg-card ${ceremony.isOverBudget ? 'border-destructive/50' : ''}`}
                       data-testid={`ceremony-budget-${ceremony.eventId}`}
                     >
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium flex items-center gap-2 flex-wrap">
-                            <span className="truncate">{ceremony.eventName}</span>
-                            {ceremony.isOverBudget && (
-                              <Badge variant="destructive" className="text-xs shrink-0">Over Budget</Badge>
-                            )}
-                            {ceremony.hasNoBudget && ceremony.spent > 0 && (
-                              <Badge variant="outline" className="text-xs shrink-0">No Budget Set</Badge>
-                            )}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            ${ceremony.spent.toLocaleString()} of ${ceremony.allocated.toLocaleString()} spent
-                            {ceremony.expenseCount > 0 && ` • ${ceremony.expenseCount} expense${ceremony.expenseCount > 1 ? 's' : ''}`}
-                          </p>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="shrink-0"
-                          onClick={() => setEditingCeremony({ id: ceremony.eventId, name: ceremony.eventName })}
-                          data-testid={`button-edit-ceremony-${ceremony.eventId}`}
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                      {ceremony.allocated > 0 && (
-                        <>
-                          <Progress 
-                            value={Math.min(percentSpent, 100)} 
-                            className={`h-2 ${ceremony.isOverBudget ? '[&>div]:bg-destructive' : ''}`} 
-                          />
-                          <div className="flex justify-between mt-1 text-xs text-muted-foreground">
-                            <span>{percentSpent.toFixed(0)}% spent</span>
-                            <span className={ceremony.remaining < 0 ? "text-destructive" : "text-emerald-600"}>
-                              ${ceremony.remaining.toLocaleString()} remaining
-                            </span>
+                      {/* Ceremony Header */}
+                      <div className="p-4">
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {lineItems && (
+                                <button
+                                  onClick={() => toggleCeremonyExpansion(ceremony.eventId)}
+                                  className="p-1 -ml-1 hover:bg-muted/50 rounded"
+                                  data-testid={`button-expand-ceremony-${ceremony.eventId}`}
+                                >
+                                  {isExpanded ? (
+                                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                                  ) : (
+                                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                                  )}
+                                </button>
+                              )}
+                              <p className="font-medium truncate">{ceremony.eventName}</p>
+                              {ceremony.isOverBudget && (
+                                <Badge variant="destructive" className="text-xs shrink-0">Over Budget</Badge>
+                              )}
+                              {ceremony.hasNoBudget && ceremony.spent > 0 && (
+                                <Badge variant="outline" className="text-xs shrink-0">No Budget Set</Badge>
+                              )}
+                              {lineItems && (
+                                <Badge variant="secondary" className="text-xs shrink-0">
+                                  {lineItems.length} line items
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              ${ceremony.spent.toLocaleString()} of ${ceremony.allocated.toLocaleString()} spent
+                              {ceremony.expenseCount > 0 && ` • ${ceremony.expenseCount} expense${ceremony.expenseCount > 1 ? 's' : ''}`}
+                              {lineItemTotal > 0 && ` • $${lineItemTotal.toLocaleString()} budgeted in line items`}
+                            </p>
                           </div>
-                        </>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="shrink-0"
+                            onClick={() => setEditingCeremony({ id: ceremony.eventId, name: ceremony.eventName })}
+                            data-testid={`button-edit-ceremony-${ceremony.eventId}`}
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        {ceremony.allocated > 0 && (
+                          <>
+                            <Progress 
+                              value={Math.min(percentSpent, 100)} 
+                              className={`h-2 ${ceremony.isOverBudget ? '[&>div]:bg-destructive' : ''}`} 
+                            />
+                            <div className="flex justify-between mt-1 text-xs text-muted-foreground">
+                              <span>{percentSpent.toFixed(0)}% spent</span>
+                              <span className={ceremony.remaining < 0 ? "text-destructive" : "text-emerald-600"}>
+                                ${ceremony.remaining.toLocaleString()} remaining
+                              </span>
+                            </div>
+                          </>
+                        )}
+                      </div>
+
+                      {/* Expandable Line Items */}
+                      {lineItems && isExpanded && (
+                        <div className="border-t bg-muted/30 p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <p className="text-sm font-medium">Cost Breakdown</p>
+                            {hasUnsavedChanges && (
+                              <Button
+                                size="sm"
+                                onClick={() => saveEventLineItems(ceremony.eventId, ceremony.eventName)}
+                                disabled={saveLineItemBudgetsMutation.isPending}
+                                data-testid={`button-save-line-items-${ceremony.eventId}`}
+                              >
+                                {saveLineItemBudgetsMutation.isPending ? (
+                                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                                ) : null}
+                                Save
+                              </Button>
+                            )}
+                          </div>
+                          <div className="space-y-2">
+                            {lineItems.map((item, idx) => {
+                              const savedAmount = getExistingLineItemBudget(ceremony.eventId, item.category);
+                              const hasValue = savedAmount && parseFloat(savedAmount) > 0;
+                              
+                              return (
+                                <div 
+                                  key={idx} 
+                                  className="flex items-center gap-3 py-2 border-b border-border/50 last:border-0"
+                                  data-testid={`line-item-${ceremony.eventId}-${idx}`}
+                                >
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium truncate">{item.category}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      Est: ${item.lowCost.toLocaleString()} - ${item.highCost.toLocaleString()}
+                                      {item.unit === "per_person" && " per person"}
+                                      {item.unit === "per_hour" && " per hour"}
+                                    </p>
+                                  </div>
+                                  <div className="flex items-center gap-2 shrink-0">
+                                    <span className="text-sm text-muted-foreground">$</span>
+                                    <Input
+                                      type="number"
+                                      placeholder="0"
+                                      className={`w-24 h-8 text-right ${hasValue ? 'border-primary/50' : ''}`}
+                                      value={savedAmount}
+                                      onChange={(e) => handleLineItemChange(ceremony.eventId, item.category, e.target.value)}
+                                      data-testid={`input-line-item-${ceremony.eventId}-${idx}`}
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                          {lineItemTotal > 0 && (
+                            <div className="flex justify-between items-center mt-4 pt-3 border-t">
+                              <span className="text-sm font-medium">Line Item Total</span>
+                              <span className="text-lg font-bold font-mono">
+                                ${lineItemTotal.toLocaleString()}
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       )}
                     </div>
                   );
