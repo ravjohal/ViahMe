@@ -54,6 +54,7 @@ interface AIBudgetEstimate {
 }
 
 type ContributorFilter = "all" | "bride" | "groom";
+type SideFilter = "all" | "bride" | "groom" | "mutual";
 
 export default function Budget() {
   const [, setLocation] = useLocation();
@@ -70,6 +71,7 @@ export default function Budget() {
   const [aiEstimateLoading, setAiEstimateLoading] = useState(false);
   const [expandedEvents, setExpandedEvents] = useState<Set<string>>(new Set());
   const [contributorFilter, setContributorFilter] = useState<ContributorFilter>("all");
+  const [sideFilter, setSideFilter] = useState<SideFilter>("all");
   const [editBudgetOpen, setEditBudgetOpen] = useState(false);
   const [showCategories, setShowCategories] = useState(false);
   const [editingExpense, setEditingExpense] = useState<ExpenseWithAllocations | null>(null);
@@ -357,6 +359,7 @@ export default function Budget() {
       eventName: string;
       eventDate: string | null;
       eventType: string | null;
+      side: 'bride' | 'groom' | 'mutual';
       allocated: number;
       spent: number;
       remaining: number;
@@ -365,6 +368,11 @@ export default function Budget() {
       hasNoBudget: boolean;
       expenseCount: number;
     }>;
+    sideAnalytics: {
+      bride: { allocated: number; spent: number; eventCount: number };
+      groom: { allocated: number; spent: number; eventCount: number };
+      mutual: { allocated: number; spent: number; eventCount: number };
+    };
     summary: {
       totalEvents: number;
       eventsWithBudget: number;
@@ -1033,51 +1041,150 @@ export default function Budget() {
           </p>
         </Card>
 
-        {/* Side-Based Spending Breakdown */}
+        {/* Side-Based Budget & Spending Breakdown */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Card className="p-4 border-l-4 border-l-pink-500" data-testid="card-bride-spending">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-full bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center">
-                <Users className="w-4 h-4 text-pink-600" />
+          <Card 
+            className={`p-4 border-l-4 border-l-pink-500 cursor-pointer transition-all hover-elevate ${sideFilter === 'bride' ? 'ring-2 ring-pink-500' : ''}`}
+            onClick={() => setSideFilter(sideFilter === 'bride' ? 'all' : 'bride')}
+            data-testid="card-bride-spending"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center">
+                  <Users className="w-4 h-4 text-pink-600" />
+                </div>
+                <span className="font-medium text-pink-700 dark:text-pink-300">
+                  {wedding?.partner1Name || "Bride"}'s Side
+                </span>
               </div>
-              <span className="font-medium text-pink-700 dark:text-pink-300">
-                {wedding?.partner1Name || "Bride"}'s Side
-              </span>
+              {sideFilter === 'bride' && (
+                <Badge variant="secondary" className="text-xs">Filtered</Badge>
+              )}
             </div>
-            <p className="text-2xl font-bold font-mono">${spentBySide.bride.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground">
-              {eventCountsBySide.bride} events
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Budget:</span>
+                <span className="font-mono font-semibold text-pink-700 dark:text-pink-300">
+                  ${(ceremonyAnalytics?.sideAnalytics?.bride?.allocated || 0).toLocaleString()}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Spent:</span>
+                <span className="font-mono font-bold">
+                  ${(ceremonyAnalytics?.sideAnalytics?.bride?.spent || spentBySide.bride).toLocaleString()}
+                </span>
+              </div>
+              {(ceremonyAnalytics?.sideAnalytics?.bride?.allocated || 0) > 0 && (
+                <Progress 
+                  value={Math.min(((ceremonyAnalytics?.sideAnalytics?.bride?.spent || 0) / (ceremonyAnalytics?.sideAnalytics?.bride?.allocated || 1)) * 100, 100)} 
+                  className="h-1.5 mt-2" 
+                />
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              {ceremonyAnalytics?.sideAnalytics?.bride?.eventCount || eventCountsBySide.bride} ceremonies
             </p>
           </Card>
 
-          <Card className="p-4 border-l-4 border-l-amber-500" data-testid="card-mutual-spending">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                <Users className="w-4 h-4 text-amber-600" />
+          <Card 
+            className={`p-4 border-l-4 border-l-amber-500 cursor-pointer transition-all hover-elevate ${sideFilter === 'mutual' ? 'ring-2 ring-amber-500' : ''}`}
+            onClick={() => setSideFilter(sideFilter === 'mutual' ? 'all' : 'mutual')}
+            data-testid="card-mutual-spending"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                  <Users className="w-4 h-4 text-amber-600" />
+                </div>
+                <span className="font-medium text-amber-700 dark:text-amber-300">Shared</span>
               </div>
-              <span className="font-medium text-amber-700 dark:text-amber-300">Shared Expenses</span>
+              {sideFilter === 'mutual' && (
+                <Badge variant="secondary" className="text-xs">Filtered</Badge>
+              )}
             </div>
-            <p className="text-2xl font-bold font-mono">${spentBySide.mutual.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground">
-              {eventCountsBySide.mutual} events
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Budget:</span>
+                <span className="font-mono font-semibold text-amber-700 dark:text-amber-300">
+                  ${(ceremonyAnalytics?.sideAnalytics?.mutual?.allocated || 0).toLocaleString()}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Spent:</span>
+                <span className="font-mono font-bold">
+                  ${(ceremonyAnalytics?.sideAnalytics?.mutual?.spent || spentBySide.mutual).toLocaleString()}
+                </span>
+              </div>
+              {(ceremonyAnalytics?.sideAnalytics?.mutual?.allocated || 0) > 0 && (
+                <Progress 
+                  value={Math.min(((ceremonyAnalytics?.sideAnalytics?.mutual?.spent || 0) / (ceremonyAnalytics?.sideAnalytics?.mutual?.allocated || 1)) * 100, 100)} 
+                  className="h-1.5 mt-2" 
+                />
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              {ceremonyAnalytics?.sideAnalytics?.mutual?.eventCount || eventCountsBySide.mutual} ceremonies
             </p>
           </Card>
 
-          <Card className="p-4 border-l-4 border-l-blue-500" data-testid="card-groom-spending">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                <Users className="w-4 h-4 text-blue-600" />
+          <Card 
+            className={`p-4 border-l-4 border-l-blue-500 cursor-pointer transition-all hover-elevate ${sideFilter === 'groom' ? 'ring-2 ring-blue-500' : ''}`}
+            onClick={() => setSideFilter(sideFilter === 'groom' ? 'all' : 'groom')}
+            data-testid="card-groom-spending"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                  <Users className="w-4 h-4 text-blue-600" />
+                </div>
+                <span className="font-medium text-blue-700 dark:text-blue-300">
+                  {wedding?.partner2Name || "Groom"}'s Side
+                </span>
               </div>
-              <span className="font-medium text-blue-700 dark:text-blue-300">
-                {wedding?.partner2Name || "Groom"}'s Side
-              </span>
+              {sideFilter === 'groom' && (
+                <Badge variant="secondary" className="text-xs">Filtered</Badge>
+              )}
             </div>
-            <p className="text-2xl font-bold font-mono">${spentBySide.groom.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground">
-              {eventCountsBySide.groom} events
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Budget:</span>
+                <span className="font-mono font-semibold text-blue-700 dark:text-blue-300">
+                  ${(ceremonyAnalytics?.sideAnalytics?.groom?.allocated || 0).toLocaleString()}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Spent:</span>
+                <span className="font-mono font-bold">
+                  ${(ceremonyAnalytics?.sideAnalytics?.groom?.spent || spentBySide.groom).toLocaleString()}
+                </span>
+              </div>
+              {(ceremonyAnalytics?.sideAnalytics?.groom?.allocated || 0) > 0 && (
+                <Progress 
+                  value={Math.min(((ceremonyAnalytics?.sideAnalytics?.groom?.spent || 0) / (ceremonyAnalytics?.sideAnalytics?.groom?.allocated || 1)) * 100, 100)} 
+                  className="h-1.5 mt-2" 
+                />
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              {ceremonyAnalytics?.sideAnalytics?.groom?.eventCount || eventCountsBySide.groom} ceremonies
             </p>
           </Card>
         </div>
+
+        {/* Clear Side Filter */}
+        {sideFilter !== 'all' && (
+          <div className="mb-4">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setSideFilter('all')}
+              className="text-xs"
+              data-testid="button-clear-side-filter"
+            >
+              Clear side filter
+            </Button>
+          </div>
+        )}
 
         {/* Contributor Filter */}
         <div className="flex items-center gap-2 mb-6 flex-wrap">
@@ -1265,12 +1372,26 @@ export default function Budget() {
 
               {/* Ceremony Breakdown */}
               <div className="space-y-3">
-                {(ceremonyAnalytics?.ceremonyBreakdown || []).map((ceremony) => {
+                {(ceremonyAnalytics?.ceremonyBreakdown || [])
+                  .filter(ceremony => sideFilter === 'all' || ceremony.side === sideFilter)
+                  .map((ceremony) => {
                   const percentSpent = ceremony.allocated > 0 ? ceremony.percentUsed : 0;
                   const lineItems = getLineItemsForEvent(ceremony.eventId, ceremony.eventName);
                   const isExpanded = expandedCeremonies.has(ceremony.eventId);
                   const lineItemTotal = lineItems ? getEventLineItemTotal(ceremony.eventId, lineItems) : 0;
                   const hasUnsavedChanges = !!editingLineItems[ceremony.eventId] && Object.keys(editingLineItems[ceremony.eventId]).length > 0;
+
+                  // Side badge styling
+                  const sideColors = {
+                    bride: 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300',
+                    groom: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+                    mutual: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+                  };
+                  const sideLabels = {
+                    bride: wedding?.partner1Name || "Bride",
+                    groom: wedding?.partner2Name || "Groom",
+                    mutual: "Shared",
+                  };
 
                   return (
                     <div 
@@ -1295,6 +1416,13 @@ export default function Budget() {
                                 )}
                               </button>
                               <p className="font-medium truncate">{ceremony.eventName}</p>
+                              <Badge 
+                                variant="outline" 
+                                className={`text-xs shrink-0 ${sideColors[ceremony.side]}`}
+                                data-testid={`badge-side-${ceremony.eventId}`}
+                              >
+                                {sideLabels[ceremony.side]}
+                              </Badge>
                               {ceremony.isOverBudget && (
                                 <Badge variant="destructive" className="text-xs shrink-0">Over Budget</Badge>
                               )}
@@ -1474,13 +1602,33 @@ export default function Budget() {
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Calendar className="w-5 h-5" />
             Breakdown by Event
+            {sideFilter !== 'all' && (
+              <Badge variant="outline" className="text-xs ml-2">
+                Filtered by {sideFilter === 'bride' ? (wedding?.partner1Name || 'Bride') : sideFilter === 'groom' ? (wedding?.partner2Name || 'Groom') : 'Shared'}
+              </Badge>
+            )}
           </h2>
 
           <div className="space-y-3">
-            {events.map((event) => {
+            {events
+              .filter(event => sideFilter === 'all' || (event.side || 'mutual') === sideFilter)
+              .map((event) => {
               const eventData = expensesByEvent[event.id];
               const isExpanded = expandedEvents.has(event.id);
               const eventTotal = eventData?.total || 0;
+              const eventSide = (event.side || 'mutual') as 'bride' | 'groom' | 'mutual';
+
+              // Side badge styling
+              const sideColors = {
+                bride: 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300',
+                groom: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+                mutual: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+              };
+              const sideLabels = {
+                bride: wedding?.partner1Name || "Bride",
+                groom: wedding?.partner2Name || "Groom",
+                mutual: "Shared",
+              };
 
               return (
                 <Collapsible 
@@ -1491,20 +1639,26 @@ export default function Budget() {
                   <Card className="overflow-hidden" data-testid={`card-event-${event.id}`}>
                     <CollapsibleTrigger asChild>
                       <button className="w-full p-4 flex items-center justify-between hover-elevate">
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 flex-wrap">
                           {isExpanded ? (
-                            <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                            <ChevronDown className="w-5 h-5 text-muted-foreground shrink-0" />
                           ) : (
-                            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                            <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
                           )}
                           <span className="font-medium">{event.name}</span>
+                          <Badge 
+                            variant="outline" 
+                            className={`text-xs shrink-0 ${sideColors[eventSide]}`}
+                          >
+                            {sideLabels[eventSide]}
+                          </Badge>
                           {eventData?.expenses.length ? (
-                            <Badge variant="secondary" className="text-xs">
+                            <Badge variant="secondary" className="text-xs shrink-0">
                               {eventData.expenses.length} items
                             </Badge>
                           ) : null}
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 shrink-0">
                           <span className="font-mono font-semibold">
                             ${eventTotal.toLocaleString()}
                           </span>

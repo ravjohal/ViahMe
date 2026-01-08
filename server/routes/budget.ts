@@ -680,6 +680,7 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
           eventName: event.name,
           eventDate: event.date,
           eventType: event.type,
+          side: event.side || 'mutual',
           allocated,
           spent,
           remaining: allocated - spent,
@@ -693,6 +694,20 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
       const eventsWithBudget = ceremonyBreakdown.filter(c => c.allocated > 0);
       const eventsOverBudget = ceremonyBreakdown.filter(c => c.isOverBudget);
 
+      // Calculate side-based analytics
+      const sideAnalytics = {
+        bride: { allocated: 0, spent: 0, eventCount: 0 },
+        groom: { allocated: 0, spent: 0, eventCount: 0 },
+        mutual: { allocated: 0, spent: 0, eventCount: 0 },
+      };
+
+      ceremonyBreakdown.forEach(ceremony => {
+        const side = ceremony.side as 'bride' | 'groom' | 'mutual';
+        sideAnalytics[side].allocated += ceremony.allocated;
+        sideAnalytics[side].spent += ceremony.spent;
+        sideAnalytics[side].eventCount += 1;
+      });
+
       res.json({
         overview: {
           totalBudget,
@@ -702,6 +717,7 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
           isOverAllocated: totalCeremonyAllocated > totalBudget,
         },
         ceremonyBreakdown,
+        sideAnalytics,
         summary: {
           totalEvents: events.length,
           eventsWithBudget: eventsWithBudget.length,
