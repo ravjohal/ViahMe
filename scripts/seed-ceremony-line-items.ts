@@ -48,21 +48,21 @@ const LINE_ITEM_TO_BUCKET: Record<string, BudgetBucket> = {
   
   // Photography & Video
   "photographer": "photography",
-  "videographer": "videography",
+  "videographer": "photography",
   "photo booth": "photography",
   "photography": "photography",
   "photography/video": "photography",
   
   // Decoration & Florals
-  "decoration": "decor",
-  "decorations": "decor",
-  "decor": "decor",
-  "florals": "decor",
-  "mandap": "decor",
-  "mandap setup": "decor",
-  "stage setup": "decor",
-  "garlands": "decor",
-  "lighting": "decor",
+  "decoration": "decoration",
+  "decorations": "decoration",
+  "decor": "decoration",
+  "florals": "decoration",
+  "mandap": "decoration",
+  "mandap setup": "decoration",
+  "stage setup": "decoration",
+  "garlands": "decoration",
+  "lighting": "decoration",
   
   // Entertainment
   "dj": "entertainment",
@@ -81,12 +81,12 @@ const LINE_ITEM_TO_BUCKET: Record<string, BudgetBucket> = {
   "raagi jatha / kirtan musicians": "entertainment",
   
   // Attire & Beauty
-  "makeup": "beauty",
-  "makeup artist": "beauty",
-  "mehndi artist": "beauty",
-  "mehndi": "beauty",
-  "henna artist (bride)": "beauty",
-  "henna artists (guests)": "beauty",
+  "makeup": "attire",
+  "makeup artist": "attire",
+  "mehndi artist": "attire",
+  "mehndi": "attire",
+  "henna artist (bride)": "attire",
+  "henna artists (guests)": "attire",
   "turban tier": "attire",
   "turban tying": "attire",
   "bride's outfit": "attire",
@@ -95,8 +95,8 @@ const LINE_ITEM_TO_BUCKET: Record<string, BudgetBucket> = {
   "attire for bride": "attire",
   "attire for groom's side": "attire",
   "attire for bride's side": "attire",
-  "jewelry": "attire",
-  "hair styling": "beauty",
+  "jewelry": "jewelry",
+  "hair styling": "attire",
   
   // Transportation
   "transportation": "transportation",
@@ -109,12 +109,12 @@ const LINE_ITEM_TO_BUCKET: Record<string, BudgetBucket> = {
   "limo rental": "transportation",
   
   // Gifts & Favors
-  "shagun / gifts": "favors",
-  "shagun / gifts for other side": "favors",
-  "gifts / shagun": "favors",
-  "favors": "favors",
-  "gift bags": "favors",
-  "mehr display": "favors",
+  "shagun / gifts": "stationery",
+  "shagun / gifts for other side": "stationery",
+  "gifts / shagun": "stationery",
+  "favors": "stationery",
+  "gift bags": "stationery",
+  "mehr display": "stationery",
   
   // Stationery
   "invitations": "stationery",
