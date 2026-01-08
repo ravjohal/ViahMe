@@ -60,6 +60,48 @@ export function createCeremonyTemplatesRouter(storage: IStorage): Router {
     }
   });
 
+  // Get line items for a ceremony (used by Add Expense dialog)
+  router.get("/:ceremonyId/line-items", async (req, res) => {
+    try {
+      const { ceremonyId } = req.params;
+      const template = await storage.getCeremonyTemplate(ceremonyId);
+      if (!template) {
+        return res.status(404).json({ error: "Ceremony template not found" });
+      }
+      
+      // Extract line items with budget bucket mappings
+      const breakdown = template.costBreakdown as Array<{
+        category: string;
+        lowCost: number;
+        highCost: number;
+        unit: 'fixed' | 'per_person' | 'per_hour';
+        hoursLow?: number;
+        hoursHigh?: number;
+        notes?: string;
+        budgetBucket?: string;
+      }>;
+      
+      const lineItems = breakdown.map(item => ({
+        name: item.category,
+        budgetBucket: item.budgetBucket || 'other',
+        lowCost: item.lowCost,
+        highCost: item.highCost,
+        unit: item.unit,
+        notes: item.notes,
+      }));
+      
+      res.json({
+        ceremonyId: template.ceremonyId,
+        ceremonyName: template.name,
+        tradition: template.tradition,
+        lineItems,
+      });
+    } catch (error) {
+      console.error("[Ceremony Templates] Error fetching line items:", error);
+      res.status(500).json({ error: "Failed to fetch ceremony line items" });
+    }
+  });
+
   router.post("/", async (req, res, next) => {
     await requireSiteAdmin(req, res, async () => {
       try {
