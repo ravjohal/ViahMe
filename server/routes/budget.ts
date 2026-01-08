@@ -902,6 +902,21 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
       
       // Get ceremony budgets (total budget set for each ceremony)
       const ceremonyBudgets = await storage.getCeremonyBudgetsByWedding(weddingId);
+      
+      // Get all expenses for this wedding to calculate spent amounts
+      const expenses = await storage.getExpensesByWedding(weddingId);
+      
+      // Build expense totals by ceremony-category combination
+      const expenseMap = new Map<string, number>(); // key: "ceremonyId:categoryKey" -> spent amount
+      const ceremonySpentMap = new Map<string, number>(); // ceremonyId -> total spent
+      for (const expense of expenses) {
+        if (expense.ceremonyId && expense.parentCategory) {
+          const key = `${expense.ceremonyId}:${expense.parentCategory}`;
+          const amount = parseFloat(expense.amount || '0');
+          expenseMap.set(key, (expenseMap.get(key) || 0) + amount);
+          ceremonySpentMap.set(expense.ceremonyId, (ceremonySpentMap.get(expense.ceremonyId) || 0) + amount);
+        }
+      }
 
       // Build a lookup map: ceremonyId -> categoryKey -> allocation
       const allocationMap = new Map<string, Map<string, typeof allocations[0]>>();
@@ -912,18 +927,21 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
         allocationMap.get(alloc.ceremonyId)!.set(alloc.categoryKey, alloc);
       }
 
-      // Build rows (ceremonies) with their allocations
+      // Build rows (ceremonies) with their allocations and spending
       const rows = events.map(event => {
         const ceremonyAllocations = allocationMap.get(event.id) || new Map();
-        const cells: Record<string, { amount: string; allocationId: string | null }> = {};
+        const cells: Record<string, { amount: string; spent: number; allocationId: string | null }> = {};
         
         let ceremonyTotal = 0;
         for (const bucket of BUDGET_BUCKETS) {
           const alloc = ceremonyAllocations.get(bucket);
           const amount = alloc?.allocatedAmount || '0';
+          const spentKey = `${event.id}:${bucket}`;
+          const spent = expenseMap.get(spentKey) || 0;
           ceremonyTotal += parseFloat(amount);
           cells[bucket] = {
             amount,
+            spent,
             allocationId: alloc?.id || null,
           };
         }
@@ -931,6 +949,7 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
         // Get the ceremony's total budget (set by user in Ceremony Budgets section)
         const ceremonyBudget = ceremonyBudgets.find(cb => cb.ceremonyId === event.id);
         const ceremonyBudgetAmount = parseFloat(ceremonyBudget?.allocatedAmount || '0');
+        const ceremonySpent = ceremonySpentMap.get(event.id) || 0;
 
         return {
           ceremonyId: event.id,
@@ -939,6 +958,7 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
           ceremonyType: event.type,
           cells,
           ceremonyBudget: ceremonyBudgetAmount, // Total budget set for this ceremony
+          ceremonySpent, // Total spent for this ceremony
           totalPlanned: ceremonyTotal, // Sum of all category allocations for this ceremony
         };
       });

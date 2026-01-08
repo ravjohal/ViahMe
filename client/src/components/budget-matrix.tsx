@@ -14,6 +14,7 @@ import { AlertCircle, CheckCircle2, DollarSign, Grid3X3, Loader2 } from "lucide-
 
 interface MatrixCell {
   amount: string;
+  spent: number;
   allocationId: string | null;
 }
 
@@ -24,6 +25,7 @@ interface MatrixRow {
   ceremonyType: string;
   cells: Record<string, MatrixCell>;
   ceremonyBudget: number;
+  ceremonySpent: number;
   totalPlanned: number;
 }
 
@@ -292,13 +294,20 @@ export function BudgetMatrix({ weddingId }: BudgetMatrixProps) {
                       <div className="flex flex-col">
                         <span>{row.ceremonyName}</span>
                         {row.ceremonyBudget > 0 ? (
-                          <div className="flex items-center gap-2 text-xs">
-                            <span className="text-amber-600 dark:text-amber-400">
-                              Budget: {formatCurrency(row.ceremonyBudget)}
-                            </span>
-                            <span className={row.ceremonyBudget - row.totalPlanned < 0 ? "text-destructive" : "text-muted-foreground"}>
-                              ({formatCurrency(row.ceremonyBudget - row.totalPlanned)} left)
-                            </span>
+                          <div className="flex flex-col text-xs">
+                            <div className="flex items-center gap-2">
+                              <span className="text-amber-600 dark:text-amber-400">
+                                Budget: {formatCurrency(row.ceremonyBudget)}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-muted-foreground">
+                                Spent: {formatCurrency(row.ceremonySpent)}
+                              </span>
+                              <span className={row.ceremonyBudget - row.ceremonySpent < 0 ? "text-destructive font-medium" : "text-green-600 dark:text-green-400"}>
+                                ({formatCurrency(row.ceremonyBudget - row.ceremonySpent)} left)
+                              </span>
+                            </div>
                           </div>
                         ) : (
                           <span className="text-xs text-muted-foreground">No budget set</span>
@@ -306,9 +315,13 @@ export function BudgetMatrix({ weddingId }: BudgetMatrixProps) {
                       </div>
                     </td>
                     {visibleCategories.map(categoryKey => {
-                      const cell = row.cells[categoryKey] || { amount: "0", allocationId: null };
+                      const cell = row.cells[categoryKey] || { amount: "0", spent: 0, allocationId: null };
                       const isEditing = editingCell?.ceremonyId === row.ceremonyId && editingCell?.categoryKey === categoryKey;
                       const isPending = pendingUpdate === `${row.ceremonyId}-${categoryKey}`;
+                      const allocated = parseFloat(cell.amount);
+                      const spent = cell.spent || 0;
+                      const remaining = allocated - spent;
+                      const isOverspent = allocated > 0 && remaining < 0;
                       const col = matrixData.columns.find(c => c.categoryKey === categoryKey);
                       
                       return (
@@ -330,20 +343,38 @@ export function BudgetMatrix({ weddingId }: BudgetMatrixProps) {
                               data-testid={`input-${row.ceremonyId}-${categoryKey}`}
                             />
                           ) : (
-                            <button
-                              onClick={() => handleCellClick(row.ceremonyId, categoryKey, cell.amount)}
-                              className="w-full h-8 px-2 rounded hover-elevate flex items-center justify-center text-sm"
-                              disabled={isPending}
-                              data-testid={`button-${row.ceremonyId}-${categoryKey}`}
-                            >
-                              {isPending ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <span className={parseFloat(cell.amount) > 0 ? "font-medium" : "text-muted-foreground"}>
-                                  {formatCurrency(cell.amount)}
-                                </span>
-                              )}
-                            </button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  onClick={() => handleCellClick(row.ceremonyId, categoryKey, cell.amount)}
+                                  className={`w-full h-8 px-2 rounded hover-elevate flex flex-col items-center justify-center text-xs ${isOverspent ? 'bg-destructive/10' : ''}`}
+                                  disabled={isPending}
+                                  data-testid={`button-${row.ceremonyId}-${categoryKey}`}
+                                >
+                                  {isPending ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <>
+                                      <span className={allocated > 0 ? "font-medium" : "text-muted-foreground"}>
+                                        {formatCurrency(allocated)}
+                                      </span>
+                                      {spent > 0 && (
+                                        <span className={`text-[10px] ${isOverspent ? 'text-destructive' : 'text-muted-foreground'}`}>
+                                          {formatCurrency(spent)} spent
+                                        </span>
+                                      )}
+                                    </>
+                                  )}
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Allocated: {formatCurrency(allocated)}</p>
+                                <p>Spent: {formatCurrency(spent)}</p>
+                                <p className={isOverspent ? 'text-destructive' : ''}>
+                                  Remaining: {formatCurrency(remaining)}
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
                           )}
                         </td>
                       );
@@ -357,10 +388,12 @@ export function BudgetMatrix({ weddingId }: BudgetMatrixProps) {
               <tfoot>
                 <tr className="border-t-2 font-semibold">
                   <td className="p-2 text-sm sticky left-0 bg-card z-10">
-                    Total
-                  </td>
-                  <td className="p-2 text-center text-sm bg-amber-50/50 dark:bg-amber-900/20">
-                    {formatCurrency(matrixData.rows.reduce((sum, row) => sum + row.ceremonyBudget, 0))}
+                    <div className="flex flex-col">
+                      <span>Total</span>
+                      <span className="text-xs text-amber-600 dark:text-amber-400 font-normal">
+                        Budget: {formatCurrency(matrixData.rows.reduce((sum, row) => sum + row.ceremonyBudget, 0))}
+                      </span>
+                    </div>
                   </td>
                   {visibleCategories.map(categoryKey => {
                     const col = matrixData.columns.find(c => c.categoryKey === categoryKey)!;
@@ -385,9 +418,9 @@ export function BudgetMatrix({ weddingId }: BudgetMatrixProps) {
         
         <div className="mt-4 p-3 bg-muted/50 rounded-lg">
           <p className="text-sm text-muted-foreground">
-            <strong>How to read this:</strong> Each row is a ceremony. The <strong>Budget</strong> column shows the total you've set for each ceremony. 
-            The category columns (Venue, Catering, etc.) let you allocate portions of your category budgets to specific ceremonies. 
-            Click any category cell to enter an amount. The <strong>Allocated</strong> column shows the sum of category allocations for each ceremony.
+            <strong>How to use:</strong> Each row is a ceremony showing its budget, spent, and remaining amounts. 
+            Click any category cell to allocate budget. When you add expenses with a ceremony and category, spending is tracked here automatically. 
+            Hover over cells to see allocation details. Red highlights indicate overspending.
           </p>
         </div>
       </CardContent>

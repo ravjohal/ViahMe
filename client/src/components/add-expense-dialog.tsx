@@ -83,6 +83,8 @@ export function AddExpenseDialog({
       queryClient.invalidateQueries({ queryKey: ["/api/expenses", weddingId] });
       queryClient.invalidateQueries({ queryKey: ["/api/expenses", weddingId, "totals"] });
       queryClient.invalidateQueries({ queryKey: ["/api/budget/allocations", weddingId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budget/matrix", weddingId] });
+      queryClient.invalidateQueries({ queryKey: [`/api/budget/ceremony-analytics/${weddingId}`] });
       onOpenChange(false);
       resetForm();
       toast({ title: "Expense added successfully" });

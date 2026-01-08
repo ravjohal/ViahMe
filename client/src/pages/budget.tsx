@@ -879,6 +879,8 @@ export default function Budget() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/expenses", wedding?.id] });
       queryClient.invalidateQueries({ queryKey: ["/api/expenses", wedding?.id, "totals"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budget/matrix", wedding?.id] });
+      queryClient.invalidateQueries({ queryKey: [`/api/budget/ceremony-analytics/${wedding?.id}`] });
       setDeletingExpenseId(null);
       toast({ title: "Expense deleted", description: "The expense has been removed" });
     },
@@ -894,6 +896,8 @@ export default function Budget() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/expenses", wedding?.id] });
       queryClient.invalidateQueries({ queryKey: ["/api/expenses", wedding?.id, "totals"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budget/matrix", wedding?.id] });
+      queryClient.invalidateQueries({ queryKey: [`/api/budget/ceremony-analytics/${wedding?.id}`] });
       setEditingExpense(null);
       toast({ title: "Expense updated", description: "The expense has been saved" });
     },
