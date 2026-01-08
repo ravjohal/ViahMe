@@ -360,6 +360,7 @@ export default function Budget() {
       eventDate: string | null;
       eventType: string | null;
       side: 'bride' | 'groom' | 'mutual';
+      guestCount: number;
       allocated: number;
       spent: number;
       remaining: number;
@@ -1436,7 +1437,9 @@ export default function Budget() {
                               )}
                             </div>
                             <p className="text-sm text-muted-foreground">
-                              ${ceremony.spent.toLocaleString()} spent
+                              <Users className="w-3 h-3 inline mr-1" />
+                              {ceremony.guestCount > 0 ? `${ceremony.guestCount} guests` : 'No guest count set'}
+                              {ceremony.spent > 0 && ` • $${ceremony.spent.toLocaleString()} spent`}
                               {ceremony.expenseCount > 0 && ` • ${ceremony.expenseCount} expense${ceremony.expenseCount > 1 ? 's' : ''}`}
                               {lineItemTotal > 0 && ` • $${lineItemTotal.toLocaleString()} in line items`}
                             </p>

@@ -681,6 +681,7 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
           eventDate: event.date,
           eventType: event.type,
           side: event.side || 'mutual',
+          guestCount: event.guestCount || 0,
           allocated,
           spent,
           remaining: allocated - spent,
