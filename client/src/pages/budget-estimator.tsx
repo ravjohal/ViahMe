@@ -80,10 +80,71 @@ interface EventEstimate {
   originalCostLow: number;
   originalCostHigh: number;
   hasCostBreakdown: boolean;
+  costBreakdown: CostCategory[] | null;
+  ceremonyId: string | null;
 }
 
 function formatCurrency(amount: number): string {
   return `$${amount.toLocaleString()}`;
+}
+
+function formatCurrencyShort(amount: number): string {
+  if (amount >= 1000) {
+    return `$${(amount / 1000).toFixed(amount % 1000 === 0 ? 0 : 1)}k`;
+  }
+  return `$${amount.toLocaleString()}`;
+}
+
+interface LineItemRowProps {
+  item: CostCategory;
+  guestCount: number;
+  multiplier: number;
+}
+
+function LineItemRow({ item, guestCount, multiplier }: LineItemRowProps) {
+  let displayLow: number;
+  let displayHigh: number;
+  let unitLabel: string;
+  
+  if (item.unit === "per_person") {
+    const adjustedLow = Math.round(item.lowCost * multiplier);
+    const adjustedHigh = Math.round(item.highCost * multiplier);
+    displayLow = adjustedLow * guestCount;
+    displayHigh = adjustedHigh * guestCount;
+    unitLabel = `${formatCurrency(adjustedLow)}-${formatCurrency(adjustedHigh)}/person`;
+  } else if (item.unit === "per_hour") {
+    const hoursLow = item.hoursLow ?? 3;
+    const hoursHigh = item.hoursHigh ?? 4;
+    const adjustedLow = Math.round(item.lowCost * multiplier);
+    const adjustedHigh = Math.round(item.highCost * multiplier);
+    displayLow = adjustedLow * hoursLow;
+    displayHigh = adjustedHigh * hoursHigh;
+    unitLabel = `${formatCurrency(adjustedLow)}-${formatCurrency(adjustedHigh)}/hr`;
+  } else {
+    displayLow = Math.round(item.lowCost * multiplier);
+    displayHigh = Math.round(item.highCost * multiplier);
+    unitLabel = "fixed";
+  }
+  
+  return (
+    <div 
+      className="grid grid-cols-[1fr_auto] sm:grid-cols-[minmax(0,1fr)_auto_auto] items-start sm:items-center gap-x-3 gap-y-1 py-2 border-b border-border/50 last:border-0"
+      data-testid={`lineitem-${item.category.toLowerCase().replace(/\s+/g, '-')}`}
+    >
+      <div className="flex items-start gap-2 min-w-0">
+        <span className="text-sm leading-tight">{item.category}</span>
+        {item.notes && (
+          <span className="text-xs text-muted-foreground hidden sm:inline">({item.notes})</span>
+        )}
+      </div>
+      <Badge variant="outline" className="text-xs whitespace-nowrap hidden sm:inline-flex">
+        {unitLabel}
+      </Badge>
+      <span className="text-sm font-semibold text-orange-600 dark:text-orange-400 whitespace-nowrap text-right">
+        {formatCurrencyShort(displayLow)} - {formatCurrencyShort(displayHigh)}
+      </span>
+    </div>
+  );
 }
 
 export default function BudgetEstimatorPage() {
@@ -133,55 +194,66 @@ export default function BudgetEstimatorPage() {
 
   const { data: traditionCeremonies = [], isLoading: ceremoniesLoading } = useCeremonyTemplatesByTradition(selectedTradition || "hindu");
 
-  const ceremonyNameMap: Record<string, string> = useMemo(() => ({
-    'roka': 'sikh_roka',
-    'engagement': 'sikh_engagement',
-    'chunni chadana': 'sikh_chunni_chadana',
-    'chunni': 'sikh_chunni_chadana',
-    'paath': 'sikh_paath',
-    'akhand paath': 'sikh_paath',
-    'sehaj paath': 'sikh_paath',
-    'bakra party': 'sikh_bakra_party',
-    'bakra': 'sikh_bakra_party',
-    'mayian': 'sikh_mayian',
-    'maiyan': 'sikh_mayian',
-    'choora': 'sikh_mayian',
-    'vatna': 'sikh_mayian',
-    'anand karaj': 'sikh_anand_karaj',
-    'day after visit': 'sikh_day_after',
-    'day after': 'sikh_day_after',
-    'haldi': 'hindu_haldi',
-    'baraat': 'hindu_baraat',
-    'wedding ceremony': 'hindu_wedding',
-    'nikah': 'muslim_nikah',
-    'walima': 'muslim_walima',
-    'dholki': 'muslim_dholki',
-    'pithi': 'gujarati_pithi',
-    'garba': 'gujarati_garba',
-    'grahshanti': 'gujarati_grahshanti',
-    'vidhi mandap': 'south_indian_vidhi_mandap',
-    'muhurtham': 'south_indian_muhurtham',
-    'saree ceremony': 'south_indian_saree_ceremony',
-    'mehndi': 'sikh_mehndi',
-    'sangeet': 'sikh_sangeet',
-    'reception': 'sikh_reception',
-  }), []);
+  // Comprehensive ceremony keyword mappings - maps ceremony IDs (must exist in CEREMONY_COST_BREAKDOWNS) to keywords
+  const CEREMONY_MAPPINGS: Record<string, string[]> = {
+    // Sikh ceremonies
+    sikh_roka: ["roka", "sikh roka"],
+    sikh_engagement: ["engagement", "sikh engagement", "kurmai"],
+    sikh_chunni_chadana: ["chunni", "chunni chadana"],
+    sikh_paath: ["paath", "akhand paath", "sehaj paath"],
+    sikh_mehndi: ["mehndi", "henna", "sikh mehndi"],
+    sikh_bakra_party: ["bakra", "bakra party"],
+    sikh_mayian: ["maiyan", "mayian", "sikh maiyan", "choora", "vatna"],
+    sikh_sangeet: ["sangeet", "lady sangeet", "sikh sangeet"],
+    sikh_anand_karaj: ["anand karaj", "anand_karaj", "sikh wedding"],
+    sikh_reception: ["sikh reception"],
+    sikh_day_after: ["day after", "day after visit"],
+    // Hindu ceremonies
+    hindu_mehndi: ["hindu mehndi"],
+    hindu_sangeet: ["hindu sangeet"],
+    hindu_haldi: ["haldi", "hindu haldi"],
+    hindu_baraat: ["baraat", "hindu baraat"],
+    hindu_wedding: ["hindu wedding", "wedding ceremony"],
+    // General
+    reception: ["reception"],
+    // Muslim ceremonies
+    muslim_nikah: ["nikah", "muslim nikah", "muslim wedding"],
+    muslim_walima: ["walima", "muslim walima"],
+    muslim_dholki: ["dholki", "muslim dholki"],
+    // Gujarati ceremonies
+    gujarati_pithi: ["pithi", "gujarati pithi"],
+    gujarati_garba: ["garba", "gujarati garba"],
+    gujarati_wedding: ["gujarati wedding"],
+    // South Indian
+    south_indian_muhurtham: ["muhurtham", "south indian muhurtham", "south indian wedding"],
+    // General events
+    general_wedding: ["general wedding", "western wedding", "christian wedding", "civil ceremony"],
+    rehearsal_dinner: ["rehearsal dinner", "rehearsal"],
+    cocktail_hour: ["cocktail hour", "cocktail", "cocktails"],
+  };
 
   const getCeremonyBreakdown = (eventName: string): { ceremonyId: string; breakdown: CostCategory[] } | null => {
     const normalizedName = eventName.toLowerCase().trim();
     
-    for (const [keyword, ceremonyId] of Object.entries(ceremonyNameMap)) {
-      if (normalizedName === keyword && CEREMONY_COST_BREAKDOWNS[ceremonyId]) {
-        return { ceremonyId, breakdown: CEREMONY_COST_BREAKDOWNS[ceremonyId] };
+    // First pass: exact match on keywords
+    for (const [ceremonyId, keywords] of Object.entries(CEREMONY_MAPPINGS)) {
+      if (keywords.some(kw => normalizedName === kw)) {
+        if (CEREMONY_COST_BREAKDOWNS[ceremonyId]) {
+          return { ceremonyId, breakdown: CEREMONY_COST_BREAKDOWNS[ceremonyId] };
+        }
       }
     }
     
-    for (const [keyword, ceremonyId] of Object.entries(ceremonyNameMap)) {
-      if (normalizedName.includes(keyword) && CEREMONY_COST_BREAKDOWNS[ceremonyId]) {
-        return { ceremonyId, breakdown: CEREMONY_COST_BREAKDOWNS[ceremonyId] };
+    // Second pass: partial match (event name contains keyword)
+    for (const [ceremonyId, keywords] of Object.entries(CEREMONY_MAPPINGS)) {
+      if (keywords.some(kw => normalizedName.includes(kw))) {
+        if (CEREMONY_COST_BREAKDOWNS[ceremonyId]) {
+          return { ceremonyId, breakdown: CEREMONY_COST_BREAKDOWNS[ceremonyId] };
+        }
       }
     }
     
+    // Fallback check for reception
     if (normalizedName.includes('reception') && CEREMONY_COST_BREAKDOWNS['reception']) {
       return { ceremonyId: 'reception', breakdown: CEREMONY_COST_BREAKDOWNS['reception'] };
     }
@@ -253,6 +325,8 @@ export default function BudgetEstimatorPage() {
           originalCostLow: costs.low,
           originalCostHigh: costs.high,
           hasCostBreakdown: !!breakdown,
+          costBreakdown: breakdown?.breakdown ?? null,
+          ceremonyId: breakdown?.ceremonyId ?? null,
         };
       });
       setEventEstimates(estimates);
@@ -667,8 +741,8 @@ export default function BudgetEstimatorPage() {
                           className="w-full mt-3"
                           data-testid={`button-expand-${event.id}`}
                         >
-                          <Settings2 className="w-4 h-4 mr-2" />
-                          {isExpanded ? "Hide" : "Adjust"} venue & vendor settings
+                          <DollarSign className="w-4 h-4 mr-2" />
+                          {isExpanded ? "Hide" : "View"} cost breakdown
                           {isExpanded ? <ChevronUp className="w-4 h-4 ml-2" /> : <ChevronDown className="w-4 h-4 ml-2" />}
                         </Button>
                       </CollapsibleTrigger>
@@ -676,7 +750,7 @@ export default function BudgetEstimatorPage() {
 
                     <CollapsibleContent>
                       <div className="px-4 pb-4 pt-2 border-t bg-muted/30">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                           <div>
                             <Label className="text-xs font-medium mb-1 block">Venue Type</Label>
                             <Select 
@@ -714,6 +788,40 @@ export default function BudgetEstimatorPage() {
                             </Select>
                           </div>
                         </div>
+
+                        {/* Cost Breakdown Line Items */}
+                        {event.costBreakdown && event.costBreakdown.length > 0 ? (
+                          <div className="mt-4 pt-4 border-t" data-testid={`cost-breakdown-${event.id}`}>
+                            <h5 className="text-sm font-medium mb-3 flex items-center gap-2">
+                              <DollarSign className="w-4 h-4" />
+                              Cost Breakdown
+                            </h5>
+                            <div className="space-y-0">
+                              {event.costBreakdown.map((item, idx) => {
+                                const cityMultiplier = CITY_MULTIPLIERS[selectedCity] || 1.0;
+                                const multiplier = VENUE_CLASS_MULTIPLIERS[event.venueClass] * 
+                                                   VENDOR_TIER_MULTIPLIERS[event.vendorTier] * 
+                                                   cityMultiplier * 
+                                                   GUEST_BRACKET_MULTIPLIERS[getGuestBracket(event.currentGuests)];
+                                return (
+                                  <LineItemRow 
+                                    key={idx} 
+                                    item={item} 
+                                    guestCount={event.currentGuests} 
+                                    multiplier={multiplier} 
+                                  />
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="mt-4 pt-4 border-t" data-testid={`cost-breakdown-generic-${event.id}`}>
+                            <p className="text-sm text-muted-foreground flex items-center gap-2">
+                              <HelpCircle className="w-4 h-4" />
+                              Generic estimate based on ${50}-${100} per guest. Add this ceremony to our database for detailed costs.
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </CollapsibleContent>
                   </Collapsible>

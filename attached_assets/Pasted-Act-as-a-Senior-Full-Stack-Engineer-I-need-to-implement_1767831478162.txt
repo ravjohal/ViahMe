@@ -1,0 +1,56 @@
+Act as a Senior Full Stack Engineer. I need to implement a Matrix Budgeting system for my Sikh Wedding app.
+
+Part 1: Schema Updates (shared/schema.ts)
+
+In the ceremonies table, add a column allocatedBudget (decimal).
+
+Create a new table ceremony_category_allocations:
+
+id: uuid
+
+weddingId: uuid
+
+ceremonyId: text (references ceremonies.id)
+
+categoryKey: text (references budgetCategories.category - e.g., 'decoration')
+
+allocatedAmount: decimal
+
+Ensure budgetCategories remains the high-level source of truth for total category spending.
+
+Part 2: Backend Logic (server/routes/budget.ts)
+
+Create a POST route /api/budget/allocate that:
+
+Takes ceremonyId, categoryKey, and amount.
+
+Validation: Sum all existing allocations for that categoryKey across ALL ceremonies. If the new total exceeds the allocated_amount in the high-level budget_categories table, return a 400 error: 'Allocation exceeds global category budget'.
+
+If valid, upsert the row in ceremony_category_allocations.
+
+Update the Ceremony GET routes to include a computed field: totalPlanned = Sum(ceremony_category_allocations where ceremonyId = X).
+
+Part 3: UI Implementation (client/src/components/budget-matrix.tsx)
+
+Create a 'Budget Planner' component that renders a table:
+
+Rows: Ceremonies (Sangeet, Anand Karaj, etc.)
+
+Columns: Budget Categories (Venue, Decor, Catering, etc.)
+
+Each cell should be an editable input. When changed, it triggers the /api/budget/allocate endpoint.
+
+Show a 'Remaining' indicator at the top of each column showing: Global Category Budget - Sum(Ceremony Allocations).
+
+The row end should show the 'Ceremony Total' which is the sum of all inputs in that row.
+
+Constraint: Ensure all math uses the Big library or handles floating point decimals correctly for financial data. Use Drizzle ORM syntax for all queries."
+
+5. Performance & Trade-off Analysis
+Performance: By using the ceremony_category_allocations table, we move from O(N) JavaScript filtering to O(log N) indexed SQL lookups. Dashboard loading will be significantly faster.
+
+Scalability: This allows you to support weddings with 1 or 20 ceremonies without changing the logic.
+
+Trade-off: The UI becomes slightly more complex (a grid vs. a simple list). However, for a Sikh wedding with multiple events, this is the only way to provide true financial control to the couple.
+
+Architect's Note: Make sure your categoryKey is indexed in the new table. This is the field users will be querying most often to check their "Decor" totals across the entire week.
