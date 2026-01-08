@@ -27,8 +27,8 @@ import {
   Building2,
   Loader2
 } from "lucide-react";
-import type { Wedding, Event, CeremonyTemplate } from "@shared/schema";
-import { useCeremonyTemplatesByTradition, calculateCeremonyTotal, getCostBreakdownFromTemplate } from "@/hooks/use-ceremony-templates";
+import type { Wedding, Event, CeremonyTemplate, CeremonyTemplateCostItem } from "@shared/schema";
+import { useCeremonyTemplatesByTradition, useCeremonyTemplates, calculateCeremonyTotal, getCostBreakdownFromTemplate, buildCeremonyBreakdownMap, calculateCeremonyTotalFromBreakdown } from "@/hooks/use-ceremony-templates";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -42,7 +42,9 @@ import {
   VENUE_CLASS_LABELS,
   VENDOR_TIER_LABELS,
 } from "@shared/pricing";
-import { CEREMONY_COST_BREAKDOWNS, calculateCeremonyTotalRange, type CostCategory } from "@shared/ceremonies";
+import { CEREMONY_MAPPINGS } from "@shared/ceremonies";
+
+type CostCategory = CeremonyTemplateCostItem;
 
 const TRADITION_LABELS: Record<string, string> = {
   sikh: "Sikh",
@@ -194,68 +196,26 @@ export default function BudgetEstimatorPage() {
 
   const { data: traditionCeremonies = [], isLoading: ceremoniesLoading } = useCeremonyTemplatesByTradition(selectedTradition || "hindu");
 
-  // Comprehensive ceremony keyword mappings - maps ceremony IDs (must exist in CEREMONY_COST_BREAKDOWNS) to keywords
-  const CEREMONY_MAPPINGS: Record<string, string[]> = {
-    // Sikh ceremonies
-    sikh_roka: ["roka", "sikh roka"],
-    sikh_engagement: ["engagement", "sikh engagement", "kurmai"],
-    sikh_chunni_chadana: ["chunni", "chunni chadana"],
-    sikh_paath: ["paath", "akhand paath", "sehaj paath"],
-    sikh_mehndi: ["mehndi", "henna", "sikh mehndi"],
-    sikh_bakra_party: ["bakra", "bakra party"],
-    sikh_mayian: ["maiyan", "mayian", "sikh maiyan", "choora", "vatna"],
-    sikh_sangeet: ["sangeet", "lady sangeet", "sikh sangeet"],
-    sikh_anand_karaj: ["anand karaj", "anand_karaj", "sikh wedding"],
-    sikh_reception: ["sikh reception"],
-    sikh_day_after: ["day after", "day after visit"],
-    // Hindu ceremonies
-    hindu_mehndi: ["hindu mehndi"],
-    hindu_sangeet: ["hindu sangeet"],
-    hindu_haldi: ["haldi", "hindu haldi"],
-    hindu_baraat: ["baraat", "hindu baraat"],
-    hindu_wedding: ["hindu wedding", "wedding ceremony"],
-    // General
-    reception: ["reception"],
-    // Muslim ceremonies
-    muslim_nikah: ["nikah", "muslim nikah", "muslim wedding"],
-    muslim_walima: ["walima", "muslim walima"],
-    muslim_dholki: ["dholki", "muslim dholki"],
-    // Gujarati ceremonies
-    gujarati_pithi: ["pithi", "gujarati pithi"],
-    gujarati_garba: ["garba", "gujarati garba"],
-    gujarati_wedding: ["gujarati wedding"],
-    // South Indian
-    south_indian_muhurtham: ["muhurtham", "south indian muhurtham", "south indian wedding"],
-    // General events
-    general_wedding: ["general wedding", "western wedding", "christian wedding", "civil ceremony"],
-    rehearsal_dinner: ["rehearsal dinner", "rehearsal"],
-    cocktail_hour: ["cocktail hour", "cocktail", "cocktails"],
-  };
+  const { data: allTemplates = [], isLoading: templatesLoading } = useCeremonyTemplates();
+  const breakdownMap = useMemo(() => buildCeremonyBreakdownMap(allTemplates), [allTemplates]);
 
   const getCeremonyBreakdown = (eventName: string): { ceremonyId: string; breakdown: CostCategory[] } | null => {
     const normalizedName = eventName.toLowerCase().trim();
     
-    // First pass: exact match on keywords
     for (const [ceremonyId, keywords] of Object.entries(CEREMONY_MAPPINGS)) {
-      if (keywords.some(kw => normalizedName === kw)) {
-        if (CEREMONY_COST_BREAKDOWNS[ceremonyId]) {
-          return { ceremonyId, breakdown: CEREMONY_COST_BREAKDOWNS[ceremonyId] };
+      if (keywords.some(kw => normalizedName === kw || normalizedName.includes(kw))) {
+        const breakdown = breakdownMap.get(ceremonyId);
+        if (breakdown) {
+          return { ceremonyId, breakdown };
         }
       }
     }
     
-    // Second pass: partial match (event name contains keyword)
-    for (const [ceremonyId, keywords] of Object.entries(CEREMONY_MAPPINGS)) {
-      if (keywords.some(kw => normalizedName.includes(kw))) {
-        if (CEREMONY_COST_BREAKDOWNS[ceremonyId]) {
-          return { ceremonyId, breakdown: CEREMONY_COST_BREAKDOWNS[ceremonyId] };
-        }
+    if (normalizedName.includes('reception')) {
+      const breakdown = breakdownMap.get('reception');
+      if (breakdown) {
+        return { ceremonyId: 'reception', breakdown };
       }
-    }
-    
-    // Fallback check for reception
-    if (normalizedName.includes('reception') && CEREMONY_COST_BREAKDOWNS['reception']) {
-      return { ceremonyId: 'reception', breakdown: CEREMONY_COST_BREAKDOWNS['reception'] };
     }
     
     return null;

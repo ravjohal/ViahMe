@@ -15,9 +15,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket, type Wedding, type Event, type Contract, type Vendor, type Expense, type BudgetAllocation, type CeremonyBudget, type CeremonyLineItemBudget } from "@shared/schema";
-import { CEREMONY_COST_BREAKDOWNS, type CostCategory, getLineItemBucketLabel, getLineItemBudgetBucket } from "@shared/ceremonies";
+import { BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket, type Wedding, type Event, type Contract, type Vendor, type Expense, type BudgetAllocation, type CeremonyBudget, type CeremonyLineItemBudget, type CeremonyTemplateCostItem } from "@shared/schema";
+import { CEREMONY_MAPPINGS } from "@shared/ceremonies";
 import { calculateLineItemEstimate, DEFAULT_PRICING_CONTEXT, type PricingContext, CITY_MULTIPLIERS } from "@shared/pricing";
+import { useCeremonyTemplates, buildCeremonyBreakdownMap, getLineItemBucketLabel } from "@/hooks/use-ceremony-templates";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
@@ -134,43 +135,11 @@ export default function Budget() {
     enabled: !!wedding?.id,
   });
 
-  // Ceremony keyword mappings - maps ceremony IDs to keywords for matching events
-  const CEREMONY_MAPPINGS: Record<string, string[]> = {
-    // Sikh ceremonies
-    sikh_roka: ["roka", "sikh roka"],
-    sikh_engagement: ["engagement", "sikh engagement", "kurmai"],
-    sikh_chunni_chadana: ["chunni", "chunni chadana"],
-    sikh_paath: ["paath", "akhand paath", "sehaj paath"],
-    sikh_mehndi: ["mehndi", "henna", "sikh mehndi"],
-    sikh_bakra_party: ["bakra", "bakra party"],
-    sikh_mayian: ["maiyan", "mayian", "sikh maiyan", "choora", "vatna"],
-    sikh_sangeet: ["sangeet", "lady sangeet", "sikh sangeet"],
-    sikh_anand_karaj: ["anand karaj", "anand_karaj", "sikh wedding"],
-    sikh_reception: ["sikh reception"],
-    sikh_day_after: ["day after", "day after visit"],
-    // Hindu ceremonies
-    hindu_mehndi: ["hindu mehndi"],
-    hindu_sangeet: ["hindu sangeet"],
-    hindu_haldi: ["haldi", "hindu haldi"],
-    hindu_baraat: ["baraat", "hindu baraat"],
-    hindu_wedding: ["hindu wedding", "wedding ceremony"],
-    // General
-    reception: ["reception"],
-    // Muslim ceremonies
-    muslim_nikah: ["nikah", "muslim nikah", "muslim wedding"],
-    muslim_walima: ["walima", "muslim walima"],
-    muslim_dholki: ["dholki", "muslim dholki"],
-    // Gujarati ceremonies
-    gujarati_pithi: ["pithi", "gujarati pithi"],
-    gujarati_garba: ["garba", "gujarati garba"],
-    gujarati_wedding: ["gujarati wedding"],
-    // South Indian
-    south_indian_muhurtham: ["muhurtham", "south indian muhurtham", "south indian wedding"],
-    // General events
-    general_wedding: ["general wedding", "western wedding", "christian wedding", "civil ceremony"],
-    rehearsal_dinner: ["rehearsal dinner", "rehearsal"],
-    cocktail_hour: ["cocktail hour", "cocktail", "cocktails"],
-  };
+  // Fetch ceremony templates from API
+  const { data: ceremonyTemplates = [] } = useCeremonyTemplates();
+  
+  // Memoize the ceremony breakdown map for fast lookups
+  const ceremonyBreakdownMap = useMemo(() => buildCeremonyBreakdownMap(ceremonyTemplates), [ceremonyTemplates]);
 
   // Get ceremony type ID from event name
   const getCeremonyTypeId = (eventName: string): string | null => {
@@ -178,7 +147,7 @@ export default function Budget() {
     
     for (const [ceremonyId, keywords] of Object.entries(CEREMONY_MAPPINGS)) {
       if (keywords.some(kw => normalizedName === kw)) {
-        if (CEREMONY_COST_BREAKDOWNS[ceremonyId]) {
+        if (ceremonyBreakdownMap[ceremonyId]) {
           return ceremonyId;
         }
       }
@@ -186,13 +155,13 @@ export default function Budget() {
     
     for (const [ceremonyId, keywords] of Object.entries(CEREMONY_MAPPINGS)) {
       if (keywords.some(kw => normalizedName.includes(kw))) {
-        if (CEREMONY_COST_BREAKDOWNS[ceremonyId]) {
+        if (ceremonyBreakdownMap[ceremonyId]) {
           return ceremonyId;
         }
       }
     }
     
-    if (normalizedName.includes('reception') && CEREMONY_COST_BREAKDOWNS['reception']) {
+    if (normalizedName.includes('reception') && ceremonyBreakdownMap['reception']) {
       return 'reception';
     }
     
@@ -200,10 +169,10 @@ export default function Budget() {
   };
 
   // Get line items for an event based on ceremony type
-  const getLineItemsForEvent = (eventId: string, eventName: string): CostCategory[] | null => {
+  const getLineItemsForEvent = (eventId: string, eventName: string): CeremonyTemplateCostItem[] | null => {
     const ceremonyTypeId = getCeremonyTypeId(eventName);
     if (!ceremonyTypeId) return null;
-    return CEREMONY_COST_BREAKDOWNS[ceremonyTypeId] || null;
+    return ceremonyBreakdownMap[ceremonyTypeId] || null;
   };
 
   // Toggle ceremony expansion
@@ -1672,7 +1641,7 @@ export default function Budget() {
                               const savedAmount = getExistingLineItemBudget(ceremony.eventId, item.category);
                               const hasValue = savedAmount && parseFloat(savedAmount) > 0;
                               
-                              const bucketLabel = getLineItemBucketLabel(item.category);
+                              const bucketLabel = getLineItemBucketLabel(item);
                               
                               return (
                                 <div 

@@ -6,8 +6,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronDown, ChevronUp, DollarSign, Users, Clock, Info, Loader2, Settings2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Event, CeremonyTemplate, CeremonyTemplateCostItem } from "@shared/schema";
-import { useCeremonyTemplates, getCostBreakdownFromTemplate, calculateCeremonyTotal } from "@/hooks/use-ceremony-templates";
-import { CEREMONY_COST_BREAKDOWNS, CEREMONY_CATALOG, calculateCeremonyTotalRange, type CostCategory } from "@shared/ceremonies";
+import { useCeremonyTemplates, getCostBreakdownFromTemplate, calculateCeremonyTotal, buildCeremonyBreakdownMap } from "@/hooks/use-ceremony-templates";
+import { CEREMONY_MAPPINGS } from "@shared/ceremonies";
 import { PricingAdjuster } from "@/components/pricing-adjuster";
 import {
   type VenueClass,
@@ -34,119 +34,27 @@ function formatCurrencyFull(amount: number): string {
   return `$${amount.toLocaleString()}`;
 }
 
-const CEREMONY_MAPPINGS: Record<string, string[]> = {
-  sikh_roka: ["roka", "sikh roka"],
-  sikh_kurmai: ["kurmai", "engagement", "sikh engagement"],
-  sikh_sangeet: ["sangeet", "lady sangeet", "sikh sangeet"],
-  sikh_mehndi: ["mehndi", "henna", "sikh mehndi"],
-  sikh_maiyan: ["maiyan", "sikh maiyan"],
-  sikh_chooda_kalire: ["chooda", "kalire", "chooda kalire", "chooda & kalire"],
-  sikh_jaggo: ["jaggo", "sikh jaggo"],
-  sikh_anand_karaj: ["anand karaj", "anand_karaj", "sikh wedding"],
-  sikh_baraat: ["baraat", "sikh baraat"],
-  sikh_milni: ["milni", "sikh milni"],
-  sikh_reception: ["sikh reception"],
-  hindu_mehndi: ["mehndi", "henna", "hindu mehndi"],
-  hindu_sangeet: ["sangeet", "lady sangeet", "hindu sangeet"],
-  hindu_haldi: ["haldi", "hindu haldi"],
-  hindu_baraat: ["baraat", "hindu baraat"],
-  hindu_wedding: ["hindu wedding", "wedding ceremony"],
-  reception: ["reception"],
-  muslim_nikah: ["nikah", "muslim nikah", "muslim wedding"],
-  muslim_walima: ["walima", "muslim walima"],
-  muslim_dholki: ["dholki", "muslim dholki"],
-  gujarati_pithi: ["pithi", "gujarati pithi"],
-  gujarati_garba: ["garba", "gujarati garba"],
-  gujarati_wedding: ["gujarati wedding"],
-  south_indian_muhurtham: ["muhurtham", "south indian muhurtham", "south indian wedding"],
-  general_wedding: ["general wedding", "western wedding", "christian wedding", "civil ceremony"],
-  rehearsal_dinner: ["rehearsal dinner", "rehearsal"],
-  cocktail_hour: ["cocktail hour", "cocktail", "cocktails"],
-};
-
-function getCeremonyIdFromEvent(event: Event, templateMap: Map<string, CeremonyTemplate>): { ceremonyId: string; useApi: boolean } | null {
+function getCeremonyIdFromEvent(event: Event, templateMap: Map<string, CeremonyTemplate>): { ceremonyId: string } | null {
   const eventType = event.type?.toLowerCase() || "";
   const eventName = event.name?.toLowerCase() || "";
   
   if ((event as any).ceremonyId && templateMap.has((event as any).ceremonyId)) {
-    return { ceremonyId: (event as any).ceremonyId, useApi: true };
+    return { ceremonyId: (event as any).ceremonyId };
   }
   
   for (const [ceremonyId, keywords] of Object.entries(CEREMONY_MAPPINGS)) {
     if (keywords.some(kw => eventName.includes(kw) || eventType.includes(kw))) {
       if (templateMap.has(ceremonyId)) {
-        return { ceremonyId, useApi: true };
+        return { ceremonyId };
       }
     }
   }
   
   if (templateMap.has(eventType)) {
-    return { ceremonyId: eventType, useApi: true };
-  }
-  
-  for (const [ceremonyId, keywords] of Object.entries(CEREMONY_MAPPINGS)) {
-    if (keywords.some(kw => eventName.includes(kw) || eventType.includes(kw))) {
-      if (CEREMONY_COST_BREAKDOWNS[ceremonyId]) {
-        return { ceremonyId, useApi: false };
-      }
-    }
-  }
-  
-  if (CEREMONY_COST_BREAKDOWNS[eventType]) {
-    return { ceremonyId: eventType, useApi: false };
+    return { ceremonyId: eventType };
   }
   
   return null;
-}
-
-function LegacyCostCategoryRow({ item, guestCount, multiplier = 1 }: { item: CostCategory; guestCount: number; multiplier?: number }) {
-  let displayLow: number;
-  let displayHigh: number;
-  let unitLabel: string;
-  
-  if (item.unit === "per_person") {
-    const adjustedLow = Math.round(item.lowCost * multiplier);
-    const adjustedHigh = Math.round(item.highCost * multiplier);
-    displayLow = adjustedLow * guestCount;
-    displayHigh = adjustedHigh * guestCount;
-    unitLabel = `@ ${formatCurrencyFull(adjustedLow)}-${formatCurrencyFull(adjustedHigh)}/person`;
-  } else if (item.unit === "per_hour") {
-    const hoursLow = item.hoursLow ?? 3;
-    const hoursHigh = item.hoursHigh ?? 4;
-    const adjustedLow = Math.round(item.lowCost * multiplier);
-    const adjustedHigh = Math.round(item.highCost * multiplier);
-    displayLow = adjustedLow * hoursLow;
-    displayHigh = adjustedHigh * hoursHigh;
-    unitLabel = `@ ${formatCurrencyFull(adjustedLow)}-${formatCurrencyFull(adjustedHigh)}/hr (${hoursLow}-${hoursHigh}hrs)`;
-  } else {
-    displayLow = Math.round(item.lowCost * multiplier);
-    displayHigh = Math.round(item.highCost * multiplier);
-    unitLabel = "fixed";
-  }
-  
-  return (
-    <div className="grid grid-cols-[1fr_auto] sm:grid-cols-[minmax(0,1fr)_auto_auto] items-start sm:items-center gap-x-3 gap-y-1 py-2 border-b border-border/50 last:border-0">
-      <div className="flex items-start gap-2 min-w-0">
-        <span className="text-sm font-medium leading-tight">{item.category}</span>
-        {item.notes && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Info className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 cursor-help mt-0.5" />
-            </TooltipTrigger>
-            <TooltipContent side="top" className="max-w-[250px]">
-              <p className="text-xs">{item.notes}</p>
-            </TooltipContent>
-          </Tooltip>
-        )}
-      </div>
-      <Badge variant="outline" className="text-xs whitespace-nowrap hidden sm:inline-flex">
-        {unitLabel}
-      </Badge>
-      <span className="text-sm font-semibold text-orange-600 dark:text-orange-400 whitespace-nowrap text-right">
-        {formatCurrency(displayLow)} - {formatCurrency(displayHigh)}
-      </span>
-    </div>
-  );
 }
 
 function CostCategoryRow({ item, guestCount, multiplier = 1 }: { item: CeremonyTemplateCostItem; guestCount: number; multiplier?: number }) {
@@ -213,91 +121,17 @@ function EventCostCard({ event, templateMap, pricingMultiplier }: EventCostCardP
     return null;
   }
   
-  const { ceremonyId, useApi } = ceremonyResult;
+  const { ceremonyId } = ceremonyResult;
+  const template = templateMap.get(ceremonyId);
+  if (!template) return null;
+  
   const guestCount = event.guestCount || 100;
   const guestBracketMultiplier = GUEST_BRACKET_MULTIPLIERS[getGuestBracket(guestCount)];
   const totalMultiplier = pricingMultiplier * guestBracketMultiplier;
   
-  if (useApi) {
-    const template = templateMap.get(ceremonyId);
-    if (!template) return null;
-    
-    const breakdown = getCostBreakdownFromTemplate(template);
-    const actualGuestCount = guestCount || template.defaultGuests || 100;
-    const baseRange = calculateCeremonyTotal(template, actualGuestCount);
-    const totalRange = {
-      low: Math.round(baseRange.low * totalMultiplier),
-      high: Math.round(baseRange.high * totalMultiplier),
-    };
-    
-    return (
-      <Card className="overflow-hidden hover-elevate" data-testid={`cost-card-${event.id}`}>
-        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-          <CollapsibleTrigger asChild>
-            <Button
-              variant="ghost"
-              className="w-full p-4 h-auto justify-between rounded-none"
-              data-testid={`button-expand-${event.id}`}
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-100 to-pink-100 dark:from-orange-900/30 dark:to-pink-900/30 flex items-center justify-center">
-                  <DollarSign className="w-5 h-5 text-orange-600" />
-                </div>
-                <div className="text-left">
-                  <h3 className="font-semibold text-base">{event.name}</h3>
-                  <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                    <Users className="w-3.5 h-3.5" />
-                    <span>{actualGuestCount} guests</span>
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="text-right">
-                  <p className="text-lg font-bold text-orange-600 dark:text-orange-400">
-                    {formatCurrency(totalRange.low)} - {formatCurrency(totalRange.high)}
-                  </p>
-                  <p className="text-xs text-muted-foreground">estimated total</p>
-                </div>
-                {isOpen ? (
-                  <ChevronUp className="w-5 h-5 text-muted-foreground" />
-                ) : (
-                  <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                )}
-              </div>
-            </Button>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <div className="px-4 pb-4 pt-2 bg-muted/30">
-              <div className="flex items-center gap-2 mb-3">
-                <Badge variant="secondary" className="text-xs">
-                  Cost Breakdown
-                </Badge>
-                <span className="text-xs text-muted-foreground">
-                  Based on {actualGuestCount} guests in mid-to-high cost areas
-                </span>
-              </div>
-              <div className="space-y-0">
-                {breakdown.map((item, index) => (
-                  <CostCategoryRow key={index} item={item} guestCount={actualGuestCount} multiplier={totalMultiplier} />
-                ))}
-              </div>
-              <div className="mt-4 pt-3 border-t flex items-center justify-between">
-                <span className="font-medium">Total Estimated Range</span>
-                <span className="text-lg font-bold text-orange-600 dark:text-orange-400">
-                  {formatCurrencyFull(totalRange.low)} - {formatCurrencyFull(totalRange.high)}
-                </span>
-              </div>
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
-      </Card>
-    );
-  }
-  
-  const legacyBreakdown = CEREMONY_COST_BREAKDOWNS[ceremonyId];
-  if (!legacyBreakdown) return null;
-  
-  const baseRange = calculateCeremonyTotalRange(legacyBreakdown, guestCount);
+  const breakdown = getCostBreakdownFromTemplate(template);
+  const actualGuestCount = guestCount || template.defaultGuests || 100;
+  const baseRange = calculateCeremonyTotal(template, actualGuestCount);
   const totalRange = {
     low: Math.round(baseRange.low * totalMultiplier),
     high: Math.round(baseRange.high * totalMultiplier),
@@ -320,7 +154,7 @@ function EventCostCard({ event, templateMap, pricingMultiplier }: EventCostCardP
                 <h3 className="font-semibold text-base">{event.name}</h3>
                 <div className="flex items-center gap-2 text-muted-foreground text-sm">
                   <Users className="w-3.5 h-3.5" />
-                  <span>{guestCount} guests</span>
+                  <span>{actualGuestCount} guests</span>
                 </div>
               </div>
             </div>
@@ -346,12 +180,12 @@ function EventCostCard({ event, templateMap, pricingMultiplier }: EventCostCardP
                 Cost Breakdown
               </Badge>
               <span className="text-xs text-muted-foreground">
-                Based on {guestCount} guests in mid-to-high cost areas
+                Based on {actualGuestCount} guests in mid-to-high cost areas
               </span>
             </div>
             <div className="space-y-0">
-              {legacyBreakdown.map((item, index) => (
-                <LegacyCostCategoryRow key={index} item={item} guestCount={guestCount} multiplier={totalMultiplier} />
+              {breakdown.map((item, index) => (
+                <CostCategoryRow key={index} item={item} guestCount={actualGuestCount} multiplier={totalMultiplier} />
               ))}
             </div>
             <div className="mt-4 pt-3 border-t flex items-center justify-between">

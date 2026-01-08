@@ -8,8 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Lightbulb, Calculator, Plus, Minus, DollarSign, Users, Info, Loader2, MapPin, ChevronDown, ChevronUp, Settings2, Check } from "lucide-react";
-import type { Wedding, Event, CeremonyTemplate } from "@shared/schema";
-import { useCeremonyTemplatesByTradition } from "@/hooks/use-ceremony-templates";
+import type { Wedding, Event, CeremonyTemplate, CeremonyTemplateCostItem } from "@shared/schema";
+import { useCeremonyTemplatesByTradition, useCeremonyTemplates, buildCeremonyBreakdownMap, getCostBreakdownFromTemplate } from "@/hooks/use-ceremony-templates";
 import {
   type VenueClass,
   type VendorTier,
@@ -21,7 +21,7 @@ import {
   VENUE_CLASS_LABELS,
   VENDOR_TIER_LABELS,
 } from "@shared/pricing";
-import { CEREMONY_COST_BREAKDOWNS, CEREMONY_CATALOG, type CostCategory } from "@shared/ceremonies";
+import { CEREMONY_MAPPINGS, CEREMONY_CATALOG } from "@shared/ceremonies";
 
 interface EventEstimate {
   id: string;
@@ -96,7 +96,11 @@ export function BudgetEstimator({ wedding, events = [], onUpdateBudget, onUpdate
   const [weddingEventOverrides, setWeddingEventOverrides] = useState<Record<string, CeremonyPricingOverride>>({});
   const [collapsedCeremonyIds, setCollapsedCeremonyIds] = useState<Set<string>>(new Set());
 
-  const { data: traditionCeremonies = [], isLoading } = useCeremonyTemplatesByTradition(selectedTradition);
+  const { data: traditionCeremonies = [], isLoading: traditionLoading } = useCeremonyTemplatesByTradition(selectedTradition);
+  const { data: allTemplates = [], isLoading: templatesLoading } = useCeremonyTemplates();
+  const isLoading = traditionLoading || templatesLoading;
+  
+  const breakdownMap = useMemo(() => buildCeremonyBreakdownMap(allTemplates), [allTemplates]);
   
   const getEffectiveMultiplier = (eventId: string, isCustom: boolean) => {
     const override = isCustom 
@@ -110,94 +114,41 @@ export function BudgetEstimator({ wedding, events = [], onUpdateBudget, onUpdate
     return VENUE_CLASS_MULTIPLIERS[effectiveVenue] * VENDOR_TIER_MULTIPLIERS[effectiveVendor] * cityMultiplier;
   };
 
-  const getCeremonyBreakdown = (eventName: string): { ceremonyId: string; breakdown: CostCategory[] } | null => {
+  const getCeremonyBreakdown = (eventName: string): { ceremonyId: string; breakdown: CeremonyTemplateCostItem[] } | null => {
     const normalizedName = eventName.toLowerCase().trim();
     
-    const ceremonyNameMap: Record<string, string> = {
-      // Sikh ceremonies (11 total - prioritize Sikh-specific mappings)
-      'roka': 'sikh_roka',
-      'engagement': 'sikh_engagement',
-      'chunni chadana': 'sikh_chunni_chadana',
-      'chunni': 'sikh_chunni_chadana',
-      'paath': 'sikh_paath',
-      'akhand paath': 'sikh_paath',
-      'sehaj paath': 'sikh_paath',
-      'bakra party': 'sikh_bakra_party',
-      'bakra': 'sikh_bakra_party',
-      'mayian': 'sikh_mayian',
-      'maiyan': 'sikh_mayian',
-      'choora': 'sikh_mayian',
-      'vatna': 'sikh_mayian',
-      'anand karaj': 'sikh_anand_karaj',
-      'day after visit': 'sikh_day_after',
-      'day after': 'sikh_day_after',
-      // Hindu ceremonies
-      'haldi': 'hindu_haldi',
-      'baraat': 'hindu_baraat',
-      'wedding ceremony': 'hindu_wedding',
-      // Muslim ceremonies
-      'nikah': 'muslim_nikah',
-      'walima': 'muslim_walima',
-      'dholki': 'muslim_dholki',
-      // Gujarati ceremonies
-      'pithi': 'gujarati_pithi',
-      'garba': 'gujarati_garba',
-      'grahshanti': 'gujarati_grahshanti',
-      // South Indian ceremonies
-      'vidhi mandap': 'south_indian_vidhi_mandap',
-      'muhurtham': 'south_indian_muhurtham',
-      'saree ceremony': 'south_indian_saree_ceremony',
-    };
-    
-    // First check exact matches
-    for (const [keyword, ceremonyId] of Object.entries(ceremonyNameMap)) {
-      if (normalizedName === keyword && CEREMONY_COST_BREAKDOWNS[ceremonyId]) {
-        return { ceremonyId, breakdown: CEREMONY_COST_BREAKDOWNS[ceremonyId] };
+    for (const [ceremonyId, keywords] of Object.entries(CEREMONY_MAPPINGS)) {
+      if (keywords.some(kw => normalizedName === kw || normalizedName.includes(kw))) {
+        const breakdown = breakdownMap.get(ceremonyId);
+        if (breakdown) {
+          return { ceremonyId, breakdown };
+        }
       }
     }
     
-    // Then check partial matches
-    for (const [keyword, ceremonyId] of Object.entries(ceremonyNameMap)) {
-      if (normalizedName.includes(keyword) && CEREMONY_COST_BREAKDOWNS[ceremonyId]) {
-        return { ceremonyId, breakdown: CEREMONY_COST_BREAKDOWNS[ceremonyId] };
-      }
-    }
-    
-    // For generic ceremony names, default to Sikh-specific versions
-    // since this is primarily a Sikh wedding planning app
-    const sikhDefaultMap: Record<string, string> = {
-      'mehndi': 'sikh_mehndi',
-      'sangeet': 'sikh_sangeet',
-      'reception': 'sikh_reception',
-      'mayian': 'sikh_mayian',
-      'maiyan': 'sikh_mayian',
-    };
-    
-    for (const [keyword, ceremonyId] of Object.entries(sikhDefaultMap)) {
-      if (normalizedName.includes(keyword) && CEREMONY_COST_BREAKDOWNS[ceremonyId]) {
-        return { ceremonyId, breakdown: CEREMONY_COST_BREAKDOWNS[ceremonyId] };
-      }
-    }
-    
-    // Check CEREMONY_CATALOG for direct ID match as final fallback
     const ceremony = CEREMONY_CATALOG.find(c => 
       c.name.toLowerCase() === normalizedName ||
       c.id === normalizedName
     );
     
-    if (ceremony && CEREMONY_COST_BREAKDOWNS[ceremony.id]) {
-      return { ceremonyId: ceremony.id, breakdown: CEREMONY_COST_BREAKDOWNS[ceremony.id] };
+    if (ceremony) {
+      const breakdown = breakdownMap.get(ceremony.id);
+      if (breakdown) {
+        return { ceremonyId: ceremony.id, breakdown };
+      }
     }
     
-    // Fallback to generic reception
-    if (normalizedName.includes('reception') && CEREMONY_COST_BREAKDOWNS['reception']) {
-      return { ceremonyId: 'reception', breakdown: CEREMONY_COST_BREAKDOWNS['reception'] };
+    if (normalizedName.includes('reception')) {
+      const breakdown = breakdownMap.get('reception');
+      if (breakdown) {
+        return { ceremonyId: 'reception', breakdown };
+      }
     }
     
     return null;
   };
 
-  const calculateBreakdownCost = (item: CostCategory, guests: number, multiplier: number, guestBracketMultiplier: number): { low: number; high: number } => {
+  const calculateBreakdownCost = (item: CeremonyTemplateCostItem, guests: number, multiplier: number, guestBracketMultiplier: number): { low: number; high: number } => {
     let low = 0;
     let high = 0;
     const totalMultiplier = multiplier * guestBracketMultiplier;
@@ -218,7 +169,7 @@ export function BudgetEstimator({ wedding, events = [], onUpdateBudget, onUpdate
     return { low, high };
   };
 
-  const calculateBreakdownTotal = (breakdown: CostCategory[], guests: number, multiplier: number, guestBracketMultiplier: number): { low: number; high: number } => {
+  const calculateBreakdownTotal = (breakdown: CeremonyTemplateCostItem[], guests: number, multiplier: number, guestBracketMultiplier: number): { low: number; high: number } => {
     let totalLow = 0;
     let totalHigh = 0;
     

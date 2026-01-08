@@ -20,8 +20,8 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Link } from "wouter";
 import type { Event, CeremonyTemplate, CeremonyTemplateCostItem } from "@shared/schema";
-import { useCeremonyTemplates, getCostBreakdownFromTemplate, calculateCeremonyTotal } from "@/hooks/use-ceremony-templates";
-import { CEREMONY_COST_BREAKDOWNS, calculateCeremonyTotalRange, type CostCategory } from "@shared/ceremonies";
+import { useCeremonyTemplates, getCostBreakdownFromTemplate, calculateCeremonyTotal, buildCeremonyBreakdownMap, calculateCeremonyTotalFromBreakdown } from "@/hooks/use-ceremony-templates";
+import { CEREMONY_MAPPINGS } from "@shared/ceremonies";
 import { PricingAdjuster } from "@/components/pricing-adjuster";
 import {
   type VenueClass,
@@ -48,36 +48,6 @@ function formatCurrencyFull(amount: number): string {
   return `$${amount.toLocaleString()}`;
 }
 
-const CEREMONY_MAPPINGS: Record<string, string[]> = {
-  sikh_roka: ["roka", "sikh roka"],
-  sikh_kurmai: ["kurmai", "engagement", "sikh engagement"],
-  sikh_sangeet: ["sangeet", "lady sangeet", "sikh sangeet"],
-  sikh_mehndi: ["mehndi", "henna", "sikh mehndi"],
-  sikh_maiyan: ["maiyan", "sikh maiyan"],
-  sikh_chooda_kalire: ["chooda", "kalire", "chooda kalire", "chooda & kalire"],
-  sikh_jaggo: ["jaggo", "sikh jaggo"],
-  sikh_anand_karaj: ["anand karaj", "anand_karaj", "sikh wedding"],
-  sikh_baraat: ["baraat", "sikh baraat"],
-  sikh_milni: ["milni", "sikh milni"],
-  sikh_reception: ["sikh reception"],
-  hindu_mehndi: ["mehndi", "henna", "hindu mehndi"],
-  hindu_sangeet: ["sangeet", "lady sangeet", "hindu sangeet"],
-  hindu_haldi: ["haldi", "hindu haldi"],
-  hindu_baraat: ["baraat", "hindu baraat"],
-  hindu_wedding: ["hindu wedding", "wedding ceremony"],
-  reception: ["reception"],
-  muslim_nikah: ["nikah", "muslim nikah", "muslim wedding"],
-  muslim_walima: ["walima", "muslim walima"],
-  muslim_dholki: ["dholki", "muslim dholki"],
-  gujarati_pithi: ["pithi", "gujarati pithi"],
-  gujarati_garba: ["garba", "gujarati garba"],
-  gujarati_wedding: ["gujarati wedding"],
-  south_indian_muhurtham: ["muhurtham", "south indian muhurtham", "south indian wedding"],
-  general_wedding: ["general wedding", "western wedding", "christian wedding", "civil ceremony"],
-  rehearsal_dinner: ["rehearsal dinner", "rehearsal"],
-  cocktail_hour: ["cocktail hour", "cocktail", "cocktails"],
-};
-
 function getTopCostDrivers(template: CeremonyTemplate, guestCount: number): { category: string; savings: number }[] {
   const breakdown = getCostBreakdownFromTemplate(template);
   if (!breakdown.length) return [];
@@ -94,36 +64,24 @@ function getTopCostDrivers(template: CeremonyTemplate, guestCount: number): { ca
   return perPersonItems;
 }
 
-function getCeremonyIdFromEvent(event: Event, templateMap: Map<string, CeremonyTemplate>): { ceremonyId: string; useApi: boolean } | null {
+function getCeremonyIdFromEvent(event: Event, templateMap: Map<string, CeremonyTemplate>): { ceremonyId: string } | null {
   const eventType = event.type?.toLowerCase() || "";
   const eventName = event.name?.toLowerCase() || "";
   
   if ((event as any).ceremonyId && templateMap.has((event as any).ceremonyId)) {
-    return { ceremonyId: (event as any).ceremonyId, useApi: true };
+    return { ceremonyId: (event as any).ceremonyId };
   }
   
   for (const [ceremonyId, keywords] of Object.entries(CEREMONY_MAPPINGS)) {
     if (keywords.some(kw => eventName.includes(kw) || eventType.includes(kw))) {
       if (templateMap.has(ceremonyId)) {
-        return { ceremonyId, useApi: true };
+        return { ceremonyId };
       }
     }
   }
   
   if (templateMap.has(eventType)) {
-    return { ceremonyId: eventType, useApi: true };
-  }
-  
-  for (const [ceremonyId, keywords] of Object.entries(CEREMONY_MAPPINGS)) {
-    if (keywords.some(kw => eventName.includes(kw) || eventType.includes(kw))) {
-      if (CEREMONY_COST_BREAKDOWNS[ceremonyId]) {
-        return { ceremonyId, useApi: false };
-      }
-    }
-  }
-  
-  if (CEREMONY_COST_BREAKDOWNS[eventType]) {
-    return { ceremonyId: eventType, useApi: false };
+    return { ceremonyId: eventType };
   }
   
   return null;
@@ -133,7 +91,6 @@ interface EventGuestState {
   eventId: number;
   eventName: string;
   ceremonyId: string;
-  useApi: boolean;
   originalGuests: number;
   currentGuests: number;
   minGuests: number;
@@ -166,13 +123,9 @@ export function MultiCeremonySavingsCalculator({ events, className = "" }: Multi
       return result !== null;
     }).map(event => {
       const result = getCeremonyIdFromEvent(event, templateMap)!;
-      const { ceremonyId, useApi } = result;
-      let originalGuests = event.guestCount || 100;
-      
-      if (useApi) {
-        const template = templateMap.get(ceremonyId);
-        originalGuests = event.guestCount || template?.defaultGuests || 100;
-      }
+      const { ceremonyId } = result;
+      const template = templateMap.get(ceremonyId);
+      const originalGuests = event.guestCount || template?.defaultGuests || 100;
       
       const minGuests = Math.max(20, Math.floor(originalGuests * 0.3));
       const maxGuests = Math.max(minGuests + 50, originalGuests, Math.ceil(originalGuests * 1.5));
@@ -180,7 +133,6 @@ export function MultiCeremonySavingsCalculator({ events, className = "" }: Multi
         eventId: event.id,
         eventName: event.name,
         ceremonyId,
-        useApi,
         originalGuests,
         currentGuests: originalGuests,
         minGuests,
@@ -211,17 +163,10 @@ export function MultiCeremonySavingsCalculator({ events, className = "" }: Multi
     return guestStates.reduce((sum, state) => {
       const guestBracketMultiplier = GUEST_BRACKET_MULTIPLIERS[getGuestBracket(state.originalGuests)];
       const totalMultiplier = pricingMultiplier * guestBracketMultiplier;
-      if (state.useApi) {
-        const template = templateMap.get(state.ceremonyId);
-        if (!template) return sum;
-        const range = calculateCeremonyTotal(template, state.originalGuests);
-        return sum + ((range.low + range.high) / 2) * totalMultiplier;
-      } else {
-        const legacyBreakdown = CEREMONY_COST_BREAKDOWNS[state.ceremonyId];
-        if (!legacyBreakdown) return sum;
-        const range = calculateCeremonyTotalRange(legacyBreakdown, state.originalGuests);
-        return sum + ((range.low + range.high) / 2) * totalMultiplier;
-      }
+      const template = templateMap.get(state.ceremonyId);
+      if (!template) return sum;
+      const range = calculateCeremonyTotal(template, state.originalGuests);
+      return sum + ((range.low + range.high) / 2) * totalMultiplier;
     }, 0);
   }, [guestStates, templateMap, pricingMultiplier]);
 
@@ -229,17 +174,10 @@ export function MultiCeremonySavingsCalculator({ events, className = "" }: Multi
     return guestStates.reduce((sum, state) => {
       const guestBracketMultiplier = GUEST_BRACKET_MULTIPLIERS[getGuestBracket(state.currentGuests)];
       const totalMultiplier = pricingMultiplier * guestBracketMultiplier;
-      if (state.useApi) {
-        const template = templateMap.get(state.ceremonyId);
-        if (!template) return sum;
-        const range = calculateCeremonyTotal(template, state.currentGuests);
-        return sum + ((range.low + range.high) / 2) * totalMultiplier;
-      } else {
-        const legacyBreakdown = CEREMONY_COST_BREAKDOWNS[state.ceremonyId];
-        if (!legacyBreakdown) return sum;
-        const range = calculateCeremonyTotalRange(legacyBreakdown, state.currentGuests);
-        return sum + ((range.low + range.high) / 2) * totalMultiplier;
-      }
+      const template = templateMap.get(state.ceremonyId);
+      if (!template) return sum;
+      const range = calculateCeremonyTotal(template, state.currentGuests);
+      return sum + ((range.low + range.high) / 2) * totalMultiplier;
     }, 0);
   }, [guestStates, templateMap, pricingMultiplier]);
 

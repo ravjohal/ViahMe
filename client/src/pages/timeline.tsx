@@ -46,7 +46,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertEventSchema } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { CEREMONY_COST_BREAKDOWNS, CEREMONY_CATALOG, calculateCeremonyTotalRange } from "@shared/ceremonies";
+import { CEREMONY_MAPPINGS, CEREMONY_CATALOG } from "@shared/ceremonies";
+import { useCeremonyTemplates, buildCeremonyBreakdownMap, calculateCeremonyTotalFromBreakdown } from "@/hooks/use-ceremony-templates";
 import { SideFilter, SideBadge, VisibilityBadge, SIDE_COLORS, type SideViewMode } from "@/components/side-filter";
 
 const COST_PRESETS = [
@@ -1026,66 +1027,6 @@ export default function TimelinePage() {
     return { totalGuests, venues, estimatedCost };
   };
 
-  const getCeremonyIdFromEvent = (event: Event): string | null => {
-    if ((event as any).ceremonyId && CEREMONY_COST_BREAKDOWNS[(event as any).ceremonyId]) {
-      return (event as any).ceremonyId;
-    }
-    const eventType = event.type?.toLowerCase() || "";
-    const eventName = event.name?.toLowerCase() || "";
-    const mappings: Record<string, string[]> = {
-      hindu_mehndi: ["mehndi", "henna"],
-      hindu_sangeet: ["sangeet", "lady sangeet"],
-      hindu_haldi: ["haldi"],
-      sikh_maiyan: ["maiyan"],
-      hindu_baraat: ["baraat"],
-      hindu_wedding: ["hindu wedding", "wedding ceremony"],
-      reception: ["reception"],
-      sikh_anand_karaj: ["anand karaj", "anand_karaj"],
-      muslim_nikah: ["nikah"],
-      muslim_walima: ["walima"],
-      muslim_dholki: ["dholki"],
-      gujarati_pithi: ["pithi"],
-      gujarati_garba: ["garba"],
-      gujarati_wedding: ["gujarati wedding"],
-      south_indian_muhurtham: ["muhurtham"],
-      general_wedding: ["general wedding", "western wedding"],
-      rehearsal_dinner: ["rehearsal dinner", "rehearsal"],
-      cocktail_hour: ["cocktail hour", "cocktail"],
-    };
-    for (const [ceremonyId, keywords] of Object.entries(mappings)) {
-      if (keywords.some(kw => eventName.includes(kw) || eventType.includes(kw))) {
-        return ceremonyId;
-      }
-    }
-    if (CEREMONY_COST_BREAKDOWNS[eventType]) {
-      return eventType;
-    }
-    return null;
-  };
-
-  const eventsWithBreakdowns = events.filter(event => {
-    const ceremonyId = getCeremonyIdFromEvent(event);
-    return ceremonyId && CEREMONY_COST_BREAKDOWNS[ceremonyId];
-  });
-
-  const getCeremonyEstimate = (event: Event) => {
-    const ceremonyId = getCeremonyIdFromEvent(event);
-    if (!ceremonyId) return null;
-    const ceremony = CEREMONY_CATALOG.find(c => c.id === ceremonyId);
-    const guestCount = event.guestCount || ceremony?.defaultGuests || 100;
-    const range = calculateCeremonyTotalRange(ceremonyId, guestCount);
-    return { low: range.low, high: range.high, guestCount, ceremonyName: ceremony?.name || event.name };
-  };
-
-  const totalEstimateLow = eventsWithBreakdowns.reduce((sum, event) => {
-    const estimate = getCeremonyEstimate(event);
-    return sum + (estimate?.low || 0);
-  }, 0);
-
-  const totalEstimateHigh = eventsWithBreakdowns.reduce((sum, event) => {
-    const estimate = getCeremonyEstimate(event);
-    return sum + (estimate?.high || 0);
-  }, 0);
 
   const formatEstimate = (amount: number): string => {
     if (amount >= 1000) {
