@@ -291,9 +291,18 @@ export function BudgetMatrix({ weddingId }: BudgetMatrixProps) {
                     <td className="p-2 font-medium text-sm sticky left-0 bg-card z-10">
                       <div className="flex flex-col">
                         <span>{row.ceremonyName}</span>
-                        <span className={`text-xs ${row.ceremonyBudget > 0 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"}`}>
-                          {row.ceremonyBudget > 0 ? formatCurrency(row.ceremonyBudget) : "No budget set"}
-                        </span>
+                        {row.ceremonyBudget > 0 ? (
+                          <div className="flex items-center gap-2 text-xs">
+                            <span className="text-amber-600 dark:text-amber-400">
+                              Budget: {formatCurrency(row.ceremonyBudget)}
+                            </span>
+                            <span className={row.ceremonyBudget - row.totalPlanned < 0 ? "text-destructive" : "text-muted-foreground"}>
+                              ({formatCurrency(row.ceremonyBudget - row.totalPlanned)} left)
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">No budget set</span>
+                        )}
                       </div>
                     </td>
                     {visibleCategories.map(categoryKey => {
