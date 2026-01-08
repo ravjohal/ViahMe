@@ -914,6 +914,7 @@ export default function Budget() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/budget/allocations", wedding?.id] });
       queryClient.invalidateQueries({ queryKey: ["/api/expenses", wedding?.id, "totals"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budget/matrix", wedding?.id] });
       setEditingBucket(null);
       setEditingBucketAmount("");
       toast({ title: "Category budget updated", description: "Budget allocation has been saved" });
@@ -934,6 +935,7 @@ export default function Budget() {
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: [`/api/budget/ceremony-analytics/${wedding?.id}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budget/matrix", wedding?.id] });
       // Clear inline editing state for this ceremony
       setEditingCeremonyTotals(prev => {
         const next = { ...prev };
