@@ -372,6 +372,7 @@ export interface IStorage {
   getCeremonyLineItemBudgetsByWedding(weddingId: string): Promise<CeremonyLineItemBudget[]>;
   upsertCeremonyLineItemBudget(data: InsertCeremonyLineItemBudget): Promise<CeremonyLineItemBudget>;
   deleteCeremonyLineItemBudgetsByEvent(weddingId: string, eventId: string): Promise<boolean>;
+  deleteCeremonyLineItemBudget(weddingId: string, eventId: string, lineItemCategory: string): Promise<boolean>;
 
   // Expenses (Single Ledger Model)
   getExpense(id: string): Promise<Expense | undefined>;
@@ -1887,6 +1888,16 @@ export class MemStorage implements IStorage {
       b => b.weddingId === weddingId && b.eventId === eventId
     );
     toDelete.forEach(b => this.ceremonyLineItemBudgetsMap.delete(b.id));
+    return true;
+  }
+
+  async deleteCeremonyLineItemBudget(weddingId: string, eventId: string, lineItemCategory: string): Promise<boolean> {
+    const existing = Array.from(this.ceremonyLineItemBudgetsMap.values()).find(
+      b => b.weddingId === weddingId && b.eventId === eventId && b.lineItemCategory === lineItemCategory
+    );
+    if (existing) {
+      this.ceremonyLineItemBudgetsMap.delete(existing.id);
+    }
     return true;
   }
 
@@ -5109,6 +5120,17 @@ export class DBStorage implements IStorage {
   async deleteCeremonyLineItemBudgetsByEvent(weddingId: string, eventId: string): Promise<boolean> {
     await this.db.delete(ceremonyLineItemBudgets).where(
       and(eq(ceremonyLineItemBudgets.weddingId, weddingId), eq(ceremonyLineItemBudgets.eventId, eventId))
+    );
+    return true;
+  }
+
+  async deleteCeremonyLineItemBudget(weddingId: string, eventId: string, lineItemCategory: string): Promise<boolean> {
+    await this.db.delete(ceremonyLineItemBudgets).where(
+      and(
+        eq(ceremonyLineItemBudgets.weddingId, weddingId),
+        eq(ceremonyLineItemBudgets.eventId, eventId),
+        eq(ceremonyLineItemBudgets.lineItemCategory, lineItemCategory)
+      )
     );
     return true;
   }

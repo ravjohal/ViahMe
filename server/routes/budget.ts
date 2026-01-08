@@ -1028,8 +1028,11 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
       }
 
       const results = [];
+      const deleted = [];
       for (const item of items) {
-        if (item.budgetedAmount && parseFloat(item.budgetedAmount) > 0) {
+        const amount = parseFloat(item.budgetedAmount || "0");
+        if (amount > 0) {
+          // Upsert non-zero amounts
           const lineItem = await storage.upsertCeremonyLineItemBudget({
             weddingId,
             eventId,
@@ -1039,10 +1042,14 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
             notes: item.notes,
           });
           results.push(lineItem);
+        } else {
+          // Delete zero/empty amounts (allows clearing budgets)
+          await storage.deleteCeremonyLineItemBudget(weddingId, eventId, item.lineItemCategory);
+          deleted.push(item.lineItemCategory);
         }
       }
 
-      res.json({ success: true, count: results.length, items: results });
+      res.json({ success: true, count: results.length, items: results, deleted });
     } catch (error) {
       console.error("Error bulk saving line item budgets:", error);
       res.status(500).json({ error: "Failed to save line item budgets" });

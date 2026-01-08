@@ -225,8 +225,14 @@ export default function Budget() {
     }) => {
       return apiRequest("POST", "/api/budget/line-items/bulk", { weddingId, eventId, ceremonyTypeId, items });
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/budget/line-items", wedding?.id] });
+      // Clear editing state for this event after successful save
+      setEditingLineItems(prev => {
+        const next = { ...prev };
+        delete next[variables.eventId];
+        return next;
+      });
       toast({ title: "Line item budgets saved" });
     },
     onError: () => {
@@ -245,17 +251,17 @@ export default function Budget() {
     }));
   };
 
-  // Save line item budgets for an event
+  // Save line item budgets for an event (includes zeros to clear existing budgets)
   const saveEventLineItems = (eventId: string, eventName: string) => {
     const ceremonyTypeId = getCeremonyTypeId(eventName);
     if (!wedding?.id || !ceremonyTypeId) return;
     
     const eventLineItems = editingLineItems[eventId] || {};
+    // Include all edited items (including zeros/empty to allow clearing)
     const items = Object.entries(eventLineItems)
-      .filter(([_, value]) => value && parseFloat(value) > 0)
       .map(([category, value]) => ({
         lineItemCategory: category,
-        budgetedAmount: value,
+        budgetedAmount: value || "0",
       }));
 
     if (items.length > 0) {
