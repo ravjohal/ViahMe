@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import { IStorage } from "../storage";
 import { requireAuth, AuthRequest } from "../auth-middleware";
-import { insertBookingSchema, Vendor } from "@shared/schema";
+import { insertBookingSchema, Vendor, getVendorBudgetBucket, getBucketLabel } from "@shared/schema";
 import { sendBookingConfirmationEmail, sendVendorNotificationEmail } from "../email";
 
 export async function registerBookingRoutes(router: Router, storage: IStorage) {
@@ -309,6 +309,35 @@ export async function registerBookingRoutes(router: Router, storage: IStorage) {
             } catch (taskError) {
               console.error("Error auto-completing tasks:", taskError);
             }
+          }
+          
+          // Auto-create expense when booking is confirmed
+          try {
+            const wedding = await storage.getWedding(booking.weddingId);
+            if (wedding && vendor) {
+              const budgetBucket = getVendorBudgetBucket(vendor.categories);
+              const bucketLabel = getBucketLabel(budgetBucket);
+              const amount = booking.estimatedCost ? String(booking.estimatedCost) : '0';
+              
+              // Create expense linked to ceremony and budget category
+              const expense = await storage.createExpense({
+                weddingId: booking.weddingId,
+                ceremonyId: booking.eventId || null,
+                parentCategory: budgetBucket,
+                expenseName: `${vendor.name} - ${bucketLabel}`,
+                amount: amount,
+                amountPaid: '0',
+                status: 'booked',
+                paidById: wedding.userId,
+                paidByName: wedding.partner1Name || 'Couple',
+                vendorId: vendor.id,
+                notes: `Auto-created from vendor booking confirmation`,
+              });
+              
+              console.log(`Auto-created expense "${expense.expenseName}" ($${amount}) for booking ${booking.id}`);
+            }
+          } catch (expenseError) {
+            console.error("Error auto-creating expense from booking:", expenseError);
           }
         } else if (req.body.status === 'declined') {
           messageType = 'booking_declined';
