@@ -135,3 +135,83 @@ export function calculateCeremonyTotal(
 
   return { low: Math.round(totalLow), high: Math.round(totalHigh) };
 }
+
+// Build a lookup map from ceremonyId to template
+export function buildCeremonyTemplateMap(
+  templates: CeremonyTemplate[] | undefined
+): Record<string, CeremonyTemplate> {
+  if (!templates) return {};
+  const map: Record<string, CeremonyTemplate> = {};
+  for (const template of templates) {
+    map[template.ceremonyId] = template;
+  }
+  return map;
+}
+
+// Build a lookup map from ceremonyId to costBreakdown array
+export function buildCeremonyBreakdownMap(
+  templates: CeremonyTemplate[] | undefined
+): Record<string, CeremonyTemplateCostItem[]> {
+  if (!templates) return {};
+  const map: Record<string, CeremonyTemplateCostItem[]> = {};
+  for (const template of templates) {
+    map[template.ceremonyId] = getCostBreakdownFromTemplate(template);
+  }
+  return map;
+}
+
+// Calculate ceremony total from a breakdown array (works with breakdown map values)
+export function calculateCeremonyTotalFromBreakdown(
+  breakdown: CeremonyTemplateCostItem[] | undefined,
+  guestCount: number,
+  multiplier: number = 1.0
+): { low: number; high: number } {
+  if (!breakdown || breakdown.length === 0) {
+    return { low: 0, high: 0 };
+  }
+
+  let totalLow = 0;
+  let totalHigh = 0;
+
+  for (const item of breakdown) {
+    let itemLow = item.lowCost;
+    let itemHigh = item.highCost;
+
+    if (item.unit === 'per_person') {
+      itemLow *= guestCount;
+      itemHigh *= guestCount;
+    } else if (item.unit === 'per_hour') {
+      const hoursLow = item.hoursLow || 1;
+      const hoursHigh = item.hoursHigh || hoursLow;
+      itemLow *= hoursLow;
+      itemHigh *= hoursHigh;
+    }
+
+    itemLow *= multiplier;
+    itemHigh *= multiplier;
+
+    totalLow += itemLow;
+    totalHigh += itemHigh;
+  }
+
+  return { low: Math.round(totalLow), high: Math.round(totalHigh) };
+}
+
+// Get budget bucket label from a line item (uses budgetBucket from template data)
+export function getLineItemBucketLabel(item: CeremonyTemplateCostItem): string {
+  const bucketLabels: Record<string, string> = {
+    venue: "Venue",
+    catering: "Catering",
+    photography: "Photography",
+    videography: "Videography",
+    decoration: "Decoration",
+    entertainment: "Entertainment",
+    attire: "Attire & Beauty",
+    religious: "Religious & Ceremonial",
+    stationery: "Stationery & Gifts",
+    transportation: "Transportation",
+    favors: "Favors",
+    other: "Other",
+  };
+  return bucketLabels[item.budgetBucket || "other"] || "Other";
+}
