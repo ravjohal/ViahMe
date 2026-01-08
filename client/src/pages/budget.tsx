@@ -23,7 +23,8 @@ import { z } from "zod";
 import { 
   DollarSign, Edit2, Trash2, Plus, CheckCircle2, AlertCircle, 
   ChevronDown, ChevronRight, ArrowLeft, Copy, Share2, FileText, 
-  Calendar, Clock, Building2, Users, Calculator, Sparkles, Loader2, BarChart3, HelpCircle
+  Calendar, Clock, Building2, Users, Calculator, Sparkles, Loader2, BarChart3, HelpCircle,
+  TrendingDown, TrendingUp
 } from "lucide-react";
 import { SiWhatsapp } from "react-icons/si";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -295,6 +296,43 @@ export default function Budget() {
       total += parseFloat(amount) || 0;
     }
     return total;
+  };
+
+  // Calculate estimate for a single line item based on type
+  const calculateLineItemEstimate = (item: CostCategory, guestCount: number, useHigh: boolean): number => {
+    const cost = useHigh ? item.highCost : item.lowCost;
+    
+    if (item.unit === "per_person") {
+      return cost * Math.max(guestCount, 50); // Default to 50 guests if not set
+    } else if (item.unit === "per_hour") {
+      const hours = useHigh ? (item.hoursHigh ?? 4) : (item.hoursLow ?? 3);
+      return cost * hours;
+    }
+    return cost;
+  };
+
+  // Set all line item budgets to estimates (low or high)
+  const setEstimatesForEvent = (eventId: string, eventName: string, useHigh: boolean) => {
+    const lineItems = getLineItemsForEvent(eventId, eventName);
+    if (!lineItems) return;
+
+    // Find the event to get guest count
+    const event = events.find(e => e.id === eventId);
+    const guestCount = event?.guestCount || 50; // Default to 50 if not set
+
+    const newValues: Record<string, string> = {};
+    for (const item of lineItems) {
+      const estimate = calculateLineItemEstimate(item, guestCount, useHigh);
+      newValues[item.category] = estimate.toString();
+    }
+
+    setEditingLineItems(prev => ({
+      ...prev,
+      [eventId]: {
+        ...(prev[eventId] || {}),
+        ...newValues,
+      },
+    }));
   };
 
   // Ceremony Budgets (Budget Matrix)
@@ -1274,21 +1312,46 @@ export default function Budget() {
                       {/* Expandable Line Items */}
                       {lineItems && isExpanded && (
                         <div className="border-t bg-muted/30 p-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <p className="text-sm font-medium">Cost Breakdown</p>
-                            {hasUnsavedChanges && (
+                          <div className="flex flex-col gap-2 mb-3">
+                            <div className="flex items-center justify-between">
+                              <p className="text-sm font-medium">Cost Breakdown</p>
+                              {hasUnsavedChanges && (
+                                <Button
+                                  size="sm"
+                                  onClick={() => saveEventLineItems(ceremony.eventId, ceremony.eventName)}
+                                  disabled={saveLineItemBudgetsMutation.isPending}
+                                  data-testid={`button-save-line-items-${ceremony.eventId}`}
+                                >
+                                  {saveLineItemBudgetsMutation.isPending ? (
+                                    <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                                  ) : null}
+                                  Save
+                                </Button>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-xs text-muted-foreground">Pull from estimates:</span>
                               <Button
+                                variant="outline"
                                 size="sm"
-                                onClick={() => saveEventLineItems(ceremony.eventId, ceremony.eventName)}
-                                disabled={saveLineItemBudgetsMutation.isPending}
-                                data-testid={`button-save-line-items-${ceremony.eventId}`}
+                                onClick={() => setEstimatesForEvent(ceremony.eventId, ceremony.eventName, false)}
+                                className="h-7 text-xs"
+                                data-testid={`button-set-low-estimate-${ceremony.eventId}`}
                               >
-                                {saveLineItemBudgetsMutation.isPending ? (
-                                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                                ) : null}
-                                Save
+                                <TrendingDown className="w-3 h-3 mr-1" />
+                                Low Estimate
                               </Button>
-                            )}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setEstimatesForEvent(ceremony.eventId, ceremony.eventName, true)}
+                                className="h-7 text-xs"
+                                data-testid={`button-set-high-estimate-${ceremony.eventId}`}
+                              >
+                                <TrendingUp className="w-3 h-3 mr-1" />
+                                High Estimate
+                              </Button>
+                            </div>
                           </div>
                           <div className="space-y-2">
                             {lineItems.map((item, idx) => {
