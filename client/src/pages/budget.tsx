@@ -16,7 +16,7 @@ import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket, type Wedding, type Event, type Contract, type Vendor, type Expense, type BudgetAllocation, type CeremonyBudget, type CeremonyLineItemBudget } from "@shared/schema";
-import { CEREMONY_COST_BREAKDOWNS, type CostCategory } from "@shared/ceremonies";
+import { CEREMONY_COST_BREAKDOWNS, type CostCategory, getLineItemBucketLabel } from "@shared/ceremonies";
 import { calculateLineItemEstimate, DEFAULT_PRICING_CONTEXT, type PricingContext, CITY_MULTIPLIERS } from "@shared/pricing";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -1537,6 +1537,8 @@ export default function Budget() {
                               const savedAmount = getExistingLineItemBudget(ceremony.eventId, item.category);
                               const hasValue = savedAmount && parseFloat(savedAmount) > 0;
                               
+                              const bucketLabel = getLineItemBucketLabel(item.category);
+                              
                               return (
                                 <div 
                                   key={idx} 
@@ -1544,7 +1546,16 @@ export default function Budget() {
                                   data-testid={`line-item-${ceremony.eventId}-${idx}`}
                                 >
                                   <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium truncate">{item.category}</p>
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <p className="text-sm font-medium truncate">{item.category}</p>
+                                      <Badge 
+                                        variant="outline" 
+                                        className="text-[10px] px-1.5 py-0 h-4 bg-muted/50"
+                                        data-testid={`badge-category-${ceremony.eventId}-${idx}`}
+                                      >
+                                        {bucketLabel}
+                                      </Badge>
+                                    </div>
                                     <p className="text-xs text-muted-foreground">
                                       Est: ${item.lowCost.toLocaleString()} - ${item.highCost.toLocaleString()}
                                       {item.unit === "per_person" && " per person"}

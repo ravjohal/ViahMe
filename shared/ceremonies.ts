@@ -1,3 +1,5 @@
+import { BUDGET_BUCKET_LABELS, type BudgetBucket } from "./schema";
+
 export interface CostCategory {
   category: string;
   lowCost: number;
@@ -286,6 +288,115 @@ export const CEREMONY_COST_BREAKDOWNS: Record<string, CostCategory[]> = {
     { category: "Decor", lowCost: 500, highCost: 2000, unit: "fixed", notes: "Lounge areas, cocktail tables" },
   ],
 };
+
+// Mapping from ceremony line item categories to high-level budget buckets
+// This allows ceremony-specific line items to roll up into overall budget categories
+// Uses prefix matching for flexibility with venue variations
+const EXACT_LINE_ITEM_MAPPINGS: Record<string, BudgetBucket> = {
+  // Venue-related (exact matches)
+  "Mandap Setup": "venue",
+  "Mandapam Setup": "venue",
+  
+  // Catering-related
+  "Caterer": "catering",
+  "Catering": "catering",
+  "Snacks/Drinks": "catering",
+  "Bar Service": "catering",
+  "Appetizers": "catering",
+  "Bartenders": "catering",
+  "Alcohol / Drinks": "catering",
+  "Haldi Supplies": "catering",
+  "Pithi Supplies": "catering",
+  
+  // Decoration-related
+  "Decoration": "decoration",
+  "Decorations": "decoration",
+  "Decor": "decoration",
+  "Decor & Florals": "decoration",
+  "Dandiya Sticks": "decoration",
+  "Rumalla Sahib": "decoration",
+  "Mehr Display": "decoration",
+  
+  // Photography-related
+  "Photographer": "photography",
+  "Photography": "photography",
+  "Photography/Video": "photography",
+  
+  // Attire & Beauty
+  "Makeup": "attire",
+  "Turban Tier": "attire",
+  "Attire for Groom": "attire",
+  "Attire for Bride": "attire",
+  "Attire for Groom's side": "attire",
+  "Attire for Bride's side": "attire",
+  "Henna Artist (Bride)": "attire",
+  "Henna Artists (Guests)": "attire",
+  
+  // Religious & Ceremonial
+  "Gurdwara Bheta / Donation": "religious",
+  "Raagi Jatha / Kirtan Musicians": "religious",
+  "Priest": "religious",
+  "Priest/Pandit": "religious",
+  "Officiant": "religious",
+  "Imam/Officiant": "religious",
+  "Nadaswaram Musicians": "religious",
+  
+  // Entertainment
+  "DJ": "entertainment",
+  "Dhol Player": "entertainment",
+  "Dhol Players": "entertainment",
+  "Entertainment": "entertainment",
+  "Entertainment (Singers, Bands, Bhangra Teams)": "entertainment",
+  "Music": "entertainment",
+  "Music/Sound": "entertainment",
+  "Live Music/Entertainment": "entertainment",
+  "Live Band/DJ": "entertainment",
+  "Baraat Band": "entertainment",
+  "Choreographer": "entertainment",
+  
+  // Gifts & Stationery
+  "Shagun / Gifts": "stationery",
+  "Gifts / Shagun": "stationery",
+  "Shagun / Gifts for other side": "stationery",
+  
+  // Transportation
+  "Horse Rental": "transportation",
+  "Horse/Carriage": "transportation",
+  "Car Rental": "transportation",
+  "Limo rental": "transportation",
+  "Transportation for Guests": "transportation",
+  "Hotels for Guests": "transportation",
+};
+
+// Prefix patterns to match venue variations like "Venue (typically a Sikh Temple)"
+const PREFIX_MAPPINGS: Array<{ prefix: string; bucket: BudgetBucket }> = [
+  { prefix: "Venue", bucket: "venue" },
+];
+
+// Get the high-level budget bucket for a ceremony line item category
+// Uses exact match first, then prefix matching for flexible venue variations
+export function getLineItemBudgetBucket(lineItemCategory: string): BudgetBucket {
+  // Try exact match first
+  if (lineItemCategory in EXACT_LINE_ITEM_MAPPINGS) {
+    return EXACT_LINE_ITEM_MAPPINGS[lineItemCategory];
+  }
+  
+  // Try prefix matching for flexible categories like "Venue (typically at home)"
+  for (const { prefix, bucket } of PREFIX_MAPPINGS) {
+    if (lineItemCategory.startsWith(prefix)) {
+      return bucket;
+    }
+  }
+  
+  return "other";
+}
+
+// Get human-readable bucket label for a line item
+// Uses the shared BUDGET_BUCKET_LABELS to stay in sync with the schema
+export function getLineItemBucketLabel(lineItemCategory: string): string {
+  const bucket = getLineItemBudgetBucket(lineItemCategory);
+  return BUDGET_BUCKET_LABELS[bucket] || "Other";
+}
 
 export function getCeremonyCostBreakdown(ceremonyId: string): CostCategory[] | undefined {
   return CEREMONY_COST_BREAKDOWNS[ceremonyId];
