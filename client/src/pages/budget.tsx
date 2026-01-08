@@ -332,7 +332,9 @@ export default function Budget() {
     const newValues: Record<string, string> = {};
     for (const item of lineItems) {
       const estimates = calculateLineItemEstimate(item, guestCount, pricingContext);
-      const value = useHigh ? estimates.high : estimates.low;
+      const rawValue = useHigh ? estimates.high : estimates.low;
+      // Round to nearest 100
+      const value = Math.round(rawValue / 100) * 100;
       newValues[item.category] = value.toString();
     }
 
@@ -1560,7 +1562,7 @@ export default function Budget() {
                                       </Badge>
                                     </div>
                                     <p className="text-xs text-muted-foreground">
-                                      Est: ${item.lowCost.toLocaleString()} - ${item.highCost.toLocaleString()}
+                                      Est: ${Math.round(item.lowCost / 100) * 100} - ${Math.round(item.highCost / 100) * 100}
                                       {item.unit === "per_person" && " per person"}
                                       {item.unit === "per_hour" && " per hour"}
                                     </p>
