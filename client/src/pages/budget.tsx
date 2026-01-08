@@ -1406,6 +1406,13 @@ export default function Budget() {
               <div className="space-y-3">
                 {(ceremonyAnalytics?.ceremonyBreakdown || [])
                   .filter(ceremony => sideFilter === 'all' || ceremony.side === sideFilter)
+                  .sort((a, b) => {
+                    // Sort chronologically by event date
+                    if (!a.eventDate && !b.eventDate) return 0;
+                    if (!a.eventDate) return 1; // Events without dates go to the end
+                    if (!b.eventDate) return -1;
+                    return new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime();
+                  })
                   .map((ceremony) => {
                   const percentSpent = ceremony.allocated > 0 ? ceremony.percentUsed : 0;
                   const lineItems = getLineItemsForEvent(ceremony.eventId, ceremony.eventName);
