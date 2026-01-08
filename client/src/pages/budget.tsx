@@ -347,6 +347,35 @@ export default function Budget() {
     }));
   };
 
+  // Calculate total ceremony estimate (sum of all line item estimates)
+  const getCeremonyEstimateTotal = (eventId: string, eventName: string, useHigh: boolean): number => {
+    const lineItems = getLineItemsForEvent(eventId, eventName);
+    if (!lineItems) return 0;
+
+    const event = events.find(e => e.id === eventId);
+    const guestCount = event?.guestCount || 100;
+
+    const pricingContext: PricingContext = {
+      ...DEFAULT_PRICING_CONTEXT,
+      guestCount,
+      city: getCityKey(wedding?.city),
+    };
+
+    let total = 0;
+    for (const item of lineItems) {
+      const estimates = calculateLineItemEstimate(item, guestCount, pricingContext);
+      const rawValue = useHigh ? estimates.high : estimates.low;
+      total += Math.round(rawValue / 100) * 100;
+    }
+    return total;
+  };
+
+  // Set ceremony budget to total estimate
+  const setCeremonyBudgetToEstimate = (eventId: string, eventName: string, useHigh: boolean) => {
+    const total = getCeremonyEstimateTotal(eventId, eventName, useHigh);
+    handleCeremonyTotalChange(eventId, total.toString());
+  };
+
   // Ceremony Budgets (Budget Matrix)
   interface CeremonyAnalyticsResponse {
     overview: {
@@ -1460,6 +1489,37 @@ export default function Budget() {
                                 data-testid={`input-ceremony-total-${ceremony.eventId}`}
                               />
                             </div>
+                            {lineItems && (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8"
+                                    data-testid={`button-use-estimate-${ceremony.eventId}`}
+                                  >
+                                    <Sparkles className="w-3 h-3 mr-1" />
+                                    Use Estimate
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem 
+                                    onClick={() => setCeremonyBudgetToEstimate(ceremony.eventId, ceremony.eventName, false)}
+                                    data-testid={`menu-low-estimate-${ceremony.eventId}`}
+                                  >
+                                    <TrendingDown className="w-4 h-4 mr-2" />
+                                    Low Estimate (${getCeremonyEstimateTotal(ceremony.eventId, ceremony.eventName, false).toLocaleString()})
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    onClick={() => setCeremonyBudgetToEstimate(ceremony.eventId, ceremony.eventName, true)}
+                                    data-testid={`menu-high-estimate-${ceremony.eventId}`}
+                                  >
+                                    <TrendingUp className="w-4 h-4 mr-2" />
+                                    High Estimate (${getCeremonyEstimateTotal(ceremony.eventId, ceremony.eventName, true).toLocaleString()})
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            )}
                             {hasCeremonyTotalChanges(ceremony.eventId, ceremony.allocated) && (
                               <Button
                                 size="sm"
