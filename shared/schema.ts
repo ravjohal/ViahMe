@@ -78,6 +78,77 @@ export function getBucketLabel(bucket: string | null | undefined): string {
   return BUDGET_BUCKET_LABELS[bucket as BudgetBucket] || bucket;
 }
 
+// Mapping from vendor categories to budget buckets
+export const VENDOR_CATEGORY_TO_BUCKET: Record<string, BudgetBucket> = {
+  // Venue-related
+  'banquet_hall': 'venue',
+  'gurdwara': 'venue',
+  'temple': 'venue',
+  'tent_service': 'venue',
+  
+  // Catering
+  'caterer': 'catering',
+  'mobile_food': 'catering',
+  'halal_caterer': 'catering',
+  
+  // Decoration & Flowers
+  'decorator': 'decoration',
+  'florist': 'decoration',
+  'mandap_decorator': 'decoration',
+  'nikah_decorator': 'decoration',
+  'rangoli_artist': 'decoration',
+  'kolam_artist': 'decoration',
+  'garland_maker': 'decoration',
+  
+  // Photography & Video
+  'photographer': 'photography',
+  'videographer': 'photography',
+  
+  // Attire & Beauty
+  'makeup_artist': 'attire',
+  'mehndi_artist': 'attire',
+  'turban_tier': 'attire',
+  'silk_saree_rental': 'attire',
+  
+  // Jewelry
+  'jewelry': 'jewelry',
+  
+  // Religious & Ceremonial
+  'pandit': 'religious',
+  'qazi': 'religious',
+  'imam': 'religious',
+  'quran_reciter': 'religious',
+  'astrologer': 'religious',
+  'pooja_items': 'religious',
+  'haldi_supplies': 'religious',
+  'sword_rental': 'religious',
+  
+  // Entertainment
+  'dj': 'entertainment',
+  'dhol_player': 'entertainment',
+  'baraat_band': 'entertainment',
+  'nadaswaram_player': 'entertainment',
+  'garba_instructor': 'entertainment',
+  'dandiya_equipment': 'entertainment',
+  
+  // Transportation
+  'horse_rental': 'transportation',
+  'limo_service': 'transportation',
+};
+
+// Helper function to get budget bucket from vendor category
+export function getVendorBudgetBucket(vendorCategories: string[] | null | undefined): BudgetBucket {
+  if (!vendorCategories || vendorCategories.length === 0) return 'other';
+  
+  // Return the bucket for the first matching category
+  for (const category of vendorCategories) {
+    const bucket = VENDOR_CATEGORY_TO_BUCKET[category];
+    if (bucket) return bucket;
+  }
+  
+  return 'other';
+}
+
 // ============================================================================
 // USERS & AUTHENTICATION
 // ============================================================================
