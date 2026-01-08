@@ -192,6 +192,9 @@ import {
   type CeremonyBudget,
   type InsertCeremonyBudget,
   ceremonyBudgets,
+  type CeremonyCategoryAllocation,
+  type InsertCeremonyCategoryAllocation,
+  ceremonyCategoryAllocations,
   type RitualRoleAssignment,
   type InsertRitualRoleAssignment,
   vendorAccessPasses,
@@ -347,6 +350,19 @@ export interface IStorage {
   updateCeremonyBudget(id: string, budget: Partial<InsertCeremonyBudget>): Promise<CeremonyBudget | undefined>;
   upsertCeremonyBudget(weddingId: string, ceremonyId: string, allocatedAmount: string, notes?: string): Promise<CeremonyBudget>;
   deleteCeremonyBudget(id: string): Promise<boolean>;
+
+  // Ceremony Category Allocations (Budget Matrix - ceremony x category)
+  getCeremonyCategoryAllocationById(id: string): Promise<CeremonyCategoryAllocation | undefined>;
+  getCeremonyCategoryAllocationsByWedding(weddingId: string): Promise<CeremonyCategoryAllocation[]>;
+  getCeremonyCategoryAllocationsByCategory(weddingId: string, categoryKey: BudgetBucket): Promise<CeremonyCategoryAllocation[]>;
+  getCeremonyCategoryAllocationsByCeremony(weddingId: string, ceremonyId: string): Promise<CeremonyCategoryAllocation[]>;
+  getCeremonyCategoryAllocation(weddingId: string, ceremonyId: string, categoryKey: BudgetBucket): Promise<CeremonyCategoryAllocation | undefined>;
+  getCategoryTotalAcrossCeremonies(weddingId: string, categoryKey: BudgetBucket): Promise<number>;
+  getCeremonyTotalAcrossCategories(weddingId: string, ceremonyId: string): Promise<number>;
+  createCeremonyCategoryAllocation(allocation: InsertCeremonyCategoryAllocation): Promise<CeremonyCategoryAllocation>;
+  updateCeremonyCategoryAllocation(id: string, allocation: Partial<InsertCeremonyCategoryAllocation>): Promise<CeremonyCategoryAllocation | undefined>;
+  upsertCeremonyCategoryAllocation(weddingId: string, ceremonyId: string, categoryKey: BudgetBucket, allocatedAmount: string, notes?: string): Promise<CeremonyCategoryAllocation>;
+  deleteCeremonyCategoryAllocation(id: string): Promise<boolean>;
 
   // Expenses (Single Ledger Model)
   getExpense(id: string): Promise<Expense | undefined>;
@@ -1757,6 +1773,76 @@ export class MemStorage implements IStorage {
 
   async deleteCeremonyBudget(id: string): Promise<boolean> {
     return this.ceremonyBudgetsMap.delete(id);
+  }
+
+  // Ceremony Category Allocations (Budget Matrix) - MemStorage stubs
+  private ceremonyCategoryAllocationsMap: Map<string, CeremonyCategoryAllocation> = new Map();
+
+  async getCeremonyCategoryAllocationById(id: string): Promise<CeremonyCategoryAllocation | undefined> {
+    return this.ceremonyCategoryAllocationsMap.get(id);
+  }
+
+  async getCeremonyCategoryAllocationsByWedding(weddingId: string): Promise<CeremonyCategoryAllocation[]> {
+    return Array.from(this.ceremonyCategoryAllocationsMap.values()).filter(a => a.weddingId === weddingId);
+  }
+
+  async getCeremonyCategoryAllocationsByCategory(weddingId: string, categoryKey: BudgetBucket): Promise<CeremonyCategoryAllocation[]> {
+    return Array.from(this.ceremonyCategoryAllocationsMap.values()).filter(
+      a => a.weddingId === weddingId && a.categoryKey === categoryKey
+    );
+  }
+
+  async getCeremonyCategoryAllocationsByCeremony(weddingId: string, ceremonyId: string): Promise<CeremonyCategoryAllocation[]> {
+    return Array.from(this.ceremonyCategoryAllocationsMap.values()).filter(
+      a => a.weddingId === weddingId && a.ceremonyId === ceremonyId
+    );
+  }
+
+  async getCeremonyCategoryAllocation(weddingId: string, ceremonyId: string, categoryKey: BudgetBucket): Promise<CeremonyCategoryAllocation | undefined> {
+    return Array.from(this.ceremonyCategoryAllocationsMap.values()).find(
+      a => a.weddingId === weddingId && a.ceremonyId === ceremonyId && a.categoryKey === categoryKey
+    );
+  }
+
+  async getCategoryTotalAcrossCeremonies(weddingId: string, categoryKey: BudgetBucket): Promise<number> {
+    const allocations = await this.getCeremonyCategoryAllocationsByCategory(weddingId, categoryKey);
+    return allocations.reduce((sum, a) => sum + parseFloat(a.allocatedAmount || '0'), 0);
+  }
+
+  async getCeremonyTotalAcrossCategories(weddingId: string, ceremonyId: string): Promise<number> {
+    const allocations = await this.getCeremonyCategoryAllocationsByCeremony(weddingId, ceremonyId);
+    return allocations.reduce((sum, a) => sum + parseFloat(a.allocatedAmount || '0'), 0);
+  }
+
+  async createCeremonyCategoryAllocation(allocation: InsertCeremonyCategoryAllocation): Promise<CeremonyCategoryAllocation> {
+    const id = randomUUID();
+    const newAllocation: CeremonyCategoryAllocation = {
+      ...allocation,
+      id,
+      createdAt: new Date(),
+    } as CeremonyCategoryAllocation;
+    this.ceremonyCategoryAllocationsMap.set(id, newAllocation);
+    return newAllocation;
+  }
+
+  async updateCeremonyCategoryAllocation(id: string, allocation: Partial<InsertCeremonyCategoryAllocation>): Promise<CeremonyCategoryAllocation | undefined> {
+    const existing = this.ceremonyCategoryAllocationsMap.get(id);
+    if (!existing) return undefined;
+    const updated = { ...existing, ...allocation };
+    this.ceremonyCategoryAllocationsMap.set(id, updated);
+    return updated;
+  }
+
+  async upsertCeremonyCategoryAllocation(weddingId: string, ceremonyId: string, categoryKey: BudgetBucket, allocatedAmount: string, notes?: string): Promise<CeremonyCategoryAllocation> {
+    const existing = await this.getCeremonyCategoryAllocation(weddingId, ceremonyId, categoryKey);
+    if (existing) {
+      return (await this.updateCeremonyCategoryAllocation(existing.id, { allocatedAmount, notes }))!;
+    }
+    return this.createCeremonyCategoryAllocation({ weddingId, ceremonyId, categoryKey, allocatedAmount, notes });
+  }
+
+  async deleteCeremonyCategoryAllocation(id: string): Promise<boolean> {
+    return this.ceremonyCategoryAllocationsMap.delete(id);
   }
 
   // Expenses (Single Ledger Model)
@@ -4873,6 +4959,75 @@ export class DBStorage implements IStorage {
 
   async deleteCeremonyBudget(id: string): Promise<boolean> {
     await this.db.delete(ceremonyBudgets).where(eq(ceremonyBudgets.id, id));
+    return true;
+  }
+
+  // Ceremony Category Allocations (Budget Matrix - ceremony x category)
+  async getCeremonyCategoryAllocationById(id: string): Promise<CeremonyCategoryAllocation | undefined> {
+    const result = await this.db.select().from(ceremonyCategoryAllocations).where(eq(ceremonyCategoryAllocations.id, id));
+    return result[0];
+  }
+
+  async getCeremonyCategoryAllocationsByWedding(weddingId: string): Promise<CeremonyCategoryAllocation[]> {
+    return await this.db.select().from(ceremonyCategoryAllocations).where(eq(ceremonyCategoryAllocations.weddingId, weddingId));
+  }
+
+  async getCeremonyCategoryAllocationsByCategory(weddingId: string, categoryKey: BudgetBucket): Promise<CeremonyCategoryAllocation[]> {
+    return await this.db.select().from(ceremonyCategoryAllocations).where(
+      and(eq(ceremonyCategoryAllocations.weddingId, weddingId), eq(ceremonyCategoryAllocations.categoryKey, categoryKey))
+    );
+  }
+
+  async getCeremonyCategoryAllocationsByCeremony(weddingId: string, ceremonyId: string): Promise<CeremonyCategoryAllocation[]> {
+    return await this.db.select().from(ceremonyCategoryAllocations).where(
+      and(eq(ceremonyCategoryAllocations.weddingId, weddingId), eq(ceremonyCategoryAllocations.ceremonyId, ceremonyId))
+    );
+  }
+
+  async getCeremonyCategoryAllocation(weddingId: string, ceremonyId: string, categoryKey: BudgetBucket): Promise<CeremonyCategoryAllocation | undefined> {
+    const result = await this.db.select().from(ceremonyCategoryAllocations).where(
+      and(
+        eq(ceremonyCategoryAllocations.weddingId, weddingId),
+        eq(ceremonyCategoryAllocations.ceremonyId, ceremonyId),
+        eq(ceremonyCategoryAllocations.categoryKey, categoryKey)
+      )
+    );
+    return result[0];
+  }
+
+  async getCategoryTotalAcrossCeremonies(weddingId: string, categoryKey: BudgetBucket): Promise<number> {
+    const allocations = await this.getCeremonyCategoryAllocationsByCategory(weddingId, categoryKey);
+    return allocations.reduce((sum, a) => sum + parseFloat(a.allocatedAmount || '0'), 0);
+  }
+
+  async getCeremonyTotalAcrossCategories(weddingId: string, ceremonyId: string): Promise<number> {
+    const allocations = await this.getCeremonyCategoryAllocationsByCeremony(weddingId, ceremonyId);
+    return allocations.reduce((sum, a) => sum + parseFloat(a.allocatedAmount || '0'), 0);
+  }
+
+  async createCeremonyCategoryAllocation(allocation: InsertCeremonyCategoryAllocation): Promise<CeremonyCategoryAllocation> {
+    const result = await this.db.insert(ceremonyCategoryAllocations).values(allocation).returning();
+    return result[0];
+  }
+
+  async updateCeremonyCategoryAllocation(id: string, allocation: Partial<InsertCeremonyCategoryAllocation>): Promise<CeremonyCategoryAllocation | undefined> {
+    const result = await this.db.update(ceremonyCategoryAllocations)
+      .set(allocation)
+      .where(eq(ceremonyCategoryAllocations.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async upsertCeremonyCategoryAllocation(weddingId: string, ceremonyId: string, categoryKey: BudgetBucket, allocatedAmount: string, notes?: string): Promise<CeremonyCategoryAllocation> {
+    const existing = await this.getCeremonyCategoryAllocation(weddingId, ceremonyId, categoryKey);
+    if (existing) {
+      return (await this.updateCeremonyCategoryAllocation(existing.id, { allocatedAmount, notes }))!;
+    }
+    return this.createCeremonyCategoryAllocation({ weddingId, ceremonyId, categoryKey, allocatedAmount, notes });
+  }
+
+  async deleteCeremonyCategoryAllocation(id: string): Promise<boolean> {
+    await this.db.delete(ceremonyCategoryAllocations).where(eq(ceremonyCategoryAllocations.id, id));
     return true;
   }
 

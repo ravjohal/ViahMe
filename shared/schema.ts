@@ -696,6 +696,41 @@ export type InsertCeremonyBudget = z.infer<typeof insertCeremonyBudgetSchema>;
 export type CeremonyBudget = typeof ceremonyBudgets.$inferSelect;
 
 // ============================================================================
+// CEREMONY CATEGORY ALLOCATIONS - Budget Matrix (rows: ceremonies, cols: categories)
+// Allows couples to plan how much of each budget category goes to each ceremony
+// Example: "Sangeet Venue: $5,000", "Anand Karaj Catering: $15,000"
+// ============================================================================
+
+export const ceremonyCategoryAllocations = pgTable("ceremony_category_allocations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  ceremonyId: varchar("ceremony_id").notNull(), // References events.id
+  categoryKey: text("category_key").notNull(), // From BUDGET_BUCKETS (e.g., 'venue', 'catering', 'decoration')
+  allocatedAmount: decimal("allocated_amount", { precision: 12, scale: 2 }).notNull().default('0'),
+  notes: text("notes"), // Optional notes about this specific allocation
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => ({
+  // Primary index for lookups by wedding + ceremony + category
+  weddingCeremonyCategoryIdx: index("ceremony_cat_alloc_wedding_ceremony_cat_idx").on(table.weddingId, table.ceremonyId, table.categoryKey),
+  // Index for category totals across all ceremonies
+  weddingCategoryIdx: index("ceremony_cat_alloc_wedding_cat_idx").on(table.weddingId, table.categoryKey),
+  // Unique constraint: one allocation per wedding+ceremony+category combo
+  uniqueAllocation: uniqueIndex("ceremony_cat_alloc_unique").on(table.weddingId, table.ceremonyId, table.categoryKey),
+}));
+
+export const insertCeremonyCategoryAllocationSchema = createInsertSchema(ceremonyCategoryAllocations).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  categoryKey: budgetBucketSchema,
+  allocatedAmount: z.string().regex(/^\d+(\.\d{1,2})?$/, "Amount must be a valid decimal"),
+  notes: z.string().optional(),
+});
+
+export type InsertCeremonyCategoryAllocation = z.infer<typeof insertCeremonyCategoryAllocationSchema>;
+export type CeremonyCategoryAllocation = typeof ceremonyCategoryAllocations.$inferSelect;
+
+// ============================================================================
 // HOUSEHOLDS - Family/group management for unified RSVPs
 // ============================================================================
 
