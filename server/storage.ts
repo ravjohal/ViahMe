@@ -194,6 +194,9 @@ import {
   ceremonyBudgets,
   type CeremonyCategoryAllocation,
   type InsertCeremonyCategoryAllocation,
+  ceremonyLineItemBudgets,
+  type CeremonyLineItemBudget,
+  type InsertCeremonyLineItemBudget,
   ceremonyCategoryAllocations,
   type RitualRoleAssignment,
   type InsertRitualRoleAssignment,
@@ -363,6 +366,12 @@ export interface IStorage {
   updateCeremonyCategoryAllocation(id: string, allocation: Partial<InsertCeremonyCategoryAllocation>): Promise<CeremonyCategoryAllocation | undefined>;
   upsertCeremonyCategoryAllocation(weddingId: string, ceremonyId: string, categoryKey: BudgetBucket, allocatedAmount: string, notes?: string): Promise<CeremonyCategoryAllocation>;
   deleteCeremonyCategoryAllocation(id: string): Promise<boolean>;
+
+  // Ceremony Line Item Budgets (per-ceremony, per-line-item from CEREMONY_COST_BREAKDOWNS)
+  getCeremonyLineItemBudgetsByEvent(weddingId: string, eventId: string): Promise<CeremonyLineItemBudget[]>;
+  getCeremonyLineItemBudgetsByWedding(weddingId: string): Promise<CeremonyLineItemBudget[]>;
+  upsertCeremonyLineItemBudget(data: InsertCeremonyLineItemBudget): Promise<CeremonyLineItemBudget>;
+  deleteCeremonyLineItemBudgetsByEvent(weddingId: string, eventId: string): Promise<boolean>;
 
   // Expenses (Single Ledger Model)
   getExpense(id: string): Promise<Expense | undefined>;
@@ -1843,6 +1852,42 @@ export class MemStorage implements IStorage {
 
   async deleteCeremonyCategoryAllocation(id: string): Promise<boolean> {
     return this.ceremonyCategoryAllocationsMap.delete(id);
+  }
+
+  // Ceremony Line Item Budgets (per-ceremony, per-line-item from CEREMONY_COST_BREAKDOWNS)
+  private ceremonyLineItemBudgetsMap: Map<string, CeremonyLineItemBudget> = new Map();
+
+  async getCeremonyLineItemBudgetsByEvent(weddingId: string, eventId: string): Promise<CeremonyLineItemBudget[]> {
+    return Array.from(this.ceremonyLineItemBudgetsMap.values()).filter(
+      b => b.weddingId === weddingId && b.eventId === eventId
+    );
+  }
+
+  async getCeremonyLineItemBudgetsByWedding(weddingId: string): Promise<CeremonyLineItemBudget[]> {
+    return Array.from(this.ceremonyLineItemBudgetsMap.values()).filter(b => b.weddingId === weddingId);
+  }
+
+  async upsertCeremonyLineItemBudget(data: InsertCeremonyLineItemBudget): Promise<CeremonyLineItemBudget> {
+    const existing = Array.from(this.ceremonyLineItemBudgetsMap.values()).find(
+      b => b.weddingId === data.weddingId && b.eventId === data.eventId && b.lineItemCategory === data.lineItemCategory
+    );
+    if (existing) {
+      const updated = { ...existing, ...data } as CeremonyLineItemBudget;
+      this.ceremonyLineItemBudgetsMap.set(existing.id, updated);
+      return updated;
+    }
+    const id = crypto.randomUUID();
+    const budget = { id, ...data, createdAt: new Date() } as CeremonyLineItemBudget;
+    this.ceremonyLineItemBudgetsMap.set(id, budget);
+    return budget;
+  }
+
+  async deleteCeremonyLineItemBudgetsByEvent(weddingId: string, eventId: string): Promise<boolean> {
+    const toDelete = Array.from(this.ceremonyLineItemBudgetsMap.values()).filter(
+      b => b.weddingId === weddingId && b.eventId === eventId
+    );
+    toDelete.forEach(b => this.ceremonyLineItemBudgetsMap.delete(b.id));
+    return true;
   }
 
   // Expenses (Single Ledger Model)
@@ -5028,6 +5073,43 @@ export class DBStorage implements IStorage {
 
   async deleteCeremonyCategoryAllocation(id: string): Promise<boolean> {
     await this.db.delete(ceremonyCategoryAllocations).where(eq(ceremonyCategoryAllocations.id, id));
+    return true;
+  }
+
+  // Ceremony Line Item Budgets (per-ceremony, per-line-item from CEREMONY_COST_BREAKDOWNS)
+  async getCeremonyLineItemBudgetsByEvent(weddingId: string, eventId: string): Promise<CeremonyLineItemBudget[]> {
+    return await this.db.select().from(ceremonyLineItemBudgets).where(
+      and(eq(ceremonyLineItemBudgets.weddingId, weddingId), eq(ceremonyLineItemBudgets.eventId, eventId))
+    );
+  }
+
+  async getCeremonyLineItemBudgetsByWedding(weddingId: string): Promise<CeremonyLineItemBudget[]> {
+    return await this.db.select().from(ceremonyLineItemBudgets).where(eq(ceremonyLineItemBudgets.weddingId, weddingId));
+  }
+
+  async upsertCeremonyLineItemBudget(data: InsertCeremonyLineItemBudget): Promise<CeremonyLineItemBudget> {
+    const existing = await this.db.select().from(ceremonyLineItemBudgets).where(
+      and(
+        eq(ceremonyLineItemBudgets.weddingId, data.weddingId),
+        eq(ceremonyLineItemBudgets.eventId, data.eventId),
+        eq(ceremonyLineItemBudgets.lineItemCategory, data.lineItemCategory)
+      )
+    );
+    if (existing[0]) {
+      const result = await this.db.update(ceremonyLineItemBudgets)
+        .set({ budgetedAmount: data.budgetedAmount, notes: data.notes, ceremonyTypeId: data.ceremonyTypeId })
+        .where(eq(ceremonyLineItemBudgets.id, existing[0].id))
+        .returning();
+      return result[0];
+    }
+    const result = await this.db.insert(ceremonyLineItemBudgets).values(data).returning();
+    return result[0];
+  }
+
+  async deleteCeremonyLineItemBudgetsByEvent(weddingId: string, eventId: string): Promise<boolean> {
+    await this.db.delete(ceremonyLineItemBudgets).where(
+      and(eq(ceremonyLineItemBudgets.weddingId, weddingId), eq(ceremonyLineItemBudgets.eventId, eventId))
+    );
     return true;
   }
 

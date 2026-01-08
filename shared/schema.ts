@@ -731,6 +731,37 @@ export type InsertCeremonyCategoryAllocation = z.infer<typeof insertCeremonyCate
 export type CeremonyCategoryAllocation = typeof ceremonyCategoryAllocations.$inferSelect;
 
 // ============================================================================
+// CEREMONY LINE ITEM BUDGETS - Per-ceremony, per-line-item budget amounts
+// Stores budgets for ceremony-specific cost categories from CEREMONY_COST_BREAKDOWNS
+// Example: "Sangeet → DJ: $1,500", "Anand Karaj → Dhol Player: $800"
+// ============================================================================
+
+export const ceremonyLineItemBudgets = pgTable("ceremony_line_item_budgets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  eventId: varchar("event_id").notNull(), // References events.id
+  ceremonyTypeId: text("ceremony_type_id").notNull(), // e.g., 'sikh_sangeet', 'hindu_mehndi' - key from CEREMONY_COST_BREAKDOWNS
+  lineItemCategory: text("line_item_category").notNull(), // e.g., 'DJ', 'Photographer', 'Caterer' - from cost breakdown
+  budgetedAmount: decimal("budgeted_amount", { precision: 12, scale: 2 }).notNull().default('0'),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => ({
+  weddingEventIdx: index("ceremony_line_item_wedding_event_idx").on(table.weddingId, table.eventId),
+  uniqueLineItem: uniqueIndex("ceremony_line_item_unique").on(table.weddingId, table.eventId, table.lineItemCategory),
+}));
+
+export const insertCeremonyLineItemBudgetSchema = createInsertSchema(ceremonyLineItemBudgets).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  budgetedAmount: z.string().regex(/^\d+(\.\d{1,2})?$/, "Amount must be a valid decimal"),
+  notes: z.string().optional(),
+});
+
+export type InsertCeremonyLineItemBudget = z.infer<typeof insertCeremonyLineItemBudgetSchema>;
+export type CeremonyLineItemBudget = typeof ceremonyLineItemBudgets.$inferSelect;
+
+// ============================================================================
 // HOUSEHOLDS - Family/group management for unified RSVPs
 // ============================================================================
 
