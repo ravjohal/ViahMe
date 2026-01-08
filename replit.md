@@ -15,14 +15,16 @@ The platform utilizes a modern web stack: **React**, **TypeScript**, **Tailwind 
 
 Key architectural decisions and features include:
 - **Comprehensive Data Model**: Designed to support the intricate nature of multi-day South Asian weddings.
-- **Cultural Templates**: Pre-populated event timelines and task templates for 9 wedding traditions with auto-seeding. Ceremony cost estimates use a hybrid data approach for flexibility.
-  - **Ceremony Cost Database**: Templates stored in `ceremony_templates` table with JSONB cost breakdown per category (Venue, Catering, Decor, etc.)
+- **Cultural Templates**: Pre-populated event timelines and task templates for 9 wedding traditions with auto-seeding. Ceremony cost estimates use database-first data approach.
+  - **Ceremony Cost Database**: Templates stored in `ceremony_templates` table with JSONB cost breakdown per category (Venue, Catering, Decor, etc.). Each line item includes a `budgetBucket` field mapping to the 12 budget categories.
   - **Regional Pricing**: `regional_pricing` table with city-specific multipliers (Bay Area 1.5x, NYC 1.4x, LA 1.3x, Chicago 1.2x, Seattle 1.1x)
-  - **API Endpoints**: `/api/ceremony-templates`, `/api/regional-pricing`, `/api/ceremony-estimate` (public read, admin write)
+  - **API Endpoints**: `/api/ceremony-templates`, `/api/ceremony-templates/:id/line-items`, `/api/regional-pricing`, `/api/ceremony-estimate` (public read, admin write)
   - **Admin UI**: Site admins (users with `isSiteAdmin: true`) can manage templates at `/admin/ceremony-templates`
-  - **Seed Script**: `scripts/seed-ceremony-templates.ts` populates initial Sikh ceremony data (11 ceremonies)
-  - **Hybrid Data Approach**: Frontend components (ceremony-cost-breakdown, multi-ceremony-savings-calculator) try API templates first, then fall back to `shared/ceremonies.ts` hardcoded data for backward compatibility
-  - **Ceremony Mapping**: `CEREMONY_MAPPINGS` object maps event names/types to ceremony IDs for matching events to templates
+  - **Seed Scripts**: 
+    - `scripts/seed-ceremony-line-items.ts` populates 27 ceremony templates across Sikh, Hindu, Muslim, Gujarati, South Indian, and General traditions with line items and budget bucket mappings
+  - **Database-First Architecture**: The `ceremony_templates` table is the single source of truth for ceremony line items. The Add Expense dialog fetches line items from the API endpoint `/api/ceremony-templates/:id/line-items`.
+  - **Ceremony Mapping**: `CEREMONY_MAPPINGS` object in `shared/ceremonies.ts` maps event names/types to ceremony template IDs for matching events to templates
+  - **Future Enhancement**: Events table could store `ceremonyTemplateId` directly to avoid name-based matching
 - **Vendor Specialization**: Support for 32 distinct vendor categories, including culturally-specific services.
 - **Budget Intelligence System**: Uses a **Single Ledger Model** for simplified budget and expense tracking. Provides smart budget recommendations, dual-view aggregation (by bucket and by ceremony), contributor filtering, guest savings calculator, upcoming payments timeline, and automatic budget alerts.
   - **Fixed BUDGET_BUCKETS**: 12 code-level budget categories defined in `shared/schema.ts`: venue, catering, photography, videography, decor, entertainment, attire, beauty, stationery, transportation, favors, other. Eliminates database joins and duplicate bucket issues.

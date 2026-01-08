@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -9,15 +9,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, ArrowRight, Check, Calendar, DollarSign, User, FileText, Upload, Tag } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ArrowLeft, ArrowRight, Check, Calendar, DollarSign, User, FileText, Upload, Tag, Loader2 } from "lucide-react";
 import { BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket, type Event } from "@shared/schema";
-import { 
-  CEREMONY_COST_BREAKDOWNS, 
-  CEREMONY_MAPPINGS, 
-  getLineItemBucket, 
-  getCeremonyIdFromEvent,
-  type CostCategory 
-} from "@shared/ceremonies";
+import { CEREMONY_MAPPINGS, getCeremonyIdFromEvent } from "@shared/ceremonies";
+
+// Type for line items fetched from API
+interface LineItem {
+  name: string;
+  budgetBucket: BudgetBucket;
+  lowCost: number;
+  highCost: number;
+  unit: 'fixed' | 'per_person' | 'per_hour';
+  notes?: string;
+}
 
 interface AddExpenseDialogProps {
   open: boolean;
@@ -79,21 +84,38 @@ export function AddExpenseDialog({
     return events.find(e => e.id === selectedCeremonyId) || null;
   }, [selectedCeremonyId, events]);
 
-  const ceremonyLineItems = useMemo((): CostCategory[] => {
-    if (!selectedEvent) return [];
-    
-    const ceremonyId = getCeremonyIdFromEvent(selectedEvent.name, selectedEvent.type);
-    if (ceremonyId && CEREMONY_COST_BREAKDOWNS[ceremonyId]) {
-      return CEREMONY_COST_BREAKDOWNS[ceremonyId];
-    }
-    
-    return [];
+  // Get the ceremony template ID from the selected event
+  const ceremonyTemplateId = useMemo(() => {
+    if (!selectedEvent) return null;
+    return getCeremonyIdFromEvent(selectedEvent.name, selectedEvent.type);
   }, [selectedEvent]);
 
+  // Fetch line items from API
+  const { data: lineItemsData, isLoading: isLoadingLineItems } = useQuery<{
+    ceremonyId: string;
+    ceremonyName: string;
+    tradition: string;
+    lineItems: LineItem[];
+  }>({
+    queryKey: ['/api/ceremony-templates', ceremonyTemplateId, 'line-items'],
+    enabled: !!ceremonyTemplateId && open,
+  });
+
+  const ceremonyLineItems = lineItemsData?.lineItems || [];
+
+  // Get the budget bucket from the selected line item (from API data)
   const derivedBucket = useMemo((): BudgetBucket | null => {
     if (!selectedLineItem) return null;
-    return getLineItemBucket(selectedLineItem);
-  }, [selectedLineItem]);
+    
+    // Find the line item in the fetched data to get its budget bucket
+    const lineItem = ceremonyLineItems.find(item => item.name === selectedLineItem);
+    if (lineItem) {
+      return lineItem.budgetBucket;
+    }
+    
+    // Fallback to 'other' for custom/unknown line items
+    return "other";
+  }, [selectedLineItem, ceremonyLineItems]);
 
   const resetForm = () => {
     setCurrentStep(1);
@@ -238,8 +260,8 @@ export function AddExpenseDialog({
             </div>
             <div className="grid grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-2">
               {events.map((event) => {
-                const ceremonyId = getCeremonyIdFromEvent(event.name, event.type);
-                const hasCategories = ceremonyId && CEREMONY_COST_BREAKDOWNS[ceremonyId];
+                const eventCeremonyId = getCeremonyIdFromEvent(event.name, event.type);
+                const hasCategories = !!eventCeremonyId;
                 return (
                   <button
                     key={event.id}
@@ -263,7 +285,7 @@ export function AddExpenseDialog({
                     )}
                     {hasCategories && (
                       <div className="text-xs text-primary mt-1">
-                        {CEREMONY_COST_BREAKDOWNS[ceremonyId!].length} expense categories
+                        Specific expense categories available
                       </div>
                     )}
                   </button>
@@ -287,29 +309,32 @@ export function AddExpenseDialog({
                 Categories for {selectedEvent?.name || "this ceremony"}
               </p>
             </div>
-            {ceremonyLineItems.length > 0 ? (
+            {isLoadingLineItems ? (
               <div className="grid grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-2">
-                {ceremonyLineItems.map((item, index) => {
-                  const bucket = getLineItemBucket(item.category);
-                  return (
-                    <button
-                      key={index}
-                      type="button"
-                      onClick={() => setSelectedLineItem(item.category)}
-                      className={`p-3 rounded-lg text-left transition-all border-2 ${
-                        selectedLineItem === item.category
-                          ? "border-primary bg-primary/10"
-                          : "border-muted hover-elevate"
-                      }`}
-                      data-testid={`button-lineitem-${index}`}
-                    >
-                      <div className="text-sm font-medium">{item.category}</div>
-                      <div className="text-xs text-muted-foreground mt-0.5">
-                        {BUDGET_BUCKET_LABELS[bucket]}
-                      </div>
-                    </button>
-                  );
-                })}
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <Skeleton key={i} className="h-16 rounded-lg" />
+                ))}
+              </div>
+            ) : ceremonyLineItems.length > 0 ? (
+              <div className="grid grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-2">
+                {ceremonyLineItems.map((item, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => setSelectedLineItem(item.name)}
+                    className={`p-3 rounded-lg text-left transition-all border-2 ${
+                      selectedLineItem === item.name
+                        ? "border-primary bg-primary/10"
+                        : "border-muted hover-elevate"
+                    }`}
+                    data-testid={`button-lineitem-${index}`}
+                  >
+                    <div className="text-sm font-medium">{item.name}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      {BUDGET_BUCKET_LABELS[item.budgetBucket]}
+                    </div>
+                  </button>
+                ))}
                 <button
                   type="button"
                   onClick={() => setSelectedLineItem("Other")}
