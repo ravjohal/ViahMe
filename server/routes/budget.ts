@@ -840,6 +840,9 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
       
       // Get global bucket allocations (source of truth for category limits)
       const bucketAllocations = await storage.getBudgetAllocationsByWedding(weddingId);
+      
+      // Get ceremony budgets (total budget set for each ceremony)
+      const ceremonyBudgets = await storage.getCeremonyBudgetsByWedding(weddingId);
 
       // Build a lookup map: ceremonyId -> categoryKey -> allocation
       const allocationMap = new Map<string, Map<string, typeof allocations[0]>>();
@@ -866,12 +869,17 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
           };
         }
 
+        // Get the ceremony's total budget (set by user in Ceremony Budgets section)
+        const ceremonyBudget = ceremonyBudgets.find(cb => cb.ceremonyId === event.id);
+        const ceremonyBudgetAmount = parseFloat(ceremonyBudget?.allocatedAmount || '0');
+
         return {
           ceremonyId: event.id,
           ceremonyName: event.name,
           ceremonyDate: event.date,
           ceremonyType: event.type,
           cells,
+          ceremonyBudget: ceremonyBudgetAmount, // Total budget set for this ceremony
           totalPlanned: ceremonyTotal, // Sum of all category allocations for this ceremony
         };
       });

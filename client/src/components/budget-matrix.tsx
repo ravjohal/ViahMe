@@ -23,6 +23,7 @@ interface MatrixRow {
   ceremonyDate: string | null;
   ceremonyType: string;
   cells: Record<string, MatrixCell>;
+  ceremonyBudget: number;
   totalPlanned: number;
 }
 
@@ -244,6 +245,16 @@ export function BudgetMatrix({ weddingId }: BudgetMatrixProps) {
                   <th className="text-left p-2 font-medium text-sm sticky left-0 bg-card z-10 min-w-[140px]">
                     Ceremony
                   </th>
+                  <th className="text-center p-2 font-medium text-sm min-w-[90px] bg-amber-50/50 dark:bg-amber-900/20">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span>Budget</span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Total budget you've set for each ceremony</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </th>
                   {visibleCategories.map(categoryKey => {
                     const col = matrixData.columns.find(c => c.categoryKey === categoryKey)!;
                     return (
@@ -266,7 +277,14 @@ export function BudgetMatrix({ weddingId }: BudgetMatrixProps) {
                     );
                   })}
                   <th className="text-center p-2 font-medium text-sm min-w-[100px] bg-muted/50">
-                    Total
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span>Allocated</span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Sum of category allocations for this ceremony</p>
+                      </TooltipContent>
+                    </Tooltip>
                   </th>
                 </tr>
               </thead>
@@ -282,6 +300,11 @@ export function BudgetMatrix({ weddingId }: BudgetMatrixProps) {
                           </span>
                         )}
                       </div>
+                    </td>
+                    <td className="p-2 text-center text-sm bg-amber-50/50 dark:bg-amber-900/20">
+                      <span className={row.ceremonyBudget > 0 ? "font-medium" : "text-muted-foreground"}>
+                        {formatCurrency(row.ceremonyBudget)}
+                      </span>
                     </td>
                     {visibleCategories.map(categoryKey => {
                       const cell = row.cells[categoryKey] || { amount: "0", allocationId: null };
@@ -335,7 +358,10 @@ export function BudgetMatrix({ weddingId }: BudgetMatrixProps) {
               <tfoot>
                 <tr className="border-t-2 font-semibold">
                   <td className="p-2 text-sm sticky left-0 bg-card z-10">
-                    Column Total
+                    Total
+                  </td>
+                  <td className="p-2 text-center text-sm bg-amber-50/50 dark:bg-amber-900/20">
+                    {formatCurrency(matrixData.rows.reduce((sum, row) => sum + row.ceremonyBudget, 0))}
                   </td>
                   {visibleCategories.map(categoryKey => {
                     const col = matrixData.columns.find(c => c.categoryKey === categoryKey)!;
@@ -360,8 +386,9 @@ export function BudgetMatrix({ weddingId }: BudgetMatrixProps) {
         
         <div className="mt-4 p-3 bg-muted/50 rounded-lg">
           <p className="text-sm text-muted-foreground">
-            <strong>Tip:</strong> Click any cell to enter a budget amount. The matrix shows how your category budgets 
-            (columns) are distributed across ceremonies (rows). Column totals cannot exceed your category budgets.
+            <strong>How to read this:</strong> Each row is a ceremony. The <strong>Budget</strong> column shows the total you've set for each ceremony. 
+            The category columns (Venue, Catering, etc.) let you allocate portions of your category budgets to specific ceremonies. 
+            Click any category cell to enter an amount. The <strong>Allocated</strong> column shows the sum of category allocations for each ceremony.
           </p>
         </div>
       </CardContent>
