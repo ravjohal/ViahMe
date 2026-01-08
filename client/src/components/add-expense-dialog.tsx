@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
@@ -9,8 +9,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, ArrowRight, Check, Calendar, DollarSign, User, FileText, Upload, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Calendar, DollarSign, User, FileText, Upload, Tag } from "lucide-react";
 import { BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket, type Event } from "@shared/schema";
+import { 
+  CEREMONY_COST_BREAKDOWNS, 
+  CEREMONY_MAPPINGS, 
+  getLineItemBucket, 
+  getCeremonyIdFromEvent,
+  type CostCategory 
+} from "@shared/ceremonies";
 
 interface AddExpenseDialogProps {
   open: boolean;
@@ -25,7 +32,7 @@ type PayerType = "me" | "partner" | "me_partner" | "bride_family" | "groom_famil
 
 const STEPS = [
   { id: 1, title: "Ceremony", icon: Calendar, description: "Which ceremony is this for?" },
-  { id: 2, title: "Category", icon: Sparkles, description: "What type of expense?" },
+  { id: 2, title: "Category", icon: Tag, description: "What type of expense?" },
   { id: 3, title: "Payer", icon: User, description: "Who is paying?" },
   { id: 4, title: "Amount", icon: DollarSign, description: "How much and when?" },
   { id: 5, title: "Details", icon: FileText, description: "Description & notes" },
@@ -52,7 +59,7 @@ export function AddExpenseDialog({
 
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedCeremonyId, setSelectedCeremonyId] = useState<string | null>(null);
-  const [selectedBucket, setSelectedBucket] = useState<BudgetBucket | null>(null);
+  const [selectedLineItem, setSelectedLineItem] = useState<string | null>(null);
   const [payer, setPayer] = useState<PayerType>("me_partner");
   const [amount, setAmount] = useState("");
   const [expenseDate, setExpenseDate] = useState(new Date().toISOString().split('T')[0]);
@@ -67,10 +74,31 @@ export function AddExpenseDialog({
     }
   }, [open, defaultEventId]);
 
+  const selectedEvent = useMemo(() => {
+    if (!selectedCeremonyId) return null;
+    return events.find(e => e.id === selectedCeremonyId) || null;
+  }, [selectedCeremonyId, events]);
+
+  const ceremonyLineItems = useMemo((): CostCategory[] => {
+    if (!selectedEvent) return [];
+    
+    const ceremonyId = getCeremonyIdFromEvent(selectedEvent.name, selectedEvent.type);
+    if (ceremonyId && CEREMONY_COST_BREAKDOWNS[ceremonyId]) {
+      return CEREMONY_COST_BREAKDOWNS[ceremonyId];
+    }
+    
+    return [];
+  }, [selectedEvent]);
+
+  const derivedBucket = useMemo((): BudgetBucket | null => {
+    if (!selectedLineItem) return null;
+    return getLineItemBucket(selectedLineItem);
+  }, [selectedLineItem]);
+
   const resetForm = () => {
     setCurrentStep(1);
     setSelectedCeremonyId(null);
-    setSelectedBucket(null);
+    setSelectedLineItem(null);
     setPayer("me_partner");
     setAmount("");
     setExpenseDate(new Date().toISOString().split('T')[0]);
@@ -113,10 +141,7 @@ export function AddExpenseDialog({
       return;
     }
 
-    if (!selectedBucket) {
-      toast({ title: "Please select a category", variant: "destructive" });
-      return;
-    }
+    const bucket = derivedBucket || "other";
 
     const payerIdMap: Record<PayerType, string> = {
       me: "me",
@@ -145,7 +170,8 @@ export function AddExpenseDialog({
 
     createExpenseMutation.mutate({
       weddingId,
-      parentCategory: selectedBucket,
+      parentCategory: bucket,
+      lineItem: selectedLineItem,
       expenseName: expenseName.trim(),
       amount: parsedAmount.toFixed(2),
       amountPaid: parsedAmount.toFixed(2),
@@ -161,8 +187,8 @@ export function AddExpenseDialog({
 
   const canProceed = () => {
     switch (currentStep) {
-      case 1: return true;
-      case 2: return selectedBucket !== null;
+      case 1: return selectedCeremonyId !== null;
+      case 2: return selectedLineItem !== null;
       case 3: return payer !== null;
       case 4: return amount && parseFloat(amount.replace(/,/g, "")) > 0 && expenseDate;
       case 5: return expenseName.trim().length > 0;
@@ -180,6 +206,9 @@ export function AddExpenseDialog({
 
   const handleBack = () => {
     if (currentStep > 1) {
+      if (currentStep === 2) {
+        setSelectedLineItem(null);
+      }
       setCurrentStep(currentStep - 1);
     }
   };
@@ -205,43 +234,47 @@ export function AddExpenseDialog({
           <div className="space-y-4">
             <div className="text-center mb-6">
               <h3 className="text-lg font-semibold">Which ceremony is this expense for?</h3>
-              <p className="text-sm text-muted-foreground mt-1">Select a ceremony or choose "General" for shared expenses</p>
+              <p className="text-sm text-muted-foreground mt-1">Select the ceremony to see its specific categories</p>
             </div>
             <div className="grid grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-2">
-              <button
-                type="button"
-                onClick={() => setSelectedCeremonyId(null)}
-                className={`p-4 rounded-lg text-left transition-all border-2 ${
-                  selectedCeremonyId === null
-                    ? "border-primary bg-primary/10"
-                    : "border-muted hover-elevate"
-                }`}
-                data-testid="button-ceremony-general"
-              >
-                <div className="font-medium">General</div>
-                <div className="text-xs text-muted-foreground mt-1">Shared across all ceremonies</div>
-              </button>
-              {events.map((event) => (
-                <button
-                  key={event.id}
-                  type="button"
-                  onClick={() => setSelectedCeremonyId(event.id)}
-                  className={`p-4 rounded-lg text-left transition-all border-2 ${
-                    selectedCeremonyId === event.id
-                      ? "border-primary bg-primary/10"
-                      : "border-muted hover-elevate"
-                  }`}
-                  data-testid={`button-ceremony-${event.id}`}
-                >
-                  <div className="font-medium">{event.name}</div>
-                  {event.date && (
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {new Date(event.date).toLocaleDateString()}
-                    </div>
-                  )}
-                </button>
-              ))}
+              {events.map((event) => {
+                const ceremonyId = getCeremonyIdFromEvent(event.name, event.type);
+                const hasCategories = ceremonyId && CEREMONY_COST_BREAKDOWNS[ceremonyId];
+                return (
+                  <button
+                    key={event.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedCeremonyId(event.id);
+                      setSelectedLineItem(null);
+                    }}
+                    className={`p-4 rounded-lg text-left transition-all border-2 ${
+                      selectedCeremonyId === event.id
+                        ? "border-primary bg-primary/10"
+                        : "border-muted hover-elevate"
+                    }`}
+                    data-testid={`button-ceremony-${event.id}`}
+                  >
+                    <div className="font-medium">{event.name}</div>
+                    {event.date && (
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {new Date(event.date).toLocaleDateString()}
+                      </div>
+                    )}
+                    {hasCategories && (
+                      <div className="text-xs text-primary mt-1">
+                        {CEREMONY_COST_BREAKDOWNS[ceremonyId!].length} expense categories
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
             </div>
+            {events.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>No ceremonies found. Add ceremonies to your wedding first.</p>
+              </div>
+            )}
           </div>
         );
 
@@ -249,26 +282,74 @@ export function AddExpenseDialog({
         return (
           <div className="space-y-4">
             <div className="text-center mb-6">
-              <h3 className="text-lg font-semibold">What category is this expense?</h3>
-              <p className="text-sm text-muted-foreground mt-1">This helps track spending against your budget</p>
+              <h3 className="text-lg font-semibold">What is this expense for?</h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                Categories for {selectedEvent?.name || "this ceremony"}
+              </p>
             </div>
-            <div className="grid grid-cols-3 gap-3 max-h-[300px] overflow-y-auto pr-2">
-              {BUDGET_BUCKETS.map((bucket) => (
+            {ceremonyLineItems.length > 0 ? (
+              <div className="grid grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-2">
+                {ceremonyLineItems.map((item, index) => {
+                  const bucket = getLineItemBucket(item.category);
+                  return (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => setSelectedLineItem(item.category)}
+                      className={`p-3 rounded-lg text-left transition-all border-2 ${
+                        selectedLineItem === item.category
+                          ? "border-primary bg-primary/10"
+                          : "border-muted hover-elevate"
+                      }`}
+                      data-testid={`button-lineitem-${index}`}
+                    >
+                      <div className="text-sm font-medium">{item.category}</div>
+                      <div className="text-xs text-muted-foreground mt-0.5">
+                        {BUDGET_BUCKET_LABELS[bucket]}
+                      </div>
+                    </button>
+                  );
+                })}
                 <button
-                  key={bucket}
                   type="button"
-                  onClick={() => setSelectedBucket(bucket)}
-                  className={`p-3 rounded-lg text-center transition-all border-2 ${
-                    selectedBucket === bucket
+                  onClick={() => setSelectedLineItem("Other")}
+                  className={`p-3 rounded-lg text-left transition-all border-2 ${
+                    selectedLineItem === "Other"
                       ? "border-primary bg-primary/10"
                       : "border-muted hover-elevate"
                   }`}
-                  data-testid={`button-category-${bucket}`}
+                  data-testid="button-lineitem-other"
                 >
-                  <div className="text-sm font-medium">{BUDGET_BUCKET_LABELS[bucket]}</div>
+                  <div className="text-sm font-medium">Other</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    Miscellaneous expense
+                  </div>
                 </button>
-              ))}
-            </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground text-center mb-4">
+                  No specific categories for this ceremony. Choose a general category:
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  {BUDGET_BUCKETS.map((bucket) => (
+                    <button
+                      key={bucket}
+                      type="button"
+                      onClick={() => setSelectedLineItem(BUDGET_BUCKET_LABELS[bucket])}
+                      className={`p-3 rounded-lg text-center transition-all border-2 ${
+                        selectedLineItem === BUDGET_BUCKET_LABELS[bucket]
+                          ? "border-primary bg-primary/10"
+                          : "border-muted hover-elevate"
+                      }`}
+                      data-testid={`button-bucket-${bucket}`}
+                    >
+                      <div className="text-sm font-medium">{BUDGET_BUCKET_LABELS[bucket]}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         );
 
@@ -357,7 +438,7 @@ export function AddExpenseDialog({
                 <Input
                   value={expenseName}
                   onChange={(e) => setExpenseName(e.target.value)}
-                  placeholder="e.g., Custom Pink Pagg Turbans"
+                  placeholder={selectedLineItem ? `e.g., ${selectedLineItem} for ${selectedEvent?.name || 'ceremony'}` : "e.g., Vendor deposit"}
                   className="text-base"
                   autoFocus
                   data-testid="input-expense-name"
@@ -416,12 +497,6 @@ export function AddExpenseDialog({
     }
   };
 
-  const getSelectedCeremonyName = () => {
-    if (selectedCeremonyId === null) return "General";
-    const event = events.find(e => e.id === selectedCeremonyId);
-    return event?.name || "Unknown";
-  };
-
   return (
     <Dialog open={open} onOpenChange={(isOpen) => {
       if (!isOpen) resetForm();
@@ -470,8 +545,10 @@ export function AddExpenseDialog({
         {currentStep > 1 && (
           <div className="px-6 py-2 bg-muted/20 text-xs text-muted-foreground">
             <div className="flex flex-wrap gap-x-4 gap-y-1">
-              {currentStep > 1 && <span>Ceremony: <strong>{getSelectedCeremonyName()}</strong></span>}
-              {currentStep > 2 && selectedBucket && <span>Category: <strong>{BUDGET_BUCKET_LABELS[selectedBucket]}</strong></span>}
+              {currentStep > 1 && selectedEvent && <span>Ceremony: <strong>{selectedEvent.name}</strong></span>}
+              {currentStep > 2 && selectedLineItem && (
+                <span>Category: <strong>{selectedLineItem}</strong> → {derivedBucket && BUDGET_BUCKET_LABELS[derivedBucket]}</span>
+              )}
               {currentStep > 3 && <span>Payer: <strong>{PAYER_OPTIONS.find(p => p.id === payer)?.label}</strong></span>}
               {currentStep > 4 && amount && <span>Amount: <strong>${parseFloat(amount.replace(/,/g, "")).toLocaleString()}</strong></span>}
             </div>

@@ -24,6 +24,153 @@ export interface CeremonyDefinition {
   defaultSide: 'mutual' | 'bride' | 'groom' | 'separate';
 }
 
+// Maps event names/types to ceremony IDs for matching events to templates
+export const CEREMONY_MAPPINGS: Record<string, string[]> = {
+  sikh_roka: ["roka", "sikh roka"],
+  sikh_engagement: ["kurmai", "engagement", "sikh engagement"],
+  sikh_sangeet: ["sangeet", "lady sangeet", "sikh sangeet"],
+  sikh_mehndi: ["mehndi", "henna", "sikh mehndi"],
+  sikh_maiyan: ["maiyan", "sikh maiyan"],
+  sikh_chooda_kalire: ["chooda", "kalire", "chooda kalire", "chooda & kalire"],
+  sikh_jaggo: ["jaggo", "sikh jaggo"],
+  sikh_anand_karaj: ["anand karaj", "anand_karaj", "sikh wedding"],
+  sikh_baraat: ["baraat", "sikh baraat"],
+  sikh_milni: ["milni", "sikh milni"],
+  sikh_reception: ["sikh reception"],
+  hindu_mehndi: ["mehndi", "henna", "hindu mehndi"],
+  hindu_sangeet: ["sangeet", "lady sangeet", "hindu sangeet"],
+  hindu_haldi: ["haldi", "hindu haldi"],
+  hindu_baraat: ["baraat", "hindu baraat"],
+  hindu_wedding: ["hindu wedding", "wedding ceremony"],
+  reception: ["reception"],
+  muslim_nikah: ["nikah", "muslim nikah", "muslim wedding"],
+  muslim_walima: ["walima", "muslim walima"],
+  muslim_dholki: ["dholki", "muslim dholki"],
+  gujarati_pithi: ["pithi", "gujarati pithi"],
+  gujarati_garba: ["garba", "gujarati garba"],
+  gujarati_wedding: ["gujarati wedding"],
+  south_indian_muhurtham: ["muhurtham", "south indian muhurtham", "south indian wedding"],
+  general_wedding: ["general wedding", "western wedding", "christian wedding", "civil ceremony"],
+  rehearsal_dinner: ["rehearsal dinner", "rehearsal"],
+  cocktail_hour: ["cocktail hour", "cocktail", "cocktails"],
+};
+
+// Maps ceremony line item categories to high-level budget buckets
+export const LINE_ITEM_TO_BUCKET: Record<string, BudgetBucket> = {
+  // Venue-related
+  "venue": "venue",
+  "venue (typically at home)": "venue",
+  "venue (typically a home)": "venue",
+  "gurdwara": "venue",
+  "gurdwara fee": "venue",
+  "temple": "venue",
+  "tent / marquee": "venue",
+  
+  // Catering
+  "caterer": "catering",
+  "catering": "catering",
+  "langar service": "catering",
+  "bartenders": "catering",
+  "alcohol / drinks": "catering",
+  
+  // Photography & Video
+  "photographer": "photography",
+  "videographer": "photography",
+  "photo booth": "photography",
+  
+  // Decoration & Florals
+  "decoration": "decoration",
+  "decor": "decoration",
+  "florals": "decoration",
+  "mandap": "decoration",
+  "stage setup": "decoration",
+  "garlands": "decoration",
+  "lighting": "decoration",
+  
+  // Entertainment
+  "dj": "entertainment",
+  "dhol player": "entertainment",
+  "dhol players": "entertainment",
+  "live band": "entertainment",
+  "dancers": "entertainment",
+  "choreographer": "entertainment",
+  "nadaswaram": "entertainment",
+  "baraat band": "entertainment",
+  
+  // Attire & Beauty
+  "makeup": "attire",
+  "makeup artist": "attire",
+  "mehndi artist": "attire",
+  "mehndi": "attire",
+  "turban tier": "attire",
+  "turban tying": "attire",
+  "bride's outfit": "attire",
+  "groom's outfit": "attire",
+  "jewelry": "attire",
+  "hair styling": "attire",
+  
+  // Transportation
+  "transportation": "transportation",
+  "horse / ghodi": "transportation",
+  "carriage": "transportation",
+  
+  // Gifts & Favors (map to other since no favors bucket)
+  "shagun / gifts": "other",
+  "shagun / gifts for other side": "other",
+  "gifts / shagun": "other",
+  "favors": "other",
+  "gift bags": "other",
+  
+  // Stationery
+  "invitations": "stationery",
+  "signage": "stationery",
+  
+  // Religious / Ceremonial (maps to other)
+  "pandit": "other",
+  "granthi": "other",
+  "qazi": "other",
+  "priest": "other",
+  "pooja items": "other",
+  "ceremony supplies": "other",
+  "haldi supplies": "other",
+  "chooda set": "other",
+  "kalire": "other",
+  "sword rental": "other",
+};
+
+// Helper to get budget bucket from line item category name
+export function getLineItemBucket(categoryName: string): BudgetBucket {
+  const normalized = categoryName.toLowerCase().trim();
+  
+  // Direct match
+  if (LINE_ITEM_TO_BUCKET[normalized]) {
+    return LINE_ITEM_TO_BUCKET[normalized];
+  }
+  
+  // Partial match
+  for (const [key, bucket] of Object.entries(LINE_ITEM_TO_BUCKET)) {
+    if (normalized.includes(key) || key.includes(normalized)) {
+      return bucket;
+    }
+  }
+  
+  return "other";
+}
+
+// Helper to get ceremony ID from event name/type
+export function getCeremonyIdFromEvent(eventName: string, eventType: string): string | null {
+  const normalizedName = eventName.toLowerCase().trim();
+  const normalizedType = eventType.toLowerCase().trim();
+  
+  for (const [ceremonyId, keywords] of Object.entries(CEREMONY_MAPPINGS)) {
+    if (keywords.some(kw => normalizedName.includes(kw) || normalizedType.includes(kw))) {
+      return ceremonyId;
+    }
+  }
+  
+  return null;
+}
+
 export const CEREMONY_COST_BREAKDOWNS: Record<string, CostCategory[]> = {
   // ============ SIKH CEREMONIES (11 Total) ============
   
