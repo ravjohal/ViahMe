@@ -1440,57 +1440,60 @@ export default function Budget() {
                     >
                       {/* Ceremony Header */}
                       <div className="p-4">
-                        <div className="flex items-start justify-between gap-3 mb-2">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <button
-                                onClick={() => toggleCeremonyExpansion(ceremony.eventId)}
-                                className="p-1 -ml-1 hover:bg-muted/50 rounded"
-                                data-testid={`button-expand-ceremony-${ceremony.eventId}`}
-                              >
-                                {isExpanded ? (
-                                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                                ) : (
-                                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                                )}
-                              </button>
-                              <p className="font-medium truncate">{ceremony.eventName}</p>
-                              <Badge 
-                                variant="outline" 
-                                className={`text-xs shrink-0 ${sideColors[ceremony.side]}`}
-                                data-testid={`badge-side-${ceremony.eventId}`}
-                              >
-                                {sideLabels[ceremony.side]}
-                              </Badge>
-                              {ceremony.isOverBudget && (
-                                <Badge variant="destructive" className="text-xs shrink-0">Over Budget</Badge>
+                        <div className="flex flex-col gap-3 mb-2">
+                          {/* Top row: Name and badges */}
+                          <div className="flex items-start gap-2">
+                            <button
+                              onClick={() => toggleCeremonyExpansion(ceremony.eventId)}
+                              className="p-1 -ml-1 hover:bg-muted/50 rounded shrink-0 mt-0.5"
+                              data-testid={`button-expand-ceremony-${ceremony.eventId}`}
+                            >
+                              {isExpanded ? (
+                                <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                              ) : (
+                                <ChevronRight className="w-4 h-4 text-muted-foreground" />
                               )}
-                              {ceremony.hasNoBudget && ceremony.spent > 0 && (
-                                <Badge variant="outline" className="text-xs shrink-0">No Budget Set</Badge>
-                              )}
-                              {lineItems && (
-                                <Badge variant="secondary" className="text-xs shrink-0">
-                                  {lineItems.length} line items
+                            </button>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start gap-2 flex-wrap">
+                                <p className="font-medium break-words">{ceremony.eventName}</p>
+                                <Badge 
+                                  variant="outline" 
+                                  className={`text-xs shrink-0 ${sideColors[ceremony.side]}`}
+                                  data-testid={`badge-side-${ceremony.eventId}`}
+                                >
+                                  {sideLabels[ceremony.side]}
                                 </Badge>
-                              )}
+                                {ceremony.isOverBudget && (
+                                  <Badge variant="destructive" className="text-xs shrink-0">Over Budget</Badge>
+                                )}
+                                {ceremony.hasNoBudget && ceremony.spent > 0 && (
+                                  <Badge variant="outline" className="text-xs shrink-0">No Budget Set</Badge>
+                                )}
+                                {lineItems && (
+                                  <Badge variant="secondary" className="text-xs shrink-0">
+                                    {lineItems.length} line items
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                <Users className="w-3 h-3 inline mr-1" />
+                                {ceremony.guestCount > 0 ? `${ceremony.guestCount} guests` : 'No guest count set'}
+                                {ceremony.spent > 0 && ` • $${ceremony.spent.toLocaleString()} spent`}
+                                {ceremony.expenseCount > 0 && ` • ${ceremony.expenseCount} expense${ceremony.expenseCount > 1 ? 's' : ''}`}
+                                {lineItemTotal > 0 && ` • $${lineItemTotal.toLocaleString()} in line items`}
+                              </p>
                             </div>
-                            <p className="text-sm text-muted-foreground">
-                              <Users className="w-3 h-3 inline mr-1" />
-                              {ceremony.guestCount > 0 ? `${ceremony.guestCount} guests` : 'No guest count set'}
-                              {ceremony.spent > 0 && ` • $${ceremony.spent.toLocaleString()} spent`}
-                              {ceremony.expenseCount > 0 && ` • ${ceremony.expenseCount} expense${ceremony.expenseCount > 1 ? 's' : ''}`}
-                              {lineItemTotal > 0 && ` • $${lineItemTotal.toLocaleString()} in line items`}
-                            </p>
                           </div>
-                          {/* Inline Total Budget Input */}
-                          <div className="flex items-center gap-2 shrink-0">
+                          {/* Budget controls row - stacked on mobile */}
+                          <div className="flex flex-wrap items-center gap-2 pl-6 sm:pl-0">
                             <span className="text-xs text-muted-foreground">Budget:</span>
                             <div className="relative">
                               <DollarSign className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
                               <Input
                                 type="number"
                                 placeholder="0"
-                                className="w-24 h-8 pl-6 text-right text-sm"
+                                className="w-24 h-9 pl-6 text-right text-sm"
                                 value={getCeremonyTotalValue(ceremony.eventId, ceremony.allocated)}
                                 onChange={(e) => handleCeremonyTotalChange(ceremony.eventId, e.target.value)}
                                 data-testid={`input-ceremony-total-${ceremony.eventId}`}
@@ -1502,11 +1505,11 @@ export default function Budget() {
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    className="h-8"
+                                    className="h-9"
                                     data-testid={`button-use-estimate-${ceremony.eventId}`}
                                   >
-                                    <Sparkles className="w-3 h-3 mr-1" />
-                                    Use Estimate
+                                    <Sparkles className="w-3 h-3 sm:mr-1" />
+                                    <span className="hidden sm:inline">Use Estimate</span>
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
@@ -1530,7 +1533,7 @@ export default function Budget() {
                             {hasCeremonyTotalChanges(ceremony.eventId, ceremony.allocated) && (
                               <Button
                                 size="sm"
-                                className="h-8"
+                                className="h-9"
                                 onClick={() => saveCeremonyTotal(ceremony.eventId)}
                                 disabled={updateCeremonyBudgetMutation.isPending}
                                 data-testid={`button-save-ceremony-total-${ceremony.eventId}`}
