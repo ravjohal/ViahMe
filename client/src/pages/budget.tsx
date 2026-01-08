@@ -61,8 +61,8 @@ export default function Budget() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingBucket, setEditingBucket] = useState<BudgetBucket | null>(null);
   const [editingBucketAmount, setEditingBucketAmount] = useState("");
-  const [editingCeremony, setEditingCeremony] = useState<{ id: string; name: string } | null>(null);
-  const [editingCeremonyAmount, setEditingCeremonyAmount] = useState("");
+  // Inline ceremony total budget editing (keyed by eventId)
+  const [editingCeremonyTotals, setEditingCeremonyTotals] = useState<Record<string, string>>({});
   const [newTotalBudget, setNewTotalBudget] = useState("");
   const [aiEstimate, setAiEstimate] = useState<AIBudgetEstimate | null>(null);
   const [addExpenseDialogOpen, setAddExpenseDialogOpen] = useState(false);
@@ -838,16 +838,48 @@ export default function Budget() {
         allocatedAmount: amount,
       });
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: [`/api/budget/ceremony-analytics/${wedding?.id}`] });
-      setEditingCeremony(null);
-      setEditingCeremonyAmount("");
-      toast({ title: "Ceremony budget updated", description: "Budget for this event has been saved" });
+      // Clear inline editing state for this ceremony
+      setEditingCeremonyTotals(prev => {
+        const next = { ...prev };
+        delete next[variables.ceremonyId];
+        return next;
+      });
+      toast({ title: "Ceremony budget updated" });
     },
     onError: () => {
       toast({ title: "Error", description: "Failed to update ceremony budget", variant: "destructive" });
     },
   });
+
+  // Helper functions for inline ceremony total editing
+  const getCeremonyTotalValue = (eventId: string, currentAllocated: number): string => {
+    if (editingCeremonyTotals[eventId] !== undefined) {
+      return editingCeremonyTotals[eventId];
+    }
+    return currentAllocated > 0 ? currentAllocated.toString() : "";
+  };
+
+  const handleCeremonyTotalChange = (eventId: string, value: string) => {
+    setEditingCeremonyTotals(prev => ({
+      ...prev,
+      [eventId]: value,
+    }));
+  };
+
+  const saveCeremonyTotal = (eventId: string) => {
+    const amount = editingCeremonyTotals[eventId];
+    if (amount !== undefined) {
+      updateCeremonyBudgetMutation.mutate({ ceremonyId: eventId, amount });
+    }
+  };
+
+  const hasCeremonyTotalChanges = (eventId: string, currentAllocated: number): boolean => {
+    const editedValue = editingCeremonyTotals[eventId];
+    if (editedValue === undefined) return false;
+    return editedValue !== (currentAllocated > 0 ? currentAllocated.toString() : "");
+  };
 
   useEffect(() => {
     if (!weddingsLoading && !wedding) {
@@ -870,14 +902,6 @@ export default function Budget() {
       setEditingBucketAmount(bucketData?.allocated?.toString() || "0");
     }
   }, [editingBucket, expenseTotals?.bucketTotals]);
-
-  // Set initial amount when opening ceremony budget editor
-  useEffect(() => {
-    if (editingCeremony && ceremonyAnalytics?.ceremonyBreakdown) {
-      const ceremonyData = ceremonyAnalytics.ceremonyBreakdown.find(c => c.eventId === editingCeremony.id);
-      setEditingCeremonyAmount(ceremonyData?.allocated?.toString() || "0");
-    }
-  }, [editingCeremony, ceremonyAnalytics?.ceremonyBreakdown]);
 
   const handleSaveBudget = () => {
     if (!newTotalBudget || parseFloat(newTotalBudget) <= 0) {
@@ -1256,22 +1280,20 @@ export default function Budget() {
                     >
                       {/* Ceremony Header */}
                       <div className="p-4">
-                        <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-start justify-between gap-3 mb-2">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              {lineItems && (
-                                <button
-                                  onClick={() => toggleCeremonyExpansion(ceremony.eventId)}
-                                  className="p-1 -ml-1 hover:bg-muted/50 rounded"
-                                  data-testid={`button-expand-ceremony-${ceremony.eventId}`}
-                                >
-                                  {isExpanded ? (
-                                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                                  ) : (
-                                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                                  )}
-                                </button>
-                              )}
+                              <button
+                                onClick={() => toggleCeremonyExpansion(ceremony.eventId)}
+                                className="p-1 -ml-1 hover:bg-muted/50 rounded"
+                                data-testid={`button-expand-ceremony-${ceremony.eventId}`}
+                              >
+                                {isExpanded ? (
+                                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                                ) : (
+                                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                                )}
+                              </button>
                               <p className="font-medium truncate">{ceremony.eventName}</p>
                               {ceremony.isOverBudget && (
                                 <Badge variant="destructive" className="text-xs shrink-0">Over Budget</Badge>
@@ -1286,20 +1308,41 @@ export default function Budget() {
                               )}
                             </div>
                             <p className="text-sm text-muted-foreground">
-                              ${ceremony.spent.toLocaleString()} of ${ceremony.allocated.toLocaleString()} spent
+                              ${ceremony.spent.toLocaleString()} spent
                               {ceremony.expenseCount > 0 && ` • ${ceremony.expenseCount} expense${ceremony.expenseCount > 1 ? 's' : ''}`}
-                              {lineItemTotal > 0 && ` • $${lineItemTotal.toLocaleString()} budgeted in line items`}
+                              {lineItemTotal > 0 && ` • $${lineItemTotal.toLocaleString()} in line items`}
                             </p>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="shrink-0"
-                            onClick={() => setEditingCeremony({ id: ceremony.eventId, name: ceremony.eventName })}
-                            data-testid={`button-edit-ceremony-${ceremony.eventId}`}
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </Button>
+                          {/* Inline Total Budget Input */}
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-xs text-muted-foreground">Budget:</span>
+                            <div className="relative">
+                              <DollarSign className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
+                              <Input
+                                type="number"
+                                placeholder="0"
+                                className="w-24 h-8 pl-6 text-right text-sm"
+                                value={getCeremonyTotalValue(ceremony.eventId, ceremony.allocated)}
+                                onChange={(e) => handleCeremonyTotalChange(ceremony.eventId, e.target.value)}
+                                data-testid={`input-ceremony-total-${ceremony.eventId}`}
+                              />
+                            </div>
+                            {hasCeremonyTotalChanges(ceremony.eventId, ceremony.allocated) && (
+                              <Button
+                                size="sm"
+                                className="h-8"
+                                onClick={() => saveCeremonyTotal(ceremony.eventId)}
+                                disabled={updateCeremonyBudgetMutation.isPending}
+                                data-testid={`button-save-ceremony-total-${ceremony.eventId}`}
+                              >
+                                {updateCeremonyBudgetMutation.isPending ? (
+                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                ) : (
+                                  "Save"
+                                )}
+                              </Button>
+                            )}
+                          </div>
                         </div>
                         {ceremony.allocated > 0 && (
                           <>
@@ -1824,53 +1867,6 @@ export default function Budget() {
           </DialogContent>
         </Dialog>
 
-        {/* Edit Ceremony Budget Dialog */}
-        <Dialog open={!!editingCeremony} onOpenChange={(open) => !open && setEditingCeremony(null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Set Budget for {editingCeremony?.name || "Ceremony"}</DialogTitle>
-              <DialogDescription>
-                How much do you want to spend on this event?
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div>
-                <Label htmlFor="ceremony-budget">Budget Amount</Label>
-                <div className="relative mt-1">
-                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="ceremony-budget"
-                    type="number"
-                    value={editingCeremonyAmount}
-                    onChange={(e) => setEditingCeremonyAmount(e.target.value)}
-                    className="pl-8"
-                    placeholder="5000"
-                    data-testid="input-ceremony-budget"
-                  />
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                This sets a spending target for {editingCeremony?.name || "this ceremony"} specifically. You can track expenses against this target.
-              </p>
-              <div className="flex gap-2 justify-end">
-                <Button variant="outline" onClick={() => setEditingCeremony(null)}>
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={() => {
-                    if (editingCeremony) {
-                      updateCeremonyBudgetMutation.mutate({ ceremonyId: editingCeremony.id, amount: editingCeremonyAmount });
-                    }
-                  }}
-                  disabled={updateCeremonyBudgetMutation.isPending}
-                  data-testid="button-save-ceremony-budget"
-                >
-                  {updateCeremonyBudgetMutation.isPending ? "Saving..." : "Save Budget"}
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
 
         {/* Add Expense Dialog */}
         {wedding?.id && (
