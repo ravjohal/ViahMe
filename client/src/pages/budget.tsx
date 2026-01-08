@@ -370,10 +370,12 @@ export default function Budget() {
     return total;
   };
 
-  // Set ceremony budget to total estimate
+  // Set ceremony budget to total estimate AND populate all line items
   const setCeremonyBudgetToEstimate = (eventId: string, eventName: string, useHigh: boolean) => {
     const total = getCeremonyEstimateTotal(eventId, eventName, useHigh);
     handleCeremonyTotalChange(eventId, total.toString());
+    // Also populate all line item categories with the corresponding estimates
+    setEstimatesForEvent(eventId, eventName, useHigh);
   };
 
   // Ceremony Budgets (Budget Matrix)
