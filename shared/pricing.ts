@@ -97,3 +97,40 @@ export const DEFAULT_PRICING_CONTEXT: PricingContext = {
   vendorTier: "standard",
   guestCount: 150,
 };
+
+// Calculate estimate for a single line item using the same logic as budget estimator
+export interface LineItemCost {
+  category: string;
+  lowCost: number;
+  highCost: number;
+  unit?: "fixed" | "per_person" | "per_hour";
+  hoursLow?: number;
+  hoursHigh?: number;
+}
+
+export function calculateLineItemEstimate(
+  item: LineItemCost,
+  guestCount: number,
+  context: PricingContext
+): { low: number; high: number } {
+  const multiplier = calculatePricingMultiplier(context);
+  
+  if (item.unit === "per_person") {
+    return {
+      low: Math.round(item.lowCost * guestCount * multiplier),
+      high: Math.round(item.highCost * guestCount * multiplier),
+    };
+  } else if (item.unit === "per_hour") {
+    const hoursLow = item.hoursLow ?? 3;
+    const hoursHigh = item.hoursHigh ?? 4;
+    return {
+      low: Math.round(item.lowCost * hoursLow * multiplier),
+      high: Math.round(item.highCost * hoursHigh * multiplier),
+    };
+  }
+  
+  return {
+    low: Math.round(item.lowCost * multiplier),
+    high: Math.round(item.highCost * multiplier),
+  };
+}

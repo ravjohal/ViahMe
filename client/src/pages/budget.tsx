@@ -17,6 +17,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket, type Wedding, type Event, type Contract, type Vendor, type Expense, type BudgetAllocation, type CeremonyBudget, type CeremonyLineItemBudget } from "@shared/schema";
 import { CEREMONY_COST_BREAKDOWNS, type CostCategory } from "@shared/ceremonies";
+import { calculateLineItemEstimate, DEFAULT_PRICING_CONTEXT, type PricingContext, CITY_MULTIPLIERS } from "@shared/pricing";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
@@ -298,32 +299,39 @@ export default function Budget() {
     return total;
   };
 
-  // Calculate estimate for a single line item based on type
-  const calculateLineItemEstimate = (item: CostCategory, guestCount: number, useHigh: boolean): number => {
-    const cost = useHigh ? item.highCost : item.lowCost;
-    
-    if (item.unit === "per_person") {
-      return cost * Math.max(guestCount, 50); // Default to 50 guests if not set
-    } else if (item.unit === "per_hour") {
-      const hours = useHigh ? (item.hoursHigh ?? 4) : (item.hoursLow ?? 3);
-      return cost * hours;
-    }
-    return cost;
+  // Map wedding city display name to pricing key
+  const getCityKey = (cityName?: string): string => {
+    if (!cityName) return 'other';
+    const normalized = cityName.toLowerCase();
+    if (normalized.includes('bay area') || normalized.includes('san francisco')) return 'bay_area';
+    if (normalized.includes('new york') || normalized.includes('nyc')) return 'nyc';
+    if (normalized.includes('los angeles') || normalized.includes('la')) return 'la';
+    if (normalized.includes('chicago')) return 'chicago';
+    if (normalized.includes('seattle')) return 'seattle';
+    return 'other';
   };
 
-  // Set all line item budgets to estimates (low or high)
+  // Set all line item budgets to estimates (low or high) using shared pricing logic
   const setEstimatesForEvent = (eventId: string, eventName: string, useHigh: boolean) => {
     const lineItems = getLineItemsForEvent(eventId, eventName);
     if (!lineItems) return;
 
     // Find the event to get guest count
     const event = events.find(e => e.id === eventId);
-    const guestCount = event?.guestCount || 50; // Default to 50 if not set
+    const guestCount = event?.guestCount || 100; // Default to 100 if not set (same as budget estimator)
+
+    // Build pricing context using wedding city and defaults
+    const pricingContext: PricingContext = {
+      ...DEFAULT_PRICING_CONTEXT,
+      guestCount,
+      city: getCityKey(wedding?.city),
+    };
 
     const newValues: Record<string, string> = {};
     for (const item of lineItems) {
-      const estimate = calculateLineItemEstimate(item, guestCount, useHigh);
-      newValues[item.category] = estimate.toString();
+      const estimates = calculateLineItemEstimate(item, guestCount, pricingContext);
+      const value = useHigh ? estimates.high : estimates.low;
+      newValues[item.category] = value.toString();
     }
 
     setEditingLineItems(prev => ({
