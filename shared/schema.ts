@@ -3720,6 +3720,7 @@ export const insertCeremonyTemplateSchema = createInsertSchema(ceremonyTemplates
     hoursLow: z.number().optional(),
     hoursHigh: z.number().optional(),
     notes: z.string().optional(),
+    budgetBucket: z.enum(BUDGET_BUCKETS).optional(),
   })),
 });
 
@@ -3735,6 +3736,7 @@ export type CeremonyTemplateCostItem = {
   hoursLow?: number;
   hoursHigh?: number;
   notes?: string;
+  budgetBucket?: BudgetBucket;
 };
 
 // ============================================================================
