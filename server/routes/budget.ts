@@ -827,6 +827,65 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
     }
   });
 
+  // POST /api/budget/allocate-bulk - Bulk allocate category budgets to a ceremony (for estimates)
+  router.post("/allocate-bulk", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      if (!authReq.session.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const { weddingId, ceremonyId, allocations } = req.body;
+
+      if (!weddingId || !ceremonyId || !allocations || !Array.isArray(allocations)) {
+        return res.status(400).json({ error: "Missing required fields: weddingId, ceremonyId, allocations (array)" });
+      }
+
+      const wedding = await storage.getWedding(weddingId);
+      if (!wedding) {
+        return res.status(404).json({ error: "Wedding not found" });
+      }
+
+      // Check access
+      if (wedding.userId !== authReq.session.userId) {
+        const roles = await storage.getWeddingRoles(weddingId);
+        const hasAccess = roles.some(role => role.userId === authReq.session.userId);
+        if (!hasAccess) {
+          return res.status(403).json({ error: "Access denied" });
+        }
+      }
+
+      const results: Array<{ categoryKey: string; amount: string; success: boolean; error?: string }> = [];
+
+      for (const alloc of allocations) {
+        const { categoryKey, amount } = alloc;
+
+        if (!BUDGET_BUCKETS.includes(categoryKey)) {
+          results.push({ categoryKey, amount, success: false, error: "Invalid category key" });
+          continue;
+        }
+
+        try {
+          // Skip budget limit validation for estimates - just upsert the allocation
+          await storage.upsertCeremonyCategoryAllocation(
+            weddingId,
+            ceremonyId,
+            categoryKey as BudgetBucket,
+            amount.toString()
+          );
+          results.push({ categoryKey, amount, success: true });
+        } catch (err) {
+          results.push({ categoryKey, amount, success: false, error: "Failed to save" });
+        }
+      }
+
+      res.json({ success: true, results });
+    } catch (error) {
+      console.error("Error bulk allocating budget:", error);
+      res.status(500).json({ error: "Failed to bulk allocate budget" });
+    }
+  });
+
   // GET /api/budget/matrix/:weddingId - Get full budget matrix (ceremonies x categories)
   router.get("/matrix/:weddingId", await requireAuth(storage, false), ensureCoupleAccess(storage, (req) => req.params.weddingId), async (req, res) => {
     try {

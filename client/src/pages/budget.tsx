@@ -16,7 +16,7 @@ import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket, type Wedding, type Event, type Contract, type Vendor, type Expense, type BudgetAllocation, type CeremonyBudget, type CeremonyLineItemBudget } from "@shared/schema";
-import { CEREMONY_COST_BREAKDOWNS, type CostCategory, getLineItemBucketLabel } from "@shared/ceremonies";
+import { CEREMONY_COST_BREAKDOWNS, type CostCategory, getLineItemBucketLabel, getLineItemBudgetBucket } from "@shared/ceremonies";
 import { calculateLineItemEstimate, DEFAULT_PRICING_CONTEXT, type PricingContext, CITY_MULTIPLIERS } from "@shared/pricing";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -244,6 +244,21 @@ export default function Budget() {
     },
   });
 
+  // Mutation for bulk allocating budget to matrix cells
+  const bulkAllocateMutation = useMutation({
+    mutationFn: async ({ weddingId, ceremonyId, allocations }: {
+      weddingId: string;
+      ceremonyId: string;
+      allocations: Array<{ categoryKey: string; amount: string }>;
+    }) => {
+      return apiRequest("POST", "/api/budget/allocate-bulk", { weddingId, ceremonyId, allocations });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/budget/matrix", wedding?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budget/allocations", wedding?.id] });
+    },
+  });
+
   // Handle line item budget change
   const handleLineItemChange = (eventId: string, category: string, value: string) => {
     setEditingLineItems(prev => ({
@@ -376,6 +391,43 @@ export default function Budget() {
     handleCeremonyTotalChange(eventId, total.toString());
     // Also populate all line item categories with the corresponding estimates
     setEstimatesForEvent(eventId, eventName, useHigh);
+    
+    // Also populate the Budget Planner matrix cells with aggregated estimates by bucket
+    const lineItems = getLineItemsForEvent(eventId, eventName);
+    if (!lineItems || !wedding?.id) return;
+
+    const event = events.find(e => e.id === eventId);
+    const guestCount = event?.guestCount || 100;
+
+    const pricingContext: PricingContext = {
+      ...DEFAULT_PRICING_CONTEXT,
+      guestCount,
+      city: getCityKey(wedding?.city),
+    };
+
+    // Aggregate estimates by budget bucket
+    const bucketTotals: Record<string, number> = {};
+    for (const item of lineItems) {
+      const estimates = calculateLineItemEstimate(item, guestCount, pricingContext);
+      const rawValue = useHigh ? estimates.high : estimates.low;
+      const value = Math.round(rawValue / 100) * 100;
+      const bucket = getLineItemBudgetBucket(item.category);
+      bucketTotals[bucket] = (bucketTotals[bucket] || 0) + value;
+    }
+
+    // Call bulk allocate mutation
+    const allocations = Object.entries(bucketTotals).map(([categoryKey, amount]) => ({
+      categoryKey,
+      amount: amount.toString(),
+    }));
+
+    if (allocations.length > 0) {
+      bulkAllocateMutation.mutate({
+        weddingId: wedding.id,
+        ceremonyId: eventId,
+        allocations,
+      });
+    }
   };
 
   // Ceremony Budgets (Budget Matrix)
