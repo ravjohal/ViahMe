@@ -29,6 +29,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { AddExpenseDialog } from "@/components/add-expense-dialog";
 import { EditExpenseDialog, type ExpenseWithDetails } from "@/components/edit-expense-dialog";
+import { BudgetMatrix } from "@/components/budget-matrix";
 
 // Use shared expense type from the edit dialog component
 type ExpenseWithAllocations = ExpenseWithDetails;
@@ -1080,6 +1081,13 @@ export default function Budget() {
             </CollapsibleContent>
           </Collapsible>
         </Card>
+
+        {/* Budget Matrix (Ceremony x Category Grid) */}
+        {wedding?.id && (
+          <div className="mb-6">
+            <BudgetMatrix weddingId={wedding.id} />
+          </div>
+        )}
 
         {/* Breakdown by Event */}
         <div className="mb-6">
