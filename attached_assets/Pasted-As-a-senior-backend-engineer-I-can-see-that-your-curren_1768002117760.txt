@@ -1,0 +1,65 @@
+As a senior backend engineer, I can see that your current schema has fallen into a common anti-pattern: **Over-normalization of the "Planning Phase."** You have four different tables trying to store a "target budget" (`budget_allocations`, `ceremony_budgets`, `ceremony_category_allocations`, and `ceremony_line_item_budgets`).
+
+In a complex South Asian wedding, you need a **Single Ledger Model**. This architecture simplifies everything by treating the "Actual Spend" as the primary source of truth and consolidating the "Planned Budget" into one flexible table.
+
+Here is how to simplify and consolidate your database for the MVP.
+
+### 1. Consolidate the "Budget Plan" Tables
+
+**The Problem:** You currently have separate tables for category budgets, event budgets, and a matrix for both.
+**The Solution:** Delete `ceremony_budgets`, `ceremony_category_allocations`, and `ceremony_line_item_budgets`. Replace them with a single, enhanced `budget_allocations` table.
+
+```typescript
+// Consolidation of 4 tables into 1
+export const budgetAllocations = pgTable("budget_allocations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  
+  // High-level bucket (Enum: venue, catering, decoration, etc.)
+  bucket: text("bucket").notNull(), 
+  
+  // Optional: If null, this is the TOTAL budget for the bucket.
+  // If set, this is the budget for that specific bucket AT that specific ceremony.
+  ceremonyId: varchar("ceremony_id"), // References events.id
+  
+  allocatedAmount: decimal("allocated_amount", { precision: 12, scale: 2 }).notNull().default('0'),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+```
+
+**Why this works:** You can now query one table to see your "Plan". If you want to know the total "Catering" budget, query by `bucket`. If you want to know the "Catering" budget for the "Sangeet," query by both `bucket` and `ceremonyId`.
+
+### 2. Solidify the "Ledger" (Expenses)
+
+You should keep the `expenses` table as your transaction ledger. Every time a couple spends money, it is one row. This table should store both the **Ceremony** and the **Budget Bucket**.
+
+* **View by Ceremony:** "Show me all expenses where `ceremony_id` = 'Sangeet'".
+* **View by Category:** "Show me all expenses where `parent_category` = 'Catering'".
+
+This "flat" transaction list allows for high-performance SQL aggregations (SUM and GROUP BY) rather than complex frontend mapping.
+
+### 3. Streamline Ceremony-Related Tables
+
+You have several tables that handle "Live" wedding features. If you are focused on the planning experience, you can simplify these significantly:
+
+* **KEEP `events`:** This is your master schedule (Sangeet, Anand Karaj, etc.).
+* **KEEP `ceremony_templates`:** This is your "knowledge base" used to seed the initial budget estimates for users.
+* **DEFER/SIMPLIFY `ritual_stages` and `ritual_role_assignments`:** These are "Day-Of" coordination features. Unless your app's core value is live status updates during the ceremony, these can be consolidated into a simple `jsonb` field on the `events` table to store "Key Rituals" and "Assigned Family Members."
+
+### 4. Summary of Table Removals
+
+To simplify your backend immediately, I recommend the following deletions and consolidations:
+
+| Current Table | Action | Reason |
+| --- | --- | --- |
+| `ceremony_budgets` | **Delete** | Merged into `budget_allocations`. |
+| `ceremony_category_allocations` | **Delete** | Merged into `budget_allocations`. |
+| `ceremony_line_item_budgets` | **Delete** | Merged into `budget_allocations`. |
+| `ritual_stages` | **Optional/JSONB** | Move to a JSON column in `events` for MVP simplicity. |
+| `ritual_role_assignments` | **Optional/JSONB** | Move to a JSON column in `events` for MVP simplicity. |
+
+### The "Senior Engineer" Takeaway
+
+System-defined **Buckets** (Catering, Venue, etc.) should own the groupings for your charts, but the **User** should own the labels for the specific expenses. By using a single ledger (`expenses`) and one allocation table, you gain massive read performance on dashboards and much higher maintainability.
