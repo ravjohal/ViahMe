@@ -10,7 +10,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket, type Wedding } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { AlertCircle, CheckCircle2, DollarSign, Grid3X3, Loader2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, DollarSign, Grid3X3, Loader2, List, LayoutGrid } from "lucide-react";
 
 interface MatrixCell {
   amount: string;
@@ -53,8 +53,11 @@ interface BudgetMatrixProps {
   weddingId: string;
 }
 
+type ViewMode = "ceremony" | "matrix";
+
 export function BudgetMatrix({ weddingId }: BudgetMatrixProps) {
   const { toast } = useToast();
+  const [viewMode, setViewMode] = useState<ViewMode>("ceremony");
   const [editingCell, setEditingCell] = useState<{ ceremonyId: string; categoryKey: string } | null>(null);
   const [editValue, setEditValue] = useState("");
   const [pendingUpdate, setPendingUpdate] = useState<string | null>(null);
@@ -134,9 +137,10 @@ export function BudgetMatrix({ weddingId }: BudgetMatrixProps) {
     }
   }, [handleCellBlur]);
 
-  const formatCurrency = (amount: number | string) => {
+  const formatCurrency = (amount: number | string, showZeroAsEmpty = false) => {
     const num = typeof amount === "string" ? parseFloat(amount) : amount;
-    if (isNaN(num) || num === 0) return "-";
+    if (isNaN(num) || (num === 0 && showZeroAsEmpty)) return "";
+    if (num === 0) return "$0";
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
@@ -209,7 +213,7 @@ export function BudgetMatrix({ weddingId }: BudgetMatrixProps) {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <CardTitle className="flex items-center gap-2">
               <Grid3X3 className="h-5 w-5" />
@@ -217,8 +221,30 @@ export function BudgetMatrix({ weddingId }: BudgetMatrixProps) {
             </CardTitle>
             <CardDescription>Plan how to allocate your budget across ceremonies and categories</CardDescription>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="text-right">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center border rounded-lg p-1">
+              <Button
+                variant={viewMode === "ceremony" ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("ceremony")}
+                className="h-8 px-3"
+                data-testid="button-view-ceremony"
+              >
+                <List className="h-4 w-4 mr-2" />
+                By Ceremony
+              </Button>
+              <Button
+                variant={viewMode === "matrix" ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("matrix")}
+                className="h-8 px-3"
+                data-testid="button-view-matrix"
+              >
+                <LayoutGrid className="h-4 w-4 mr-2" />
+                Matrix
+              </Button>
+            </div>
+            <div className="text-right hidden sm:block">
               <div className="text-sm text-muted-foreground">Total Allocated</div>
               <div className="text-lg font-semibold">
                 {formatCurrency(matrixData.summary.totalAllocated)} / {formatCurrency(matrixData.summary.totalGlobalBudget)}
@@ -239,6 +265,47 @@ export function BudgetMatrix({ weddingId }: BudgetMatrixProps) {
         </div>
       </CardHeader>
       <CardContent>
+        {viewMode === "ceremony" ? (
+          <div className="space-y-4">
+            {matrixData.rows.map((row) => (
+              <div key={row.ceremonyId} className="p-4 border rounded-lg">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h4 className="font-semibold">{row.ceremonyName}</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Budget: {formatCurrency(row.ceremonyBudget)} • Spent: {formatCurrency(row.ceremonySpent)}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-mono font-semibold">{formatCurrency(row.totalPlanned)}</p>
+                    <p className="text-xs text-muted-foreground">allocated</p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {visibleCategories.map((categoryKey) => {
+                    const cell = row.cells[categoryKey] || { amount: "0", spent: 0, allocationId: null };
+                    const allocated = parseFloat(cell.amount);
+                    const spent = cell.spent || 0;
+                    if (allocated === 0 && spent === 0) return null;
+                    return (
+                      <Badge 
+                        key={categoryKey} 
+                        variant="secondary" 
+                        className="px-3 py-1"
+                      >
+                        {BUDGET_BUCKET_LABELS[categoryKey as BudgetBucket]}: {formatCurrency(allocated)}
+                        {spent > 0 && <span className="ml-1 text-muted-foreground">({formatCurrency(spent)} spent)</span>}
+                      </Badge>
+                    );
+                  })}
+                  {row.totalPlanned === 0 && (
+                    <span className="text-sm text-muted-foreground italic">No allocations yet - use Matrix view to set budgets</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
         <ScrollArea className="w-full">
           <div className="min-w-[800px]">
             <table className="w-full border-collapse" data-testid="budget-matrix-table">
@@ -327,7 +394,7 @@ export function BudgetMatrix({ weddingId }: BudgetMatrixProps) {
                       return (
                         <td
                           key={categoryKey}
-                          className="p-1 text-center"
+                          className="p-2 text-center"
                           data-testid={`cell-${row.ceremonyId}-${categoryKey}`}
                         >
                           {isEditing ? (
@@ -337,7 +404,7 @@ export function BudgetMatrix({ weddingId }: BudgetMatrixProps) {
                               onChange={(e) => setEditValue(e.target.value)}
                               onBlur={handleCellBlur}
                               onKeyDown={handleKeyDown}
-                              className="h-8 text-center text-sm w-full"
+                              className="h-10 text-center text-sm w-full min-w-[80px]"
                               autoFocus
                               placeholder="$0"
                               data-testid={`input-${row.ceremonyId}-${categoryKey}`}
@@ -347,23 +414,25 @@ export function BudgetMatrix({ weddingId }: BudgetMatrixProps) {
                               <TooltipTrigger asChild>
                                 <button
                                   onClick={() => handleCellClick(row.ceremonyId, categoryKey, cell.amount)}
-                                  className={`w-full h-8 px-2 rounded hover-elevate flex flex-col items-center justify-center text-xs ${isOverspent ? 'bg-destructive/10' : ''}`}
+                                  className={`w-full min-h-[44px] min-w-[80px] px-3 py-2 rounded hover-elevate flex flex-col items-center justify-center text-sm ${isOverspent ? 'bg-destructive/10' : allocated > 0 ? 'bg-muted/50' : ''}`}
                                   disabled={isPending}
                                   data-testid={`button-${row.ceremonyId}-${categoryKey}`}
                                 >
                                   {isPending ? (
                                     <Loader2 className="h-4 w-4 animate-spin" />
-                                  ) : (
+                                  ) : allocated > 0 || spent > 0 ? (
                                     <>
-                                      <span className={allocated > 0 ? "font-medium" : "text-muted-foreground"}>
+                                      <span className="font-medium">
                                         {formatCurrency(allocated)}
                                       </span>
                                       {spent > 0 && (
-                                        <span className={`text-[10px] ${isOverspent ? 'text-destructive' : 'text-muted-foreground'}`}>
+                                        <span className={`text-xs ${isOverspent ? 'text-destructive' : 'text-muted-foreground'}`}>
                                           {formatCurrency(spent)} spent
                                         </span>
                                       )}
                                     </>
+                                  ) : (
+                                    <span className="text-muted-foreground/50 text-xs">Click to set</span>
                                   )}
                                 </button>
                               </TooltipTrigger>
@@ -415,14 +484,7 @@ export function BudgetMatrix({ weddingId }: BudgetMatrixProps) {
           </div>
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
-        
-        <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-          <p className="text-sm text-muted-foreground">
-            <strong>How to use:</strong> Each row is a ceremony showing its budget, spent, and remaining amounts. 
-            Click any category cell to allocate budget. When you add expenses with a ceremony and category, spending is tracked here automatically. 
-            Hover over cells to see allocation details. Red highlights indicate overspending.
-          </p>
-        </div>
+        )}
       </CardContent>
     </Card>
   );

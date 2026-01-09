@@ -615,6 +615,14 @@ export default function Budget() {
   const remainingBudget = total - totalSpent;
   const spentPercentage = total > 0 ? (totalSpent / total) * 100 : 0;
 
+  // Calculate total allocated across all budget categories
+  const totalAllocated = useMemo(() => {
+    return allocations.reduce((sum, alloc) => {
+      return sum + parseFloat(alloc.allocatedAmount?.toString() || "0");
+    }, 0);
+  }, [allocations]);
+  const unallocatedBudget = total - totalAllocated;
+
   // Calculate totals by event side
   const spentBySide = useMemo(() => {
     const sideTotals = { bride: 0, groom: 0, mutual: 0 };
@@ -1025,6 +1033,17 @@ export default function Budget() {
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <Button
+              size="sm"
+              onClick={() => {
+                setAddExpenseEventId(undefined);
+                setAddExpenseDialogOpen(true);
+              }}
+              data-testid="button-add-expense-header"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Expense
+            </Button>
+            <Button
               variant="outline"
               size="sm"
               onClick={() => setLocation("/budget-estimator")}
@@ -1070,7 +1089,7 @@ export default function Budget() {
         {/* Budget Summary Card */}
         <Card className="p-6 mb-6" data-testid="card-budget-summary">
           <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-            <div className="flex items-center gap-6">
+            <div className="flex flex-wrap items-center gap-6">
               <div>
                 <p className="text-sm text-muted-foreground">Total Budget</p>
                 <button 
@@ -1081,7 +1100,14 @@ export default function Budget() {
                   ${total.toLocaleString()}
                 </button>
               </div>
-              <div className="h-12 w-px bg-border" />
+              <div className="h-12 w-px bg-border hidden sm:block" />
+              <div>
+                <p className="text-sm text-muted-foreground">Allocated</p>
+                <p className="text-2xl font-bold font-mono" data-testid="text-total-allocated">
+                  ${totalAllocated.toLocaleString()}
+                </p>
+              </div>
+              <div className="h-12 w-px bg-border hidden sm:block" />
               <div>
                 <p className="text-sm text-muted-foreground">Spent</p>
                 <p className="text-2xl font-bold font-mono" data-testid="text-total-spent">
@@ -1089,17 +1115,31 @@ export default function Budget() {
                 </p>
               </div>
             </div>
-            <div className="text-right">
-              <p className="text-sm text-muted-foreground">Remaining</p>
-              <p className={`text-2xl font-bold font-mono ${remainingBudget < 0 ? "text-destructive" : "text-emerald-600"}`} data-testid="text-remaining">
-                ${remainingBudget.toLocaleString()}
-              </p>
+            <div className="flex flex-wrap items-center gap-4">
+              {unallocatedBudget > 0 && (
+                <Badge variant="outline" className="px-3 py-1.5 text-base font-mono bg-amber-50 dark:bg-amber-900/20 border-amber-300 text-amber-700 dark:text-amber-300" data-testid="badge-unallocated">
+                  ${unallocatedBudget.toLocaleString()} unallocated
+                </Badge>
+              )}
+              <div className="text-right">
+                <p className="text-sm text-muted-foreground">Remaining</p>
+                <p className={`text-2xl font-bold font-mono ${remainingBudget < 0 ? "text-destructive" : "text-emerald-600"}`} data-testid="text-remaining">
+                  ${remainingBudget.toLocaleString()}
+                </p>
+              </div>
             </div>
           </div>
           <Progress value={Math.min(spentPercentage, 100)} className="h-3" />
-          <p className="text-sm text-muted-foreground mt-2 text-center">
-            {spentPercentage.toFixed(0)}% of budget spent
-          </p>
+          <div className="flex justify-between items-center mt-2">
+            <p className="text-sm text-muted-foreground">
+              {spentPercentage.toFixed(0)}% of budget spent
+            </p>
+            {totalAllocated > 0 && (
+              <p className="text-sm text-muted-foreground">
+                {((totalSpent / totalAllocated) * 100).toFixed(0)}% of allocated budget used
+              </p>
+            )}
+          </div>
         </Card>
 
         {/* Side-Based Budget & Spending Breakdown */}
@@ -1280,24 +1320,6 @@ export default function Budget() {
           </div>
         </div>
 
-        {/* Budget Matrix Explainer */}
-        <Card className="p-4 mb-6 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border-amber-200 dark:border-amber-800">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 shrink-0 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center">
-              <HelpCircle className="w-5 h-5 text-amber-600" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-amber-800 dark:text-amber-200">Two Ways to Track Your Budget</h3>
-              <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-                You can set budgets <strong>by category</strong> (like Venue, Catering, Photography) OR <strong>by ceremony</strong> (like Sangeet, Mehndi, Reception). 
-                Use whichever feels more natural to you — or both! They draw from the same total budget.
-              </p>
-              <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
-                Tip: Click the pencil icon next to any category or ceremony to set its budget.
-              </p>
-            </div>
-          </div>
-        </Card>
 
         {/* Budget Categories Breakdown */}
         <Card className="p-4 mb-6">
