@@ -199,7 +199,7 @@ export async function registerTaskRoutes(router: Router, storage: IStorage) {
         tradition: wedding.tradition || 'General',
         weddingDate: wedding.date ? wedding.date.toISOString().split('T')[0] : undefined,
         city: wedding.city || undefined,
-        budget: wedding.budget ? Number(wedding.budget) : undefined,
+        budget: wedding.totalBudget ? Number(wedding.totalBudget) : undefined,
         events: events.map(e => ({ 
           name: e.name, 
           date: e.date ? e.date.toISOString() : undefined 

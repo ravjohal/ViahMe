@@ -466,7 +466,7 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
         return res.status(404).json({ error: "Wedding not found" });
       }
 
-      const totalBudget = wedding.budget || 0;
+      const totalBudget = parseFloat(wedding.totalBudget || '0');
       const totalAllocated = allocations.reduce((sum, a) => sum + parseFloat(a.allocatedAmount || '0'), 0);
       const totalSpent = expenses.reduce((sum, e) => sum + parseFloat(e.amount || '0'), 0);
 
