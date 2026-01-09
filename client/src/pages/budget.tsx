@@ -33,7 +33,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { AddExpenseDialog } from "@/components/add-expense-dialog";
 import { EditExpenseDialog, type ExpenseWithDetails } from "@/components/edit-expense-dialog";
-import { BudgetMatrix } from "@/components/budget-matrix";
+import { CeremonyPlanningCard } from "@/components/ceremony-planning-card";
 
 // Use shared expense type from the edit dialog component
 type ExpenseWithAllocations = ExpenseWithDetails;
@@ -1389,638 +1389,280 @@ export default function Budget() {
           </Collapsible>
         </Card>
 
-        {/* Budget by Ceremony (Budget Matrix) */}
-        <Card className="p-4 mb-6">
-          <Collapsible open={showCeremonyBudgets} onOpenChange={setShowCeremonyBudgets}>
-            <CollapsibleTrigger asChild>
-              <button className="flex items-center justify-between w-full" data-testid="toggle-ceremony-budgets">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 shrink-0 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center">
-                    <Calendar className="w-5 h-5 text-orange-600" />
-                  </div>
-                  <div className="text-left">
-                    <h3 className="font-semibold">Budget by Ceremony</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {ceremonyAnalytics?.summary.eventsWithBudget || 0} of {events.length} events • Track spending by event
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  {ceremonyAnalytics?.overview.isOverAllocated && (
-                    <Badge variant="destructive" className="text-xs">
-                      Over-allocated
-                    </Badge>
-                  )}
-                  {showCeremonyBudgets ? (
-                    <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                  ) : (
-                    <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                  )}
-                </div>
-              </button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="mt-4">
-              <p className="text-xs text-muted-foreground mb-3 px-1">
-                Set a budget for each ceremony or event. Great for tracking costs when different families host different events.
-              </p>
-              {/* Allocation Overview */}
-              {ceremonyAnalytics && (
-                <div className="p-4 rounded-lg bg-muted/50 mb-4">
-                  <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Allocated to Ceremonies</p>
-                      <p className="text-xl font-bold font-mono">
-                        ${ceremonyAnalytics.overview.totalCeremonyAllocated.toLocaleString()}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Unallocated</p>
-                      <p className={`text-xl font-bold font-mono ${ceremonyAnalytics.overview.unallocatedBudget < 0 ? 'text-destructive' : ''}`}>
-                        ${ceremonyAnalytics.overview.unallocatedBudget.toLocaleString()}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm text-muted-foreground">
-                        {ceremonyAnalytics.overview.percentAllocated.toFixed(0)}% of budget allocated
-                      </p>
-                      {ceremonyAnalytics.summary.eventsOverBudget > 0 && (
-                        <p className="text-xs text-destructive">
-                          {ceremonyAnalytics.summary.eventsOverBudget} event(s) over budget
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
+        {/* Ceremony Planning Cards - Main Section */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 shrink-0 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center">
+                <Calendar className="w-5 h-5 text-orange-600" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold">Your Ceremonies</h2>
+                <p className="text-sm text-muted-foreground">
+                  Plan your budget ceremony by ceremony
+                </p>
+              </div>
+            </div>
+            {sideFilter !== 'all' && (
+              <Badge variant="outline" className="text-xs">
+                Showing: {sideFilter === 'bride' ? (wedding?.partner1Name || 'Bride') : sideFilter === 'groom' ? (wedding?.partner2Name || 'Groom') : 'Shared'}
+              </Badge>
+            )}
+          </div>
+          {/* Ceremony Planning Cards */}
+          <div className="space-y-4">
+            {(ceremonyAnalytics?.ceremonyBreakdown || [])
+              .filter(ceremony => sideFilter === 'all' || ceremony.side === sideFilter)
+              .sort((a, b) => {
+                if (!a.eventDate && !b.eventDate) return 0;
+                if (!a.eventDate) return 1;
+                if (!b.eventDate) return -1;
+                return new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime();
+              })
+              .map((ceremony) => {
+                const percentSpent = ceremony.allocated > 0 ? ceremony.percentUsed : 0;
+                const lineItems = getLineItemsForEvent(ceremony.eventId, ceremony.eventName);
+                const isExpanded = expandedCeremonies.has(ceremony.eventId);
+                const lineItemTotal = lineItems ? getEventLineItemTotal(ceremony.eventId, lineItems) : 0;
+                const hasUnsavedChanges = !!editingLineItems[ceremony.eventId] && Object.keys(editingLineItems[ceremony.eventId]).length > 0;
+                const eventExpenses = expensesByEvent[ceremony.eventId]?.expenses || [];
 
-              {/* Ceremony Breakdown */}
-              <div className="space-y-3">
-                {(ceremonyAnalytics?.ceremonyBreakdown || [])
-                  .filter(ceremony => sideFilter === 'all' || ceremony.side === sideFilter)
-                  .sort((a, b) => {
-                    // Sort chronologically by event date
-                    if (!a.eventDate && !b.eventDate) return 0;
-                    if (!a.eventDate) return 1; // Events without dates go to the end
-                    if (!b.eventDate) return -1;
-                    return new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime();
-                  })
-                  .map((ceremony) => {
-                  const percentSpent = ceremony.allocated > 0 ? ceremony.percentUsed : 0;
-                  const lineItems = getLineItemsForEvent(ceremony.eventId, ceremony.eventName);
-                  const isExpanded = expandedCeremonies.has(ceremony.eventId);
-                  const lineItemTotal = lineItems ? getEventLineItemTotal(ceremony.eventId, lineItems) : 0;
-                  const hasUnsavedChanges = !!editingLineItems[ceremony.eventId] && Object.keys(editingLineItems[ceremony.eventId]).length > 0;
+                const sideColors = {
+                  bride: 'border-l-pink-500',
+                  groom: 'border-l-blue-500',
+                  mutual: 'border-l-amber-500',
+                };
+                const sideBadgeColors = {
+                  bride: 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300',
+                  groom: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+                  mutual: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+                };
+                const sideLabels = {
+                  bride: wedding?.partner1Name || "Bride",
+                  groom: wedding?.partner2Name || "Groom",
+                  mutual: "Shared",
+                };
 
-                  // Side badge styling
-                  const sideColors = {
-                    bride: 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300',
-                    groom: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-                    mutual: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
-                  };
-                  const sideLabels = {
-                    bride: wedding?.partner1Name || "Bride",
-                    groom: wedding?.partner2Name || "Groom",
-                    mutual: "Shared",
-                  };
-
-                  return (
-                    <div 
-                      key={ceremony.eventId} 
-                      className={`rounded-lg border bg-card ${ceremony.isOverBudget ? 'border-destructive/50' : ''}`}
-                      data-testid={`ceremony-budget-${ceremony.eventId}`}
-                    >
-                      {/* Ceremony Header */}
-                      <div className="p-4">
-                        <div className="flex flex-col gap-3 mb-2">
-                          {/* Top row: Name and badges */}
-                          <div className="flex items-start gap-2">
-                            <button
-                              onClick={() => toggleCeremonyExpansion(ceremony.eventId)}
-                              className="p-1 -ml-1 hover:bg-muted/50 rounded shrink-0 mt-0.5"
-                              data-testid={`button-expand-ceremony-${ceremony.eventId}`}
-                            >
-                              {isExpanded ? (
-                                <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                              ) : (
-                                <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                              )}
-                            </button>
+                return (
+                  <Card 
+                    key={ceremony.eventId}
+                    className={`border-l-4 ${sideColors[ceremony.side]} overflow-hidden ${ceremony.isOverBudget ? 'border-destructive/50' : ''}`}
+                    data-testid={`ceremony-card-${ceremony.eventId}`}
+                  >
+                    <Collapsible open={isExpanded} onOpenChange={() => toggleCeremonyExpansion(ceremony.eventId)}>
+                      <CollapsibleTrigger asChild>
+                        <button className="w-full p-4 text-left hover-elevate" data-testid={`toggle-ceremony-${ceremony.eventId}`}>
+                          <div className="flex items-start justify-between gap-4">
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-start gap-2 flex-wrap">
-                                <p className="font-medium break-words">{ceremony.eventName}</p>
-                                <Badge 
-                                  variant="outline" 
-                                  className={`text-xs shrink-0 ${sideColors[ceremony.side]}`}
-                                  data-testid={`badge-side-${ceremony.eventId}`}
-                                >
+                              <div className="flex items-center gap-2 flex-wrap mb-1">
+                                <h3 className="font-semibold text-base">{ceremony.eventName}</h3>
+                                <Badge variant="outline" className={`text-xs ${sideBadgeColors[ceremony.side]}`}>
                                   {sideLabels[ceremony.side]}
                                 </Badge>
                                 {ceremony.isOverBudget && (
-                                  <Badge variant="destructive" className="text-xs shrink-0">Over Budget</Badge>
-                                )}
-                                {ceremony.hasNoBudget && ceremony.spent > 0 && (
-                                  <Badge variant="outline" className="text-xs shrink-0">No Budget Set</Badge>
-                                )}
-                                {lineItems && (
-                                  <Badge variant="secondary" className="text-xs shrink-0">
-                                    {lineItems.length} line items
-                                  </Badge>
+                                  <Badge variant="destructive" className="text-xs">Over Budget</Badge>
                                 )}
                               </div>
-                              <p className="text-sm text-muted-foreground mt-1">
-                                <Users className="w-3 h-3 inline mr-1" />
-                                {ceremony.guestCount > 0 ? `${ceremony.guestCount} guests` : 'No guest count set'}
-                                {ceremony.spent > 0 && ` • $${ceremony.spent.toLocaleString()} spent`}
-                                {ceremony.expenseCount > 0 && ` • ${ceremony.expenseCount} expense${ceremony.expenseCount > 1 ? 's' : ''}`}
-                                {lineItemTotal > 0 && ` • $${lineItemTotal.toLocaleString()} in line items`}
-                              </p>
+                              {ceremony.eventDate && (
+                                <p className="text-sm text-muted-foreground flex items-center gap-1">
+                                  <Calendar className="w-3 h-3" />
+                                  {new Date(ceremony.eventDate).toLocaleDateString()}
+                                  {ceremony.expenseCount > 0 && ` • ${ceremony.expenseCount} expense${ceremony.expenseCount > 1 ? 's' : ''}`}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-3 shrink-0">
+                              <div className="text-right">
+                                <p className="text-lg font-bold font-mono">
+                                  ${ceremony.allocated.toLocaleString()}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  ${ceremony.spent.toLocaleString()} spent
+                                </p>
+                              </div>
+                              {isExpanded ? (
+                                <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                              ) : (
+                                <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                              )}
                             </div>
                           </div>
-                          {/* Budget controls row - stacked on mobile */}
-                          <div className="flex flex-wrap items-center gap-2 pl-6 sm:pl-0">
-                            <span className="text-xs text-muted-foreground">Budget:</span>
-                            <div className="relative">
-                              <DollarSign className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
+                          {ceremony.allocated > 0 && (
+                            <div className="mt-3">
+                              <Progress 
+                                value={Math.min(percentSpent, 100)} 
+                                className={`h-2 ${ceremony.isOverBudget ? '[&>div]:bg-destructive' : ''}`} 
+                              />
+                              <div className="flex justify-between mt-1 text-xs text-muted-foreground">
+                                <span>{percentSpent.toFixed(0)}% spent</span>
+                                <span className={ceremony.remaining < 0 ? "text-destructive" : "text-emerald-600"}>
+                                  ${Math.abs(ceremony.remaining).toLocaleString()} {ceremony.remaining < 0 ? 'over' : 'left'}
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                        </button>
+                      </CollapsibleTrigger>
+
+                      <CollapsibleContent>
+                        <div className="border-t bg-muted/30 p-4">
+                          {/* Budget Controls */}
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                              <DollarSign className="w-4 h-4 text-muted-foreground" />
+                              <span className="font-medium">Ceremony Budget</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-muted-foreground">$</span>
                               <Input
                                 type="number"
                                 placeholder="0"
-                                className="w-24 h-9 pl-6 text-right text-sm"
+                                className="w-28 h-9 text-right"
                                 value={getCeremonyTotalValue(ceremony.eventId, ceremony.allocated)}
                                 onChange={(e) => handleCeremonyTotalChange(ceremony.eventId, e.target.value)}
                                 data-testid={`input-ceremony-total-${ceremony.eventId}`}
                               />
-                            </div>
-                            {lineItems && (
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-9"
-                                    data-testid={`button-use-estimate-${ceremony.eventId}`}
-                                  >
-                                    <Sparkles className="w-3 h-3 sm:mr-1" />
-                                    <span className="hidden sm:inline">Use Estimate</span>
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem 
-                                    onClick={() => setCeremonyBudgetToEstimate(ceremony.eventId, ceremony.eventName, false)}
-                                    data-testid={`menu-low-estimate-${ceremony.eventId}`}
-                                  >
-                                    <TrendingDown className="w-4 h-4 mr-2" />
-                                    Low Estimate (${getCeremonyEstimateTotal(ceremony.eventId, ceremony.eventName, false).toLocaleString()})
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem 
-                                    onClick={() => setCeremonyBudgetToEstimate(ceremony.eventId, ceremony.eventName, true)}
-                                    data-testid={`menu-high-estimate-${ceremony.eventId}`}
-                                  >
-                                    <TrendingUp className="w-4 h-4 mr-2" />
-                                    High Estimate (${getCeremonyEstimateTotal(ceremony.eventId, ceremony.eventName, true).toLocaleString()})
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            )}
-                            {hasCeremonyTotalChanges(ceremony.eventId, ceremony.allocated) && (
-                              <Button
-                                size="sm"
-                                className="h-9"
-                                onClick={() => saveCeremonyTotal(ceremony.eventId)}
-                                disabled={updateCeremonyBudgetMutation.isPending}
-                                data-testid={`button-save-ceremony-total-${ceremony.eventId}`}
-                              >
-                                {updateCeremonyBudgetMutation.isPending ? (
-                                  <Loader2 className="w-3 h-3 animate-spin" />
-                                ) : (
-                                  "Save"
-                                )}
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                        {ceremony.allocated > 0 && (
-                          <>
-                            <Progress 
-                              value={Math.min(percentSpent, 100)} 
-                              className={`h-2 ${ceremony.isOverBudget ? '[&>div]:bg-destructive' : ''}`} 
-                            />
-                            <div className="flex justify-between mt-1 text-xs text-muted-foreground">
-                              <span>{percentSpent.toFixed(0)}% spent</span>
-                              <span className={ceremony.remaining < 0 ? "text-destructive" : "text-emerald-600"}>
-                                ${ceremony.remaining.toLocaleString()} remaining
-                              </span>
-                            </div>
-                          </>
-                        )}
-                      </div>
-
-                      {/* Expandable Line Items */}
-                      {lineItems && isExpanded && (
-                        <div className="border-t bg-muted/30 p-4">
-                          <div className="flex flex-col gap-2 mb-3">
-                            <div className="flex items-center justify-between">
-                              <p className="text-sm font-medium">Budget per Category</p>
-                              {hasUnsavedChanges && (
+                              {lineItems && (
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" size="sm" className="h-9" data-testid={`menu-estimate-${ceremony.eventId}`}>
+                                      <Sparkles className="w-3 h-3 mr-1" />
+                                      Estimate
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => setCeremonyBudgetToEstimate(ceremony.eventId, ceremony.eventName, false)}>
+                                      <TrendingDown className="w-4 h-4 mr-2" />
+                                      Low: ${getCeremonyEstimateTotal(ceremony.eventId, ceremony.eventName, false).toLocaleString()}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setCeremonyBudgetToEstimate(ceremony.eventId, ceremony.eventName, true)}>
+                                      <TrendingUp className="w-4 h-4 mr-2" />
+                                      High: ${getCeremonyEstimateTotal(ceremony.eventId, ceremony.eventName, true).toLocaleString()}
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              )}
+                              {hasCeremonyTotalChanges(ceremony.eventId, ceremony.allocated) && (
                                 <Button
                                   size="sm"
-                                  onClick={() => saveEventLineItems(ceremony.eventId, ceremony.eventName)}
-                                  disabled={saveLineItemBudgetsMutation.isPending}
-                                  data-testid={`button-save-line-items-${ceremony.eventId}`}
+                                  className="h-9"
+                                  onClick={() => saveCeremonyTotal(ceremony.eventId)}
+                                  disabled={updateCeremonyBudgetMutation.isPending}
+                                  data-testid={`button-save-ceremony-total-${ceremony.eventId}`}
                                 >
-                                  {saveLineItemBudgetsMutation.isPending ? (
-                                    <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                                  ) : null}
-                                  Save
+                                  {updateCeremonyBudgetMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : "Save"}
                                 </Button>
                               )}
                             </div>
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-xs text-muted-foreground">Pull from estimates:</span>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setEstimatesForEvent(ceremony.eventId, ceremony.eventName, false)}
-                                className="h-7 text-xs"
-                                data-testid={`button-set-low-estimate-${ceremony.eventId}`}
-                              >
-                                <TrendingDown className="w-3 h-3 mr-1" />
-                                Low Estimate
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setEstimatesForEvent(ceremony.eventId, ceremony.eventName, true)}
-                                className="h-7 text-xs"
-                                data-testid={`button-set-high-estimate-${ceremony.eventId}`}
-                              >
-                                <TrendingUp className="w-3 h-3 mr-1" />
-                                High Estimate
-                              </Button>
-                            </div>
                           </div>
-                          <div className="space-y-2">
-                            {lineItems.map((item, idx) => {
-                              const savedAmount = getExistingLineItemBudget(ceremony.eventId, item.category);
-                              const hasValue = savedAmount && parseFloat(savedAmount) > 0;
-                              
-                              const bucketLabel = getLineItemBucketLabel(item);
-                              
-                              return (
-                                <div 
-                                  key={idx} 
-                                  className="flex items-center gap-3 py-2 border-b border-border/50 last:border-0"
-                                  data-testid={`line-item-${ceremony.eventId}-${idx}`}
-                                >
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                      <p className="text-sm font-medium truncate">{item.category}</p>
-                                      <Badge 
-                                        variant="outline" 
-                                        className="text-[10px] px-1.5 py-0 h-4 bg-muted/50"
-                                        data-testid={`badge-category-${ceremony.eventId}-${idx}`}
-                                      >
-                                        {bucketLabel}
-                                      </Badge>
-                                    </div>
-                                    <p className="text-xs text-muted-foreground">
-                                      Est: ${Math.round(item.lowCost / 100) * 100} - ${Math.round(item.highCost / 100) * 100}
-                                      {item.unit === "per_person" && " per person"}
-                                      {item.unit === "per_hour" && " per hour"}
-                                    </p>
-                                  </div>
-                                  <div className="flex items-center gap-2 shrink-0">
-                                    <span className="text-sm text-muted-foreground">$</span>
-                                    <Input
-                                      type="number"
-                                      placeholder="0"
-                                      className={`w-24 h-8 text-right ${hasValue ? 'border-primary/50' : ''}`}
-                                      value={savedAmount}
-                                      onChange={(e) => handleLineItemChange(ceremony.eventId, item.category, e.target.value)}
-                                      data-testid={`input-line-item-${ceremony.eventId}-${idx}`}
-                                    />
-                                  </div>
+
+                          {/* Line Items */}
+                          {lineItems && lineItems.length > 0 && (
+                            <div className="mb-4">
+                              <div className="flex items-center justify-between mb-3">
+                                <p className="text-sm font-medium text-muted-foreground">Line Items</p>
+                                <div className="flex items-center gap-2">
+                                  <Button variant="outline" size="sm" onClick={() => setEstimatesForEvent(ceremony.eventId, ceremony.eventName, false)} className="h-7 text-xs">
+                                    <TrendingDown className="w-3 h-3 mr-1" />Low
+                                  </Button>
+                                  <Button variant="outline" size="sm" onClick={() => setEstimatesForEvent(ceremony.eventId, ceremony.eventName, true)} className="h-7 text-xs">
+                                    <TrendingUp className="w-3 h-3 mr-1" />High
+                                  </Button>
                                 </div>
-                              );
-                            })}
-                          </div>
-                          {lineItemTotal > 0 && (
-                            <div className="flex justify-between items-center mt-4 pt-3 border-t">
-                              <span className="text-sm font-medium">Line Item Total</span>
-                              <span className="text-lg font-bold font-mono">
-                                ${lineItemTotal.toLocaleString()}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-
-                {(!ceremonyAnalytics?.ceremonyBreakdown || ceremonyAnalytics.ceremonyBreakdown.length === 0) && (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    No events found. Add events to start budgeting per ceremony.
-                  </p>
-                )}
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-        </Card>
-
-        {/* Budget Matrix (Ceremony x Category Grid) */}
-        {wedding?.id && (
-          <div className="mb-6">
-            <BudgetMatrix weddingId={wedding.id} />
-          </div>
-        )}
-
-        {/* Breakdown by Event */}
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <Calendar className="w-5 h-5" />
-            Breakdown by Event
-            {sideFilter !== 'all' && (
-              <Badge variant="outline" className="text-xs ml-2">
-                Filtered by {sideFilter === 'bride' ? (wedding?.partner1Name || 'Bride') : sideFilter === 'groom' ? (wedding?.partner2Name || 'Groom') : 'Shared'}
-              </Badge>
-            )}
-          </h2>
-
-          <div className="space-y-3">
-            {events
-              .filter(event => sideFilter === 'all' || (event.side || 'mutual') === sideFilter)
-              .map((event) => {
-              const eventData = expensesByEvent[event.id];
-              const isExpanded = expandedEvents.has(event.id);
-              const eventTotal = eventData?.total || 0;
-              const eventSide = (event.side || 'mutual') as 'bride' | 'groom' | 'mutual';
-
-              // Side badge styling
-              const sideColors = {
-                bride: 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300',
-                groom: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-                mutual: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
-              };
-              const sideLabels = {
-                bride: wedding?.partner1Name || "Bride",
-                groom: wedding?.partner2Name || "Groom",
-                mutual: "Shared",
-              };
-
-              return (
-                <Collapsible 
-                  key={event.id} 
-                  open={isExpanded} 
-                  onOpenChange={() => toggleEvent(event.id)}
-                >
-                  <Card className="overflow-hidden" data-testid={`card-event-${event.id}`}>
-                    <CollapsibleTrigger asChild>
-                      <button className="w-full p-4 flex items-center justify-between hover-elevate">
-                        <div className="flex items-center gap-3 flex-wrap">
-                          {isExpanded ? (
-                            <ChevronDown className="w-5 h-5 text-muted-foreground shrink-0" />
-                          ) : (
-                            <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
-                          )}
-                          <span className="font-medium">{event.name}</span>
-                          <Badge 
-                            variant="outline" 
-                            className={`text-xs shrink-0 ${sideColors[eventSide]}`}
-                          >
-                            {sideLabels[eventSide]}
-                          </Badge>
-                          {eventData?.expenses.length ? (
-                            <Badge variant="secondary" className="text-xs shrink-0">
-                              {eventData.expenses.length} items
-                            </Badge>
-                          ) : null}
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <span className="font-mono font-semibold">
-                            ${eventTotal.toLocaleString()}
-                          </span>
-                        </div>
-                      </button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <div className="border-t px-4 py-3 bg-muted/30">
-                        {eventData?.expenses.length ? (
-                          <div className="space-y-4">
-                            {/* Group expenses by category (bucket) */}
-                            {(() => {
-                              const byCategory: Record<string, typeof eventData.expenses> = {};
-                              eventData.expenses.forEach((exp) => {
-                                const cat = exp.parentCategory || "other";
-                                if (!byCategory[cat]) byCategory[cat] = [];
-                                byCategory[cat].push(exp);
-                              });
-                              return Object.entries(byCategory).map(([bucket, catExpenses]) => {
-                                const categoryTotal = catExpenses.reduce((sum, exp) => {
-                                  return sum + parseFloat(exp.amount?.toString() || "0");
-                                }, 0);
-                                return (
-                                  <div key={bucket} className="space-y-1">
-                                    <div className="flex items-center justify-between text-sm font-medium text-muted-foreground border-b pb-1">
-                                      <span>{getBucketLabel(bucket)}</span>
-                                      <span className="font-mono">${categoryTotal.toLocaleString()}</span>
-                                    </div>
-                                    {catExpenses.map((expense, idx) => {
-                                      const amount = parseFloat(expense.amount?.toString() || "0");
-                                      const status = getPaymentStatus(expense);
-                                      const isPartial = status.remaining > 0;
-                                      return (
-                                        <div 
-                                          key={expense.id || idx}
-                                          className={`group flex items-center justify-between py-1 text-sm pl-4 ${isPartial ? "bg-orange-50/50 dark:bg-orange-950/20 rounded -mx-2 px-2" : ""}`}
-                                          data-testid={`expense-item-${expense.id}`}
-                                        >
-                                          <div className="flex items-center gap-2 flex-wrap">
-                                            <span>{expense.expenseName}</span>
-                                            <Badge 
-                                              variant={status.variant} 
-                                              className={`text-xs ${isPartial ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" : ""}`}
-                                            >
-                                              {status.label}
-                                            </Badge>
-                                            {isPartial && (
-                                              <span className="text-xs text-orange-600 dark:text-orange-400 font-medium">
-                                                (${status.remaining.toLocaleString()} owed)
-                                              </span>
-                                            )}
-                                          </div>
-                                          <div className="flex items-center gap-2">
-                                            <div className="invisible group-hover:visible flex items-center gap-1">
-                                              <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-6 w-6"
-                                                onClick={() => setEditingExpense(expense)}
-                                                data-testid={`button-edit-expense-${expense.id}`}
-                                              >
-                                                <Edit2 className="h-3 w-3" />
-                                              </Button>
-                                              <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-6 w-6 text-destructive hover:text-destructive"
-                                                onClick={() => setDeletingExpenseId(expense.id)}
-                                                data-testid={`button-delete-expense-${expense.id}`}
-                                              >
-                                                <Trash2 className="h-3 w-3" />
-                                              </Button>
-                                            </div>
-                                            <span className="font-mono text-muted-foreground">
-                                              ${amount.toLocaleString()}
-                                            </span>
-                                          </div>
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-                                );
-                              });
-                            })()}
-                          </div>
-                        ) : (
-                          <p className="text-sm text-muted-foreground py-2">
-                            No expenses recorded for this event yet.
-                          </p>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="mt-2 text-xs"
-                          onClick={() => {
-                            setAddExpenseEventId(event.id);
-                            setAddExpenseDialogOpen(true);
-                          }}
-                          data-testid={`button-add-expense-${event.id}`}
-                        >
-                          <Plus className="w-3 h-3 mr-1" />
-                          Add Expense
-                        </Button>
-                      </div>
-                    </CollapsibleContent>
-                  </Card>
-                </Collapsible>
-              );
-            })}
-
-            {/* Unassigned Expenses */}
-            {expensesByEvent["unassigned"]?.expenses.length > 0 && (
-              <Collapsible 
-                open={expandedEvents.has("unassigned")} 
-                onOpenChange={() => toggleEvent("unassigned")}
-              >
-                <Card className="overflow-hidden border-dashed" data-testid="card-event-unassigned">
-                  <CollapsibleTrigger asChild>
-                    <button className="w-full p-4 flex items-center justify-between hover-elevate">
-                      <div className="flex items-center gap-3">
-                        {expandedEvents.has("unassigned") ? (
-                          <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                        ) : (
-                          <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                        )}
-                        <span className="font-medium text-muted-foreground">General / Unassigned</span>
-                        <Badge variant="outline" className="text-xs">
-                          {expensesByEvent["unassigned"].expenses.length} items
-                        </Badge>
-                      </div>
-                      <span className="font-mono font-semibold">
-                        ${expensesByEvent["unassigned"].total.toLocaleString()}
-                      </span>
-                    </button>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <div className="border-t px-4 py-3 bg-muted/30">
-                      <div className="space-y-4">
-                        {/* Group unassigned expenses by category (bucket) */}
-                        {(() => {
-                          const unassignedExpenses = expensesByEvent["unassigned"].expenses;
-                          const byCategory: Record<string, typeof unassignedExpenses> = {};
-                          unassignedExpenses.forEach((exp) => {
-                            const cat = exp.parentCategory || "other";
-                            if (!byCategory[cat]) byCategory[cat] = [];
-                            byCategory[cat].push(exp);
-                          });
-                          return Object.entries(byCategory).map(([bucket, catExpenses]) => {
-                            const categoryTotal = catExpenses.reduce((sum, exp) => {
-                              return sum + parseFloat(exp.amount?.toString() || "0");
-                            }, 0);
-                            return (
-                              <div key={bucket} className="space-y-1">
-                                <div className="flex items-center justify-between text-sm font-medium text-muted-foreground border-b pb-1">
-                                  <span>{getBucketLabel(bucket)}</span>
-                                  <span className="font-mono">${categoryTotal.toLocaleString()}</span>
-                                </div>
-                                {catExpenses.map((expense, idx) => {
-                                  const amount = parseFloat(expense.amount?.toString() || "0");
-                                  const status = getPaymentStatus(expense);
-                                  const isPartial = status.remaining > 0;
+                              </div>
+                              <div className="space-y-2 bg-background rounded-lg p-3 border">
+                                {lineItems.map((item, idx) => {
+                                  const savedAmount = getExistingLineItemBudget(ceremony.eventId, item.category);
+                                  const bucketLabel = getLineItemBucketLabel(item);
                                   return (
-                                    <div 
-                                      key={expense.id || idx}
-                                      className={`group flex items-center justify-between py-1 text-sm pl-4 ${isPartial ? "bg-orange-50/50 dark:bg-orange-950/20 rounded -mx-2 px-2" : ""}`}
-                                    >
-                                      <div className="flex items-center gap-2 flex-wrap">
-                                        <span>{expense.expenseName}</span>
-                                        <Badge 
-                                          variant={status.variant} 
-                                          className={`text-xs ${isPartial ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" : ""}`}
-                                        >
-                                          {status.label}
-                                        </Badge>
-                                        {isPartial && (
-                                          <span className="text-xs text-orange-600 dark:text-orange-400 font-medium">
-                                            (${status.remaining.toLocaleString()} owed)
-                                          </span>
-                                        )}
-                                      </div>
-                                      <div className="flex items-center gap-2">
-                                        <div className="invisible group-hover:visible flex items-center gap-1">
-                                          <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-6 w-6"
-                                            onClick={() => setEditingExpense(expense)}
-                                            data-testid={`button-edit-expense-unassigned-${expense.id}`}
-                                          >
-                                            <Edit2 className="h-3 w-3" />
-                                          </Button>
-                                          <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-6 w-6 text-destructive hover:text-destructive"
-                                            onClick={() => setDeletingExpenseId(expense.id)}
-                                            data-testid={`button-delete-expense-unassigned-${expense.id}`}
-                                          >
-                                            <Trash2 className="h-3 w-3" />
-                                          </Button>
+                                    <div key={idx} className="flex items-center gap-3 py-2 border-b border-border/50 last:border-0" data-testid={`line-item-${ceremony.eventId}-${idx}`}>
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                          <p className="text-sm font-medium">{item.category}</p>
+                                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 bg-muted/50">{bucketLabel}</Badge>
                                         </div>
-                                        <span className="font-mono text-muted-foreground">
-                                          ${amount.toLocaleString()}
-                                        </span>
+                                        <p className="text-xs text-muted-foreground">Est: ${Math.round(item.lowCost / 100) * 100} - ${Math.round(item.highCost / 100) * 100}</p>
+                                      </div>
+                                      <div className="flex items-center gap-1 shrink-0">
+                                        <span className="text-sm text-muted-foreground">$</span>
+                                        <Input type="number" placeholder="0" className="w-24 h-8 text-right" value={savedAmount} onChange={(e) => handleLineItemChange(ceremony.eventId, item.category, e.target.value)} data-testid={`input-line-item-${ceremony.eventId}-${idx}`} />
                                       </div>
                                     </div>
                                   );
                                 })}
                               </div>
-                            );
-                          });
-                        })()}
-                      </div>
-                    </div>
-                  </CollapsibleContent>
-                </Card>
-              </Collapsible>
-            )}
+                              {lineItemTotal > 0 && (
+                                <div className="flex justify-between items-center mt-3 pt-3 border-t">
+                                  <span className="text-sm font-medium">Line Item Total</span>
+                                  <span className="text-lg font-bold font-mono">${lineItemTotal.toLocaleString()}</span>
+                                </div>
+                              )}
+                              {hasUnsavedChanges && (
+                                <div className="mt-3">
+                                  <Button onClick={() => saveEventLineItems(ceremony.eventId, ceremony.eventName)} disabled={saveLineItemBudgetsMutation.isPending} className="w-full" data-testid={`button-save-line-items-${ceremony.eventId}`}>
+                                    {saveLineItemBudgetsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                                    Save Line Items
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          )}
 
-            {events.length === 0 && (
+                          {/* Expenses for this ceremony */}
+                          {eventExpenses.length > 0 && (
+                            <div className="mb-4">
+                              <p className="text-sm font-medium text-muted-foreground mb-2">Expenses</p>
+                              <div className="space-y-1 bg-background rounded-lg p-3 border">
+                                {eventExpenses.map((expense, idx) => {
+                                  const amount = parseFloat(expense.amount?.toString() || "0");
+                                  const status = getPaymentStatus(expense);
+                                  return (
+                                    <div key={expense.id || idx} className="group flex items-center justify-between py-2 border-b border-border/50 last:border-0" data-testid={`expense-item-${expense.id}`}>
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <span className="text-sm">{expense.expenseName}</span>
+                                        <Badge variant={status.variant} className="text-xs">{status.label}</Badge>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <div className="invisible group-hover:visible flex items-center gap-1">
+                                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setEditingExpense(expense)} data-testid={`button-edit-expense-${expense.id}`}>
+                                            <Edit2 className="h-3 w-3" />
+                                          </Button>
+                                          <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive" onClick={() => setDeletingExpenseId(expense.id)} data-testid={`button-delete-expense-${expense.id}`}>
+                                            <Trash2 className="h-3 w-3" />
+                                          </Button>
+                                        </div>
+                                        <span className="font-mono text-sm">${amount.toLocaleString()}</span>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Add Expense Button */}
+                          <div className="flex items-center justify-between pt-3 border-t">
+                            <div className="text-sm text-muted-foreground">
+                              {ceremony.expenseCount} expense{ceremony.expenseCount !== 1 ? 's' : ''} recorded
+                            </div>
+                            <Button size="sm" onClick={() => { setAddExpenseEventId(ceremony.eventId); setAddExpenseDialogOpen(true); }} data-testid={`button-add-expense-${ceremony.eventId}`}>
+                              <Plus className="w-4 h-4 mr-1" />
+                              Add Expense
+                            </Button>
+                          </div>
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  </Card>
+                );
+              })}
+
+            {(!ceremonyAnalytics?.ceremonyBreakdown || ceremonyAnalytics.ceremonyBreakdown.length === 0) && (
               <Card className="p-8 text-center border-dashed">
                 <Calendar className="w-12 h-12 mx-auto mb-3 text-muted-foreground/30" />
-                <p className="text-muted-foreground mb-2">No events created yet</p>
+                <p className="text-muted-foreground mb-2">No ceremonies yet</p>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Create events in your timeline to track expenses by ceremony
+                  Add events to your timeline to start planning budgets
                 </p>
                 <Button onClick={() => setLocation("/timeline")} variant="outline">
                   Go to Timeline
@@ -2029,6 +1671,63 @@ export default function Budget() {
             )}
           </div>
         </div>
+
+        {/* Unassigned Expenses Card */}
+        {expensesByEvent["unassigned"]?.expenses.length > 0 && (
+          <Card className="border-l-4 border-l-gray-400 overflow-hidden mb-6" data-testid="card-unassigned-expenses">
+            <Collapsible open={expandedEvents.has("unassigned")} onOpenChange={() => toggleEvent("unassigned")}>
+              <CollapsibleTrigger asChild>
+                <button className="w-full p-4 text-left hover-elevate">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-semibold text-base text-muted-foreground">General / Unassigned</h3>
+                        <Badge variant="outline" className="text-xs">
+                          {expensesByEvent["unassigned"].expenses.length} items
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">Expenses not linked to a specific ceremony</p>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span className="text-lg font-bold font-mono">${expensesByEvent["unassigned"].total.toLocaleString()}</span>
+                      {expandedEvents.has("unassigned") ? <ChevronDown className="w-5 h-5 text-muted-foreground" /> : <ChevronRight className="w-5 h-5 text-muted-foreground" />}
+                    </div>
+                  </div>
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="border-t bg-muted/30 p-4">
+                  <div className="space-y-1 bg-background rounded-lg p-3 border">
+                    {expensesByEvent["unassigned"].expenses.map((expense, idx) => {
+                      const amount = parseFloat(expense.amount?.toString() || "0");
+                      const status = getPaymentStatus(expense);
+                      return (
+                        <div key={expense.id || idx} className="group flex items-center justify-between py-2 border-b border-border/50 last:border-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm">{expense.expenseName}</span>
+                            <Badge variant={status.variant} className="text-xs">{status.label}</Badge>
+                            {expense.parentCategory && <Badge variant="outline" className="text-xs">{getBucketLabel(expense.parentCategory)}</Badge>}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="invisible group-hover:visible flex items-center gap-1">
+                              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setEditingExpense(expense)}><Edit2 className="h-3 w-3" /></Button>
+                              <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive" onClick={() => setDeletingExpenseId(expense.id)}><Trash2 className="h-3 w-3" /></Button>
+                            </div>
+                            <span className="font-mono text-sm">${amount.toLocaleString()}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <Button variant="ghost" size="sm" className="mt-3" onClick={() => { setAddExpenseEventId(undefined); setAddExpenseDialogOpen(true); }}>
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add General Expense
+                  </Button>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          </Card>
+        )}
 
         {/* Upcoming Payments */}
         {upcomingPayments.length > 0 && (
