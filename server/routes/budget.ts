@@ -665,7 +665,7 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
       const expenses = await storage.getExpensesByWedding(weddingId);
       const wedding = await storage.getWedding(weddingId);
 
-      const totalBudget = parseFloat(wedding?.budget || '0');
+      const totalBudget = parseFloat(wedding?.totalBudget || '0');
       const totalCeremonyAllocated = ceremonyBudgets.reduce((sum, cb) => sum + parseFloat(cb.allocatedAmount || '0'), 0);
       const unallocatedBudget = totalBudget - totalCeremonyAllocated;
 
