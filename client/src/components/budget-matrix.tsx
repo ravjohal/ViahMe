@@ -245,7 +245,7 @@ export function BudgetMatrix({ weddingId }: BudgetMatrixProps) {
               </Button>
             </div>
             <div className="text-right hidden sm:block">
-              <div className="text-sm text-muted-foreground">Total Allocated</div>
+              <div className="text-sm text-muted-foreground">Total Planned</div>
               <div className="text-lg font-semibold">
                 {formatCurrency(matrixData.summary.totalAllocated)} / {formatCurrency(matrixData.summary.totalGlobalBudget)}
               </div>
@@ -278,7 +278,7 @@ export function BudgetMatrix({ weddingId }: BudgetMatrixProps) {
                   </div>
                   <div className="text-right">
                     <p className="font-mono font-semibold">{formatCurrency(row.totalPlanned)}</p>
-                    <p className="text-xs text-muted-foreground">allocated</p>
+                    <p className="text-xs text-muted-foreground">planned</p>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -299,7 +299,7 @@ export function BudgetMatrix({ weddingId }: BudgetMatrixProps) {
                     );
                   })}
                   {row.totalPlanned === 0 && (
-                    <span className="text-sm text-muted-foreground italic">No allocations yet - use Matrix view to set budgets</span>
+                    <span className="text-sm text-muted-foreground italic">No budget set yet - use Matrix view to plan</span>
                   )}
                 </div>
               </div>
@@ -335,7 +335,7 @@ export function BudgetMatrix({ weddingId }: BudgetMatrixProps) {
                             </TooltipTrigger>
                             <TooltipContent>
                               <p>Budget: {formatCurrency(col.globalBudget)}</p>
-                              <p>Allocated: {formatCurrency(col.totalAllocated)}</p>
+                              <p>Planned: {formatCurrency(col.totalAllocated)}</p>
                             </TooltipContent>
                           </Tooltip>
                         </div>
@@ -345,10 +345,10 @@ export function BudgetMatrix({ weddingId }: BudgetMatrixProps) {
                   <th className="text-center p-2 font-medium text-sm min-w-[100px] bg-muted/50">
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <span>Allocated</span>
+                        <span>Planned</span>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Sum of category allocations for this ceremony</p>
+                        <p>Total planned for this ceremony</p>
                       </TooltipContent>
                     </Tooltip>
                   </th>
@@ -437,10 +437,10 @@ export function BudgetMatrix({ weddingId }: BudgetMatrixProps) {
                                 </button>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>Allocated: {formatCurrency(allocated)}</p>
+                                <p>Planned: {formatCurrency(allocated)}</p>
                                 <p>Spent: {formatCurrency(spent)}</p>
                                 <p className={isOverspent ? 'text-destructive' : ''}>
-                                  Remaining: {formatCurrency(remaining)}
+                                  Left: {formatCurrency(remaining)}
                                 </p>
                               </TooltipContent>
                             </Tooltip>

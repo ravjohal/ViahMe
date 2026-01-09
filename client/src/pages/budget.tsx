@@ -1102,7 +1102,7 @@ export default function Budget() {
               </div>
               <div className="h-12 w-px bg-border hidden sm:block" />
               <div>
-                <p className="text-sm text-muted-foreground">Allocated</p>
+                <p className="text-sm text-muted-foreground">Planned</p>
                 <p className="text-2xl font-bold font-mono" data-testid="text-total-allocated">
                   ${totalAllocated.toLocaleString()}
                 </p>
@@ -1118,7 +1118,7 @@ export default function Budget() {
             <div className="flex flex-wrap items-center gap-4">
               {unallocatedBudget > 0 && (
                 <Badge variant="outline" className="px-3 py-1.5 text-base font-mono bg-amber-50 dark:bg-amber-900/20 border-amber-300 text-amber-700 dark:text-amber-300" data-testid="badge-unallocated">
-                  ${unallocatedBudget.toLocaleString()} unallocated
+                  ${unallocatedBudget.toLocaleString()} left to plan
                 </Badge>
               )}
               <div className="text-right">
@@ -1136,7 +1136,7 @@ export default function Budget() {
             </p>
             {totalAllocated > 0 && (
               <p className="text-sm text-muted-foreground">
-                {((totalSpent / totalAllocated) * 100).toFixed(0)}% of allocated budget used
+                {((totalSpent / totalAllocated) * 100).toFixed(0)}% of planned budget spent
               </p>
             )}
           </div>
