@@ -1,13 +1,26 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Upload, X, FileText, ExternalLink } from "lucide-react";
 import { BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket, type Event, type Expense, type ExpenseSplit } from "@shared/schema";
+import { getCeremonyIdFromEvent } from "@shared/ceremonies";
 
 type PayerType = "me" | "partner" | "me_partner" | "bride_family" | "groom_family";
 type ExpenseStatus = "estimated" | "booked" | "paid";
+
+interface LineItem {
+  name: string;
+  budgetBucket: BudgetBucket;
+  lowCost: number;
+  highCost: number;
+  unit: 'fixed' | 'per_person' | 'per_hour';
+  notes?: string;
+}
 
 export interface ExpenseWithDetails extends Expense {
   splits?: ExpenseSplit[];
@@ -20,6 +33,7 @@ interface EditExpenseDialogProps {
   events: Event[];
   onSave: (data: any) => void;
   isPending: boolean;
+  weddingId?: string;
 }
 
 export function EditExpenseDialog({
@@ -29,22 +43,63 @@ export function EditExpenseDialog({
   events,
   onSave,
   isPending,
+  weddingId,
 }: EditExpenseDialogProps) {
   const [expenseName, setExpenseName] = useState("");
   const [amount, setAmount] = useState("");
   const [amountPaid, setAmountPaid] = useState("");
   const [expenseDate, setExpenseDate] = useState("");
-  const [selectedBucket, setSelectedBucket] = useState<BudgetBucket | null>(null);
+  const [selectedLineItem, setSelectedLineItem] = useState<string | null>(null);
   const [selectedCeremonyId, setSelectedCeremonyId] = useState<string | null>(null);
   const [status, setStatus] = useState<ExpenseStatus>("paid");
   const [payer, setPayer] = useState<PayerType>("me_partner");
   const [notes, setNotes] = useState("");
-  const [splitType, setSplitType] = useState<"full" | "split">("full");
-  const [splitPercentages, setSplitPercentages] = useState({
-    couple: "50",
-    bride_family: "25",
-    groom_family: "25",
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [existingReceiptUrl, setExistingReceiptUrl] = useState<string | null>(null);
+
+  // Get the selected event and its ceremony template ID
+  const selectedEvent = useMemo(() => {
+    if (!selectedCeremonyId) return null;
+    return events.find(e => e.id === selectedCeremonyId) || null;
+  }, [selectedCeremonyId, events]);
+
+  const ceremonyTemplateId = useMemo(() => {
+    if (!selectedEvent) return null;
+    return getCeremonyIdFromEvent(selectedEvent.name, selectedEvent.type);
+  }, [selectedEvent]);
+
+  // Fetch line items from API
+  const { data: lineItemsData, isLoading: isLoadingLineItems, isError: isLineItemsError } = useQuery<{
+    ceremonyId: string;
+    ceremonyName: string;
+    tradition: string;
+    lineItems: LineItem[];
+  }>({
+    queryKey: [`/api/ceremony-templates/${ceremonyTemplateId}/line-items`],
+    enabled: !!ceremonyTemplateId && open,
+    retry: false,
   });
+
+  const ceremonyLineItems = lineItemsData?.lineItems || [];
+
+  // Derive the budget bucket from the selected line item
+  const derivedBucket = useMemo((): BudgetBucket | null => {
+    if (!selectedLineItem) return null;
+    
+    const lineItem = ceremonyLineItems.find(item => item.name === selectedLineItem);
+    if (lineItem) {
+      return lineItem.budgetBucket;
+    }
+    
+    // Check if it's a bucket label (from fallback)
+    const bucketFromLabel = BUDGET_BUCKETS.find(b => BUDGET_BUCKET_LABELS[b] === selectedLineItem);
+    if (bucketFromLabel) {
+      return bucketFromLabel;
+    }
+    
+    return "other";
+  }, [selectedLineItem, ceremonyLineItems]);
 
   useEffect(() => {
     if (expense) {
@@ -52,15 +107,26 @@ export function EditExpenseDialog({
       setAmount(expense.amount?.toString() || "");
       setAmountPaid(expense.amountPaid?.toString() || "0");
       const dateValue = expense.expenseDate 
-        ? (typeof expense.expenseDate === 'string' 
-            ? expense.expenseDate.split('T')[0] 
-            : new Date(expense.expenseDate).toISOString().split('T')[0])
+        ? new Date(expense.expenseDate).toISOString().split('T')[0]
         : new Date().toISOString().split('T')[0];
       setExpenseDate(dateValue);
-      setSelectedBucket((expense.parentCategory as BudgetBucket) || null);
       setSelectedCeremonyId(expense.ceremonyId || null);
       setStatus((expense.status as ExpenseStatus) || "paid");
       setNotes(expense.notes || "");
+      setExistingReceiptUrl(expense.receiptUrl || null);
+      setPhotoFile(null);
+      setPhotoPreview(null);
+      
+      // Set the line item based on the bucket
+      // For ceremony-specific expenses, the line items will be checked after they load
+      // For general expenses, use the bucket label for category matching
+      const bucket = expense.parentCategory as BudgetBucket;
+      if (bucket) {
+        // Use the bucket label for the fallback category selector to work correctly
+        setSelectedLineItem(BUDGET_BUCKET_LABELS[bucket]);
+      } else {
+        setSelectedLineItem(null);
+      }
       
       if (expense.paidById === "me") {
         setPayer("me");
@@ -75,32 +141,44 @@ export function EditExpenseDialog({
       } else {
         setPayer("me_partner");
       }
-      
-      if (expense.splits && expense.splits.length > 1) {
-        setSplitType("split");
-        const totalAmount = parseFloat(expense.amount?.toString() || "1") || 1;
-        const newPercentages = { couple: "0", bride_family: "0", groom_family: "0" };
-        for (const split of expense.splits) {
-          const percent = ((parseFloat(split.shareAmount?.toString() || "0") / totalAmount) * 100).toFixed(0);
-          if (split.userId === "me-partner") {
-            newPercentages.couple = percent;
-          } else if (split.userId === "bride-parents") {
-            newPercentages.bride_family = percent;
-          } else if (split.userId === "groom-parents") {
-            newPercentages.groom_family = percent;
-          }
-        }
-        setSplitPercentages(newPercentages);
-      } else {
-        setSplitType("full");
-      }
     }
   }, [expense]);
+
+  // When ceremony line items load, check if we should update the selected line item
+  // to match the expense name (if it matches a line item in the template)
+  useEffect(() => {
+    if (expense && ceremonyLineItems.length > 0) {
+      // Check if expense name matches any line item
+      const matchingLineItem = ceremonyLineItems.find(
+        item => item.name === expense.expenseName
+      );
+      if (matchingLineItem) {
+        setSelectedLineItem(matchingLineItem.name);
+      }
+    }
+  }, [ceremonyLineItems, expense]);
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setPhotoFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removePhoto = () => {
+    setPhotoFile(null);
+    setPhotoPreview(null);
+  };
 
   const handleSubmit = () => {
     const parsedAmount = parseFloat(amount.replace(/,/g, ""));
     if (isNaN(parsedAmount) || parsedAmount <= 0) return;
-    if (!selectedBucket) return;
+    if (!derivedBucket) return;
     
     const finalAmountPaid = status === "paid" 
       ? parsedAmount 
@@ -124,47 +202,8 @@ export function EditExpenseDialog({
     const payerId = payerIdMap[payer];
     const payerName = payerNameMap[payer];
 
-    let splits: any[] = [];
-    if (splitType === "split") {
-      const couplePercent = parseFloat(splitPercentages.couple) || 0;
-      const bridePercent = parseFloat(splitPercentages.bride_family) || 0;
-      const groomPercent = parseFloat(splitPercentages.groom_family) || 0;
-      
-      if (couplePercent > 0) {
-        splits.push({
-          userId: "me-partner",
-          userName: "Me/Partner",
-          shareAmount: ((couplePercent / 100) * parsedAmount).toFixed(2),
-          isPaid: payer === "me" || payer === "partner" || payer === "me_partner",
-        });
-      }
-      if (bridePercent > 0) {
-        splits.push({
-          userId: "bride-parents",
-          userName: "Bride's Family",
-          shareAmount: ((bridePercent / 100) * parsedAmount).toFixed(2),
-          isPaid: payer === "bride_family",
-        });
-      }
-      if (groomPercent > 0) {
-        splits.push({
-          userId: "groom-parents",
-          userName: "Groom's Family",
-          shareAmount: ((groomPercent / 100) * parsedAmount).toFixed(2),
-          isPaid: payer === "groom_family",
-        });
-      }
-    } else {
-      splits = [{
-        userId: payerId,
-        userName: payerName,
-        shareAmount: parsedAmount.toFixed(2),
-        isPaid: true,
-      }];
-    }
-
     onSave({
-      parentCategory: selectedBucket,
+      parentCategory: derivedBucket,
       expenseName: expenseName.trim(),
       amount: parsedAmount.toFixed(2),
       amountPaid: finalAmountPaid.toFixed(2),
@@ -174,7 +213,8 @@ export function EditExpenseDialog({
       paidById: payerId,
       paidByName: payerName,
       notes: notes.trim() || null,
-      splits,
+      photoFile,
+      existingReceiptUrl: existingReceiptUrl,
     });
   };
 
@@ -233,35 +273,15 @@ export function EditExpenseDialog({
 
           <div className="space-y-3">
             <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Category <span className="text-destructive">*</span>
-            </Label>
-            <div className="flex flex-wrap gap-2">
-              {BUDGET_BUCKETS.map((bucket) => (
-                <button
-                  key={bucket}
-                  type="button"
-                  onClick={() => setSelectedBucket(bucket)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                    selectedBucket === bucket
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground hover-elevate"
-                  }`}
-                  data-testid={`button-edit-category-${bucket}`}
-                >
-                  {BUDGET_BUCKET_LABELS[bucket]}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
               For which ceremony? (Optional)
             </Label>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
-                onClick={() => setSelectedCeremonyId(null)}
+                onClick={() => {
+                  setSelectedCeremonyId(null);
+                  setSelectedLineItem(null);
+                }}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                   selectedCeremonyId === null
                     ? "bg-primary text-primary-foreground"
@@ -275,7 +295,10 @@ export function EditExpenseDialog({
                 <button
                   key={event.id}
                   type="button"
-                  onClick={() => setSelectedCeremonyId(event.id)}
+                  onClick={() => {
+                    setSelectedCeremonyId(event.id);
+                    setSelectedLineItem(null);
+                  }}
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                     selectedCeremonyId === event.id
                       ? "bg-primary text-primary-foreground"
@@ -287,6 +310,72 @@ export function EditExpenseDialog({
                 </button>
               ))}
             </div>
+          </div>
+
+          <div className="space-y-3">
+            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Category <span className="text-destructive">*</span>
+            </Label>
+            {isLoadingLineItems && ceremonyTemplateId ? (
+              <div className="flex flex-wrap gap-2">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Skeleton key={i} className="h-9 w-24 rounded-full" />
+                ))}
+              </div>
+            ) : ceremonyLineItems.length > 0 && !isLineItemsError ? (
+              <div className="flex flex-wrap gap-2">
+                {ceremonyLineItems.map((item, index) => (
+                  <button
+                    key={item.name}
+                    type="button"
+                    onClick={() => setSelectedLineItem(item.name)}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                      selectedLineItem === item.name
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground hover-elevate"
+                    }`}
+                    data-testid={`button-edit-lineitem-${index}`}
+                  >
+                    {item.name}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setSelectedLineItem("Other")}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                    selectedLineItem === "Other"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground hover-elevate"
+                  }`}
+                  data-testid="button-edit-lineitem-other"
+                >
+                  Other
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {BUDGET_BUCKETS.map((bucket) => (
+                  <button
+                    key={bucket}
+                    type="button"
+                    onClick={() => setSelectedLineItem(BUDGET_BUCKET_LABELS[bucket])}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                      selectedLineItem === BUDGET_BUCKET_LABELS[bucket]
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground hover-elevate"
+                    }`}
+                    data-testid={`button-edit-category-${bucket}`}
+                  >
+                    {BUDGET_BUCKET_LABELS[bucket]}
+                  </button>
+                ))}
+              </div>
+            )}
+            {derivedBucket && selectedLineItem && (
+              <p className="text-xs text-muted-foreground">
+                Budget category: {BUDGET_BUCKET_LABELS[derivedBucket]}
+              </p>
+            )}
           </div>
 
           <div className="space-y-3">
@@ -355,95 +444,6 @@ export function EditExpenseDialog({
                 Groom's Family
               </button>
             </div>
-          </div>
-
-          <div className="space-y-3">
-            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Split the bill?
-            </Label>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setSplitType("full")}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  splitType === "full"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground hover-elevate"
-                }`}
-                data-testid="button-edit-split-none"
-              >
-                No Split
-              </button>
-              <button
-                type="button"
-                onClick={() => setSplitType("split")}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  splitType === "split"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground hover-elevate"
-                }`}
-                data-testid="button-edit-split-yes"
-              >
-                Split Among Families
-              </button>
-            </div>
-            
-            {splitType === "split" && (
-              <div className="mt-3 p-4 bg-muted/50 rounded-lg space-y-3">
-                <div className="flex items-center gap-3">
-                  <span className="text-sm w-28">Me/Partner</span>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={splitPercentages.couple}
-                    onChange={(e) => setSplitPercentages(prev => ({ ...prev, couple: e.target.value }))}
-                    className="w-20 h-8 text-sm"
-                    data-testid="input-edit-split-couple"
-                  />
-                  <span className="text-sm text-muted-foreground">%</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm w-28">Bride's Family</span>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={splitPercentages.bride_family}
-                    onChange={(e) => setSplitPercentages(prev => ({ ...prev, bride_family: e.target.value }))}
-                    className="w-20 h-8 text-sm"
-                    data-testid="input-edit-split-bride"
-                  />
-                  <span className="text-sm text-muted-foreground">%</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm w-28">Groom's Family</span>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={splitPercentages.groom_family}
-                    onChange={(e) => setSplitPercentages(prev => ({ ...prev, groom_family: e.target.value }))}
-                    className="w-20 h-8 text-sm"
-                    data-testid="input-edit-split-groom"
-                  />
-                  <span className="text-sm text-muted-foreground">%</span>
-                </div>
-                {(() => {
-                  const total = (parseFloat(splitPercentages.couple) || 0) + 
-                               (parseFloat(splitPercentages.bride_family) || 0) + 
-                               (parseFloat(splitPercentages.groom_family) || 0);
-                  if (total !== 100) {
-                    return (
-                      <p className="text-xs text-destructive">
-                        Total: {total}% (should equal 100%)
-                      </p>
-                    );
-                  }
-                  return null;
-                })()}
-              </div>
-            )}
           </div>
 
           <div className="space-y-3">
@@ -527,13 +527,70 @@ export function EditExpenseDialog({
             />
           </div>
 
+          <div className="space-y-2">
+            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Receipt / Attachment (optional)
+            </Label>
+            
+            {existingReceiptUrl && !photoPreview && (
+              <div className="p-3 bg-muted/50 rounded-lg flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Current receipt attached</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <a 
+                    href={existingReceiptUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-sm text-primary hover:underline flex items-center gap-1"
+                    data-testid="link-view-receipt"
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                    View
+                  </a>
+                </div>
+              </div>
+            )}
+            
+            {photoPreview ? (
+              <div className="relative">
+                <img src={photoPreview} alt="Receipt preview" className="max-h-32 mx-auto rounded" />
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="destructive"
+                  className="absolute top-1 right-1 h-6 w-6"
+                  onClick={removePhoto}
+                  data-testid="button-remove-receipt"
+                >
+                  <X className="w-3 h-3" />
+                </Button>
+              </div>
+            ) : (
+              <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed rounded-lg cursor-pointer hover-elevate">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoChange}
+                  className="hidden"
+                  data-testid="input-edit-receipt"
+                />
+                <Upload className="w-6 h-6 text-muted-foreground mb-2" />
+                <span className="text-sm text-muted-foreground">
+                  {existingReceiptUrl ? "Upload new receipt" : "Click to upload a receipt"}
+                </span>
+              </label>
+            )}
+          </div>
+
           <div className="flex gap-2 justify-end pt-4">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={isPending || !expenseName.trim() || !selectedBucket}
+              disabled={isPending || !expenseName.trim() || !derivedBucket}
               data-testid="button-save-edit-expense"
             >
               {isPending ? "Saving..." : "Save Changes"}
