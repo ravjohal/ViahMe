@@ -683,6 +683,50 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
     }
   });
 
+  // POST /api/budget/ceremony-budgets - Set ceremony-level total budget
+  router.post("/ceremony-budgets", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      if (!authReq.session.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const { weddingId, ceremonyId, allocatedAmount } = req.body;
+
+      if (!weddingId || !ceremonyId || allocatedAmount === undefined) {
+        return res.status(400).json({ error: "Missing required fields: weddingId, ceremonyId, allocatedAmount" });
+      }
+
+      const wedding = await storage.getWedding(weddingId);
+      if (!wedding) {
+        return res.status(404).json({ error: "Wedding not found" });
+      }
+
+      if (wedding.userId !== authReq.session.userId) {
+        const roles = await storage.getWeddingRoles(weddingId);
+        const hasAccess = roles.some(role => role.userId === authReq.session.userId);
+        if (!hasAccess) {
+          return res.status(403).json({ error: "Access denied" });
+        }
+      }
+
+      // Use 'other' as the bucket for ceremony-level totals (no specific category)
+      const allocation = await storage.upsertBudgetAllocation(
+        weddingId,
+        "other" as BudgetBucket,
+        allocatedAmount.toString(),
+        ceremonyId,
+        null,
+        null
+      );
+
+      res.json({ allocation });
+    } catch (error) {
+      console.error("Error saving ceremony budget:", error);
+      res.status(500).json({ error: "Failed to save ceremony budget" });
+    }
+  });
+
   router.get("/ceremony-analytics/:weddingId", await requireAuth(storage, false), ensureCoupleAccess(storage, (req) => req.params.weddingId), async (req, res) => {
     try {
       const weddingId = req.params.weddingId;
