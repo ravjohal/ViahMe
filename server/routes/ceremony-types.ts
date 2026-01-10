@@ -159,8 +159,8 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
           return res.status(404).json({ error: "Wedding not found" });
         }
         
-        const weddingUser = await storage.getWeddingUser(weddingId, userId);
-        if (!weddingUser) {
+        const permissions = await storage.getUserPermissionsForWedding(userId, weddingId);
+        if (!permissions.isOwner && permissions.permissions.size === 0) {
           return res.status(403).json({ error: "You don't have access to this wedding" });
         }
         
@@ -249,8 +249,8 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
           return res.status(404).json({ error: "Wedding not found" });
         }
         
-        const weddingUser = await storage.getWeddingUser(weddingId, userId);
-        if (!weddingUser) {
+        const permissions = await storage.getUserPermissionsForWedding(userId, weddingId);
+        if (!permissions.isOwner && permissions.permissions.size === 0) {
           return res.status(403).json({ error: "You don't have access to this wedding" });
         }
         
