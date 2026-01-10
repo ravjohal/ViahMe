@@ -918,8 +918,8 @@ export default function Budget() {
     setCustomItemAmount("");
   };
   
-  // Handle selecting a library item to add to a ceremony
-  const handleLibraryItemSelect = (item: LibraryItem, amount: string) => {
+  // Handle selecting a library item to add to a ceremony (one-click clone with inherited costs)
+  const handleLibraryItemSelect = (item: LibraryItem) => {
     if (!libraryPickerOpen || !wedding?.id) return;
     
     const ceremonyTypeId = getCeremonyTypeId(libraryPickerOpen.eventName);
@@ -932,7 +932,6 @@ export default function Budget() {
       weddingId: wedding.id,
       ceremonyTypeId,
       sourceCategoryId: item.id,
-      amount,
     }, {
       onSuccess: () => {
         toast({ title: "Success", description: `${item.itemName} added to ${libraryPickerOpen.eventName}` });

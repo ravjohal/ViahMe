@@ -149,11 +149,11 @@ export interface CreateCustomCeremonyItemInput {
 }
 
 // Input type for cloning a library item to a ceremony
+// Clone inherits lowCost/highCost from source - no amount needed
 export interface CloneLibraryItemInput {
   weddingId: string;
   ceremonyTypeId: string;
   sourceCategoryId: string; // ID of the library item to clone
-  amount: string; // Budget amount for this ceremony
   notes?: string;
 }
 

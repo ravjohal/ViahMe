@@ -1,12 +1,10 @@
 import { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Search, DollarSign, Check } from "lucide-react";
+import { Search, Plus } from "lucide-react";
 import { useBudgetItemLibrary, type LibraryItem } from "@/hooks/use-ceremony-types";
 
 const BUCKET_LABELS: Record<string, string> = {
@@ -28,14 +26,12 @@ interface LibraryItemPickerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   ceremonyName: string;
-  onSelect: (item: LibraryItem, amount: string) => void;
+  onSelect: (item: LibraryItem) => void;
 }
 
 export function LibraryItemPicker({ open, onOpenChange, ceremonyName, onSelect }: LibraryItemPickerProps) {
   const { data: libraryData, isLoading } = useBudgetItemLibrary();
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedItem, setSelectedItem] = useState<LibraryItem | null>(null);
-  const [amount, setAmount] = useState("");
 
   const filteredItems = useMemo(() => {
     if (!libraryData?.items) return {};
@@ -58,14 +54,10 @@ export function LibraryItemPicker({ open, onOpenChange, ceremonyName, onSelect }
     return filtered;
   }, [libraryData?.items, searchQuery]);
 
-  const handleSelect = () => {
-    if (selectedItem && amount) {
-      onSelect(selectedItem, amount);
-      setSelectedItem(null);
-      setAmount("");
-      setSearchQuery("");
-      onOpenChange(false);
-    }
+  const handleItemClick = (item: LibraryItem) => {
+    onSelect(item);
+    setSearchQuery("");
+    onOpenChange(false);
   };
 
   const formatCurrency = (value: number) => {
@@ -83,7 +75,7 @@ export function LibraryItemPicker({ open, onOpenChange, ceremonyName, onSelect }
         <DialogHeader>
           <DialogTitle>Add Item from Library</DialogTitle>
           <DialogDescription>
-            Choose a budget item to add to {ceremonyName}
+            Click an item to add it to {ceremonyName} with its estimated costs
           </DialogDescription>
         </DialogHeader>
 
@@ -101,59 +93,6 @@ export function LibraryItemPicker({ open, onOpenChange, ceremonyName, onSelect }
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
-          </div>
-        ) : selectedItem ? (
-          <div className="space-y-4 py-4">
-            <div className="p-4 rounded-lg bg-muted/50">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-medium">{selectedItem.itemName}</h3>
-                <Badge variant="outline">{BUCKET_LABELS[selectedItem.budgetBucketId] || "Other"}</Badge>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Typical range: {formatCurrency(selectedItem.lowCost)} - {formatCurrency(selectedItem.highCost)}
-              </p>
-              {selectedItem.ceremonies.length > 0 && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Used in: {selectedItem.ceremonies.map(c => c.ceremonyName).join(", ")}
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="budget-amount">Your Budget for This Item</Label>
-              <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="budget-amount"
-                  type="number"
-                  placeholder="Enter amount"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  className="pl-10"
-                  data-testid="input-library-amount"
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                onClick={() => setSelectedItem(null)}
-                className="flex-1"
-                data-testid="button-back-to-list"
-              >
-                Back
-              </Button>
-              <Button 
-                onClick={handleSelect}
-                disabled={!amount || isNaN(parseFloat(amount))}
-                className="flex-1"
-                data-testid="button-add-library-item"
-              >
-                <Check className="h-4 w-4 mr-2" />
-                Add to {ceremonyName}
-              </Button>
-            </div>
           </div>
         ) : (
           <ScrollArea className="flex-1 max-h-[400px]">
@@ -173,18 +112,21 @@ export function LibraryItemPicker({ open, onOpenChange, ceremonyName, onSelect }
                       {items.map((item) => (
                         <button
                           key={item.id}
-                          onClick={() => setSelectedItem(item)}
-                          className="w-full text-left p-3 rounded-md hover-elevate transition-colors"
+                          onClick={() => handleItemClick(item)}
+                          className="w-full text-left p-3 rounded-md hover-elevate transition-colors group"
                           data-testid={`button-library-item-${item.id}`}
                         >
                           <div className="flex items-center justify-between">
-                            <span className="font-medium">{item.itemName}</span>
+                            <div className="flex items-center gap-2">
+                              <Plus className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                              <span className="font-medium">{item.itemName}</span>
+                            </div>
                             <span className="text-sm text-muted-foreground">
                               {formatCurrency(item.lowCost)} - {formatCurrency(item.highCost)}
                             </span>
                           </div>
                           {item.ceremonies.length > 1 && (
-                            <p className="text-xs text-muted-foreground mt-1">
+                            <p className="text-xs text-muted-foreground mt-1 ml-6">
                               Found in {item.ceremonies.length} ceremonies
                             </p>
                           )}

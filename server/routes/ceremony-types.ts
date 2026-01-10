@@ -327,8 +327,14 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
       let finalItemName: string;
       let finalBudgetBucketId: string;
       let finalSourceCategoryId: string | null = null;
+      let finalLowCost: string;
+      let finalHighCost: string;
+      let finalUnit: string = 'fixed';
+      let finalHoursLow: string | null = null;
+      let finalHoursHigh: string | null = null;
+      let finalNotes: string | null = notes || null;
       
-      // Mode 1: Clone from library item
+      // Mode 1: Clone from library item - inherits all cost data from source
       if (sourceCategoryId && typeof sourceCategoryId === 'string') {
         // Fetch the source library item
         const sourceItem = await storage.getCeremonyBudgetCategory(sourceCategoryId);
@@ -352,41 +358,56 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
           });
         }
         
+        // Clone all data from source item
         finalItemName = sourceItem.itemName;
         finalBudgetBucketId = sourceItem.budgetBucketId;
         finalSourceCategoryId = sourceCategoryId;
+        finalLowCost = sourceItem.lowCost;
+        finalHighCost = sourceItem.highCost;
+        finalUnit = sourceItem.unit;
+        finalHoursLow = sourceItem.hoursLow;
+        finalHoursHigh = sourceItem.hoursHigh;
+        finalNotes = sourceItem.notes || notes || null;
       } else {
-        // Mode 2: Create fully custom item
+        // Mode 2: Create fully custom item - requires amount
         if (!itemName || typeof itemName !== 'string' || !itemName.trim()) {
           return res.status(400).json({ error: "itemName is required for custom items" });
         }
         if (!budgetBucketId || typeof budgetBucketId !== 'string') {
           return res.status(400).json({ error: "budgetBucketId is required for custom items" });
         }
+        if (!amount || isNaN(parseFloat(amount))) {
+          return res.status(400).json({ error: "amount is required for custom items" });
+        }
         finalItemName = itemName.trim();
         finalBudgetBucketId = budgetBucketId;
+        // Custom items: store amount as both lowCost and highCost with unit='fixed'
+        finalLowCost = amount.toString();
+        finalHighCost = amount.toString();
       }
       
-      // Amount is required for both modes
-      if (!amount || isNaN(parseFloat(amount))) {
-        return res.status(400).json({ error: "amount is required and must be a valid number" });
-      }
-      
-      // Custom items: store amount as both lowCost and highCost with unit='fixed'
-      // This ensures they display the same value regardless of low/high toggle
-      const budgetAmount = amount.toString();
-      
-      const validatedData = insertCeremonyBudgetCategorySchema.parse({
+      // Build the data object, only including hours if they have values
+      const insertData: Record<string, any> = {
         itemName: finalItemName,
         budgetBucketId: finalBudgetBucketId,
-        lowCost: budgetAmount,
-        highCost: budgetAmount,
-        unit: 'fixed',
-        notes: notes || null,
+        lowCost: finalLowCost,
+        highCost: finalHighCost,
+        unit: finalUnit,
+        notes: finalNotes,
         ceremonyTypeId: ceremonyId,
         weddingId,
         sourceCategoryId: finalSourceCategoryId,
-      });
+      };
+      
+      // Only include hours fields if they have actual values (not null/undefined)
+      if (finalHoursLow !== null && finalHoursLow !== undefined) {
+        insertData.hoursLow = finalHoursLow;
+      }
+      if (finalHoursHigh !== null && finalHoursHigh !== undefined) {
+        insertData.hoursHigh = finalHoursHigh;
+      }
+      
+      const validatedData = insertCeremonyBudgetCategorySchema.parse(insertData);
       
       const newItem = await storage.createCeremonyBudgetCategory(validatedData);
       
