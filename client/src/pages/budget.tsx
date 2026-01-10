@@ -17,7 +17,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type BudgetBucket, type Wedding, type Event, type Contract, type Vendor, type Expense, type BudgetAllocation, type CeremonyBudget, type CeremonyLineItemBudget, type CeremonyBudgetCategoryItem } from "@shared/schema";
 import { CEREMONY_MAPPINGS } from "@shared/ceremonies";
-import { useAllCeremonyLineItems, getLineItemBucketLabel, useCreateCustomCeremonyItem, useWeddingCeremonyLineItemsMap, type CeremonyBudgetCategoryApiItem } from "@/hooks/use-ceremony-types";
+import { useAllCeremonyLineItems, getLineItemBucketLabel, useCreateCustomCeremonyItem, useCloneLibraryItem, useWeddingCeremonyLineItemsMap, type CeremonyBudgetCategoryApiItem, type LibraryItem } from "@/hooks/use-ceremony-types";
+import { LibraryItemPicker } from "@/components/budget/library-item-picker";
 import { useBudgetCategories, useBudgetCategoryLookup } from "@/hooks/use-budget-bucket-categories";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -84,6 +85,9 @@ export default function Budget() {
   const [customItemName, setCustomItemName] = useState("");
   const [customItemBucket, setCustomItemBucket] = useState("");
   const [customItemAmount, setCustomItemAmount] = useState("");
+  
+  // Library picker state (keyed by eventId for which ceremony the picker is open)
+  const [libraryPickerOpen, setLibraryPickerOpen] = useState<{ eventId: string; eventName: string } | null>(null);
 
   const { data: weddings, isLoading: weddingsLoading } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
@@ -905,12 +909,46 @@ export default function Budget() {
 
   // Custom ceremony budget item creation
   const createCustomItemMutation = useCreateCustomCeremonyItem();
+  const cloneLibraryItemMutation = useCloneLibraryItem();
   
   const resetCustomItemForm = () => {
     setCustomItemFormOpen(null);
     setCustomItemName("");
     setCustomItemBucket("");
     setCustomItemAmount("");
+  };
+  
+  // Handle selecting a library item to add to a ceremony
+  const handleLibraryItemSelect = (item: LibraryItem, amount: string) => {
+    if (!libraryPickerOpen || !wedding?.id) return;
+    
+    const ceremonyTypeId = getCeremonyTypeId(libraryPickerOpen.eventName);
+    if (!ceremonyTypeId) {
+      toast({ title: "Error", description: "Could not determine ceremony type", variant: "destructive" });
+      return;
+    }
+    
+    cloneLibraryItemMutation.mutate({
+      weddingId: wedding.id,
+      ceremonyTypeId,
+      sourceCategoryId: item.id,
+      amount,
+    }, {
+      onSuccess: () => {
+        toast({ title: "Success", description: `${item.itemName} added to ${libraryPickerOpen.eventName}` });
+        setLibraryPickerOpen(null);
+        // Invalidate queries to refresh the data
+        queryClient.invalidateQueries({ queryKey: ['/api/ceremony-types/all/line-items', wedding?.id] });
+      },
+      onError: (error: any) => {
+        const message = error?.message || "Failed to add item";
+        if (message.includes("already exists")) {
+          toast({ title: "Already Added", description: "This item is already in your ceremony budget", variant: "destructive" });
+        } else {
+          toast({ title: "Error", description: message, variant: "destructive" });
+        }
+      },
+    });
   };
   
   const handleCreateCustomItem = (eventId: string, eventName: string) => {
@@ -1658,16 +1696,28 @@ export default function Budget() {
                           {getCeremonyTypeId(ceremony.eventName) && budgetCategories.length > 0 && (
                             <div className="mb-4">
                               {customItemFormOpen !== ceremony.eventId ? (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => setCustomItemFormOpen(ceremony.eventId)}
-                                  className="w-full"
-                                  data-testid={`button-add-custom-item-${ceremony.eventId}`}
-                                >
-                                  <Sparkles className="w-4 h-4 mr-2" />
-                                  Add Custom Budget Item
-                                </Button>
+                                <div className="flex gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setLibraryPickerOpen({ eventId: ceremony.eventId, eventName: ceremony.eventName })}
+                                    className="flex-1"
+                                    data-testid={`button-add-from-library-${ceremony.eventId}`}
+                                  >
+                                    <Plus className="w-4 h-4 mr-2" />
+                                    Add from Library
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setCustomItemFormOpen(ceremony.eventId)}
+                                    className="flex-1"
+                                    data-testid={`button-add-custom-item-${ceremony.eventId}`}
+                                  >
+                                    <Sparkles className="w-4 h-4 mr-2" />
+                                    Create New
+                                  </Button>
+                                </div>
                               ) : (
                                 <div className="bg-background rounded-lg p-4 border space-y-4">
                                   <div className="flex items-center justify-between">
@@ -2054,6 +2104,14 @@ export default function Budget() {
             }
           }}
           isPending={updateExpenseMutation.isPending}
+        />
+
+        {/* Library Item Picker Dialog */}
+        <LibraryItemPicker
+          open={!!libraryPickerOpen}
+          onOpenChange={(open) => !open && setLibraryPickerOpen(null)}
+          ceremonyName={libraryPickerOpen?.eventName || ""}
+          onSelect={handleLibraryItemSelect}
         />
       </main>
     </div>

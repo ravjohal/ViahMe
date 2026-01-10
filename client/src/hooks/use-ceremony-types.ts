@@ -148,6 +148,51 @@ export interface CreateCustomCeremonyItemInput {
   notes?: string;
 }
 
+// Input type for cloning a library item to a ceremony
+export interface CloneLibraryItemInput {
+  weddingId: string;
+  ceremonyTypeId: string;
+  sourceCategoryId: string; // ID of the library item to clone
+  amount: string; // Budget amount for this ceremony
+  notes?: string;
+}
+
+// Library item type returned by /api/ceremony-types/library
+export interface LibraryItem {
+  id: string;
+  itemName: string;
+  budgetBucketId: string;
+  lowCost: number;
+  highCost: number;
+  unit: string;
+  hoursLow?: number;
+  hoursHigh?: number;
+  notes?: string;
+  ceremonies: Array<{
+    ceremonyId: string;
+    ceremonyName: string;
+    tradition: string;
+  }>;
+}
+
+export interface LibraryResponse {
+  items: LibraryItem[];
+  groupedByBucket: Record<string, LibraryItem[]>;
+  totalCount: number;
+}
+
+// Hook to fetch the budget item library (all unique system items)
+export function useBudgetItemLibrary() {
+  return useQuery<LibraryResponse>({
+    queryKey: ['/api/ceremony-types/library'],
+    queryFn: async () => {
+      const response = await fetch('/api/ceremony-types/library');
+      if (!response.ok) throw new Error('Failed to fetch budget item library');
+      return response.json();
+    },
+  });
+}
+
 // Hook for creating custom ceremony budget categories
 export function useCreateCustomCeremonyItem() {
   const queryClient = useQueryClient();
@@ -162,6 +207,34 @@ export function useCreateCustomCeremonyItem() {
       queryClient.invalidateQueries({ 
         queryKey: ['/api/ceremony-types', variables.ceremonyTypeId, 'line-items'] 
       });
+    },
+  });
+}
+
+// Hook for cloning a library item to a ceremony
+export function useCloneLibraryItem() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (data: CloneLibraryItemInput) => {
+      const response = await apiRequest('POST', `/api/ceremony-types/${data.ceremonyTypeId}/line-items`, data);
+      return response.json();
+    },
+    onSuccess: (_, variables) => {
+      // Invalidate the line items query for this ceremony type
+      queryClient.invalidateQueries({ 
+        queryKey: ['/api/ceremony-types', variables.ceremonyTypeId, 'line-items'] 
+      });
+      // Invalidate the all line items query (base key)
+      queryClient.invalidateQueries({ 
+        queryKey: ['/api/ceremony-types/all/line-items'] 
+      });
+      // CRITICAL: Also invalidate the wedding-specific line items map used by budget page
+      if (variables.weddingId) {
+        queryClient.invalidateQueries({ 
+          queryKey: ['/api/ceremony-types/all/line-items', variables.weddingId] 
+        });
+      }
     },
   });
 }
