@@ -82,7 +82,41 @@ export interface CeremonyEstimateResponse {
     lowCost: number;
     highCost: number;
     notes?: string;
+    budgetBucket?: string;
   }>;
+}
+
+// Line item type from the normalized ceremony_template_items table
+export interface CeremonyTemplateLineItem {
+  id: string;
+  name: string;
+  budgetBucket: string;
+  lowCost: number;
+  highCost: number;
+  unit: 'fixed' | 'per_person' | 'per_hour';
+  hoursLow?: number;
+  hoursHigh?: number;
+  notes?: string;
+}
+
+export interface CeremonyLineItemsResponse {
+  ceremonyId: string;
+  ceremonyName: string;
+  tradition: string;
+  lineItems: CeremonyTemplateLineItem[];
+}
+
+// Hook to fetch normalized line items from the ceremony_template_items table
+export function useCeremonyTemplateLineItems(ceremonyId: string | null | undefined) {
+  return useQuery<CeremonyLineItemsResponse>({
+    queryKey: ['/api/ceremony-templates', ceremonyId, 'line-items'],
+    queryFn: async () => {
+      const response = await fetch(`/api/ceremony-templates/${ceremonyId}/line-items`);
+      if (!response.ok) throw new Error('Failed to fetch ceremony line items');
+      return response.json();
+    },
+    enabled: !!ceremonyId,
+  });
 }
 
 export async function getCeremonyEstimate(request: CeremonyEstimateRequest): Promise<CeremonyEstimateResponse> {
