@@ -3911,6 +3911,7 @@ export type CeremonyType = typeof ceremonyTypes.$inferSelect;
 
 // Cost breakdown item type for the JSON field in ceremony types
 export type CeremonyBudgetCategoryItem = {
+  id?: string; // Item ID - present when fetched from API, used for deleting custom items
   category: string;
   lowCost: number;
   highCost: number;

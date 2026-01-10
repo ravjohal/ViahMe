@@ -173,6 +173,7 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
       const combinedItems = [...allItems, ...customItems];
       
       const grouped: Record<string, Array<{
+        id: string;
         category: string;
         lowCost: number;
         highCost: number;
@@ -192,6 +193,7 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
         }
         const bucketId = item.budgetBucketId ?? 'other';
         grouped[key].push({
+          id: item.id, // Include id so custom items can be deleted
           category: item.itemName,
           lowCost: parseFloat(item.lowCost),
           highCost: parseFloat(item.highCost),
