@@ -241,6 +241,42 @@ export function useCloneLibraryItem() {
   });
 }
 
+// Input type for deleting a custom ceremony budget category
+export interface DeleteCeremonyItemInput {
+  weddingId: string;
+  ceremonyTypeId: string;
+  itemId: string;
+}
+
+// Hook for deleting a custom ceremony budget category
+export function useDeleteCeremonyItem() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (data: DeleteCeremonyItemInput) => {
+      const response = await apiRequest(
+        'DELETE', 
+        `/api/ceremony-types/${data.ceremonyTypeId}/line-items/${data.itemId}?weddingId=${data.weddingId}`
+      );
+      return response.json();
+    },
+    onSuccess: (_, variables) => {
+      // Invalidate the line items query for this ceremony type
+      queryClient.invalidateQueries({ 
+        queryKey: ['/api/ceremony-types', variables.ceremonyTypeId, 'line-items'] 
+      });
+      // Invalidate the all line items query (base key)
+      queryClient.invalidateQueries({ 
+        queryKey: ['/api/ceremony-types/all/line-items'] 
+      });
+      // CRITICAL: Also invalidate the wedding-specific line items map used by budget page
+      queryClient.invalidateQueries({ 
+        queryKey: ['/api/ceremony-types/all/line-items', variables.weddingId] 
+      });
+    },
+  });
+}
+
 export async function getCeremonyEstimate(request: CeremonyEstimateRequest): Promise<CeremonyEstimateResponse> {
   const response = await fetch('/api/ceremony-estimate', {
     method: 'POST',

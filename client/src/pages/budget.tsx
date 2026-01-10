@@ -17,7 +17,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type BudgetBucket, type Wedding, type Event, type Contract, type Vendor, type Expense, type BudgetAllocation, type CeremonyBudget, type CeremonyLineItemBudget, type CeremonyBudgetCategoryItem } from "@shared/schema";
 import { CEREMONY_MAPPINGS } from "@shared/ceremonies";
-import { useAllCeremonyLineItems, getLineItemBucketLabel, useCreateCustomCeremonyItem, useCloneLibraryItem, useWeddingCeremonyLineItemsMap, type CeremonyBudgetCategoryApiItem, type LibraryItem } from "@/hooks/use-ceremony-types";
+import { useAllCeremonyLineItems, getLineItemBucketLabel, useCreateCustomCeremonyItem, useCloneLibraryItem, useDeleteCeremonyItem, useWeddingCeremonyLineItemsMap, type CeremonyBudgetCategoryApiItem, type LibraryItem } from "@/hooks/use-ceremony-types";
 import { LibraryItemPicker } from "@/components/budget/library-item-picker";
 import { useBudgetCategories, useBudgetCategoryLookup } from "@/hooks/use-budget-bucket-categories";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -909,9 +909,17 @@ export default function Budget() {
     return editedValue !== (currentAllocated > 0 ? currentAllocated.toString() : "");
   };
 
-  // Custom ceremony budget item creation
+  // Custom ceremony budget item creation and deletion
   const createCustomItemMutation = useCreateCustomCeremonyItem();
   const cloneLibraryItemMutation = useCloneLibraryItem();
+  const deleteCustomItemMutation = useDeleteCeremonyItem();
+  
+  // State for tracking which custom item is pending deletion (includes context for the mutation)
+  const [deletingCustomItem, setDeletingCustomItem] = useState<{
+    itemId: string;
+    itemName: string;
+    ceremonyTypeId: string;
+  } | null>(null);
   
   const resetCustomItemForm = () => {
     setCustomItemFormOpen(null);
@@ -991,6 +999,28 @@ export default function Budget() {
         } else {
           toast({ title: "Error", description: message, variant: "destructive" });
         }
+      },
+    });
+  };
+
+  // Handle deleting a custom ceremony budget item
+  const handleDeleteCustomItem = () => {
+    if (!deletingCustomItem || !wedding?.id) return;
+    
+    deleteCustomItemMutation.mutate({
+      weddingId: wedding.id,
+      ceremonyTypeId: deletingCustomItem.ceremonyTypeId,
+      itemId: deletingCustomItem.itemId,
+    }, {
+      onSuccess: () => {
+        toast({ title: "Deleted", description: `${deletingCustomItem.itemName} removed from budget` });
+        setDeletingCustomItem(null);
+        // Invalidate the wedding-aware line items map to refresh the list
+        queryClient.invalidateQueries({ queryKey: ['/api/ceremony-types/all/line-items', wedding.id] });
+      },
+      onError: (error: any) => {
+        const message = error?.message || (error instanceof Error ? error.message : "Failed to delete item");
+        toast({ title: "Error", description: message, variant: "destructive" });
       },
     });
   };
@@ -1678,6 +1708,26 @@ export default function Budget() {
                                       <div className="flex items-center gap-1 shrink-0">
                                         <span className="text-sm text-muted-foreground">$</span>
                                         <Input type="number" placeholder="0" className="w-24 h-8 text-right" value={savedAmount} onChange={(e) => handleLineItemChange(ceremony.eventId, item.category, e.target.value)} data-testid={`input-line-item-${ceremony.eventId}-${idx}`} />
+                                        {item.isCustom && item.id && (
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                            onClick={() => {
+                                              const ceremonyTypeId = getCeremonyTypeId(ceremony.eventName);
+                                              if (ceremonyTypeId) {
+                                                setDeletingCustomItem({
+                                                  itemId: item.id!,
+                                                  itemName: item.category,
+                                                  ceremonyTypeId,
+                                                });
+                                              }
+                                            }}
+                                            data-testid={`button-delete-custom-item-${ceremony.eventId}-${idx}`}
+                                          >
+                                            <Trash2 className="h-4 w-4" />
+                                          </Button>
+                                        )}
                                       </div>
                                     </div>
                                   );
@@ -2126,6 +2176,31 @@ export default function Budget() {
                 data-testid="button-confirm-delete-expense"
               >
                 {deleteExpenseMutation.isPending ? "Deleting..." : "Delete"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Custom Budget Item Confirmation Dialog */}
+        <Dialog open={!!deletingCustomItem} onOpenChange={(open) => !open && setDeletingCustomItem(null)}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Remove Budget Item</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to remove "{deletingCustomItem?.itemName}" from your ceremony budget? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex gap-2 justify-end pt-4">
+              <Button variant="outline" onClick={() => setDeletingCustomItem(null)}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDeleteCustomItem}
+                disabled={deleteCustomItemMutation.isPending}
+                data-testid="button-confirm-delete-custom-item"
+              >
+                {deleteCustomItemMutation.isPending ? "Removing..." : "Remove"}
               </Button>
             </div>
           </DialogContent>

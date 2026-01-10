@@ -450,6 +450,63 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
     }
   });
 
+  // Delete a custom ceremony budget category (wedding-specific items only)
+  router.delete("/:ceremonyId/line-items/:itemId", async (req, res) => {
+    try {
+      const { ceremonyId, itemId } = req.params;
+      const userId = req.session?.userId;
+      const { weddingId } = req.query;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      if (!weddingId || typeof weddingId !== 'string') {
+        return res.status(400).json({ error: "weddingId query parameter is required" });
+      }
+      
+      // Verify user has access to this wedding
+      const wedding = await storage.getWedding(weddingId);
+      if (!wedding) {
+        return res.status(404).json({ error: "Wedding not found" });
+      }
+      
+      const permissions = await storage.getUserPermissionsForWedding(userId, weddingId);
+      if (!permissions.isOwner && permissions.permissions.size === 0) {
+        return res.status(403).json({ error: "You don't have access to this wedding" });
+      }
+      
+      // Get the item to verify it belongs to this wedding
+      const item = await storage.getCeremonyBudgetCategory(itemId);
+      if (!item) {
+        return res.status(404).json({ error: "Budget item not found" });
+      }
+      
+      // Only allow deleting wedding-specific custom items
+      if (!item.weddingId) {
+        return res.status(403).json({ error: "Cannot delete system library items" });
+      }
+      
+      // Verify the item belongs to the specified wedding
+      if (item.weddingId !== weddingId) {
+        return res.status(403).json({ error: "Budget item does not belong to this wedding" });
+      }
+      
+      // Verify the item belongs to the specified ceremony
+      if (item.ceremonyTypeId !== ceremonyId) {
+        return res.status(400).json({ error: "Budget item does not belong to this ceremony" });
+      }
+      
+      // Delete the item
+      await storage.deleteCeremonyBudgetCategory(itemId);
+      
+      res.json({ success: true, deletedId: itemId });
+    } catch (error) {
+      console.error("[Ceremony Types] Error deleting custom line item:", error);
+      res.status(500).json({ error: "Failed to delete custom line item" });
+    }
+  });
+
   router.post("/", async (req, res, next) => {
     await requireSiteAdmin(req, res, async () => {
       try {
