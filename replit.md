@@ -20,7 +20,9 @@ Key architectural decisions and features include:
 - **Vendor Specialization**: Support for 32 distinct vendor categories, including culturally-specific services.
 - **Budget Intelligence System**: Employs a Unified Single Ledger Model with a three-tier budget hierarchy, smart budget recommendations, dual-view aggregation, and a refined pricing engine using three-factor multipliers for precise estimates.
   - **`budget_bucket_categories` table**: 12 high-level budget buckets managed by site admins with rich metadata (displayName, description, iconName, isEssential, suggestedPercentage)
-  - **API Endpoints**: `/api/budget-bucket-categories/:weddingId` (GET), `/api/budget-bucket-categories` (POST), `/api/budget-bucket-categories/:id` (PATCH)
+  - **Two-Tier Budget API Architecture**:
+    - `/api/budget/categories` - Site-admin managed global category definitions (the 12 master budget bucket templates). Admin-only CRUD for managing system-wide budget categories.
+    - `/api/budget-bucket-categories/:weddingId` - Wedding-specific budget allocations with spent amounts. Per-couple budget tracking and AI-powered estimates.
   - **React Hooks**: `useBudgetBucketCategories()`, `useBudgetBucketCategoryLookup()` for data fetching and label resolution
 - **Guest List Management**: Features frictionless bulk guest import, advanced invitation & RSVP system with household grouping, magic link authentication, per-event RSVP tracking, and a Household-First Architecture. Includes an integrated Guest Management Module for planning and collector links.
 - **Communication & Collaboration**: Offers a messaging system, review system, document storage, team collaboration with granular role-based access control, and AI-powered message suggestions using Gemini LLM.
