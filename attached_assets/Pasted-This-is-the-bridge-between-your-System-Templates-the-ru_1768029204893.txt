@@ -1,0 +1,100 @@
+This is the bridge between your **System Templates** (the rules of how a Sikh or Hindu wedding works) and the **Couple’s Data** (what is actually happening at Rav and Simran’s wedding).
+
+To understand the relationship, think of it as a **Class vs. Instance** relationship in programming:
+
+* `ceremony_types` is the **Class/Template** (The *concept* of an Anand Karaj).
+* `events` is the **Instance** (The *actual* Anand Karaj happening on June 12th at 10:00 AM).
+
+Here is how they relate to the refactored tables:
+
+### 1. The Relationship Map
+
+| User/Couple Table | Links to | System/Template Table | Why? |
+| --- | --- | --- | --- |
+| **`events`** |  | **`ceremony_types`** | To inherit the tradition-specific details and default descriptions. |
+| **`event_cost_items`** |  | **`ceremony_budget_categories`** | To know that this specific expense is a "Turban Tying" ritual. |
+| **`event_cost_items`** |  | **`budget_bucket_categories`** | To ensure this expense rolls up into the "Attire & Beauty" master bucket. |
+
+---
+
+### 2. Schema Logic (The Senior Design)
+
+Here is how the Foreign Keys should be structured in your `shared/schema.ts` to make this work:
+
+#### The `events` Table
+
+When a couple adds a "Sangeet" to their wedding, the `events` table records the "Instance" data (time, venue, guest count) but points back to the "Type" to know its cultural context.
+
+```typescript
+export const events = pgTable("events", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  weddingId: uuid("wedding_id").references(() => weddings.id),
+  
+  // NEW RELATIONSHIP: Points to the specific ceremony type (e.g., 'anand_karaj')
+  ceremonyTypeId: varchar("ceremony_type_id").references(() => ceremonyTypes.id),
+  
+  customName: text("custom_name"), // e.g., "Simran's Grand Mehndi"
+  eventDate: timestamp("event_date"),
+  // ... logistics like venueId, guestCount, etc.
+});
+
+```
+
+#### The `event_cost_items` Table
+
+This is where the "Single Ledger" happens. Every time a couple spends money, it is tied to an **Event** (where the money is spent) and a **Bucket** (how it's accounted for).
+
+```typescript
+export const eventCostItems = pgTable("event_cost_items", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  eventId: uuid("event_id").references(() => events.id), // Which ceremony?
+  
+  // THE FINANCIAL LINK: 
+  // Points back to the system-defined ritual item (e.g., 'Turban Tying')
+  ceremonyBudgetCategoryId: varchar("ceremony_budget_category_id")
+    .references(() => ceremonyBudgetCategories.id),
+
+  // THE ACCOUNTING LINK:
+  // Points to the high-level bucket (e.g., 'Attire & Beauty')
+  budgetBucketCategoryId: varchar("budget_bucket_category_id")
+    .references(() => budgetBucketCategories.id),
+
+  actualAmount: decimal("actual_amount", { precision: 12, scale: 2 }),
+  status: text("status"), // 'estimated', 'booked', 'paid'
+});
+
+```
+
+---
+
+### 3. The "Life of a Line Item" (Example: Turban Tying)
+
+To see how these all talk to each other, follow the data flow for a couple planning a Sikh wedding:
+
+1. **System Level:** * A `ceremony_type` exists called `anand_karaj` (linked to `sikh` tradition).
+* A `ceremony_budget_category` exists called `turban_tying` (linked to `anand_karaj` and the `attire_beauty` bucket).
+
+
+2. **Couple Creation:**
+* The couple creates an `event` in their wedding. They select "Anand Karaj" from a dropdown.
+* The `events` table now has a row: `{ id: 101, ceremonyTypeId: 'anand_karaj' }`.
+
+
+3. **Automatic Budget Generation:**
+* The system looks at `ceremony_budget_categories` where `ceremonyTypeId = 'anand_karaj'`.
+* It finds `turban_tying`.
+* It automatically creates an `event_cost_item` for the couple.
+
+
+4. **The Resulting Record in `event_cost_items`:**
+* `eventId`: `101` (The couple's specific ceremony).
+* `ceremonyBudgetCategoryId`: `'turban_tying'` (The specific ritual).
+* `budgetBucketCategoryId`: `'attire_beauty'` (The accounting group).
+
+
+
+### Why this is a "Clean" Architecture:
+
+* **Reporting Power:** You can now answer the question: *"How much did I spend on Attire specifically for the Sangeet?"* by querying `event_cost_items` filtered by `eventId` and `budgetBucketCategoryId`.
+* **Maintenance:** if you decide "Turban Tying" should cost more on average, you only update the system `ceremony_budget_categories` table once, and it reflects for all new weddings.
+* **Flexibility:** If a couple has a "Westernized" event that doesn't fit a tradition, they can still create an `event` with a `null` `ceremonyTypeId`, but still link their `event_cost_items` to the standard `budget_bucket_categories` so their math stays correct.

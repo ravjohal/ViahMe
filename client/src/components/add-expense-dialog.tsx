@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, ArrowRight, Check, Calendar, DollarSign, User, FileText, Upload, Tag, Loader2 } from "lucide-react";
 import { type BudgetBucket, type Event } from "@shared/schema";
 import { CEREMONY_MAPPINGS, getCeremonyIdFromEvent } from "@shared/ceremonies";
-import { useBudgetCategories, useBudgetCategoryLookup } from "@/hooks/use-budget-categories";
+import { useBudgetCategories, useBudgetCategoryLookup } from "@/hooks/use-budget-bucket-categories";
 
 // Type for line items fetched from API
 interface LineItem {

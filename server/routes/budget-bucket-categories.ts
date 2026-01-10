@@ -2,7 +2,7 @@ import { Router } from "express";
 import type { IStorage } from "../storage";
 import { insertBudgetAllocationSchema, BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket } from "@shared/schema";
 
-export async function registerBudgetCategoryRoutes(router: Router, storage: IStorage) {
+export async function registerBudgetBucketCategoryRoutes(router: Router, storage: IStorage) {
   router.get("/:weddingId", async (req, res) => {
     try {
       const allocations = await storage.getBudgetAllocationsByWedding(req.params.weddingId);

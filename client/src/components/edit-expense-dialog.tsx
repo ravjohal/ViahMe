@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Upload, X, FileText, ExternalLink } from "lucide-react";
 import { type BudgetBucket, type Event, type Expense, type ExpenseSplit } from "@shared/schema";
 import { getCeremonyIdFromEvent } from "@shared/ceremonies";
-import { useBudgetCategories, useBudgetCategoryLookup } from "@/hooks/use-budget-categories";
+import { useBudgetCategories, useBudgetCategoryLookup } from "@/hooks/use-budget-bucket-categories";
 
 type PayerType = "me" | "partner" | "me_partner" | "bride_family" | "groom_family";
 type ExpenseStatus = "estimated" | "booked" | "paid";

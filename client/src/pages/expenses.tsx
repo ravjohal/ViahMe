@@ -18,7 +18,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Trash2, Pencil, DollarSign, Users, ArrowRightLeft, Check, Receipt, Share2, Copy, Calendar } from "lucide-react";
 import type { Expense, ExpenseSplit, Event, Wedding, BudgetCategory, ExpenseEventAllocation } from "@shared/schema";
 import { EditExpenseDialog, type ExpenseWithDetails } from "@/components/edit-expense-dialog";
-import { useBudgetCategoryLookup } from "@/hooks/use-budget-categories";
+import { useBudgetCategoryLookup } from "@/hooks/use-budget-bucket-categories";
 
 type ExpenseWithSplits = Expense & { splits: ExpenseSplit[]; eventAllocations?: ExpenseEventAllocation[] };
 type SettlementBalance = Record<string, { name: string; paid: number; owes: number; balance: number }>;
@@ -67,7 +67,7 @@ export default function Expenses() {
   });
 
   const { data: budgetCategories = [] } = useQuery<BudgetCategory[]>({
-    queryKey: ["/api/budget-categories", weddingId],
+    queryKey: ["/api/budget-bucket-categories", weddingId],
     enabled: !!weddingId,
   });
 
@@ -96,7 +96,7 @@ export default function Expenses() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/expenses", weddingId] });
-      queryClient.invalidateQueries({ queryKey: ["/api/budget-categories", weddingId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budget-bucket-categories", weddingId] });
       setIsAddDialogOpen(false);
       resetForm();
       toast({ title: "Expense added successfully" });
@@ -112,7 +112,7 @@ export default function Expenses() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/expenses", weddingId] });
-      queryClient.invalidateQueries({ queryKey: ["/api/budget-categories", weddingId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budget-bucket-categories", weddingId] });
       setEditingExpense(null);
       resetForm();
       toast({ title: "Expense updated successfully" });
@@ -128,7 +128,7 @@ export default function Expenses() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/expenses", weddingId] });
-      queryClient.invalidateQueries({ queryKey: ["/api/budget-categories", weddingId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budget-bucket-categories", weddingId] });
       toast({ title: "Expense deleted successfully" });
     },
     onError: () => {

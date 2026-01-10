@@ -14,7 +14,7 @@ import { registerCollectorRoutes } from "./collector-submissions";
 import { registerWeddingRoutes } from "./weddings";
 import { registerEventRoutes, registerEventCostItemRoutes, registerWeddingCostSummaryRoute } from "./events";
 import { registerTaskRoutes, registerTaskReminderRoutes, registerTaskCommentRoutes } from "./tasks";
-import { registerBudgetCategoryRoutes } from "./budget-categories";
+import { registerBudgetBucketCategoryRoutes } from "./budget-bucket-categories";
 import { registerExpenseRoutes } from "./expenses";
 import { registerHouseholdRoutes } from "./households";
 import { registerInvitationRoutes } from "./invitations";
@@ -225,9 +225,9 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   await registerTaskCommentRoutes(taskCommentRouter, storage);
   app.use("/api/task-comments", taskCommentRouter);
 
-  const budgetCategoryRouter = Router();
-  await registerBudgetCategoryRoutes(budgetCategoryRouter, storage);
-  app.use("/api/budget-categories", budgetCategoryRouter);
+  const budgetBucketCategoryRouter = Router();
+  await registerBudgetBucketCategoryRoutes(budgetBucketCategoryRouter, storage);
+  app.use("/api/budget-bucket-categories", budgetBucketCategoryRouter);
 
   const traditionsRouter = Router();
   await registerTraditionsRoutes(traditionsRouter, storage);

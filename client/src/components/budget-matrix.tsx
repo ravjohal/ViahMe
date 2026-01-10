@@ -9,7 +9,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { type BudgetBucket, type Wedding } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useBudgetCategories, useBudgetCategoryLookup } from "@/hooks/use-budget-categories";
+import { useBudgetCategories, useBudgetCategoryLookup } from "@/hooks/use-budget-bucket-categories";
 import { useToast } from "@/hooks/use-toast";
 import { AlertCircle, CheckCircle2, DollarSign, Grid3X3, Loader2, List, LayoutGrid } from "lucide-react";
 

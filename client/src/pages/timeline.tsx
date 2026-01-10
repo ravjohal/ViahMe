@@ -540,7 +540,7 @@ export default function TimelinePage() {
   });
 
   const { data: budgetCategories = [] } = useQuery<{ id: string; name: string; category: string }[]>({
-    queryKey: ["/api/budget-categories", wedding?.id],
+    queryKey: ["/api/budget-bucket-categories", wedding?.id],
     enabled: !!wedding?.id,
   });
 

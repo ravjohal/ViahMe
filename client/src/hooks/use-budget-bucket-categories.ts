@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-export interface BudgetCategory {
+export interface BudgetBucketCategory {
   id: string;
   displayName: string;
   description: string | null;
@@ -12,17 +12,23 @@ export interface BudgetCategory {
   isSystemCategory: boolean | null;
 }
 
-export function useBudgetCategories() {
-  return useQuery<BudgetCategory[]>({
+// Backward compatibility alias
+export type BudgetCategory = BudgetBucketCategory;
+
+export function useBudgetBucketCategories() {
+  return useQuery<BudgetBucketCategory[]>({
     queryKey: ["/api/budget/categories"],
     staleTime: 5 * 60 * 1000,
   });
 }
 
-export function useBudgetCategoryLookup() {
-  const { data: categories = [] } = useBudgetCategories();
+// Backward compatibility alias
+export const useBudgetCategories = useBudgetBucketCategories;
+
+export function useBudgetBucketCategoryLookup() {
+  const { data: categories = [] } = useBudgetBucketCategories();
   
-  const categoryById = new Map<string, BudgetCategory>();
+  const categoryById = new Map<string, BudgetBucketCategory>();
   categories.forEach(cat => categoryById.set(cat.id, cat));
   
   const getCategoryLabel = (id: string): string => {
@@ -43,3 +49,6 @@ export function useBudgetCategoryLookup() {
     allCategoryIds,
   };
 }
+
+// Backward compatibility alias
+export const useBudgetCategoryLookup = useBudgetBucketCategoryLookup;

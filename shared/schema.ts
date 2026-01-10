@@ -79,10 +79,10 @@ export function getBucketLabel(bucket: string | null | undefined): string {
 }
 
 // ============================================================================
-// BUDGET CATEGORIES TABLE - Dynamic category management with rich metadata
+// BUDGET BUCKET CATEGORIES TABLE - Dynamic category management with rich metadata
 // ============================================================================
 
-export const budgetCategories = pgTable("budget_categories", {
+export const budgetBucketCategories = pgTable("budget_bucket_categories", {
   // Use slug-style IDs (e.g., 'venue', 'catering') so code can still reference them
   id: varchar("id").primaryKey(),
   
@@ -106,13 +106,19 @@ export const budgetCategories = pgTable("budget_categories", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-export const insertBudgetCategorySchema = createInsertSchema(budgetCategories).omit({
+export const insertBudgetBucketCategorySchema = createInsertSchema(budgetBucketCategories).omit({
   createdAt: true,
   updatedAt: true,
 });
 
-export type InsertBudgetCategory = z.infer<typeof insertBudgetCategorySchema>;
-export type BudgetCategory = typeof budgetCategories.$inferSelect;
+export type InsertBudgetBucketCategory = z.infer<typeof insertBudgetBucketCategorySchema>;
+export type BudgetBucketCategory = typeof budgetBucketCategories.$inferSelect;
+
+// Backward compatibility aliases
+export const budgetCategories = budgetBucketCategories;
+export const insertBudgetCategorySchema = insertBudgetBucketCategorySchema;
+export type InsertBudgetCategory = InsertBudgetBucketCategory;
+export type BudgetCategory = BudgetBucketCategory;
 
 // Default category metadata for seeding - based on typical South Asian wedding spending
 export const DEFAULT_CATEGORY_METADATA: Record<BudgetBucket, {

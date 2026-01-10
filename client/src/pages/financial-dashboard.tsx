@@ -503,7 +503,7 @@ export default function FinancialDashboard() {
   const widgets = localWidgets;
 
   const { data: categories = [] } = useQuery<BudgetCategory[]>({
-    queryKey: ["/api/budget-categories", wedding?.id],
+    queryKey: ["/api/budget-bucket-categories", wedding?.id],
     enabled: !!wedding?.id,
   });
 

@@ -19,7 +19,7 @@ import { type BudgetBucket, type Wedding, type Event, type Contract, type Vendor
 import { CEREMONY_MAPPINGS } from "@shared/ceremonies";
 import { calculateLineItemEstimate, DEFAULT_PRICING_CONTEXT, type PricingContext, CITY_MULTIPLIERS } from "@shared/pricing";
 import { useAllCeremonyLineItems, getLineItemBucketLabel } from "@/hooks/use-ceremony-templates";
-import { useBudgetCategories, useBudgetCategoryLookup } from "@/hooks/use-budget-categories";
+import { useBudgetCategories, useBudgetCategoryLookup } from "@/hooks/use-budget-bucket-categories";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";

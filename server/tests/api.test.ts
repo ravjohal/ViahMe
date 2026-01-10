@@ -317,18 +317,18 @@ describe('Viah.me API Tests', () => {
     });
   });
 
-  describe('Budget Category Endpoints', () => {
-    it('GET /api/budget-categories/:weddingId - should fetch budget categories', async () => {
+  describe('Budget Bucket Category Endpoints', () => {
+    it('GET /api/budget-bucket-categories/:weddingId - should fetch budget bucket categories', async () => {
       const res = await request(app)
-        .get(`/api/budget-categories/${testWedding.id}`)
+        .get(`/api/budget-bucket-categories/${testWedding.id}`)
         .expect(200);
       
       expect(Array.isArray(res.body)).toBe(true);
     });
 
-    it('POST /api/budget-categories - should create budget category', async () => {
+    it('POST /api/budget-bucket-categories - should create budget bucket category', async () => {
       const res = await request(app)
-        .post('/api/budget-categories')
+        .post('/api/budget-bucket-categories')
         .send({
           weddingId: testWedding.id,
           category: 'catering',
@@ -341,7 +341,7 @@ describe('Viah.me API Tests', () => {
       expect(res.body.allocatedAmount).toBe('25000');
     });
 
-    it('PATCH /api/budget-categories/:id - should update budget category', async () => {
+    it('PATCH /api/budget-bucket-categories/:id - should update budget bucket category', async () => {
       const category = await storage.createBudgetCategory({
         weddingId: testWedding.id,
         category: 'photography',
@@ -350,7 +350,7 @@ describe('Viah.me API Tests', () => {
       });
       
       const res = await request(app)
-        .patch(`/api/budget-categories/${category.id}`)
+        .patch(`/api/budget-bucket-categories/${category.id}`)
         .send({ spentAmount: '5000' })
         .expect(200);
       
@@ -548,7 +548,7 @@ describe('Viah.me API Tests', () => {
   describe('Data Validation', () => {
     it('should reject negative budget amounts', async () => {
       const res = await request(app)
-        .post('/api/budget-categories')
+        .post('/api/budget-bucket-categories')
         .send({
           weddingId: testWedding.id,
           category: 'venue',

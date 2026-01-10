@@ -295,7 +295,7 @@ export default function Dashboard() {
   });
 
   const { data: budgetCategories = [], isLoading: budgetLoading } = useQuery<BudgetCategory[]>({
-    queryKey: ["/api/budget-categories", wedding?.id],
+    queryKey: ["/api/budget-bucket-categories", wedding?.id],
     enabled: !!wedding?.id,
   });
 
