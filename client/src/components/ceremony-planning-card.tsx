@@ -10,8 +10,8 @@ import {
   Loader2, TrendingDown, TrendingUp, Edit2
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { type CeremonyTemplateCostItem } from "@shared/schema";
-import { getLineItemBucketLabel } from "@/hooks/use-ceremony-templates";
+import { type CeremonyBudgetCategoryItem } from "@shared/schema";
+import { getLineItemBucketLabel } from "@/hooks/use-ceremony-types";
 
 interface CeremonyBreakdown {
   eventId: string;
@@ -29,7 +29,7 @@ interface CeremonyBreakdown {
 
 interface CeremonyPlanningCardProps {
   ceremony: CeremonyBreakdown;
-  lineItems: CeremonyTemplateCostItem[] | null;
+  lineItems: CeremonyBudgetCategoryItem[] | null;
   existingLineItemBudgets: Record<string, string>;
   onEditLineItem: (eventId: string, category: string, value: string) => void;
   onSaveLineItems: (eventId: string, eventName: string) => void;

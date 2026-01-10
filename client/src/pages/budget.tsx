@@ -15,10 +15,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { type BudgetBucket, type Wedding, type Event, type Contract, type Vendor, type Expense, type BudgetAllocation, type CeremonyBudget, type CeremonyLineItemBudget, type CeremonyTemplateCostItem } from "@shared/schema";
+import { type BudgetBucket, type Wedding, type Event, type Contract, type Vendor, type Expense, type BudgetAllocation, type CeremonyBudget, type CeremonyLineItemBudget, type CeremonyBudgetCategoryItem } from "@shared/schema";
 import { CEREMONY_MAPPINGS } from "@shared/ceremonies";
 import { calculateLineItemEstimate, DEFAULT_PRICING_CONTEXT, type PricingContext, CITY_MULTIPLIERS } from "@shared/pricing";
-import { useAllCeremonyLineItems, getLineItemBucketLabel } from "@/hooks/use-ceremony-templates";
+import { useAllCeremonyLineItems, getLineItemBucketLabel } from "@/hooks/use-ceremony-types";
 import { useBudgetCategories, useBudgetCategoryLookup } from "@/hooks/use-budget-bucket-categories";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -169,7 +169,7 @@ export default function Budget() {
   };
 
   // Get line items for an event based on ceremony type
-  const getLineItemsForEvent = (eventId: string, eventName: string): CeremonyTemplateCostItem[] | null => {
+  const getLineItemsForEvent = (eventId: string, eventName: string): CeremonyBudgetCategoryItem[] | null => {
     const ceremonyTypeId = getCeremonyTypeId(eventName);
     if (!ceremonyTypeId) return null;
     return ceremonyBreakdownMap[ceremonyTypeId] || null;

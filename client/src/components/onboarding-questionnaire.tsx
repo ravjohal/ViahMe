@@ -13,7 +13,7 @@ import { Calendar, MapPin, Users, DollarSign, Crown, Gift, Lightbulb, TrendingUp
 import { motion, AnimatePresence } from "framer-motion";
 import { TRADITION_HIERARCHY, getSubTraditionsForMain, getAllSubTraditions, getMainTraditionByValue } from "@/lib/tradition-hierarchy";
 import { getCeremoniesForTradition, getCeremonyById, getDefaultCeremoniesForTradition, type CeremonyDefinition } from "@shared/ceremonies";
-import { useCeremonyTemplatesByTradition, useRegionalPricing, calculateCeremonyTotal } from "@/hooks/use-ceremony-templates";
+import { useCeremonyTypesByTradition, useRegionalPricing, calculateCeremonyTotal } from "@/hooks/use-ceremony-types";
 
 const customEventSchema = z.object({
   ceremonyId: z.string().optional(),
@@ -295,7 +295,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
   }, [selectedMainTradition]);
 
   // Fetch ceremony templates from database for budget estimation
-  const { data: ceremonyTemplates } = useCeremonyTemplatesByTradition(selectedMainTradition);
+  const { data: ceremonyTypes } = useCeremonyTypesByTradition(selectedMainTradition);
   const { data: regionalPricingData } = useRegionalPricing();
   
   // Get regional multiplier based on selected location
@@ -979,7 +979,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                       validEvents.forEach(event => {
                         if (event.ceremonyId && event.ceremonyId !== "custom") {
                           // Try to find template in database first
-                          const template = ceremonyTemplates?.find(t => t.ceremonyId === event.ceremonyId);
+                          const template = ceremonyTypes?.find(t => t.ceremonyId === event.ceremonyId);
                           
                           if (template) {
                             // Use database template with regional multiplier

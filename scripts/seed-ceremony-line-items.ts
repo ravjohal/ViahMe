@@ -9,8 +9,8 @@
 
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
-import { ceremonyTemplates } from "../shared/schema";
-import type { BudgetBucket, CeremonyTemplateCostItem } from "../shared/schema";
+import { ceremonyTypes } from "../shared/schema";
+import type { BudgetBucket, CeremonyBudgetCategoryItem } from "../shared/schema";
 import { eq } from "drizzle-orm";
 import * as schema from "../shared/schema";
 
@@ -704,7 +704,7 @@ async function seedCeremonyTemplates() {
 
   for (const ceremony of CEREMONY_DEFINITIONS) {
     // Add budgetBucket to each cost breakdown item
-    const costBreakdownWithBuckets: CeremonyTemplateCostItem[] = ceremony.costBreakdown.map(item => ({
+    const costBreakdownWithBuckets: CeremonyBudgetCategoryItem[] = ceremony.costBreakdown.map(item => ({
       ...item,
       budgetBucket: getLineItemBucket(item.category),
     }));
@@ -713,14 +713,14 @@ async function seedCeremonyTemplates() {
       // Check if ceremony already exists
       const existing = await db
         .select()
-        .from(ceremonyTemplates)
-        .where(eq(ceremonyTemplates.ceremonyId, ceremony.ceremonyId))
+        .from(ceremonyTypes)
+        .where(eq(ceremonyTypes.ceremonyId, ceremony.ceremonyId))
         .limit(1);
 
       if (existing.length > 0) {
         // Update existing
         await db
-          .update(ceremonyTemplates)
+          .update(ceremonyTypes)
           .set({
             name: ceremony.name,
             description: ceremony.description,
@@ -732,11 +732,11 @@ async function seedCeremonyTemplates() {
             costBreakdown: costBreakdownWithBuckets,
             updatedAt: new Date(),
           })
-          .where(eq(ceremonyTemplates.ceremonyId, ceremony.ceremonyId));
+          .where(eq(ceremonyTypes.ceremonyId, ceremony.ceremonyId));
         console.log(`Updated: ${ceremony.ceremonyId}`);
       } else {
         // Insert new
-        await db.insert(ceremonyTemplates).values({
+        await db.insert(ceremonyTypes).values({
           ceremonyId: ceremony.ceremonyId,
           name: ceremony.name,
           description: ceremony.description,

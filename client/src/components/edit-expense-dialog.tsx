@@ -81,7 +81,7 @@ export function EditExpenseDialog({
     tradition: string;
     lineItems: LineItem[];
   }>({
-    queryKey: [`/api/ceremony-templates/${ceremonyTemplateId}/line-items`],
+    queryKey: ['/api/ceremony-types', ceremonyTemplateId, 'line-items'],
     enabled: !!ceremonyTemplateId && open,
     retry: false,
   });

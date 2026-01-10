@@ -181,8 +181,6 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
   return router;
 }
 
-// Backward compatibility alias
-export const createCeremonyTemplatesRouter = createCeremonyTypesRouter;
 
 export function createRegionalPricingRouter(storage: IStorage): Router {
   const router = Router();

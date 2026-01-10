@@ -3944,14 +3944,8 @@ export const insertCeremonyTypeSchema = createInsertSchema(ceremonyTypes).omit({
 export type InsertCeremonyType = z.infer<typeof insertCeremonyTypeSchema>;
 export type CeremonyType = typeof ceremonyTypes.$inferSelect;
 
-// Backward compatibility aliases
-export const ceremonyTemplates = ceremonyTypes;
-export const insertCeremonyTemplateSchema = insertCeremonyTypeSchema;
-export type InsertCeremonyTemplate = InsertCeremonyType;
-export type CeremonyTemplate = CeremonyType;
-
-// Cost breakdown item type for the JSON field (legacy - use ceremonyTypeItems table instead)
-export type CeremonyTemplateCostItem = {
+// Cost breakdown item type for the JSON field in ceremony types
+export type CeremonyBudgetCategoryItem = {
   category: string;
   lowCost: number;
   highCost: number;
@@ -4006,16 +4000,6 @@ export const insertCeremonyBudgetCategorySchema = createInsertSchema(ceremonyBud
 
 export type InsertCeremonyBudgetCategory = z.infer<typeof insertCeremonyBudgetCategorySchema>;
 export type CeremonyBudgetCategory = typeof ceremonyBudgetCategories.$inferSelect;
-
-// Backward compatibility aliases for legacy code
-export const ceremonyTypeItems = ceremonyBudgetCategories;
-export const ceremonyTemplateItems = ceremonyBudgetCategories;
-export const insertCeremonyTypeItemSchema = insertCeremonyBudgetCategorySchema;
-export const insertCeremonyTemplateItemSchema = insertCeremonyBudgetCategorySchema;
-export type InsertCeremonyTypeItem = InsertCeremonyBudgetCategory;
-export type InsertCeremonyTemplateItem = InsertCeremonyBudgetCategory;
-export type CeremonyTypeItem = CeremonyBudgetCategory;
-export type CeremonyTemplateItem = CeremonyBudgetCategory;
 
 // ============================================================================
 // WEDDING LINE ITEMS - Couple's customized budget line items

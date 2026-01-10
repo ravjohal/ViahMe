@@ -47,7 +47,7 @@ import { insertEventSchema } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { CEREMONY_MAPPINGS, CEREMONY_CATALOG } from "@shared/ceremonies";
-import { useCeremonyTemplates, buildCeremonyBreakdownMap, calculateCeremonyTotalFromBreakdown } from "@/hooks/use-ceremony-templates";
+import { useCeremonyTypes, buildCeremonyBreakdownMap, calculateCeremonyTotalFromBreakdown } from "@/hooks/use-ceremony-types";
 import { SideFilter, SideBadge, VisibilityBadge, SIDE_COLORS, type SideViewMode } from "@/components/side-filter";
 
 const COST_PRESETS = [

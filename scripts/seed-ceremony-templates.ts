@@ -276,13 +276,13 @@ async function seedCeremonyTemplates() {
     };
     
     try {
-      const existing = await storage.getCeremonyTemplate(template.ceremonyId);
+      const existing = await storage.getCeremonyType(template.ceremonyId);
       if (existing) {
         console.log(`  Updating: ${template.name}`);
-        await storage.updateCeremonyTemplate(template.ceremonyId, fullTemplate);
+        await storage.updateCeremonyType(template.ceremonyId, fullTemplate);
       } else {
         console.log(`  Creating: ${template.name}`);
-        await storage.createCeremonyTemplate(fullTemplate);
+        await storage.createCeremonyType(fullTemplate);
       }
     } catch (error) {
       console.error(`  Error with ${template.name}:`, error);

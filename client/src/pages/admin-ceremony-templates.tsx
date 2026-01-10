@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Plus, Pencil, Trash2, DollarSign, MapPin, Users, Clock, ShieldCheck, AlertCircle } from "lucide-react";
-import type { CeremonyTemplate, RegionalPricing } from "@shared/schema";
+import type { CeremonyType, RegionalPricing } from "@shared/schema";
 
 const TRADITIONS = [
   { value: "sikh", label: "Sikh" },
@@ -37,7 +37,7 @@ const UNIT_TYPES = [
 export default function AdminCeremonyTemplatesPage() {
   const { toast } = useToast();
   const [selectedTradition, setSelectedTradition] = useState("sikh");
-  const [editingTemplate, setEditingTemplate] = useState<CeremonyTemplate | null>(null);
+  const [editingTemplate, setEditingTemplate] = useState<CeremonyType | null>(null);
   const [editingPricing, setEditingPricing] = useState<RegionalPricing | null>(null);
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
   const [isPricingDialogOpen, setIsPricingDialogOpen] = useState(false);
@@ -47,8 +47,8 @@ export default function AdminCeremonyTemplatesPage() {
   });
   const user = authData?.user;
 
-  const { data: templates = [], isLoading: templatesLoading } = useQuery<CeremonyTemplate[]>({
-    queryKey: ["/api/ceremony-templates"],
+  const { data: templates = [], isLoading: templatesLoading } = useQuery<CeremonyType[]>({
+    queryKey: ["/api/ceremony-types"],
   });
 
   const { data: regionalPricing = [], isLoading: pricingLoading } = useQuery<RegionalPricing[]>({
@@ -56,11 +56,11 @@ export default function AdminCeremonyTemplatesPage() {
   });
 
   const updateTemplateMutation = useMutation({
-    mutationFn: async ({ ceremonyId, data }: { ceremonyId: string; data: Partial<CeremonyTemplate> }) => {
-      return apiRequest("PATCH", `/api/ceremony-templates/${ceremonyId}`, data);
+    mutationFn: async ({ ceremonyId, data }: { ceremonyId: string; data: Partial<CeremonyType> }) => {
+      return apiRequest("PATCH", `/api/ceremony-types/${ceremonyId}`, data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/ceremony-templates"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/ceremony-types"] });
       toast({ title: "Template updated successfully" });
       setIsTemplateDialogOpen(false);
       setEditingTemplate(null);
@@ -318,8 +318,8 @@ function TemplateEditForm({
   onSave,
   isPending,
 }: {
-  template: CeremonyTemplate;
-  onSave: (data: Partial<CeremonyTemplate>) => void;
+  template: CeremonyType;
+  onSave: (data: Partial<CeremonyType>) => void;
   isPending: boolean;
 }) {
   const [name, setName] = useState(template.name);

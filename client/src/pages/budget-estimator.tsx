@@ -27,8 +27,8 @@ import {
   Building2,
   Loader2
 } from "lucide-react";
-import type { Wedding, Event, CeremonyTemplate, CeremonyTemplateCostItem } from "@shared/schema";
-import { useCeremonyTemplatesByTradition, useCeremonyTemplates, calculateCeremonyTotal, getCostBreakdownFromTemplate, buildCeremonyBreakdownMap, calculateCeremonyTotalFromBreakdown } from "@/hooks/use-ceremony-templates";
+import type { Wedding, Event, CeremonyType, CeremonyBudgetCategoryItem } from "@shared/schema";
+import { useCeremonyTypesByTradition, useCeremonyTypes, calculateCeremonyTotal, getCostBreakdownFromType, buildCeremonyBreakdownMap, calculateCeremonyTotalFromBreakdown } from "@/hooks/use-ceremony-types";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -44,7 +44,7 @@ import {
 } from "@shared/pricing";
 import { CEREMONY_MAPPINGS } from "@shared/ceremonies";
 
-type CostCategory = CeremonyTemplateCostItem;
+type CostCategory = CeremonyBudgetCategoryItem;
 
 const TRADITION_LABELS: Record<string, string> = {
   sikh: "Sikh",
@@ -194,9 +194,9 @@ export default function BudgetEstimatorPage() {
     }
   }, [wedding?.tradition, wedding?.location, selectedTradition, selectedCity]);
 
-  const { data: traditionCeremonies = [], isLoading: ceremoniesLoading } = useCeremonyTemplatesByTradition(selectedTradition || "hindu");
+  const { data: traditionCeremonies = [], isLoading: ceremoniesLoading } = useCeremonyTypesByTradition(selectedTradition || "hindu");
 
-  const { data: allTemplates = [], isLoading: templatesLoading } = useCeremonyTemplates();
+  const { data: allTemplates = [], isLoading: templatesLoading } = useCeremonyTypes();
   const breakdownMap = useMemo(() => buildCeremonyBreakdownMap(allTemplates), [allTemplates]);
 
   const getCeremonyBreakdown = (eventName: string): { ceremonyId: string; breakdown: CostCategory[] } | null => {

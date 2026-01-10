@@ -1,8 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import type { CeremonyType, RegionalPricing, CeremonyTemplateCostItem, CeremonyBudgetCategory } from "@shared/schema";
+import type { CeremonyType, RegionalPricing, CeremonyBudgetCategoryItem, CeremonyBudgetCategory } from "@shared/schema";
 
-// Backward compatibility type alias
-type CeremonyTemplate = CeremonyType;
 type CeremonyTypeItem = CeremonyBudgetCategory;
 
 export function useCeremonyTypes() {
@@ -142,10 +140,10 @@ export async function getCeremonyEstimate(request: CeremonyEstimateRequest): Pro
   return response.json();
 }
 
-export function getCostBreakdownFromType(template: CeremonyType): CeremonyTemplateCostItem[] {
+export function getCostBreakdownFromType(template: CeremonyType): CeremonyBudgetCategoryItem[] {
   if (!template.costBreakdown) return [];
   if (Array.isArray(template.costBreakdown)) {
-    return template.costBreakdown as CeremonyTemplateCostItem[];
+    return template.costBreakdown as CeremonyBudgetCategoryItem[];
   }
   return [];
 }
@@ -199,9 +197,9 @@ export function buildCeremonyTypeMap(
 // DEPRECATED: Use useAllCeremonyLineItems hook instead for normalized data
 export function buildCeremonyBreakdownMap(
   types: CeremonyType[] | undefined
-): Record<string, CeremonyTemplateCostItem[]> {
+): Record<string, CeremonyBudgetCategoryItem[]> {
   if (!types) return {};
-  const map: Record<string, CeremonyTemplateCostItem[]> = {};
+  const map: Record<string, CeremonyBudgetCategoryItem[]> = {};
   for (const type of types) {
     map[type.ceremonyId] = getCostBreakdownFromType(type);
   }
@@ -209,9 +207,9 @@ export function buildCeremonyBreakdownMap(
 }
 
 // Hook to fetch all ceremony line items from the normalized ceremony_type_items table
-// Returns a map of ceremonyId -> CeremonyTemplateCostItem[]
+// Returns a map of ceremonyId -> CeremonyBudgetCategoryItem[]
 export function useAllCeremonyLineItems() {
-  return useQuery<Record<string, CeremonyTemplateCostItem[]>>({
+  return useQuery<Record<string, CeremonyBudgetCategoryItem[]>>({
     queryKey: ['/api/ceremony-types/all/line-items'],
     queryFn: async () => {
       const response = await fetch('/api/ceremony-types/all/line-items');
@@ -223,7 +221,7 @@ export function useAllCeremonyLineItems() {
 
 // Calculate ceremony total from a breakdown array (works with breakdown map values)
 export function calculateCeremonyTotalFromBreakdown(
-  breakdown: CeremonyTemplateCostItem[] | undefined,
+  breakdown: CeremonyBudgetCategoryItem[] | undefined,
   guestCount: number,
   multiplier: number = 1.0
 ): { low: number; high: number } {
@@ -259,7 +257,7 @@ export function calculateCeremonyTotalFromBreakdown(
 }
 
 // Get budget bucket label from a line item (uses budgetBucket from type data)
-export function getLineItemBucketLabel(item: CeremonyTemplateCostItem): string {
+export function getLineItemBucketLabel(item: CeremonyBudgetCategoryItem): string {
   const bucketLabels: Record<string, string> = {
     venue: "Venue",
     catering: "Catering",
@@ -276,12 +274,3 @@ export function getLineItemBucketLabel(item: CeremonyTemplateCostItem): string {
   };
   return bucketLabels[item.budgetBucket || "other"] || "Other";
 }
-
-// Backward compatibility exports
-export const useCeremonyTemplates = useCeremonyTypes;
-export const useCeremonyTemplatesByTradition = useCeremonyTypesByTradition;
-export const useCeremonyTemplate = useCeremonyType;
-export const useCeremonyTemplateLineItems = useCeremonyTypeLineItems;
-export const getCostBreakdownFromTemplate = getCostBreakdownFromType;
-export const buildCeremonyTemplateMap = buildCeremonyTypeMap;
-export type CeremonyTemplateLineItem = CeremonyTypeLineItem;

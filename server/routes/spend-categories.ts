@@ -1,6 +1,6 @@
 import { Router } from "express";
 import type { IStorage } from "../storage";
-import type { CeremonyTemplateCostItem } from "@shared/schema";
+import type { CeremonyBudgetCategoryItem } from "@shared/schema";
 
 const PARENT_BUDGET_CATEGORY_MAP: Record<string, string> = {
   "venue": "venue",
@@ -224,12 +224,12 @@ export async function seedSpendCategoriesFromCeremonies(storage: IStorage): Prom
 
   const spendCategoryCache: Map<string, string> = new Map();
 
-  // Fetch ceremony templates from database instead of hardcoded data
-  const templates = await storage.getAllCeremonyTemplates();
+  // Fetch ceremony types from database
+  const templates = await storage.getAllCeremonyTypes();
 
   for (const template of templates) {
     const ceremonyId = template.ceremonyId;
-    const costBreakdown = template.costBreakdown as CeremonyTemplateCostItem[] | null;
+    const costBreakdown = template.costBreakdown as CeremonyBudgetCategoryItem[] | null;
     
     if (!costBreakdown || !Array.isArray(costBreakdown)) {
       continue;

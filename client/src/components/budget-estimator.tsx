@@ -8,8 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Lightbulb, Calculator, Plus, Minus, DollarSign, Users, Info, Loader2, MapPin, ChevronDown, ChevronUp, Settings2, Check } from "lucide-react";
-import type { Wedding, Event, CeremonyTemplate, CeremonyTemplateCostItem } from "@shared/schema";
-import { useCeremonyTemplatesByTradition, useCeremonyTemplates, buildCeremonyBreakdownMap, getCostBreakdownFromTemplate } from "@/hooks/use-ceremony-templates";
+import type { Wedding, Event, CeremonyType, CeremonyBudgetCategoryItem } from "@shared/schema";
+import { useCeremonyTypesByTradition, useCeremonyTypes, buildCeremonyBreakdownMap, getCostBreakdownFromType } from "@/hooks/use-ceremony-types";
 import {
   type VenueClass,
   type VendorTier,
@@ -96,8 +96,8 @@ export function BudgetEstimator({ wedding, events = [], onUpdateBudget, onUpdate
   const [weddingEventOverrides, setWeddingEventOverrides] = useState<Record<string, CeremonyPricingOverride>>({});
   const [collapsedCeremonyIds, setCollapsedCeremonyIds] = useState<Set<string>>(new Set());
 
-  const { data: traditionCeremonies = [], isLoading: traditionLoading } = useCeremonyTemplatesByTradition(selectedTradition);
-  const { data: allTemplates = [], isLoading: templatesLoading } = useCeremonyTemplates();
+  const { data: traditionCeremonies = [], isLoading: traditionLoading } = useCeremonyTypesByTradition(selectedTradition);
+  const { data: allTemplates = [], isLoading: templatesLoading } = useCeremonyTypes();
   const isLoading = traditionLoading || templatesLoading;
   
   const breakdownMap = useMemo(() => buildCeremonyBreakdownMap(allTemplates), [allTemplates]);
@@ -114,7 +114,7 @@ export function BudgetEstimator({ wedding, events = [], onUpdateBudget, onUpdate
     return VENUE_CLASS_MULTIPLIERS[effectiveVenue] * VENDOR_TIER_MULTIPLIERS[effectiveVendor] * cityMultiplier;
   };
 
-  const getCeremonyBreakdown = (eventName: string): { ceremonyId: string; breakdown: CeremonyTemplateCostItem[] } | null => {
+  const getCeremonyBreakdown = (eventName: string): { ceremonyId: string; breakdown: CeremonyBudgetCategoryItem[] } | null => {
     const normalizedName = eventName.toLowerCase().trim();
     
     for (const [ceremonyId, keywords] of Object.entries(CEREMONY_MAPPINGS)) {
@@ -148,7 +148,7 @@ export function BudgetEstimator({ wedding, events = [], onUpdateBudget, onUpdate
     return null;
   };
 
-  const calculateBreakdownCost = (item: CeremonyTemplateCostItem, guests: number, multiplier: number, guestBracketMultiplier: number): { low: number; high: number } => {
+  const calculateBreakdownCost = (item: CeremonyBudgetCategoryItem, guests: number, multiplier: number, guestBracketMultiplier: number): { low: number; high: number } => {
     let low = 0;
     let high = 0;
     const totalMultiplier = multiplier * guestBracketMultiplier;
@@ -169,7 +169,7 @@ export function BudgetEstimator({ wedding, events = [], onUpdateBudget, onUpdate
     return { low, high };
   };
 
-  const calculateBreakdownTotal = (breakdown: CeremonyTemplateCostItem[], guests: number, multiplier: number, guestBracketMultiplier: number): { low: number; high: number } => {
+  const calculateBreakdownTotal = (breakdown: CeremonyBudgetCategoryItem[], guests: number, multiplier: number, guestBracketMultiplier: number): { low: number; high: number } => {
     let totalLow = 0;
     let totalHigh = 0;
     
@@ -282,7 +282,7 @@ export function BudgetEstimator({ wedding, events = [], onUpdateBudget, onUpdate
     return traditionCeremonies.filter(c => !chosenNames.has(c.name.toLowerCase()));
   }, [traditionCeremonies, allEstimates]);
 
-  const addCeremony = (ceremony: CeremonyTemplate) => {
+  const addCeremony = (ceremony: CeremonyType) => {
     const newEvent: CustomEventBase = {
       id: `custom-${Date.now()}`,
       name: ceremony.name,

@@ -183,14 +183,12 @@ import {
   type InsertBudgetAlert,
   type DashboardWidget,
   type InsertDashboardWidget,
-  type CeremonyTemplate,
-  type InsertCeremonyTemplate,
+  type CeremonyType,
+  type InsertCeremonyType,
   type CeremonyBudgetCategory,
   type InsertCeremonyBudgetCategory,
-  type CeremonyTemplateItem,
-  type InsertCeremonyTemplateItem,
+  ceremonyTypes,
   ceremonyBudgetCategories,
-  ceremonyTemplateItems,
   type WeddingLineItem,
   type InsertWeddingLineItem,
   weddingLineItems,
@@ -209,7 +207,7 @@ import {
   budgetAllocations,
   budgetAlerts,
   dashboardWidgets,
-  ceremonyTemplates,
+  // ceremonyTypes already imported above
   regionalPricing,
   ritualRoleAssignments,
   BUDGET_BUCKETS,
@@ -1079,19 +1077,12 @@ export interface IStorage {
   updateDashboardWidgetPositions(widgetIds: string[], positions: number[]): Promise<DashboardWidget[]>;
 
   // Ceremony Types (uses ceremony_templates table with 'tradition' text field)
-  getCeremonyType(ceremonyId: string): Promise<CeremonyTemplate | undefined>;
-  getCeremonyTypesByTradition(tradition: string): Promise<CeremonyTemplate[]>;
-  getAllCeremonyTypes(): Promise<CeremonyTemplate[]>;
-  createCeremonyType(template: InsertCeremonyTemplate): Promise<CeremonyTemplate>;
-  updateCeremonyType(ceremonyId: string, template: Partial<InsertCeremonyTemplate>): Promise<CeremonyTemplate | undefined>;
+  getCeremonyType(ceremonyId: string): Promise<CeremonyType | undefined>;
+  getCeremonyTypesByTradition(tradition: string): Promise<CeremonyType[]>;
+  getAllCeremonyTypes(): Promise<CeremonyType[]>;
+  createCeremonyType(template: InsertCeremonyType): Promise<CeremonyType>;
+  updateCeremonyType(ceremonyId: string, template: Partial<InsertCeremonyType>): Promise<CeremonyType | undefined>;
   deleteCeremonyType(ceremonyId: string): Promise<boolean>;
-  // Backward compatibility aliases
-  getCeremonyTemplate(ceremonyId: string): Promise<CeremonyTemplate | undefined>;
-  getCeremonyTemplatesByTradition(tradition: string): Promise<CeremonyTemplate[]>;
-  getAllCeremonyTemplates(): Promise<CeremonyTemplate[]>;
-  createCeremonyTemplate(template: InsertCeremonyTemplate): Promise<CeremonyTemplate>;
-  updateCeremonyTemplate(ceremonyId: string, template: Partial<InsertCeremonyTemplate>): Promise<CeremonyTemplate | undefined>;
-  deleteCeremonyTemplate(ceremonyId: string): Promise<boolean>;
 
   // Ceremony Budget Categories (junction table: ceremony type + budget bucket)
   getCeremonyBudgetCategories(ceremonyTypeId: string): Promise<CeremonyBudgetCategory[]>;
@@ -1101,19 +1092,6 @@ export interface IStorage {
   createCeremonyBudgetCategory(item: InsertCeremonyBudgetCategory): Promise<CeremonyBudgetCategory>;
   updateCeremonyBudgetCategory(id: string, item: Partial<InsertCeremonyBudgetCategory>): Promise<CeremonyBudgetCategory | undefined>;
   deleteCeremonyBudgetCategory(id: string): Promise<boolean>;
-  // Backward compatibility aliases (legacy naming)
-  getCeremonyTypeItems(ceremonyTypeId: string): Promise<CeremonyBudgetCategory[]>;
-  getAllCeremonyTypeItems(): Promise<CeremonyBudgetCategory[]>;
-  getCeremonyTypeItem(id: string): Promise<CeremonyBudgetCategory | undefined>;
-  createCeremonyTypeItem(item: InsertCeremonyBudgetCategory): Promise<CeremonyBudgetCategory>;
-  updateCeremonyTypeItem(id: string, item: Partial<InsertCeremonyBudgetCategory>): Promise<CeremonyBudgetCategory | undefined>;
-  deleteCeremonyTypeItem(id: string): Promise<boolean>;
-  getCeremonyTemplateItems(templateId: string): Promise<CeremonyBudgetCategory[]>;
-  getAllCeremonyTemplateItems(): Promise<CeremonyBudgetCategory[]>;
-  getCeremonyTemplateItem(id: string): Promise<CeremonyBudgetCategory | undefined>;
-  createCeremonyTemplateItem(item: InsertCeremonyBudgetCategory): Promise<CeremonyBudgetCategory>;
-  updateCeremonyTemplateItem(id: string, item: Partial<InsertCeremonyBudgetCategory>): Promise<CeremonyBudgetCategory | undefined>;
-  deleteCeremonyTemplateItem(id: string): Promise<boolean>;
 
   // Wedding Line Items (couple's customized budget line items)
   getWeddingLineItems(weddingId: string): Promise<WeddingLineItem[]>;
@@ -4359,19 +4337,12 @@ export class MemStorage implements IStorage {
   async getIgnoredDuplicatePairs(weddingId: string): Promise<IgnoredDuplicatePair[]> { return []; }
 
   // Ceremony Types (stubs - use DBStorage for production)
-  async getCeremonyType(ceremonyId: string): Promise<CeremonyTemplate | undefined> { return undefined; }
-  async getCeremonyTypesByTradition(tradition: string): Promise<CeremonyTemplate[]> { return []; }
-  async getAllCeremonyTypes(): Promise<CeremonyTemplate[]> { return []; }
-  async createCeremonyType(template: InsertCeremonyTemplate): Promise<CeremonyTemplate> { throw new Error('MemStorage does not support Ceremony Types. Use DBStorage.'); }
-  async updateCeremonyType(ceremonyId: string, template: Partial<InsertCeremonyTemplate>): Promise<CeremonyTemplate | undefined> { throw new Error('MemStorage does not support Ceremony Types. Use DBStorage.'); }
+  async getCeremonyType(ceremonyId: string): Promise<CeremonyType | undefined> { return undefined; }
+  async getCeremonyTypesByTradition(tradition: string): Promise<CeremonyType[]> { return []; }
+  async getAllCeremonyTypes(): Promise<CeremonyType[]> { return []; }
+  async createCeremonyType(template: InsertCeremonyType): Promise<CeremonyType> { throw new Error('MemStorage does not support Ceremony Types. Use DBStorage.'); }
+  async updateCeremonyType(ceremonyId: string, template: Partial<InsertCeremonyType>): Promise<CeremonyType | undefined> { throw new Error('MemStorage does not support Ceremony Types. Use DBStorage.'); }
   async deleteCeremonyType(ceremonyId: string): Promise<boolean> { return false; }
-  // Backward compatibility aliases
-  async getCeremonyTemplate(ceremonyId: string): Promise<CeremonyTemplate | undefined> { return this.getCeremonyType(ceremonyId); }
-  async getCeremonyTemplatesByTradition(tradition: string): Promise<CeremonyTemplate[]> { return this.getCeremonyTypesByTradition(tradition); }
-  async getAllCeremonyTemplates(): Promise<CeremonyTemplate[]> { return this.getAllCeremonyTypes(); }
-  async createCeremonyTemplate(template: InsertCeremonyTemplate): Promise<CeremonyTemplate> { return this.createCeremonyType(template); }
-  async updateCeremonyTemplate(ceremonyId: string, template: Partial<InsertCeremonyTemplate>): Promise<CeremonyTemplate | undefined> { return this.updateCeremonyType(ceremonyId, template); }
-  async deleteCeremonyTemplate(ceremonyId: string): Promise<boolean> { return this.deleteCeremonyType(ceremonyId); }
 
   // Ceremony Budget Categories (stubs - use DBStorage for production)
   async getCeremonyBudgetCategories(ceremonyTypeId: string): Promise<CeremonyBudgetCategory[]> { return []; }
@@ -4381,19 +4352,6 @@ export class MemStorage implements IStorage {
   async createCeremonyBudgetCategory(item: InsertCeremonyBudgetCategory): Promise<CeremonyBudgetCategory> { throw new Error('MemStorage does not support Ceremony Budget Categories. Use DBStorage.'); }
   async updateCeremonyBudgetCategory(id: string, item: Partial<InsertCeremonyBudgetCategory>): Promise<CeremonyBudgetCategory | undefined> { throw new Error('MemStorage does not support Ceremony Budget Categories. Use DBStorage.'); }
   async deleteCeremonyBudgetCategory(id: string): Promise<boolean> { return false; }
-  // Backward compatibility aliases (legacy naming)
-  async getCeremonyTypeItems(ceremonyTypeId: string): Promise<CeremonyBudgetCategory[]> { return this.getCeremonyBudgetCategories(ceremonyTypeId); }
-  async getAllCeremonyTypeItems(): Promise<CeremonyBudgetCategory[]> { return this.getAllCeremonyBudgetCategories(); }
-  async getCeremonyTypeItem(id: string): Promise<CeremonyBudgetCategory | undefined> { return this.getCeremonyBudgetCategory(id); }
-  async createCeremonyTypeItem(item: InsertCeremonyBudgetCategory): Promise<CeremonyBudgetCategory> { return this.createCeremonyBudgetCategory(item); }
-  async updateCeremonyTypeItem(id: string, item: Partial<InsertCeremonyBudgetCategory>): Promise<CeremonyBudgetCategory | undefined> { return this.updateCeremonyBudgetCategory(id, item); }
-  async deleteCeremonyTypeItem(id: string): Promise<boolean> { return this.deleteCeremonyBudgetCategory(id); }
-  async getCeremonyTemplateItems(templateId: string): Promise<CeremonyBudgetCategory[]> { return this.getCeremonyBudgetCategories(templateId); }
-  async getAllCeremonyTemplateItems(): Promise<CeremonyBudgetCategory[]> { return this.getAllCeremonyBudgetCategories(); }
-  async getCeremonyTemplateItem(id: string): Promise<CeremonyBudgetCategory | undefined> { return this.getCeremonyBudgetCategory(id); }
-  async createCeremonyTemplateItem(item: InsertCeremonyBudgetCategory): Promise<CeremonyBudgetCategory> { return this.createCeremonyBudgetCategory(item); }
-  async updateCeremonyTemplateItem(id: string, item: Partial<InsertCeremonyBudgetCategory>): Promise<CeremonyBudgetCategory | undefined> { return this.updateCeremonyBudgetCategory(id, item); }
-  async deleteCeremonyTemplateItem(id: string): Promise<boolean> { return this.deleteCeremonyBudgetCategory(id); }
 
   // Wedding Line Items (stubs - use DBStorage for production)
   async getWeddingLineItems(weddingId: string): Promise<WeddingLineItem[]> { return []; }
@@ -10558,65 +10516,45 @@ export class DBStorage implements IStorage {
   }
 
   // Ceremony Types (uses ceremony_templates table with 'tradition' field)
-  async getCeremonyType(ceremonyId: string): Promise<CeremonyTemplate | undefined> {
+  async getCeremonyType(ceremonyId: string): Promise<CeremonyType | undefined> {
     const result = await this.db.select()
-      .from(ceremonyTemplates)
-      .where(eq(ceremonyTemplates.ceremonyId, ceremonyId));
+      .from(ceremonyTypes)
+      .where(eq(ceremonyTypes.ceremonyId, ceremonyId));
     return result[0];
   }
 
-  async getCeremonyTypesByTradition(tradition: string): Promise<CeremonyTemplate[]> {
+  async getCeremonyTypesByTradition(tradition: string): Promise<CeremonyType[]> {
     return await this.db.select()
-      .from(ceremonyTemplates)
-      .where(eq(ceremonyTemplates.tradition, tradition))
-      .orderBy(sql`${ceremonyTemplates.displayOrder} ASC`);
+      .from(ceremonyTypes)
+      .where(eq(ceremonyTypes.tradition, tradition))
+      .orderBy(sql`${ceremonyTypes.displayOrder} ASC`);
   }
 
-  async getAllCeremonyTypes(): Promise<CeremonyTemplate[]> {
+  async getAllCeremonyTypes(): Promise<CeremonyType[]> {
     return await this.db.select()
-      .from(ceremonyTemplates)
-      .orderBy(sql`${ceremonyTemplates.tradition} ASC, ${ceremonyTemplates.displayOrder} ASC`);
+      .from(ceremonyTypes)
+      .orderBy(sql`${ceremonyTypes.tradition} ASC, ${ceremonyTypes.displayOrder} ASC`);
   }
 
-  async createCeremonyType(template: InsertCeremonyTemplate): Promise<CeremonyTemplate> {
-    const result = await this.db.insert(ceremonyTemplates)
+  async createCeremonyType(template: InsertCeremonyType): Promise<CeremonyType> {
+    const result = await this.db.insert(ceremonyTypes)
       .values(template)
       .returning();
     return result[0];
   }
 
-  async updateCeremonyType(ceremonyId: string, template: Partial<InsertCeremonyTemplate>): Promise<CeremonyTemplate | undefined> {
-    const result = await this.db.update(ceremonyTemplates)
-      .set(template)
-      .where(eq(ceremonyTemplates.ceremonyId, ceremonyId))
+  async updateCeremonyType(ceremonyId: string, data: Partial<InsertCeremonyType>): Promise<CeremonyType | undefined> {
+    const result = await this.db.update(ceremonyTypes)
+      .set(data)
+      .where(eq(ceremonyTypes.ceremonyId, ceremonyId))
       .returning();
     return result[0];
   }
 
   async deleteCeremonyType(ceremonyId: string): Promise<boolean> {
-    await this.db.delete(ceremonyTemplates)
-      .where(eq(ceremonyTemplates.ceremonyId, ceremonyId));
+    await this.db.delete(ceremonyTypes)
+      .where(eq(ceremonyTypes.ceremonyId, ceremonyId));
     return true;
-  }
-
-  // Backward compatibility aliases
-  async getCeremonyTemplate(ceremonyId: string): Promise<CeremonyTemplate | undefined> {
-    return this.getCeremonyType(ceremonyId);
-  }
-  async getCeremonyTemplatesByTradition(tradition: string): Promise<CeremonyTemplate[]> {
-    return this.getCeremonyTypesByTradition(tradition);
-  }
-  async getAllCeremonyTemplates(): Promise<CeremonyTemplate[]> {
-    return this.getAllCeremonyTypes();
-  }
-  async createCeremonyTemplate(template: InsertCeremonyTemplate): Promise<CeremonyTemplate> {
-    return this.createCeremonyType(template);
-  }
-  async updateCeremonyTemplate(ceremonyId: string, template: Partial<InsertCeremonyTemplate>): Promise<CeremonyTemplate | undefined> {
-    return this.updateCeremonyType(ceremonyId, template);
-  }
-  async deleteCeremonyTemplate(ceremonyId: string): Promise<boolean> {
-    return this.deleteCeremonyType(ceremonyId);
   }
 
   // Ceremony Budget Categories (junction: ceremony type + budget bucket)
@@ -10673,44 +10611,6 @@ export class DBStorage implements IStorage {
     return true;
   }
 
-  // Backward compatibility aliases (legacy naming)
-  async getCeremonyTypeItems(ceremonyTypeId: string): Promise<CeremonyBudgetCategory[]> {
-    return this.getCeremonyBudgetCategories(ceremonyTypeId);
-  }
-  async getAllCeremonyTypeItems(): Promise<CeremonyBudgetCategory[]> {
-    return this.getAllCeremonyBudgetCategories();
-  }
-  async getCeremonyTypeItem(id: string): Promise<CeremonyBudgetCategory | undefined> {
-    return this.getCeremonyBudgetCategory(id);
-  }
-  async createCeremonyTypeItem(item: InsertCeremonyBudgetCategory): Promise<CeremonyBudgetCategory> {
-    return this.createCeremonyBudgetCategory(item);
-  }
-  async updateCeremonyTypeItem(id: string, item: Partial<InsertCeremonyBudgetCategory>): Promise<CeremonyBudgetCategory | undefined> {
-    return this.updateCeremonyBudgetCategory(id, item);
-  }
-  async deleteCeremonyTypeItem(id: string): Promise<boolean> {
-    return this.deleteCeremonyBudgetCategory(id);
-  }
-  async getCeremonyTemplateItems(templateId: string): Promise<CeremonyBudgetCategory[]> {
-    return this.getCeremonyBudgetCategories(templateId);
-  }
-  async getAllCeremonyTemplateItems(): Promise<CeremonyBudgetCategory[]> {
-    return this.getAllCeremonyBudgetCategories();
-  }
-  async getCeremonyTemplateItem(id: string): Promise<CeremonyBudgetCategory | undefined> {
-    return this.getCeremonyBudgetCategory(id);
-  }
-  async createCeremonyTemplateItem(item: InsertCeremonyBudgetCategory): Promise<CeremonyBudgetCategory> {
-    return this.createCeremonyBudgetCategory(item);
-  }
-  async updateCeremonyTemplateItem(id: string, item: Partial<InsertCeremonyBudgetCategory>): Promise<CeremonyBudgetCategory | undefined> {
-    return this.updateCeremonyBudgetCategory(id, item);
-  }
-  async deleteCeremonyTemplateItem(id: string): Promise<boolean> {
-    return this.deleteCeremonyBudgetCategory(id);
-  }
-
   // Wedding Line Items (couple's customized budget line items)
   async getWeddingLineItems(weddingId: string): Promise<WeddingLineItem[]> {
     return await this.db.select()
@@ -10757,7 +10657,7 @@ export class DBStorage implements IStorage {
 
   async hydrateWeddingLineItemsFromTemplate(weddingId: string, ceremonyId: string, templateId: string): Promise<WeddingLineItem[]> {
     // Get template items
-    const templateItems = await this.getCeremonyTemplateItems(templateId);
+    const templateItems = await this.getCeremonyBudgetCategories(templateId);
     
     // Create wedding line items from template
     const createdItems: WeddingLineItem[] = [];

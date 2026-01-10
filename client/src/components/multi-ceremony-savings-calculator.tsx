@@ -19,8 +19,8 @@ import {
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Link } from "wouter";
-import type { Event, CeremonyTemplate, CeremonyTemplateCostItem } from "@shared/schema";
-import { useCeremonyTemplates, getCostBreakdownFromTemplate, calculateCeremonyTotal, buildCeremonyBreakdownMap, calculateCeremonyTotalFromBreakdown } from "@/hooks/use-ceremony-templates";
+import type { Event, CeremonyType, CeremonyBudgetCategoryItem } from "@shared/schema";
+import { useCeremonyTypes, getCostBreakdownFromType, calculateCeremonyTotal, buildCeremonyBreakdownMap, calculateCeremonyTotalFromBreakdown } from "@/hooks/use-ceremony-types";
 import { CEREMONY_MAPPINGS } from "@shared/ceremonies";
 import { PricingAdjuster } from "@/components/pricing-adjuster";
 import {
@@ -48,8 +48,8 @@ function formatCurrencyFull(amount: number): string {
   return `$${amount.toLocaleString()}`;
 }
 
-function getTopCostDrivers(template: CeremonyTemplate, guestCount: number): { category: string; savings: number }[] {
-  const breakdown = getCostBreakdownFromTemplate(template);
+function getTopCostDrivers(template: CeremonyType, guestCount: number): { category: string; savings: number }[] {
+  const breakdown = getCostBreakdownFromType(template);
   if (!breakdown.length) return [];
   
   const perPersonItems = breakdown
@@ -64,7 +64,7 @@ function getTopCostDrivers(template: CeremonyTemplate, guestCount: number): { ca
   return perPersonItems;
 }
 
-function getCeremonyIdFromEvent(event: Event, templateMap: Map<string, CeremonyTemplate>): { ceremonyId: string } | null {
+function getCeremonyIdFromEvent(event: Event, templateMap: Map<string, CeremonyType>): { ceremonyId: string } | null {
   const eventType = event.type?.toLowerCase() || "";
   const eventName = event.name?.toLowerCase() || "";
   
@@ -98,7 +98,7 @@ interface EventGuestState {
 }
 
 export function MultiCeremonySavingsCalculator({ events, className = "" }: MultiCeremonySavingsCalculatorProps) {
-  const { data: templates, isLoading } = useCeremonyTemplates();
+  const { data: templates, isLoading } = useCeremonyTypes();
   const [venueClass, setVenueClass] = useState<VenueClass>("community_hall");
   const [vendorTier, setVendorTier] = useState<VendorTier>("standard");
   const [showPricingSettings, setShowPricingSettings] = useState(false);
@@ -108,7 +108,7 @@ export function MultiCeremonySavingsCalculator({ events, className = "" }: Multi
   }, [venueClass, vendorTier]);
   
   const templateMap = useMemo(() => {
-    const map = new Map<string, CeremonyTemplate>();
+    const map = new Map<string, CeremonyType>();
     if (templates) {
       for (const t of templates) {
         map.set(t.ceremonyId, t);

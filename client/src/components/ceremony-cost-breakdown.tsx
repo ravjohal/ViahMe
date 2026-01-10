@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronUp, DollarSign, Users, Clock, Info, Loader2, Settings2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import type { Event, CeremonyTemplate, CeremonyTemplateCostItem } from "@shared/schema";
-import { useCeremonyTemplates, getCostBreakdownFromTemplate, calculateCeremonyTotal, buildCeremonyBreakdownMap } from "@/hooks/use-ceremony-templates";
+import type { Event, CeremonyType, CeremonyBudgetCategoryItem } from "@shared/schema";
+import { useCeremonyTypes, getCostBreakdownFromType, calculateCeremonyTotal, buildCeremonyBreakdownMap } from "@/hooks/use-ceremony-types";
 import { CEREMONY_MAPPINGS } from "@shared/ceremonies";
 import { PricingAdjuster } from "@/components/pricing-adjuster";
 import {
@@ -34,7 +34,7 @@ function formatCurrencyFull(amount: number): string {
   return `$${amount.toLocaleString()}`;
 }
 
-function getCeremonyIdFromEvent(event: Event, templateMap: Map<string, CeremonyTemplate>): { ceremonyId: string } | null {
+function getCeremonyIdFromEvent(event: Event, templateMap: Map<string, CeremonyType>): { ceremonyId: string } | null {
   const eventType = event.type?.toLowerCase() || "";
   const eventName = event.name?.toLowerCase() || "";
   
@@ -57,7 +57,7 @@ function getCeremonyIdFromEvent(event: Event, templateMap: Map<string, CeremonyT
   return null;
 }
 
-function CostCategoryRow({ item, guestCount, multiplier = 1 }: { item: CeremonyTemplateCostItem; guestCount: number; multiplier?: number }) {
+function CostCategoryRow({ item, guestCount, multiplier = 1 }: { item: CeremonyBudgetCategoryItem; guestCount: number; multiplier?: number }) {
   let displayLow: number;
   let displayHigh: number;
   let unitLabel: string;
@@ -109,7 +109,7 @@ function CostCategoryRow({ item, guestCount, multiplier = 1 }: { item: CeremonyT
 
 interface EventCostCardProps {
   event: Event;
-  templateMap: Map<string, CeremonyTemplate>;
+  templateMap: Map<string, CeremonyType>;
   pricingMultiplier: number;
 }
 
@@ -129,7 +129,7 @@ function EventCostCard({ event, templateMap, pricingMultiplier }: EventCostCardP
   const guestBracketMultiplier = GUEST_BRACKET_MULTIPLIERS[getGuestBracket(guestCount)];
   const totalMultiplier = pricingMultiplier * guestBracketMultiplier;
   
-  const breakdown = getCostBreakdownFromTemplate(template);
+  const breakdown = getCostBreakdownFromType(template);
   const actualGuestCount = guestCount || template.defaultGuests || 100;
   const baseRange = calculateCeremonyTotal(template, actualGuestCount);
   const totalRange = {
@@ -202,7 +202,7 @@ function EventCostCard({ event, templateMap, pricingMultiplier }: EventCostCardP
 }
 
 export function CeremonyCostBreakdown({ events, className = "" }: CeremonyCostBreakdownProps) {
-  const { data: templates, isLoading } = useCeremonyTemplates();
+  const { data: templates, isLoading } = useCeremonyTypes();
   const [venueClass, setVenueClass] = useState<VenueClass>("community_hall");
   const [vendorTier, setVendorTier] = useState<VendorTier>("standard");
   const [showPricingSettings, setShowPricingSettings] = useState(false);
@@ -212,7 +212,7 @@ export function CeremonyCostBreakdown({ events, className = "" }: CeremonyCostBr
   }, [venueClass, vendorTier]);
   
   const templateMap = useMemo(() => {
-    const map = new Map<string, CeremonyTemplate>();
+    const map = new Map<string, CeremonyType>();
     if (templates) {
       for (const t of templates) {
         map.set(t.ceremonyId, t);
