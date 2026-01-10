@@ -46,6 +46,47 @@ export function createCeremonyTemplatesRouter(storage: IStorage): Router {
     }
   });
 
+  // Get all line items from all ceremonies grouped by ceremony ID
+  // Used by budget page to build the ceremony breakdown map from normalized data
+  router.get("/all/line-items", async (req, res) => {
+    try {
+      const allItems = await storage.getAllCeremonyTemplateItems();
+      
+      // Group by templateId (ceremonyId)
+      const grouped: Record<string, Array<{
+        category: string;
+        lowCost: number;
+        highCost: number;
+        unit: 'fixed' | 'per_person' | 'per_hour';
+        hoursLow?: number;
+        hoursHigh?: number;
+        notes?: string;
+        budgetBucket?: string;
+      }>> = {};
+      
+      for (const item of allItems) {
+        if (!grouped[item.templateId]) {
+          grouped[item.templateId] = [];
+        }
+        grouped[item.templateId].push({
+          category: item.itemName,
+          lowCost: parseFloat(item.lowCost),
+          highCost: parseFloat(item.highCost),
+          unit: item.unit as 'fixed' | 'per_person' | 'per_hour',
+          hoursLow: item.hoursLow ? parseFloat(item.hoursLow) : undefined,
+          hoursHigh: item.hoursHigh ? parseFloat(item.hoursHigh) : undefined,
+          notes: item.notes ?? undefined,
+          budgetBucket: item.budgetBucket ?? 'other',
+        });
+      }
+      
+      res.json(grouped);
+    } catch (error) {
+      console.error("[Ceremony Templates] Error fetching all line items:", error);
+      res.status(500).json({ error: "Failed to fetch all ceremony line items" });
+    }
+  });
+
   router.get("/:ceremonyId", async (req, res) => {
     try {
       const { ceremonyId } = req.params;

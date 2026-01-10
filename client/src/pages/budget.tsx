@@ -18,7 +18,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket, type Wedding, type Event, type Contract, type Vendor, type Expense, type BudgetAllocation, type CeremonyBudget, type CeremonyLineItemBudget, type CeremonyTemplateCostItem } from "@shared/schema";
 import { CEREMONY_MAPPINGS } from "@shared/ceremonies";
 import { calculateLineItemEstimate, DEFAULT_PRICING_CONTEXT, type PricingContext, CITY_MULTIPLIERS } from "@shared/pricing";
-import { useCeremonyTemplates, buildCeremonyBreakdownMap, getLineItemBucketLabel } from "@/hooks/use-ceremony-templates";
+import { useAllCeremonyLineItems, getLineItemBucketLabel } from "@/hooks/use-ceremony-templates";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
@@ -133,11 +133,8 @@ export default function Budget() {
     enabled: !!wedding?.id,
   });
 
-  // Fetch ceremony templates from API
-  const { data: ceremonyTemplates = [] } = useCeremonyTemplates();
-  
-  // Memoize the ceremony breakdown map for fast lookups
-  const ceremonyBreakdownMap = useMemo(() => buildCeremonyBreakdownMap(ceremonyTemplates), [ceremonyTemplates]);
+  // Fetch ceremony line items from normalized table (replaces deprecated costBreakdown JSONB)
+  const { data: ceremonyBreakdownMap = {} } = useAllCeremonyLineItems();
 
   // Get ceremony type ID from event name
   const getCeremonyTypeId = (eventName: string): string | null => {
@@ -352,69 +349,14 @@ export default function Budget() {
     return total;
   };
 
-  // Set ceremony budget to total estimate AND populate all line items
+  // Set ceremony budget to total estimate AND populate all line items as draft
+  // NOTE: This only populates local draft state - user must click "Save" to persist
   const setCeremonyBudgetToEstimate = (eventId: string, eventName: string, useHigh: boolean) => {
     const total = getCeremonyEstimateTotal(eventId, eventName, useHigh);
     handleCeremonyTotalChange(eventId, total.toString());
-    // Also populate all line item categories with the corresponding estimates
+    // Populate all line item categories with the corresponding estimates (as draft)
     setEstimatesForEvent(eventId, eventName, useHigh);
-    
-    // Also populate the Budget Planner matrix cells with aggregated estimates by bucket
-    const lineItems = getLineItemsForEvent(eventId, eventName);
-    if (!lineItems || !wedding?.id) return;
-
-    const event = events.find(e => e.id === eventId);
-    const guestCount = event?.guestCount || 100;
-
-    const pricingContext: PricingContext = {
-      ...DEFAULT_PRICING_CONTEXT,
-      guestCount,
-      city: getCityKey(wedding?.city),
-    };
-
-    // Aggregate estimates by budget bucket AND collect line item budgets
-    const bucketTotals: Record<string, number> = {};
-    const lineItemBudgetItems: Array<{ lineItemCategory: string; budgetedAmount: string; bucket: string }> = [];
-    
-    for (const item of lineItems) {
-      const estimates = calculateLineItemEstimate(item, guestCount, pricingContext);
-      const rawValue = useHigh ? estimates.high : estimates.low;
-      const value = Math.round(rawValue / 100) * 100;
-      const bucket = item.budgetBucket ?? "other";
-      bucketTotals[bucket] = (bucketTotals[bucket] || 0) + value;
-      
-      // Collect line item budget for saving
-      lineItemBudgetItems.push({
-        lineItemCategory: item.category,
-        budgetedAmount: value.toString(),
-        bucket,
-      });
-    }
-
-    // Call bulk allocate mutation for ceremony-bucket allocations
-    const allocations = Object.entries(bucketTotals).map(([categoryKey, amount]) => ({
-      categoryKey,
-      amount: amount.toString(),
-    }));
-
-    if (allocations.length > 0) {
-      bulkAllocateMutation.mutate({
-        weddingId: wedding.id,
-        ceremonyId: eventId,
-        allocations,
-      });
-    }
-    
-    // Also save line item budgets to database
-    const ceremonyTypeId = getCeremonyTypeId(eventName);
-    if (ceremonyTypeId && lineItemBudgetItems.length > 0) {
-      saveLineItemBudgetsMutation.mutate({
-        weddingId: wedding.id,
-        eventId,
-        ceremonyTypeId,
-        items: lineItemBudgetItems,
-      });
-    }
+    // Line items are now in editingLineItems state - user must click Save to persist
   };
 
   // Ceremony Budgets (Budget Matrix)

@@ -1074,6 +1074,7 @@ export interface IStorage {
 
   // Ceremony Template Items (normalized line items for templates)
   getCeremonyTemplateItems(templateId: string): Promise<CeremonyTemplateItem[]>;
+  getAllCeremonyTemplateItems(): Promise<CeremonyTemplateItem[]>;
   getCeremonyTemplateItem(id: string): Promise<CeremonyTemplateItem | undefined>;
   createCeremonyTemplateItem(item: InsertCeremonyTemplateItem): Promise<CeremonyTemplateItem>;
   updateCeremonyTemplateItem(id: string, item: Partial<InsertCeremonyTemplateItem>): Promise<CeremonyTemplateItem | undefined>;
@@ -4313,6 +4314,7 @@ export class MemStorage implements IStorage {
 
   // Ceremony Template Items (stubs - use DBStorage for production)
   async getCeremonyTemplateItems(templateId: string): Promise<CeremonyTemplateItem[]> { return []; }
+  async getAllCeremonyTemplateItems(): Promise<CeremonyTemplateItem[]> { return []; }
   async getCeremonyTemplateItem(id: string): Promise<CeremonyTemplateItem | undefined> { return undefined; }
   async createCeremonyTemplateItem(item: InsertCeremonyTemplateItem): Promise<CeremonyTemplateItem> { throw new Error('MemStorage does not support Ceremony Template Items. Use DBStorage.'); }
   async updateCeremonyTemplateItem(id: string, item: Partial<InsertCeremonyTemplateItem>): Promise<CeremonyTemplateItem | undefined> { throw new Error('MemStorage does not support Ceremony Template Items. Use DBStorage.'); }
@@ -10512,6 +10514,13 @@ export class DBStorage implements IStorage {
         eq(ceremonyTemplateItems.isActive, true)
       ))
       .orderBy(sql`${ceremonyTemplateItems.displayOrder} ASC`);
+  }
+
+  async getAllCeremonyTemplateItems(): Promise<CeremonyTemplateItem[]> {
+    return await this.db.select()
+      .from(ceremonyTemplateItems)
+      .where(eq(ceremonyTemplateItems.isActive, true))
+      .orderBy(sql`${ceremonyTemplateItems.templateId} ASC, ${ceremonyTemplateItems.displayOrder} ASC`);
   }
 
   async getCeremonyTemplateItem(id: string): Promise<CeremonyTemplateItem | undefined> {

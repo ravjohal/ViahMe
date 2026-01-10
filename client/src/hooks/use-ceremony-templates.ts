@@ -183,6 +183,7 @@ export function buildCeremonyTemplateMap(
 }
 
 // Build a lookup map from ceremonyId to costBreakdown array
+// DEPRECATED: Use useAllCeremonyLineItems hook instead for normalized data
 export function buildCeremonyBreakdownMap(
   templates: CeremonyTemplate[] | undefined
 ): Record<string, CeremonyTemplateCostItem[]> {
@@ -192,6 +193,19 @@ export function buildCeremonyBreakdownMap(
     map[template.ceremonyId] = getCostBreakdownFromTemplate(template);
   }
   return map;
+}
+
+// Hook to fetch all ceremony line items from the normalized ceremony_template_items table
+// Returns a map of ceremonyId -> CeremonyTemplateCostItem[]
+export function useAllCeremonyLineItems() {
+  return useQuery<Record<string, CeremonyTemplateCostItem[]>>({
+    queryKey: ['/api/ceremony-templates/all/line-items'],
+    queryFn: async () => {
+      const response = await fetch('/api/ceremony-templates/all/line-items');
+      if (!response.ok) throw new Error('Failed to fetch all ceremony line items');
+      return response.json();
+    },
+  });
 }
 
 // Calculate ceremony total from a breakdown array (works with breakdown map values)
