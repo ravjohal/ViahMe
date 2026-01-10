@@ -688,13 +688,33 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
 
       const totalBudget = parseFloat(wedding?.totalBudget || '0');
       
-      // Calculate ceremony-level allocations (allocations with ceremonyId set)
+      // Calculate ceremony-level allocations
+      // IMPORTANT: Use line items if they exist, otherwise use the ceremony-level total
+      // This prevents double-counting when both exist
       const ceremonyAllocationsMap = new Map<string, number>();
+      const ceremonyLineItemsMap = new Map<string, number>(); // Sum of line items only
+      const ceremonyCeremonyTotalsMap = new Map<string, number>(); // Ceremony-level total only (lineItemLabel = null)
+      
       for (const alloc of allocations) {
         if (alloc.ceremonyId) {
-          const current = ceremonyAllocationsMap.get(alloc.ceremonyId) || 0;
-          ceremonyAllocationsMap.set(alloc.ceremonyId, current + parseFloat(alloc.allocatedAmount || '0'));
+          const amount = parseFloat(alloc.allocatedAmount || '0');
+          if (alloc.lineItemLabel) {
+            // This is a line item allocation
+            const current = ceremonyLineItemsMap.get(alloc.ceremonyId) || 0;
+            ceremonyLineItemsMap.set(alloc.ceremonyId, current + amount);
+          } else {
+            // This is a ceremony-level total (no line item label)
+            ceremonyCeremonyTotalsMap.set(alloc.ceremonyId, amount);
+          }
         }
+      }
+      
+      // For each ceremony, use line items sum if available, else use ceremony total
+      for (const event of events) {
+        const lineItemsTotal = ceremonyLineItemsMap.get(event.id) || 0;
+        const ceremonyTotal = ceremonyCeremonyTotalsMap.get(event.id) || 0;
+        // Prefer line items if they exist (non-zero), otherwise use ceremony-level total
+        ceremonyAllocationsMap.set(event.id, lineItemsTotal > 0 ? lineItemsTotal : ceremonyTotal);
       }
 
       const totalCeremonyAllocated = Array.from(ceremonyAllocationsMap.values()).reduce((sum, v) => sum + v, 0);
