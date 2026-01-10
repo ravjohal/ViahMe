@@ -54,7 +54,7 @@ import { registerRitualRoleRoutes } from "./ritual-roles";
 import { registerTraditionsRoutes } from "./traditions";
 import { createVendorAccessPassesRouter, createVendorCollaborationViewRouter } from "./vendor-access-passes";
 import { createCeremonyExplainersRouter, createPublicCeremonyExplainersRouter } from "./ceremony-explainers";
-import { seedVendors, seedBudgetBenchmarks } from "../seed-data";
+import { seedVendors } from "../seed-data";
 
 let defaultStorageSeeded = false;
 
@@ -96,11 +96,6 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
     const existingVendors = await storage.getAllVendors();
     if (existingVendors.length === 0) {
       await seedVendors(storage);
-    }
-    
-    const existingBenchmarks = await storage.getAllBudgetBenchmarks();
-    if (existingBenchmarks.length === 0) {
-      await seedBudgetBenchmarks(storage);
     }
     
     defaultStorageSeeded = true;

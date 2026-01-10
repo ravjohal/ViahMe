@@ -37,8 +37,6 @@ import {
   type InsertFollowUpReminder,
   type Review,
   type InsertReview,
-  type BudgetBenchmark,
-  type InsertBudgetBenchmark,
   type Playlist,
   type InsertPlaylist,
   type PlaylistSong,
@@ -498,14 +496,6 @@ export interface IStorage {
   getReviewsByWedding(weddingId: string): Promise<Review[]>;
   createReview(review: InsertReview): Promise<Review>;
   updateVendorRating(vendorId: string): Promise<void>; // Recalculate average rating
-
-  // Budget Benchmarks
-  getBudgetBenchmark(id: string): Promise<BudgetBenchmark | undefined>;
-  getBudgetBenchmarks(city: string, tradition: string): Promise<BudgetBenchmark[]>;
-  getBudgetBenchmarkByCategory(city: string, tradition: string, category: string): Promise<BudgetBenchmark | undefined>;
-  getAllBudgetBenchmarks(): Promise<BudgetBenchmark[]>;
-  createBudgetBenchmark(benchmark: InsertBudgetBenchmark): Promise<BudgetBenchmark>;
-  updateBudgetBenchmark(id: string, benchmark: Partial<InsertBudgetBenchmark>): Promise<BudgetBenchmark | undefined>;
 
   // Playlists
   getPlaylist(id: string): Promise<Playlist | undefined>;
@@ -1242,7 +1232,6 @@ export class MemStorage implements IStorage {
   private quickReplyTemplates: Map<string, QuickReplyTemplate>;
   private followUpReminders: Map<string, FollowUpReminder>;
   private reviews: Map<string, Review>;
-  private budgetBenchmarks: Map<string, BudgetBenchmark>;
   private playlists: Map<string, Playlist>;
   private playlistSongs: Map<string, PlaylistSong>;
   private songVotes: Map<string, SongVote>;
@@ -1279,7 +1268,6 @@ export class MemStorage implements IStorage {
     this.quickReplyTemplates = new Map();
     this.followUpReminders = new Map();
     this.reviews = new Map();
-    this.budgetBenchmarks = new Map();
     this.playlists = new Map();
     this.playlistSongs = new Map();
     this.songVotes = new Map();
@@ -2687,56 +2675,6 @@ export class MemStorage implements IStorage {
     }
     
     this.vendors.set(vendorId, vendor);
-  }
-
-  // Budget Benchmarks
-  async getBudgetBenchmark(id: string): Promise<BudgetBenchmark | undefined> {
-    return this.budgetBenchmarks.get(id);
-  }
-
-  async getBudgetBenchmarks(city: string, tradition: string): Promise<BudgetBenchmark[]> {
-    return Array.from(this.budgetBenchmarks.values()).filter(
-      (b) => b.city === city && b.tradition === tradition
-    );
-  }
-
-  async getBudgetBenchmarkByCategory(
-    city: string,
-    tradition: string,
-    category: string
-  ): Promise<BudgetBenchmark | undefined> {
-    return Array.from(this.budgetBenchmarks.values()).find(
-      (b) => b.city === city && b.tradition === tradition && b.category === category
-    );
-  }
-
-  async getAllBudgetBenchmarks(): Promise<BudgetBenchmark[]> {
-    return Array.from(this.budgetBenchmarks.values());
-  }
-
-  async createBudgetBenchmark(insertBenchmark: InsertBudgetBenchmark): Promise<BudgetBenchmark> {
-    const id = randomUUID();
-    const benchmark: BudgetBenchmark = {
-      ...insertBenchmark,
-      id,
-      sampleSize: insertBenchmark.sampleSize || 0,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    } as BudgetBenchmark;
-    this.budgetBenchmarks.set(id, benchmark);
-    return benchmark;
-  }
-
-  async updateBudgetBenchmark(
-    id: string,
-    update: Partial<InsertBudgetBenchmark>
-  ): Promise<BudgetBenchmark | undefined> {
-    const benchmark = this.budgetBenchmarks.get(id);
-    if (!benchmark) return undefined;
-
-    const updated = { ...benchmark, ...update, updatedAt: new Date() };
-    this.budgetBenchmarks.set(id, updated);
-    return updated;
   }
 
   // Playlists
@@ -5792,59 +5730,6 @@ export class DBStorage implements IStorage {
         })
         .where(eq(schema.vendors.id, vendorId));
     }
-  }
-
-  // Budget Benchmarks
-  async getBudgetBenchmark(id: string): Promise<BudgetBenchmark | undefined> {
-    const result = await this.db.select().from(schema.budgetBenchmarks).where(eq(schema.budgetBenchmarks.id, id));
-    return result[0];
-  }
-
-  async getBudgetBenchmarks(city: string, tradition: string): Promise<BudgetBenchmark[]> {
-    return await this.db
-      .select()
-      .from(schema.budgetBenchmarks)
-      .where(and(
-        eq(schema.budgetBenchmarks.city, city),
-        eq(schema.budgetBenchmarks.tradition, tradition)
-      ));
-  }
-
-  async getBudgetBenchmarkByCategory(
-    city: string,
-    tradition: string,
-    category: string
-  ): Promise<BudgetBenchmark | undefined> {
-    const result = await this.db
-      .select()
-      .from(schema.budgetBenchmarks)
-      .where(and(
-        eq(schema.budgetBenchmarks.city, city),
-        eq(schema.budgetBenchmarks.tradition, tradition),
-        eq(schema.budgetBenchmarks.category, category)
-      ));
-    return result[0];
-  }
-
-  async getAllBudgetBenchmarks(): Promise<BudgetBenchmark[]> {
-    return await this.db.select().from(schema.budgetBenchmarks);
-  }
-
-  async createBudgetBenchmark(insertBenchmark: InsertBudgetBenchmark): Promise<BudgetBenchmark> {
-    const result = await this.db.insert(schema.budgetBenchmarks).values(insertBenchmark).returning();
-    return result[0];
-  }
-
-  async updateBudgetBenchmark(
-    id: string,
-    update: Partial<InsertBudgetBenchmark>
-  ): Promise<BudgetBenchmark | undefined> {
-    const result = await this.db
-      .update(schema.budgetBenchmarks)
-      .set({ ...update, updatedAt: new Date() })
-      .where(eq(schema.budgetBenchmarks.id, id))
-      .returning();
-    return result[0];
   }
 
   // Playlists

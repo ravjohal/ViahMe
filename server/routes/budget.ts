@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { requireAuth, type AuthRequest } from "../auth-middleware";
 import type { IStorage } from "../storage";
-import { insertExpenseSchema, insertBudgetAllocationSchema, insertBudgetBenchmarkSchema, BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket, insertBudgetCategorySchema } from "@shared/schema";
+import { insertExpenseSchema, insertBudgetAllocationSchema, BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket, insertBudgetCategorySchema } from "@shared/schema";
 import { ensureCoupleAccess } from "./middleware";
 
 export async function registerBudgetRoutes(router: Router, storage: IStorage) {
@@ -248,26 +248,6 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete budget allocation" });
-    }
-  });
-
-  router.post("/allocations/estimate", async (req, res) => {
-    try {
-      const { budget, city, tradition, guestCount } = req.body;
-      const benchmarks = await storage.getBudgetBenchmarksByCityAndTradition(city, tradition);
-      
-      const allocations = benchmarks.map((b) => ({
-        bucket: b.categoryName,
-        label: BUDGET_BUCKET_LABELS[b.categoryName as BudgetBucket] || b.categoryName,
-        allocatedAmount: Math.round((budget * (b.percentageOfBudget || 0)) / 100),
-        percentageOfBudget: b.percentageOfBudget,
-        priority: b.priority,
-        typicalRange: b.typicalRange,
-      }));
-      
-      res.json({ allocations, guestCount });
-    } catch (error) {
-      res.status(500).json({ error: "Failed to generate budget estimate" });
     }
   });
 
@@ -547,36 +527,16 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
     }
   });
 
-  router.get("/benchmarks", async (_req, res) => {
-    try {
-      const benchmarks = await storage.getAllBudgetBenchmarks();
-      res.json(benchmarks);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to fetch budget benchmarks" });
-    }
-  });
-
-  router.get("/benchmarks/:city/:tradition", async (req, res) => {
-    try {
-      const { city, tradition } = req.params;
-      const benchmarks = await storage.getBudgetBenchmarksByCityAndTradition(city, tradition);
-      res.json(benchmarks);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to fetch budget benchmarks" });
-    }
-  });
-
   router.get("/analytics/:weddingId", await requireAuth(storage, false), ensureCoupleAccess(storage, (req) => req.params.weddingId), async (req, res) => {
     try {
       const weddingId = req.params.weddingId;
       
-      const [wedding, allocations, expenses, events, bookings, benchmarks] = await Promise.all([
+      const [wedding, allocations, expenses, events, bookings] = await Promise.all([
         storage.getWedding(weddingId),
         storage.getBudgetAllocationsByWedding(weddingId),
         storage.getExpensesByWedding(weddingId),
         storage.getEventsByWedding(weddingId),
         storage.getBookingsByWedding(weddingId),
-        storage.getAllBudgetBenchmarks(),
       ]);
 
       if (!wedding) {
@@ -603,12 +563,12 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
         };
       });
 
-      const traditionBenchmarks = benchmarks.filter(b => 
-        b.tradition === wedding.tradition && 
-        (b.city === wedding.city || b.city === 'National')
-      );
-
       res.json({
+        wedding: {
+          city: wedding.city,
+          tradition: wedding.tradition,
+          totalBudget: wedding.totalBudget,
+        },
         overview: {
           totalBudget,
           totalAllocated,
@@ -619,24 +579,11 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
         bucketBreakdown,
         eventCount: events.length,
         vendorBookings: bookings.length,
-        benchmarks: traditionBenchmarks,
+        benchmarks: [],
       });
     } catch (error) {
       console.error("Error fetching budget analytics:", error);
       res.status(500).json({ error: "Failed to fetch budget analytics" });
-    }
-  });
-
-  router.post("/benchmarks", async (req, res) => {
-    try {
-      const validatedData = insertBudgetBenchmarkSchema.parse(req.body);
-      const benchmark = await storage.createBudgetBenchmark(validatedData);
-      res.json(benchmark);
-    } catch (error) {
-      if (error instanceof Error && "issues" in error) {
-        return res.status(400).json({ error: "Validation failed", details: error });
-      }
-      res.status(500).json({ error: "Failed to create budget benchmark" });
     }
   });
 
