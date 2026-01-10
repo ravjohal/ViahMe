@@ -3933,15 +3933,18 @@ export type CeremonyTemplateCostItem = {
 };
 
 // ============================================================================
-// CEREMONY TYPE ITEMS - Normalized line items for ceremony types (Site Admin managed)
-// Note: Database table name is 'ceremony_template_items' for backward compatibility
+// CEREMONY BUDGET CATEGORIES - Junction table connecting ceremony types to budget buckets
+// Links ceremony-specific line items to their ceremony type and financial bucket
+// Note: Database table currently named 'ceremony_template_items' (migration pending)
 // ============================================================================
 
-export const ceremonyTypeItems = pgTable("ceremony_template_items", {
+export const ceremonyBudgetCategories = pgTable("ceremony_template_items", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  templateId: text("template_id").notNull(), // References ceremony_templates.ceremonyId
-  itemName: text("item_name").notNull(), // e.g., "Gurdwara Donation", "Venue"
-  budgetBucket: text("budget_bucket").notNull(), // Maps to BUDGET_BUCKETS
+  // Foreign key to ceremony_templates.ceremonyId (slug-style ID like 'sikh_anand_karaj')
+  ceremonyTypeId: text("template_id").notNull(),
+  // Foreign key to budget_bucket_categories.id (slug-style ID like 'venue', 'attire')
+  budgetBucketId: text("budget_bucket").notNull(),
+  itemName: text("item_name").notNull(), // e.g., "Gurdwara Donation", "Turban Tying"
   lowCost: decimal("low_cost", { precision: 12, scale: 2 }).notNull(),
   highCost: decimal("high_cost", { precision: 12, scale: 2 }).notNull(),
   unit: text("unit").notNull(), // 'fixed', 'per_person', 'per_hour'
@@ -3953,16 +3956,17 @@ export const ceremonyTypeItems = pgTable("ceremony_template_items", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (table) => ({
-  templateIdx: index("ceremony_template_items_template_idx").on(table.templateId),
+  ceremonyTypeIdx: index("ceremony_template_items_template_idx").on(table.ceremonyTypeId),
+  budgetBucketIdx: index("ceremony_budget_categories_bucket_idx").on(table.budgetBucketId),
 }));
 
-export const insertCeremonyTypeItemSchema = createInsertSchema(ceremonyTypeItems).omit({
+export const insertCeremonyBudgetCategorySchema = createInsertSchema(ceremonyBudgetCategories).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
 }).extend({
-  templateId: z.string(), // References ceremony_templates.ceremonyId
-  budgetBucket: z.enum(BUDGET_BUCKETS),
+  ceremonyTypeId: z.string(), // References ceremony_templates.ceremonyId
+  budgetBucketId: z.enum(BUDGET_BUCKETS), // References budget_bucket_categories.id
   unit: z.enum(['fixed', 'per_hour', 'per_person']),
   lowCost: z.string(),
   highCost: z.string(),
@@ -3970,14 +3974,18 @@ export const insertCeremonyTypeItemSchema = createInsertSchema(ceremonyTypeItems
   hoursHigh: z.string().optional(),
 });
 
-export type InsertCeremonyTypeItem = z.infer<typeof insertCeremonyTypeItemSchema>;
-export type CeremonyTypeItem = typeof ceremonyTypeItems.$inferSelect;
+export type InsertCeremonyBudgetCategory = z.infer<typeof insertCeremonyBudgetCategorySchema>;
+export type CeremonyBudgetCategory = typeof ceremonyBudgetCategories.$inferSelect;
 
-// Backward compatibility aliases for ceremony type items
-export const ceremonyTemplateItems = ceremonyTypeItems;
-export const insertCeremonyTemplateItemSchema = insertCeremonyTypeItemSchema;
-export type InsertCeremonyTemplateItem = InsertCeremonyTypeItem;
-export type CeremonyTemplateItem = CeremonyTypeItem;
+// Backward compatibility aliases for legacy code
+export const ceremonyTypeItems = ceremonyBudgetCategories;
+export const ceremonyTemplateItems = ceremonyBudgetCategories;
+export const insertCeremonyTypeItemSchema = insertCeremonyBudgetCategorySchema;
+export const insertCeremonyTemplateItemSchema = insertCeremonyBudgetCategorySchema;
+export type InsertCeremonyTypeItem = InsertCeremonyBudgetCategory;
+export type InsertCeremonyTemplateItem = InsertCeremonyBudgetCategory;
+export type CeremonyTypeItem = CeremonyBudgetCategory;
+export type CeremonyTemplateItem = CeremonyBudgetCategory;
 
 // ============================================================================
 // WEDDING LINE ITEMS - Couple's customized budget line items

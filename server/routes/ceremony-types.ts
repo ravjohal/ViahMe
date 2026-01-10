@@ -48,7 +48,7 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
 
   router.get("/all/line-items", async (req, res) => {
     try {
-      const allItems = await storage.getAllCeremonyTypeItems();
+      const allItems = await storage.getAllCeremonyBudgetCategories();
       
       const grouped: Record<string, Array<{
         category: string;
@@ -58,11 +58,11 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
         hoursLow?: number;
         hoursHigh?: number;
         notes?: string;
-        budgetBucket?: string;
+        budgetBucketId?: string;
       }>> = {};
       
       for (const item of allItems) {
-        const key = item.templateId;
+        const key = item.ceremonyTypeId;
         if (!grouped[key]) {
           grouped[key] = [];
         }
@@ -74,7 +74,7 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
           hoursLow: item.hoursLow ? parseFloat(item.hoursLow) : undefined,
           hoursHigh: item.hoursHigh ? parseFloat(item.hoursHigh) : undefined,
           notes: item.notes ?? undefined,
-          budgetBucket: item.budgetBucket ?? 'other',
+          budgetBucketId: item.budgetBucketId ?? 'other',
         });
       }
       
@@ -107,12 +107,12 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
         return res.status(404).json({ error: "Ceremony type not found" });
       }
       
-      const typeItems = await storage.getCeremonyTypeItems(ceremonyId);
+      const budgetCategories = await storage.getCeremonyBudgetCategories(ceremonyId);
       
-      const lineItems = typeItems.map(item => ({
+      const lineItems = budgetCategories.map(item => ({
         id: item.id,
         name: item.itemName,
-        budgetBucket: item.budgetBucket || 'other',
+        budgetBucketId: item.budgetBucketId || 'other',
         lowCost: parseFloat(item.lowCost),
         highCost: parseFloat(item.highCost),
         unit: item.unit,

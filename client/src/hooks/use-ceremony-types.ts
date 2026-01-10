@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import type { CeremonyType, RegionalPricing, CeremonyTemplateCostItem } from "@shared/schema";
+import type { CeremonyType, RegionalPricing, CeremonyTemplateCostItem, CeremonyBudgetCategory } from "@shared/schema";
 
 // Backward compatibility type alias
 type CeremonyTemplate = CeremonyType;
+type CeremonyTypeItem = CeremonyBudgetCategory;
 
 export function useCeremonyTypes() {
   return useQuery<CeremonyType[]>({
@@ -89,11 +90,11 @@ export interface CeremonyEstimateResponse {
   }>;
 }
 
-// Line item type from the normalized ceremony_type_items table
-export interface CeremonyTypeLineItem {
+// Line item type from the ceremony_budget_categories junction table
+export interface CeremonyBudgetCategoryItem {
   id: string;
   name: string;
-  budgetBucket: string;
+  budgetBucketId: string; // FK to budget_bucket_categories.id
   lowCost: number;
   highCost: number;
   unit: 'fixed' | 'per_person' | 'per_hour';
@@ -102,25 +103,34 @@ export interface CeremonyTypeLineItem {
   notes?: string;
 }
 
-export interface CeremonyLineItemsResponse {
+// Backward compatibility alias
+export type CeremonyTypeLineItem = CeremonyBudgetCategoryItem;
+
+export interface CeremonyBudgetCategoriesResponse {
   ceremonyId: string;
   ceremonyName: string;
   tradition: string;
-  lineItems: CeremonyTypeLineItem[];
+  lineItems: CeremonyBudgetCategoryItem[];
 }
 
-// Hook to fetch normalized line items from the ceremony_type_items table
-export function useCeremonyTypeLineItems(ceremonyId: string | null | undefined) {
-  return useQuery<CeremonyLineItemsResponse>({
+// Backward compatibility alias
+export type CeremonyLineItemsResponse = CeremonyBudgetCategoriesResponse;
+
+// Hook to fetch ceremony budget categories for a specific ceremony type
+export function useCeremonyBudgetCategories(ceremonyId: string | null | undefined) {
+  return useQuery<CeremonyBudgetCategoriesResponse>({
     queryKey: ['/api/ceremony-types', ceremonyId, 'line-items'],
     queryFn: async () => {
       const response = await fetch(`/api/ceremony-types/${ceremonyId}/line-items`);
-      if (!response.ok) throw new Error('Failed to fetch ceremony line items');
+      if (!response.ok) throw new Error('Failed to fetch ceremony budget categories');
       return response.json();
     },
     enabled: !!ceremonyId,
   });
 }
+
+// Backward compatibility alias
+export const useCeremonyTypeLineItems = useCeremonyBudgetCategories;
 
 export async function getCeremonyEstimate(request: CeremonyEstimateRequest): Promise<CeremonyEstimateResponse> {
   const response = await fetch('/api/ceremony-estimate', {
