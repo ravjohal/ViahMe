@@ -10512,35 +10512,35 @@ export class DBStorage implements IStorage {
     return results;
   }
 
-  // Ceremony Templates
-  async getCeremonyTemplate(ceremonyId: string): Promise<CeremonyTemplate | undefined> {
+  // Ceremony Types (renamed from ceremony_templates, now linked to wedding_traditions)
+  async getCeremonyType(ceremonyId: string): Promise<CeremonyTemplate | undefined> {
     const result = await this.db.select()
       .from(ceremonyTemplates)
       .where(eq(ceremonyTemplates.ceremonyId, ceremonyId));
     return result[0];
   }
 
-  async getCeremonyTemplatesByTradition(tradition: string): Promise<CeremonyTemplate[]> {
+  async getCeremonyTypesByTradition(traditionId: string): Promise<CeremonyTemplate[]> {
     return await this.db.select()
       .from(ceremonyTemplates)
-      .where(eq(ceremonyTemplates.tradition, tradition))
+      .where(eq(ceremonyTemplates.traditionId, traditionId))
       .orderBy(sql`${ceremonyTemplates.displayOrder} ASC`);
   }
 
-  async getAllCeremonyTemplates(): Promise<CeremonyTemplate[]> {
+  async getAllCeremonyTypes(): Promise<CeremonyTemplate[]> {
     return await this.db.select()
       .from(ceremonyTemplates)
-      .orderBy(sql`${ceremonyTemplates.tradition} ASC, ${ceremonyTemplates.displayOrder} ASC`);
+      .orderBy(sql`${ceremonyTemplates.traditionId} ASC, ${ceremonyTemplates.displayOrder} ASC`);
   }
 
-  async createCeremonyTemplate(template: InsertCeremonyTemplate): Promise<CeremonyTemplate> {
+  async createCeremonyType(template: InsertCeremonyTemplate): Promise<CeremonyTemplate> {
     const result = await this.db.insert(ceremonyTemplates)
       .values(template)
       .returning();
     return result[0];
   }
 
-  async updateCeremonyTemplate(ceremonyId: string, template: Partial<InsertCeremonyTemplate>): Promise<CeremonyTemplate | undefined> {
+  async updateCeremonyType(ceremonyId: string, template: Partial<InsertCeremonyTemplate>): Promise<CeremonyTemplate | undefined> {
     const result = await this.db.update(ceremonyTemplates)
       .set(template)
       .where(eq(ceremonyTemplates.ceremonyId, ceremonyId))
@@ -10548,48 +10548,85 @@ export class DBStorage implements IStorage {
     return result[0];
   }
 
-  async deleteCeremonyTemplate(ceremonyId: string): Promise<boolean> {
+  async deleteCeremonyType(ceremonyId: string): Promise<boolean> {
     await this.db.delete(ceremonyTemplates)
       .where(eq(ceremonyTemplates.ceremonyId, ceremonyId));
     return true;
   }
 
-  // Ceremony Template Items (normalized line items for templates)
-  async getCeremonyTemplateItems(templateId: string): Promise<CeremonyTemplateItem[]> {
+  // Backward compatibility aliases
+  async getCeremonyTemplate(ceremonyId: string): Promise<CeremonyTemplate | undefined> {
+    return this.getCeremonyType(ceremonyId);
+  }
+  async getCeremonyTemplatesByTradition(traditionId: string): Promise<CeremonyTemplate[]> {
+    return this.getCeremonyTypesByTradition(traditionId);
+  }
+  async getAllCeremonyTemplates(): Promise<CeremonyTemplate[]> {
+    return this.getAllCeremonyTypes();
+  }
+  async createCeremonyTemplate(template: InsertCeremonyTemplate): Promise<CeremonyTemplate> {
+    return this.createCeremonyType(template);
+  }
+  async updateCeremonyTemplate(ceremonyId: string, template: Partial<InsertCeremonyTemplate>): Promise<CeremonyTemplate | undefined> {
+    return this.updateCeremonyType(ceremonyId, template);
+  }
+  async deleteCeremonyTemplate(ceremonyId: string): Promise<boolean> {
+    return this.deleteCeremonyType(ceremonyId);
+  }
+
+  // Ceremony Type Items (normalized line items for ceremony types)
+  async getCeremonyTypeItems(ceremonyTypeId: string): Promise<CeremonyTemplateItem[]> {
     return await this.db.select()
       .from(ceremonyTemplateItems)
       .where(and(
-        eq(ceremonyTemplateItems.templateId, templateId),
+        eq(ceremonyTemplateItems.ceremonyTypeId, ceremonyTypeId),
         eq(ceremonyTemplateItems.isActive, true)
       ))
       .orderBy(sql`${ceremonyTemplateItems.displayOrder} ASC`);
   }
 
-  async getAllCeremonyTemplateItems(): Promise<CeremonyTemplateItem[]> {
+  async getAllCeremonyTypeItems(): Promise<CeremonyTemplateItem[]> {
     return await this.db.select()
       .from(ceremonyTemplateItems)
       .where(eq(ceremonyTemplateItems.isActive, true))
-      .orderBy(sql`${ceremonyTemplateItems.templateId} ASC, ${ceremonyTemplateItems.displayOrder} ASC`);
+      .orderBy(sql`${ceremonyTemplateItems.ceremonyTypeId} ASC, ${ceremonyTemplateItems.displayOrder} ASC`);
   }
 
-  async getCeremonyTemplateItem(id: string): Promise<CeremonyTemplateItem | undefined> {
+  async getCeremonyTypeItem(id: string): Promise<CeremonyTemplateItem | undefined> {
     const result = await this.db.select()
       .from(ceremonyTemplateItems)
       .where(eq(ceremonyTemplateItems.id, id));
     return result[0];
   }
 
-  async createCeremonyTemplateItem(item: InsertCeremonyTemplateItem): Promise<CeremonyTemplateItem> {
+  async createCeremonyTypeItem(item: InsertCeremonyTemplateItem): Promise<CeremonyTemplateItem> {
     const result = await this.db.insert(ceremonyTemplateItems).values(item).returning();
     return result[0];
   }
 
-  async updateCeremonyTemplateItem(id: string, item: Partial<InsertCeremonyTemplateItem>): Promise<CeremonyTemplateItem | undefined> {
+  async updateCeremonyTypeItem(id: string, item: Partial<InsertCeremonyTemplateItem>): Promise<CeremonyTemplateItem | undefined> {
     const result = await this.db.update(ceremonyTemplateItems)
       .set({ ...item, updatedAt: new Date() })
       .where(eq(ceremonyTemplateItems.id, id))
       .returning();
     return result[0];
+  }
+
+  // Backward compatibility aliases for template items
+  async getCeremonyTemplateItems(templateId: string): Promise<CeremonyTemplateItem[]> {
+    return this.getCeremonyTypeItems(templateId);
+  }
+  async getAllCeremonyTemplateItems(): Promise<CeremonyTemplateItem[]> {
+    return this.getAllCeremonyTypeItems();
+  }
+  async getCeremonyTemplateItem(id: string): Promise<CeremonyTemplateItem | undefined> {
+    return this.getCeremonyTypeItem(id);
+  }
+  async createCeremonyTemplateItem(item: InsertCeremonyTemplateItem): Promise<CeremonyTemplateItem> {
+    return this.createCeremonyTypeItem(item);
+  }
+  async updateCeremonyTemplateItem(id: string, item: Partial<InsertCeremonyTemplateItem>): Promise<CeremonyTemplateItem | undefined> {
+    return this.updateCeremonyTypeItem(id, item);
   }
 
   async deleteCeremonyTemplateItem(id: string): Promise<boolean> {

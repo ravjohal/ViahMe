@@ -49,7 +49,7 @@ import { createRolesRouter, createWeddingRolesRouter, createCollaboratorsRouter,
 import { createGuestSourcesRouter } from "./guest-sources";
 import { createGuestSideRouter, createGuestConsensusRouter, createScenariosRouter, createGuestBudgetRouter, createHouseholdPriorityRouter } from "./guest-planning";
 import { createTimelineRouter, createEventTimeRouter, createTimelineChangesRouter, createVendorAcknowledgmentsRouter } from "./timeline";
-import { createCeremonyTemplatesRouter, createRegionalPricingRouter, createCeremonyEstimateRouter } from "./ceremony-templates";
+import { createCeremonyTypesRouter, createRegionalPricingRouter, createCeremonyEstimateRouter } from "./ceremony-types";
 import { registerRitualRoleRoutes } from "./ritual-roles";
 import { registerTraditionsRoutes } from "./traditions";
 import { createVendorAccessPassesRouter, createVendorCollaborationViewRouter } from "./vendor-access-passes";
@@ -108,8 +108,10 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   
   registerAuthRoutes(app, storage);
 
-  // Public ceremony templates and regional pricing (public read, admin write)
-  app.use("/api/ceremony-templates", createCeremonyTemplatesRouter(storage));
+  // Public ceremony types and regional pricing (public read, admin write)
+  const ceremonyTypesRouter = createCeremonyTypesRouter(storage);
+  app.use("/api/ceremony-types", ceremonyTypesRouter);
+  app.use("/api/ceremony-templates", ceremonyTypesRouter); // Backward compatibility
   app.use("/api/regional-pricing", createRegionalPricingRouter(storage));
   app.use("/api/ceremony-estimate", createCeremonyEstimateRouter(storage));
   
