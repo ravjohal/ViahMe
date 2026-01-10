@@ -516,7 +516,8 @@ export const events = pgTable("events", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   weddingId: varchar("wedding_id").notNull(),
   name: text("name").notNull(),
-  type: text("type").notNull(), // 'paath' | 'mehndi' | 'maiyan' | 'sangeet' | 'anand_karaj' | 'reception' | 'custom'
+  type: text("type").notNull(), // Legacy: 'paath' | 'mehndi' | 'maiyan' | 'sangeet' | 'anand_karaj' | 'reception' | 'custom'
+  ceremonyTypeId: varchar("ceremony_type_id"), // FK to ceremony_templates.ceremonyId (nullable during migration)
   date: timestamp("date"),
   time: text("time"),
   location: text("location"),
@@ -538,7 +539,10 @@ export const events = pgTable("events", {
   parkingInfo: text("parking_info"), // Parking instructions
   // Livestream integration
   livestreamUrl: text("livestream_url"), // YouTube live stream URL for remote guests
-});
+}, (table) => ({
+  weddingIdIdx: index("events_wedding_id_idx").on(table.weddingId),
+  ceremonyTypeIdIdx: index("events_ceremony_type_id_idx").on(table.ceremonyTypeId),
+}));
 
 export const insertEventSchema = createInsertSchema(events).omit({
   id: true,
@@ -560,6 +564,7 @@ export const insertEventSchema = createInsertSchema(events).omit({
     // Generic
     'custom', 'other'
   ]),
+  ceremonyTypeId: z.string().nullable().optional(), // FK to ceremony_templates.ceremonyId
   date: z.string().optional().transform(val => val ? new Date(val) : undefined),
   costPerHead: z.string().nullable().optional(),
   allocatedBudget: z.string().nullable().optional(),
@@ -577,19 +582,33 @@ export type Event = typeof events.$inferSelect;
 
 export const eventCostItems = pgTable("event_cost_items", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  eventId: varchar("event_id").notNull(),
-  categoryId: varchar("category_id"), // Links to budget_categories table for cost aggregation
+  eventId: varchar("event_id").notNull(), // FK to events.id
+  categoryId: varchar("category_id"), // Legacy: links to budget_categories table
+  ceremonyBudgetCategoryId: varchar("ceremony_budget_category_id"), // FK to ceremony_template_items.id (template line item)
+  budgetBucketCategoryId: varchar("budget_bucket_category_id"), // FK to budget_bucket_categories.id
   name: text("name").notNull(), // e.g., "Catering", "Decorations", "DJ", "Venue Rental"
-  costType: text("cost_type").notNull(), // 'per_head' | 'fixed'
+  costType: text("cost_type").notNull(), // 'per_head' | 'fixed' | 'per_hour'
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(), // Cost amount
-});
+  lowEstimate: decimal("low_estimate", { precision: 10, scale: 2 }), // Low cost estimate from template
+  highEstimate: decimal("high_estimate", { precision: 10, scale: 2 }), // High cost estimate from template
+  notes: text("notes"), // Additional notes
+}, (table) => ({
+  eventIdIdx: index("event_cost_items_event_id_idx").on(table.eventId),
+  ceremonyBudgetCategoryIdIdx: index("event_cost_items_ceremony_budget_category_id_idx").on(table.ceremonyBudgetCategoryId),
+  budgetBucketCategoryIdIdx: index("event_cost_items_budget_bucket_category_id_idx").on(table.budgetBucketCategoryId),
+}));
 
 export const insertEventCostItemSchema = createInsertSchema(eventCostItems).omit({
   id: true,
 }).extend({
-  costType: z.enum(['per_head', 'fixed']),
+  costType: z.enum(['per_head', 'fixed', 'per_hour']),
   amount: z.string(),
   categoryId: z.string().nullable().optional(),
+  ceremonyBudgetCategoryId: z.string().nullable().optional(), // FK to ceremony_template_items
+  budgetBucketCategoryId: z.string().nullable().optional(), // FK to budget_bucket_categories
+  lowEstimate: z.string().nullable().optional(),
+  highEstimate: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
 });
 
 export type InsertEventCostItem = z.infer<typeof insertEventCostItemSchema>;
@@ -900,10 +919,15 @@ export const expenses = pgTable("expenses", {
   weddingId: varchar("wedding_id").notNull(),
   
   // Tie to ceremony from events table (e.g., event ID or ceremony type like 'sikh_sangeet')
-  ceremonyId: text("ceremony_id"), // Optional - which ceremony this expense belongs to
+  ceremonyId: text("ceremony_id"), // Legacy: which ceremony this expense belongs to (event.id or type string)
+  eventId: varchar("event_id"), // FK to events.id (new, nullable during migration)
   
   // Tie to HIGH-LEVEL system category from BUDGET_BUCKETS
-  parentCategory: text("parent_category").notNull(), // e.g., "attire", "catering", "venue"
+  parentCategory: text("parent_category").notNull(), // Legacy: e.g., "attire", "catering", "venue"
+  bucketCategoryId: varchar("bucket_category_id"), // FK to budget_bucket_categories.id (new, nullable during migration)
+  
+  // Link to planned cost item (The Plan)
+  eventCostItemId: varchar("event_cost_item_id"), // FK to event_cost_items.id (new, nullable during migration)
   
   // User-defined granular name for this expense
   expenseName: text("expense_name").notNull(), // e.g., "Custom Pink Pagg Turbans"
@@ -934,6 +958,9 @@ export const expenses = pgTable("expenses", {
   weddingIdIdx: index("expenses_wedding_id_idx").on(table.weddingId),
   parentCategoryIdx: index("expenses_parent_category_idx").on(table.parentCategory),
   ceremonyIdIdx: index("expenses_ceremony_id_idx").on(table.ceremonyId),
+  eventIdIdx: index("expenses_event_id_idx").on(table.eventId),
+  bucketCategoryIdIdx: index("expenses_bucket_category_id_idx").on(table.bucketCategoryId),
+  eventCostItemIdIdx: index("expenses_event_cost_item_id_idx").on(table.eventCostItemId),
 }));
 
 export const insertExpenseSchema = createInsertSchema(expenses).omit({
@@ -941,6 +968,9 @@ export const insertExpenseSchema = createInsertSchema(expenses).omit({
   createdAt: true,
 }).extend({
   parentCategory: budgetBucketSchema,
+  eventId: z.string().nullable().optional(), // FK to events.id
+  bucketCategoryId: z.string().nullable().optional(), // FK to budget_bucket_categories.id
+  eventCostItemId: z.string().nullable().optional(), // FK to event_cost_items.id
   amount: z.string().regex(/^\d+(\.\d{1,2})?$/, "Amount must be a valid decimal"),
   amountPaid: z.string().regex(/^\d+(\.\d{1,2})?$/, "Amount paid must be a valid decimal").optional(),
   status: z.enum(['estimated', 'booked', 'paid']).optional(),
