@@ -42,7 +42,19 @@ Key architectural decisions and features include:
   - **Migration Note**: Legacy `cost_breakdown` JSONB column on `ceremony_templates` table is deprecated; all data has been migrated to the normalized `ceremony_template_items` table
 - **Vendor Specialization**: Support for 32 distinct vendor categories, including culturally-specific services.
 - **Budget Intelligence System**: Uses a **Unified Single Ledger Model** for simplified budget and expense tracking. Provides smart budget recommendations, dual-view aggregation (by bucket and by ceremony), contributor filtering, guest savings calculator, upcoming payments timeline, and automatic budget alerts.
-  - **Fixed BUDGET_BUCKETS**: 12 code-level budget categories defined in `shared/schema.ts`: venue, catering, photography, videography, decor, entertainment, attire, beauty, stationery, transportation, favors, other. Eliminates database joins and duplicate bucket issues.
+  - **Three-Tier Budget Hierarchy**:
+    1. **`budget_categories` (Top Tier)**: 12 high-level budget buckets managed by site admins in the database, with rich metadata:
+       - `id`: Slug-style ID (e.g., 'venue', 'catering') for code references
+       - `displayName`: Human-readable label
+       - `description`: Help text for couples
+       - `iconName`: Lucide icon name for UI
+       - `isEssential`: Essential vs. Optional grouping
+       - `suggestedPercentage`: Typical % of budget (e.g., Venue 30%, Catering 25%)
+       - `displayOrder`, `isActive`, `isSystemCategory`: Admin controls
+    2. **`ceremony_template_items` (Middle Tier)**: 50+ tradition-specific line items (e.g., "Gurdwara Donation", "Turban Tying") that serve as blueprints
+    3. **`wedding_line_items` (Bottom Tier)**: Couple's actual budget items, hydrated from templates or custom-created
+  - **Reserved Keys Pattern**: `BUDGET_BUCKETS` constant in code for system logic, while `budget_categories` table serves as the UI source of truth
+  - **API Endpoints**: `/api/budget/categories` (GET all), `/api/budget/categories/:id` (GET one), `/api/budget/categories/seed` (POST admin seed)
   - **Unified Budget Allocations Table**: `budgetAllocations` serves as the single table for ALL budget planning with hierarchical support:
     - `ceremonyId: null, lineItemLabel: null` = Bucket-level total (global category budget)
     - `ceremonyId: set, lineItemLabel: null` = Ceremony-bucket allocation (per-ceremony, per-category)

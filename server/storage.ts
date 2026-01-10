@@ -10673,9 +10673,14 @@ export class DBStorage implements IStorage {
   }
 
   async deleteBudgetCategory(id: string): Promise<boolean> {
-    // Don't allow deleting system categories
+    // Check if category exists
     const existing = await this.getBudgetCategory(id);
-    if (existing?.isSystemCategory) {
+    if (!existing) {
+      return false; // Category not found
+    }
+    
+    // Don't allow deleting system categories
+    if (existing.isSystemCategory) {
       throw new Error('Cannot delete system categories');
     }
     
