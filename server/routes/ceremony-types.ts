@@ -319,8 +319,8 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
         return res.status(404).json({ error: "Wedding not found" });
       }
       
-      const weddingUser = await storage.getWeddingUser(weddingId, userId);
-      if (!weddingUser) {
+      const permissions = await storage.getUserPermissionsForWedding(userId, weddingId);
+      if (!permissions.isOwner && permissions.permissions.size === 0) {
         return res.status(403).json({ error: "You don't have access to this wedding" });
       }
       
@@ -334,7 +334,8 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
       let finalHoursHigh: string | null = null;
       let finalNotes: string | null = notes || null;
       
-      // Mode 1: Clone from library item - inherits all cost data from source
+      // Mode 1: Import from library item (with optional overrides)
+      // If sourceCategoryId is provided, start with source data then apply any overrides
       if (sourceCategoryId && typeof sourceCategoryId === 'string') {
         // Fetch the source library item
         const sourceItem = await storage.getCeremonyBudgetCategory(sourceCategoryId);
@@ -342,7 +343,7 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
           return res.status(404).json({ error: "Source library item not found" });
         }
         if (sourceItem.weddingId) {
-          return res.status(400).json({ error: "Can only clone from system library items" });
+          return res.status(400).json({ error: "Can only import from system library items" });
         }
         
         // Check if this item already exists for this wedding+ceremony combination
@@ -358,18 +359,34 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
           });
         }
         
-        // Clone all data from source item
-        finalItemName = sourceItem.itemName;
-        finalBudgetBucketId = sourceItem.budgetBucketId;
+        // Start with source data
         finalSourceCategoryId = sourceCategoryId;
-        finalLowCost = sourceItem.lowCost;
-        finalHighCost = sourceItem.highCost;
-        finalUnit = sourceItem.unit;
         finalHoursLow = sourceItem.hoursLow;
         finalHoursHigh = sourceItem.hoursHigh;
-        finalNotes = sourceItem.notes || notes || null;
+        
+        // Allow user overrides for name, bucket, and amount
+        // If user provides values, use those; otherwise use source values
+        finalItemName = (itemName && typeof itemName === 'string' && itemName.trim()) 
+          ? itemName.trim() 
+          : sourceItem.itemName;
+        finalBudgetBucketId = (budgetBucketId && typeof budgetBucketId === 'string') 
+          ? budgetBucketId 
+          : sourceItem.budgetBucketId;
+        
+        // For amount: if user provides, use as fixed low=high; otherwise inherit source range
+        if (amount && !isNaN(parseFloat(amount))) {
+          finalLowCost = amount.toString();
+          finalHighCost = amount.toString();
+          finalUnit = 'fixed';
+        } else {
+          finalLowCost = sourceItem.lowCost;
+          finalHighCost = sourceItem.highCost;
+          finalUnit = sourceItem.unit;
+        }
+        
+        finalNotes = notes || sourceItem.notes || null;
       } else {
-        // Mode 2: Create fully custom item - requires amount
+        // Mode 2: Create fully custom item - requires all fields
         if (!itemName || typeof itemName !== 'string' || !itemName.trim()) {
           return res.status(400).json({ error: "itemName is required for custom items" });
         }

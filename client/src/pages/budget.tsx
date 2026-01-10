@@ -85,6 +85,8 @@ export default function Budget() {
   const [customItemName, setCustomItemName] = useState("");
   const [customItemBucket, setCustomItemBucket] = useState("");
   const [customItemAmount, setCustomItemAmount] = useState("");
+  const [customItemSourceId, setCustomItemSourceId] = useState<string | null>(null); // Track if imported from library
+  const [customItemSourceName, setCustomItemSourceName] = useState<string | null>(null); // Display name of source item
   
   // Library picker state (keyed by eventId for which ceremony the picker is open)
   const [libraryPickerOpen, setLibraryPickerOpen] = useState<{ eventId: string; eventName: string } | null>(null);
@@ -916,37 +918,24 @@ export default function Budget() {
     setCustomItemName("");
     setCustomItemBucket("");
     setCustomItemAmount("");
+    setCustomItemSourceId(null);
+    setCustomItemSourceName(null);
   };
   
-  // Handle selecting a library item to add to a ceremony (one-click clone with inherited costs)
+  // Handle selecting a library item to prefill the custom form
   const handleLibraryItemSelect = (item: LibraryItem) => {
-    if (!libraryPickerOpen || !wedding?.id) return;
-    
-    const ceremonyTypeId = getCeremonyTypeId(libraryPickerOpen.eventName);
-    if (!ceremonyTypeId) {
-      toast({ title: "Error", description: "Could not determine ceremony type", variant: "destructive" });
-      return;
-    }
-    
-    cloneLibraryItemMutation.mutate({
-      weddingId: wedding.id,
-      ceremonyTypeId,
-      sourceCategoryId: item.id,
-    }, {
-      onSuccess: () => {
-        toast({ title: "Success", description: `${item.itemName} added to ${libraryPickerOpen.eventName}` });
-        setLibraryPickerOpen(null);
-        // Invalidate queries to refresh the data
-        queryClient.invalidateQueries({ queryKey: ['/api/ceremony-types/all/line-items', wedding?.id] });
-      },
-      onError: (error: any) => {
-        const message = error?.message || "Failed to add item";
-        if (message.includes("already exists")) {
-          toast({ title: "Already Added", description: "This item is already in your ceremony budget", variant: "destructive" });
-        } else {
-          toast({ title: "Error", description: message, variant: "destructive" });
-        }
-      },
+    // Prefill the form with the library item's data
+    setCustomItemName(item.itemName);
+    setCustomItemBucket(item.budgetBucketId || "");
+    // Don't set amount - leave it blank to inherit the source's low/high range
+    // User can optionally enter a custom amount to override
+    setCustomItemAmount("");
+    setCustomItemSourceId(item.id);
+    setCustomItemSourceName(item.itemName);
+    setLibraryPickerOpen(null);
+    toast({ 
+      title: "Imported", 
+      description: `${item.itemName} loaded with $${item.lowCost.toLocaleString()}-$${item.highCost.toLocaleString()} estimate` 
     });
   };
   
@@ -964,30 +953,39 @@ export default function Budget() {
       toast({ title: "Error", description: "Please select a budget category", variant: "destructive" });
       return;
     }
-    if (!customItemAmount || isNaN(parseFloat(customItemAmount))) {
+    // Amount is required for custom items, but optional for library imports (will inherit source range)
+    const isLibraryImport = !!customItemSourceId;
+    const hasAmount = customItemAmount && !isNaN(parseFloat(customItemAmount));
+    if (!isLibraryImport && !hasAmount) {
       toast({ title: "Error", description: "Please enter a budget amount", variant: "destructive" });
       return;
     }
     
+    // Use the custom item mutation - it handles both new items and items imported from library
+    // The backend will track sourceCategoryId if provided
     createCustomItemMutation.mutate({
       weddingId: wedding.id,
       ceremonyTypeId,
       itemName: customItemName.trim(),
       budgetBucketId: customItemBucket,
-      amount: customItemAmount,
+      // Only pass amount if user entered one; otherwise backend will inherit source range
+      amount: hasAmount ? customItemAmount : "",
+      sourceCategoryId: customItemSourceId || undefined,
     }, {
       onSuccess: () => {
-        toast({ title: "Success", description: "Custom budget item added" });
+        const message = customItemSourceId ? "Budget item added from library" : "Custom budget item added";
+        toast({ title: "Success", description: message });
         resetCustomItemForm();
         // Invalidate the wedding-aware line items map to refresh custom items
         queryClient.invalidateQueries({ queryKey: ['/api/ceremony-types/all/line-items', wedding.id] });
       },
-      onError: (error) => {
-        toast({ 
-          title: "Error", 
-          description: error instanceof Error ? error.message : "Failed to add custom item", 
-          variant: "destructive" 
-        });
+      onError: (error: any) => {
+        const message = error?.message || (error instanceof Error ? error.message : "Failed to add item");
+        if (message.includes("already exists")) {
+          toast({ title: "Already Added", description: "This item is already in your ceremony budget", variant: "destructive" });
+        } else {
+          toast({ title: "Error", description: message, variant: "destructive" });
+        }
       },
     });
   };
@@ -1705,38 +1703,26 @@ export default function Budget() {
                             </div>
                           )}
 
-                          {/* Add Custom Budget Item */}
+                          {/* Add Budget Item */}
                           {getCeremonyTypeId(ceremony.eventName) && budgetCategories.length > 0 && (
                             <div className="mb-4">
                               {customItemFormOpen !== ceremony.eventId ? (
-                                <div className="flex gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setLibraryPickerOpen({ eventId: ceremony.eventId, eventName: ceremony.eventName })}
-                                    className="flex-1"
-                                    data-testid={`button-add-from-library-${ceremony.eventId}`}
-                                  >
-                                    <Plus className="w-4 h-4 mr-2" />
-                                    Add from Library
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setCustomItemFormOpen(ceremony.eventId)}
-                                    className="flex-1"
-                                    data-testid={`button-add-custom-item-${ceremony.eventId}`}
-                                  >
-                                    <Sparkles className="w-4 h-4 mr-2" />
-                                    Create New
-                                  </Button>
-                                </div>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setCustomItemFormOpen(ceremony.eventId)}
+                                  className="w-full"
+                                  data-testid={`button-add-budget-item-${ceremony.eventId}`}
+                                >
+                                  <Plus className="w-4 h-4 mr-2" />
+                                  Add Budget Item
+                                </Button>
                               ) : (
                                 <div className="bg-background rounded-lg p-4 border space-y-4">
                                   <div className="flex items-center justify-between">
                                     <h4 className="font-medium text-sm flex items-center gap-2">
-                                      <Sparkles className="w-4 h-4 text-primary" />
-                                      Add Custom Budget Item
+                                      <Plus className="w-4 h-4 text-primary" />
+                                      Add Budget Item
                                     </h4>
                                     <Button
                                       variant="ghost"
@@ -1749,10 +1735,44 @@ export default function Budget() {
                                     </Button>
                                   </div>
                                   
+                                  {/* Import from Library button */}
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setLibraryPickerOpen({ eventId: ceremony.eventId, eventName: ceremony.eventName })}
+                                    className="w-full"
+                                    data-testid={`button-import-from-library-${ceremony.eventId}`}
+                                  >
+                                    <Sparkles className="w-4 h-4 mr-2" />
+                                    Import from Library
+                                  </Button>
+                                  
+                                  {/* Show imported item indicator */}
+                                  {customItemSourceName && (
+                                    <div className="flex items-center justify-between p-2 bg-primary/5 rounded-md border border-primary/20">
+                                      <div className="flex items-center gap-2">
+                                        <Badge variant="secondary" className="text-xs">Imported</Badge>
+                                        <span className="text-sm">{customItemSourceName}</span>
+                                      </div>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-6 w-6"
+                                        onClick={() => {
+                                          setCustomItemSourceId(null);
+                                          setCustomItemSourceName(null);
+                                        }}
+                                        data-testid={`button-clear-import-${ceremony.eventId}`}
+                                      >
+                                        <X className="w-3 h-3" />
+                                      </Button>
+                                    </div>
+                                  )}
+                                  
                                   <div className="space-y-3">
                                     <div>
                                       <Label htmlFor={`custom-item-name-${ceremony.eventId}`} className="text-xs">
-                                        Item Name
+                                        Item Name <span className="text-destructive">*</span>
                                       </Label>
                                       <Input
                                         id={`custom-item-name-${ceremony.eventId}`}
@@ -1786,12 +1806,13 @@ export default function Budget() {
                                     
                                     <div>
                                       <Label htmlFor={`custom-item-amount-${ceremony.eventId}`} className="text-xs">
-                                        Budget Amount ($) <span className="text-destructive">*</span>
+                                        Budget Amount ($) {!customItemSourceId && <span className="text-destructive">*</span>}
+                                        {customItemSourceId && <span className="text-muted-foreground">(optional - uses library estimate)</span>}
                                       </Label>
                                       <Input
                                         id={`custom-item-amount-${ceremony.eventId}`}
                                         type="number"
-                                        placeholder="0"
+                                        placeholder={customItemSourceId ? "Leave blank to use library estimate" : "0"}
                                         value={customItemAmount}
                                         onChange={(e) => setCustomItemAmount(e.target.value)}
                                         data-testid={`input-custom-item-amount-${ceremony.eventId}`}
@@ -1810,7 +1831,7 @@ export default function Budget() {
                                     ) : (
                                       <Plus className="w-4 h-4 mr-2" />
                                     )}
-                                    Add Item
+                                    {customItemSourceId ? "Add from Library" : "Add Item"}
                                   </Button>
                                 </div>
                               )}

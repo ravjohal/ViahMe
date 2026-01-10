@@ -139,6 +139,7 @@ export const useCeremonyTypeLineItems = useCeremonyBudgetCategories;
 
 // Input type for creating a custom ceremony budget category
 // Custom items use a single budget amount (stored as lowCost=highCost, unit='fixed')
+// Can optionally include sourceCategoryId when importing from library (for tracking/deduplication)
 export interface CreateCustomCeremonyItemInput {
   weddingId: string;
   ceremonyTypeId: string;
@@ -146,6 +147,7 @@ export interface CreateCustomCeremonyItemInput {
   budgetBucketId: string;
   amount: string; // Single budget amount (backend stores as lowCost=highCost)
   notes?: string;
+  sourceCategoryId?: string; // Reference to library item if imported from library
 }
 
 // Input type for cloning a library item to a ceremony
