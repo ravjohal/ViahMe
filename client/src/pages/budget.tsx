@@ -17,7 +17,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type BudgetBucket, type Wedding, type Event, type Contract, type Vendor, type Expense, type BudgetAllocation, type CeremonyBudget, type CeremonyLineItemBudget, type CeremonyBudgetCategoryItem } from "@shared/schema";
 import { CEREMONY_MAPPINGS } from "@shared/ceremonies";
-import { calculateLineItemEstimate, DEFAULT_PRICING_CONTEXT, type PricingContext, CITY_MULTIPLIERS } from "@shared/pricing";
 import { useAllCeremonyLineItems, getLineItemBucketLabel } from "@/hooks/use-ceremony-types";
 import { useBudgetCategories, useBudgetCategoryLookup } from "@/hooks/use-budget-bucket-categories";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -26,7 +25,7 @@ import { z } from "zod";
 import { 
   DollarSign, Edit2, Trash2, Plus, CheckCircle2, AlertCircle, 
   ChevronDown, ChevronRight, ArrowLeft, Copy, Share2, FileText, 
-  Calendar, Clock, Building2, Users, Calculator, Sparkles, Loader2, BarChart3, HelpCircle,
+  Calendar, Clock, Building2, Users, Calculator, Loader2, BarChart3, HelpCircle,
   TrendingDown, TrendingUp
 } from "lucide-react";
 import { SiWhatsapp } from "react-icons/si";
@@ -285,53 +284,33 @@ export default function Budget() {
     return total;
   };
 
-  // Map wedding city display name to pricing key
-  const getCityKey = (cityName?: string): string => {
-    if (!cityName) return 'other';
-    const normalized = cityName.toLowerCase();
-    if (normalized.includes('bay area') || normalized.includes('san francisco')) return 'bay_area';
-    if (normalized.includes('new york') || normalized.includes('nyc')) return 'nyc';
-    if (normalized.includes('los angeles') || normalized.includes('la')) return 'la';
-    if (normalized.includes('chicago')) return 'chicago';
-    if (normalized.includes('seattle')) return 'seattle';
-    return 'other';
-  };
-
-  // Set all line item budgets to estimates (low or high) using shared pricing logic
-  const setEstimatesForEvent = (eventId: string, eventName: string, useHigh: boolean) => {
-    const lineItems = getLineItemsForEvent(eventId, eventName);
-    if (!lineItems) return;
-
-    // Find the event to get guest count
-    const event = events.find(e => e.id === eventId);
-    const guestCount = event?.guestCount || 100; // Default to 100 if not set (same as budget estimator)
-
-    // Build pricing context using wedding city and defaults
-    const pricingContext: PricingContext = {
-      ...DEFAULT_PRICING_CONTEXT,
-      guestCount,
-      city: getCityKey(wedding?.city),
-    };
-
-    const newValues: Record<string, string> = {};
-    for (const item of lineItems) {
-      const estimates = calculateLineItemEstimate(item, guestCount, pricingContext);
-      const rawValue = useHigh ? estimates.high : estimates.low;
-      // Round to nearest 100
-      const value = Math.round(rawValue / 100) * 100;
-      newValues[item.category] = value.toString();
+  // Helper to format unit display
+  const formatUnitLabel = (unit?: string): string => {
+    if (!unit) return '';
+    switch (unit) {
+      case 'per_person': return '/person';
+      case 'per_hour': return '/hour';
+      case 'fixed': return 'fixed';
+      default: return '';
     }
-
-    setEditingLineItems(prev => ({
-      ...prev,
-      [eventId]: {
-        ...(prev[eventId] || {}),
-        ...newValues,
-      },
-    }));
   };
 
-  // Calculate total ceremony estimate (sum of all line item estimates)
+  // Calculate line item estimate from database values (respecting unit types)
+  const calculateLineItemEstimateFromDb = (item: CostCategory, guestCount: number, useHigh: boolean): number => {
+    const baseValue = useHigh ? item.highCost : item.lowCost;
+    
+    if (item.unit === 'per_person') {
+      return baseValue * guestCount;
+    } else if (item.unit === 'per_hour') {
+      // Use hoursHigh for high estimate, hoursLow for low estimate
+      const hours = useHigh ? (item.hoursHigh || item.hoursLow || 1) : (item.hoursLow || 1);
+      return baseValue * hours;
+    }
+    // Fixed cost - return as is
+    return baseValue;
+  };
+
+  // Calculate total ceremony estimate from database values
   const getCeremonyEstimateTotal = (eventId: string, eventName: string, useHigh: boolean): number => {
     const lineItems = getLineItemsForEvent(eventId, eventName);
     if (!lineItems) return 0;
@@ -339,29 +318,45 @@ export default function Budget() {
     const event = events.find(e => e.id === eventId);
     const guestCount = event?.guestCount || 100;
 
-    const pricingContext: PricingContext = {
-      ...DEFAULT_PRICING_CONTEXT,
-      guestCount,
-      city: getCityKey(wedding?.city),
-    };
-
     let total = 0;
     for (const item of lineItems) {
-      const estimates = calculateLineItemEstimate(item, guestCount, pricingContext);
-      const rawValue = useHigh ? estimates.high : estimates.low;
+      const rawValue = calculateLineItemEstimateFromDb(item, guestCount, useHigh);
       total += Math.round(rawValue / 100) * 100;
     }
     return total;
   };
 
-  // Set ceremony budget to total estimate AND populate all line items as draft
-  // NOTE: This only populates local draft state - user must click "Save" to persist
-  const setCeremonyBudgetToEstimate = (eventId: string, eventName: string, useHigh: boolean) => {
-    const total = getCeremonyEstimateTotal(eventId, eventName, useHigh);
+  // Set all line item budgets to estimates (low or high) using database values
+  // Also updates the ceremony total to match the sum of line items
+  const setEstimatesForEvent = (eventId: string, eventName: string, useHigh: boolean) => {
+    const lineItems = getLineItemsForEvent(eventId, eventName);
+    if (!lineItems) return;
+
+    // Find the event to get guest count
+    const event = events.find(e => e.id === eventId);
+    const guestCount = event?.guestCount || 100; // Default to 100 if not set
+
+    const newValues: Record<string, string> = {};
+    let total = 0;
+    for (const item of lineItems) {
+      const rawValue = calculateLineItemEstimateFromDb(item, guestCount, useHigh);
+      // Round to nearest 100
+      const value = Math.round(rawValue / 100) * 100;
+      newValues[item.category] = value.toString();
+      total += value;
+    }
+
+    // Update line items
+    setEditingLineItems(prev => ({
+      ...prev,
+      [eventId]: {
+        ...(prev[eventId] || {}),
+        ...newValues,
+      },
+    }));
+
+    // Also update ceremony total to match sum of line items
     handleCeremonyTotalChange(eventId, total.toString());
-    // Populate all line item categories with the corresponding estimates (as draft)
-    setEstimatesForEvent(eventId, eventName, useHigh);
-    // Line items are now in editingLineItems state - user must click Save to persist
   };
 
   // Ceremony Budgets (Budget Matrix)
@@ -1469,26 +1464,6 @@ export default function Budget() {
                                 onChange={(e) => handleCeremonyTotalChange(ceremony.eventId, e.target.value)}
                                 data-testid={`input-ceremony-total-${ceremony.eventId}`}
                               />
-                              {lineItems && (
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" size="sm" className="h-9" data-testid={`menu-estimate-${ceremony.eventId}`}>
-                                      <Sparkles className="w-3 h-3 mr-1" />
-                                      Estimate
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => setCeremonyBudgetToEstimate(ceremony.eventId, ceremony.eventName, false)}>
-                                      <TrendingDown className="w-4 h-4 mr-2" />
-                                      Low: ${getCeremonyEstimateTotal(ceremony.eventId, ceremony.eventName, false).toLocaleString()}
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => setCeremonyBudgetToEstimate(ceremony.eventId, ceremony.eventName, true)}>
-                                      <TrendingUp className="w-4 h-4 mr-2" />
-                                      High: ${getCeremonyEstimateTotal(ceremony.eventId, ceremony.eventName, true).toLocaleString()}
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              )}
                               {hasCeremonyBudgetChanges(ceremony.eventId, ceremony.allocated) && (
                                 <Button
                                   size="sm"
@@ -1527,8 +1502,11 @@ export default function Budget() {
                                         <div className="flex items-center gap-2 flex-wrap">
                                           <p className="text-sm font-medium">{item.category}</p>
                                           <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 bg-muted/50">{bucketLabel}</Badge>
+                                          {item.unit && item.unit !== 'fixed' && (
+                                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">{formatUnitLabel(item.unit)}</Badge>
+                                          )}
                                         </div>
-                                        <p className="text-xs text-muted-foreground">Est: ${Math.round(item.lowCost / 100) * 100} - ${Math.round(item.highCost / 100) * 100}</p>
+                                        <p className="text-xs text-muted-foreground">Est: ${item.lowCost.toLocaleString()}{formatUnitLabel(item.unit) ? ` ${formatUnitLabel(item.unit)}` : ''} - ${item.highCost.toLocaleString()}{formatUnitLabel(item.unit) ? ` ${formatUnitLabel(item.unit)}` : ''}</p>
                                       </div>
                                       <div className="flex items-center gap-1 shrink-0">
                                         <span className="text-sm text-muted-foreground">$</span>
