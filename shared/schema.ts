@@ -3866,10 +3866,9 @@ export type DashboardWidget = typeof dashboardWidgets.$inferSelect;
 
 // ============================================================================
 // CEREMONY TYPES - Database-driven ceremony cost estimates (linked to traditions)
-// Note: Database table name is 'ceremony_templates' for backward compatibility
 // ============================================================================
 
-export const ceremonyTypes = pgTable("ceremony_templates", {
+export const ceremonyTypes = pgTable("ceremony_types", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   ceremonyId: text("ceremony_id").notNull().unique(), // e.g., 'sikh_maiyan', 'sikh_anand_karaj'
   name: text("name").notNull(), // Display name e.g., "Maiyan"
@@ -3884,7 +3883,7 @@ export const ceremonyTypes = pgTable("ceremony_templates", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (table) => ({
-  traditionIdx: index("ceremony_templates_tradition_idx").on(table.tradition),
+  traditionIdx: index("ceremony_types_tradition_idx").on(table.tradition),
 }));
 
 export const insertCeremonyTypeSchema = createInsertSchema(ceremonyTypes).omit({
@@ -3925,15 +3924,14 @@ export type CeremonyBudgetCategoryItem = {
 // ============================================================================
 // CEREMONY BUDGET CATEGORIES - Junction table connecting ceremony types to budget buckets
 // Links ceremony-specific line items to their ceremony type and financial bucket
-// Note: Database table currently named 'ceremony_template_items' (migration pending)
 // ============================================================================
 
-export const ceremonyBudgetCategories = pgTable("ceremony_template_items", {
+export const ceremonyBudgetCategories = pgTable("ceremony_budget_categories", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  // Foreign key to ceremony_templates.ceremonyId (slug-style ID like 'sikh_anand_karaj')
-  ceremonyTypeId: text("template_id").notNull(),
+  // Foreign key to ceremony_types.ceremonyId (slug-style ID like 'sikh_anand_karaj')
+  ceremonyTypeId: text("ceremony_type_id").notNull(),
   // Foreign key to budget_bucket_categories.id (slug-style ID like 'venue', 'attire')
-  budgetBucketId: text("budget_bucket").notNull(),
+  budgetBucketId: text("budget_bucket_id").notNull(),
   itemName: text("item_name").notNull(), // e.g., "Gurdwara Donation", "Turban Tying"
   lowCost: decimal("low_cost", { precision: 12, scale: 2 }).notNull(),
   highCost: decimal("high_cost", { precision: 12, scale: 2 }).notNull(),
@@ -3946,7 +3944,7 @@ export const ceremonyBudgetCategories = pgTable("ceremony_template_items", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (table) => ({
-  ceremonyTypeIdx: index("ceremony_template_items_template_idx").on(table.ceremonyTypeId),
+  ceremonyTypeIdx: index("ceremony_budget_categories_type_idx").on(table.ceremonyTypeId),
   budgetBucketIdx: index("ceremony_budget_categories_bucket_idx").on(table.budgetBucketId),
 }));
 
