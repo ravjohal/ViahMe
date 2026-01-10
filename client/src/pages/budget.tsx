@@ -220,8 +220,16 @@ export default function Budget() {
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/budget/line-items", wedding?.id] });
+      queryClient.invalidateQueries({ queryKey: [`/api/budget/ceremony-analytics/${wedding?.id}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budget/matrix", wedding?.id] });
       // Clear editing state for this event after successful save
       setEditingLineItems(prev => {
+        const next = { ...prev };
+        delete next[variables.eventId];
+        return next;
+      });
+      // Also clear ceremony total editing state since line items determine the total
+      setEditingCeremonyTotals(prev => {
         const next = { ...prev };
         delete next[variables.eventId];
         return next;
@@ -1054,19 +1062,21 @@ export default function Budget() {
       }
     }
     
-    // Save ceremony total if changed
-    if (totalAmount !== undefined) {
-      updateCeremonyBudgetMutation.mutate({ ceremonyId: eventId, amount: totalAmount });
-    }
-    
-    // Save line items if payload was built
+    // If line items are being saved, DON'T also save a separate ceremony total
+    // The ceremony total will be derived from line items by the analytics endpoint
+    // This prevents double-counting (ceremony total + line items sum)
     if (lineItemsPayload && lineItemsPayload.length > 0 && wedding?.id && ceremonyTypeId) {
+      // Only save line items - the total is derived from them
       saveLineItemBudgetsMutation.mutate({
         weddingId: wedding.id,
         eventId,
         ceremonyTypeId,
         items: lineItemsPayload,
       });
+    } else if (totalAmount !== undefined) {
+      // Only save ceremony total if no line items are being saved
+      // (e.g., user manually edited the total without using line items)
+      updateCeremonyBudgetMutation.mutate({ ceremonyId: eventId, amount: totalAmount });
     }
   };
 
