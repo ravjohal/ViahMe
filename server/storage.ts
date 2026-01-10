@@ -1094,6 +1094,15 @@ export interface IStorage {
   createRegionalPricing(pricing: InsertRegionalPricing): Promise<RegionalPricing>;
   updateRegionalPricing(city: string, pricing: Partial<InsertRegionalPricing>): Promise<RegionalPricing | undefined>;
 
+  // Budget Categories
+  getBudgetCategory(id: string): Promise<BudgetCategory | undefined>;
+  getAllBudgetCategories(): Promise<BudgetCategory[]>;
+  getActiveBudgetCategories(): Promise<BudgetCategory[]>;
+  createBudgetCategory(category: InsertBudgetCategory): Promise<BudgetCategory>;
+  updateBudgetCategory(id: string, category: Partial<InsertBudgetCategory>): Promise<BudgetCategory | undefined>;
+  deleteBudgetCategory(id: string): Promise<boolean>;
+  seedBudgetCategories(): Promise<BudgetCategory[]>;
+
   // Ritual Role Assignments
   getRitualRoleAssignment(id: string): Promise<RitualRoleAssignment | undefined>;
   getRitualRolesByWedding(weddingId: string): Promise<RitualRoleAssignment[]>;
@@ -4323,6 +4332,15 @@ export class MemStorage implements IStorage {
   async getAllRegionalPricing(): Promise<RegionalPricing[]> { return []; }
   async createRegionalPricing(pricing: InsertRegionalPricing): Promise<RegionalPricing> { throw new Error('MemStorage does not support Regional Pricing. Use DBStorage.'); }
   async updateRegionalPricing(city: string, pricing: Partial<InsertRegionalPricing>): Promise<RegionalPricing | undefined> { throw new Error('MemStorage does not support Regional Pricing. Use DBStorage.'); }
+
+  // Budget Categories (stubs - use DBStorage for production)
+  async getBudgetCategory(id: string): Promise<BudgetCategory | undefined> { return undefined; }
+  async getAllBudgetCategories(): Promise<BudgetCategory[]> { return []; }
+  async getActiveBudgetCategories(): Promise<BudgetCategory[]> { return []; }
+  async createBudgetCategory(category: InsertBudgetCategory): Promise<BudgetCategory> { throw new Error('MemStorage does not support Budget Categories. Use DBStorage.'); }
+  async updateBudgetCategory(id: string, category: Partial<InsertBudgetCategory>): Promise<BudgetCategory | undefined> { throw new Error('MemStorage does not support Budget Categories. Use DBStorage.'); }
+  async deleteBudgetCategory(id: string): Promise<boolean> { return false; }
+  async seedBudgetCategories(): Promise<BudgetCategory[]> { throw new Error('MemStorage does not support Budget Categories. Use DBStorage.'); }
 }
 
 import { neon } from "@neondatabase/serverless";
@@ -10616,6 +10634,83 @@ export class DBStorage implements IStorage {
       .where(eq(regionalPricing.city, city))
       .returning();
     return result[0];
+  }
+
+  // Budget Categories (dynamic system categories)
+  async getBudgetCategory(id: string): Promise<BudgetCategory | undefined> {
+    const result = await this.db.select()
+      .from(schema.budgetCategories)
+      .where(eq(schema.budgetCategories.id, id));
+    return result[0];
+  }
+
+  async getAllBudgetCategories(): Promise<BudgetCategory[]> {
+    return await this.db.select()
+      .from(schema.budgetCategories)
+      .orderBy(sql`${schema.budgetCategories.displayOrder} ASC`);
+  }
+
+  async getActiveBudgetCategories(): Promise<BudgetCategory[]> {
+    return await this.db.select()
+      .from(schema.budgetCategories)
+      .where(eq(schema.budgetCategories.isActive, true))
+      .orderBy(sql`${schema.budgetCategories.displayOrder} ASC`);
+  }
+
+  async createBudgetCategory(category: InsertBudgetCategory): Promise<BudgetCategory> {
+    const result = await this.db.insert(schema.budgetCategories)
+      .values(category)
+      .returning();
+    return result[0];
+  }
+
+  async updateBudgetCategory(id: string, category: Partial<InsertBudgetCategory>): Promise<BudgetCategory | undefined> {
+    const result = await this.db.update(schema.budgetCategories)
+      .set({ ...category, updatedAt: new Date() })
+      .where(eq(schema.budgetCategories.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteBudgetCategory(id: string): Promise<boolean> {
+    // Don't allow deleting system categories
+    const existing = await this.getBudgetCategory(id);
+    if (existing?.isSystemCategory) {
+      throw new Error('Cannot delete system categories');
+    }
+    
+    await this.db.delete(schema.budgetCategories)
+      .where(eq(schema.budgetCategories.id, id));
+    return true;
+  }
+
+  async seedBudgetCategories(): Promise<BudgetCategory[]> {
+    const seededCategories: BudgetCategory[] = [];
+    
+    // Seed from DEFAULT_CATEGORY_METADATA
+    for (const [id, metadata] of Object.entries(schema.DEFAULT_CATEGORY_METADATA)) {
+      // Check if category already exists
+      const existing = await this.getBudgetCategory(id);
+      if (existing) {
+        seededCategories.push(existing);
+        continue;
+      }
+      
+      const category = await this.createBudgetCategory({
+        id,
+        displayName: metadata.displayName,
+        description: metadata.description,
+        iconName: metadata.iconName,
+        isEssential: metadata.isEssential,
+        suggestedPercentage: metadata.suggestedPercentage,
+        displayOrder: metadata.displayOrder,
+        isActive: true,
+        isSystemCategory: true, // System categories can't be deleted
+      });
+      seededCategories.push(category);
+    }
+    
+    return seededCategories;
   }
 
   // Ritual Role Assignments
