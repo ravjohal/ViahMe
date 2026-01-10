@@ -892,17 +892,39 @@ export default function Budget() {
   };
 
   // Combined save function for ceremony total AND line items
-  const saveCeremonyBudget = (eventId: string, eventName: string) => {
-    // Save ceremony total if changed
-    const amount = editingCeremonyTotals[eventId];
-    if (amount !== undefined) {
-      updateCeremonyBudgetMutation.mutate({ ceremonyId: eventId, amount });
+  const saveCeremonyBudget = async (eventId: string, eventName: string) => {
+    // Capture payloads synchronously before any async operations
+    const totalAmount = editingCeremonyTotals[eventId];
+    const eventLineItems = editingLineItems[eventId];
+    const hasLineItems = eventLineItems && Object.keys(eventLineItems).length > 0;
+    
+    // Build line items payload synchronously
+    let lineItemsPayload: Array<{ lineItemCategory: string; budgetedAmount: string }> | null = null;
+    let ceremonyTypeId: string | null = null;
+    if (hasLineItems && wedding?.id) {
+      ceremonyTypeId = getCeremonyTypeId(eventName);
+      if (ceremonyTypeId) {
+        lineItemsPayload = Object.entries(eventLineItems)
+          .map(([category, value]) => ({
+            lineItemCategory: category,
+            budgetedAmount: value || "0",
+          }));
+      }
     }
     
-    // Save line items if any exist in editing state
-    const eventLineItems = editingLineItems[eventId];
-    if (eventLineItems && Object.keys(eventLineItems).length > 0) {
-      saveEventLineItems(eventId, eventName);
+    // Save ceremony total if changed
+    if (totalAmount !== undefined) {
+      updateCeremonyBudgetMutation.mutate({ ceremonyId: eventId, amount: totalAmount });
+    }
+    
+    // Save line items if payload was built
+    if (lineItemsPayload && lineItemsPayload.length > 0 && wedding?.id && ceremonyTypeId) {
+      saveLineItemBudgetsMutation.mutate({
+        weddingId: wedding.id,
+        eventId,
+        ceremonyTypeId,
+        items: lineItemsPayload,
+      });
     }
   };
 
