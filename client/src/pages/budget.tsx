@@ -548,12 +548,20 @@ export default function Budget() {
   const remainingBudget = total - totalSpent;
   const spentPercentage = total > 0 ? (totalSpent / total) * 100 : 0;
 
-  // Calculate total allocated across all budget categories
-  const totalAllocated = useMemo(() => {
-    return allocations.reduce((sum, alloc) => {
-      return sum + parseFloat(alloc.allocatedAmount?.toString() || "0");
-    }, 0);
+  // Calculate ceremony-level total (from ceremony analytics)
+  const totalByCeremonies = ceremonyAnalytics?.overview?.totalCeremonyAllocated || 0;
+
+  // Calculate category-level total (sum allocations by bucket, ignoring ceremony-specific ones)
+  const totalByCategories = useMemo(() => {
+    // Sum allocations that don't have a ceremonyId (global category allocations)
+    // For now, use ceremony total since that's where budgets are set
+    return allocations
+      .filter(alloc => !alloc.ceremonyId) // Only non-ceremony allocations
+      .reduce((sum, alloc) => sum + parseFloat(alloc.allocatedAmount?.toString() || "0"), 0);
   }, [allocations]);
+
+  // For display, use ceremony totals as the primary "planned" amount
+  const totalAllocated = totalByCeremonies;
   const unallocatedBudget = total - totalAllocated;
 
   // Calculate totals by event side
@@ -1068,7 +1076,7 @@ export default function Budget() {
           <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
             <div className="flex flex-wrap items-center gap-6">
               <div>
-                <p className="text-sm text-muted-foreground">Total Budget</p>
+                <p className="text-sm text-muted-foreground">Target Budget</p>
                 <button 
                   onClick={() => setEditBudgetOpen(true)}
                   className="text-3xl font-bold font-mono hover:text-primary transition-colors"
@@ -1079,11 +1087,28 @@ export default function Budget() {
               </div>
               <div className="h-12 w-px bg-border hidden sm:block" />
               <div>
-                <p className="text-sm text-muted-foreground">Planned</p>
-                <p className="text-2xl font-bold font-mono" data-testid="text-total-allocated">
-                  ${totalAllocated.toLocaleString()}
+                <p className="text-sm text-muted-foreground flex items-center gap-1">
+                  <Calendar className="w-3 h-3" />
+                  By Ceremonies
+                </p>
+                <p className="text-2xl font-bold font-mono" data-testid="text-ceremonies-total">
+                  ${totalByCeremonies.toLocaleString()}
                 </p>
               </div>
+              {totalByCategories > 0 && (
+                <>
+                  <div className="h-12 w-px bg-border hidden sm:block" />
+                  <div>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                      <DollarSign className="w-3 h-3" />
+                      By Categories
+                    </p>
+                    <p className="text-2xl font-bold font-mono" data-testid="text-categories-total">
+                      ${totalByCategories.toLocaleString()}
+                    </p>
+                  </div>
+                </>
+              )}
               <div className="h-12 w-px bg-border hidden sm:block" />
               <div>
                 <p className="text-sm text-muted-foreground">Spent</p>
@@ -1098,10 +1123,15 @@ export default function Budget() {
                   ${unallocatedBudget.toLocaleString()} left to plan
                 </Badge>
               )}
+              {unallocatedBudget < 0 && (
+                <Badge variant="destructive" className="px-3 py-1.5 text-base font-mono" data-testid="badge-over-allocated">
+                  ${Math.abs(unallocatedBudget).toLocaleString()} over target
+                </Badge>
+              )}
               <div className="text-right">
                 <p className="text-sm text-muted-foreground">Remaining</p>
                 <p className={`text-2xl font-bold font-mono ${remainingBudget < 0 ? "text-destructive" : "text-emerald-600"}`} data-testid="text-remaining">
-                  ${remainingBudget.toLocaleString()}
+                  ${Math.abs(remainingBudget).toLocaleString()}
                 </p>
               </div>
             </div>
@@ -1111,9 +1141,9 @@ export default function Budget() {
             <p className="text-sm text-muted-foreground">
               {spentPercentage.toFixed(0)}% of budget spent
             </p>
-            {totalAllocated > 0 && (
+            {totalByCeremonies > 0 && (
               <p className="text-sm text-muted-foreground">
-                {((totalSpent / totalAllocated) * 100).toFixed(0)}% of planned budget spent
+                {((totalSpent / totalByCeremonies) * 100).toFixed(0)}% of ceremony budgets spent
               </p>
             )}
           </div>
