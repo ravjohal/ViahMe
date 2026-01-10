@@ -221,6 +221,123 @@ export const DEFAULT_CATEGORY_METADATA: Record<BudgetBucket, {
   },
 };
 
+// ============================================================================
+// WEDDING TRADITIONS TABLE - Database-driven tradition management
+// ============================================================================
+
+export const weddingTraditions = pgTable("wedding_traditions", {
+  // Use slug-style IDs (e.g., 'sikh', 'hindu') for code compatibility
+  id: varchar("id").primaryKey(),
+  
+  // Display metadata
+  displayName: text("display_name").notNull(), // e.g., "Sikh", "Hindu"
+  description: text("description"), // Brief description of this tradition
+  
+  // Admin controls
+  displayOrder: integer("display_order").default(0),
+  isActive: boolean("is_active").default(true),
+  isSystemTradition: boolean("is_system_tradition").default(true), // System traditions can't be deleted
+  
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertWeddingTraditionSchema = createInsertSchema(weddingTraditions).omit({
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertWeddingTradition = z.infer<typeof insertWeddingTraditionSchema>;
+export type WeddingTradition = typeof weddingTraditions.$inferSelect;
+
+// ============================================================================
+// WEDDING SUB-TRADITIONS TABLE - Regional/cultural variations within traditions
+// ============================================================================
+
+export const weddingSubTraditions = pgTable("wedding_sub_traditions", {
+  // Use slug-style IDs (e.g., 'punjabi', 'tamil') for code compatibility
+  id: varchar("id").primaryKey(),
+  
+  // Parent tradition reference
+  traditionId: varchar("tradition_id").notNull().references(() => weddingTraditions.id),
+  
+  // Display metadata
+  displayName: text("display_name").notNull(), // e.g., "Punjabi", "Tamil"
+  description: text("description"), // Brief description of this sub-tradition
+  
+  // Admin controls
+  displayOrder: integer("display_order").default(0),
+  isActive: boolean("is_active").default(true),
+  
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  traditionIdx: index("wedding_sub_traditions_tradition_idx").on(table.traditionId),
+}));
+
+export const insertWeddingSubTraditionSchema = createInsertSchema(weddingSubTraditions).omit({
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertWeddingSubTradition = z.infer<typeof insertWeddingSubTraditionSchema>;
+export type WeddingSubTradition = typeof weddingSubTraditions.$inferSelect;
+
+// Default traditions data for seeding
+export const DEFAULT_TRADITIONS: Array<{
+  id: string;
+  displayName: string;
+  description: string;
+  displayOrder: number;
+}> = [
+  { id: "sikh", displayName: "Sikh", description: "Punjabi Sikh wedding traditions with Anand Karaj ceremony", displayOrder: 1 },
+  { id: "hindu", displayName: "Hindu", description: "Hindu wedding traditions across regional variations", displayOrder: 2 },
+  { id: "muslim", displayName: "Muslim", description: "Islamic wedding traditions with Nikah ceremony", displayOrder: 3 },
+  { id: "gujarati", displayName: "Gujarati", description: "Gujarati Hindu wedding traditions with Garba celebrations", displayOrder: 4 },
+  { id: "south_indian", displayName: "South Indian", description: "South Indian traditions including Tamil, Telugu, Malayalam, Kannada", displayOrder: 5 },
+  { id: "christian", displayName: "Christian", description: "Christian wedding traditions with church ceremony", displayOrder: 6 },
+  { id: "jain", displayName: "Jain", description: "Jain wedding traditions with unique rituals", displayOrder: 7 },
+  { id: "parsi", displayName: "Parsi", description: "Zoroastrian Parsi wedding traditions", displayOrder: 8 },
+  { id: "mixed", displayName: "Mixed/Fusion", description: "Multi-tradition or fusion wedding combining elements", displayOrder: 9 },
+  { id: "general", displayName: "General", description: "Non-specific or secular wedding celebration", displayOrder: 10 },
+];
+
+// Default sub-traditions data for seeding
+export const DEFAULT_SUB_TRADITIONS: Array<{
+  id: string;
+  traditionId: string;
+  displayName: string;
+  description: string;
+  displayOrder: number;
+}> = [
+  // Sikh sub-traditions
+  { id: "punjabi_sikh", traditionId: "sikh", displayName: "Punjabi Sikh", description: "Traditional Punjabi Sikh wedding", displayOrder: 1 },
+  
+  // Hindu sub-traditions (regional variations)
+  { id: "punjabi_hindu", traditionId: "hindu", displayName: "Punjabi Hindu", description: "North Indian Punjabi Hindu traditions", displayOrder: 1 },
+  { id: "bengali", traditionId: "hindu", displayName: "Bengali", description: "Bengali Hindu wedding traditions", displayOrder: 2 },
+  { id: "marathi", traditionId: "hindu", displayName: "Marathi", description: "Maharashtrian Hindu wedding traditions", displayOrder: 3 },
+  { id: "rajasthani", traditionId: "hindu", displayName: "Rajasthani", description: "Rajasthani Hindu wedding traditions", displayOrder: 4 },
+  { id: "bihari", traditionId: "hindu", displayName: "Bihari", description: "Bihar/Jharkhand Hindu wedding traditions", displayOrder: 5 },
+  { id: "kashmiri", traditionId: "hindu", displayName: "Kashmiri Pandit", description: "Kashmiri Pandit wedding traditions", displayOrder: 6 },
+  
+  // South Indian sub-traditions
+  { id: "tamil", traditionId: "south_indian", displayName: "Tamil", description: "Tamil Nadu wedding traditions", displayOrder: 1 },
+  { id: "telugu", traditionId: "south_indian", displayName: "Telugu", description: "Andhra/Telangana wedding traditions", displayOrder: 2 },
+  { id: "malayalam", traditionId: "south_indian", displayName: "Malayalam (Kerala)", description: "Kerala wedding traditions", displayOrder: 3 },
+  { id: "kannada", traditionId: "south_indian", displayName: "Kannada", description: "Karnataka wedding traditions", displayOrder: 4 },
+  
+  // Gujarati sub-traditions
+  { id: "gujarati_patel", traditionId: "gujarati", displayName: "Patidar/Patel", description: "Patidar community traditions", displayOrder: 1 },
+  { id: "gujarati_brahmin", traditionId: "gujarati", displayName: "Gujarati Brahmin", description: "Gujarati Brahmin traditions", displayOrder: 2 },
+  { id: "kutchi", traditionId: "gujarati", displayName: "Kutchi", description: "Kutch region traditions", displayOrder: 3 },
+  
+  // Muslim sub-traditions
+  { id: "sunni", traditionId: "muslim", displayName: "Sunni", description: "Sunni Muslim traditions", displayOrder: 1 },
+  { id: "shia", traditionId: "muslim", displayName: "Shia", description: "Shia Muslim traditions", displayOrder: 2 },
+  { id: "hyderabadi_muslim", traditionId: "muslim", displayName: "Hyderabadi", description: "Hyderabadi Muslim traditions", displayOrder: 3 },
+];
+
 // Mapping from vendor categories to budget buckets
 export const VENDOR_CATEGORY_TO_BUCKET: Record<string, BudgetBucket> = {
   // Venue-related
