@@ -3932,6 +3932,8 @@ export const ceremonyBudgetCategories = pgTable("ceremony_budget_categories", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   // Nullable: NULL = system-defined global template, value = custom item for specific wedding
   weddingId: varchar("wedding_id"), // References weddings.id (nullable for system templates)
+  // Reference to source library item when cloning from master library (nullable)
+  sourceCategoryId: varchar("source_category_id"), // References ceremony_budget_categories.id (library item)
   // Foreign key to ceremony_types.ceremonyId (slug-style ID like 'sikh_anand_karaj')
   ceremonyTypeId: text("ceremony_type_id").notNull(),
   // Foreign key to budget_bucket_categories.id (slug-style ID like 'venue', 'attire')
@@ -3951,6 +3953,7 @@ export const ceremonyBudgetCategories = pgTable("ceremony_budget_categories", {
   weddingIdx: index("ceremony_budget_categories_wedding_idx").on(table.weddingId),
   ceremonyTypeIdx: index("ceremony_budget_categories_type_idx").on(table.ceremonyTypeId),
   budgetBucketIdx: index("ceremony_budget_categories_bucket_idx").on(table.budgetBucketId),
+  sourceCategoryIdx: index("ceremony_budget_categories_source_idx").on(table.sourceCategoryId),
 }));
 
 export const insertCeremonyBudgetCategorySchema = createInsertSchema(ceremonyBudgetCategories).omit({
@@ -3959,6 +3962,7 @@ export const insertCeremonyBudgetCategorySchema = createInsertSchema(ceremonyBud
   updatedAt: true,
 }).extend({
   weddingId: z.string().nullable().optional(), // NULL = system template, value = custom for wedding
+  sourceCategoryId: z.string().nullable().optional(), // Reference to source library item when cloning
   ceremonyTypeId: z.string(), // References ceremony_types.ceremonyId
   budgetBucketId: z.enum(BUDGET_BUCKETS), // References budget_bucket_categories.id
   unit: z.enum(['fixed', 'per_hour', 'per_person']),
