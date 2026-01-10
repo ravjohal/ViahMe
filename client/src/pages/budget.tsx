@@ -15,10 +15,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket, type Wedding, type Event, type Contract, type Vendor, type Expense, type BudgetAllocation, type CeremonyBudget, type CeremonyLineItemBudget, type CeremonyTemplateCostItem } from "@shared/schema";
+import { type BudgetBucket, type Wedding, type Event, type Contract, type Vendor, type Expense, type BudgetAllocation, type CeremonyBudget, type CeremonyLineItemBudget, type CeremonyTemplateCostItem } from "@shared/schema";
 import { CEREMONY_MAPPINGS } from "@shared/ceremonies";
 import { calculateLineItemEstimate, DEFAULT_PRICING_CONTEXT, type PricingContext, CITY_MULTIPLIERS } from "@shared/pricing";
 import { useAllCeremonyLineItems, getLineItemBucketLabel } from "@/hooks/use-ceremony-templates";
+import { useBudgetCategories, useBudgetCategoryLookup } from "@/hooks/use-budget-categories";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
@@ -135,6 +136,10 @@ export default function Budget() {
 
   // Fetch ceremony line items from normalized table (replaces deprecated costBreakdown JSONB)
   const { data: ceremonyBreakdownMap = {} } = useAllCeremonyLineItems();
+
+  // Fetch budget categories from database (replaces hardcoded BUDGET_BUCKETS constant)
+  const { data: budgetCategories = [], isLoading: categoriesLoading } = useBudgetCategories();
+  const { getCategoryLabel, allCategoryIds } = useBudgetCategoryLookup();
 
   // Get ceremony type ID from event name
   const getCeremonyTypeId = (eventName: string): string | null => {
@@ -406,10 +411,10 @@ export default function Budget() {
     return vendor?.name || "Vendor";
   };
 
-  // Get bucket label
+  // Get bucket label (now from database)
   const getBucketLabel = (bucket: string | null | undefined) => {
     if (!bucket) return "Other";
-    return BUDGET_BUCKET_LABELS[bucket as BudgetBucket] || bucket;
+    return getCategoryLabel(bucket);
   };
 
   // Extract upcoming payments from contracts
@@ -1276,7 +1281,7 @@ export default function Budget() {
                   <div className="text-left">
                     <h3 className="font-semibold">Budget by Category</h3>
                     <p className="text-sm text-muted-foreground">
-                      {BUDGET_BUCKETS.length} categories • Track spending by type
+                      {budgetCategories.length} categories • Track spending by type
                     </p>
                   </div>
                 </div>
@@ -1763,7 +1768,7 @@ export default function Budget() {
         <Dialog open={!!editingBucket} onOpenChange={(open) => !open && setEditingBucket(null)}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Set {editingBucket ? BUDGET_BUCKET_LABELS[editingBucket] : ""} Budget</DialogTitle>
+              <DialogTitle>Set {editingBucket ? getCategoryLabel(editingBucket) : ""} Budget</DialogTitle>
               <DialogDescription>
                 How much do you want to allocate to this category?
               </DialogDescription>
@@ -1785,7 +1790,7 @@ export default function Budget() {
                 </div>
               </div>
               <p className="text-xs text-muted-foreground">
-                This sets how much you plan to spend on {editingBucket ? BUDGET_BUCKET_LABELS[editingBucket].toLowerCase() : "this category"} across all your ceremonies.
+                This sets how much you plan to spend on {editingBucket ? getCategoryLabel(editingBucket).toLowerCase() : "this category"} across all your ceremonies.
               </p>
               <div className="flex gap-2 justify-end">
                 <Button variant="outline" onClick={() => setEditingBucket(null)}>

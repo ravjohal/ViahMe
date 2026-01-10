@@ -17,8 +17,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Trash2, Pencil, DollarSign, Users, ArrowRightLeft, Check, Receipt, Share2, Copy, Calendar } from "lucide-react";
 import type { Expense, ExpenseSplit, Event, Wedding, BudgetCategory, ExpenseEventAllocation } from "@shared/schema";
-import { BUDGET_BUCKET_LABELS } from "@shared/schema";
 import { EditExpenseDialog, type ExpenseWithDetails } from "@/components/edit-expense-dialog";
+import { useBudgetCategoryLookup } from "@/hooks/use-budget-categories";
 
 type ExpenseWithSplits = Expense & { splits: ExpenseSplit[]; eventAllocations?: ExpenseEventAllocation[] };
 type SettlementBalance = Record<string, { name: string; paid: number; owes: number; balance: number }>;
@@ -27,6 +27,7 @@ type AllocationStrategy = "single" | "equal" | "percentage" | "custom";
 export default function Expenses() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { getCategoryLabel } = useBudgetCategoryLookup();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<ExpenseWithSplits | null>(null);
   const [formData, setFormData] = useState({
@@ -770,7 +771,7 @@ export default function Expenses() {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="font-medium">{expense.expenseName}</h3>
-                          {expense.parentCategory && <Badge variant="default" data-testid={`badge-category-${expense.id}`}>{BUDGET_BUCKET_LABELS[expense.parentCategory as keyof typeof BUDGET_BUCKET_LABELS] || expense.parentCategory}</Badge>}
+                          {expense.parentCategory && <Badge variant="default" data-testid={`badge-category-${expense.id}`}>{getCategoryLabel(expense.parentCategory)}</Badge>}
                           {event && <Badge variant="outline">{event.name}</Badge>}
                           <Badge variant="secondary">{expense.status}</Badge>
                         </div>

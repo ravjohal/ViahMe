@@ -7,8 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket, type Wedding } from "@shared/schema";
+import { type BudgetBucket, type Wedding } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useBudgetCategories, useBudgetCategoryLookup } from "@/hooks/use-budget-categories";
 import { useToast } from "@/hooks/use-toast";
 import { AlertCircle, CheckCircle2, DollarSign, Grid3X3, Loader2, List, LayoutGrid } from "lucide-react";
 
@@ -57,6 +58,7 @@ type ViewMode = "ceremony" | "matrix";
 
 export function BudgetMatrix({ weddingId }: BudgetMatrixProps) {
   const { toast } = useToast();
+  const { categories: budgetCategories, getCategoryLabel, allCategoryIds } = useBudgetCategoryLookup();
   const [viewMode, setViewMode] = useState<ViewMode>("ceremony");
   const [editingCell, setEditingCell] = useState<{ ceremonyId: string; categoryKey: string } | null>(null);
   const [editValue, setEditValue] = useState("");
@@ -185,7 +187,7 @@ export function BudgetMatrix({ weddingId }: BudgetMatrixProps) {
     );
   }
 
-  const visibleCategories = BUDGET_BUCKETS.filter(bucket => {
+  const visibleCategories = allCategoryIds.filter(bucket => {
     const col = matrixData.columns.find(c => c.categoryKey === bucket);
     return col && (col.globalBudget > 0 || col.totalAllocated > 0);
   });
@@ -293,7 +295,7 @@ export function BudgetMatrix({ weddingId }: BudgetMatrixProps) {
                         variant="secondary" 
                         className="px-3 py-1"
                       >
-                        {BUDGET_BUCKET_LABELS[categoryKey as BudgetBucket]}: {formatCurrency(allocated)}
+                        {getCategoryLabel(categoryKey)}: {formatCurrency(allocated)}
                         {spent > 0 && <span className="ml-1 text-muted-foreground">({formatCurrency(spent)} spent)</span>}
                       </Badge>
                     );
@@ -326,7 +328,7 @@ export function BudgetMatrix({ weddingId }: BudgetMatrixProps) {
                     return (
                       <th key={categoryKey} className="text-center p-2 font-medium text-sm min-w-[100px]">
                         <div className="flex flex-col items-center gap-1">
-                          <span>{BUDGET_BUCKET_LABELS[categoryKey as BudgetBucket]}</span>
+                          <span>{getCategoryLabel(categoryKey)}</span>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <span className={`text-xs ${col.isOverAllocated ? 'text-destructive' : 'text-muted-foreground'}`}>

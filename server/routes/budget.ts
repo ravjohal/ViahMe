@@ -19,9 +19,13 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
   });
 
   // New: Get all budget categories with rich metadata (from database)
-  router.get("/categories", async (_req, res) => {
+  // By default returns only active categories; use ?includeInactive=true for admin UI
+  router.get("/categories", async (req, res) => {
     try {
-      const categories = await storage.getActiveBudgetCategories();
+      const includeInactive = req.query.includeInactive === "true";
+      const categories = includeInactive 
+        ? await storage.getAllBudgetCategories()
+        : await storage.getActiveBudgetCategories();
       res.json(categories);
     } catch (error) {
       console.error("Failed to fetch budget categories:", error);

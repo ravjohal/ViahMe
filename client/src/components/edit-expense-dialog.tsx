@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Upload, X, FileText, ExternalLink } from "lucide-react";
-import { BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket, type Event, type Expense, type ExpenseSplit } from "@shared/schema";
+import { type BudgetBucket, type Event, type Expense, type ExpenseSplit } from "@shared/schema";
 import { getCeremonyIdFromEvent } from "@shared/ceremonies";
+import { useBudgetCategories, useBudgetCategoryLookup } from "@/hooks/use-budget-categories";
 
 type PayerType = "me" | "partner" | "me_partner" | "bride_family" | "groom_family";
 type ExpenseStatus = "estimated" | "booked" | "paid";
@@ -45,6 +46,10 @@ export function EditExpenseDialog({
   isPending,
   weddingId,
 }: EditExpenseDialogProps) {
+  // Get budget categories from database
+  const { data: budgetCategories = [] } = useBudgetCategories();
+  const { getCategoryLabel } = useBudgetCategoryLookup();
+  
   const [expenseName, setExpenseName] = useState("");
   const [amount, setAmount] = useState("");
   const [amountPaid, setAmountPaid] = useState("");
@@ -93,13 +98,13 @@ export function EditExpenseDialog({
     }
     
     // Check if it's a bucket label (from fallback)
-    const bucketFromLabel = BUDGET_BUCKETS.find(b => BUDGET_BUCKET_LABELS[b] === selectedLineItem);
-    if (bucketFromLabel) {
-      return bucketFromLabel;
+    const matchingCategory = budgetCategories.find(c => c.displayName === selectedLineItem);
+    if (matchingCategory) {
+      return matchingCategory.id as BudgetBucket;
     }
     
     return "other";
-  }, [selectedLineItem, ceremonyLineItems]);
+  }, [selectedLineItem, ceremonyLineItems, budgetCategories]);
 
   useEffect(() => {
     if (expense) {
@@ -123,7 +128,7 @@ export function EditExpenseDialog({
       const bucket = expense.parentCategory as BudgetBucket;
       if (bucket) {
         // Use the bucket label for the fallback category selector to work correctly
-        setSelectedLineItem(BUDGET_BUCKET_LABELS[bucket]);
+        setSelectedLineItem(getCategoryLabel(bucket));
       } else {
         setSelectedLineItem(null);
       }
@@ -354,26 +359,26 @@ export function EditExpenseDialog({
               </div>
             ) : (
               <div className="flex flex-wrap gap-2">
-                {BUDGET_BUCKETS.map((bucket) => (
+                {budgetCategories.map((category) => (
                   <button
-                    key={bucket}
+                    key={category.id}
                     type="button"
-                    onClick={() => setSelectedLineItem(BUDGET_BUCKET_LABELS[bucket])}
+                    onClick={() => setSelectedLineItem(category.displayName)}
                     className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                      selectedLineItem === BUDGET_BUCKET_LABELS[bucket]
+                      selectedLineItem === category.displayName
                         ? "bg-primary text-primary-foreground"
                         : "bg-muted text-muted-foreground hover-elevate"
                     }`}
-                    data-testid={`button-edit-category-${bucket}`}
+                    data-testid={`button-edit-category-${category.id}`}
                   >
-                    {BUDGET_BUCKET_LABELS[bucket]}
+                    {category.displayName}
                   </button>
                 ))}
               </div>
             )}
             {derivedBucket && selectedLineItem && (
               <p className="text-xs text-muted-foreground">
-                Budget category: {BUDGET_BUCKET_LABELS[derivedBucket]}
+                Budget category: {getCategoryLabel(derivedBucket)}
               </p>
             )}
           </div>

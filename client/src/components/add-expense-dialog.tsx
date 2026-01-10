@@ -11,8 +11,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, ArrowRight, Check, Calendar, DollarSign, User, FileText, Upload, Tag, Loader2 } from "lucide-react";
-import { BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket, type Event } from "@shared/schema";
+import { type BudgetBucket, type Event } from "@shared/schema";
 import { CEREMONY_MAPPINGS, getCeremonyIdFromEvent } from "@shared/ceremonies";
+import { useBudgetCategories, useBudgetCategoryLookup } from "@/hooks/use-budget-categories";
 
 // Type for line items fetched from API
 interface LineItem {
@@ -61,6 +62,10 @@ export function AddExpenseDialog({
 }: AddExpenseDialogProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  
+  // Get budget categories from database
+  const { data: budgetCategories = [] } = useBudgetCategories();
+  const { getCategoryLabel, allCategoryIds } = useBudgetCategoryLookup();
 
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedCeremonyId, setSelectedCeremonyId] = useState<string | null>(null);
@@ -331,7 +336,7 @@ export function AddExpenseDialog({
                   >
                     <div className="text-sm font-medium">{item.name}</div>
                     <div className="text-xs text-muted-foreground mt-0.5">
-                      {BUDGET_BUCKET_LABELS[item.budgetBucket]}
+                      {getCategoryLabel(item.budgetBucket)}
                     </div>
                   </button>
                 ))}
@@ -357,19 +362,19 @@ export function AddExpenseDialog({
                   No specific categories for this ceremony. Choose a general category:
                 </p>
                 <div className="grid grid-cols-3 gap-2">
-                  {BUDGET_BUCKETS.map((bucket) => (
+                  {budgetCategories.map((category) => (
                     <button
-                      key={bucket}
+                      key={category.id}
                       type="button"
-                      onClick={() => setSelectedLineItem(BUDGET_BUCKET_LABELS[bucket])}
+                      onClick={() => setSelectedLineItem(category.displayName)}
                       className={`p-3 rounded-lg text-center transition-all border-2 ${
-                        selectedLineItem === BUDGET_BUCKET_LABELS[bucket]
+                        selectedLineItem === category.displayName
                           ? "border-primary bg-primary/10"
                           : "border-muted hover-elevate"
                       }`}
-                      data-testid={`button-bucket-${bucket}`}
+                      data-testid={`button-bucket-${category.id}`}
                     >
-                      <div className="text-sm font-medium">{BUDGET_BUCKET_LABELS[bucket]}</div>
+                      <div className="text-sm font-medium">{category.displayName}</div>
                     </button>
                   ))}
                 </div>
@@ -572,7 +577,7 @@ export function AddExpenseDialog({
             <div className="flex flex-wrap gap-x-4 gap-y-1">
               {currentStep > 1 && selectedEvent && <span>Ceremony: <strong>{selectedEvent.name}</strong></span>}
               {currentStep > 2 && selectedLineItem && (
-                <span>Category: <strong>{selectedLineItem}</strong> → {derivedBucket && BUDGET_BUCKET_LABELS[derivedBucket]}</span>
+                <span>Category: <strong>{selectedLineItem}</strong> → {derivedBucket && getCategoryLabel(derivedBucket)}</span>
               )}
               {currentStep > 3 && <span>Payer: <strong>{PAYER_OPTIONS.find(p => p.id === payer)?.label}</strong></span>}
               {currentStep > 4 && amount && <span>Amount: <strong>${parseFloat(amount.replace(/,/g, "")).toLocaleString()}</strong></span>}

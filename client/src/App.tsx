@@ -54,6 +54,7 @@ import ClaimProfile from "@/pages/claim-profile";
 import ClaimYourBusiness from "@/pages/claim-your-business";
 import AdminVendorClaims from "@/pages/admin-vendor-claims";
 import AdminCeremonyTemplates from "@/pages/admin-ceremony-templates";
+import AdminBudgetCategories from "@/pages/admin-budget-categories";
 import AiPlanner from "@/pages/ai-planner";
 import SpeechGenerator from "@/pages/speech-generator";
 import LiveTimeline from "@/pages/live-timeline";
@@ -244,6 +245,7 @@ function Router() {
         </CoupleRoute>
       </Route>
       <Route path="/admin/ceremony-templates" component={AdminCeremonyTemplates} />
+      <Route path="/admin/budget-categories" component={AdminBudgetCategories} />
       <Route path="/settings" component={Settings} />
       
       {/* Vendor pages */}
