@@ -1861,13 +1861,12 @@ export default function Budget() {
                                     
                                     <div>
                                       <Label htmlFor={`custom-item-amount-${ceremony.eventId}`} className="text-xs">
-                                        Budget Amount ($) {!customItemSourceId && <span className="text-destructive">*</span>}
-                                        {customItemSourceId && <span className="text-muted-foreground">(optional - uses library estimate)</span>}
+                                        Budget Amount ($)
                                       </Label>
                                       <Input
                                         id={`custom-item-amount-${ceremony.eventId}`}
                                         type="number"
-                                        placeholder={customItemSourceId ? "Leave blank to use library estimate" : "0"}
+                                        placeholder="0"
                                         value={customItemAmount}
                                         onChange={(e) => setCustomItemAmount(e.target.value)}
                                         data-testid={`input-custom-item-amount-${ceremony.eventId}`}
