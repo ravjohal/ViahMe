@@ -138,16 +138,13 @@ export function useCeremonyBudgetCategories(ceremonyId: string | null | undefine
 export const useCeremonyTypeLineItems = useCeremonyBudgetCategories;
 
 // Input type for creating a custom ceremony budget category
+// Custom items use a single budget amount (stored as lowCost=highCost, unit='fixed')
 export interface CreateCustomCeremonyItemInput {
   weddingId: string;
   ceremonyTypeId: string;
   itemName: string;
   budgetBucketId: string;
-  lowCost: string;
-  highCost: string;
-  unit: 'fixed' | 'per_person' | 'per_hour';
-  hoursLow?: string;
-  hoursHigh?: string;
+  amount: string; // Single budget amount (backend stores as lowCost=highCost)
   notes?: string;
 }
 
@@ -253,6 +250,40 @@ export function useAllCeremonyLineItems() {
     queryFn: async () => {
       const response = await fetch('/api/ceremony-types/all/line-items');
       if (!response.ok) throw new Error('Failed to fetch all ceremony line items');
+      return response.json();
+    },
+  });
+}
+
+// Hook to fetch ceremony line items for a specific ceremony INCLUDING wedding-specific custom items
+// Returns array of line items with isCustom flag for custom items
+export function useCeremonyLineItemsWithCustom(ceremonyId: string | null | undefined, weddingId: string | undefined) {
+  return useQuery<CeremonyBudgetCategoryApiItem[]>({
+    queryKey: ['/api/ceremony-types', ceremonyId, 'line-items', 'with-wedding', weddingId || null],
+    queryFn: async () => {
+      const url = weddingId 
+        ? `/api/ceremony-types/${ceremonyId}/line-items?weddingId=${weddingId}`
+        : `/api/ceremony-types/${ceremonyId}/line-items`;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch ceremony line items');
+      const data = await response.json();
+      return data.lineItems || [];
+    },
+    enabled: !!ceremonyId,
+  });
+}
+
+// Hook to fetch ALL ceremony line items including wedding-specific custom items
+// Returns a map of ceremonyTypeId -> CeremonyBudgetCategoryItem[] (with isCustom flag)
+export function useWeddingCeremonyLineItemsMap(weddingId: string | undefined) {
+  return useQuery<Record<string, CeremonyBudgetCategoryItem[]>>({
+    queryKey: ['/api/ceremony-types/all/line-items', weddingId || null],
+    queryFn: async () => {
+      const url = weddingId 
+        ? `/api/ceremony-types/all/line-items?weddingId=${weddingId}`
+        : `/api/ceremony-types/all/line-items`;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch ceremony line items');
       return response.json();
     },
   });

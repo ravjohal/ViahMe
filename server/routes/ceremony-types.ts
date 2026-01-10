@@ -46,9 +46,41 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
     }
   });
 
+  // Line items endpoint - optionally accepts weddingId to include wedding-specific custom items
+  // Returns a map of ceremonyTypeId -> line items[] 
   router.get("/all/line-items", async (req, res) => {
     try {
+      const { weddingId } = req.query;
+      const userId = req.session?.userId;
+      
+      // Get all system items first
       const allItems = await storage.getAllCeremonyBudgetCategories();
+      
+      // If weddingId provided, also fetch wedding-specific custom items
+      let customItems: typeof allItems = [];
+      if (weddingId && typeof weddingId === 'string') {
+        // Validate wedding access
+        if (!userId) {
+          return res.status(401).json({ error: "Authentication required to view custom items" });
+        }
+        
+        const wedding = await storage.getWedding(weddingId);
+        if (!wedding) {
+          return res.status(404).json({ error: "Wedding not found" });
+        }
+        
+        const weddingUser = await storage.getWeddingUser(weddingId, userId);
+        if (!weddingUser) {
+          return res.status(403).json({ error: "You don't have access to this wedding" });
+        }
+        
+        // Fetch wedding-specific items (weddingId column is set)
+        const allWeddingItems = await storage.getAllCeremonyBudgetCategoriesForWedding(weddingId);
+        customItems = allWeddingItems;
+      }
+      
+      // Combine system items + custom items
+      const combinedItems = [...allItems, ...customItems];
       
       const grouped: Record<string, Array<{
         category: string;
@@ -58,14 +90,17 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
         hoursLow?: number;
         hoursHigh?: number;
         notes?: string;
+        budgetBucket?: string;
         budgetBucketId?: string;
+        isCustom?: boolean;
       }>> = {};
       
-      for (const item of allItems) {
+      for (const item of combinedItems) {
         const key = item.ceremonyTypeId;
         if (!grouped[key]) {
           grouped[key] = [];
         }
+        const bucketId = item.budgetBucketId ?? 'other';
         grouped[key].push({
           category: item.itemName,
           lowCost: parseFloat(item.lowCost),
@@ -74,7 +109,9 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
           hoursLow: item.hoursLow ? parseFloat(item.hoursLow) : undefined,
           hoursHigh: item.hoursHigh ? parseFloat(item.hoursHigh) : undefined,
           notes: item.notes ?? undefined,
-          budgetBucketId: item.budgetBucketId ?? 'other',
+          budgetBucket: bucketId,
+          budgetBucketId: bucketId,
+          isCustom: !!item.weddingId,
         });
       }
       
@@ -163,6 +200,7 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
   });
 
   // Create a custom ceremony budget category for a specific wedding
+  // Custom items use a single budget amount (stored as lowCost=highCost, unit='fixed')
   router.post("/:ceremonyId/line-items", async (req, res) => {
     try {
       const { ceremonyId } = req.params;
@@ -178,9 +216,18 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
       }
       
       // Validate request body - weddingId is required for custom items
-      const { weddingId, ...itemData } = req.body;
+      const { weddingId, amount, itemName, budgetBucketId, notes } = req.body;
       if (!weddingId) {
         return res.status(400).json({ error: "weddingId is required for custom items" });
+      }
+      if (!itemName || typeof itemName !== 'string' || !itemName.trim()) {
+        return res.status(400).json({ error: "itemName is required" });
+      }
+      if (!budgetBucketId || typeof budgetBucketId !== 'string') {
+        return res.status(400).json({ error: "budgetBucketId is required" });
+      }
+      if (!amount || isNaN(parseFloat(amount))) {
+        return res.status(400).json({ error: "amount is required and must be a valid number" });
       }
       
       // Verify user has access to this wedding
@@ -194,9 +241,17 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
         return res.status(403).json({ error: "You don't have access to this wedding" });
       }
       
-      // Validate and create the custom item
+      // Custom items: store amount as both lowCost and highCost with unit='fixed'
+      // This ensures they display the same value regardless of low/high toggle
+      const budgetAmount = amount.toString();
+      
       const validatedData = insertCeremonyBudgetCategorySchema.parse({
-        ...itemData,
+        itemName: itemName.trim(),
+        budgetBucketId,
+        lowCost: budgetAmount,
+        highCost: budgetAmount,
+        unit: 'fixed',
+        notes: notes || null,
         ceremonyTypeId: ceremonyId,
         weddingId,
       });
@@ -210,8 +265,6 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
         lowCost: parseFloat(newItem.lowCost),
         highCost: parseFloat(newItem.highCost),
         unit: newItem.unit,
-        hoursLow: newItem.hoursLow ? parseFloat(newItem.hoursLow) : undefined,
-        hoursHigh: newItem.hoursHigh ? parseFloat(newItem.hoursHigh) : undefined,
         notes: newItem.notes,
         weddingId: newItem.weddingId,
         isCustom: true,

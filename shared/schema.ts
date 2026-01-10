@@ -3919,6 +3919,8 @@ export type CeremonyBudgetCategoryItem = {
   hoursHigh?: number;
   notes?: string;
   budgetBucket?: BudgetBucket;
+  budgetBucketId?: string;
+  isCustom?: boolean;
 };
 
 // ============================================================================

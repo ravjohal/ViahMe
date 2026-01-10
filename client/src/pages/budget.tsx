@@ -17,7 +17,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type BudgetBucket, type Wedding, type Event, type Contract, type Vendor, type Expense, type BudgetAllocation, type CeremonyBudget, type CeremonyLineItemBudget, type CeremonyBudgetCategoryItem } from "@shared/schema";
 import { CEREMONY_MAPPINGS } from "@shared/ceremonies";
-import { useAllCeremonyLineItems, getLineItemBucketLabel, useCreateCustomCeremonyItem } from "@/hooks/use-ceremony-types";
+import { useAllCeremonyLineItems, getLineItemBucketLabel, useCreateCustomCeremonyItem, useWeddingCeremonyLineItemsMap, type CeremonyBudgetCategoryApiItem } from "@/hooks/use-ceremony-types";
 import { useBudgetCategories, useBudgetCategoryLookup } from "@/hooks/use-budget-bucket-categories";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -83,9 +83,7 @@ export default function Budget() {
   const [customItemFormOpen, setCustomItemFormOpen] = useState<string | null>(null);
   const [customItemName, setCustomItemName] = useState("");
   const [customItemBucket, setCustomItemBucket] = useState("");
-  const [customItemLowCost, setCustomItemLowCost] = useState("");
-  const [customItemHighCost, setCustomItemHighCost] = useState("");
-  const [customItemUnit, setCustomItemUnit] = useState<'fixed' | 'per_person' | 'per_hour'>('fixed');
+  const [customItemAmount, setCustomItemAmount] = useState("");
 
   const { data: weddings, isLoading: weddingsLoading } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
@@ -141,8 +139,9 @@ export default function Budget() {
     enabled: !!wedding?.id,
   });
 
-  // Fetch ceremony line items from normalized table (replaces deprecated costBreakdown JSONB)
-  const { data: ceremonyBreakdownMap = {} } = useAllCeremonyLineItems();
+  // Fetch ceremony line items INCLUDING wedding-specific custom items
+  // Uses wedding-aware endpoint that returns system templates + custom items
+  const { data: ceremonyBreakdownMap = {} } = useWeddingCeremonyLineItemsMap(wedding?.id);
 
   // Fetch budget categories from database (replaces hardcoded BUDGET_BUCKETS constant)
   const { data: budgetCategories = [], isLoading: categoriesLoading } = useBudgetCategories();
@@ -911,9 +910,7 @@ export default function Budget() {
     setCustomItemFormOpen(null);
     setCustomItemName("");
     setCustomItemBucket("");
-    setCustomItemLowCost("");
-    setCustomItemHighCost("");
-    setCustomItemUnit('fixed');
+    setCustomItemAmount("");
   };
   
   const handleCreateCustomItem = (eventId: string, eventName: string) => {
@@ -930,8 +927,8 @@ export default function Budget() {
       toast({ title: "Error", description: "Please select a budget category", variant: "destructive" });
       return;
     }
-    if (!customItemLowCost || !customItemHighCost) {
-      toast({ title: "Error", description: "Please enter cost estimates", variant: "destructive" });
+    if (!customItemAmount || isNaN(parseFloat(customItemAmount))) {
+      toast({ title: "Error", description: "Please enter a budget amount", variant: "destructive" });
       return;
     }
     
@@ -940,15 +937,13 @@ export default function Budget() {
       ceremonyTypeId,
       itemName: customItemName.trim(),
       budgetBucketId: customItemBucket,
-      lowCost: customItemLowCost,
-      highCost: customItemHighCost,
-      unit: customItemUnit,
+      amount: customItemAmount,
     }, {
       onSuccess: () => {
         toast({ title: "Success", description: "Custom budget item added" });
         resetCustomItemForm();
-        // Invalidate line items to refresh the list
-        queryClient.invalidateQueries({ queryKey: ['/api/ceremony-types', ceremonyTypeId, 'line-items'] });
+        // Invalidate the wedding-aware line items map to refresh custom items
+        queryClient.invalidateQueries({ queryKey: ['/api/ceremony-types/all/line-items', wedding.id] });
       },
       onError: (error) => {
         toast({ 
@@ -1613,11 +1608,18 @@ export default function Budget() {
                                         <div className="flex items-center gap-2 flex-wrap">
                                           <p className="text-sm font-medium">{item.category}</p>
                                           <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 bg-muted/50">{bucketLabel}</Badge>
-                                          {item.unit && item.unit !== 'fixed' && (
+                                          {item.isCustom && (
+                                            <Badge variant="default" className="text-[10px] px-1.5 py-0 h-4">Custom</Badge>
+                                          )}
+                                          {!item.isCustom && item.unit && item.unit !== 'fixed' && (
                                             <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">{formatUnitLabel(item.unit)}</Badge>
                                           )}
                                         </div>
-                                        <p className="text-xs text-muted-foreground">Est: ${item.lowCost.toLocaleString()}{formatUnitLabel(item.unit) ? ` ${formatUnitLabel(item.unit)}` : ''} - ${item.highCost.toLocaleString()}{formatUnitLabel(item.unit) ? ` ${formatUnitLabel(item.unit)}` : ''}</p>
+                                        {item.isCustom ? (
+                                          <p className="text-xs text-muted-foreground">Budget: ${item.lowCost.toLocaleString()}</p>
+                                        ) : (
+                                          <p className="text-xs text-muted-foreground">Est: ${item.lowCost.toLocaleString()}{formatUnitLabel(item.unit) ? ` ${formatUnitLabel(item.unit)}` : ''} - ${item.highCost.toLocaleString()}{formatUnitLabel(item.unit) ? ` ${formatUnitLabel(item.unit)}` : ''}</p>
+                                        )}
                                       </div>
                                       <div className="flex items-center gap-1 shrink-0">
                                         <span className="text-sm text-muted-foreground">$</span>
@@ -1719,52 +1721,18 @@ export default function Budget() {
                                       </Select>
                                     </div>
                                     
-                                    <div className="grid grid-cols-2 gap-3">
-                                      <div>
-                                        <Label htmlFor={`custom-item-low-${ceremony.eventId}`} className="text-xs">
-                                          Low Estimate ($)
-                                        </Label>
-                                        <Input
-                                          id={`custom-item-low-${ceremony.eventId}`}
-                                          type="number"
-                                          placeholder="0"
-                                          value={customItemLowCost}
-                                          onChange={(e) => setCustomItemLowCost(e.target.value)}
-                                          data-testid={`input-custom-item-low-${ceremony.eventId}`}
-                                        />
-                                      </div>
-                                      <div>
-                                        <Label htmlFor={`custom-item-high-${ceremony.eventId}`} className="text-xs">
-                                          High Estimate ($)
-                                        </Label>
-                                        <Input
-                                          id={`custom-item-high-${ceremony.eventId}`}
-                                          type="number"
-                                          placeholder="0"
-                                          value={customItemHighCost}
-                                          onChange={(e) => setCustomItemHighCost(e.target.value)}
-                                          data-testid={`input-custom-item-high-${ceremony.eventId}`}
-                                        />
-                                      </div>
-                                    </div>
-                                    
                                     <div>
-                                      <Label htmlFor={`custom-item-unit-${ceremony.eventId}`} className="text-xs">
-                                        Pricing Type
+                                      <Label htmlFor={`custom-item-amount-${ceremony.eventId}`} className="text-xs">
+                                        Budget Amount ($) <span className="text-destructive">*</span>
                                       </Label>
-                                      <Select value={customItemUnit} onValueChange={(v) => setCustomItemUnit(v as 'fixed' | 'per_person' | 'per_hour')}>
-                                        <SelectTrigger 
-                                          id={`custom-item-unit-${ceremony.eventId}`}
-                                          data-testid={`select-custom-item-unit-${ceremony.eventId}`}
-                                        >
-                                          <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="fixed">Fixed Price</SelectItem>
-                                          <SelectItem value="per_person">Per Person</SelectItem>
-                                          <SelectItem value="per_hour">Per Hour</SelectItem>
-                                        </SelectContent>
-                                      </Select>
+                                      <Input
+                                        id={`custom-item-amount-${ceremony.eventId}`}
+                                        type="number"
+                                        placeholder="0"
+                                        value={customItemAmount}
+                                        onChange={(e) => setCustomItemAmount(e.target.value)}
+                                        data-testid={`input-custom-item-amount-${ceremony.eventId}`}
+                                      />
                                     </div>
                                   </div>
                                   

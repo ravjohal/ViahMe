@@ -1079,6 +1079,7 @@ export interface IStorage {
   getCeremonyBudgetCategories(ceremonyTypeId: string, weddingId?: string | null): Promise<CeremonyBudgetCategory[]>;
   getCeremonyBudgetCategoriesByBucket(budgetBucketId: string): Promise<CeremonyBudgetCategory[]>;
   getAllCeremonyBudgetCategories(): Promise<CeremonyBudgetCategory[]>;
+  getAllCeremonyBudgetCategoriesForWedding(weddingId: string): Promise<CeremonyBudgetCategory[]>;
   getCeremonyBudgetCategory(id: string): Promise<CeremonyBudgetCategory | undefined>;
   createCeremonyBudgetCategory(item: InsertCeremonyBudgetCategory): Promise<CeremonyBudgetCategory>;
   updateCeremonyBudgetCategory(id: string, item: Partial<InsertCeremonyBudgetCategory>): Promise<CeremonyBudgetCategory | undefined>;
@@ -4287,6 +4288,7 @@ export class MemStorage implements IStorage {
   async getCeremonyBudgetCategories(ceremonyTypeId: string, weddingId?: string | null): Promise<CeremonyBudgetCategory[]> { return []; }
   async getCeremonyBudgetCategoriesByBucket(budgetBucketId: string): Promise<CeremonyBudgetCategory[]> { return []; }
   async getAllCeremonyBudgetCategories(): Promise<CeremonyBudgetCategory[]> { return []; }
+  async getAllCeremonyBudgetCategoriesForWedding(weddingId: string): Promise<CeremonyBudgetCategory[]> { return []; }
   async getCeremonyBudgetCategory(id: string): Promise<CeremonyBudgetCategory | undefined> { return undefined; }
   async createCeremonyBudgetCategory(item: InsertCeremonyBudgetCategory): Promise<CeremonyBudgetCategory> { throw new Error('MemStorage does not support Ceremony Budget Categories. Use DBStorage.'); }
   async updateCeremonyBudgetCategory(id: string, item: Partial<InsertCeremonyBudgetCategory>): Promise<CeremonyBudgetCategory | undefined> { throw new Error('MemStorage does not support Ceremony Budget Categories. Use DBStorage.'); }
@@ -10475,9 +10477,24 @@ export class DBStorage implements IStorage {
   }
 
   async getAllCeremonyBudgetCategories(): Promise<CeremonyBudgetCategory[]> {
+    // Returns only system templates (weddingId is NULL)
     return await this.db.select()
       .from(ceremonyBudgetCategories)
-      .where(eq(ceremonyBudgetCategories.isActive, true))
+      .where(and(
+        eq(ceremonyBudgetCategories.isActive, true),
+        isNull(ceremonyBudgetCategories.weddingId)
+      ))
+      .orderBy(sql`${ceremonyBudgetCategories.ceremonyTypeId} ASC, ${ceremonyBudgetCategories.displayOrder} ASC`);
+  }
+
+  async getAllCeremonyBudgetCategoriesForWedding(weddingId: string): Promise<CeremonyBudgetCategory[]> {
+    // Returns only wedding-specific custom items (weddingId matches)
+    return await this.db.select()
+      .from(ceremonyBudgetCategories)
+      .where(and(
+        eq(ceremonyBudgetCategories.isActive, true),
+        eq(ceremonyBudgetCategories.weddingId, weddingId)
+      ))
       .orderBy(sql`${ceremonyBudgetCategories.ceremonyTypeId} ASC, ${ceremonyBudgetCategories.displayOrder} ASC`);
   }
 
