@@ -145,7 +145,7 @@ export interface CreateCustomCeremonyItemInput {
   ceremonyTypeId: string;
   itemName: string;
   budgetBucketId: string;
-  amount: string; // Single budget amount (backend stores as lowCost=highCost)
+  amount?: string; // Optional - when empty and sourceCategoryId provided, inherits source's low/high range
   notes?: string;
   sourceCategoryId?: string; // Reference to library item if imported from library
 }

@@ -963,15 +963,20 @@ export default function Budget() {
     
     // Use the custom item mutation - it handles both new items and items imported from library
     // The backend will track sourceCategoryId if provided
-    createCustomItemMutation.mutate({
+    // Build mutation payload - only include amount if user provided one
+    const mutationPayload: Parameters<typeof createCustomItemMutation.mutate>[0] = {
       weddingId: wedding.id,
       ceremonyTypeId,
       itemName: customItemName.trim(),
       budgetBucketId: customItemBucket,
-      // Only pass amount if user entered one; otherwise backend will inherit source range
-      amount: hasAmount ? customItemAmount : "",
       sourceCategoryId: customItemSourceId || undefined,
-    }, {
+    };
+    // Only include amount when user explicitly provided one (not empty string)
+    if (hasAmount) {
+      mutationPayload.amount = customItemAmount;
+    }
+    
+    createCustomItemMutation.mutate(mutationPayload, {
       onSuccess: () => {
         const message = customItemSourceId ? "Budget item added from library" : "Custom budget item added";
         toast({ title: "Success", description: message });
