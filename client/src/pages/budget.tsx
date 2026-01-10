@@ -1533,12 +1533,28 @@ export default function Budget() {
                                   );
                                 })}
                               </div>
-                              {lineItemTotal > 0 && (
-                                <div className="flex justify-between items-center mt-3 pt-3 border-t">
-                                  <span className="text-sm font-medium">Line Item Total</span>
-                                  <span className="text-lg font-bold font-mono">${lineItemTotal.toLocaleString()}</span>
+                              <div className="flex justify-between items-center mt-3 pt-3 border-t">
+                                <div>
+                                  {lineItemTotal > 0 && (
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm font-medium">Line Item Total</span>
+                                      <span className="text-lg font-bold font-mono">${lineItemTotal.toLocaleString()}</span>
+                                    </div>
+                                  )}
                                 </div>
-                              )}
+                                {editingLineItems[ceremony.eventId] && Object.keys(editingLineItems[ceremony.eventId]).length > 0 && (
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    onClick={() => saveEventLineItems(ceremony.eventId, ceremony.eventName)} 
+                                    disabled={saveLineItemBudgetsMutation.isPending} 
+                                    data-testid={`button-save-line-items-${ceremony.eventId}`}
+                                  >
+                                    {saveLineItemBudgetsMutation.isPending && <Loader2 className="w-3 h-3 mr-1 animate-spin" />}
+                                    Save Line Items
+                                  </Button>
+                                )}
+                              </div>
                             </div>
                           )}
 
