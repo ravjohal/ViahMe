@@ -23,7 +23,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import { 
-  DollarSign, Edit2, Trash2, Plus, CheckCircle2, AlertCircle, 
+  DollarSign, Edit2, Trash2, Plus, CheckCircle2, AlertCircle, AlertTriangle,
   ChevronDown, ChevronRight, ArrowLeft, Copy, Share2, FileText, 
   Calendar, Clock, Building2, Users, Calculator, Loader2, BarChart3, HelpCircle,
   TrendingDown, TrendingUp
@@ -551,14 +551,11 @@ export default function Budget() {
   // Calculate ceremony-level total (from ceremony analytics)
   const totalByCeremonies = ceremonyAnalytics?.overview?.totalCeremonyAllocated || 0;
 
-  // Calculate category-level total (sum allocations by bucket, ignoring ceremony-specific ones)
+  // Calculate category-level total from bucket allocations (expenseTotals.bucketTotals)
   const totalByCategories = useMemo(() => {
-    // Sum allocations that don't have a ceremonyId (global category allocations)
-    // For now, use ceremony total since that's where budgets are set
-    return allocations
-      .filter(alloc => !alloc.ceremonyId) // Only non-ceremony allocations
-      .reduce((sum, alloc) => sum + parseFloat(alloc.allocatedAmount?.toString() || "0"), 0);
-  }, [allocations]);
+    if (!expenseTotals?.bucketTotals) return 0;
+    return expenseTotals.bucketTotals.reduce((sum, bucket) => sum + bucket.allocated, 0);
+  }, [expenseTotals?.bucketTotals]);
 
   // For display, use ceremony totals as the primary "planned" amount
   const totalAllocated = totalByCeremonies;
@@ -1119,7 +1116,7 @@ export default function Budget() {
             </div>
             <div className="flex flex-wrap items-center gap-4">
               {unallocatedBudget > 0 && (
-                <Badge variant="outline" className="px-3 py-1.5 text-base font-mono bg-amber-50 dark:bg-amber-900/20 border-amber-300 text-amber-700 dark:text-amber-300" data-testid="badge-unallocated">
+                <Badge variant="outline" className="px-3 py-1.5 text-base font-mono bg-emerald-50 dark:bg-emerald-900/20 border-emerald-300 text-emerald-700 dark:text-emerald-300" data-testid="badge-unallocated">
                   ${unallocatedBudget.toLocaleString()} left to plan
                 </Badge>
               )}
@@ -1128,10 +1125,19 @@ export default function Budget() {
                   ${Math.abs(unallocatedBudget).toLocaleString()} over target
                 </Badge>
               )}
+              {totalByCategories > 0 && totalByCeremonies > 0 && Math.abs(totalByCategories - totalByCeremonies) > 100 && (
+                <Badge variant="outline" className="px-3 py-1.5 text-sm font-mono bg-orange-50 dark:bg-orange-900/20 border-orange-300 text-orange-700 dark:text-orange-300" data-testid="badge-allocation-mismatch">
+                  <AlertTriangle className="w-3 h-3 mr-1" />
+                  {totalByCategories > totalByCeremonies 
+                    ? `Categories $${(totalByCategories - totalByCeremonies).toLocaleString()} higher`
+                    : `Ceremonies $${(totalByCeremonies - totalByCategories).toLocaleString()} higher`
+                  }
+                </Badge>
+              )}
               <div className="text-right">
                 <p className="text-sm text-muted-foreground">Remaining</p>
                 <p className={`text-2xl font-bold font-mono ${remainingBudget < 0 ? "text-destructive" : "text-emerald-600"}`} data-testid="text-remaining">
-                  ${Math.abs(remainingBudget).toLocaleString()}
+                  {remainingBudget < 0 ? "-" : ""}${Math.abs(remainingBudget).toLocaleString()}
                 </p>
               </div>
             </div>
