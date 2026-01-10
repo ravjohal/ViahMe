@@ -1699,7 +1699,7 @@ export default function Budget() {
                                             <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">{formatUnitLabel(item.unit)}</Badge>
                                           )}
                                         </div>
-                                        {item.isCustom ? (
+                                        {item.lowCost === item.highCost ? (
                                           <p className="text-xs text-muted-foreground">Budget: ${item.lowCost.toLocaleString()}</p>
                                         ) : (
                                           <p className="text-xs text-muted-foreground">Est: ${item.lowCost.toLocaleString()}{formatUnitLabel(item.unit) ? ` ${formatUnitLabel(item.unit)}` : ''} - ${item.highCost.toLocaleString()}{formatUnitLabel(item.unit) ? ` ${formatUnitLabel(item.unit)}` : ''}</p>
