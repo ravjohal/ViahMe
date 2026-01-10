@@ -372,17 +372,26 @@ export default function Budget() {
       city: getCityKey(wedding?.city),
     };
 
-    // Aggregate estimates by budget bucket
+    // Aggregate estimates by budget bucket AND collect line item budgets
     const bucketTotals: Record<string, number> = {};
+    const lineItemBudgetItems: Array<{ lineItemCategory: string; budgetedAmount: string; bucket: string }> = [];
+    
     for (const item of lineItems) {
       const estimates = calculateLineItemEstimate(item, guestCount, pricingContext);
       const rawValue = useHigh ? estimates.high : estimates.low;
       const value = Math.round(rawValue / 100) * 100;
-      const bucket = getLineItemBudgetBucket(item.category);
+      const bucket = item.budgetBucket ?? "other";
       bucketTotals[bucket] = (bucketTotals[bucket] || 0) + value;
+      
+      // Collect line item budget for saving
+      lineItemBudgetItems.push({
+        lineItemCategory: item.category,
+        budgetedAmount: value.toString(),
+        bucket,
+      });
     }
 
-    // Call bulk allocate mutation
+    // Call bulk allocate mutation for ceremony-bucket allocations
     const allocations = Object.entries(bucketTotals).map(([categoryKey, amount]) => ({
       categoryKey,
       amount: amount.toString(),
@@ -393,6 +402,17 @@ export default function Budget() {
         weddingId: wedding.id,
         ceremonyId: eventId,
         allocations,
+      });
+    }
+    
+    // Also save line item budgets to database
+    const ceremonyTypeId = getCeremonyTypeId(eventName);
+    if (ceremonyTypeId && lineItemBudgetItems.length > 0) {
+      saveLineItemBudgetsMutation.mutate({
+        weddingId: wedding.id,
+        eventId,
+        ceremonyTypeId,
+        items: lineItemBudgetItems,
       });
     }
   };

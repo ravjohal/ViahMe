@@ -763,6 +763,93 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
     }
   });
 
+  // POST /api/budget/line-items/bulk - Bulk save line item budgets for a ceremony
+  router.post("/line-items/bulk", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      if (!authReq.session.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const { weddingId, eventId, ceremonyTypeId, items } = req.body;
+
+      if (!weddingId || !eventId || !items || !Array.isArray(items)) {
+        return res.status(400).json({ error: "Missing required fields: weddingId, eventId, items (array)" });
+      }
+
+      const wedding = await storage.getWedding(weddingId);
+      if (!wedding) {
+        return res.status(404).json({ error: "Wedding not found" });
+      }
+
+      if (wedding.userId !== authReq.session.userId) {
+        const roles = await storage.getWeddingRoles(weddingId);
+        const hasAccess = roles.some(role => role.userId === authReq.session.userId);
+        if (!hasAccess) {
+          return res.status(403).json({ error: "Access denied" });
+        }
+      }
+
+      const results: Array<{ lineItemCategory: string; amount: string; success: boolean; error?: string }> = [];
+
+      for (const item of items) {
+        const { lineItemCategory, budgetedAmount, bucket } = item;
+
+        if (!lineItemCategory) {
+          results.push({ lineItemCategory: lineItemCategory || "unknown", amount: budgetedAmount, success: false, error: "Missing category" });
+          continue;
+        }
+
+        // Validate bucket if provided, default to 'other'
+        const validBucket = bucket && BUDGET_BUCKETS.includes(bucket) ? bucket : "other";
+
+        try {
+          // Store line item budgets in the unified budget_allocations table
+          // The lineItemLabel field stores the specific line item category name
+          await storage.upsertBudgetAllocation(
+            weddingId,
+            validBucket as BudgetBucket,
+            budgetedAmount?.toString() || "0",
+            eventId,
+            lineItemCategory // This becomes the lineItemLabel
+          );
+          results.push({ lineItemCategory, amount: budgetedAmount, success: true });
+        } catch (err) {
+          results.push({ lineItemCategory, amount: budgetedAmount, success: false, error: "Failed to save" });
+        }
+      }
+
+      res.json({ success: true, results });
+    } catch (error) {
+      console.error("Error bulk saving line item budgets:", error);
+      res.status(500).json({ error: "Failed to save line item budgets" });
+    }
+  });
+
+  // GET /api/budget/line-items/:weddingId - Get all line item budgets for a wedding
+  router.get("/line-items/:weddingId", await requireAuth(storage, false), ensureCoupleAccess(storage, (req) => req.params.weddingId), async (req, res) => {
+    try {
+      const { weddingId } = req.params;
+
+      const allocations = await storage.getBudgetAllocationsByWedding(weddingId);
+      
+      // Filter to only line item level allocations (has ceremonyId AND lineItemLabel)
+      const lineItemAllocations = allocations
+        .filter(a => a.ceremonyId && a.lineItemLabel)
+        .map(a => ({
+          id: a.id,
+          eventId: a.ceremonyId,
+          lineItemCategory: a.lineItemLabel,
+          budgetedAmount: a.allocatedAmount,
+        }));
+
+      res.json(lineItemAllocations);
+    } catch (error) {
+      console.error("Error fetching line item budgets:", error);
+      res.status(500).json({ error: "Failed to fetch line item budgets" });
+    }
+  });
+
   // GET /api/budget/matrix/:weddingId - Get budget matrix (ceremonies x buckets)
   router.get("/matrix/:weddingId", await requireAuth(storage, false), ensureCoupleAccess(storage, (req) => req.params.weddingId), async (req, res) => {
     try {
