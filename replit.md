@@ -26,9 +26,13 @@ Key architectural decisions and features include:
   - **Ceremony Mapping**: `CEREMONY_MAPPINGS` object in `shared/ceremonies.ts` maps event names/types to ceremony template IDs for matching events to templates
   - **Future Enhancement**: Events table could store `ceremonyTemplateId` directly to avoid name-based matching
 - **Vendor Specialization**: Support for 32 distinct vendor categories, including culturally-specific services.
-- **Budget Intelligence System**: Uses a **Single Ledger Model** for simplified budget and expense tracking. Provides smart budget recommendations, dual-view aggregation (by bucket and by ceremony), contributor filtering, guest savings calculator, upcoming payments timeline, and automatic budget alerts.
+- **Budget Intelligence System**: Uses a **Unified Single Ledger Model** for simplified budget and expense tracking. Provides smart budget recommendations, dual-view aggregation (by bucket and by ceremony), contributor filtering, guest savings calculator, upcoming payments timeline, and automatic budget alerts.
   - **Fixed BUDGET_BUCKETS**: 12 code-level budget categories defined in `shared/schema.ts`: venue, catering, photography, videography, decor, entertainment, attire, beauty, stationery, transportation, favors, other. Eliminates database joins and duplicate bucket issues.
-  - **Budget Allocations Table**: `budgetAllocations` stores per-bucket budget targets with upsert capability. Unique constraint on (weddingId, bucket).
+  - **Unified Budget Allocations Table**: `budgetAllocations` serves as the single table for ALL budget planning with hierarchical support:
+    - `ceremonyId: null, lineItemLabel: null` = Bucket-level total (global category budget)
+    - `ceremonyId: set, lineItemLabel: null` = Ceremony-bucket allocation (per-ceremony, per-category)
+    - `ceremonyId: set, lineItemLabel: set` = Line-item level budget (specific cost item within ceremony+category)
+    - This replaces the previous 3-table model (ceremony_budgets, ceremony_category_allocations, ceremony_line_item_budgets) with a simpler, more flexible design
   - **Expenses Table**: Expenses link directly to buckets via `parentCategory` field and optionally to ceremonies via `ceremonyId`. Fields include: `expenseName` (user-defined), `parentCategory` (bucket), `ceremonyId`, `status` ('estimated' | 'booked' | 'paid'), `paidBy` (me | partner | me_partner | bride_family | groom_family).
   - **Dual-View Aggregation**: Expenses can be viewed/totaled by bucket OR by ceremony using `getExpensesByBucket()` and `getExpensesByCeremony()` storage methods.
   - **Refined Pricing Engine**: Three-factor multiplier system in `shared/pricing.ts` for precise cost estimates:

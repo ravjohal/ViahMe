@@ -1,0 +1,53 @@
+Yes, the architecture is capable of tracking both high-level and ceremony-specific budget items, though it does so across different tables depending on whether you are defining **Templates (Metadata)** or **Wedding-Specific Targets (Planning)**.
+
+### 1. Tracking High-Level Budget Categories
+
+Your system handles these as "Buckets" (Venue, Photography, etc.). These are fixed and used for top-down budget distribution.
+
+* **Metadata Source:** Defined in the `BUDGET_BUCKETS` constant in your code, which acts as the system's "source of truth" for high-level groupings.
+* **Planning Table:** The `budget_allocations` table tracks how much a specific couple has assigned to each bucket.
+* **Ledger Table:** The `expenses` table uses the `parent_category` field (referencing a bucket) to ensure every transaction rolls up to a high-level summary for the dashboard.
+
+### 2. Tracking Ceremony-Level Budget Items
+
+Your "Ceremony-level" items (like **Turban Tying** for a Sikh wedding or **Gurdwara Donation**) are handled by two distinct parts of the schema:
+
+* **The "Knowledge Base" (Metadata):** The `ceremony_templates` table stores the "metadata list" you mentioned. It includes a `cost_breakdown` JSONB column that contains the system-defined list of items relevant to that ceremony (e.g., "Turban Tier" would be a line item in the `sikh_anand_karaj` template).
+* **The Planning Table:** The `ceremony_line_item_budgets` table is where the user sets a specific budget for these granular items (e.g., "Turban Tying: $500").
+
+---
+
+### How to simplify it without losing this functionality
+
+If you want to move toward the **Single Ledger Model** while still tracking "Turban Tying" vs. "Makeup" separately, you can consolidate the planning tables by adding a `label` or `line_item` field to the consolidated `budget_allocations` table.
+
+**Proposed Unified Planning Table:**
+Instead of four separate planning tables, use this one:
+
+```typescript
+export const budgetAllocations = pgTable("budget_allocations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  
+  // 1. High Level: venue, attire, catering, etc.
+  bucket: text("bucket").notNull(), 
+  
+  // 2. Ceremony Level: Reference to the event (e.g., Sangeet ID)
+  ceremonyId: varchar("ceremony_id"), 
+  
+  // 3. Line Item Level: "Turban Tying", "Donation", "Bridal Makeup"
+  // If null, this is the budget for the whole bucket or ceremony.
+  lineItemLabel: text("line_item_label"), 
+  
+  allocatedAmount: decimal("allocated_amount", { precision: 12, scale: 2 }).notNull().default('0'),
+});
+
+```
+
+### Why this is better for your "Metadata" requirement:
+
+1. **System Defaults:** You pull the list of `lineItemLabels` from your `ceremony_templates` (the metadata) to show the user suggestions.
+2. **User Flexibility:** The user can add their own unique ceremony-level items (e.g., "Bhangra Dancers Extra") just by adding a row with that label.
+3. **Clean Ledger:** Your `expenses` table already has an `expense_name` field, which perfectly maps to these ceremony-level line items for tracking actual vs. planned spend.
+
+**Verdict:** The current schema *is* able to do this, but it's "over-engineered" by having separate tables for high-level and granular budgeting. Moving to a single table with a `lineItemLabel` field will allow you to track "Turban Tying" without the complexity of managing 4+ budget tables.
