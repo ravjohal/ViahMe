@@ -15,7 +15,15 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { type BudgetBucket, type Wedding, type Event, type Contract, type Vendor, type Expense, type BudgetAllocation, type CeremonyBudget, type CeremonyLineItemBudget, type CeremonyBudgetCategoryItem } from "@shared/schema";
+import { type BudgetBucket, type Wedding, type Event, type Contract, type Vendor, type Expense, type BudgetAllocation, type CeremonyBudgetCategoryItem } from "@shared/schema";
+
+// Local type definitions for ceremony budgets (not in shared schema)
+interface CeremonyLineItemBudget {
+  id: string;
+  eventId: string;
+  lineItemCategory: string;
+  budgetedAmount: string;
+}
 import { CEREMONY_MAPPINGS } from "@shared/ceremonies";
 import { useAllCeremonyLineItems, getLineItemBucketLabel, useCreateCustomCeremonyItem, useCloneLibraryItem, useDeleteCeremonyItem, useWeddingCeremonyLineItemsMap, type CeremonyBudgetCategoryApiItem, type LibraryItem } from "@/hooks/use-ceremony-types";
 import { LibraryItemPicker } from "@/components/budget/library-item-picker";
@@ -288,7 +296,7 @@ export default function Budget() {
   };
 
   // Calculate total line item budget for an event
-  const getEventLineItemTotal = (eventId: string, lineItems: CostCategory[]): number => {
+  const getEventLineItemTotal = (eventId: string, lineItems: CeremonyBudgetCategoryItem[]): number => {
     let total = 0;
     for (const item of lineItems) {
       const amount = getExistingLineItemBudget(eventId, item.category);
@@ -309,7 +317,7 @@ export default function Budget() {
   };
 
   // Calculate line item estimate from database values (respecting unit types)
-  const calculateLineItemEstimateFromDb = (item: CostCategory, guestCount: number, useHigh: boolean): number => {
+  const calculateLineItemEstimateFromDb = (item: CeremonyBudgetCategoryItem, guestCount: number, useHigh: boolean): number => {
     const baseValue = useHigh ? item.highCost : item.lowCost;
     
     if (item.unit === 'per_person') {
@@ -517,11 +525,11 @@ export default function Budget() {
     // Assign expenses to events
     allExpenses.forEach((expense) => {
       // Check for multi-event allocations (embedded in expense object from API)
-      const allocations = expense.eventAllocations || [];
+      const allocations = (expense as any).eventAllocations || [];
       
       if (allocations.length > 0) {
         // Multi-event expense
-        allocations.forEach((allocation) => {
+        allocations.forEach((allocation: { eventId?: string; allocatedAmount?: string | number }) => {
           const eventId = allocation.eventId || "unassigned";
           if (!eventMap[eventId]) {
             eventMap[eventId] = { event: null, expenses: [], total: 0 };
@@ -639,7 +647,7 @@ export default function Budget() {
         summary += `\n${event.name}: $${eventData.total.toLocaleString()}\n`;
         eventData.expenses.forEach((exp) => {
           const amount = exp.allocatedAmount || parseFloat(exp.amount?.toString() || "0");
-          summary += `  - ${exp.description}: $${amount.toLocaleString()}\n`;
+          summary += `  - ${exp.expenseName || 'Expense'}: $${amount.toLocaleString()}\n`;
         });
       }
     });
@@ -650,7 +658,7 @@ export default function Budget() {
       summary += `\nGeneral/Unassigned: $${unassigned.total.toLocaleString()}\n`;
       unassigned.expenses.forEach((exp) => {
         const amount = exp.allocatedAmount || parseFloat(exp.amount?.toString() || "0");
-        summary += `  - ${exp.description}: $${amount.toLocaleString()}\n`;
+        summary += `  - ${exp.expenseName || 'Expense'}: $${amount.toLocaleString()}\n`;
       });
     }
 
@@ -705,7 +713,7 @@ export default function Budget() {
             </div>
             ${eventData.expenses.map(exp => `
               <div style="display: flex; justify-content: space-between; padding-left: 16px; font-size: 14px; color: #666;">
-                <span>${exp.description}</span>
+                <span>${exp.expenseName || 'Expense'}</span>
                 <span>$${(exp.allocatedAmount || parseFloat(exp.amount?.toString() || "0")).toLocaleString()}</span>
               </div>
             `).join("")}
@@ -725,7 +733,7 @@ export default function Budget() {
           </div>
           ${unassigned.expenses.map(exp => `
             <div style="display: flex; justify-content: space-between; padding-left: 16px; font-size: 14px; color: #666;">
-              <span>${exp.description}</span>
+              <span>${exp.expenseName || 'Expense'}</span>
               <span>$${(exp.allocatedAmount || parseFloat(exp.amount?.toString() || "0")).toLocaleString()}</span>
             </div>
           `).join("")}
