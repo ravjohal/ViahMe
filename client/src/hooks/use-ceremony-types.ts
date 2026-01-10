@@ -1,5 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { CeremonyType, RegionalPricing, CeremonyBudgetCategoryItem, CeremonyBudgetCategory } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
 
 type CeremonyTypeItem = CeremonyBudgetCategory;
 
@@ -99,6 +100,8 @@ export interface CeremonyBudgetCategoryApiItem {
   hoursLow?: number;
   hoursHigh?: number;
   notes?: string;
+  weddingId?: string | null; // NULL = system template, string = custom for wedding
+  isCustom?: boolean; // Convenience flag: true if wedding-specific
 }
 
 // Backward compatibility alias
@@ -115,11 +118,15 @@ export interface CeremonyBudgetCategoriesResponse {
 export type CeremonyLineItemsResponse = CeremonyBudgetCategoriesResponse;
 
 // Hook to fetch ceremony budget categories for a specific ceremony type
-export function useCeremonyBudgetCategories(ceremonyId: string | null | undefined) {
+// weddingId: optional - when provided, includes wedding-specific custom items
+export function useCeremonyBudgetCategories(ceremonyId: string | null | undefined, weddingId?: string) {
   return useQuery<CeremonyBudgetCategoriesResponse>({
-    queryKey: ['/api/ceremony-types', ceremonyId, 'line-items'],
+    queryKey: ['/api/ceremony-types', ceremonyId, 'line-items', weddingId || null],
     queryFn: async () => {
-      const response = await fetch(`/api/ceremony-types/${ceremonyId}/line-items`);
+      const url = weddingId 
+        ? `/api/ceremony-types/${ceremonyId}/line-items?weddingId=${weddingId}`
+        : `/api/ceremony-types/${ceremonyId}/line-items`;
+      const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch ceremony budget categories');
       return response.json();
     },
@@ -129,6 +136,38 @@ export function useCeremonyBudgetCategories(ceremonyId: string | null | undefine
 
 // Backward compatibility alias
 export const useCeremonyTypeLineItems = useCeremonyBudgetCategories;
+
+// Input type for creating a custom ceremony budget category
+export interface CreateCustomCeremonyItemInput {
+  weddingId: string;
+  ceremonyTypeId: string;
+  itemName: string;
+  budgetBucketId: string;
+  lowCost: string;
+  highCost: string;
+  unit: 'fixed' | 'per_person' | 'per_hour';
+  hoursLow?: string;
+  hoursHigh?: string;
+  notes?: string;
+}
+
+// Hook for creating custom ceremony budget categories
+export function useCreateCustomCeremonyItem() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (data: CreateCustomCeremonyItemInput) => {
+      const response = await apiRequest('POST', `/api/ceremony-types/${data.ceremonyTypeId}/line-items`, data);
+      return response.json();
+    },
+    onSuccess: (_, variables) => {
+      // Invalidate the line items query for this ceremony type
+      queryClient.invalidateQueries({ 
+        queryKey: ['/api/ceremony-types', variables.ceremonyTypeId, 'line-items'] 
+      });
+    },
+  });
+}
 
 export async function getCeremonyEstimate(request: CeremonyEstimateRequest): Promise<CeremonyEstimateResponse> {
   const response = await fetch('/api/ceremony-estimate', {

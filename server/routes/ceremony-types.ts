@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from "express";
 import type { IStorage } from "../storage";
-import { insertCeremonyTypeSchema, insertRegionalPricingSchema } from "@shared/schema";
+import { insertCeremonyTypeSchema, insertRegionalPricingSchema, insertCeremonyBudgetCategorySchema } from "@shared/schema";
 
 declare module 'express-session' {
   interface SessionData {
@@ -102,12 +102,39 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
   router.get("/:ceremonyId/line-items", async (req, res) => {
     try {
       const { ceremonyId } = req.params;
+      const { weddingId } = req.query; // Optional: include wedding-specific items
+      const userId = req.session?.userId;
+      
       const type = await storage.getCeremonyType(ceremonyId);
       if (!type) {
         return res.status(404).json({ error: "Ceremony type not found" });
       }
       
-      const budgetCategories = await storage.getCeremonyBudgetCategories(ceremonyId);
+      // If weddingId is provided, verify the user has access to that wedding
+      let validatedWeddingId: string | undefined = undefined;
+      if (typeof weddingId === 'string' && weddingId) {
+        if (!userId) {
+          return res.status(401).json({ error: "Authentication required to view wedding-specific items" });
+        }
+        
+        const wedding = await storage.getWedding(weddingId);
+        if (!wedding) {
+          return res.status(404).json({ error: "Wedding not found" });
+        }
+        
+        const weddingUser = await storage.getWeddingUser(weddingId, userId);
+        if (!weddingUser) {
+          return res.status(403).json({ error: "You don't have access to this wedding" });
+        }
+        
+        validatedWeddingId = weddingId;
+      }
+      
+      // Pass validated weddingId to get system templates + wedding-specific custom items
+      const budgetCategories = await storage.getCeremonyBudgetCategories(
+        ceremonyId, 
+        validatedWeddingId
+      );
       
       const lineItems = budgetCategories.map(item => ({
         id: item.id,
@@ -119,6 +146,8 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
         hoursLow: item.hoursLow ? parseFloat(item.hoursLow) : undefined,
         hoursHigh: item.hoursHigh ? parseFloat(item.hoursHigh) : undefined,
         notes: item.notes,
+        weddingId: item.weddingId, // Include to identify custom vs system items
+        isCustom: !!item.weddingId, // Convenience flag for frontend
       }));
       
       res.json({
@@ -130,6 +159,69 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
     } catch (error) {
       console.error("[Ceremony Types] Error fetching line items:", error);
       res.status(500).json({ error: "Failed to fetch ceremony line items" });
+    }
+  });
+
+  // Create a custom ceremony budget category for a specific wedding
+  router.post("/:ceremonyId/line-items", async (req, res) => {
+    try {
+      const { ceremonyId } = req.params;
+      const userId = req.session?.userId;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      const type = await storage.getCeremonyType(ceremonyId);
+      if (!type) {
+        return res.status(404).json({ error: "Ceremony type not found" });
+      }
+      
+      // Validate request body - weddingId is required for custom items
+      const { weddingId, ...itemData } = req.body;
+      if (!weddingId) {
+        return res.status(400).json({ error: "weddingId is required for custom items" });
+      }
+      
+      // Verify user has access to this wedding
+      const wedding = await storage.getWedding(weddingId);
+      if (!wedding) {
+        return res.status(404).json({ error: "Wedding not found" });
+      }
+      
+      const weddingUser = await storage.getWeddingUser(weddingId, userId);
+      if (!weddingUser) {
+        return res.status(403).json({ error: "You don't have access to this wedding" });
+      }
+      
+      // Validate and create the custom item
+      const validatedData = insertCeremonyBudgetCategorySchema.parse({
+        ...itemData,
+        ceremonyTypeId: ceremonyId,
+        weddingId,
+      });
+      
+      const newItem = await storage.createCeremonyBudgetCategory(validatedData);
+      
+      res.status(201).json({
+        id: newItem.id,
+        name: newItem.itemName,
+        budgetBucketId: newItem.budgetBucketId || 'other',
+        lowCost: parseFloat(newItem.lowCost),
+        highCost: parseFloat(newItem.highCost),
+        unit: newItem.unit,
+        hoursLow: newItem.hoursLow ? parseFloat(newItem.hoursLow) : undefined,
+        hoursHigh: newItem.hoursHigh ? parseFloat(newItem.hoursHigh) : undefined,
+        notes: newItem.notes,
+        weddingId: newItem.weddingId,
+        isCustom: true,
+      });
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      console.error("[Ceremony Types] Error creating custom line item:", error);
+      res.status(500).json({ error: "Failed to create custom line item" });
     }
   });
 

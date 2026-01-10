@@ -4,14 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   ChevronDown, ChevronRight, Plus, Calendar, DollarSign, 
-  Loader2, TrendingDown, TrendingUp, Edit2
+  Loader2, TrendingDown, TrendingUp, Edit2, X, Sparkles
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { type CeremonyBudgetCategoryItem } from "@shared/schema";
-import { getLineItemBucketLabel } from "@/hooks/use-ceremony-types";
+import { type CeremonyBudgetCategoryItem, type BudgetBucketCategory } from "@shared/schema";
+import { getLineItemBucketLabel, useCreateCustomCeremonyItem } from "@/hooks/use-ceremony-types";
+import { useToast } from "@/hooks/use-toast";
 
 interface CeremonyBreakdown {
   eventId: string;
@@ -42,6 +45,9 @@ interface CeremonyPlanningCardProps {
   partner2Name?: string;
   isSaving?: boolean;
   isSavingLineItems?: boolean;
+  weddingId?: string;
+  ceremonyTypeId?: string;
+  budgetBuckets?: BudgetBucketCategory[];
 }
 
 export function CeremonyPlanningCard({
@@ -59,10 +65,22 @@ export function CeremonyPlanningCard({
   partner2Name,
   isSaving,
   isSavingLineItems,
+  weddingId,
+  ceremonyTypeId,
+  budgetBuckets = [],
 }: CeremonyPlanningCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [editingTotal, setEditingTotal] = useState<string | null>(null);
   const [tempTotal, setTempTotal] = useState("");
+  const [showCustomItemForm, setShowCustomItemForm] = useState(false);
+  const [customItemName, setCustomItemName] = useState("");
+  const [customItemBucket, setCustomItemBucket] = useState("");
+  const [customItemLowCost, setCustomItemLowCost] = useState("");
+  const [customItemHighCost, setCustomItemHighCost] = useState("");
+  const [customItemUnit, setCustomItemUnit] = useState<'fixed' | 'per_person' | 'per_hour'>('fixed');
+  
+  const { toast } = useToast();
+  const createCustomItemMutation = useCreateCustomCeremonyItem();
 
   const percentSpent = ceremony.allocated > 0 ? ceremony.percentUsed : 0;
   
@@ -110,6 +128,58 @@ export function CeremonyPlanningCard({
     if (e.key === "Enter") handleTotalSave();
     if (e.key === "Escape") setEditingTotal(null);
   };
+
+  const resetCustomItemForm = () => {
+    setCustomItemName("");
+    setCustomItemBucket("");
+    setCustomItemLowCost("");
+    setCustomItemHighCost("");
+    setCustomItemUnit('fixed');
+    setShowCustomItemForm(false);
+  };
+
+  const handleCreateCustomItem = () => {
+    if (!weddingId || !ceremonyTypeId) {
+      toast({ title: "Error", description: "Missing wedding or ceremony information", variant: "destructive" });
+      return;
+    }
+    if (!customItemName.trim()) {
+      toast({ title: "Error", description: "Please enter an item name", variant: "destructive" });
+      return;
+    }
+    if (!customItemBucket) {
+      toast({ title: "Error", description: "Please select a budget category", variant: "destructive" });
+      return;
+    }
+    if (!customItemLowCost || !customItemHighCost) {
+      toast({ title: "Error", description: "Please enter cost estimates", variant: "destructive" });
+      return;
+    }
+    
+    createCustomItemMutation.mutate({
+      weddingId,
+      ceremonyTypeId,
+      itemName: customItemName.trim(),
+      budgetBucketId: customItemBucket,
+      lowCost: customItemLowCost,
+      highCost: customItemHighCost,
+      unit: customItemUnit,
+    }, {
+      onSuccess: () => {
+        toast({ title: "Success", description: "Custom budget item added" });
+        resetCustomItemForm();
+      },
+      onError: (error) => {
+        toast({ 
+          title: "Error", 
+          description: error instanceof Error ? error.message : "Failed to add custom item", 
+          variant: "destructive" 
+        });
+      },
+    });
+  };
+
+  const canAddCustomItems = !!weddingId && !!ceremonyTypeId && budgetBuckets.length > 0;
 
   return (
     <Card 
@@ -316,6 +386,139 @@ export function CeremonyPlanningCard({
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       ) : null}
                       Save Line Items
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {canAddCustomItems && (
+              <div className="mb-4">
+                {!showCustomItemForm ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowCustomItemForm(true)}
+                    className="w-full"
+                    data-testid={`button-add-custom-item-${ceremony.eventId}`}
+                  >
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Add Custom Budget Item
+                  </Button>
+                ) : (
+                  <div className="bg-background rounded-lg p-4 border space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium text-sm flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-primary" />
+                        Add Custom Budget Item
+                      </h4>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={resetCustomItemForm}
+                        className="h-7 w-7"
+                        data-testid={`button-cancel-custom-item-${ceremony.eventId}`}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div>
+                        <Label htmlFor={`custom-item-name-${ceremony.eventId}`} className="text-xs">
+                          Item Name
+                        </Label>
+                        <Input
+                          id={`custom-item-name-${ceremony.eventId}`}
+                          placeholder="e.g., Henna Artist"
+                          value={customItemName}
+                          onChange={(e) => setCustomItemName(e.target.value)}
+                          data-testid={`input-custom-item-name-${ceremony.eventId}`}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor={`custom-item-bucket-${ceremony.eventId}`} className="text-xs">
+                          Budget Category <span className="text-destructive">*</span>
+                        </Label>
+                        <Select value={customItemBucket} onValueChange={setCustomItemBucket}>
+                          <SelectTrigger 
+                            id={`custom-item-bucket-${ceremony.eventId}`}
+                            data-testid={`select-custom-item-bucket-${ceremony.eventId}`}
+                          >
+                            <SelectValue placeholder="Select a category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {budgetBuckets.map((bucket) => (
+                              <SelectItem key={bucket.id} value={bucket.id}>
+                                {bucket.displayName}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label htmlFor={`custom-item-low-${ceremony.eventId}`} className="text-xs">
+                            Low Estimate ($)
+                          </Label>
+                          <Input
+                            id={`custom-item-low-${ceremony.eventId}`}
+                            type="number"
+                            placeholder="0"
+                            value={customItemLowCost}
+                            onChange={(e) => setCustomItemLowCost(e.target.value)}
+                            data-testid={`input-custom-item-low-${ceremony.eventId}`}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`custom-item-high-${ceremony.eventId}`} className="text-xs">
+                            High Estimate ($)
+                          </Label>
+                          <Input
+                            id={`custom-item-high-${ceremony.eventId}`}
+                            type="number"
+                            placeholder="0"
+                            value={customItemHighCost}
+                            onChange={(e) => setCustomItemHighCost(e.target.value)}
+                            data-testid={`input-custom-item-high-${ceremony.eventId}`}
+                          />
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor={`custom-item-unit-${ceremony.eventId}`} className="text-xs">
+                          Pricing Type
+                        </Label>
+                        <Select value={customItemUnit} onValueChange={(v) => setCustomItemUnit(v as 'fixed' | 'per_person' | 'per_hour')}>
+                          <SelectTrigger 
+                            id={`custom-item-unit-${ceremony.eventId}`}
+                            data-testid={`select-custom-item-unit-${ceremony.eventId}`}
+                          >
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="fixed">Fixed Price</SelectItem>
+                            <SelectItem value="per_person">Per Person</SelectItem>
+                            <SelectItem value="per_hour">Per Hour</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    
+                    <Button
+                      onClick={handleCreateCustomItem}
+                      disabled={createCustomItemMutation.isPending}
+                      className="w-full"
+                      data-testid={`button-save-custom-item-${ceremony.eventId}`}
+                    >
+                      {createCustomItemMutation.isPending ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Plus className="w-4 h-4 mr-2" />
+                      )}
+                      Add Item
                     </Button>
                   </div>
                 )}

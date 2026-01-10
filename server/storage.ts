@@ -1075,7 +1075,8 @@ export interface IStorage {
   deleteCeremonyType(ceremonyId: string): Promise<boolean>;
 
   // Ceremony Budget Categories (junction table: ceremony type + budget bucket)
-  getCeremonyBudgetCategories(ceremonyTypeId: string): Promise<CeremonyBudgetCategory[]>;
+  // weddingId: NULL = system templates only, undefined = system templates only, string = system + wedding-specific
+  getCeremonyBudgetCategories(ceremonyTypeId: string, weddingId?: string | null): Promise<CeremonyBudgetCategory[]>;
   getCeremonyBudgetCategoriesByBucket(budgetBucketId: string): Promise<CeremonyBudgetCategory[]>;
   getAllCeremonyBudgetCategories(): Promise<CeremonyBudgetCategory[]>;
   getCeremonyBudgetCategory(id: string): Promise<CeremonyBudgetCategory | undefined>;
@@ -4283,7 +4284,7 @@ export class MemStorage implements IStorage {
   async deleteCeremonyType(ceremonyId: string): Promise<boolean> { return false; }
 
   // Ceremony Budget Categories (stubs - use DBStorage for production)
-  async getCeremonyBudgetCategories(ceremonyTypeId: string): Promise<CeremonyBudgetCategory[]> { return []; }
+  async getCeremonyBudgetCategories(ceremonyTypeId: string, weddingId?: string | null): Promise<CeremonyBudgetCategory[]> { return []; }
   async getCeremonyBudgetCategoriesByBucket(budgetBucketId: string): Promise<CeremonyBudgetCategory[]> { return []; }
   async getAllCeremonyBudgetCategories(): Promise<CeremonyBudgetCategory[]> { return []; }
   async getCeremonyBudgetCategory(id: string): Promise<CeremonyBudgetCategory | undefined> { return undefined; }
@@ -4337,7 +4338,7 @@ export class MemStorage implements IStorage {
 
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
-import { eq, and, sql, inArray, isNull } from "drizzle-orm";
+import { eq, and, or, sql, inArray, isNull } from "drizzle-orm";
 import * as schema from "@shared/schema";
 
 export class DBStorage implements IStorage {
@@ -10443,12 +10444,22 @@ export class DBStorage implements IStorage {
   }
 
   // Ceremony Budget Categories (junction: ceremony type + budget bucket)
-  async getCeremonyBudgetCategories(ceremonyTypeId: string): Promise<CeremonyBudgetCategory[]> {
+  // Returns system templates (weddingId = NULL) plus any wedding-specific custom items
+  async getCeremonyBudgetCategories(ceremonyTypeId: string, weddingId?: string | null): Promise<CeremonyBudgetCategory[]> {
+    // Build filter: ceremonyTypeId matches AND (weddingId is NULL OR weddingId matches)
+    const weddingFilter = weddingId
+      ? or(
+          isNull(ceremonyBudgetCategories.weddingId),
+          eq(ceremonyBudgetCategories.weddingId, weddingId)
+        )
+      : isNull(ceremonyBudgetCategories.weddingId); // Only system templates when no weddingId provided
+    
     return await this.db.select()
       .from(ceremonyBudgetCategories)
       .where(and(
         eq(ceremonyBudgetCategories.ceremonyTypeId, ceremonyTypeId),
-        eq(ceremonyBudgetCategories.isActive, true)
+        eq(ceremonyBudgetCategories.isActive, true),
+        weddingFilter
       ))
       .orderBy(sql`${ceremonyBudgetCategories.displayOrder} ASC`);
   }
