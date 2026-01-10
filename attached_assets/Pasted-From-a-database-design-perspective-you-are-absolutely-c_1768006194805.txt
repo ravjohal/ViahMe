@@ -1,0 +1,67 @@
+From a database design perspective, you are absolutely correct. While **JSONB** is great for "one-and-done" fetches, it becomes a maintenance nightmare once you need to perform complex admin operations or allow user extensions.
+
+Moving line items into a dedicated table is a transition from a **Document Model** to a **Relational Catalog Model**. Here is how you should structure it to satisfy your requirements for both Site Admins and Couples.
+
+### 1. The "Template Library" (Metadata for Site Admins)
+
+Instead of a `jsonb` column, create a `ceremony_template_items` table. This allows you as a site admin to add, update, or deprecate items across the whole system using standard SQL or a simple admin UI.
+
+```typescript
+// New table for system-defined line items
+export const ceremonyTemplateItems = pgTable("ceremony_template_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  templateId: text("template_id").notNull(), // References ceremony_templates.ceremonyId
+  
+  // The name you want site admins to manage (e.g., "Gurdwara Donation")
+  itemName: text("item_name").notNull(), 
+  
+  // Link it to a high-level bucket for auto-aggregation
+  budgetBucket: text("budget_bucket").notNull(), // References BUDGET_BUCKETS constant
+  
+  lowCost: decimal("low_cost", { precision: 12, scale: 2 }).notNull(),
+  highCost: decimal("high_cost", { precision: 12, scale: 2 }).notNull(),
+  unit: text("unit").notNull(), // 'fixed', 'per_person', 'per_hour'
+  notes: text("notes"),
+});
+
+```
+
+### 2. The "Active Budget" (Extensions for Couples)
+
+You should **not** allow couples to add rows to the template table (that would pollute the global library). Instead, when a couple starts planning, you "hydrate" their personal budget by copying the template items into a **Wedding-specific table**.
+
+This allows couples to:
+
+1. **Modify** the defaults (e.g., Change "Gurdwara Donation" to "Small Private Donation").
+2. **Add** unique items that only apply to their wedding (e.g., "Uncle Raj's Special Dhol Player").
+3. **Associate** everything with a main category (`budget_bucket`).
+
+```typescript
+// The table where couples manage their actual line items
+export const weddingLineItems = pgTable("wedding_line_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  ceremonyId: varchar("ceremony_id"), // References specific event in 'events' table
+  
+  label: text("label").notNull(), // User can rename this
+  bucket: text("bucket").notNull(), // User can change the category if they want
+  
+  targetAmount: decimal("target_amount", { precision: 12, scale: 2 }).notNull(),
+  isSystemGenerated: boolean("is_system_generated").default(false), // Track if it came from your template
+});
+
+```
+
+### Why this is better for your growth:
+
+* **Site Admin Scalability**: You can write a single SQL script to add a new "Mandap Decor" item to every Hindu wedding template instantly.
+* **Analytics**: You can easily query "What is the average amount couples are actually spending on 'Gurdwara Donations' compared to our system estimate?"
+* **Mapping**: By forcing an association with a `budget_bucket` (Venue, Catering, etc.), you ensure that no matter how many custom items a couple adds, your high-level dashboard charts never break.
+
+### Summary of Change
+
+1. **DELETE** the `cost_breakdown` JSONB column in `ceremony_templates`.
+2. **CREATE** `ceremony_template_items` as your master library (for you/site admins).
+3. **CREATE** `wedding_line_items` as the couple's workspace.
+
+This pattern is the "Gold Standard" for platforms that provide a mix of expert knowledge (Templates) and user flexibility (Customization).

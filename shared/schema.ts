@@ -3645,7 +3645,7 @@ export const insertCeremonyTemplateSchema = createInsertSchema(ceremonyTemplates
 export type InsertCeremonyTemplate = z.infer<typeof insertCeremonyTemplateSchema>;
 export type CeremonyTemplate = typeof ceremonyTemplates.$inferSelect;
 
-// Cost breakdown item type for the JSON field
+// Cost breakdown item type for the JSON field (legacy - use ceremonyTemplateItems table instead)
 export type CeremonyTemplateCostItem = {
   category: string;
   lowCost: number;
@@ -3656,6 +3656,78 @@ export type CeremonyTemplateCostItem = {
   notes?: string;
   budgetBucket?: BudgetBucket;
 };
+
+// ============================================================================
+// CEREMONY TEMPLATE ITEMS - Normalized line items for ceremony templates (Site Admin managed)
+// ============================================================================
+
+export const ceremonyTemplateItems = pgTable("ceremony_template_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  templateId: text("template_id").notNull(), // References ceremony_templates.ceremonyId
+  itemName: text("item_name").notNull(), // e.g., "Gurdwara Donation", "Venue"
+  budgetBucket: text("budget_bucket").notNull(), // Maps to BUDGET_BUCKETS
+  lowCost: decimal("low_cost", { precision: 12, scale: 2 }).notNull(),
+  highCost: decimal("high_cost", { precision: 12, scale: 2 }).notNull(),
+  unit: text("unit").notNull(), // 'fixed', 'per_person', 'per_hour'
+  hoursLow: decimal("hours_low", { precision: 6, scale: 2 }), // For per_hour items
+  hoursHigh: decimal("hours_high", { precision: 6, scale: 2 }), // For per_hour items
+  notes: text("notes"),
+  displayOrder: integer("display_order").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  templateIdx: index("ceremony_template_items_template_idx").on(table.templateId),
+}));
+
+export const insertCeremonyTemplateItemSchema = createInsertSchema(ceremonyTemplateItems).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  budgetBucket: z.enum(BUDGET_BUCKETS),
+  unit: z.enum(['fixed', 'per_hour', 'per_person']),
+  lowCost: z.string(),
+  highCost: z.string(),
+  hoursLow: z.string().optional(),
+  hoursHigh: z.string().optional(),
+});
+
+export type InsertCeremonyTemplateItem = z.infer<typeof insertCeremonyTemplateItemSchema>;
+export type CeremonyTemplateItem = typeof ceremonyTemplateItems.$inferSelect;
+
+// ============================================================================
+// WEDDING LINE ITEMS - Couple's customized budget line items
+// ============================================================================
+
+export const weddingLineItems = pgTable("wedding_line_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  ceremonyId: varchar("ceremony_id"), // References specific event in 'events' table (null = general item)
+  label: text("label").notNull(), // User can rename this
+  bucket: text("bucket").notNull(), // Maps to BUDGET_BUCKETS - user can change category
+  targetAmount: decimal("target_amount", { precision: 12, scale: 2 }).notNull(),
+  isSystemGenerated: boolean("is_system_generated").notNull().default(false), // Track if it came from template
+  sourceTemplateItemId: varchar("source_template_item_id"), // Reference to original template item if hydrated
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  weddingIdx: index("wedding_line_items_wedding_idx").on(table.weddingId),
+  ceremonyIdx: index("wedding_line_items_ceremony_idx").on(table.ceremonyId),
+}));
+
+export const insertWeddingLineItemSchema = createInsertSchema(weddingLineItems).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  bucket: z.enum(BUDGET_BUCKETS),
+  targetAmount: z.string(),
+});
+
+export type InsertWeddingLineItem = z.infer<typeof insertWeddingLineItemSchema>;
+export type WeddingLineItem = typeof weddingLineItems.$inferSelect;
 
 // ============================================================================
 // REGIONAL PRICING - City-specific cost multipliers
