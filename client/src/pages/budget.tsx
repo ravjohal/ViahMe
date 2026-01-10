@@ -1405,13 +1405,24 @@ export default function Budget() {
                                   <Badge variant="destructive" className="text-xs">Over Budget</Badge>
                                 )}
                               </div>
-                              {ceremony.eventDate && (
-                                <p className="text-sm text-muted-foreground flex items-center gap-1">
-                                  <Calendar className="w-3 h-3" />
-                                  {new Date(ceremony.eventDate).toLocaleDateString()}
-                                  {ceremony.expenseCount > 0 && ` • ${ceremony.expenseCount} expense${ceremony.expenseCount > 1 ? 's' : ''}`}
-                                </p>
-                              )}
+                              <p className="text-sm text-muted-foreground flex items-center gap-1 flex-wrap">
+                                {ceremony.eventDate && (
+                                  <>
+                                    <Calendar className="w-3 h-3" />
+                                    {new Date(ceremony.eventDate).toLocaleDateString()}
+                                  </>
+                                )}
+                                {ceremony.guestCount > 0 && (
+                                  <>
+                                    {ceremony.eventDate && <span>•</span>}
+                                    <Users className="w-3 h-3" />
+                                    {ceremony.guestCount} guests
+                                  </>
+                                )}
+                                {ceremony.expenseCount > 0 && (
+                                  <span>• {ceremony.expenseCount} expense{ceremony.expenseCount > 1 ? 's' : ''}</span>
+                                )}
+                              </p>
                             </div>
                             <div className="flex items-center gap-3 shrink-0">
                               <div className="text-right">
