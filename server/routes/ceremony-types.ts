@@ -35,10 +35,10 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
     }
   });
 
-  router.get("/tradition/:traditionId", async (req, res) => {
+  router.get("/tradition/:tradition", async (req, res) => {
     try {
-      const { traditionId } = req.params;
-      const types = await storage.getCeremonyTypesByTradition(traditionId);
+      const { tradition } = req.params;
+      const types = await storage.getCeremonyTypesByTradition(tradition);
       res.json(types);
     } catch (error) {
       console.error("[Ceremony Types] Error fetching by tradition:", error);
@@ -62,10 +62,11 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
       }>> = {};
       
       for (const item of allItems) {
-        if (!grouped[item.ceremonyTypeId]) {
-          grouped[item.ceremonyTypeId] = [];
+        const key = item.templateId;
+        if (!grouped[key]) {
+          grouped[key] = [];
         }
-        grouped[item.ceremonyTypeId].push({
+        grouped[key].push({
           category: item.itemName,
           lowCost: parseFloat(item.lowCost),
           highCost: parseFloat(item.highCost),
@@ -123,7 +124,7 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
       res.json({
         ceremonyId: type.ceremonyId,
         ceremonyName: type.name,
-        traditionId: type.traditionId,
+        tradition: type.tradition,
         lineItems,
       });
     } catch (error) {
@@ -250,10 +251,10 @@ export function createCeremonyEstimateRouter(storage: IStorage): Router {
 
   router.post("/", async (req, res) => {
     try {
-      const { traditionId, ceremonyId, guestCount, city } = req.body;
+      const { tradition, ceremonyId, guestCount, city } = req.body;
 
-      if (!traditionId || !ceremonyId || !guestCount) {
-        return res.status(400).json({ error: "traditionId, ceremonyId, and guestCount are required" });
+      if (!tradition || !ceremonyId || !guestCount) {
+        return res.status(400).json({ error: "tradition, ceremonyId, and guestCount are required" });
       }
 
       const type = await storage.getCeremonyType(ceremonyId);
@@ -313,7 +314,7 @@ export function createCeremonyEstimateRouter(storage: IStorage): Router {
       res.json({
         ceremonyId,
         ceremonyName: type.name,
-        traditionId,
+        tradition,
         guestCount,
         city: city || 'default',
         multiplier,

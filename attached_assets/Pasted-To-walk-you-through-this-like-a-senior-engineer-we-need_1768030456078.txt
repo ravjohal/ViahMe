@@ -1,0 +1,116 @@
+To walk you through this like a senior engineer, we need to look at the data flow in three layers: **The Blueprint** (System Templates), **The Plan** (Couple’s Wedding), and **The Reality** (The Ledger).
+
+Here is exactly what happens in the database at every stage of your scenario.
+
+---
+
+### Layer 1: The Blueprint (System-Defined Data)
+
+*These rows exist in your database before the couple even signs up. They are the "Source of Truth" constants.*
+
+1. **`wedding_traditions`**:
+* `id: 'sikh'`, `name: 'Sikh'`.
+
+
+2. **`ceremony_types`**:
+* `id: 'anand_karaj'`, `traditionId: 'sikh'`, `name: 'Anand Karaj'`.
+* `id: 'paath'`, `traditionId: 'sikh'`, `name: 'Paath'`.
+
+
+3. **`budget_bucket_categories`**:
+* `id: 'attire'`, `name: 'Attire & Beauty'`.
+* `id: 'entertainment'`, `name: 'Music & Entertainment'`.
+
+
+4. **`ceremony_budget_categories`**: (The template items)
+* `id: 'turban_tmpl'`, `ceremonyTypeId: 'anand_karaj'`, `bucketId: 'attire'`, `itemName: 'Turban Tying'`.
+* `id: 'dhol_tmpl'`, `ceremonyTypeId: 'anand_karaj'`, `bucketId: 'entertainment'`, `itemName: 'Dhol Player'`.
+
+
+
+---
+
+### Layer 2: The Plan (Couple Creates the Wedding)
+
+*The couple logs in and starts making choices.*
+
+#### Step 1: Create the Wedding
+
+* **Table: `weddings**`
+* Stores: `{ id: W1, traditionId: 'sikh', title: 'Rav & Simran’s Wedding' }`.
+* *Note: No text "Sikh" is stored here, only the ID reference.*
+
+
+
+#### Step 2: Adding the Ceremonies
+
+* **Table: `events**`
+* Row 1: `{ id: E1, weddingId: W1, ceremonyTypeId: 'anand_karaj', customName: 'Grand Anand Karaj' }`.
+* Row 2: `{ id: E2, weddingId: W1, ceremonyTypeId: 'paath', customName: 'Morning Paath' }`.
+
+
+
+#### Step 3: Generating Planned Cost Items
+
+*When the couple selects "Anand Karaj," the system automatically looks up the templates and creates these "Planned" rows.*
+
+* **Table: `event_cost_items**`
+* Row 1 (The Plan for Turban): `{ id: CI_1, eventId: E1, ceremonyBudgetCategoryId: 'turban_tmpl', budgetBucketCategoryId: 'attire' }`.
+* Row 2 (The Plan for Dhol): `{ id: CI_2, eventId: E1, ceremonyBudgetCategoryId: 'dhol_tmpl', budgetBucketCategoryId: 'entertainment' }`.
+
+
+
+---
+
+### Layer 3: The Reality (The Expenses)
+
+*The couple actually pays the vendors. This is where the money is "Locked In."*
+
+#### Step 4: Expense $500 for Turban Tying
+
+* **Table: `expenses**`
+* `id`: `EXP_101`
+* `weddingId`: `W1`
+* `ceremonyId`: `E1` (Linked to the Anand Karaj Event)
+* `eventCostItemId`: `CI_1` (Direct link to the planned "Turban Tying" item)
+* `bucketCategoryId`: `attire` (Direct link to the "Attire & Beauty" bucket)
+* `amount`: `500.00`
+* `description`: "Paid Mandeep for Turban Tying"
+
+
+
+#### Step 5: Expense $1000 for Dhol Player
+
+* **Table: `expenses**`
+* `id`: `EXP_102`
+* `weddingId`: `W1`
+* `ceremonyId`: `E1` (Linked to the Anand Karaj Event)
+* `eventCostItemId`: `CI_2` (Direct link to the planned "Dhol Player" item)
+* `bucketCategoryId`: `entertainment` (Direct link to the "Music & Entertainment" bucket)
+* `amount`: `1000.00`
+* `description`: "Booking fee for Dhol"
+
+
+
+---
+
+### The Result: How the Data "Talks" Back to You
+
+Because of this structure, your backend can now run these queries instantly:
+
+1. **By Ceremony**: `SELECT SUM(amount) FROM expenses WHERE ceremonyId = 'E1'`
+* **Result**: "You spent **$1,500** on the Anand Karaj."
+
+
+2. **By Financial Category**: `SELECT SUM(amount) FROM expenses WHERE bucketCategoryId = 'attire'`
+* **Result**: "You have spent **$500** total on Attire & Beauty so far."
+
+
+3. **By Tradition Requirement**: `SELECT * FROM ceremony_budget_categories WHERE ceremonyTypeId = 'anand_karaj' AND id NOT IN (SELECT ceremonyBudgetCategoryId FROM expenses)`
+* **Result**: "You still haven't paid for a **Priest/Granthi**, which is a standard requirement for an Anand Karaj."
+
+
+
+### Why this is "Senior" level:
+
+If you had just used a single `expenses` table with text strings, you would have had a row that said "Turban" and "Anand Karaj." But if the user made a typo (e.g., "Turban Tyng"), your budget reports would break. By using the **`event_cost_items`** as a middle-man, the user is selecting from a pre-defined list that you control, ensuring your data remains perfectly clean for analytics.

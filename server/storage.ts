@@ -1075,16 +1075,16 @@ export interface IStorage {
   deleteDashboardWidget(id: string): Promise<boolean>;
   updateDashboardWidgetPositions(widgetIds: string[], positions: number[]): Promise<DashboardWidget[]>;
 
-  // Ceremony Types (renamed from ceremony_templates, now linked to wedding_traditions)
+  // Ceremony Types (uses ceremony_templates table with 'tradition' text field)
   getCeremonyType(ceremonyId: string): Promise<CeremonyTemplate | undefined>;
-  getCeremonyTypesByTradition(traditionId: string): Promise<CeremonyTemplate[]>;
+  getCeremonyTypesByTradition(tradition: string): Promise<CeremonyTemplate[]>;
   getAllCeremonyTypes(): Promise<CeremonyTemplate[]>;
   createCeremonyType(template: InsertCeremonyTemplate): Promise<CeremonyTemplate>;
   updateCeremonyType(ceremonyId: string, template: Partial<InsertCeremonyTemplate>): Promise<CeremonyTemplate | undefined>;
   deleteCeremonyType(ceremonyId: string): Promise<boolean>;
   // Backward compatibility aliases
   getCeremonyTemplate(ceremonyId: string): Promise<CeremonyTemplate | undefined>;
-  getCeremonyTemplatesByTradition(traditionId: string): Promise<CeremonyTemplate[]>;
+  getCeremonyTemplatesByTradition(tradition: string): Promise<CeremonyTemplate[]>;
   getAllCeremonyTemplates(): Promise<CeremonyTemplate[]>;
   createCeremonyTemplate(template: InsertCeremonyTemplate): Promise<CeremonyTemplate>;
   updateCeremonyTemplate(ceremonyId: string, template: Partial<InsertCeremonyTemplate>): Promise<CeremonyTemplate | undefined>;
@@ -4350,14 +4350,14 @@ export class MemStorage implements IStorage {
 
   // Ceremony Types (stubs - use DBStorage for production)
   async getCeremonyType(ceremonyId: string): Promise<CeremonyTemplate | undefined> { return undefined; }
-  async getCeremonyTypesByTradition(traditionId: string): Promise<CeremonyTemplate[]> { return []; }
+  async getCeremonyTypesByTradition(tradition: string): Promise<CeremonyTemplate[]> { return []; }
   async getAllCeremonyTypes(): Promise<CeremonyTemplate[]> { return []; }
   async createCeremonyType(template: InsertCeremonyTemplate): Promise<CeremonyTemplate> { throw new Error('MemStorage does not support Ceremony Types. Use DBStorage.'); }
   async updateCeremonyType(ceremonyId: string, template: Partial<InsertCeremonyTemplate>): Promise<CeremonyTemplate | undefined> { throw new Error('MemStorage does not support Ceremony Types. Use DBStorage.'); }
   async deleteCeremonyType(ceremonyId: string): Promise<boolean> { return false; }
   // Backward compatibility aliases
   async getCeremonyTemplate(ceremonyId: string): Promise<CeremonyTemplate | undefined> { return this.getCeremonyType(ceremonyId); }
-  async getCeremonyTemplatesByTradition(traditionId: string): Promise<CeremonyTemplate[]> { return this.getCeremonyTypesByTradition(traditionId); }
+  async getCeremonyTemplatesByTradition(tradition: string): Promise<CeremonyTemplate[]> { return this.getCeremonyTypesByTradition(tradition); }
   async getAllCeremonyTemplates(): Promise<CeremonyTemplate[]> { return this.getAllCeremonyTypes(); }
   async createCeremonyTemplate(template: InsertCeremonyTemplate): Promise<CeremonyTemplate> { return this.createCeremonyType(template); }
   async updateCeremonyTemplate(ceremonyId: string, template: Partial<InsertCeremonyTemplate>): Promise<CeremonyTemplate | undefined> { return this.updateCeremonyType(ceremonyId, template); }
@@ -10540,7 +10540,7 @@ export class DBStorage implements IStorage {
     return results;
   }
 
-  // Ceremony Types (renamed from ceremony_templates, now linked to wedding_traditions)
+  // Ceremony Types (uses ceremony_templates table with 'tradition' field)
   async getCeremonyType(ceremonyId: string): Promise<CeremonyTemplate | undefined> {
     const result = await this.db.select()
       .from(ceremonyTemplates)
@@ -10548,17 +10548,17 @@ export class DBStorage implements IStorage {
     return result[0];
   }
 
-  async getCeremonyTypesByTradition(traditionId: string): Promise<CeremonyTemplate[]> {
+  async getCeremonyTypesByTradition(tradition: string): Promise<CeremonyTemplate[]> {
     return await this.db.select()
       .from(ceremonyTemplates)
-      .where(eq(ceremonyTemplates.traditionId, traditionId))
+      .where(eq(ceremonyTemplates.tradition, tradition))
       .orderBy(sql`${ceremonyTemplates.displayOrder} ASC`);
   }
 
   async getAllCeremonyTypes(): Promise<CeremonyTemplate[]> {
     return await this.db.select()
       .from(ceremonyTemplates)
-      .orderBy(sql`${ceremonyTemplates.traditionId} ASC, ${ceremonyTemplates.displayOrder} ASC`);
+      .orderBy(sql`${ceremonyTemplates.tradition} ASC, ${ceremonyTemplates.displayOrder} ASC`);
   }
 
   async createCeremonyType(template: InsertCeremonyTemplate): Promise<CeremonyTemplate> {
@@ -10586,8 +10586,8 @@ export class DBStorage implements IStorage {
   async getCeremonyTemplate(ceremonyId: string): Promise<CeremonyTemplate | undefined> {
     return this.getCeremonyType(ceremonyId);
   }
-  async getCeremonyTemplatesByTradition(traditionId: string): Promise<CeremonyTemplate[]> {
-    return this.getCeremonyTypesByTradition(traditionId);
+  async getCeremonyTemplatesByTradition(tradition: string): Promise<CeremonyTemplate[]> {
+    return this.getCeremonyTypesByTradition(tradition);
   }
   async getAllCeremonyTemplates(): Promise<CeremonyTemplate[]> {
     return this.getAllCeremonyTypes();
@@ -10602,12 +10602,12 @@ export class DBStorage implements IStorage {
     return this.deleteCeremonyType(ceremonyId);
   }
 
-  // Ceremony Type Items (normalized line items for ceremony types)
-  async getCeremonyTypeItems(ceremonyTypeId: string): Promise<CeremonyTemplateItem[]> {
+  // Ceremony Type Items (uses ceremony_template_items table with 'template_id' field)
+  async getCeremonyTypeItems(templateId: string): Promise<CeremonyTemplateItem[]> {
     return await this.db.select()
       .from(ceremonyTemplateItems)
       .where(and(
-        eq(ceremonyTemplateItems.ceremonyTypeId, ceremonyTypeId),
+        eq(ceremonyTemplateItems.templateId, templateId),
         eq(ceremonyTemplateItems.isActive, true)
       ))
       .orderBy(sql`${ceremonyTemplateItems.displayOrder} ASC`);
@@ -10617,7 +10617,7 @@ export class DBStorage implements IStorage {
     return await this.db.select()
       .from(ceremonyTemplateItems)
       .where(eq(ceremonyTemplateItems.isActive, true))
-      .orderBy(sql`${ceremonyTemplateItems.ceremonyTypeId} ASC, ${ceremonyTemplateItems.displayOrder} ASC`);
+      .orderBy(sql`${ceremonyTemplateItems.templateId} ASC, ${ceremonyTemplateItems.displayOrder} ASC`);
   }
 
   async getCeremonyTypeItem(id: string): Promise<CeremonyTemplateItem | undefined> {

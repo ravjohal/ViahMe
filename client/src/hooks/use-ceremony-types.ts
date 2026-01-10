@@ -15,15 +15,15 @@ export function useCeremonyTypes() {
   });
 }
 
-export function useCeremonyTypesByTradition(traditionId: string) {
+export function useCeremonyTypesByTradition(tradition: string) {
   return useQuery<CeremonyType[]>({
-    queryKey: ['/api/ceremony-types', 'tradition', traditionId],
+    queryKey: ['/api/ceremony-types', 'tradition', tradition],
     queryFn: async () => {
-      const response = await fetch(`/api/ceremony-types/tradition/${traditionId}`);
+      const response = await fetch(`/api/ceremony-types/tradition/${tradition}`);
       if (!response.ok) throw new Error('Failed to fetch ceremony types');
       return response.json();
     },
-    enabled: !!traditionId,
+    enabled: !!tradition,
   });
 }
 
@@ -63,7 +63,7 @@ export function useRegionalPricingByCity(city: string) {
 }
 
 export interface CeremonyEstimateRequest {
-  traditionId: string;
+  tradition: string;
   ceremonyId: string;
   guestCount: number;
   city?: string;
@@ -72,7 +72,7 @@ export interface CeremonyEstimateRequest {
 export interface CeremonyEstimateResponse {
   ceremonyId: string;
   ceremonyName: string;
-  traditionId: string;
+  tradition: string;
   guestCount: number;
   city: string;
   multiplier: number;
@@ -105,7 +105,7 @@ export interface CeremonyTypeLineItem {
 export interface CeremonyLineItemsResponse {
   ceremonyId: string;
   ceremonyName: string;
-  traditionId: string;
+  tradition: string;
   lineItems: CeremonyTypeLineItem[];
 }
 

@@ -3870,14 +3870,15 @@ export type DashboardWidget = typeof dashboardWidgets.$inferSelect;
 
 // ============================================================================
 // CEREMONY TYPES - Database-driven ceremony cost estimates (linked to traditions)
+// Note: Database table name is 'ceremony_templates' for backward compatibility
 // ============================================================================
 
-export const ceremonyTypes = pgTable("ceremony_types", {
+export const ceremonyTypes = pgTable("ceremony_templates", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   ceremonyId: text("ceremony_id").notNull().unique(), // e.g., 'sikh_maiyan', 'sikh_anand_karaj'
   name: text("name").notNull(), // Display name e.g., "Maiyan"
   description: text("description"), // Description of the ceremony
-  traditionId: varchar("tradition_id").notNull().references(() => weddingTraditions.id), // FK to wedding_traditions
+  tradition: text("tradition").notNull(), // Text field: 'sikh', 'hindu', etc.
   costPerGuestLow: decimal("cost_per_guest_low", { precision: 10, scale: 2 }).notNull(),
   costPerGuestHigh: decimal("cost_per_guest_high", { precision: 10, scale: 2 }).notNull(),
   defaultGuests: integer("default_guests").notNull().default(100),
@@ -3887,7 +3888,7 @@ export const ceremonyTypes = pgTable("ceremony_types", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (table) => ({
-  traditionIdx: index("ceremony_types_tradition_idx").on(table.traditionId),
+  traditionIdx: index("ceremony_templates_tradition_idx").on(table.tradition),
 }));
 
 export const insertCeremonyTypeSchema = createInsertSchema(ceremonyTypes).omit({
@@ -3895,7 +3896,7 @@ export const insertCeremonyTypeSchema = createInsertSchema(ceremonyTypes).omit({
   createdAt: true,
   updatedAt: true,
 }).extend({
-  traditionId: z.string(), // References wedding_traditions.id (e.g., 'sikh', 'hindu')
+  tradition: z.string(), // Text field for tradition
   costPerGuestLow: z.string(),
   costPerGuestHigh: z.string(),
   costBreakdown: z.array(z.object({
@@ -3933,11 +3934,12 @@ export type CeremonyTemplateCostItem = {
 
 // ============================================================================
 // CEREMONY TYPE ITEMS - Normalized line items for ceremony types (Site Admin managed)
+// Note: Database table name is 'ceremony_template_items' for backward compatibility
 // ============================================================================
 
-export const ceremonyTypeItems = pgTable("ceremony_type_items", {
+export const ceremonyTypeItems = pgTable("ceremony_template_items", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  ceremonyTypeId: text("ceremony_type_id").notNull(), // References ceremony_types.ceremonyId
+  templateId: text("template_id").notNull(), // References ceremony_templates.ceremonyId
   itemName: text("item_name").notNull(), // e.g., "Gurdwara Donation", "Venue"
   budgetBucket: text("budget_bucket").notNull(), // Maps to BUDGET_BUCKETS
   lowCost: decimal("low_cost", { precision: 12, scale: 2 }).notNull(),
@@ -3951,7 +3953,7 @@ export const ceremonyTypeItems = pgTable("ceremony_type_items", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (table) => ({
-  ceremonyTypeIdx: index("ceremony_type_items_ceremony_type_idx").on(table.ceremonyTypeId),
+  templateIdx: index("ceremony_template_items_template_idx").on(table.templateId),
 }));
 
 export const insertCeremonyTypeItemSchema = createInsertSchema(ceremonyTypeItems).omit({
@@ -3959,7 +3961,7 @@ export const insertCeremonyTypeItemSchema = createInsertSchema(ceremonyTypeItems
   createdAt: true,
   updatedAt: true,
 }).extend({
-  ceremonyTypeId: z.string(),
+  templateId: z.string(), // References ceremony_templates.ceremonyId
   budgetBucket: z.enum(BUDGET_BUCKETS),
   unit: z.enum(['fixed', 'per_hour', 'per_person']),
   lowCost: z.string(),
