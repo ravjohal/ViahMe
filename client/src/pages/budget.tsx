@@ -1412,6 +1412,12 @@ export default function Budget() {
                     </p>
                   </div>
                 </div>
+                <div className="text-right mr-2">
+                  <p className="font-semibold text-lg">
+                    ${(expenseTotals?.bucketTotals || []).reduce((sum, b) => sum + b.allocated, 0).toLocaleString()}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Total allocated</p>
+                </div>
                 {showCategories ? (
                   <ChevronDown className="w-5 h-5 text-muted-foreground shrink-0" />
                 ) : (
@@ -1478,11 +1484,19 @@ export default function Budget() {
                 </p>
               </div>
             </div>
-            {sideFilter !== 'all' && (
-              <Badge variant="outline" className="text-xs">
-                Showing: {sideFilter === 'bride' ? (wedding?.partner1Name || 'Bride') : sideFilter === 'groom' ? (wedding?.partner2Name || 'Groom') : 'Shared'}
-              </Badge>
-            )}
+            <div className="flex items-center gap-4">
+              {sideFilter !== 'all' && (
+                <Badge variant="outline" className="text-xs">
+                  Showing: {sideFilter === 'bride' ? (wedding?.partner1Name || 'Bride') : sideFilter === 'groom' ? (wedding?.partner2Name || 'Groom') : 'Shared'}
+                </Badge>
+              )}
+              <div className="text-right">
+                <p className="font-semibold text-lg">
+                  ${(ceremonyAnalytics?.overview?.totalCeremonyAllocated || 0).toLocaleString()}
+                </p>
+                <p className="text-xs text-muted-foreground">Total ceremony budget</p>
+              </div>
+            </div>
           </div>
           {/* Ceremony Planning Cards */}
           <div className="space-y-4">
