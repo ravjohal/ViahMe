@@ -51,6 +51,7 @@ import { createGuestSideRouter, createGuestConsensusRouter, createScenariosRoute
 import { createTimelineRouter, createEventTimeRouter, createTimelineChangesRouter, createVendorAcknowledgmentsRouter } from "./timeline";
 import { createCeremonyTemplatesRouter, createRegionalPricingRouter, createCeremonyEstimateRouter } from "./ceremony-templates";
 import { registerRitualRoleRoutes } from "./ritual-roles";
+import { registerTraditionsRoutes } from "./traditions";
 import { createVendorAccessPassesRouter, createVendorCollaborationViewRouter } from "./vendor-access-passes";
 import { createCeremonyExplainersRouter, createPublicCeremonyExplainersRouter } from "./ceremony-explainers";
 import { seedVendors, seedBudgetBenchmarks } from "../seed-data";
@@ -227,6 +228,10 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   const budgetCategoryRouter = Router();
   await registerBudgetCategoryRoutes(budgetCategoryRouter, storage);
   app.use("/api/budget-categories", budgetCategoryRouter);
+
+  const traditionsRouter = Router();
+  await registerTraditionsRoutes(traditionsRouter, storage);
+  app.use("/api/traditions", traditionsRouter);
 
   const expenseRouter = Router();
   await registerExpenseRoutes(expenseRouter, storage);
