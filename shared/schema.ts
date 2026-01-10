@@ -78,6 +78,149 @@ export function getBucketLabel(bucket: string | null | undefined): string {
   return BUDGET_BUCKET_LABELS[bucket as BudgetBucket] || bucket;
 }
 
+// ============================================================================
+// BUDGET CATEGORIES TABLE - Dynamic category management with rich metadata
+// ============================================================================
+
+export const budgetCategories = pgTable("budget_categories", {
+  // Use slug-style IDs (e.g., 'venue', 'catering') so code can still reference them
+  id: varchar("id").primaryKey(),
+  
+  // Display metadata
+  displayName: text("display_name").notNull(), // e.g., "Catering & Food"
+  description: text("description"), // Help text for this category
+  iconName: text("icon_name"), // Lucide icon name like 'utensils', 'camera', 'music'
+  
+  // Category classification
+  isEssential: boolean("is_essential").default(true), // Essential vs. Optional grouping
+  
+  // Benchmark data for budget recommendations
+  suggestedPercentage: integer("suggested_percentage"), // What % of budget typically goes here
+  
+  // Admin controls
+  displayOrder: integer("display_order").default(0),
+  isActive: boolean("is_active").default(true),
+  isSystemCategory: boolean("is_system_category").default(false), // Can't be deleted by admin
+  
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertBudgetCategorySchema = createInsertSchema(budgetCategories).omit({
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertBudgetCategory = z.infer<typeof insertBudgetCategorySchema>;
+export type BudgetCategory = typeof budgetCategories.$inferSelect;
+
+// Default category metadata for seeding - based on typical South Asian wedding spending
+export const DEFAULT_CATEGORY_METADATA: Record<BudgetBucket, {
+  displayName: string;
+  description: string;
+  iconName: string;
+  isEssential: boolean;
+  suggestedPercentage: number;
+  displayOrder: number;
+}> = {
+  venue: {
+    displayName: "Venue",
+    description: "Wedding venue rental, multiple event spaces",
+    iconName: "building-2",
+    isEssential: true,
+    suggestedPercentage: 30,
+    displayOrder: 1,
+  },
+  catering: {
+    displayName: "Catering & Food",
+    description: "Food service, catering staff, bar service",
+    iconName: "utensils",
+    isEssential: true,
+    suggestedPercentage: 25,
+    displayOrder: 2,
+  },
+  decoration: {
+    displayName: "Decoration & Flowers",
+    description: "Mandap, floral arrangements, ceremony decor",
+    iconName: "flower-2",
+    isEssential: true,
+    suggestedPercentage: 10,
+    displayOrder: 3,
+  },
+  photography: {
+    displayName: "Photography & Video",
+    description: "Photo and video coverage, albums, prints",
+    iconName: "camera",
+    isEssential: true,
+    suggestedPercentage: 10,
+    displayOrder: 4,
+  },
+  attire: {
+    displayName: "Attire & Beauty",
+    description: "Wedding outfits, makeup, mehndi, hair styling",
+    iconName: "shirt",
+    isEssential: true,
+    suggestedPercentage: 8,
+    displayOrder: 5,
+  },
+  jewelry: {
+    displayName: "Jewelry & Accessories",
+    description: "Wedding jewelry, kalire, accessories",
+    iconName: "gem",
+    isEssential: false,
+    suggestedPercentage: 5,
+    displayOrder: 6,
+  },
+  religious: {
+    displayName: "Religious & Ceremonial",
+    description: "Pandit, religious items, ceremony supplies",
+    iconName: "flame",
+    isEssential: true,
+    suggestedPercentage: 3,
+    displayOrder: 7,
+  },
+  entertainment: {
+    displayName: "Music & Entertainment",
+    description: "DJ, dhol, live music, sangeet performances",
+    iconName: "music",
+    isEssential: true,
+    suggestedPercentage: 4,
+    displayOrder: 8,
+  },
+  stationery: {
+    displayName: "Invitations & Gifts",
+    description: "Wedding invitations, favors, guest gifts",
+    iconName: "mail",
+    isEssential: false,
+    suggestedPercentage: 2,
+    displayOrder: 9,
+  },
+  transportation: {
+    displayName: "Transportation",
+    description: "Baraat vehicles, guest shuttles, airport pickups",
+    iconName: "car",
+    isEssential: false,
+    suggestedPercentage: 2,
+    displayOrder: 10,
+  },
+  planning: {
+    displayName: "Wedding Planning Services",
+    description: "Wedding coordinator, day-of coordination",
+    iconName: "clipboard-list",
+    isEssential: false,
+    suggestedPercentage: 3,
+    displayOrder: 11,
+  },
+  other: {
+    displayName: "Other",
+    description: "Miscellaneous wedding expenses",
+    iconName: "more-horizontal",
+    isEssential: false,
+    suggestedPercentage: 0,
+    displayOrder: 99,
+  },
+};
+
 // Mapping from vendor categories to budget buckets
 export const VENDOR_CATEGORY_TO_BUCKET: Record<string, BudgetBucket> = {
   // Venue-related

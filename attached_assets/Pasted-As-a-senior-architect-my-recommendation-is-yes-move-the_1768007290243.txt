@@ -1,0 +1,54 @@
+As a senior architect, my recommendation is **yes, move them to a table**, but with a specific strategy.
+
+Currently, your `BUDGET_BUCKETS` are a hardcoded array in `shared/schema.ts`. This is a "Static Enum" pattern. It is fast to develop but "brittle" because every time you want to add a category like "Bridal Mehndi" or "Livestream Services," you have to redeploy your entire codebase.
+
+Here is how to transition to a **Dynamic Category Model**.
+
+### 1. Create the `budget_categories` Table
+
+Instead of just a list of strings, a table allows you to store rich metadata that improves the user experience.
+
+```typescript
+export const budgetCategories = pgTable("budget_categories", {
+  // Use a slug like 'venue' or 'catering' as the ID so code can still reference them easily
+  id: varchar("id").primaryKey(), 
+  
+  displayName: text("display_name").notNull(), // e.g., "Catering & Food"
+  iconName: text("icon_name"), // Store Lucide icon names like 'utensils' or 'camera'
+  
+  // High-level grouping (Essential vs. Optional)
+  isEssential: boolean("is_essential").default(true),
+  
+  // Benchmark data: What % of a total budget usually goes here?
+  suggestedPercentage: integer("suggested_percentage"), 
+  
+  displayOrder: integer("display_order").default(0),
+  isActive: boolean("is_active").default(true),
+});
+
+```
+
+### 2. Why this is the "Senior Engineer" move
+
+Moving these to a table solves three major problems your current code has:
+
+* **Site Admin Control:** You can now build an admin dashboard where you add "Security" or "Gifts" as new high-level categories without touching a single line of code.
+* **The "Other" Problem:** In your current schema, "Other" is a catch-all. With a table, you can allow couples to see a list of "Inactive" categories and "Enable" them if their specific sub-culture requires it.
+* **Referential Integrity:** In your `expenses` table, you currently use `parent_category` as a plain text field. If a site admin renames "Catering" to "Food & Beverage" in the code, your existing database rows for "Catering" will break or become "orphans." A table with a foreign key prevents this.
+
+### 3. The Migration Strategy (Don't break the code)
+
+Even if you move them to a table, you will likely still have logic in your backend that says `if (bucket === 'venue') { ... }`.
+
+**The Pattern:** 1.  **Database:** Use the table as the source of truth for the UI (dropdowns, charts).
+2.  **Code:** Keep a "Reserved Keys" constant for the few buckets the system *must* know about to perform calculations.
+
+### 4. The Unified Architecture
+
+By moving both **Buckets** and **Line Items** to tables, your budget system becomes a three-tier hierarchy:
+
+1. **`budget_categories` (Top Tier):** The 10–12 major buckets (Venue, Photography, etc.) managed by you as the Admin.
+2. **`ceremony_template_items` (Middle Tier):** The 50+ tradition-specific items (Gurdwara Donation, Turban Tying) that act as "blueprints".
+3. **`wedding_line_items` (Bottom Tier):** The specific rows a couple actually uses for their wedding.
+
+**Verdict:** If you plan to scale this beyond a simple MVP, moving these to a table now is much easier than trying to migrate thousands of "plain text" expense rows later.
