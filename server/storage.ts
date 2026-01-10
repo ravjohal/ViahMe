@@ -212,6 +212,17 @@ import {
   BUDGET_BUCKETS,
   type BudgetBucket,
   getBucketLabel,
+  weddingTraditions,
+  type WeddingTradition,
+  type InsertWeddingTradition,
+  weddingSubTraditions,
+  type WeddingSubTradition,
+  type InsertWeddingSubTradition,
+  DEFAULT_TRADITIONS,
+  DEFAULT_SUB_TRADITIONS,
+  type BudgetCategory,
+  type InsertBudgetCategory,
+  budgetCategories,
 } from "@shared/schema";
 import { randomUUID, randomBytes } from "crypto";
 import bcrypt from "bcrypt";
@@ -1103,6 +1114,25 @@ export interface IStorage {
   updateBudgetCategory(id: string, category: Partial<InsertBudgetCategory>): Promise<BudgetCategory | undefined>;
   deleteBudgetCategory(id: string): Promise<boolean>;
   seedBudgetCategories(): Promise<BudgetCategory[]>;
+
+  // Wedding Traditions (data-driven tradition system)
+  getWeddingTradition(id: string): Promise<WeddingTradition | undefined>;
+  getAllWeddingTraditions(): Promise<WeddingTradition[]>;
+  getActiveWeddingTraditions(): Promise<WeddingTradition[]>;
+  createWeddingTradition(tradition: InsertWeddingTradition): Promise<WeddingTradition>;
+  updateWeddingTradition(id: string, tradition: Partial<InsertWeddingTradition>): Promise<WeddingTradition | undefined>;
+  deleteWeddingTradition(id: string): Promise<boolean>;
+  seedWeddingTraditions(): Promise<WeddingTradition[]>;
+
+  // Wedding Sub-Traditions (regional variations)
+  getWeddingSubTradition(id: string): Promise<WeddingSubTradition | undefined>;
+  getWeddingSubTraditionsByTradition(traditionId: string): Promise<WeddingSubTradition[]>;
+  getAllWeddingSubTraditions(): Promise<WeddingSubTradition[]>;
+  getActiveWeddingSubTraditions(): Promise<WeddingSubTradition[]>;
+  createWeddingSubTradition(subTradition: InsertWeddingSubTradition): Promise<WeddingSubTradition>;
+  updateWeddingSubTradition(id: string, subTradition: Partial<InsertWeddingSubTradition>): Promise<WeddingSubTradition | undefined>;
+  deleteWeddingSubTradition(id: string): Promise<boolean>;
+  seedWeddingSubTraditions(): Promise<WeddingSubTradition[]>;
 
   // Ritual Role Assignments
   getRitualRoleAssignment(id: string): Promise<RitualRoleAssignment | undefined>;
@@ -4343,6 +4373,25 @@ export class MemStorage implements IStorage {
   async updateBudgetCategory(id: string, category: Partial<InsertBudgetCategory>): Promise<BudgetCategory | undefined> { throw new Error('MemStorage does not support Budget Categories. Use DBStorage.'); }
   async deleteBudgetCategory(id: string): Promise<boolean> { return false; }
   async seedBudgetCategories(): Promise<BudgetCategory[]> { throw new Error('MemStorage does not support Budget Categories. Use DBStorage.'); }
+
+  // Wedding Traditions (stubs - use DBStorage for production)
+  async getWeddingTradition(id: string): Promise<WeddingTradition | undefined> { return undefined; }
+  async getAllWeddingTraditions(): Promise<WeddingTradition[]> { return []; }
+  async getActiveWeddingTraditions(): Promise<WeddingTradition[]> { return []; }
+  async createWeddingTradition(tradition: InsertWeddingTradition): Promise<WeddingTradition> { throw new Error('MemStorage does not support Wedding Traditions. Use DBStorage.'); }
+  async updateWeddingTradition(id: string, tradition: Partial<InsertWeddingTradition>): Promise<WeddingTradition | undefined> { throw new Error('MemStorage does not support Wedding Traditions. Use DBStorage.'); }
+  async deleteWeddingTradition(id: string): Promise<boolean> { return false; }
+  async seedWeddingTraditions(): Promise<WeddingTradition[]> { throw new Error('MemStorage does not support Wedding Traditions. Use DBStorage.'); }
+
+  // Wedding Sub-Traditions (stubs - use DBStorage for production)
+  async getWeddingSubTradition(id: string): Promise<WeddingSubTradition | undefined> { return undefined; }
+  async getWeddingSubTraditionsByTradition(traditionId: string): Promise<WeddingSubTradition[]> { return []; }
+  async getAllWeddingSubTraditions(): Promise<WeddingSubTradition[]> { return []; }
+  async getActiveWeddingSubTraditions(): Promise<WeddingSubTradition[]> { return []; }
+  async createWeddingSubTradition(subTradition: InsertWeddingSubTradition): Promise<WeddingSubTradition> { throw new Error('MemStorage does not support Wedding Sub-Traditions. Use DBStorage.'); }
+  async updateWeddingSubTradition(id: string, subTradition: Partial<InsertWeddingSubTradition>): Promise<WeddingSubTradition | undefined> { throw new Error('MemStorage does not support Wedding Sub-Traditions. Use DBStorage.'); }
+  async deleteWeddingSubTradition(id: string): Promise<boolean> { return false; }
+  async seedWeddingSubTraditions(): Promise<WeddingSubTradition[]> { throw new Error('MemStorage does not support Wedding Sub-Traditions. Use DBStorage.'); }
 }
 
 import { neon } from "@neondatabase/serverless";
@@ -10725,6 +10774,160 @@ export class DBStorage implements IStorage {
     }
     
     return seededCategories;
+  }
+
+  // Wedding Traditions (data-driven tradition system)
+  async getWeddingTradition(id: string): Promise<WeddingTradition | undefined> {
+    const result = await this.db.select()
+      .from(weddingTraditions)
+      .where(eq(weddingTraditions.id, id));
+    return result[0];
+  }
+
+  async getAllWeddingTraditions(): Promise<WeddingTradition[]> {
+    return await this.db.select()
+      .from(weddingTraditions)
+      .orderBy(sql`${weddingTraditions.displayOrder} ASC`);
+  }
+
+  async getActiveWeddingTraditions(): Promise<WeddingTradition[]> {
+    return await this.db.select()
+      .from(weddingTraditions)
+      .where(eq(weddingTraditions.isActive, true))
+      .orderBy(sql`${weddingTraditions.displayOrder} ASC`);
+  }
+
+  async createWeddingTradition(tradition: InsertWeddingTradition): Promise<WeddingTradition> {
+    const result = await this.db.insert(weddingTraditions)
+      .values(tradition)
+      .returning();
+    return result[0];
+  }
+
+  async updateWeddingTradition(id: string, tradition: Partial<InsertWeddingTradition>): Promise<WeddingTradition | undefined> {
+    const result = await this.db.update(weddingTraditions)
+      .set({ ...tradition, updatedAt: new Date() })
+      .where(eq(weddingTraditions.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteWeddingTradition(id: string): Promise<boolean> {
+    const existing = await this.getWeddingTradition(id);
+    if (!existing) {
+      return false;
+    }
+    
+    // Don't allow deleting system traditions
+    if (existing.isSystemTradition) {
+      throw new Error('Cannot delete system traditions');
+    }
+    
+    await this.db.delete(weddingTraditions)
+      .where(eq(weddingTraditions.id, id));
+    return true;
+  }
+
+  async seedWeddingTraditions(): Promise<WeddingTradition[]> {
+    const seededTraditions: WeddingTradition[] = [];
+    
+    for (const traditionData of DEFAULT_TRADITIONS) {
+      const existing = await this.getWeddingTradition(traditionData.id);
+      if (existing) {
+        seededTraditions.push(existing);
+        continue;
+      }
+      
+      const tradition = await this.createWeddingTradition({
+        id: traditionData.id,
+        displayName: traditionData.displayName,
+        description: traditionData.description,
+        displayOrder: traditionData.displayOrder,
+        isActive: true,
+        isSystemTradition: true,
+      });
+      seededTraditions.push(tradition);
+    }
+    
+    return seededTraditions;
+  }
+
+  // Wedding Sub-Traditions (regional variations)
+  async getWeddingSubTradition(id: string): Promise<WeddingSubTradition | undefined> {
+    const result = await this.db.select()
+      .from(weddingSubTraditions)
+      .where(eq(weddingSubTraditions.id, id));
+    return result[0];
+  }
+
+  async getWeddingSubTraditionsByTradition(traditionId: string): Promise<WeddingSubTradition[]> {
+    return await this.db.select()
+      .from(weddingSubTraditions)
+      .where(eq(weddingSubTraditions.traditionId, traditionId))
+      .orderBy(sql`${weddingSubTraditions.displayOrder} ASC`);
+  }
+
+  async getAllWeddingSubTraditions(): Promise<WeddingSubTradition[]> {
+    return await this.db.select()
+      .from(weddingSubTraditions)
+      .orderBy(sql`${weddingSubTraditions.displayOrder} ASC`);
+  }
+
+  async getActiveWeddingSubTraditions(): Promise<WeddingSubTradition[]> {
+    return await this.db.select()
+      .from(weddingSubTraditions)
+      .where(eq(weddingSubTraditions.isActive, true))
+      .orderBy(sql`${weddingSubTraditions.displayOrder} ASC`);
+  }
+
+  async createWeddingSubTradition(subTradition: InsertWeddingSubTradition): Promise<WeddingSubTradition> {
+    const result = await this.db.insert(weddingSubTraditions)
+      .values(subTradition)
+      .returning();
+    return result[0];
+  }
+
+  async updateWeddingSubTradition(id: string, subTradition: Partial<InsertWeddingSubTradition>): Promise<WeddingSubTradition | undefined> {
+    const result = await this.db.update(weddingSubTraditions)
+      .set({ ...subTradition, updatedAt: new Date() })
+      .where(eq(weddingSubTraditions.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteWeddingSubTradition(id: string): Promise<boolean> {
+    const existing = await this.getWeddingSubTradition(id);
+    if (!existing) {
+      return false;
+    }
+    
+    await this.db.delete(weddingSubTraditions)
+      .where(eq(weddingSubTraditions.id, id));
+    return true;
+  }
+
+  async seedWeddingSubTraditions(): Promise<WeddingSubTradition[]> {
+    const seededSubTraditions: WeddingSubTradition[] = [];
+    
+    for (const subTraditionData of DEFAULT_SUB_TRADITIONS) {
+      const existing = await this.getWeddingSubTradition(subTraditionData.id);
+      if (existing) {
+        seededSubTraditions.push(existing);
+        continue;
+      }
+      
+      const subTradition = await this.createWeddingSubTradition({
+        id: subTraditionData.id,
+        traditionId: subTraditionData.traditionId,
+        displayName: subTraditionData.displayName,
+        description: subTraditionData.description,
+        displayOrder: subTraditionData.displayOrder,
+        isActive: true,
+      });
+      seededSubTraditions.push(subTradition);
+    }
+    
+    return seededSubTraditions;
   }
 
   // Ritual Role Assignments
