@@ -223,8 +223,8 @@ export function CeremonyCostBreakdown({ events, className = "" }: CeremonyCostBr
   
   const eventsWithBreakdowns = useMemo(() => {
     return events.filter(event => {
-      const ceremonyId = getCeremonyIdFromEvent(event, templateMap);
-      return ceremonyId && templateMap.has(ceremonyId);
+      const result = getCeremonyIdFromEvent(event, templateMap);
+      return result && templateMap.has(result.ceremonyId);
     });
   }, [events, templateMap]);
   

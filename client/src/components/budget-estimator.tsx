@@ -119,8 +119,8 @@ export function BudgetEstimator({ wedding, events = [], onUpdateBudget, onUpdate
     
     for (const [ceremonyId, keywords] of Object.entries(CEREMONY_MAPPINGS)) {
       if (keywords.some(kw => normalizedName === kw || normalizedName.includes(kw))) {
-        const breakdown = breakdownMap.get(ceremonyId);
-        if (breakdown) {
+        const breakdown = breakdownMap[ceremonyId];
+        if (breakdown && breakdown.length > 0) {
           return { ceremonyId, breakdown };
         }
       }
@@ -132,15 +132,15 @@ export function BudgetEstimator({ wedding, events = [], onUpdateBudget, onUpdate
     );
     
     if (ceremony) {
-      const breakdown = breakdownMap.get(ceremony.id);
-      if (breakdown) {
+      const breakdown = breakdownMap[ceremony.id];
+      if (breakdown && breakdown.length > 0) {
         return { ceremonyId: ceremony.id, breakdown };
       }
     }
     
     if (normalizedName.includes('reception')) {
-      const breakdown = breakdownMap.get('reception');
-      if (breakdown) {
+      const breakdown = breakdownMap['reception'];
+      if (breakdown && breakdown.length > 0) {
         return { ceremonyId: 'reception', breakdown };
       }
     }

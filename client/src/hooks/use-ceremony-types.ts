@@ -88,8 +88,8 @@ export interface CeremonyEstimateResponse {
   }>;
 }
 
-// Line item type from the ceremony_budget_categories junction table
-export interface CeremonyBudgetCategoryItem {
+// Line item type from the ceremony_budget_categories junction table (API response)
+export interface CeremonyBudgetCategoryApiItem {
   id: string;
   name: string;
   budgetBucketId: string; // FK to budget_bucket_categories.id
@@ -102,13 +102,13 @@ export interface CeremonyBudgetCategoryItem {
 }
 
 // Backward compatibility alias
-export type CeremonyTypeLineItem = CeremonyBudgetCategoryItem;
+export type CeremonyTypeLineItem = CeremonyBudgetCategoryApiItem;
 
 export interface CeremonyBudgetCategoriesResponse {
   ceremonyId: string;
   ceremonyName: string;
   tradition: string;
-  lineItems: CeremonyBudgetCategoryItem[];
+  lineItems: CeremonyBudgetCategoryApiItem[];
 }
 
 // Backward compatibility alias
