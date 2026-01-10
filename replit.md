@@ -16,6 +16,7 @@ The platform utilizes a modern web stack: **React**, **TypeScript**, **Tailwind 
 Key architectural decisions and features include:
 - **Comprehensive Data Model**: Designed to support the intricate nature of multi-day South Asian weddings with database-driven wedding traditions and sub-traditions for flexible management.
 - **Cultural Templates**: Pre-populated event timelines, task templates, and normalized ceremony cost estimates for 9 wedding traditions, supporting regional pricing variations.
+- **Ceremony Types System**: Database-driven `ceremony_types` table (renamed from ceremony_templates) linked to `wedding_traditions` via `traditionId` foreign key. Provides ceremony definitions with cost breakdowns via `ceremony_type_items` table. Supports backward compatibility through type aliases and dual API endpoints (`/api/ceremony-types` and `/api/ceremony-templates`).
 - **Vendor Specialization**: Support for 32 distinct vendor categories, including culturally-specific services.
 - **Budget Intelligence System**: Employs a Unified Single Ledger Model with a three-tier budget hierarchy, smart budget recommendations, dual-view aggregation, and a refined pricing engine using three-factor multipliers for precise estimates.
   - **`budget_bucket_categories` table**: 12 high-level budget buckets managed by site admins with rich metadata (displayName, description, iconName, isEssential, suggestedPercentage)
