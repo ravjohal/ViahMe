@@ -104,13 +104,19 @@ The application has passed comprehensive QA testing with **100% test pass rate**
 | POST /api/households | PASS | Creates households |
 | GET /api/households/by-id/:id | PASS | Fetches household by ID |
 
-### Budget Category Endpoints
+### Budget Bucket Category Endpoints (Wedding-Specific Allocations)
 | Test | Status | Notes |
 |------|--------|-------|
-| GET /api/budget-categories/:weddingId | PASS | Returns categories |
-| POST /api/budget-categories | PASS | Creates budget categories |
-| PATCH /api/budget-categories/:id | PASS | Updates category correctly |
-| DELETE /api/budget-categories/:id | PASS | Deletes correctly |
+| GET /api/budget-bucket-categories/:weddingId | PASS | Returns categories |
+| POST /api/budget-bucket-categories | PASS | Creates budget categories |
+| PATCH /api/budget-bucket-categories/:id | PASS | Updates category correctly |
+| DELETE /api/budget-bucket-categories/:id | PASS | Deletes correctly |
+
+### Budget Category Definitions (Site-Admin Managed)
+| Test | Status | Notes |
+|------|--------|-------|
+| GET /api/budget/categories | PASS | Returns global category definitions |
+| PATCH /api/budget/categories/:id | PASS | Updates category metadata |
 
 ### Expense Splitting Endpoints
 | Test | Status | Notes |
