@@ -54,7 +54,6 @@ interface AIBudgetEstimate {
   hasEstimate: boolean;
 }
 
-type ContributorFilter = "all" | "bride" | "groom";
 type SideFilter = "all" | "bride" | "groom" | "mutual";
 
 export default function Budget() {
@@ -71,7 +70,6 @@ export default function Budget() {
   const [addExpenseEventId, setAddExpenseEventId] = useState<string | undefined>(undefined);
   const [aiEstimateLoading, setAiEstimateLoading] = useState(false);
   const [expandedEvents, setExpandedEvents] = useState<Set<string>>(new Set());
-  const [contributorFilter, setContributorFilter] = useState<ContributorFilter>("all");
   const [sideFilter, setSideFilter] = useState<SideFilter>("all");
   const [editBudgetOpen, setEditBudgetOpen] = useState(false);
   const [showCategories, setShowCategories] = useState(false);
@@ -541,35 +539,8 @@ export default function Budget() {
       total: 0,
     };
 
-    // Filter expenses by contributor
-    // Uses paidById to match team member IDs, or falls back to name matching
-    const filteredExpenses = allExpenses.filter((expense) => {
-      if (contributorFilter === "all") return true;
-      
-      const paidByName = expense.paidByName?.toLowerCase() || "";
-      const paidById = expense.paidById?.toLowerCase() || "";
-      
-      // Check common patterns for bride's side
-      if (contributorFilter === "bride") {
-        const bridePatterns = ["bride", "wife", "partner1", wedding?.partner1Name?.toLowerCase() || ""].filter(Boolean);
-        return bridePatterns.some(pattern => 
-          paidByName.includes(pattern) || paidById.includes(pattern)
-        );
-      }
-      
-      // Check common patterns for groom's side
-      if (contributorFilter === "groom") {
-        const groomPatterns = ["groom", "husband", "partner2", wedding?.partner2Name?.toLowerCase() || ""].filter(Boolean);
-        return groomPatterns.some(pattern => 
-          paidByName.includes(pattern) || paidById.includes(pattern)
-        );
-      }
-      
-      return true;
-    });
-
     // Assign expenses to events
-    filteredExpenses.forEach((expense) => {
+    allExpenses.forEach((expense) => {
       // Check for multi-event allocations (embedded in expense object from API)
       const allocations = expense.eventAllocations || [];
       
@@ -605,7 +576,7 @@ export default function Budget() {
     });
 
     return eventMap;
-  }, [events, allExpenses, contributorFilter, wedding, costSummary]);
+  }, [events, allExpenses, wedding, costSummary]);
 
   // Calculate totals
   const total = parseFloat(wedding?.totalBudget || "0");
@@ -1286,40 +1257,6 @@ export default function Budget() {
             </Button>
           </div>
         )}
-
-        {/* Contributor Filter */}
-        <div className="flex items-center gap-2 mb-6 flex-wrap">
-          <span className="text-sm font-medium text-muted-foreground">Contributors:</span>
-          <div className="flex gap-2">
-            <Button
-              variant={contributorFilter === "all" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setContributorFilter("all")}
-              data-testid="filter-all"
-            >
-              All
-            </Button>
-            <Button
-              variant={contributorFilter === "bride" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setContributorFilter("bride")}
-              className={contributorFilter === "bride" ? "bg-rose-500 hover:bg-rose-600" : ""}
-              data-testid="filter-bride"
-            >
-              {wedding.partner1Name || "Bride"}'s Family
-            </Button>
-            <Button
-              variant={contributorFilter === "groom" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setContributorFilter("groom")}
-              className={contributorFilter === "groom" ? "bg-amber-500 hover:bg-amber-600" : ""}
-              data-testid="filter-groom"
-            >
-              {wedding.partner2Name || "Groom"}'s Family
-            </Button>
-          </div>
-        </div>
-
 
         {/* Budget Categories Breakdown */}
         <Card className="p-4 mb-6">
