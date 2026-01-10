@@ -61,6 +61,7 @@ export function createCeremonyTemplatesRouter(storage: IStorage): Router {
   });
 
   // Get line items for a ceremony (used by Add Expense dialog)
+  // Now uses the normalized ceremony_template_items table instead of JSONB
   router.get("/:ceremonyId/line-items", async (req, res) => {
     try {
       const { ceremonyId } = req.params;
@@ -69,24 +70,18 @@ export function createCeremonyTemplatesRouter(storage: IStorage): Router {
         return res.status(404).json({ error: "Ceremony template not found" });
       }
       
-      // Extract line items with budget bucket mappings
-      const breakdown = template.costBreakdown as Array<{
-        category: string;
-        lowCost: number;
-        highCost: number;
-        unit: 'fixed' | 'per_person' | 'per_hour';
-        hoursLow?: number;
-        hoursHigh?: number;
-        notes?: string;
-        budgetBucket?: string;
-      }>;
+      // Fetch from the normalized ceremony_template_items table
+      const templateItems = await storage.getCeremonyTemplateItems(ceremonyId);
       
-      const lineItems = breakdown.map(item => ({
-        name: item.category,
+      const lineItems = templateItems.map(item => ({
+        id: item.id,
+        name: item.itemName,
         budgetBucket: item.budgetBucket || 'other',
-        lowCost: item.lowCost,
-        highCost: item.highCost,
+        lowCost: parseFloat(item.lowCost),
+        highCost: parseFloat(item.highCost),
         unit: item.unit,
+        hoursLow: item.hoursLow ? parseFloat(item.hoursLow) : undefined,
+        hoursHigh: item.hoursHigh ? parseFloat(item.hoursHigh) : undefined,
         notes: item.notes,
       }));
       
@@ -215,6 +210,7 @@ export function createRegionalPricingRouter(storage: IStorage): Router {
 export function createCeremonyEstimateRouter(storage: IStorage): Router {
   const router = Router();
 
+  // Uses the normalized ceremony_template_items table instead of JSONB
   router.post("/", async (req, res) => {
     try {
       const { tradition, ceremonyId, guestCount, city } = req.body;
@@ -236,15 +232,8 @@ export function createCeremonyEstimateRouter(storage: IStorage): Router {
         }
       }
 
-      const breakdown = template.costBreakdown as Array<{
-        category: string;
-        lowCost: number;
-        highCost: number;
-        unit: 'fixed' | 'per_person' | 'per_hour';
-        hoursLow?: number;
-        hoursHigh?: number;
-        notes?: string;
-      }>;
+      // Fetch from the normalized ceremony_template_items table
+      const templateItems = await storage.getCeremonyTemplateItems(ceremonyId);
 
       let totalLow = 0;
       let totalHigh = 0;
@@ -253,18 +242,19 @@ export function createCeremonyEstimateRouter(storage: IStorage): Router {
         lowCost: number;
         highCost: number;
         notes?: string;
+        budgetBucket?: string;
       }> = [];
 
-      for (const item of breakdown) {
-        let itemLow = item.lowCost;
-        let itemHigh = item.highCost;
+      for (const item of templateItems) {
+        let itemLow = parseFloat(item.lowCost);
+        let itemHigh = parseFloat(item.highCost);
 
         if (item.unit === 'per_person') {
           itemLow *= guestCount;
           itemHigh *= guestCount;
         } else if (item.unit === 'per_hour') {
-          const hoursLow = item.hoursLow || 1;
-          const hoursHigh = item.hoursHigh || hoursLow;
+          const hoursLow = item.hoursLow ? parseFloat(item.hoursLow) : 1;
+          const hoursHigh = item.hoursHigh ? parseFloat(item.hoursHigh) : hoursLow;
           itemLow *= hoursLow;
           itemHigh *= hoursHigh;
         }
@@ -276,10 +266,11 @@ export function createCeremonyEstimateRouter(storage: IStorage): Router {
         totalHigh += itemHigh;
 
         categoryEstimates.push({
-          category: item.category,
+          category: item.itemName,
           lowCost: Math.round(itemLow),
           highCost: Math.round(itemHigh),
-          notes: item.notes,
+          notes: item.notes || undefined,
+          budgetBucket: item.budgetBucket,
         });
       }
 

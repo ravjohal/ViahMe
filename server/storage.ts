@@ -185,6 +185,12 @@ import {
   type InsertDashboardWidget,
   type CeremonyTemplate,
   type InsertCeremonyTemplate,
+  type CeremonyTemplateItem,
+  type InsertCeremonyTemplateItem,
+  ceremonyTemplateItems,
+  type WeddingLineItem,
+  type InsertWeddingLineItem,
+  weddingLineItems,
   type RegionalPricing,
   type InsertRegionalPricing,
   type BudgetAllocation,
@@ -1065,6 +1071,22 @@ export interface IStorage {
   createCeremonyTemplate(template: InsertCeremonyTemplate): Promise<CeremonyTemplate>;
   updateCeremonyTemplate(ceremonyId: string, template: Partial<InsertCeremonyTemplate>): Promise<CeremonyTemplate | undefined>;
   deleteCeremonyTemplate(ceremonyId: string): Promise<boolean>;
+
+  // Ceremony Template Items (normalized line items for templates)
+  getCeremonyTemplateItems(templateId: string): Promise<CeremonyTemplateItem[]>;
+  getCeremonyTemplateItem(id: string): Promise<CeremonyTemplateItem | undefined>;
+  createCeremonyTemplateItem(item: InsertCeremonyTemplateItem): Promise<CeremonyTemplateItem>;
+  updateCeremonyTemplateItem(id: string, item: Partial<InsertCeremonyTemplateItem>): Promise<CeremonyTemplateItem | undefined>;
+  deleteCeremonyTemplateItem(id: string): Promise<boolean>;
+
+  // Wedding Line Items (couple's customized budget line items)
+  getWeddingLineItems(weddingId: string): Promise<WeddingLineItem[]>;
+  getWeddingLineItemsByCeremony(weddingId: string, ceremonyId: string): Promise<WeddingLineItem[]>;
+  getWeddingLineItem(id: string): Promise<WeddingLineItem | undefined>;
+  createWeddingLineItem(item: InsertWeddingLineItem): Promise<WeddingLineItem>;
+  updateWeddingLineItem(id: string, item: Partial<InsertWeddingLineItem>): Promise<WeddingLineItem | undefined>;
+  deleteWeddingLineItem(id: string): Promise<boolean>;
+  hydrateWeddingLineItemsFromTemplate(weddingId: string, ceremonyId: string, templateId: string): Promise<WeddingLineItem[]>;
 
   // Regional Pricing
   getRegionalPricing(city: string): Promise<RegionalPricing | undefined>;
@@ -4279,6 +4301,22 @@ export class MemStorage implements IStorage {
   async createCeremonyTemplate(template: InsertCeremonyTemplate): Promise<CeremonyTemplate> { throw new Error('MemStorage does not support Ceremony Templates. Use DBStorage.'); }
   async updateCeremonyTemplate(ceremonyId: string, template: Partial<InsertCeremonyTemplate>): Promise<CeremonyTemplate | undefined> { throw new Error('MemStorage does not support Ceremony Templates. Use DBStorage.'); }
   async deleteCeremonyTemplate(ceremonyId: string): Promise<boolean> { return false; }
+
+  // Ceremony Template Items (stubs - use DBStorage for production)
+  async getCeremonyTemplateItems(templateId: string): Promise<CeremonyTemplateItem[]> { return []; }
+  async getCeremonyTemplateItem(id: string): Promise<CeremonyTemplateItem | undefined> { return undefined; }
+  async createCeremonyTemplateItem(item: InsertCeremonyTemplateItem): Promise<CeremonyTemplateItem> { throw new Error('MemStorage does not support Ceremony Template Items. Use DBStorage.'); }
+  async updateCeremonyTemplateItem(id: string, item: Partial<InsertCeremonyTemplateItem>): Promise<CeremonyTemplateItem | undefined> { throw new Error('MemStorage does not support Ceremony Template Items. Use DBStorage.'); }
+  async deleteCeremonyTemplateItem(id: string): Promise<boolean> { return false; }
+
+  // Wedding Line Items (stubs - use DBStorage for production)
+  async getWeddingLineItems(weddingId: string): Promise<WeddingLineItem[]> { return []; }
+  async getWeddingLineItemsByCeremony(weddingId: string, ceremonyId: string): Promise<WeddingLineItem[]> { return []; }
+  async getWeddingLineItem(id: string): Promise<WeddingLineItem | undefined> { return undefined; }
+  async createWeddingLineItem(item: InsertWeddingLineItem): Promise<WeddingLineItem> { throw new Error('MemStorage does not support Wedding Line Items. Use DBStorage.'); }
+  async updateWeddingLineItem(id: string, item: Partial<InsertWeddingLineItem>): Promise<WeddingLineItem | undefined> { throw new Error('MemStorage does not support Wedding Line Items. Use DBStorage.'); }
+  async deleteWeddingLineItem(id: string): Promise<boolean> { return false; }
+  async hydrateWeddingLineItemsFromTemplate(weddingId: string, ceremonyId: string, templateId: string): Promise<WeddingLineItem[]> { throw new Error('MemStorage does not support Wedding Line Items. Use DBStorage.'); }
 
   // Regional Pricing (stubs - use DBStorage for production)
   async getRegionalPricing(city: string): Promise<RegionalPricing | undefined> { return undefined; }
@@ -10445,6 +10483,110 @@ export class DBStorage implements IStorage {
     await this.db.delete(ceremonyTemplates)
       .where(eq(ceremonyTemplates.ceremonyId, ceremonyId));
     return true;
+  }
+
+  // Ceremony Template Items (normalized line items for templates)
+  async getCeremonyTemplateItems(templateId: string): Promise<CeremonyTemplateItem[]> {
+    return await this.db.select()
+      .from(ceremonyTemplateItems)
+      .where(and(
+        eq(ceremonyTemplateItems.templateId, templateId),
+        eq(ceremonyTemplateItems.isActive, true)
+      ))
+      .orderBy(sql`${ceremonyTemplateItems.displayOrder} ASC`);
+  }
+
+  async getCeremonyTemplateItem(id: string): Promise<CeremonyTemplateItem | undefined> {
+    const result = await this.db.select()
+      .from(ceremonyTemplateItems)
+      .where(eq(ceremonyTemplateItems.id, id));
+    return result[0];
+  }
+
+  async createCeremonyTemplateItem(item: InsertCeremonyTemplateItem): Promise<CeremonyTemplateItem> {
+    const result = await this.db.insert(ceremonyTemplateItems).values(item).returning();
+    return result[0];
+  }
+
+  async updateCeremonyTemplateItem(id: string, item: Partial<InsertCeremonyTemplateItem>): Promise<CeremonyTemplateItem | undefined> {
+    const result = await this.db.update(ceremonyTemplateItems)
+      .set({ ...item, updatedAt: new Date() })
+      .where(eq(ceremonyTemplateItems.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteCeremonyTemplateItem(id: string): Promise<boolean> {
+    await this.db.delete(ceremonyTemplateItems)
+      .where(eq(ceremonyTemplateItems.id, id));
+    return true;
+  }
+
+  // Wedding Line Items (couple's customized budget line items)
+  async getWeddingLineItems(weddingId: string): Promise<WeddingLineItem[]> {
+    return await this.db.select()
+      .from(weddingLineItems)
+      .where(eq(weddingLineItems.weddingId, weddingId))
+      .orderBy(sql`${weddingLineItems.createdAt} ASC`);
+  }
+
+  async getWeddingLineItemsByCeremony(weddingId: string, ceremonyId: string): Promise<WeddingLineItem[]> {
+    return await this.db.select()
+      .from(weddingLineItems)
+      .where(and(
+        eq(weddingLineItems.weddingId, weddingId),
+        eq(weddingLineItems.ceremonyId, ceremonyId)
+      ))
+      .orderBy(sql`${weddingLineItems.createdAt} ASC`);
+  }
+
+  async getWeddingLineItem(id: string): Promise<WeddingLineItem | undefined> {
+    const result = await this.db.select()
+      .from(weddingLineItems)
+      .where(eq(weddingLineItems.id, id));
+    return result[0];
+  }
+
+  async createWeddingLineItem(item: InsertWeddingLineItem): Promise<WeddingLineItem> {
+    const result = await this.db.insert(weddingLineItems).values(item).returning();
+    return result[0];
+  }
+
+  async updateWeddingLineItem(id: string, item: Partial<InsertWeddingLineItem>): Promise<WeddingLineItem | undefined> {
+    const result = await this.db.update(weddingLineItems)
+      .set({ ...item, updatedAt: new Date() })
+      .where(eq(weddingLineItems.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteWeddingLineItem(id: string): Promise<boolean> {
+    await this.db.delete(weddingLineItems)
+      .where(eq(weddingLineItems.id, id));
+    return true;
+  }
+
+  async hydrateWeddingLineItemsFromTemplate(weddingId: string, ceremonyId: string, templateId: string): Promise<WeddingLineItem[]> {
+    // Get template items
+    const templateItems = await this.getCeremonyTemplateItems(templateId);
+    
+    // Create wedding line items from template
+    const createdItems: WeddingLineItem[] = [];
+    for (const item of templateItems) {
+      const newItem = await this.createWeddingLineItem({
+        weddingId,
+        ceremonyId,
+        label: item.itemName,
+        bucket: item.budgetBucket as any,
+        targetAmount: item.highCost, // Use high cost as default target
+        isSystemGenerated: true,
+        sourceTemplateItemId: item.id,
+        notes: item.notes || undefined,
+      });
+      createdItems.push(newItem);
+    }
+    
+    return createdItems;
   }
 
   // Regional Pricing
