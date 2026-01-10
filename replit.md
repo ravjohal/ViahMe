@@ -15,16 +15,31 @@ The platform utilizes a modern web stack: **React**, **TypeScript**, **Tailwind 
 
 Key architectural decisions and features include:
 - **Comprehensive Data Model**: Designed to support the intricate nature of multi-day South Asian weddings.
-- **Cultural Templates**: Pre-populated event timelines and task templates for 9 wedding traditions with auto-seeding. Ceremony cost estimates use database-first data approach.
-  - **Ceremony Cost Database**: Templates stored in `ceremony_templates` table with JSONB cost breakdown per category (Venue, Catering, Decor, etc.). Each line item includes a `budgetBucket` field mapping to the 12 budget categories.
+- **Cultural Templates**: Pre-populated event timelines and task templates for 9 wedding traditions with auto-seeding. Ceremony cost estimates use a **normalized relational model**.
+  - **Ceremony Template Items (Normalized)**: `ceremony_template_items` table stores line items for each ceremony template with fields:
+    - `templateId`: References `ceremony_templates.ceremonyId`
+    - `itemName`: The line item name (e.g., "Venue", "Caterer", "Photographer")
+    - `budgetBucket`: Maps to one of the 12 BUDGET_BUCKETS
+    - `lowCost`/`highCost`: Cost range estimates
+    - `unit`: 'fixed' | 'per_person' | 'per_hour'
+    - `hoursLow`/`hoursHigh`: For per_hour items
+    - `notes`: Additional context
+    - `displayOrder`, `isActive`: For admin management
+  - **Wedding Line Items (Couple's Workspace)**: `wedding_line_items` table for couple-customized budget items:
+    - `weddingId`: The couple's wedding
+    - `ceremonyId`: Optional - links to specific event
+    - `label`: User-editable item name
+    - `bucket`: Budget category (can be changed by user)
+    - `targetAmount`: The budgeted amount
+    - `isSystemGenerated`: True if hydrated from template
+    - `sourceTemplateItemId`: Original template item reference
   - **Regional Pricing**: `regional_pricing` table with city-specific multipliers (Bay Area 1.5x, NYC 1.4x, LA 1.3x, Chicago 1.2x, Seattle 1.1x)
   - **API Endpoints**: `/api/ceremony-templates`, `/api/ceremony-templates/:id/line-items`, `/api/regional-pricing`, `/api/ceremony-estimate` (public read, admin write)
   - **Admin UI**: Site admins (users with `isSiteAdmin: true`) can manage templates at `/admin/ceremony-templates`
-  - **Seed Scripts**: 
-    - `scripts/seed-ceremony-line-items.ts` populates 27 ceremony templates across Sikh, Hindu, Muslim, Gujarati, South Indian, and General traditions with line items and budget bucket mappings
-  - **Database-First Architecture**: The `ceremony_templates` table is the single source of truth for ceremony line items. The Add Expense dialog fetches line items from the API endpoint `/api/ceremony-templates/:id/line-items`.
+  - **Database-First Architecture**: The `ceremony_template_items` table is the single source of truth for ceremony line items. The API endpoint `/api/ceremony-templates/:id/line-items` fetches from this normalized table.
   - **Ceremony Mapping**: `CEREMONY_MAPPINGS` object in `shared/ceremonies.ts` maps event names/types to ceremony template IDs for matching events to templates
-  - **Future Enhancement**: Events table could store `ceremonyTemplateId` directly to avoid name-based matching
+  - **Hydration**: When couples select ceremony estimates, line items can be "hydrated" into `wedding_line_items` for customization
+  - **Migration Note**: Legacy `cost_breakdown` JSONB column on `ceremony_templates` table is deprecated; all data has been migrated to the normalized `ceremony_template_items` table
 - **Vendor Specialization**: Support for 32 distinct vendor categories, including culturally-specific services.
 - **Budget Intelligence System**: Uses a **Unified Single Ledger Model** for simplified budget and expense tracking. Provides smart budget recommendations, dual-view aggregation (by bucket and by ceremony), contributor filtering, guest savings calculator, upcoming payments timeline, and automatic budget alerts.
   - **Fixed BUDGET_BUCKETS**: 12 code-level budget categories defined in `shared/schema.ts`: venue, catering, photography, videography, decor, entertainment, attire, beauty, stationery, transportation, favors, other. Eliminates database joins and duplicate bucket issues.
