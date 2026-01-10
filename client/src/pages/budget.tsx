@@ -891,6 +891,28 @@ export default function Budget() {
     return editedValue !== (currentAllocated > 0 ? currentAllocated.toString() : "");
   };
 
+  // Combined save function for ceremony total AND line items
+  const saveCeremonyBudget = (eventId: string, eventName: string) => {
+    // Save ceremony total if changed
+    const amount = editingCeremonyTotals[eventId];
+    if (amount !== undefined) {
+      updateCeremonyBudgetMutation.mutate({ ceremonyId: eventId, amount });
+    }
+    
+    // Save line items if any exist in editing state
+    const eventLineItems = editingLineItems[eventId];
+    if (eventLineItems && Object.keys(eventLineItems).length > 0) {
+      saveEventLineItems(eventId, eventName);
+    }
+  };
+
+  // Check if ceremony has ANY unsaved changes (total or line items)
+  const hasCeremonyBudgetChanges = (eventId: string, currentAllocated: number): boolean => {
+    const hasTotalChanges = hasCeremonyTotalChanges(eventId, currentAllocated);
+    const hasLineItemChanges = !!editingLineItems[eventId] && Object.keys(editingLineItems[eventId]).length > 0;
+    return hasTotalChanges || hasLineItemChanges;
+  };
+
   useEffect(() => {
     if (!weddingsLoading && !wedding) {
       setLocation("/onboarding");
@@ -1323,7 +1345,6 @@ export default function Budget() {
                 const lineItems = getLineItemsForEvent(ceremony.eventId, ceremony.eventName);
                 const isExpanded = expandedCeremonies.has(ceremony.eventId);
                 const lineItemTotal = lineItems ? getEventLineItemTotal(ceremony.eventId, lineItems) : 0;
-                const hasUnsavedChanges = !!editingLineItems[ceremony.eventId] && Object.keys(editingLineItems[ceremony.eventId]).length > 0;
                 const eventExpenses = expensesByEvent[ceremony.eventId]?.expenses || [];
 
                 const sideColors = {
@@ -1441,15 +1462,15 @@ export default function Budget() {
                                   </DropdownMenuContent>
                                 </DropdownMenu>
                               )}
-                              {hasCeremonyTotalChanges(ceremony.eventId, ceremony.allocated) && (
+                              {hasCeremonyBudgetChanges(ceremony.eventId, ceremony.allocated) && (
                                 <Button
                                   size="sm"
                                   className="h-9"
-                                  onClick={() => saveCeremonyTotal(ceremony.eventId)}
-                                  disabled={updateCeremonyBudgetMutation.isPending}
-                                  data-testid={`button-save-ceremony-total-${ceremony.eventId}`}
+                                  onClick={() => saveCeremonyBudget(ceremony.eventId, ceremony.eventName)}
+                                  disabled={updateCeremonyBudgetMutation.isPending || saveLineItemBudgetsMutation.isPending}
+                                  data-testid={`button-save-ceremony-budget-${ceremony.eventId}`}
                                 >
-                                  {updateCeremonyBudgetMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : "Save"}
+                                  {(updateCeremonyBudgetMutation.isPending || saveLineItemBudgetsMutation.isPending) ? <Loader2 className="w-3 h-3 animate-spin" /> : "Save"}
                                 </Button>
                               )}
                             </div>
@@ -1494,14 +1515,6 @@ export default function Budget() {
                                 <div className="flex justify-between items-center mt-3 pt-3 border-t">
                                   <span className="text-sm font-medium">Line Item Total</span>
                                   <span className="text-lg font-bold font-mono">${lineItemTotal.toLocaleString()}</span>
-                                </div>
-                              )}
-                              {hasUnsavedChanges && (
-                                <div className="mt-3">
-                                  <Button onClick={() => saveEventLineItems(ceremony.eventId, ceremony.eventName)} disabled={saveLineItemBudgetsMutation.isPending} className="w-full" data-testid={`button-save-line-items-${ceremony.eventId}`}>
-                                    {saveLineItemBudgetsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                                    Save Line Items
-                                  </Button>
                                 </div>
                               )}
                             </div>
