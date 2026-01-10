@@ -21,10 +21,12 @@ import {
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useTraditionLookup } from "@/hooks/use-traditions";
 import type { Vendor } from "@shared/schema";
 
 export default function VendorProfilePage() {
   const { toast } = useToast();
+  const { getTraditionLabel } = useTraditionLookup();
   const [isEditing, setIsEditing] = useState(false);
 
   const { data: vendor, isLoading } = useQuery<Vendor>({
@@ -206,7 +208,7 @@ export default function VendorProfilePage() {
                     {vendor.preferredWeddingTraditions && vendor.preferredWeddingTraditions.length > 0 ? (
                       vendor.preferredWeddingTraditions.map((tradition) => (
                         <Badge key={tradition} variant="outline">
-                          {tradition.charAt(0).toUpperCase() + tradition.slice(1)}
+                          {getTraditionLabel(tradition)}
                         </Badge>
                       ))
                     ) : (

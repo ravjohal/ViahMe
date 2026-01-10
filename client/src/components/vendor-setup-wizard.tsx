@@ -17,6 +17,7 @@ import { VENDOR_CATEGORIES } from "@shared/schema";
 import { ChevronLeft, ChevronRight, Upload, X, Image } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useTraditions } from "@/hooks/use-traditions";
 
 export interface VendorSetupData {
   name: string;
@@ -50,6 +51,7 @@ const STEPS = [
 
 export function VendorSetupWizard({ initialData, onComplete, onCancel }: VendorSetupWizardProps) {
   const { toast } = useToast();
+  const { data: traditions = [], isLoading: traditionsLoading } = useTraditions();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<VendorSetupData>({
     name: initialData?.name || "",
@@ -261,33 +263,39 @@ export function VendorSetupWizard({ initialData, onComplete, onCancel }: VendorS
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">Select wedding traditions you specialize in (optional)</p>
             <div className="grid grid-cols-2 gap-2">
-              {["sikh", "hindu", "muslim", "gujarati", "south_indian", "mixed", "general"].map((tradition) => (
-                <label
-                  key={tradition}
-                  className="flex items-center gap-2 p-3 rounded-md border cursor-pointer hover:bg-muted/50"
-                >
-                  <Checkbox
-                    checked={formData.preferredWeddingTraditions.includes(tradition)}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        setFormData({
-                          ...formData,
-                          preferredWeddingTraditions: [...formData.preferredWeddingTraditions, tradition],
-                        });
-                      } else {
-                        setFormData({
-                          ...formData,
-                          preferredWeddingTraditions: formData.preferredWeddingTraditions.filter(
-                            (t) => t !== tradition
-                          ),
-                        });
-                      }
-                    }}
-                    data-testid={`checkbox-tradition-${tradition}`}
-                  />
-                  <span className="text-sm capitalize">{tradition.replace(/_/g, " ")}</span>
-                </label>
-              ))}
+              {traditionsLoading ? (
+                <p className="text-sm text-muted-foreground col-span-2">Loading traditions...</p>
+              ) : traditions.length === 0 ? (
+                <p className="text-sm text-muted-foreground col-span-2">No traditions available</p>
+              ) : (
+                traditions.map((tradition) => (
+                  <label
+                    key={tradition.id}
+                    className="flex items-center gap-2 p-3 rounded-md border cursor-pointer hover:bg-muted/50"
+                  >
+                    <Checkbox
+                      checked={formData.preferredWeddingTraditions.includes(tradition.id)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setFormData({
+                            ...formData,
+                            preferredWeddingTraditions: [...formData.preferredWeddingTraditions, tradition.id],
+                          });
+                        } else {
+                          setFormData({
+                            ...formData,
+                            preferredWeddingTraditions: formData.preferredWeddingTraditions.filter(
+                              (t) => t !== tradition.id
+                            ),
+                          });
+                        }
+                      }}
+                      data-testid={`checkbox-tradition-${tradition.id}`}
+                    />
+                    <span className="text-sm">{tradition.displayName}</span>
+                  </label>
+                ))
+              )}
             </div>
           </div>
         );

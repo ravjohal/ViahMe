@@ -22,9 +22,10 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { Vendor, ServicePackage, InsertServicePackage } from "@shared/schema";
-import { insertServicePackageSchema, VENDOR_CATEGORIES, WEDDING_TRADITIONS } from "@shared/schema";
+import { insertServicePackageSchema, VENDOR_CATEGORIES } from "@shared/schema";
 import { useLocation, Link } from "wouter";
 import { Package, Plus, Edit, Trash2, CheckCircle, Settings, X } from "lucide-react";
+import { useTraditions } from "@/hooks/use-traditions";
 
 export default function VendorPackages() {
   const { toast } = useToast();
@@ -49,6 +50,8 @@ export default function VendorPackages() {
     queryKey: ["/api/vendors/me"],
     enabled: !!user && user.role === "vendor",
   });
+
+  const { data: traditions = [], isLoading: traditionsLoading } = useTraditions();
 
   const vendorId = currentVendor?.id;
   const hasProfile = !!currentVendor;
@@ -482,17 +485,23 @@ export default function VendorPackages() {
             <div>
               <Label className="mb-2 block">Wedding Traditions *</Label>
               <div className="flex flex-wrap gap-2">
-                {WEDDING_TRADITIONS.map((tradition) => (
-                  <Badge
-                    key={tradition.value}
-                    variant={packageFormData.traditions?.includes(tradition.value) ? "default" : "outline"}
-                    className="cursor-pointer"
-                    onClick={() => toggleTradition(tradition.value)}
-                    data-testid={`badge-tradition-${tradition.value}`}
-                  >
-                    {tradition.label}
-                  </Badge>
-                ))}
+                {traditionsLoading ? (
+                  <span className="text-sm text-muted-foreground">Loading traditions...</span>
+                ) : traditions.length === 0 ? (
+                  <span className="text-sm text-muted-foreground">No traditions available</span>
+                ) : (
+                  traditions.map((tradition) => (
+                    <Badge
+                      key={tradition.id}
+                      variant={packageFormData.traditions?.includes(tradition.id) ? "default" : "outline"}
+                      className="cursor-pointer"
+                      onClick={() => toggleTradition(tradition.id)}
+                      data-testid={`badge-tradition-${tradition.id}`}
+                    >
+                      {tradition.displayName}
+                    </Badge>
+                  ))
+                )}
               </div>
               {packageFormErrors.traditions && (
                 <p className="text-sm text-destructive mt-1">{packageFormErrors.traditions}</p>
@@ -503,15 +512,15 @@ export default function VendorPackages() {
               <Label className="mb-2 block">Service Categories *</Label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-48 overflow-y-auto p-2 border rounded-lg">
                 {VENDOR_CATEGORIES.map((category) => (
-                  <div key={category.value} className="flex items-center gap-2">
+                  <div key={category} className="flex items-center gap-2">
                     <Checkbox
-                      id={`category-${category.value}`}
-                      checked={packageFormData.categories?.includes(category.value)}
-                      onCheckedChange={() => toggleCategory(category.value)}
-                      data-testid={`checkbox-category-${category.value}`}
+                      id={`category-${category}`}
+                      checked={packageFormData.categories?.includes(category)}
+                      onCheckedChange={() => toggleCategory(category)}
+                      data-testid={`checkbox-category-${category}`}
                     />
-                    <Label htmlFor={`category-${category.value}`} className="text-sm cursor-pointer">
-                      {category.label}
+                    <Label htmlFor={`category-${category}`} className="text-sm cursor-pointer">
+                      {category.replace(/_/g, ' ')}
                     </Label>
                   </div>
                 ))}

@@ -14,96 +14,32 @@ Viah.me is a specialized vertical SaaS platform designed to manage the unique lo
 The platform utilizes a modern web stack: **React**, **TypeScript**, **Tailwind CSS**, and **Shadcn UI** for the frontend, and **Express.js** with **Node.js** for the backend. Data is persisted in **PostgreSQL** (Neon) using **Drizzle ORM**.
 
 Key architectural decisions and features include:
-- **Comprehensive Data Model**: Designed to support the intricate nature of multi-day South Asian weddings.
-- **Cultural Templates**: Pre-populated event timelines and task templates for 9 wedding traditions with auto-seeding. Ceremony cost estimates use a **normalized relational model**.
-  - **Ceremony Template Items (Normalized)**: `ceremony_template_items` table stores line items for each ceremony template with fields:
-    - `templateId`: References `ceremony_templates.ceremonyId`
-    - `itemName`: The line item name (e.g., "Venue", "Caterer", "Photographer")
-    - `budgetBucket`: Maps to one of the 12 BUDGET_BUCKETS
-    - `lowCost`/`highCost`: Cost range estimates
-    - `unit`: 'fixed' | 'per_person' | 'per_hour'
-    - `hoursLow`/`hoursHigh`: For per_hour items
-    - `notes`: Additional context
-    - `displayOrder`, `isActive`: For admin management
-  - **Wedding Line Items (Couple's Workspace)**: `wedding_line_items` table for couple-customized budget items:
-    - `weddingId`: The couple's wedding
-    - `ceremonyId`: Optional - links to specific event
-    - `label`: User-editable item name
-    - `bucket`: Budget category (can be changed by user)
-    - `targetAmount`: The budgeted amount
-    - `isSystemGenerated`: True if hydrated from template
-    - `sourceTemplateItemId`: Original template item reference
-  - **Regional Pricing**: `regional_pricing` table with city-specific multipliers (Bay Area 1.5x, NYC 1.4x, LA 1.3x, Chicago 1.2x, Seattle 1.1x)
-  - **API Endpoints**: `/api/ceremony-templates`, `/api/ceremony-templates/:id/line-items`, `/api/regional-pricing`, `/api/ceremony-estimate` (public read, admin write)
-  - **Admin UI**: Site admins (users with `isSiteAdmin: true`) can manage templates at `/admin/ceremony-templates`
-  - **Database-First Architecture**: The `ceremony_template_items` table is the single source of truth for ceremony line items. The API endpoint `/api/ceremony-templates/:id/line-items` fetches from this normalized table.
-  - **Ceremony Mapping**: `CEREMONY_MAPPINGS` object in `shared/ceremonies.ts` maps event names/types to ceremony template IDs for matching events to templates
-  - **Hydration**: When couples select ceremony estimates, line items can be "hydrated" into `wedding_line_items` for customization
-  - **Migration Note**: Legacy `cost_breakdown` JSONB column on `ceremony_templates` table is deprecated; all data has been migrated to the normalized `ceremony_template_items` table
-  - **Cleanup Note (Jan 2026)**: Legacy `spend_categories` and `ceremony_spend_categories` tables have been dropped; `ceremony_template_items` is the single source of truth for all ceremony cost line items
+- **Comprehensive Data Model**: Designed to support the intricate nature of multi-day South Asian weddings with database-driven wedding traditions and sub-traditions for flexible management.
+- **Cultural Templates**: Pre-populated event timelines, task templates, and normalized ceremony cost estimates for 9 wedding traditions, supporting regional pricing variations.
 - **Vendor Specialization**: Support for 32 distinct vendor categories, including culturally-specific services.
-- **Budget Intelligence System**: Uses a **Unified Single Ledger Model** for simplified budget and expense tracking. Provides smart budget recommendations, dual-view aggregation (by bucket and by ceremony), contributor filtering, guest savings calculator, upcoming payments timeline, and automatic budget alerts.
-  - **Three-Tier Budget Hierarchy**:
-    1. **`budget_categories` (Top Tier)**: 12 high-level budget buckets managed by site admins in the database, with rich metadata:
-       - `id`: Slug-style ID (e.g., 'venue', 'catering') for code references
-       - `displayName`: Human-readable label
-       - `description`: Help text for couples
-       - `iconName`: Lucide icon name for UI
-       - `isEssential`: Essential vs. Optional grouping
-       - `suggestedPercentage`: Typical % of budget (e.g., Venue 30%, Catering 25%)
-       - `displayOrder`, `isActive`, `isSystemCategory`: Admin controls
-    2. **`ceremony_template_items` (Middle Tier)**: 50+ tradition-specific line items (e.g., "Gurdwara Donation", "Turban Tying") that serve as blueprints
-    3. **`wedding_line_items` (Bottom Tier)**: Couple's actual budget items, hydrated from templates or custom-created
-  - **Reserved Keys Pattern**: `BUDGET_BUCKETS` constant in code for system logic, while `budget_categories` table serves as the UI source of truth
-  - **API Endpoints**: `/api/budget/categories` (GET all), `/api/budget/categories/:id` (GET one), `/api/budget/categories/seed` (POST admin seed)
-  - **Unified Budget Allocations Table**: `budgetAllocations` serves as the single table for ALL budget planning with hierarchical support:
-    - `ceremonyId: null, lineItemLabel: null` = Bucket-level total (global category budget)
-    - `ceremonyId: set, lineItemLabel: null` = Ceremony-bucket allocation (per-ceremony, per-category)
-    - `ceremonyId: set, lineItemLabel: set` = Line-item level budget (specific cost item within ceremony+category)
-    - This replaces the previous 3-table model (ceremony_budgets, ceremony_category_allocations, ceremony_line_item_budgets) with a simpler, more flexible design
-  - **Expenses Table**: Expenses link directly to buckets via `parentCategory` field and optionally to ceremonies via `ceremonyId`. Fields include: `expenseName` (user-defined), `parentCategory` (bucket), `ceremonyId`, `status` ('estimated' | 'booked' | 'paid'), `paidBy` (me | partner | me_partner | bride_family | groom_family).
-  - **Dual-View Aggregation**: Expenses can be viewed/totaled by bucket OR by ceremony using `getExpensesByBucket()` and `getExpensesByCeremony()` storage methods.
-  - **Refined Pricing Engine**: Three-factor multiplier system in `shared/pricing.ts` for precise cost estimates:
-    - Venue class multipliers (Home 0.6x → Hotel Ballroom 1.0x)
-    - Vendor tier multipliers (Budget 0.65x → Premium 1.0x)
-    - Guest bracket multipliers (Small <50 guests 0.9x → XL 400+ guests 1.05x)
-  - **Pricing Adjuster Component**: Reusable `PricingAdjuster` component with venue/vendor selectors for Budget Estimator and Ceremony Cost Breakdown
-  - **Synchronized Pricing**: All three estimation surfaces (Budget Estimator, Ceremony Cost Breakdown, Multi-Ceremony Savings Calculator) apply consistent multipliers to both totals and line-item breakdowns
-- **Guest List Management**: Frictionless bulk guest import, advanced invitation & RSVP system with household grouping, magic link authentication, per-event RSVP tracking, and bulk invitation sender. Features a Household-First Architecture with Head of House contacts, side filters, event filter pills, summary headers, gift tracking, and WhatsApp template blasts.
-- **Integrated Guest Management Module**: Two-tier UI for managing final guest lists ("Guest List") and a simplified planning workflow ("Guest Planning") including collector links for family submissions, per-event cost & capacity tracking.
-- **Communication & Collaboration**: Messaging system, review system, document storage, and team collaboration with granular role-based access control.
-- **Persistent AI Planner Chatbot**: Floating AI assistant available throughout the app, mobile-first design, wedding context awareness, quick prompts, markdown responses, and progressive summarization for long conversations.
-- **AI-Powered Message Suggestions**: Gemini LLM integration for intelligent message drafting for vendor replies and couple booking requests, context-aware.
-- **ViahMe Guest Assistant**: AI-powered chat on the guest contribution page for family members, designed for ease of use with context-aware responses and quick prompts.
-- **Live Wedding Experience**: Real-Time Guest Concierge system, Gap Concierge Designer, Ritual Control Panel, and public-facing Guest Live Feed.
-- **Real-Time Master Timeline**: Day-of coordination system with drag-and-drop event reordering, vendor tagging, time change notifications via email/SMS, vendor acknowledgment, and WebSocket-based live updates.
-- **Vendor Tools**: Real-Time Vendor Availability Calendar, Vendor Comparison Tools, Google Calendar Integration.
-- **E-commerce & Shopping**: Invitation Card Shop with Stripe payment processing, Shopping & Measurements Tracking with dual currency support.
-- **Cultural Information**: Guest-facing educational section with ceremony explanations, attire guides, etiquette, traditions, and a terminology glossary.
+- **Budget Intelligence System**: Employs a Unified Single Ledger Model with a three-tier budget hierarchy, smart budget recommendations, dual-view aggregation, and a refined pricing engine using three-factor multipliers for precise estimates.
+- **Guest List Management**: Features frictionless bulk guest import, advanced invitation & RSVP system with household grouping, magic link authentication, per-event RSVP tracking, and a Household-First Architecture. Includes an integrated Guest Management Module for planning and collector links.
+- **Communication & Collaboration**: Offers a messaging system, review system, document storage, team collaboration with granular role-based access control, and AI-powered message suggestions using Gemini LLM.
+- **Persistent AI Planner Chatbot**: A floating, mobile-first AI assistant with wedding context awareness and progressive summarization.
+- **Live Wedding Experience**: Real-Time Guest Concierge, Gap Concierge Designer, Ritual Control Panel, and public-facing Guest Live Feed.
+- **Real-Time Master Timeline**: Day-of coordination system with drag-and-drop functionality, vendor tagging, notifications, and WebSocket-based live updates.
+- **Vendor Tools**: Real-Time Vendor Availability Calendar, Comparison Tools, and Google Calendar Integration.
+- **E-commerce & Shopping**: Invitation Card Shop with payment processing and Shopping & Measurements Tracking.
+- **Cultural Information**: Guest-facing educational section with ceremony explanations, attire guides, etiquette, and a terminology glossary.
 - **Authentication**: Dual-persona (Couples/Vendors) email-based authentication with distinct user journeys and role-based access control.
-- **Transactional Emails**: Professional email notifications via Resend with React Email templates.
 - **Analytics**: Vendor & Couple Analytics Dashboards with Recharts for visualizations.
 - **UI/UX**: Warm orange/gold primary color palette, elegant typography, Shadcn UI components, hover elevate interactions, and responsive design.
 - **Contract E-Signatures**: Legally-binding digital contract signing system.
-- **Photo Gallery & Portfolio System**: Comprehensive visual content management with Inspiration Boards, Vendor Portfolios, and Event Photos.
-- **Gift Registry Integration**: Link-based registry support for major retailers and custom retailers.
-- **YouTube Livestream Integration**: Embedded YouTube livestream URLs on guest websites for remote guests.
-- **Interactive Task Checklist**: Comprehensive task management with circular progress visualization, automated reminders via email/SMS, task assignment, on-demand reminders, filtered views, phase-based organization, and auto-completion upon vendor booking.
-- **Expense Splitting**: Shared cost management for couples with expense tracking, "who paid" selection, various split types, event association, settlement summary, and payment tracking.
-- **Vendor Lead Management System**: Automated lead qualification and nurturing with lead scoring, priority classification (hot/warm/medium/cold), auto-lead creation, a vendor-facing lead dashboard, activity tracking, nurturing sequences, and email integration.
-- **Side-Based Event Separation**: Multi-family planning support where bride/groom sides can have private events and expenses. Events have `side` ('bride'|'groom'|'mutual') and `visibility` ('private'|'shared') attributes for granular control.
-- **Partner Collaboration Flow**: Prominent "Invite Your Partner" card on dashboard immediately after onboarding, encouraging collaborative wedding planning.
-- **Ritual Role Assignee Manager**: Couples can assign ceremonial micro-roles to guests with "Mission Card" notifications.
-  - **RITUAL_ROLE_TEMPLATES**: 20+ pre-defined roles (Ardas Leader, Palla Holder, Milni Coordinator, Joota Chupai Captain, etc.) organized by ceremony type in `shared/schema.ts`
-  - **ritual_role_assignments table**: Stores assignments with status tracking (assigned/acknowledged/completed), custom instructions, timing, location, attire notes, and priority (high/medium/low)
-  - **Couples UI**: `/ritual-roles` page with ceremony-by-ceremony role management interface accessible from sidebar under "More Tools"
-  - **Guest Portal Integration**: Mission Cards appear in the RSVP portal (`/rsvp/:token`) showing assigned roles with "Accept Role" acknowledgment flow
-  - **API Endpoints**: `/api/ritual-roles/*` for CRUD operations, guest-facing endpoints for acknowledging roles
-- **Vendor Access Pass & Collaboration Hub**: Share filtered timeline views with booked vendors. Eliminates the "15 different PDF versions of the timeline" problem.
-  - **vendor_access_passes table**: Stores access tokens, vendor/event visibility filters, permissions (canViewGuestCount, canViewVendorDetails), access tracking (lastAccessedAt, accessCount), and status (active/revoked/expired)
-  - **Couples UI**: `/vendor-collaboration` page to create, manage, and revoke vendor access passes. Select specific events to share, configure visibility permissions, copy shareable links, and track vendor access usage
-  - **Vendor-Facing View**: `/vendor-timeline/:token` public page for vendors to view their filtered timeline without requiring an account. Shows relevant events with dates, times, locations, and optional guest counts
-  - **API Endpoints**: `/api/vendor-access-passes/*` for CRUD operations, `/api/vendor-collaboration/:token` for public vendor timeline view with usage tracking
+- **Photo Gallery & Portfolio System**: Comprehensive visual content management with Inspiration Boards and Vendor Portfolios.
+- **Gift Registry Integration**: Link-based registry support for major retailers.
+- **YouTube Livestream Integration**: Embedded YouTube livestream URLs for guest websites.
+- **Interactive Task Checklist**: Comprehensive task management with progress visualization, automated reminders, and task assignment.
+- **Expense Splitting**: Shared cost management for couples with tracking, split types, and settlement summaries.
+- **Vendor Lead Management System**: Automated lead qualification and nurturing with scoring, activity tracking, and email integration.
+- **Side-Based Event Separation**: Multi-family planning support with `side` and `visibility` attributes for granular event and expense control.
+- **Partner Collaboration Flow**: Encourages collaborative planning through prominent in-app prompts.
+- **Ritual Role Assignee Manager**: Allows couples to assign ceremonial micro-roles to guests using pre-defined templates, with guest portal integration for acknowledgments.
+- **Vendor Access Pass & Collaboration Hub**: Enables sharing of filtered timeline views with booked vendors, managing access tokens, and tracking vendor engagement without requiring vendor accounts.
 
 ## External Dependencies
 - **PostgreSQL (Neon)**: Relational database.

@@ -34,8 +34,9 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { Vendor, Booking, Contract, InsertVendor, ServicePackage, InsertServicePackage } from "@shared/schema";
-import { insertVendorSchema, insertServicePackageSchema, VENDOR_CATEGORIES, WEDDING_TRADITIONS } from "@shared/schema";
+import { insertVendorSchema, insertServicePackageSchema, VENDOR_CATEGORIES } from "@shared/schema";
 import { AddressAutocomplete } from "@/components/address-autocomplete";
+import { useTraditions } from "@/hooks/use-traditions";
 import { Checkbox } from "@/components/ui/checkbox";
 import { VendorSetupWizard } from "@/components/vendor-setup-wizard";
 import { z } from "zod";
@@ -127,6 +128,8 @@ export default function VendorDashboard() {
     queryKey: ["/api/vendors/me"],
     enabled: !!user && user.role === "vendor",
   });
+
+  const { data: traditions = [], isLoading: traditionsLoading } = useTraditions();
 
   const vendorId = currentVendor?.id;
 
@@ -1697,22 +1700,28 @@ export default function VendorDashboard() {
               <Label>Wedding Traditions <span className="text-destructive">*</span></Label>
               <p className="text-xs text-muted-foreground">Select which wedding traditions this package is designed for</p>
               <div className="grid grid-cols-2 gap-2 mt-2">
-                {WEDDING_TRADITIONS.map((tradition) => (
-                  <div key={tradition} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`tradition-${tradition}`}
-                      checked={(packageFormData.traditions || []).includes(tradition)}
-                      onCheckedChange={() => {
-                        toggleTradition(tradition);
-                        if (packageFormErrors.traditions) setPackageFormErrors(prev => ({ ...prev, traditions: "" }));
-                      }}
-                      data-testid={`checkbox-tradition-${tradition}`}
-                    />
-                    <Label htmlFor={`tradition-${tradition}`} className="text-sm cursor-pointer">
-                      {tradition}
-                    </Label>
-                  </div>
-                ))}
+                {traditionsLoading ? (
+                  <p className="text-sm text-muted-foreground col-span-2">Loading traditions...</p>
+                ) : traditions.length === 0 ? (
+                  <p className="text-sm text-muted-foreground col-span-2">No traditions available</p>
+                ) : (
+                  traditions.map((tradition) => (
+                    <div key={tradition.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`tradition-${tradition.id}`}
+                        checked={(packageFormData.traditions || []).includes(tradition.id)}
+                        onCheckedChange={() => {
+                          toggleTradition(tradition.id);
+                          if (packageFormErrors.traditions) setPackageFormErrors(prev => ({ ...prev, traditions: "" }));
+                        }}
+                        data-testid={`checkbox-tradition-${tradition.id}`}
+                      />
+                      <Label htmlFor={`tradition-${tradition.id}`} className="text-sm cursor-pointer">
+                        {tradition.displayName}
+                      </Label>
+                    </div>
+                  ))
+                )}
               </div>
               {packageFormErrors.traditions && (
                 <p className="text-sm text-destructive">{packageFormErrors.traditions}</p>
