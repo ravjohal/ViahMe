@@ -40,6 +40,7 @@ Key architectural decisions and features include:
   - **Ceremony Mapping**: `CEREMONY_MAPPINGS` object in `shared/ceremonies.ts` maps event names/types to ceremony template IDs for matching events to templates
   - **Hydration**: When couples select ceremony estimates, line items can be "hydrated" into `wedding_line_items` for customization
   - **Migration Note**: Legacy `cost_breakdown` JSONB column on `ceremony_templates` table is deprecated; all data has been migrated to the normalized `ceremony_template_items` table
+  - **Cleanup Note (Jan 2026)**: Legacy `spend_categories` and `ceremony_spend_categories` tables have been dropped; `ceremony_template_items` is the single source of truth for all ceremony cost line items
 - **Vendor Specialization**: Support for 32 distinct vendor categories, including culturally-specific services.
 - **Budget Intelligence System**: Uses a **Unified Single Ledger Model** for simplified budget and expense tracking. Provides smart budget recommendations, dual-view aggregation (by bucket and by ceremony), contributor filtering, guest savings calculator, upcoming payments timeline, and automatic budget alerts.
   - **Three-Tier Budget Hierarchy**:
