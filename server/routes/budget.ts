@@ -1,10 +1,11 @@
 import { Router } from "express";
 import { requireAuth, type AuthRequest } from "../auth-middleware";
 import type { IStorage } from "../storage";
-import { insertExpenseSchema, insertBudgetAllocationSchema, insertBudgetBenchmarkSchema, BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket } from "@shared/schema";
+import { insertExpenseSchema, insertBudgetAllocationSchema, insertBudgetBenchmarkSchema, BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket, insertBudgetCategorySchema } from "@shared/schema";
 import { ensureCoupleAccess } from "./middleware";
 
 export async function registerBudgetRoutes(router: Router, storage: IStorage) {
+  // Legacy endpoint - returns static buckets (kept for backwards compatibility)
   router.get("/buckets", async (_req, res) => {
     try {
       const buckets = BUDGET_BUCKETS.map(bucket => ({
@@ -14,6 +15,112 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
       res.json(buckets);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch budget buckets" });
+    }
+  });
+
+  // New: Get all budget categories with rich metadata (from database)
+  router.get("/categories", async (_req, res) => {
+    try {
+      const categories = await storage.getActiveBudgetCategories();
+      res.json(categories);
+    } catch (error) {
+      console.error("Failed to fetch budget categories:", error);
+      res.status(500).json({ error: "Failed to fetch budget categories" });
+    }
+  });
+
+  // New: Get a specific budget category
+  router.get("/categories/:id", async (req, res) => {
+    try {
+      const category = await storage.getBudgetCategory(req.params.id);
+      if (!category) {
+        return res.status(404).json({ error: "Budget category not found" });
+      }
+      res.json(category);
+    } catch (error) {
+      console.error("Failed to fetch budget category:", error);
+      res.status(500).json({ error: "Failed to fetch budget category" });
+    }
+  });
+
+  // Admin: Seed budget categories from defaults
+  router.post("/categories/seed", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      const user = await storage.getUser(authReq.session.userId!);
+      if (!user?.isSiteAdmin) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      const categories = await storage.seedBudgetCategories();
+      res.json({ message: "Budget categories seeded successfully", count: categories.length, categories });
+    } catch (error) {
+      console.error("Failed to seed budget categories:", error);
+      res.status(500).json({ error: "Failed to seed budget categories" });
+    }
+  });
+
+  // Admin: Create a new budget category
+  router.post("/categories", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      const user = await storage.getUser(authReq.session.userId!);
+      if (!user?.isSiteAdmin) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      const validatedData = insertBudgetCategorySchema.parse(req.body);
+      const category = await storage.createBudgetCategory(validatedData);
+      res.status(201).json(category);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      console.error("Failed to create budget category:", error);
+      res.status(500).json({ error: "Failed to create budget category" });
+    }
+  });
+
+  // Admin: Update a budget category
+  router.patch("/categories/:id", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      const user = await storage.getUser(authReq.session.userId!);
+      if (!user?.isSiteAdmin) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      const category = await storage.updateBudgetCategory(req.params.id, req.body);
+      if (!category) {
+        return res.status(404).json({ error: "Budget category not found" });
+      }
+      res.json(category);
+    } catch (error) {
+      console.error("Failed to update budget category:", error);
+      res.status(500).json({ error: "Failed to update budget category" });
+    }
+  });
+
+  // Admin: Delete a budget category (system categories cannot be deleted)
+  router.delete("/categories/:id", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      const user = await storage.getUser(authReq.session.userId!);
+      if (!user?.isSiteAdmin) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      const deleted = await storage.deleteBudgetCategory(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Budget category not found or cannot be deleted" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      if (error instanceof Error && error.message.includes("Cannot delete system categories")) {
+        return res.status(400).json({ error: error.message });
+      }
+      console.error("Failed to delete budget category:", error);
+      res.status(500).json({ error: "Failed to delete budget category" });
     }
   });
 
