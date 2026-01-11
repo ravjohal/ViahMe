@@ -60,6 +60,16 @@ export default function AdminCeremonyTemplatesPage() {
   // Budget line items state
   const [selectedCeremonyForLineItems, setSelectedCeremonyForLineItems] = useState<string | null>(null);
   const [isAddLineItemDialogOpen, setIsAddLineItemDialogOpen] = useState(false);
+  const [isEditLineItemDialogOpen, setIsEditLineItemDialogOpen] = useState(false);
+  const [editingLineItem, setEditingLineItem] = useState<{
+    id: string;
+    itemName: string;
+    budgetBucketId: string;
+    lowCost: string;
+    highCost: string;
+    unit: string;
+    notes: string;
+  } | null>(null);
   const [newLineItem, setNewLineItem] = useState({
     itemName: "",
     budgetBucketId: "other",
@@ -186,10 +196,39 @@ export default function AdminCeremonyTemplatesPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ceremony-types", selectedCeremonyForLineItems, "line-items"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/ceremony-types/all/line-items"] });
       toast({ title: "Budget line item deleted" });
     },
     onError: (error: Error) => {
       toast({ title: "Failed to delete line item", description: error.message, variant: "destructive" });
+    },
+  });
+  
+  // Mutation to update a system budget line item
+  const updateLineItemMutation = useMutation({
+    mutationFn: async ({ ceremonyId, categoryId, data }: { 
+      ceremonyId: string;
+      categoryId: string;
+      data: { 
+        itemName?: string; 
+        budgetBucketId?: string; 
+        lowCost?: number; 
+        highCost?: number; 
+        unit?: string; 
+        notes?: string; 
+      }
+    }) => {
+      return apiRequest("PATCH", `/api/ceremony-types/${ceremonyId}/budget-categories/${categoryId}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/ceremony-types", selectedCeremonyForLineItems, "line-items"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/ceremony-types/all/line-items"] });
+      toast({ title: "Budget line item updated successfully" });
+      setIsEditLineItemDialogOpen(false);
+      setEditingLineItem(null);
+    },
+    onError: (error: Error) => {
+      toast({ title: "Failed to update line item", description: error.message, variant: "destructive" });
     },
   });
 
@@ -483,21 +522,42 @@ export default function AdminCeremonyTemplatesPage() {
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                if (selectedCeremonyForLineItems && confirm("Delete this line item?")) {
-                                  deleteLineItemMutation.mutate({
-                                    ceremonyId: selectedCeremonyForLineItems,
-                                    categoryId: item.id,
+                            <div className="flex items-center justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setEditingLineItem({
+                                    id: item.id,
+                                    itemName: item.name,
+                                    budgetBucketId: item.budgetBucketId,
+                                    lowCost: String(item.lowCost),
+                                    highCost: String(item.highCost),
+                                    unit: item.unit,
+                                    notes: item.notes || "",
                                   });
-                                }
-                              }}
-                              data-testid={`button-delete-item-${item.id}`}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                                  setIsEditLineItemDialogOpen(true);
+                                }}
+                                data-testid={`button-edit-item-${item.id}`}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  if (selectedCeremonyForLineItems && confirm("Delete this line item?")) {
+                                    deleteLineItemMutation.mutate({
+                                      ceremonyId: selectedCeremonyForLineItems,
+                                      categoryId: item.id,
+                                    });
+                                  }
+                                }}
+                                data-testid={`button-delete-item-${item.id}`}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       );
@@ -603,6 +663,119 @@ export default function AdminCeremonyTemplatesPage() {
             >
               {createLineItemMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Add Line Item
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isEditLineItemDialogOpen} onOpenChange={setIsEditLineItemDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Budget Line Item</DialogTitle>
+            <DialogDescription>Update the budget category for {ceremonyLineItems?.ceremonyName || "this ceremony"}</DialogDescription>
+          </DialogHeader>
+          {editingLineItem && (
+            <div className="space-y-4">
+              <div>
+                <Label>Item Name</Label>
+                <Input
+                  value={editingLineItem.itemName}
+                  onChange={(e) => setEditingLineItem({ ...editingLineItem, itemName: e.target.value })}
+                  placeholder="e.g., Gurdwara Donation"
+                  data-testid="input-edit-item-name"
+                />
+              </div>
+              <div>
+                <Label>Budget Category</Label>
+                <Select value={editingLineItem.budgetBucketId} onValueChange={(v) => setEditingLineItem({ ...editingLineItem, budgetBucketId: v })}>
+                  <SelectTrigger data-testid="select-edit-item-bucket">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {BUDGET_BUCKETS.map(b => (
+                      <SelectItem key={b.value} value={b.value}>{b.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Low Cost ($)</Label>
+                  <Input
+                    type="number"
+                    value={editingLineItem.lowCost}
+                    onChange={(e) => setEditingLineItem({ ...editingLineItem, lowCost: e.target.value })}
+                    placeholder="500"
+                    data-testid="input-edit-item-low"
+                  />
+                </div>
+                <div>
+                  <Label>High Cost ($)</Label>
+                  <Input
+                    type="number"
+                    value={editingLineItem.highCost}
+                    onChange={(e) => setEditingLineItem({ ...editingLineItem, highCost: e.target.value })}
+                    placeholder="2000"
+                    data-testid="input-edit-item-high"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>Unit Type</Label>
+                <Select value={editingLineItem.unit} onValueChange={(v) => setEditingLineItem({ ...editingLineItem, unit: v })}>
+                  <SelectTrigger data-testid="select-edit-item-unit">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {UNIT_TYPES.map(u => (
+                      <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Notes (optional)</Label>
+                <Textarea
+                  value={editingLineItem.notes}
+                  onChange={(e) => setEditingLineItem({ ...editingLineItem, notes: e.target.value })}
+                  placeholder="Any additional notes..."
+                  data-testid="input-edit-item-notes"
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsEditLineItemDialogOpen(false);
+                setEditingLineItem(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (selectedCeremonyForLineItems && editingLineItem && editingLineItem.itemName && editingLineItem.lowCost && editingLineItem.highCost) {
+                  updateLineItemMutation.mutate({
+                    ceremonyId: selectedCeremonyForLineItems,
+                    categoryId: editingLineItem.id,
+                    data: {
+                      itemName: editingLineItem.itemName,
+                      budgetBucketId: editingLineItem.budgetBucketId,
+                      lowCost: parseFloat(editingLineItem.lowCost),
+                      highCost: parseFloat(editingLineItem.highCost),
+                      unit: editingLineItem.unit,
+                      notes: editingLineItem.notes,
+                    },
+                  });
+                }
+              }}
+              disabled={updateLineItemMutation.isPending || !editingLineItem?.itemName || !editingLineItem?.lowCost || !editingLineItem?.highCost}
+              data-testid="button-update-line-item"
+            >
+              {updateLineItemMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>
