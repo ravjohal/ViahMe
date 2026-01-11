@@ -81,6 +81,7 @@ export default function Budget() {
   const [sideFilter, setSideFilter] = useState<SideFilter>("all");
   const [editBudgetOpen, setEditBudgetOpen] = useState(false);
   const [showCategories, setShowCategories] = useState(false);
+  const [expandedBudgetCategories, setExpandedBudgetCategories] = useState<Set<string>>(new Set());
   const [editingExpense, setEditingExpense] = useState<ExpenseWithAllocations | null>(null);
   const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null);
   const [showCeremonyBudgets, setShowCeremonyBudgets] = useState(false);
@@ -643,6 +644,82 @@ export default function Budget() {
     
     return bucketEstimates;
   }, [events, ceremonyBreakdownMap]);
+
+  // Detailed breakdown of line items per bucket, including ceremony/event info
+  // This powers the expandable breakdown view in budget categories
+  interface LineItemBreakdown {
+    eventId: string;
+    eventName: string;
+    ceremonyName: string;
+    itemName: string;
+    lowCost: number;
+    highCost: number;
+    unit: string;
+    guestCount: number;
+    calculatedLow: number;
+    calculatedHigh: number;
+  }
+  const lineItemBreakdownByBucket = useMemo(() => {
+    const breakdown: Record<string, LineItemBreakdown[]> = {};
+    
+    const eventsWithCeremony = events.filter(e => e.ceremonyTypeId);
+    
+    for (const event of eventsWithCeremony) {
+      const lineItems = ceremonyBreakdownMap[event.ceremonyTypeId!];
+      if (!lineItems) continue;
+      
+      const guestCount = event.guestCount || 100;
+      
+      for (const item of lineItems) {
+        const bucketId = item.budgetBucketId || 'other';
+        
+        if (!breakdown[bucketId]) {
+          breakdown[bucketId] = [];
+        }
+        
+        let calculatedLow = item.lowCost;
+        let calculatedHigh = item.highCost;
+        
+        if (item.unit === 'per_person') {
+          calculatedLow *= guestCount;
+          calculatedHigh *= guestCount;
+        } else if (item.unit === 'per_hour') {
+          const hoursLow = item.hoursLow || 1;
+          const hoursHigh = item.hoursHigh || hoursLow;
+          calculatedLow *= hoursLow;
+          calculatedHigh *= hoursHigh;
+        }
+        
+        breakdown[bucketId].push({
+          eventId: event.id,
+          eventName: event.name,
+          ceremonyName: item.category || event.name,
+          itemName: item.itemName,
+          lowCost: item.lowCost,
+          highCost: item.highCost,
+          unit: item.unit || 'fixed',
+          guestCount,
+          calculatedLow: Math.round(calculatedLow),
+          calculatedHigh: Math.round(calculatedHigh),
+        });
+      }
+    }
+    
+    return breakdown;
+  }, [events, ceremonyBreakdownMap]);
+
+  // Toggle budget category expansion
+  const toggleBudgetCategoryExpansion = (bucketId: string) => {
+    setExpandedBudgetCategories(prev => {
+      const next = new Set(prev);
+      if (next.has(bucketId)) {
+        next.delete(bucketId);
+      } else {
+        next.add(bucketId);
+      }
+      return next;
+    });
+  };
 
   // For display, use ceremony totals as the primary "planned" amount
   const totalAllocated = totalByCeremonies;
@@ -1536,63 +1613,116 @@ export default function Budget() {
               <div className="space-y-3">
                 {(expenseTotals?.bucketTotals || []).map((bucketTotal) => {
                   const percentSpent = bucketTotal.allocated > 0 ? (bucketTotal.spent / bucketTotal.allocated) * 100 : 0;
-                  // Get estimated budget from ceremony line items for this bucket
                   const bucketEstimate = estimatedBudgetByBucket[bucketTotal.bucket];
                   const hasEstimate = bucketEstimate && bucketEstimate.itemCount > 0;
+                  const lineItems = lineItemBreakdownByBucket[bucketTotal.bucket] || [];
+                  const isExpanded = expandedBudgetCategories.has(bucketTotal.bucket);
 
                   return (
                     <div 
                       key={bucketTotal.bucket} 
-                      className="p-4 rounded-lg border bg-card"
+                      className="rounded-lg border bg-card overflow-hidden"
                       data-testid={`category-${bucketTotal.bucket}`}
                     >
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <p className="font-medium">{bucketTotal.label}</p>
-                          <p className="text-sm text-muted-foreground">
-                            ${bucketTotal.spent.toLocaleString()} of ${bucketTotal.allocated.toLocaleString()} spent
-                          </p>
-                          {hasEstimate && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Est. from ceremonies: ${bucketEstimate.low.toLocaleString()} - ${bucketEstimate.high.toLocaleString()}
-                              <span className="ml-1">({bucketEstimate.itemCount} items)</span>
+                      <div className="p-4">
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1">
+                            <p className="font-medium">{bucketTotal.label}</p>
+                            <p className="text-sm text-muted-foreground">
+                              ${bucketTotal.spent.toLocaleString()} of ${bucketTotal.allocated.toLocaleString()} spent
                             </p>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          {hasEstimate && bucketTotal.allocated === 0 && (
+                            {hasEstimate && (
+                              <button
+                                onClick={() => toggleBudgetCategoryExpansion(bucketTotal.bucket)}
+                                className="text-xs text-muted-foreground mt-1 hover:text-foreground flex items-center gap-1"
+                                data-testid={`toggle-breakdown-${bucketTotal.bucket}`}
+                              >
+                                Est. from ceremonies: ${bucketEstimate.low.toLocaleString()} - ${bucketEstimate.high.toLocaleString()}
+                                <span className="ml-1">({bucketEstimate.itemCount} items)</span>
+                                {isExpanded ? (
+                                  <ChevronDown className="w-3 h-3 ml-1" />
+                                ) : (
+                                  <ChevronRight className="w-3 h-3 ml-1" />
+                                )}
+                              </button>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {hasEstimate && bucketTotal.allocated === 0 && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 text-xs"
+                                onClick={() => {
+                                  const avgEstimate = Math.round((bucketEstimate.low + bucketEstimate.high) / 2);
+                                  setEditingBucket(bucketTotal.bucket as BudgetBucket);
+                                  setEditingBucketAmount(avgEstimate.toString());
+                                }}
+                                data-testid={`button-use-estimate-${bucketTotal.bucket}`}
+                              >
+                                Use Estimate
+                              </Button>
+                            )}
                             <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-8 text-xs"
-                              onClick={() => {
-                                // Use average of low/high as default
-                                const avgEstimate = Math.round((bucketEstimate.low + bucketEstimate.high) / 2);
-                                setEditingBucket(bucketTotal.bucket as BudgetBucket);
-                                setEditingBucketAmount(avgEstimate.toString());
-                              }}
-                              data-testid={`button-use-estimate-${bucketTotal.bucket}`}
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setEditingBucket(bucketTotal.bucket as BudgetBucket)}
+                              data-testid={`button-edit-category-${bucketTotal.bucket}`}
                             >
-                              Use Estimate
+                              <Edit2 className="w-4 h-4" />
                             </Button>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setEditingBucket(bucketTotal.bucket as BudgetBucket)}
-                            data-testid={`button-edit-category-${bucketTotal.bucket}`}
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </Button>
+                          </div>
+                        </div>
+                        <Progress value={Math.min(percentSpent, 100)} className="h-2" />
+                        <div className="flex justify-between mt-1 text-xs text-muted-foreground">
+                          <span>{percentSpent.toFixed(0)}% spent</span>
+                          <span className={bucketTotal.remaining < 0 ? "text-destructive" : "text-emerald-600"}>
+                            ${bucketTotal.remaining.toLocaleString()} remaining
+                          </span>
                         </div>
                       </div>
-                      <Progress value={Math.min(percentSpent, 100)} className="h-2" />
-                      <div className="flex justify-between mt-1 text-xs text-muted-foreground">
-                        <span>{percentSpent.toFixed(0)}% spent</span>
-                        <span className={bucketTotal.remaining < 0 ? "text-destructive" : "text-emerald-600"}>
-                          ${bucketTotal.remaining.toLocaleString()} remaining
-                        </span>
-                      </div>
+                      
+                      {isExpanded && lineItems.length > 0 && (
+                        <div className="border-t bg-muted/30 p-3">
+                          <p className="text-xs font-medium text-muted-foreground mb-2">
+                            Ceremony Line Items
+                          </p>
+                          <div className="space-y-2">
+                            {lineItems.map((item, idx) => (
+                              <div 
+                                key={`${item.eventId}-${item.itemName}-${idx}`}
+                                className="flex items-center justify-between text-sm py-1.5 px-2 rounded bg-background"
+                              >
+                                <div className="min-w-0 flex-1">
+                                  <p className="font-medium truncate">{item.eventName}</p>
+                                  <p className="text-xs text-muted-foreground truncate">
+                                    {item.itemName}
+                                    {item.unit === 'per_person' && (
+                                      <span className="ml-1">
+                                        (${item.lowCost.toLocaleString()}-${item.highCost.toLocaleString()}/person × {item.guestCount})
+                                      </span>
+                                    )}
+                                    {item.unit === 'per_hour' && (
+                                      <span className="ml-1">(per hour)</span>
+                                    )}
+                                  </p>
+                                </div>
+                                <div className="text-right shrink-0 ml-3">
+                                  <p className="font-mono text-sm">
+                                    ${item.calculatedLow.toLocaleString()} - ${item.calculatedHigh.toLocaleString()}
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="flex justify-between mt-3 pt-2 border-t text-sm font-medium">
+                            <span>Total Estimate</span>
+                            <span className="font-mono">
+                              ${bucketEstimate.low.toLocaleString()} - ${bucketEstimate.high.toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
