@@ -299,6 +299,33 @@ export default function Dashboard() {
     enabled: !!wedding?.id,
   });
 
+  const { data: ceremonyAnalytics } = useQuery<{
+    overview: {
+      totalCeremonyAllocated: number;
+      totalSpent: number;
+    };
+  }>({
+    queryKey: [`/api/budget/ceremony-analytics/${wedding?.id}`],
+    enabled: !!wedding?.id,
+  });
+
+  const { data: expenseTotals } = useQuery<{
+    bucketTotals: Array<{ 
+      bucket: string; 
+      allocated: number; 
+      spent: number; 
+    }>;
+    totalSpent: number;
+    totalAllocated: number;
+    totalRemaining: number;
+  }>({
+    queryKey: ["/api/expenses", wedding?.id, "totals"],
+    enabled: !!wedding?.id,
+  });
+
+  const totalByCeremonies = ceremonyAnalytics?.overview?.totalCeremonyAllocated || 0;
+  const totalByCategories = expenseTotals?.bucketTotals?.reduce((sum, bucket) => sum + bucket.allocated, 0) || 0;
+
   const { data: bookings = [] } = useQuery<Booking[]>({
     queryKey: ["/api/bookings", wedding?.id],
     enabled: !!wedding?.id,
@@ -724,6 +751,9 @@ export default function Dashboard() {
                   <BudgetDashboard
                     categories={budgetCategories}
                     totalBudget={wedding.totalBudget || "0"}
+                    totalByCeremonies={totalByCeremonies}
+                    totalByCategories={totalByCategories}
+                    showCeremonyBudgets={wedding.showCeremonyBudgets !== false}
                     onNavigate={() => setLocation("/budget")}
                   />
                 </>
