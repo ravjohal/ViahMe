@@ -33,7 +33,8 @@ export const COUPLE_NAV_SECTIONS: NavSection[] = [
       { path: "/timeline", label: "Timeline", icon: Clock, permission: "timeline", priority: 3, description: "Your schedule" },
       { path: "/vendors", label: "Vendors", icon: UserCircle, permission: "vendors", priority: 4, description: "Find services" },
       { path: "/guests", label: "Guests", icon: Users, permission: "guests", priority: 5, description: "Manage guest list" },
-      { path: "/tasks", label: "Tasks", icon: CheckSquare, permission: "tasks", priority: 6, description: "Things to do" },
+      { path: "/website-builder", label: "Wedding Website", icon: Globe, permission: "website", priority: 6, description: "Your wedding site" },
+      { path: "/tasks", label: "Tasks", icon: CheckSquare, permission: "tasks", priority: 7, description: "Things to do" },
     ],
   },
   {
@@ -49,9 +50,8 @@ export const COUPLE_NAV_SECTIONS: NavSection[] = [
   },
   {
     id: "content",
-    label: "Website & Media",
+    label: "Media & Documents",
     items: [
-      { path: "/website-builder", label: "Website", icon: Globe, permission: "website", description: "Your wedding site" },
       { path: "/playlists", label: "Playlists", icon: Music, permission: "playlists", description: "Music picks" },
       { path: "/documents", label: "Documents", icon: FileText, permission: "documents", description: "Important files" },
     ],
