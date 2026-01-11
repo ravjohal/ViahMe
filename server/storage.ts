@@ -347,15 +347,19 @@ export interface IStorage {
   // Handles bucket-level, ceremony-level, and line-item-level allocations
   getBudgetAllocation(id: string): Promise<BudgetAllocation | undefined>;
   getBudgetAllocationsByWedding(weddingId: string): Promise<BudgetAllocation[]>;
-  getBudgetAllocationByBucket(weddingId: string, bucket: BudgetBucket, ceremonyId?: string | null, lineItemLabel?: string | null): Promise<BudgetAllocation | undefined>;
+  getBudgetAllocationByBucket(weddingId: string, bucket: BudgetBucket, ceremonyId?: string | null, lineItemLabel?: string | null): Promise<BudgetAllocation | undefined>; // @deprecated - use getBudgetAllocationByBucketCategoryId
+  getBudgetAllocationByBucketCategoryId(weddingId: string, bucketCategoryId: string, ceremonyId?: string | null, lineItemLabel?: string | null): Promise<BudgetAllocation | undefined>;
   getBudgetAllocationsByCeremony(weddingId: string, ceremonyId: string): Promise<BudgetAllocation[]>;
-  getBudgetAllocationsByBucket(weddingId: string, bucket: BudgetBucket): Promise<BudgetAllocation[]>;
+  getBudgetAllocationsByBucket(weddingId: string, bucket: BudgetBucket): Promise<BudgetAllocation[]>; // @deprecated - use getBudgetAllocationsByBucketCategoryId
+  getBudgetAllocationsByBucketCategoryId(weddingId: string, bucketCategoryId: string): Promise<BudgetAllocation[]>;
   createBudgetAllocation(allocation: InsertBudgetAllocation): Promise<BudgetAllocation>;
   updateBudgetAllocation(id: string, allocation: Partial<InsertBudgetAllocation>): Promise<BudgetAllocation | undefined>;
-  upsertBudgetAllocation(weddingId: string, bucket: BudgetBucket, allocatedAmount: string, ceremonyId?: string | null, lineItemLabel?: string | null, notes?: string | null): Promise<BudgetAllocation>;
+  upsertBudgetAllocation(weddingId: string, bucket: BudgetBucket, allocatedAmount: string, ceremonyId?: string | null, lineItemLabel?: string | null, notes?: string | null): Promise<BudgetAllocation>; // @deprecated - use upsertBudgetAllocationByUUID
+  upsertBudgetAllocationByUUID(weddingId: string, bucketCategoryId: string, allocatedAmount: string, ceremonyId?: string | null, lineItemLabel?: string | null, notes?: string | null): Promise<BudgetAllocation>;
   deleteBudgetAllocation(id: string): Promise<boolean>;
   getCeremonyTotalAllocated(weddingId: string, ceremonyId: string): Promise<number>;
-  getBucketTotalAllocated(weddingId: string, bucket: BudgetBucket): Promise<number>;
+  getBucketTotalAllocated(weddingId: string, bucket: BudgetBucket): Promise<number>; // @deprecated - use getBucketTotalAllocatedByUUID
+  getBucketTotalAllocatedByUUID(weddingId: string, bucketCategoryId: string): Promise<number>;
 
   // Expenses (Single Ledger Model)
   getExpense(id: string): Promise<Expense | undefined>;
@@ -1066,9 +1070,10 @@ export interface IStorage {
   deleteDashboardWidget(id: string): Promise<boolean>;
   updateDashboardWidgetPositions(widgetIds: string[], positions: number[]): Promise<DashboardWidget[]>;
 
-  // Ceremony Types (uses ceremony_templates table with 'tradition' text field)
+  // Ceremony Types (uses ceremony_templates table with traditionId UUID FK)
   getCeremonyType(ceremonyId: string): Promise<CeremonyType | undefined>;
-  getCeremonyTypesByTradition(tradition: string): Promise<CeremonyType[]>;
+  getCeremonyTypesByTradition(tradition: string): Promise<CeremonyType[]>; // @deprecated - use getCeremonyTypesByTraditionId
+  getCeremonyTypesByTraditionId(traditionId: string): Promise<CeremonyType[]>;
   getAllCeremonyTypes(): Promise<CeremonyType[]>;
   createCeremonyType(template: InsertCeremonyType): Promise<CeremonyType>;
   updateCeremonyType(ceremonyId: string, template: Partial<InsertCeremonyType>): Promise<CeremonyType | undefined>;
@@ -1769,6 +1774,26 @@ export class MemStorage implements IStorage {
     );
   }
 
+  async getBudgetAllocationByBucketCategoryId(
+    weddingId: string,
+    bucketCategoryId: string,
+    ceremonyId?: string | null,
+    lineItemLabel?: string | null
+  ): Promise<BudgetAllocation | undefined> {
+    return Array.from(this.budgetAllocationsMap.values()).find(
+      a => a.weddingId === weddingId && 
+           a.bucketCategoryId === bucketCategoryId &&
+           (ceremonyId === undefined ? true : a.ceremonyId === ceremonyId) &&
+           (lineItemLabel === undefined ? true : a.lineItemLabel === lineItemLabel)
+    );
+  }
+
+  async getBudgetAllocationsByBucketCategoryId(weddingId: string, bucketCategoryId: string): Promise<BudgetAllocation[]> {
+    return Array.from(this.budgetAllocationsMap.values()).filter(
+      a => a.weddingId === weddingId && a.bucketCategoryId === bucketCategoryId
+    );
+  }
+
   async upsertBudgetAllocation(
     weddingId: string, 
     bucket: BudgetBucket, 
@@ -1802,6 +1827,33 @@ export class MemStorage implements IStorage {
 
   async getBucketTotalAllocated(weddingId: string, bucket: BudgetBucket): Promise<number> {
     const allocations = await this.getBudgetAllocationsByBucket(weddingId, bucket);
+    return allocations.reduce((sum, a) => sum + parseFloat(a.allocatedAmount || '0'), 0);
+  }
+
+  async upsertBudgetAllocationByUUID(
+    weddingId: string,
+    bucketCategoryId: string,
+    allocatedAmount: string,
+    ceremonyId?: string | null,
+    lineItemLabel?: string | null,
+    notes?: string | null
+  ): Promise<BudgetAllocation> {
+    const existing = await this.getBudgetAllocationByBucketCategoryId(weddingId, bucketCategoryId, ceremonyId, lineItemLabel);
+    if (existing) {
+      return (await this.updateBudgetAllocation(existing.id, { allocatedAmount, notes }))!;
+    }
+    return this.createBudgetAllocation({
+      weddingId,
+      bucketCategoryId,
+      allocatedAmount,
+      ceremonyId: ceremonyId ?? null,
+      lineItemLabel: lineItemLabel ?? null,
+      notes: notes ?? null
+    });
+  }
+
+  async getBucketTotalAllocatedByUUID(weddingId: string, bucketCategoryId: string): Promise<number> {
+    const allocations = await this.getBudgetAllocationsByBucketCategoryId(weddingId, bucketCategoryId);
     return allocations.reduce((sum, a) => sum + parseFloat(a.allocatedAmount || '0'), 0);
   }
 
@@ -4282,6 +4334,7 @@ export class MemStorage implements IStorage {
   // Ceremony Types (stubs - use DBStorage for production)
   async getCeremonyType(ceremonyId: string): Promise<CeremonyType | undefined> { return undefined; }
   async getCeremonyTypesByTradition(tradition: string): Promise<CeremonyType[]> { return []; }
+  async getCeremonyTypesByTraditionId(traditionId: string): Promise<CeremonyType[]> { return []; }
   async getAllCeremonyTypes(): Promise<CeremonyType[]> { return []; }
   async createCeremonyType(template: InsertCeremonyType): Promise<CeremonyType> { throw new Error('MemStorage does not support Ceremony Types. Use DBStorage.'); }
   async updateCeremonyType(ceremonyId: string, template: Partial<InsertCeremonyType>): Promise<CeremonyType | undefined> { throw new Error('MemStorage does not support Ceremony Types. Use DBStorage.'); }
@@ -4908,6 +4961,32 @@ export class DBStorage implements IStorage {
     );
   }
 
+  async getBudgetAllocationByBucketCategoryId(
+    weddingId: string,
+    bucketCategoryId: string,
+    ceremonyId?: string | null,
+    lineItemLabel?: string | null
+  ): Promise<BudgetAllocation | undefined> {
+    const conditions = [
+      eq(budgetAllocations.weddingId, weddingId),
+      eq(budgetAllocations.bucketCategoryId, bucketCategoryId),
+    ];
+    if (ceremonyId !== undefined) {
+      conditions.push(ceremonyId === null ? isNull(budgetAllocations.ceremonyId) : eq(budgetAllocations.ceremonyId, ceremonyId));
+    }
+    if (lineItemLabel !== undefined) {
+      conditions.push(lineItemLabel === null ? isNull(budgetAllocations.lineItemLabel) : eq(budgetAllocations.lineItemLabel, lineItemLabel));
+    }
+    const result = await this.db.select().from(budgetAllocations).where(and(...conditions));
+    return result[0];
+  }
+
+  async getBudgetAllocationsByBucketCategoryId(weddingId: string, bucketCategoryId: string): Promise<BudgetAllocation[]> {
+    return await this.db.select().from(budgetAllocations).where(
+      and(eq(budgetAllocations.weddingId, weddingId), eq(budgetAllocations.bucketCategoryId, bucketCategoryId))
+    );
+  }
+
   async createBudgetAllocation(insertAllocation: InsertBudgetAllocation): Promise<BudgetAllocation> {
     // Resolve bucket slug to UUID for the new FK column
     let bucketCategoryId = insertAllocation.bucketCategoryId;
@@ -4976,6 +5055,33 @@ export class DBStorage implements IStorage {
 
   async getBucketTotalAllocated(weddingId: string, bucket: BudgetBucket): Promise<number> {
     const allocations = await this.getBudgetAllocationsByBucket(weddingId, bucket);
+    return allocations.reduce((sum, a) => sum + parseFloat(a.allocatedAmount || '0'), 0);
+  }
+
+  async upsertBudgetAllocationByUUID(
+    weddingId: string,
+    bucketCategoryId: string,
+    allocatedAmount: string,
+    ceremonyId?: string | null,
+    lineItemLabel?: string | null,
+    notes?: string | null
+  ): Promise<BudgetAllocation> {
+    const existing = await this.getBudgetAllocationByBucketCategoryId(weddingId, bucketCategoryId, ceremonyId, lineItemLabel);
+    if (existing) {
+      return (await this.updateBudgetAllocation(existing.id, { allocatedAmount, notes }))!;
+    }
+    return this.createBudgetAllocation({
+      weddingId,
+      bucketCategoryId,
+      allocatedAmount,
+      ceremonyId: ceremonyId ?? null,
+      lineItemLabel: lineItemLabel ?? null,
+      notes: notes ?? null
+    });
+  }
+
+  async getBucketTotalAllocatedByUUID(weddingId: string, bucketCategoryId: string): Promise<number> {
+    const allocations = await this.getBudgetAllocationsByBucketCategoryId(weddingId, bucketCategoryId);
     return allocations.reduce((sum, a) => sum + parseFloat(a.allocatedAmount || '0'), 0);
   }
 
@@ -10469,6 +10575,13 @@ export class DBStorage implements IStorage {
     return await this.db.select()
       .from(ceremonyTypes)
       .where(eq(ceremonyTypes.tradition, tradition))
+      .orderBy(sql`${ceremonyTypes.displayOrder} ASC`);
+  }
+
+  async getCeremonyTypesByTraditionId(traditionId: string): Promise<CeremonyType[]> {
+    return await this.db.select()
+      .from(ceremonyTypes)
+      .where(eq(ceremonyTypes.traditionId, traditionId))
       .orderBy(sql`${ceremonyTypes.displayOrder} ASC`);
   }
 
