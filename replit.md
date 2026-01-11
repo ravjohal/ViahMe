@@ -17,6 +17,11 @@ Key architectural decisions and features include:
 - **Comprehensive Data Model**: Designed to support the intricate nature of multi-day South Asian weddings with database-driven wedding traditions and sub-traditions for flexible management.
 - **Cultural Templates**: Pre-populated event timelines, task templates, and normalized ceremony cost estimates for 9 wedding traditions, supporting regional pricing variations.
 - **Ceremony Types System**: Database-driven ceremony definitions (table: `ceremony_types`) with cost breakdowns via `ceremony_budget_categories` junction table. TypeScript layer uses canonical naming: `ceremonyTypes` table export, `CeremonyType` type, `ceremonyBudgetCategories` table export, `CeremonyBudgetCategory` type. Junction table connects ceremony types to budget buckets via `ceremony_type_id` (FK to `ceremony_types.ceremony_id`) and `budget_bucket_id` (FK to `budget_bucket_categories.id`). Single API endpoint `/api/ceremony-types`.
+- **UUID-Based Foreign Key Architecture**: Dual-column approach for referential integrity with backward compatibility:
+  - Core tables (`wedding_traditions`, `wedding_sub_traditions`, `budget_bucket_categories`) have both UUID `id` and `slug` fields
+  - Referencing tables (`weddings`, `ceremony_types`, `budget_allocations`) have new UUID FK columns (`traditionId`, `bucketCategoryId`) alongside legacy string columns (`tradition`, `bucket`)
+  - Storage layer auto-resolves slugs to UUIDs on create/update operations via helpers: `getWeddingTraditionBySlug()`, `getBudgetCategoryBySlug()`
+  - Enables gradual migration while maintaining backward compatibility for existing callers
 - **Vendor Specialization**: Support for 32 distinct vendor categories, including culturally-specific services.
 - **Budget Intelligence System**: Employs a Unified Single Ledger Model with a three-tier budget hierarchy, smart budget recommendations, dual-view aggregation, and a refined pricing engine using three-factor multipliers for precise estimates.
   - **Three-Layer Budget Architecture**:
