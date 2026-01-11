@@ -162,7 +162,7 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
   });
 
   // Line items endpoint - optionally accepts weddingId to include wedding-specific custom items
-  // Returns a map of ceremonyTypeId -> line items[] 
+  // Returns a map of ceremonyTypeId (UUID) -> line items[]
   router.get("/all/line-items", async (req, res) => {
     try {
       const { weddingId } = req.query;
@@ -212,13 +212,14 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
       }>> = {};
       
       for (const item of combinedItems) {
+        // Key by ceremonyTypeId (UUID)
         const key = item.ceremonyTypeId;
         if (!grouped[key]) {
           grouped[key] = [];
         }
         const bucketId = item.budgetBucketId ?? 'other';
         grouped[key].push({
-          id: item.id, // Include id so custom items can be deleted
+          id: item.id,
           category: item.itemName,
           lowCost: parseFloat(item.lowCost),
           highCost: parseFloat(item.highCost),

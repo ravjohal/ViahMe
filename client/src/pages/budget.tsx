@@ -24,7 +24,6 @@ interface CeremonyLineItemBudget {
   lineItemCategory: string;
   budgetedAmount: string;
 }
-import { CEREMONY_MAPPINGS } from "@shared/ceremonies";
 import { useAllCeremonyLineItems, getLineItemBucketLabel, useCreateCustomCeremonyItem, useCloneLibraryItem, useDeleteCeremonyItem, useWeddingCeremonyLineItemsMap, type CeremonyBudgetCategoryApiItem, type LibraryItem } from "@/hooks/use-ceremony-types";
 import { LibraryItemPicker } from "@/components/budget/library-item-picker";
 import { useBudgetCategories, useBudgetCategoryLookup } from "@/hooks/use-budget-bucket-categories";
@@ -161,36 +160,8 @@ export default function Budget() {
   const { data: budgetCategories = [], isLoading: categoriesLoading } = useBudgetCategories();
   const { getCategoryLabel, allCategoryIds } = useBudgetCategoryLookup();
 
-  // Get ceremony type ID from event name
-  const getCeremonyTypeId = (eventName: string): string | null => {
-    const normalizedName = eventName.toLowerCase().trim();
-    
-    for (const [ceremonyId, keywords] of Object.entries(CEREMONY_MAPPINGS)) {
-      if (keywords.some(kw => normalizedName === kw)) {
-        if (ceremonyBreakdownMap[ceremonyId]) {
-          return ceremonyId;
-        }
-      }
-    }
-    
-    for (const [ceremonyId, keywords] of Object.entries(CEREMONY_MAPPINGS)) {
-      if (keywords.some(kw => normalizedName.includes(kw))) {
-        if (ceremonyBreakdownMap[ceremonyId]) {
-          return ceremonyId;
-        }
-      }
-    }
-    
-    if (normalizedName.includes('reception') && ceremonyBreakdownMap['reception']) {
-      return 'reception';
-    }
-    
-    return null;
-  };
-
-  // Get line items for an event based on ceremony type
-  const getLineItemsForEvent = (eventId: string, eventName: string): CeremonyBudgetCategoryItem[] | null => {
-    const ceremonyTypeId = getCeremonyTypeId(eventName);
+  // Get line items for an event using its ceremonyTypeId (UUID)
+  const getLineItemsForEvent = (ceremonyTypeId: string | null | undefined): CeremonyBudgetCategoryItem[] | null => {
     if (!ceremonyTypeId) return null;
     return ceremonyBreakdownMap[ceremonyTypeId] || null;
   };
@@ -259,11 +230,11 @@ export default function Budget() {
   // Calculate line item total for a ceremony from local edits and saved budgets
   const calculateLineItemTotalForEvent = (
     eventId: string,
-    eventName: string,
+    ceremonyTypeId: string | null | undefined,
     localEdits: Record<string, Record<string, string>>,
     categoryOverride?: { category: string; value: string }
   ): number | null => {
-    const lineItems = getLineItemsForEvent(eventId, eventName);
+    const lineItems = getLineItemsForEvent(ceremonyTypeId);
     if (!lineItems) return null;
     
     let total = 0;
@@ -289,7 +260,7 @@ export default function Budget() {
   };
 
   // Handle line item budget change - also updates ceremony total in real-time
-  const handleLineItemChange = (eventId: string, category: string, value: string) => {
+  const handleLineItemChange = (eventId: string, ceremonyTypeId: string | null | undefined, category: string, value: string) => {
     // First update line items state
     const newEditingLineItems = {
       ...editingLineItems,
@@ -301,26 +272,22 @@ export default function Budget() {
     setEditingLineItems(newEditingLineItems);
     
     // Then calculate and update ceremony total separately
-    const event = events.find(e => e.id === eventId);
-    if (event) {
-      const total = calculateLineItemTotalForEvent(
-        eventId, 
-        event.name, 
-        newEditingLineItems,
-        { category, value }
-      );
-      if (total !== null) {
-        setEditingCeremonyTotals(prev => ({
-          ...prev,
-          [eventId]: total.toString(),
-        }));
-      }
+    const total = calculateLineItemTotalForEvent(
+      eventId, 
+      ceremonyTypeId, 
+      newEditingLineItems,
+      { category, value }
+    );
+    if (total !== null) {
+      setEditingCeremonyTotals(prev => ({
+        ...prev,
+        [eventId]: total.toString(),
+      }));
     }
   };
 
   // Save line item budgets for an event (includes zeros to clear existing budgets)
-  const saveEventLineItems = (eventId: string, eventName: string) => {
-    const ceremonyTypeId = getCeremonyTypeId(eventName);
+  const saveEventLineItems = (eventId: string, ceremonyTypeId: string | null | undefined) => {
     if (!wedding?.id || !ceremonyTypeId) return;
     
     const eventLineItems = editingLineItems[eventId] || {};
@@ -391,12 +358,9 @@ export default function Budget() {
   };
 
   // Calculate total ceremony estimate from database values
-  const getCeremonyEstimateTotal = (eventId: string, eventName: string, useHigh: boolean): number => {
-    const lineItems = getLineItemsForEvent(eventId, eventName);
+  const getCeremonyEstimateTotal = (ceremonyTypeId: string | null | undefined, guestCount: number, useHigh: boolean): number => {
+    const lineItems = getLineItemsForEvent(ceremonyTypeId);
     if (!lineItems) return 0;
-
-    const event = events.find(e => e.id === eventId);
-    const guestCount = event?.guestCount || 100;
 
     let total = 0;
     for (const item of lineItems) {
@@ -408,13 +372,9 @@ export default function Budget() {
 
   // Set all line item budgets to estimates (low or high) using database values
   // Also updates the ceremony total to match the sum of line items
-  const setEstimatesForEvent = (eventId: string, eventName: string, useHigh: boolean) => {
-    const lineItems = getLineItemsForEvent(eventId, eventName);
+  const setEstimatesForEvent = (eventId: string, ceremonyTypeId: string | null | undefined, guestCount: number, useHigh: boolean) => {
+    const lineItems = getLineItemsForEvent(ceremonyTypeId);
     if (!lineItems) return;
-
-    // Find the event to get guest count
-    const event = events.find(e => e.id === eventId);
-    const guestCount = event?.guestCount || 100; // Default to 100 if not set
 
     const newValues: Record<string, string> = {};
     let total = 0;
@@ -453,6 +413,7 @@ export default function Budget() {
       eventName: string;
       eventDate: string | null;
       eventType: string | null;
+      ceremonyTypeId: string; // UUID FK to ceremony_types
       side: 'bride' | 'groom' | 'mutual';
       guestCount: number;
       allocated: number;
@@ -1014,8 +975,7 @@ export default function Budget() {
     });
   };
   
-  const handleCreateCustomItem = (eventId: string, eventName: string) => {
-    const ceremonyTypeId = getCeremonyTypeId(eventName);
+  const handleCreateCustomItem = (eventId: string, ceremonyTypeId: string | null | undefined) => {
     if (!wedding?.id || !ceremonyTypeId) {
       toast({ title: "Error", description: "Missing wedding or ceremony information", variant: "destructive" });
       return;
@@ -1093,7 +1053,7 @@ export default function Budget() {
   };
 
   // Combined save function for ceremony total AND line items
-  const saveCeremonyBudget = async (eventId: string, eventName: string) => {
+  const saveCeremonyBudget = async (eventId: string, ceremonyTypeId: string | null | undefined) => {
     // Capture payloads synchronously before any async operations
     const totalAmount = editingCeremonyTotals[eventId];
     const eventLineItems = editingLineItems[eventId];
@@ -1101,16 +1061,12 @@ export default function Budget() {
     
     // Build line items payload synchronously
     let lineItemsPayload: Array<{ lineItemCategory: string; budgetedAmount: string }> | null = null;
-    let ceremonyTypeId: string | null = null;
-    if (hasLineItems && wedding?.id) {
-      ceremonyTypeId = getCeremonyTypeId(eventName);
-      if (ceremonyTypeId) {
-        lineItemsPayload = Object.entries(eventLineItems)
-          .map(([category, value]) => ({
-            lineItemCategory: category,
-            budgetedAmount: value || "0",
-          }));
-      }
+    if (hasLineItems && wedding?.id && ceremonyTypeId) {
+      lineItemsPayload = Object.entries(eventLineItems)
+        .map(([category, value]) => ({
+          lineItemCategory: category,
+          budgetedAmount: value || "0",
+        }));
     }
     
     // If line items are being saved, DON'T also save a separate ceremony total
@@ -1612,7 +1568,7 @@ export default function Budget() {
               })
               .map((ceremony) => {
                 const percentSpent = ceremony.allocated > 0 ? ceremony.percentUsed : 0;
-                const lineItems = getLineItemsForEvent(ceremony.eventId, ceremony.eventName);
+                const lineItems = getLineItemsForEvent(ceremony.ceremonyTypeId);
                 const isExpanded = expandedCeremonies.has(ceremony.eventId);
                 const lineItemTotal = lineItems ? getEventLineItemTotal(ceremony.eventId, lineItems) : 0;
                 const eventExpenses = expensesByEvent[ceremony.eventId]?.expenses || [];
@@ -1727,7 +1683,7 @@ export default function Budget() {
                                 <Button
                                   size="sm"
                                   className="h-9"
-                                  onClick={() => saveCeremonyBudget(ceremony.eventId, ceremony.eventName)}
+                                  onClick={() => saveCeremonyBudget(ceremony.eventId, ceremony.ceremonyTypeId)}
                                   disabled={updateCeremonyBudgetMutation.isPending || saveLineItemBudgetsMutation.isPending}
                                   data-testid={`button-save-ceremony-budget-${ceremony.eventId}`}
                                 >
@@ -1743,10 +1699,10 @@ export default function Budget() {
                               <div className="flex items-center justify-between mb-3">
                                 <p className="text-sm font-medium text-muted-foreground">Line Items</p>
                                 <div className="flex items-center gap-2">
-                                  <Button variant="outline" size="sm" onClick={() => setEstimatesForEvent(ceremony.eventId, ceremony.eventName, false)} className="h-7 text-xs">
+                                  <Button variant="outline" size="sm" onClick={() => setEstimatesForEvent(ceremony.eventId, ceremony.ceremonyTypeId, ceremony.guestCount || 100, false)} className="h-7 text-xs">
                                     <TrendingDown className="w-3 h-3 mr-1" />Low
                                   </Button>
-                                  <Button variant="outline" size="sm" onClick={() => setEstimatesForEvent(ceremony.eventId, ceremony.eventName, true)} className="h-7 text-xs">
+                                  <Button variant="outline" size="sm" onClick={() => setEstimatesForEvent(ceremony.eventId, ceremony.ceremonyTypeId, ceremony.guestCount || 100, true)} className="h-7 text-xs">
                                     <TrendingUp className="w-3 h-3 mr-1" />High
                                   </Button>
                                 </div>
@@ -1776,19 +1732,18 @@ export default function Budget() {
                                       </div>
                                       <div className="flex items-center gap-1 shrink-0">
                                         <span className="text-sm text-muted-foreground">$</span>
-                                        <Input type="number" placeholder="0" className="w-24 h-8 text-right" value={savedAmount} onChange={(e) => handleLineItemChange(ceremony.eventId, item.category, e.target.value)} data-testid={`input-line-item-${ceremony.eventId}-${idx}`} />
+                                        <Input type="number" placeholder="0" className="w-24 h-8 text-right" value={savedAmount} onChange={(e) => handleLineItemChange(ceremony.eventId, ceremony.ceremonyTypeId, item.category, e.target.value)} data-testid={`input-line-item-${ceremony.eventId}-${idx}`} />
                                         {item.isCustom && item.id && (
                                           <Button
                                             variant="ghost"
                                             size="icon"
                                             className="h-8 w-8 text-muted-foreground hover:text-destructive"
                                             onClick={() => {
-                                              const ceremonyTypeId = getCeremonyTypeId(ceremony.eventName);
-                                              if (ceremonyTypeId) {
+                                              if (ceremony.ceremonyTypeId) {
                                                 setDeletingCustomItem({
                                                   itemId: item.id!,
                                                   itemName: item.category,
-                                                  ceremonyTypeId,
+                                                  ceremonyTypeId: ceremony.ceremonyTypeId,
                                                 });
                                               }
                                             }}
@@ -1815,7 +1770,7 @@ export default function Budget() {
                                   <Button 
                                     size="sm" 
                                     variant="outline"
-                                    onClick={() => saveEventLineItems(ceremony.eventId, ceremony.eventName)} 
+                                    onClick={() => saveEventLineItems(ceremony.eventId, ceremony.ceremonyTypeId)} 
                                     disabled={saveLineItemBudgetsMutation.isPending} 
                                     data-testid={`button-save-line-items-${ceremony.eventId}`}
                                   >
@@ -1828,7 +1783,7 @@ export default function Budget() {
                           )}
 
                           {/* Add Budget Item */}
-                          {getCeremonyTypeId(ceremony.eventName) && budgetCategories.length > 0 && (
+                          {ceremony.ceremonyTypeId && budgetCategories.length > 0 && (
                             <div className="mb-4">
                               {customItemFormOpen !== ceremony.eventId ? (
                                 <Button
@@ -1944,7 +1899,7 @@ export default function Budget() {
                                   </div>
                                   
                                   <Button
-                                    onClick={() => handleCreateCustomItem(ceremony.eventId, ceremony.eventName)}
+                                    onClick={() => handleCreateCustomItem(ceremony.eventId, ceremony.ceremonyTypeId)}
                                     disabled={createCustomItemMutation.isPending}
                                     className="w-full"
                                     data-testid={`button-save-custom-item-${ceremony.eventId}`}

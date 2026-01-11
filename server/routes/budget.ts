@@ -730,6 +730,7 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
           eventName: event.name,
           eventDate: event.date,
           eventType: event.type,
+          ceremonyTypeId: event.ceremonyTypeId, // UUID FK to ceremony_types
           side: event.side || 'mutual',
           guestCount: event.guestCount || 0,
           allocated,
