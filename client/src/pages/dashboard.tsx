@@ -3,7 +3,6 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { TimelineView } from "@/components/timeline-view";
 import { BudgetDashboard } from "@/components/budget-dashboard";
 import { WelcomeTour } from "@/components/welcome-tour";
-import { EventDetailModal } from "@/components/event-detail-modal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,7 +16,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { usePermissions } from "@/hooks/use-permissions";
 import { useAuth } from "@/hooks/use-auth";
 import { PERMISSION_CATEGORIES, type PermissionCategory } from "@shared/schema";
-import type { Wedding, Event, BudgetCategory, Contract, Booking, EventCostItem, Guest, WeddingRole, Task, WeddingCollaborator, Vendor } from "@shared/schema";
+import type { Wedding, Event, BudgetCategory, Contract, Booking, Guest, WeddingRole, Task, WeddingCollaborator, Vendor } from "@shared/schema";
 import { PartnerEventConfirmation } from "@/components/partner-event-confirmation";
 import { InvitePartnerModal } from "@/components/invite-partner-modal";
 
@@ -271,7 +270,6 @@ function CollaboratorDashboard({ wedding, roleName, events = [] }: { wedding: We
 export default function Dashboard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showRoadmap, setShowRoadmap] = useState(false);
   const [invitePartnerOpen, setInvitePartnerOpen] = useState(false);
   const { isOwner, isLoading: permissionsLoading, weddingId } = usePermissions();
@@ -345,10 +343,6 @@ export default function Dashboard() {
     enabled: !!wedding?.id,
   });
 
-  const { data: costItems = [], isLoading: costItemsLoading } = useQuery<EventCostItem[]>({
-    queryKey: ["/api/events", selectedEvent?.id, "cost-items"],
-    enabled: !!selectedEvent?.id,
-  });
 
   const { data: tasks = [] } = useQuery<Task[]>({
     queryKey: ["/api/tasks", wedding?.id],
@@ -360,32 +354,6 @@ export default function Dashboard() {
     enabled: !!wedding?.id,
   });
 
-  const deleteEventMutation = useMutation({
-    mutationFn: async (id: string) => {
-      return await apiRequest("DELETE", `/api/events/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/events", wedding?.id] });
-      setSelectedEvent(null);
-      toast({
-        title: "Event deleted",
-        description: "The event has been removed from your wedding.",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to delete event.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleDeleteEvent = (id: string) => {
-    if (confirm("Are you sure you want to delete this event?")) {
-      deleteEventMutation.mutate(id);
-    }
-  };
 
   useEffect(() => {
     if (!weddingsLoading && !wedding) {
@@ -793,7 +761,7 @@ export default function Dashboard() {
                     return (
                       <button
                         key={event.id}
-                        onClick={() => setSelectedEvent(event)}
+                        onClick={() => setLocation(`/timeline?eventId=${event.id}`)}
                         className="w-full flex items-start gap-3 p-4 hover-elevate text-left transition-all"
                         data-testid={`timeline-event-${event.id}`}
                       >
@@ -921,19 +889,6 @@ export default function Dashboard() {
 
       <WelcomeTour weddingTradition={wedding.tradition} />
 
-      <EventDetailModal
-        open={!!selectedEvent}
-        onOpenChange={(open) => {
-          if (!open) setSelectedEvent(null);
-        }}
-        event={selectedEvent}
-        weddingId={wedding.id}
-        costItems={costItems}
-        costItemsLoading={costItemsLoading}
-        budgetCategories={budgetCategories}
-        tasks={selectedEvent ? tasks.filter(t => t.eventId === selectedEvent.id) : []}
-        onDelete={handleDeleteEvent}
-      />
 
       <InvitePartnerModal
         open={invitePartnerOpen}
