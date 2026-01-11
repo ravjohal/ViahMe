@@ -4004,8 +4004,11 @@ export const insertCeremonyBudgetCategorySchema = createInsertSchema(ceremonyBud
   unit: z.enum(['fixed', 'per_hour', 'per_person']),
   lowCost: z.string(),
   highCost: z.string(),
-  hoursLow: z.string().optional(),
-  hoursHigh: z.string().optional(),
+  hoursLow: z.string().nullable().optional(),
+  hoursHigh: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  displayOrder: z.number().optional(),
+  isActive: z.boolean().optional(),
 });
 
 export type InsertCeremonyBudgetCategory = z.infer<typeof insertCeremonyBudgetCategorySchema>;
