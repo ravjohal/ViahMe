@@ -199,7 +199,7 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
       
       const grouped: Record<string, Array<{
         id: string;
-        category: string;
+        name: string;
         lowCost: number;
         highCost: number;
         unit: 'fixed' | 'per_person' | 'per_hour';
@@ -220,7 +220,7 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
         const bucketId = item.budgetBucketId ?? 'other';
         grouped[key].push({
           id: item.id,
-          category: item.itemName,
+          name: item.itemName,
           lowCost: parseFloat(item.lowCost),
           highCost: parseFloat(item.highCost),
           unit: item.unit as 'fixed' | 'per_person' | 'per_hour',
