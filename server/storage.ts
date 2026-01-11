@@ -4566,7 +4566,19 @@ export class DBStorage implements IStorage {
   }
 
   async updateWedding(id: string, update: Partial<InsertWedding>): Promise<Wedding | undefined> {
-    const result = await this.db.update(schema.weddings).set(update).where(eq(schema.weddings.id, id)).returning();
+    // Resolve tradition slug to UUID for the new FK column if tradition is being updated
+    let traditionId = update.traditionId;
+    if (!traditionId && update.tradition) {
+      const tradition = await this.getWeddingTraditionBySlug(update.tradition);
+      if (tradition) {
+        traditionId = tradition.id;
+      }
+    }
+    
+    const result = await this.db.update(schema.weddings).set({
+      ...update,
+      ...(traditionId ? { traditionId } : {}),
+    }).where(eq(schema.weddings.id, id)).returning();
     return result[0];
   }
 
@@ -4914,7 +4926,19 @@ export class DBStorage implements IStorage {
   }
 
   async updateBudgetAllocation(id: string, update: Partial<InsertBudgetAllocation>): Promise<BudgetAllocation | undefined> {
-    const result = await this.db.update(budgetAllocations).set(update).where(eq(budgetAllocations.id, id)).returning();
+    // Resolve bucket slug to UUID for the new FK column if bucket is being updated
+    let bucketCategoryId = update.bucketCategoryId;
+    if (!bucketCategoryId && update.bucket) {
+      const bucketCategory = await this.getBudgetCategoryBySlug(update.bucket);
+      if (bucketCategory) {
+        bucketCategoryId = bucketCategory.id;
+      }
+    }
+    
+    const result = await this.db.update(budgetAllocations).set({
+      ...update,
+      ...(bucketCategoryId ? { bucketCategoryId } : {}),
+    }).where(eq(budgetAllocations.id, id)).returning();
     return result[0];
   }
 
@@ -10474,8 +10498,20 @@ export class DBStorage implements IStorage {
   }
 
   async updateCeremonyType(ceremonyId: string, data: Partial<InsertCeremonyType>): Promise<CeremonyType | undefined> {
+    // Resolve tradition slug to UUID for the new FK column if tradition is being updated
+    let traditionId = data.traditionId;
+    if (!traditionId && data.tradition) {
+      const tradition = await this.getWeddingTraditionBySlug(data.tradition);
+      if (tradition) {
+        traditionId = tradition.id;
+      }
+    }
+    
     const result = await this.db.update(ceremonyTypes)
-      .set(data)
+      .set({
+        ...data,
+        ...(traditionId ? { traditionId } : {}),
+      })
       .where(eq(ceremonyTypes.ceremonyId, ceremonyId))
       .returning();
     return result[0];
