@@ -27,7 +27,7 @@ Key architectural decisions and features include:
     - `ceremony_budget_categories.ceremonyTypeId` (NOT NULL) → `ceremony_types.id`
     - `expenses.bucketCategoryId` (NOT NULL) → `budget_bucket_categories.id`
     - `budget_allocations.bucketCategoryId` (NOT NULL) → `budget_bucket_categories.id`
-  - Storage layer auto-resolves slugs to UUIDs on create/update operations via helpers: `getWeddingTraditionBySlug()`, `getCeremonyType()`
+  - Storage layer auto-resolves slugs to UUIDs on create/update operations via helpers: `getWeddingTraditionBySlug()`, `getBudgetCategoryBySlug()`, `getCeremonyType()`
   - **Primary UUID-based storage methods**: `getCeremonyBudgetCategoriesByCeremonyTypeId()`, `getCeremonyTypesByTraditionId()`, `getBudgetAllocationByBucketCategoryId()`, `upsertBudgetAllocationByUUID()`
   - **Deprecated legacy columns** (kept for backward compatibility on some tables):
     - `weddings.tradition` (slug) - use `traditionId`
@@ -41,7 +41,7 @@ Key architectural decisions and features include:
     - **Layer 1 - The Blueprint**: System-defined templates (`ceremony_types`, `budget_bucket_categories`, `ceremony_budget_categories` junction table)
     - **Layer 2 - The Plan**: Couple's wedding setup (`events` with `ceremonyTypeId`, `event_cost_items` with `ceremonyBudgetCategoryId` and `budgetBucketCategoryId`)
     - **Layer 3 - The Reality**: Actual expenses (`expenses` with `eventId`, `eventCostItemId`, `bucketCategoryId`)
-  - **`budget_bucket_categories` table**: 12 high-level budget buckets managed by site admins with rich metadata (displayName, description, iconName, isEssential, suggestedPercentage). **Design Note**: This table uses slug-as-ID pattern (id === slug), e.g., id='venue', slug='venue'. This is intentional for readability and is a fixed set of system-managed categories.
+  - **`budget_bucket_categories` table**: 12 high-level budget buckets managed by site admins with rich metadata (displayName, description, iconName, isEssential, suggestedPercentage). Uses proper UUID `id` column with separate `slug` field for human-readable lookups.
   - **Two-Tier Budget API Architecture**:
     - `/api/budget/categories` - Site-admin managed global category definitions (the 12 master budget bucket templates). Admin-only CRUD for managing system-wide budget categories.
     - `/api/budget-bucket-categories/:weddingId` - Wedding-specific budget allocations with spent amounts. Per-couple budget tracking and AI-powered estimates.

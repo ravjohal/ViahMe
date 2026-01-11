@@ -5144,10 +5144,11 @@ export class DBStorage implements IStorage {
     // Auto-resolve parentCategory slug to bucketCategoryId if not provided
     let bucketCategoryId = insertExpense.bucketCategoryId;
     if (!bucketCategoryId && insertExpense.parentCategory) {
-      // For budget_bucket_categories, the id column uses slug values directly (id === slug)
-      // This is verified: SELECT id, slug FROM budget_bucket_categories shows matching values
-      // e.g., id='venue', slug='venue'; id='catering', slug='catering'
-      bucketCategoryId = insertExpense.parentCategory;
+      // Look up the budget_bucket_category by slug to get its UUID
+      const category = await this.getBudgetCategoryBySlug(insertExpense.parentCategory);
+      if (category) {
+        bucketCategoryId = category.id;
+      }
     }
     
     // Ensure we have a valid bucketCategoryId - required by NOT NULL constraint
