@@ -89,8 +89,8 @@ export default function AdminCeremonyTemplatesPage() {
     tradition: string;
     lineItems: Array<{
       id: string;
-      category: string;
-      bucket: string;
+      name: string;
+      budgetBucketId: string;
       lowCost: number;
       highCost: number;
       unit: string;
@@ -140,7 +140,17 @@ export default function AdminCeremonyTemplatesPage() {
   
   // Mutation to create a new system budget line item
   const createLineItemMutation = useMutation({
-    mutationFn: async ({ ceremonyId, data }: { ceremonyId: string; data: typeof newLineItem }) => {
+    mutationFn: async ({ ceremonyId, data }: { 
+      ceremonyId: string; 
+      data: { 
+        itemName: string; 
+        budgetBucketId: string; 
+        lowCost: number; 
+        highCost: number; 
+        unit: string; 
+        notes: string; 
+      }
+    }) => {
       return apiRequest("POST", `/api/ceremony-types/${ceremonyId}/budget-categories`, data);
     },
     onSuccess: () => {
@@ -428,38 +438,41 @@ export default function AdminCeremonyTemplatesPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {systemLineItems.map((item) => (
-                      <TableRow key={item.id} data-testid={`row-line-item-${item.id}`}>
-                        <TableCell className="font-medium">{item.category}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{item.bucket}</Badge>
-                        </TableCell>
-                        <TableCell>${parseFloat(String(item.lowCost)).toLocaleString()}</TableCell>
-                        <TableCell>${parseFloat(String(item.highCost)).toLocaleString()}</TableCell>
-                        <TableCell>
-                          <Badge variant="secondary">
-                            {item.unit === "per_person" ? "Per Person" : item.unit === "per_hour" ? "Per Hour" : "Fixed"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              if (selectedCeremonyForLineItems && confirm("Delete this line item?")) {
-                                deleteLineItemMutation.mutate({
-                                  ceremonyId: selectedCeremonyForLineItems,
-                                  categoryId: item.id,
-                                });
-                              }
-                            }}
-                            data-testid={`button-delete-item-${item.id}`}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {systemLineItems.map((item) => {
+                      const bucketLabel = BUDGET_BUCKETS.find(b => b.value === item.budgetBucketId)?.label || item.budgetBucketId;
+                      return (
+                        <TableRow key={item.id} data-testid={`row-line-item-${item.id}`}>
+                          <TableCell className="font-medium">{item.name}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{bucketLabel}</Badge>
+                          </TableCell>
+                          <TableCell>${parseFloat(String(item.lowCost)).toLocaleString()}</TableCell>
+                          <TableCell>${parseFloat(String(item.highCost)).toLocaleString()}</TableCell>
+                          <TableCell>
+                            <Badge variant="secondary">
+                              {item.unit === "per_person" ? "Per Person" : item.unit === "per_hour" ? "Per Hour" : "Fixed"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                if (selectedCeremonyForLineItems && confirm("Delete this line item?")) {
+                                  deleteLineItemMutation.mutate({
+                                    ceremonyId: selectedCeremonyForLineItems,
+                                    categoryId: item.id,
+                                  });
+                                }
+                              }}
+                              data-testid={`button-delete-item-${item.id}`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </CardContent>
@@ -548,7 +561,11 @@ export default function AdminCeremonyTemplatesPage() {
                 if (selectedCeremonyForLineItems && newLineItem.itemName && newLineItem.lowCost && newLineItem.highCost) {
                   createLineItemMutation.mutate({
                     ceremonyId: selectedCeremonyForLineItems,
-                    data: newLineItem,
+                    data: {
+                      ...newLineItem,
+                      lowCost: parseFloat(newLineItem.lowCost),
+                      highCost: parseFloat(newLineItem.highCost),
+                    },
                   });
                 }
               }}
