@@ -158,7 +158,7 @@ export default function Budget() {
 
   // Fetch budget categories from database (replaces hardcoded BUDGET_BUCKETS constant)
   const { data: budgetCategories = [], isLoading: categoriesLoading } = useBudgetCategories();
-  const { getCategoryLabel, allCategoryIds } = useBudgetCategoryLookup();
+  const { getCategoryLabel, categoryById, allCategoryIds } = useBudgetCategoryLookup();
 
   // Get line items for an event using its ceremonyTypeId (UUID)
   const getLineItemsForEvent = (ceremonyTypeId: string | null | undefined): CeremonyBudgetCategoryItem[] | null => {
@@ -1710,7 +1710,7 @@ export default function Budget() {
                               <div className="space-y-2 bg-background rounded-lg p-3 border">
                                 {lineItems.map((item, idx) => {
                                   const savedAmount = getExistingLineItemBudget(ceremony.eventId, item.category);
-                                  const bucketLabel = getLineItemBucketLabel(item);
+                                  const bucketLabel = getLineItemBucketLabel(item, categoryById);
                                   return (
                                     <div key={idx} className="flex items-center gap-3 py-2 border-b border-border/50 last:border-0" data-testid={`line-item-${ceremony.eventId}-${idx}`}>
                                       <div className="flex-1 min-w-0">

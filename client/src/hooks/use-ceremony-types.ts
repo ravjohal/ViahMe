@@ -384,8 +384,24 @@ export function calculateCeremonyTotalFromBreakdown(
   return { low: Math.round(totalLow), high: Math.round(totalHigh) };
 }
 
-// Get budget bucket label from a line item (uses budgetBucket from type data)
-export function getLineItemBucketLabel(item: CeremonyBudgetCategoryItem): string {
+// Get budget bucket label from a line item
+// Can optionally pass a UUID lookup map from useBudgetBucketCategoryLookup
+export function getLineItemBucketLabel(
+  item: CeremonyBudgetCategoryItem, 
+  uuidLookup?: Map<string, { displayName: string }> | ((id: string) => string)
+): string {
+  // If UUID lookup is provided and item has budgetBucketId, use it
+  if (item.budgetBucketId && uuidLookup) {
+    if (typeof uuidLookup === 'function') {
+      return uuidLookup(item.budgetBucketId);
+    }
+    const category = uuidLookup.get(item.budgetBucketId);
+    if (category) {
+      return category.displayName;
+    }
+  }
+  
+  // Fallback to slug-based lookup for backward compatibility
   const bucketLabels: Record<string, string> = {
     venue: "Venue",
     catering: "Catering",
