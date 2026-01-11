@@ -10605,10 +10605,14 @@ export class DBStorage implements IStorage {
   }
 
   // Ceremony Types (uses ceremony_templates table with 'tradition' field)
+  // Accepts either ceremonyId (slug like 'sikh_maiyan') or id (UUID)
   async getCeremonyType(ceremonyId: string): Promise<CeremonyType | undefined> {
     const result = await this.db.select()
       .from(ceremonyTypes)
-      .where(eq(ceremonyTypes.ceremonyId, ceremonyId));
+      .where(or(
+        eq(ceremonyTypes.ceremonyId, ceremonyId),
+        eq(ceremonyTypes.id, ceremonyId)
+      ));
     return result[0];
   }
 

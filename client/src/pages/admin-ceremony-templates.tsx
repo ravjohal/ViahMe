@@ -338,7 +338,7 @@ export default function AdminCeremonyTemplatesPage() {
 
                     <div className="mt-4">
                       {(() => {
-                        const lineItems = allLineItemsMap[template.ceremonyId] || [];
+                        const lineItems = allLineItemsMap[template.id] || [];
                         const systemItems = lineItems.filter(item => !item.isCustom);
                         return (
                           <>
@@ -449,7 +449,7 @@ export default function AdminCeremonyTemplatesPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {templates.map(t => (
-                    <SelectItem key={t.ceremonyId} value={t.ceremonyId}>
+                    <SelectItem key={t.id} value={t.id}>
                       {t.name} ({t.tradition})
                     </SelectItem>
                   ))}
