@@ -34,7 +34,7 @@ const UNIT_TYPES = [
   { value: "per_hour", label: "Per Hour" },
 ];
 
-const BUDGET_BUCKETS = [
+const BUDGET_BUCKETS_FALLBACK = [
   { value: "venue", label: "Venue" },
   { value: "catering", label: "Catering" },
   { value: "photography", label: "Photography" },
@@ -91,6 +91,23 @@ export default function AdminCeremonyTemplatesPage() {
   const { data: regionalPricing = [], isLoading: pricingLoading } = useQuery<RegionalPricing[]>({
     queryKey: ["/api/regional-pricing"],
   });
+  
+  // Fetch budget bucket categories for dropdown and label lookup
+  const { data: budgetBucketCategories = [] } = useQuery<BudgetBucketCategory[]>({
+    queryKey: ["/api/budget/categories"],
+  });
+  
+  // Create lookup maps for budget bucket categories (by UUID and by slug)
+  const budgetBucketLookup = budgetBucketCategories.reduce((acc, cat) => {
+    acc[cat.id] = cat.displayName || cat.slug;
+    acc[cat.slug] = cat.displayName || cat.slug;
+    return acc;
+  }, {} as Record<string, string>);
+  
+  // Budget buckets for Select dropdown - use API data or fallback
+  const BUDGET_BUCKETS = budgetBucketCategories.length > 0
+    ? budgetBucketCategories.map(cat => ({ value: cat.id, label: cat.displayName || cat.slug }))
+    : BUDGET_BUCKETS_FALLBACK;
   
   // Fetch all ceremony line items (grouped by ceremony ID) for displaying in templates tab
   type AllLineItemsMap = Record<string, Array<{
@@ -345,7 +362,7 @@ export default function AdminCeremonyTemplatesPage() {
                             <h4 className="text-sm font-medium mb-2">Budget Line Items ({systemItems.length} categories)</h4>
                             <div className="grid gap-1 text-xs">
                               {systemItems.slice(0, 5).map((item) => {
-                                const bucketLabel = BUDGET_BUCKETS.find(b => b.value === item.budgetBucketId)?.label || item.budgetBucketId;
+                                const bucketLabel = budgetBucketLookup[item.budgetBucketId] || item.budgetBucketId;
                                 return (
                                   <div key={item.id} className="flex justify-between text-muted-foreground">
                                     <span>{item.name} <Badge variant="outline" className="ml-1 text-[10px] py-0">{bucketLabel}</Badge></span>
@@ -507,7 +524,7 @@ export default function AdminCeremonyTemplatesPage() {
                   </TableHeader>
                   <TableBody>
                     {systemLineItems.map((item) => {
-                      const bucketLabel = BUDGET_BUCKETS.find(b => b.value === item.budgetBucketId)?.label || item.budgetBucketId;
+                      const bucketLabel = budgetBucketLookup[item.budgetBucketId] || item.budgetBucketId;
                       return (
                         <TableRow key={item.id} data-testid={`row-line-item-${item.id}`}>
                           <TableCell className="font-medium">{item.name}</TableCell>
