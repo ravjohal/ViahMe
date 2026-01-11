@@ -658,17 +658,13 @@ export default function Budget() {
 
   // Detailed breakdown of line items per bucket, including ceremony/event info
   // This powers the expandable breakdown view in budget categories
+  // Now uses actual budgeted amounts from lineItemBudgets instead of template estimates
   interface LineItemBreakdown {
     eventId: string;
     eventName: string;
     ceremonyName: string;
     itemName: string;
-    lowCost: number;
-    highCost: number;
-    unit: string;
-    guestCount: number;
-    calculatedLow: number;
-    calculatedHigh: number;
+    budgetedAmount: number;
   }
   const lineItemBreakdownByBucket = useMemo(() => {
     const breakdown: Record<string, LineItemBreakdown[]> = {};
@@ -679,45 +675,34 @@ export default function Budget() {
       const lineItems = ceremonyBreakdownMap[event.ceremonyTypeId!];
       if (!lineItems) continue;
       
-      const guestCount = event.guestCount || 100;
-      
       for (const item of lineItems) {
         const bucketId = item.budgetBucketId || 'other';
         
-        if (!breakdown[bucketId]) {
-          breakdown[bucketId] = [];
+        // Find the actual budgeted amount for this line item
+        const savedBudget = lineItemBudgets.find(
+          b => b.eventId === event.id && b.lineItemCategory === item.category
+        );
+        const budgetedAmount = parseFloat(savedBudget?.budgetedAmount || "0") || 0;
+        
+        // Only include items that have an actual budget set
+        if (budgetedAmount > 0) {
+          if (!breakdown[bucketId]) {
+            breakdown[bucketId] = [];
+          }
+          
+          breakdown[bucketId].push({
+            eventId: event.id,
+            eventName: event.name,
+            ceremonyName: item.category || event.name,
+            itemName: item.category,
+            budgetedAmount,
+          });
         }
-        
-        let calculatedLow = item.lowCost;
-        let calculatedHigh = item.highCost;
-        
-        if (item.unit === 'per_person') {
-          calculatedLow *= guestCount;
-          calculatedHigh *= guestCount;
-        } else if (item.unit === 'per_hour') {
-          const hoursLow = item.hoursLow || 1;
-          const hoursHigh = item.hoursHigh || hoursLow;
-          calculatedLow *= hoursLow;
-          calculatedHigh *= hoursHigh;
-        }
-        
-        breakdown[bucketId].push({
-          eventId: event.id,
-          eventName: event.name,
-          ceremonyName: item.category || event.name,
-          itemName: item.category,
-          lowCost: item.lowCost,
-          highCost: item.highCost,
-          unit: item.unit || 'fixed',
-          guestCount,
-          calculatedLow: Math.round(calculatedLow),
-          calculatedHigh: Math.round(calculatedHigh),
-        });
       }
     }
     
     return breakdown;
-  }, [events, ceremonyBreakdownMap]);
+  }, [events, ceremonyBreakdownMap, lineItemBudgets]);
 
   // Toggle budget category expansion
   const toggleBudgetCategoryExpansion = (bucketId: string) => {
@@ -1637,9 +1622,10 @@ export default function Budget() {
               <div className="space-y-3">
                 {(expenseTotals?.bucketTotals || []).map((bucketTotal) => {
                   const percentSpent = bucketTotal.allocated > 0 ? (bucketTotal.spent / bucketTotal.allocated) * 100 : 0;
-                  // Use API auto values instead of client-side computation
-                  const hasAutoEstimate = bucketTotal.autoItemCount > 0;
                   const lineItems = lineItemBreakdownByBucket[bucketTotal.bucket] || [];
+                  // Calculate actual budget total from line items for this bucket
+                  const lineItemsTotal = lineItems.reduce((sum, item) => sum + item.budgetedAmount, 0);
+                  const hasLineItems = lineItems.length > 0;
                   const isExpanded = expandedBudgetCategories.has(bucketTotal.bucket);
 
                   return (
@@ -1662,14 +1648,14 @@ export default function Budget() {
                             <p className="text-sm text-muted-foreground">
                               ${bucketTotal.spent.toLocaleString()} of ${bucketTotal.allocated.toLocaleString()} spent
                             </p>
-                            {hasAutoEstimate && (
+                            {hasLineItems && (
                               <button
                                 onClick={() => toggleBudgetCategoryExpansion(bucketTotal.bucket)}
                                 className="text-xs text-muted-foreground mt-1 hover:text-foreground flex items-center gap-1"
                                 data-testid={`toggle-breakdown-${bucketTotal.bucket}`}
                               >
-                                Est. from ceremonies: ${bucketTotal.autoLow.toLocaleString()} - ${bucketTotal.autoHigh.toLocaleString()}
-                                <span className="ml-1">({bucketTotal.autoItemCount} items)</span>
+                                From ceremonies: ${lineItemsTotal.toLocaleString()}
+                                <span className="ml-1">({lineItems.length} items)</span>
                                 {isExpanded ? (
                                   <ChevronDown className="w-3 h-3 ml-1" />
                                 ) : (
@@ -1679,19 +1665,18 @@ export default function Budget() {
                             )}
                           </div>
                           <div className="flex items-center gap-1">
-                            {hasAutoEstimate && bucketTotal.allocated === 0 && (
+                            {hasLineItems && lineItemsTotal > 0 && bucketTotal.allocated === 0 && (
                               <Button
                                 variant="outline"
                                 size="sm"
                                 className="h-8 text-xs"
                                 onClick={() => {
-                                  const avgEstimate = Math.round((bucketTotal.autoLow + bucketTotal.autoHigh) / 2);
                                   setEditingBucket(bucketTotal.bucket as BudgetBucket);
-                                  setEditingBucketAmount(avgEstimate.toString());
+                                  setEditingBucketAmount(lineItemsTotal.toString());
                                 }}
-                                data-testid={`button-use-estimate-${bucketTotal.bucket}`}
+                                data-testid={`button-use-budget-${bucketTotal.bucket}`}
                               >
-                                Use Estimate
+                                Use Ceremony Budget
                               </Button>
                             )}
                             <Button
@@ -1728,28 +1713,20 @@ export default function Budget() {
                                   <p className="font-medium truncate">{item.eventName}</p>
                                   <p className="text-xs text-muted-foreground truncate">
                                     {item.itemName}
-                                    {item.unit === 'per_person' && (
-                                      <span className="ml-1">
-                                        (${item.lowCost.toLocaleString()}-${item.highCost.toLocaleString()}/person × {item.guestCount})
-                                      </span>
-                                    )}
-                                    {item.unit === 'per_hour' && (
-                                      <span className="ml-1">(per hour)</span>
-                                    )}
                                   </p>
                                 </div>
                                 <div className="text-right shrink-0 ml-3">
                                   <p className="font-mono text-sm">
-                                    ${item.calculatedLow.toLocaleString()} - ${item.calculatedHigh.toLocaleString()}
+                                    ${item.budgetedAmount.toLocaleString()}
                                   </p>
                                 </div>
                               </div>
                             ))}
                           </div>
                           <div className="flex justify-between mt-3 pt-2 border-t text-sm font-medium">
-                            <span>Total Estimate</span>
+                            <span>Total Budget</span>
                             <span className="font-mono">
-                              ${bucketTotal.autoLow.toLocaleString()} - ${bucketTotal.autoHigh.toLocaleString()}
+                              ${lineItems.reduce((sum, item) => sum + item.budgetedAmount, 0).toLocaleString()}
                             </span>
                           </div>
                         </div>
