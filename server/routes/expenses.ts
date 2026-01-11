@@ -66,14 +66,24 @@ export async function registerExpenseRoutes(router: Router, storage: IStorage) {
       const expenses = await storage.getExpensesByWedding(req.params.weddingId);
       const allocations = await storage.getBudgetAllocationsByWedding(req.params.weddingId);
       
-      const bucketTotals = BUDGET_BUCKETS.map(bucket => {
-        const allocation = allocations.find(a => a.bucket === bucket);
-        const bucketExpenses = expenses.filter(e => e.parentCategory === bucket);
+      // Use UUID-based categories from database instead of slug constants
+      const categories = await storage.getActiveBudgetCategories();
+      
+      const bucketTotals = categories.map(category => {
+        // Match allocations by UUID (bucketCategoryId) with fallback to legacy slug
+        const allocation = allocations.find(a => 
+          a.bucketCategoryId === category.id || a.bucket === category.slug
+        );
+        // Match expenses by UUID (bucketCategoryId) with fallback to legacy slug
+        const bucketExpenses = expenses.filter(e => 
+          e.bucketCategoryId === category.id || e.parentCategory === category.slug
+        );
         const spent = bucketExpenses.reduce((sum, e) => sum + parseFloat(e.amount || '0'), 0);
         const allocated = parseFloat(allocation?.allocatedAmount || '0');
         return {
-          bucket,
-          label: BUDGET_BUCKET_LABELS[bucket],
+          bucket: category.id, // UUID as primary key
+          slug: category.slug, // For backward compatibility during transition
+          label: category.displayName,
           allocated,
           spent,
           remaining: allocated - spent,

@@ -30,46 +30,28 @@ export const useBudgetCategories = useBudgetBucketCategories;
 export function useBudgetBucketCategoryLookup() {
   const { data: categories = [] } = useBudgetBucketCategories();
   
-  // Memoize Maps to avoid recreating on every render
-  const { categoryById, categoryBySlug, uuidToSlug, slugToUuid } = useMemo(() => {
+  // Memoize Map to avoid recreating on every render - UUID-only lookup
+  const categoryById = useMemo(() => {
     const byId = new Map<string, BudgetBucketCategory>();
-    const bySlug = new Map<string, BudgetBucketCategory>();
-    const toSlug = new Map<string, string>();
-    const toUuid = new Map<string, string>();
-    
-    categories.forEach(cat => {
-      byId.set(cat.id, cat);
-      bySlug.set(cat.slug, cat);
-      toSlug.set(cat.id, cat.slug);
-      toUuid.set(cat.slug, cat.id);
-    });
-    
-    return { categoryById: byId, categoryBySlug: bySlug, uuidToSlug: toSlug, slugToUuid: toUuid };
+    categories.forEach(cat => byId.set(cat.id, cat));
+    return byId;
   }, [categories]);
   
   const getCategoryLabel = useCallback((id: string): string => {
-    return categoryById.get(id)?.displayName || categoryBySlug.get(id)?.displayName || id;
-  }, [categoryById, categoryBySlug]);
+    return categoryById.get(id)?.displayName || id;
+  }, [categoryById]);
   
   const getCategoryIcon = useCallback((id: string): string | null => {
-    return categoryById.get(id)?.iconName || categoryBySlug.get(id)?.iconName || null;
-  }, [categoryById, categoryBySlug]);
-  
-  const getSlugFromUuid = useCallback((uuid: string): string => {
-    return uuidToSlug.get(uuid) || uuid;
-  }, [uuidToSlug]);
+    return categoryById.get(id)?.iconName || null;
+  }, [categoryById]);
   
   const allCategoryIds = useMemo(() => categories.map(cat => cat.id), [categories]);
   
   return {
     categories,
     categoryById,
-    categoryBySlug,
-    uuidToSlug,
-    slugToUuid,
     getCategoryLabel,
     getCategoryIcon,
-    getSlugFromUuid,
     allCategoryIds,
   };
 }
