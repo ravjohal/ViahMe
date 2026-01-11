@@ -158,7 +158,7 @@ export default function Budget() {
 
   // Fetch budget categories from database (replaces hardcoded BUDGET_BUCKETS constant)
   const { data: budgetCategories = [], isLoading: categoriesLoading } = useBudgetCategories();
-  const { getCategoryLabel, categoryById, allCategoryIds } = useBudgetCategoryLookup();
+  const { getCategoryLabel, categoryById, getSlugFromUuid, allCategoryIds } = useBudgetCategoryLookup();
 
   // Get line items for an event using its ceremonyTypeId (UUID)
   const getLineItemsForEvent = (ceremonyTypeId: string | null | undefined): CeremonyBudgetCategoryItem[] | null => {
@@ -598,8 +598,9 @@ export default function Budget() {
     return expenseTotals.bucketTotals.reduce((sum, bucket) => sum + bucket.allocated, 0);
   }, [expenseTotals?.bucketTotals]);
 
-  // Aggregate ceremony line items by budgetBucketId to calculate estimated budget per bucket
+  // Aggregate ceremony line items by bucket SLUG to calculate estimated budget per bucket
   // This uses the ceremony line items from all events to provide suggested bucket allocations
+  // Key by slug (e.g., "venue", "catering") to match expenseTotals.bucketTotals format
   const estimatedBudgetByBucket = useMemo(() => {
     const bucketEstimates: Record<string, { low: number; high: number; itemCount: number }> = {};
     
@@ -613,10 +614,13 @@ export default function Budget() {
       const guestCount = event.guestCount || 100;
       
       for (const item of lineItems) {
-        const bucketId = item.budgetBucketId || item.budgetBucket || 'other';
+        // Get the bucket key - convert UUID to slug for matching with expenseTotals
+        const bucketUuidOrSlug = item.budgetBucketId || item.budgetBucket || 'other';
+        // Convert UUID to slug if it's a UUID, otherwise use as-is (might already be a slug)
+        const bucketSlug = getSlugFromUuid(bucketUuidOrSlug);
         
-        if (!bucketEstimates[bucketId]) {
-          bucketEstimates[bucketId] = { low: 0, high: 0, itemCount: 0 };
+        if (!bucketEstimates[bucketSlug]) {
+          bucketEstimates[bucketSlug] = { low: 0, high: 0, itemCount: 0 };
         }
         
         let itemLow = item.lowCost;
@@ -633,14 +637,14 @@ export default function Budget() {
           itemHigh *= hoursHigh;
         }
         
-        bucketEstimates[bucketId].low += Math.round(itemLow);
-        bucketEstimates[bucketId].high += Math.round(itemHigh);
-        bucketEstimates[bucketId].itemCount += 1;
+        bucketEstimates[bucketSlug].low += Math.round(itemLow);
+        bucketEstimates[bucketSlug].high += Math.round(itemHigh);
+        bucketEstimates[bucketSlug].itemCount += 1;
       }
     }
     
     return bucketEstimates;
-  }, [events, ceremonyBreakdownMap]);
+  }, [events, ceremonyBreakdownMap, getSlugFromUuid]);
 
   // For display, use ceremony totals as the primary "planned" amount
   const totalAllocated = totalByCeremonies;
