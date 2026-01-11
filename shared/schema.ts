@@ -473,9 +473,9 @@ export type User = typeof users.$inferSelect;
 export const weddings = pgTable("weddings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull(),
-  // Foreign key to wedding_traditions (UUID)
-  traditionId: varchar("tradition_id").references(() => weddingTraditions.id),
-  // Legacy: kept for backward compatibility, will be deprecated
+  // PRIMARY: UUID FK to wedding_traditions.id (required)
+  traditionId: varchar("tradition_id").notNull().references(() => weddingTraditions.id),
+  // DEPRECATED: Legacy slug - kept for backward compatibility, auto-resolved from traditionId
   tradition: text("tradition").notNull(), // Main tradition slug: 'sikh' | 'hindu' | 'muslim' | etc
   subTradition: text("sub_tradition"), // Single sub-tradition for most main traditions
   subTraditions: text("sub_traditions").array(), // Multiple sub-traditions for Mixed tradition
@@ -505,6 +505,9 @@ export const insertWeddingSchema = createInsertSchema(weddings).omit({
   createdAt: true,
   status: true,
 }).extend({
+  // PRIMARY: UUID FK - optional at validation, auto-resolved from tradition slug in storage layer
+  traditionId: z.string().optional(),
+  // DEPRECATED: Legacy slug - still required for backward compatibility, used for auto-resolution
   tradition: z.enum(['sikh', 'hindu', 'muslim', 'gujarati', 'south_indian', 'christian', 'jain', 'parsi', 'mixed', 'other']),
   subTradition: z.string().nullable().optional(),
   subTraditions: z.array(z.string()).nullable().optional(),
@@ -531,9 +534,9 @@ export const events = pgTable("events", {
   weddingId: varchar("wedding_id").notNull(),
   name: text("name").notNull(),
   type: text("type").notNull(), // Legacy: 'paath' | 'mehndi' | 'maiyan' | 'sangeet' | 'anand_karaj' | 'reception' | 'custom'
-  // NEW: UUID FK to ceremony_types.id (primary approach)
-  ceremonyTypeUuid: varchar("ceremony_type_uuid").references(() => ceremonyTypes.id),
-  // DEPRECATED: Legacy slug FK to ceremony_types.ceremonyId
+  // PRIMARY: UUID FK to ceremony_types.id (required)
+  ceremonyTypeUuid: varchar("ceremony_type_uuid").notNull().references(() => ceremonyTypes.id),
+  // DEPRECATED: Legacy slug FK - nullable, auto-resolved from UUID
   ceremonyTypeId: varchar("ceremony_type_id"),
   date: timestamp("date"),
   time: text("time"),
@@ -942,8 +945,9 @@ export const expenses = pgTable("expenses", {
   eventId: varchar("event_id"), // FK to events.id (new, nullable during migration)
   
   // Tie to HIGH-LEVEL system category from BUDGET_BUCKETS
-  parentCategory: text("parent_category").notNull(), // Legacy: e.g., "attire", "catering", "venue"
-  bucketCategoryId: varchar("bucket_category_id"), // FK to budget_bucket_categories.id (new, nullable during migration)
+  parentCategory: text("parent_category").notNull(), // DEPRECATED: Legacy e.g., "attire", "catering", "venue"
+  // PRIMARY: UUID FK to budget_bucket_categories.id (required)
+  bucketCategoryId: varchar("bucket_category_id").notNull(), // FK to budget_bucket_categories.id
   
   // Link to planned cost item (The Plan)
   eventCostItemId: varchar("event_cost_item_id"), // FK to event_cost_items.id (new, nullable during migration)
@@ -986,9 +990,11 @@ export const insertExpenseSchema = createInsertSchema(expenses).omit({
   id: true,
   createdAt: true,
 }).extend({
+  // DEPRECATED: Legacy slug - still required for backward compatibility, used for auto-resolution
   parentCategory: budgetBucketSchema,
   eventId: z.string().nullable().optional(), // FK to events.id
-  bucketCategoryId: z.string().nullable().optional(), // FK to budget_bucket_categories.id
+  // PRIMARY: UUID FK - optional at validation, auto-resolved from parentCategory slug in storage layer
+  bucketCategoryId: z.string().optional(),
   eventCostItemId: z.string().nullable().optional(), // FK to event_cost_items.id
   amount: z.string().regex(/^\d+(\.\d{1,2})?$/, "Amount must be a valid decimal"),
   amountPaid: z.string().regex(/^\d+(\.\d{1,2})?$/, "Amount paid must be a valid decimal").optional(),
@@ -1038,9 +1044,9 @@ export type ExpenseSplit = typeof expenseSplits.$inferSelect;
 export const budgetAllocations = pgTable("budget_allocations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   weddingId: varchar("wedding_id").notNull(),
-  // Foreign key to budget_bucket_categories (UUID)
-  bucketCategoryId: varchar("bucket_category_id").references(() => budgetBucketCategories.id),
-  // Legacy: kept for backward compatibility, will be deprecated
+  // PRIMARY: UUID FK to budget_bucket_categories.id (required)
+  bucketCategoryId: varchar("bucket_category_id").notNull().references(() => budgetBucketCategories.id),
+  // DEPRECATED: Legacy slug - kept for backward compatibility, auto-resolved from bucketCategoryId
   bucket: text("bucket").notNull(), // From BUDGET_BUCKETS (venue, catering, etc.)
   ceremonyId: varchar("ceremony_id"), // Optional: References events.id - if set, this is ceremony-specific
   lineItemLabel: text("line_item_label"), // Optional: "Turban Tying", "DJ", etc. - granular line item
@@ -1059,6 +1065,9 @@ export const insertBudgetAllocationSchema = createInsertSchema(budgetAllocations
   id: true,
   createdAt: true,
 }).extend({
+  // PRIMARY: UUID FK - optional at validation, auto-resolved from bucket slug in storage layer
+  bucketCategoryId: z.string().optional(),
+  // DEPRECATED: Legacy slug - still required for backward compatibility, used for auto-resolution
   bucket: budgetBucketSchema,
   ceremonyId: z.string().nullable().optional(),
   lineItemLabel: z.string().nullable().optional(),
@@ -3896,9 +3905,9 @@ export const ceremonyTypes = pgTable("ceremony_types", {
   ceremonyId: text("ceremony_id").notNull().unique(), // e.g., 'sikh_maiyan', 'sikh_anand_karaj' - slug identifier
   name: text("name").notNull(), // Display name e.g., "Maiyan"
   description: text("description"), // Description of the ceremony
-  // Foreign key to wedding_traditions (UUID)
-  traditionId: varchar("tradition_id").references(() => weddingTraditions.id),
-  // Legacy: kept for backward compatibility, will be deprecated
+  // PRIMARY: UUID FK to wedding_traditions.id (required)
+  traditionId: varchar("tradition_id").notNull().references(() => weddingTraditions.id),
+  // DEPRECATED: Legacy slug - kept for backward compatibility, auto-resolved from traditionId
   tradition: text("tradition").notNull(), // Text field: 'sikh', 'hindu', etc.
   costPerGuestLow: decimal("cost_per_guest_low", { precision: 10, scale: 2 }).notNull(),
   costPerGuestHigh: decimal("cost_per_guest_high", { precision: 10, scale: 2 }).notNull(),

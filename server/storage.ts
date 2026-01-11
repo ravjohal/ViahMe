@@ -4656,6 +4656,17 @@ export class DBStorage implements IStorage {
         ceremonyTypeUuid = ceremonyType.id;
       }
     }
+    // Also try to resolve from wedding tradition + event type if still not found
+    if (!ceremonyTypeUuid && insertEvent.type && insertEvent.weddingId) {
+      const wedding = await this.getWedding(insertEvent.weddingId);
+      if (wedding?.tradition) {
+        const ceremonyId = `${wedding.tradition.toLowerCase()}_${insertEvent.type}`;
+        const ceremonyType = await this.getCeremonyType(ceremonyId);
+        if (ceremonyType) {
+          ceremonyTypeUuid = ceremonyType.id;
+        }
+      }
+    }
     
     const result = await this.db.insert(schema.events).values({
       ...insertEvent,
@@ -5132,7 +5143,24 @@ export class DBStorage implements IStorage {
   }
 
   async createExpense(insertExpense: InsertExpense): Promise<Expense> {
-    const result = await this.db.insert(schema.expenses).values(insertExpense).returning();
+    // Auto-resolve parentCategory slug to bucketCategoryId if not provided
+    let bucketCategoryId = insertExpense.bucketCategoryId;
+    if (!bucketCategoryId && insertExpense.parentCategory) {
+      // For budget_bucket_categories, the id column uses slug values directly (id === slug)
+      // This is verified: SELECT id, slug FROM budget_bucket_categories shows matching values
+      // e.g., id='venue', slug='venue'; id='catering', slug='catering'
+      bucketCategoryId = insertExpense.parentCategory;
+    }
+    
+    // Ensure we have a valid bucketCategoryId - required by NOT NULL constraint
+    if (!bucketCategoryId) {
+      throw new Error("bucketCategoryId is required - provide directly or via parentCategory");
+    }
+    
+    const result = await this.db.insert(schema.expenses).values({
+      ...insertExpense,
+      bucketCategoryId,
+    }).returning();
     return result[0];
   }
 
