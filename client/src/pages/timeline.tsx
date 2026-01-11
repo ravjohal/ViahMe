@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation, Link } from "wouter";
 import type { Event, InsertEvent, EventCostItem, Task } from "@shared/schema";
-import { EventDetailModal } from "@/components/event-detail-modal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Calendar, MapPin, Users, Clock, Pencil, Trash2, DollarSign, X, Tag, HelpCircle, ChevronDown, ChevronRight, Sun, Sunset, Moon, Sunrise, CheckCircle2, CircleDot, GripVertical, CalendarPlus } from "lucide-react";
@@ -497,7 +496,6 @@ export default function TimelinePage() {
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
-  const [viewingEventId, setViewingEventId] = useState<string | null>(null);
   const [costItemsOpen, setCostItemsOpen] = useState(false);
   const [newCostItem, setNewCostItem] = useState({ name: "", costType: "fixed" as "per_head" | "fixed", amount: "", categoryId: "" });
   const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set());
@@ -547,11 +545,6 @@ export default function TimelinePage() {
   const { data: costItems = [], isLoading: costItemsLoading } = useQuery<EventCostItem[]>({
     queryKey: ["/api/events", editingEvent?.id, "cost-items"],
     enabled: !!editingEvent?.id,
-  });
-
-  const { data: viewingCostItems = [], isLoading: viewingCostItemsLoading } = useQuery<EventCostItem[]>({
-    queryKey: ["/api/events", viewingEventId, "cost-items"],
-    enabled: !!viewingEventId,
   });
 
   const { data: viewingEventTasks = [], isLoading: viewingEventTasksLoading } = useQuery<Task[]>({
@@ -743,10 +736,6 @@ export default function TimelinePage() {
     if (confirm("Are you sure you want to delete this event?")) {
       deleteMutation.mutate(id);
     }
-  };
-
-  const getViewingEvent = () => {
-    return events.find((e) => e.id === viewingEventId);
   };
 
   const toggleDayCollapse = (dateKey: string) => {
@@ -1987,7 +1976,10 @@ export default function TimelinePage() {
                     onToggleCollapse={toggleDayCollapse}
                     getDaySummary={getDaySummary}
                     getEventStatus={getEventStatus}
-                    onView={setViewingEventId}
+                    onView={(id) => {
+                      const event = events.find(e => e.id === id);
+                      if (event) handleEdit(event);
+                    }}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
                   />
@@ -2010,24 +2002,6 @@ export default function TimelinePage() {
         </DragOverlay>
       </DndContext>
 
-      <EventDetailModal
-        open={!!viewingEventId}
-        onOpenChange={(open) => {
-          if (!open) setViewingEventId(null);
-        }}
-        event={getViewingEvent() || null}
-        weddingId={wedding?.id}
-        costItems={viewingCostItems}
-        costItemsLoading={viewingCostItemsLoading}
-        budgetCategories={budgetCategories}
-        tasks={viewingEventId ? viewingEventTasks.filter(t => t.eventId === viewingEventId) : []}
-        tasksLoading={viewingEventTasksLoading}
-        onEdit={(event) => {
-          setViewingEventId(null);
-          handleEdit(event);
-        }}
-        onDelete={handleDelete}
-      />
     </div>
   );
 }
