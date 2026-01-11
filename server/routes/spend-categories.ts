@@ -229,14 +229,16 @@ export async function seedSpendCategoriesFromCeremonies(storage: IStorage): Prom
 
   for (const template of templates) {
     const ceremonyId = template.ceremonyId;
-    const costBreakdown = template.costBreakdown as CeremonyBudgetCategoryItem[] | null;
     
-    if (!costBreakdown || !Array.isArray(costBreakdown)) {
+    // Fetch line items from the normalized ceremony_budget_categories table
+    const lineItems = await storage.getCeremonyBudgetCategories(ceremonyId);
+    
+    if (!lineItems || lineItems.length === 0) {
       continue;
     }
 
-    for (const item of costBreakdown) {
-      const categoryName = item.category;
+    for (const item of lineItems) {
+      const categoryName = item.name;
       const parentCategory = item.budgetBucket || getParentBudgetCategory(categoryName);
 
       let spendCategoryId = spendCategoryCache.get(categoryName.toLowerCase());

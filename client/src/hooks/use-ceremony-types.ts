@@ -287,47 +287,6 @@ export async function getCeremonyEstimate(request: CeremonyEstimateRequest): Pro
   return response.json();
 }
 
-export function getCostBreakdownFromType(template: CeremonyType): CeremonyBudgetCategoryItem[] {
-  if (!template.costBreakdown) return [];
-  if (Array.isArray(template.costBreakdown)) {
-    return template.costBreakdown as CeremonyBudgetCategoryItem[];
-  }
-  return [];
-}
-
-export function calculateCeremonyTotal(
-  template: CeremonyType,
-  guestCount: number,
-  multiplier: number = 1.0
-): { low: number; high: number } {
-  const breakdown = getCostBreakdownFromType(template);
-  let totalLow = 0;
-  let totalHigh = 0;
-
-  for (const item of breakdown) {
-    let itemLow = item.lowCost;
-    let itemHigh = item.highCost;
-
-    if (item.unit === 'per_person') {
-      itemLow *= guestCount;
-      itemHigh *= guestCount;
-    } else if (item.unit === 'per_hour') {
-      const hoursLow = item.hoursLow || 1;
-      const hoursHigh = item.hoursHigh || hoursLow;
-      itemLow *= hoursLow;
-      itemHigh *= hoursHigh;
-    }
-
-    itemLow *= multiplier;
-    itemHigh *= multiplier;
-
-    totalLow += itemLow;
-    totalHigh += itemHigh;
-  }
-
-  return { low: Math.round(totalLow), high: Math.round(totalHigh) };
-}
-
 // Build a lookup map from ceremonyId to type
 export function buildCeremonyTypeMap(
   types: CeremonyType[] | undefined
@@ -336,19 +295,6 @@ export function buildCeremonyTypeMap(
   const map: Record<string, CeremonyType> = {};
   for (const type of types) {
     map[type.ceremonyId] = type;
-  }
-  return map;
-}
-
-// Build a lookup map from ceremonyId to costBreakdown array
-// DEPRECATED: Use useAllCeremonyLineItems hook instead for normalized data
-export function buildCeremonyBreakdownMap(
-  types: CeremonyType[] | undefined
-): Record<string, CeremonyBudgetCategoryItem[]> {
-  if (!types) return {};
-  const map: Record<string, CeremonyBudgetCategoryItem[]> = {};
-  for (const type of types) {
-    map[type.ceremonyId] = getCostBreakdownFromType(type);
   }
   return map;
 }

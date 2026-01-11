@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Lightbulb, Calculator, Plus, Minus, DollarSign, Users, Info, Loader2, MapPin, ChevronDown, ChevronUp, Settings2, Check } from "lucide-react";
 import type { Wedding, Event, CeremonyType, CeremonyBudgetCategoryItem } from "@shared/schema";
-import { useCeremonyTypesByTradition, useCeremonyTypes, buildCeremonyBreakdownMap, getCostBreakdownFromType } from "@/hooks/use-ceremony-types";
+import { useCeremonyTypesByTradition, useCeremonyTypes, useAllCeremonyLineItems } from "@/hooks/use-ceremony-types";
 import {
   type VenueClass,
   type VendorTier,
@@ -98,9 +98,8 @@ export function BudgetEstimator({ wedding, events = [], onUpdateBudget, onUpdate
 
   const { data: traditionCeremonies = [], isLoading: traditionLoading } = useCeremonyTypesByTradition(selectedTradition);
   const { data: allTemplates = [], isLoading: templatesLoading } = useCeremonyTypes();
-  const isLoading = traditionLoading || templatesLoading;
-  
-  const breakdownMap = useMemo(() => buildCeremonyBreakdownMap(allTemplates), [allTemplates]);
+  const { data: breakdownMap = {}, isLoading: lineItemsLoading } = useAllCeremonyLineItems();
+  const isLoading = traditionLoading || templatesLoading || lineItemsLoading;
   
   const getEffectiveMultiplier = (eventId: string, isCustom: boolean) => {
     const override = isCustom 

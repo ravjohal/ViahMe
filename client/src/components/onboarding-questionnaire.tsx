@@ -13,7 +13,7 @@ import { Calendar, MapPin, Users, DollarSign, Crown, Gift, Lightbulb, TrendingUp
 import { motion, AnimatePresence } from "framer-motion";
 import { TRADITION_HIERARCHY, getSubTraditionsForMain, getAllSubTraditions, getMainTraditionByValue } from "@/lib/tradition-hierarchy";
 import { getCeremoniesForTradition, getCeremonyById, getDefaultCeremoniesForTradition, type CeremonyDefinition } from "@shared/ceremonies";
-import { useCeremonyTypesByTradition, useRegionalPricing, calculateCeremonyTotal } from "@/hooks/use-ceremony-types";
+import { useCeremonyTypesByTradition, useRegionalPricing, useAllCeremonyLineItems, calculateCeremonyTotalFromBreakdown } from "@/hooks/use-ceremony-types";
 
 const customEventSchema = z.object({
   ceremonyId: z.string().optional(),
@@ -297,6 +297,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
   // Fetch ceremony templates from database for budget estimation
   const { data: ceremonyTypes } = useCeremonyTypesByTradition(selectedMainTradition);
   const { data: regionalPricingData } = useRegionalPricing();
+  const { data: lineItemsMap = {} } = useAllCeremonyLineItems();
   
   // Get regional multiplier based on selected location
   const regionalMultiplier = useMemo(() => {
@@ -988,7 +989,8 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                             const parsedGuests = Number(event.guestCount) || 0;
                             const guestCount = parsedGuests > 0 ? parsedGuests : defaultGuests;
                             
-                            const costs = calculateCeremonyTotal(template, guestCount, regionalMultiplier);
+                            const breakdown = lineItemsMap[event.ceremonyId] || [];
+                            const costs = calculateCeremonyTotalFromBreakdown(breakdown, guestCount, regionalMultiplier);
                             totalLow += costs.low;
                             totalHigh += costs.high;
                             ceremonyCount++;

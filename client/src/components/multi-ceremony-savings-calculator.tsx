@@ -20,7 +20,7 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Link } from "wouter";
 import type { Event, CeremonyType, CeremonyBudgetCategoryItem } from "@shared/schema";
-import { useCeremonyTypes, getCostBreakdownFromType, calculateCeremonyTotal, buildCeremonyBreakdownMap, calculateCeremonyTotalFromBreakdown } from "@/hooks/use-ceremony-types";
+import { useCeremonyTypes, useAllCeremonyLineItems, calculateCeremonyTotalFromBreakdown } from "@/hooks/use-ceremony-types";
 import { CEREMONY_MAPPINGS } from "@shared/ceremonies";
 import { PricingAdjuster } from "@/components/pricing-adjuster";
 import {
@@ -48,8 +48,7 @@ function formatCurrencyFull(amount: number): string {
   return `$${amount.toLocaleString()}`;
 }
 
-function getTopCostDrivers(template: CeremonyType, guestCount: number): { category: string; savings: number }[] {
-  const breakdown = getCostBreakdownFromType(template);
+function getTopCostDrivers(breakdown: CeremonyBudgetCategoryItem[], guestCount: number): { category: string; savings: number }[] {
   if (!breakdown.length) return [];
   
   const perPersonItems = breakdown
@@ -98,7 +97,9 @@ interface EventGuestState {
 }
 
 export function MultiCeremonySavingsCalculator({ events, className = "" }: MultiCeremonySavingsCalculatorProps) {
-  const { data: templates, isLoading } = useCeremonyTypes();
+  const { data: templates, isLoading: templatesLoading } = useCeremonyTypes();
+  const { data: lineItemsMap = {}, isLoading: lineItemsLoading } = useAllCeremonyLineItems();
+  const isLoading = templatesLoading || lineItemsLoading;
   const [venueClass, setVenueClass] = useState<VenueClass>("community_hall");
   const [vendorTier, setVendorTier] = useState<VendorTier>("standard");
   const [showPricingSettings, setShowPricingSettings] = useState(false);
@@ -163,23 +164,21 @@ export function MultiCeremonySavingsCalculator({ events, className = "" }: Multi
     return guestStates.reduce((sum, state) => {
       const guestBracketMultiplier = GUEST_BRACKET_MULTIPLIERS[getGuestBracket(state.originalGuests)];
       const totalMultiplier = pricingMultiplier * guestBracketMultiplier;
-      const template = templateMap.get(state.ceremonyId);
-      if (!template) return sum;
-      const range = calculateCeremonyTotal(template, state.originalGuests);
+      const breakdown = lineItemsMap[state.ceremonyId] || [];
+      const range = calculateCeremonyTotalFromBreakdown(breakdown, state.originalGuests);
       return sum + ((range.low + range.high) / 2) * totalMultiplier;
     }, 0);
-  }, [guestStates, templateMap, pricingMultiplier]);
+  }, [guestStates, lineItemsMap, pricingMultiplier]);
 
   const currentTotal = useMemo(() => {
     return guestStates.reduce((sum, state) => {
       const guestBracketMultiplier = GUEST_BRACKET_MULTIPLIERS[getGuestBracket(state.currentGuests)];
       const totalMultiplier = pricingMultiplier * guestBracketMultiplier;
-      const template = templateMap.get(state.ceremonyId);
-      if (!template) return sum;
-      const range = calculateCeremonyTotal(template, state.currentGuests);
+      const breakdown = lineItemsMap[state.ceremonyId] || [];
+      const range = calculateCeremonyTotalFromBreakdown(breakdown, state.currentGuests);
       return sum + ((range.low + range.high) / 2) * totalMultiplier;
     }, 0);
-  }, [guestStates, templateMap, pricingMultiplier]);
+  }, [guestStates, lineItemsMap, pricingMultiplier]);
 
   if (isLoading) {
     return (
@@ -334,17 +333,17 @@ export function MultiCeremonySavingsCalculator({ events, className = "" }: Multi
         <CollapsibleContent>
           <div className="p-4 space-y-6">
             {guestStates.map((state) => {
-              const template = templateMap.get(state.ceremonyId);
-              if (!template) return null;
+              const breakdown = lineItemsMap[state.ceremonyId] || [];
+              if (!breakdown.length) return null;
               
-              const range = calculateCeremonyTotal(template, state.currentGuests);
-              const originalRange = calculateCeremonyTotal(template, state.originalGuests);
+              const range = calculateCeremonyTotalFromBreakdown(breakdown, state.currentGuests);
+              const originalRange = calculateCeremonyTotalFromBreakdown(breakdown, state.originalGuests);
               const avgCurrent = (range.low + range.high) / 2;
               const avgOriginal = (originalRange.low + originalRange.high) / 2;
               const eventSavings = avgOriginal - avgCurrent;
               const guestsChanged = state.currentGuests !== state.originalGuests;
               const guestsReduced = state.originalGuests - state.currentGuests;
-              const costDrivers = getTopCostDrivers(template, guestsReduced > 0 ? guestsReduced : 10);
+              const costDrivers = getTopCostDrivers(breakdown, guestsReduced > 0 ? guestsReduced : 10);
 
               return (
                 <div 

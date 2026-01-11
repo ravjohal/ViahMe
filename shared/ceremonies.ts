@@ -19,7 +19,7 @@ export interface CeremonyDefinition {
   costPerGuestHigh: number;
   defaultGuests: number;
   traditions: string[];
-  costBreakdown?: CostCategory[];
+  costBreakdown?: CostCategory[]; // DEPRECATED: Use ceremony_budget_categories table instead
   defaultSide: 'mutual' | 'bride' | 'groom' | 'separate';
 }
 

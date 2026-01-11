@@ -6,7 +6,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronDown, ChevronUp, DollarSign, Users, Clock, Info, Loader2, Settings2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Event, CeremonyType, CeremonyBudgetCategoryItem } from "@shared/schema";
-import { useCeremonyTypes, getCostBreakdownFromType, calculateCeremonyTotal, buildCeremonyBreakdownMap } from "@/hooks/use-ceremony-types";
+import { useCeremonyTypes, useAllCeremonyLineItems, calculateCeremonyTotalFromBreakdown } from "@/hooks/use-ceremony-types";
 import { CEREMONY_MAPPINGS } from "@shared/ceremonies";
 import { PricingAdjuster } from "@/components/pricing-adjuster";
 import {
@@ -110,10 +110,11 @@ function CostCategoryRow({ item, guestCount, multiplier = 1 }: { item: CeremonyB
 interface EventCostCardProps {
   event: Event;
   templateMap: Map<string, CeremonyType>;
+  lineItemsMap: Record<string, CeremonyBudgetCategoryItem[]>;
   pricingMultiplier: number;
 }
 
-function EventCostCard({ event, templateMap, pricingMultiplier }: EventCostCardProps) {
+function EventCostCard({ event, templateMap, lineItemsMap, pricingMultiplier }: EventCostCardProps) {
   const [isOpen, setIsOpen] = useState(false);
   const ceremonyResult = getCeremonyIdFromEvent(event, templateMap);
   
@@ -129,9 +130,9 @@ function EventCostCard({ event, templateMap, pricingMultiplier }: EventCostCardP
   const guestBracketMultiplier = GUEST_BRACKET_MULTIPLIERS[getGuestBracket(guestCount)];
   const totalMultiplier = pricingMultiplier * guestBracketMultiplier;
   
-  const breakdown = getCostBreakdownFromType(template);
+  const breakdown = lineItemsMap[ceremonyId] || [];
   const actualGuestCount = guestCount || template.defaultGuests || 100;
-  const baseRange = calculateCeremonyTotal(template, actualGuestCount);
+  const baseRange = calculateCeremonyTotalFromBreakdown(breakdown, actualGuestCount);
   const totalRange = {
     low: Math.round(baseRange.low * totalMultiplier),
     high: Math.round(baseRange.high * totalMultiplier),
@@ -202,7 +203,9 @@ function EventCostCard({ event, templateMap, pricingMultiplier }: EventCostCardP
 }
 
 export function CeremonyCostBreakdown({ events, className = "" }: CeremonyCostBreakdownProps) {
-  const { data: templates, isLoading } = useCeremonyTypes();
+  const { data: templates, isLoading: templatesLoading } = useCeremonyTypes();
+  const { data: lineItemsMap = {}, isLoading: lineItemsLoading } = useAllCeremonyLineItems();
+  const isLoading = templatesLoading || lineItemsLoading;
   const [venueClass, setVenueClass] = useState<VenueClass>("community_hall");
   const [vendorTier, setVendorTier] = useState<VendorTier>("standard");
   const [showPricingSettings, setShowPricingSettings] = useState(false);
@@ -239,12 +242,13 @@ export function CeremonyCostBreakdown({ events, className = "" }: CeremonyCostBr
       const guestCount = event.guestCount || template.defaultGuests || 100;
       const guestBracketMultiplier = GUEST_BRACKET_MULTIPLIERS[getGuestBracket(guestCount)];
       const totalMultiplier = pricingMultiplier * guestBracketMultiplier;
-      const range = calculateCeremonyTotal(template, guestCount);
+      const breakdown = lineItemsMap[ceremonyResult.ceremonyId] || [];
+      const range = calculateCeremonyTotalFromBreakdown(breakdown, guestCount);
       low += Math.round(range.low * totalMultiplier);
       high += Math.round(range.high * totalMultiplier);
     }
     return { totalLow: low, totalHigh: high };
-  }, [eventsWithBreakdowns, templateMap, pricingMultiplier]);
+  }, [eventsWithBreakdowns, templateMap, lineItemsMap, pricingMultiplier]);
   
   if (isLoading) {
     return (
@@ -328,7 +332,7 @@ export function CeremonyCostBreakdown({ events, className = "" }: CeremonyCostBr
       
       <div className="space-y-3">
         {eventsWithBreakdowns.map(event => (
-          <EventCostCard key={event.id} event={event} templateMap={templateMap} pricingMultiplier={pricingMultiplier} />
+          <EventCostCard key={event.id} event={event} templateMap={templateMap} lineItemsMap={lineItemsMap} pricingMultiplier={pricingMultiplier} />
         ))}
       </div>
     </div>

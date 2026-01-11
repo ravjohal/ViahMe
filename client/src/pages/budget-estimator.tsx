@@ -28,7 +28,7 @@ import {
   Loader2
 } from "lucide-react";
 import type { Wedding, Event, CeremonyType, CeremonyBudgetCategoryItem } from "@shared/schema";
-import { useCeremonyTypesByTradition, useCeremonyTypes, calculateCeremonyTotal, getCostBreakdownFromType, buildCeremonyBreakdownMap, calculateCeremonyTotalFromBreakdown } from "@/hooks/use-ceremony-types";
+import { useCeremonyTypesByTradition, useCeremonyTypes, useAllCeremonyLineItems, calculateCeremonyTotalFromBreakdown } from "@/hooks/use-ceremony-types";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -197,23 +197,23 @@ export default function BudgetEstimatorPage() {
   const { data: traditionCeremonies = [], isLoading: ceremoniesLoading } = useCeremonyTypesByTradition(selectedTradition || "hindu");
 
   const { data: allTemplates = [], isLoading: templatesLoading } = useCeremonyTypes();
-  const breakdownMap = useMemo(() => buildCeremonyBreakdownMap(allTemplates), [allTemplates]);
+  const { data: lineItemsMap = {}, isLoading: lineItemsLoading } = useAllCeremonyLineItems();
 
   const getCeremonyBreakdown = (eventName: string): { ceremonyId: string; breakdown: CostCategory[] } | null => {
     const normalizedName = eventName.toLowerCase().trim();
     
     for (const [ceremonyId, keywords] of Object.entries(CEREMONY_MAPPINGS)) {
       if (keywords.some(kw => normalizedName === kw || normalizedName.includes(kw))) {
-        const breakdown = breakdownMap.get(ceremonyId);
-        if (breakdown) {
+        const breakdown = lineItemsMap[ceremonyId];
+        if (breakdown && breakdown.length > 0) {
           return { ceremonyId, breakdown };
         }
       }
     }
     
     if (normalizedName.includes('reception')) {
-      const breakdown = breakdownMap.get('reception');
-      if (breakdown) {
+      const breakdown = lineItemsMap['reception'];
+      if (breakdown && breakdown.length > 0) {
         return { ceremonyId: 'reception', breakdown };
       }
     }
@@ -427,7 +427,7 @@ export default function BudgetEstimatorPage() {
     updateWeddingBudgetMutation.mutate(averageBudget);
   };
 
-  if (weddingsLoading || eventsLoading) {
+  if (weddingsLoading || eventsLoading || lineItemsLoading) {
     return (
       <div className="min-h-screen bg-background">
         <main className="container mx-auto px-4 py-6 max-w-4xl">
