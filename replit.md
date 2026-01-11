@@ -21,6 +21,9 @@ Key architectural decisions and features include:
   - Core tables (`wedding_traditions`, `wedding_sub_traditions`, `budget_bucket_categories`) have both UUID `id` and `slug` fields
   - Referencing tables (`weddings`, `ceremony_types`, `budget_allocations`) have new UUID FK columns (`traditionId`, `bucketCategoryId`) alongside legacy string columns (`tradition`, `bucket`)
   - Storage layer auto-resolves slugs to UUIDs on create/update operations via helpers: `getWeddingTraditionBySlug()`, `getBudgetCategoryBySlug()`
+  - **Routes actively use UUID-based methods**: `/api/ceremony-types/tradition/:tradition` resolves slugs to UUIDs before querying; new `/api/ceremony-types/tradition-id/:traditionId` endpoint for direct UUID access; wedding creation uses `upsertBudgetAllocationByUUID()` for initial budget allocations
+  - **New UUID-based storage methods**: `getCeremonyTypesByTraditionId()`, `getBudgetAllocationByBucketCategoryId()`, `upsertBudgetAllocationByUUID()`, `getBudgetTotalAllocatedByUUID()`
+  - **Deprecated legacy methods**: `getCeremonyTypesByTradition()`, `getBudgetAllocationsByBucket()`, `upsertBudgetAllocation()` marked @deprecated for future removal
   - Enables gradual migration while maintaining backward compatibility for existing callers
 - **Vendor Specialization**: Support for 32 distinct vendor categories, including culturally-specific services.
 - **Budget Intelligence System**: Employs a Unified Single Ledger Model with a three-tier budget hierarchy, smart budget recommendations, dual-view aggregation, and a refined pricing engine using three-factor multipliers for precise estimates.
