@@ -172,6 +172,7 @@ export interface LibraryItem {
   notes?: string;
   ceremonies: Array<{
     ceremonyId: string;
+    ceremonyTypeUuid?: string; // UUID FK to ceremony_types.id
     ceremonyName: string;
     tradition: string;
   }>;

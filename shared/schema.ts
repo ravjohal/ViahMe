@@ -3963,10 +3963,10 @@ export const ceremonyBudgetCategories = pgTable("ceremony_budget_categories", {
   weddingId: varchar("wedding_id"), // References weddings.id (nullable for system templates)
   // Reference to source library item when cloning from master library (nullable)
   sourceCategoryId: varchar("source_category_id"), // References ceremony_budget_categories.id (library item)
-  // NEW: UUID FK to ceremony_types.id (primary approach)
-  ceremonyTypeUuid: varchar("ceremony_type_uuid").references(() => ceremonyTypes.id),
-  // DEPRECATED: Legacy slug FK to ceremony_types.ceremonyId - kept for backward compatibility
-  ceremonyTypeId: text("ceremony_type_id").notNull(),
+  // PRIMARY: UUID FK to ceremony_types.id
+  ceremonyTypeUuid: varchar("ceremony_type_uuid").notNull().references(() => ceremonyTypes.id),
+  // DEPRECATED: Legacy slug FK - kept for backward compatibility, will be removed in future migration
+  ceremonyTypeId: text("ceremony_type_id"),
   // Foreign key to budget_bucket_categories.id (slug-style ID like 'venue', 'attire')
   budgetBucketId: text("budget_bucket_id").notNull(),
   itemName: text("item_name").notNull(), // e.g., "Gurdwara Donation", "Turban Tying"
@@ -3995,8 +3995,10 @@ export const insertCeremonyBudgetCategorySchema = createInsertSchema(ceremonyBud
 }).extend({
   weddingId: z.string().nullable().optional(), // NULL = system template, value = custom for wedding
   sourceCategoryId: z.string().nullable().optional(), // Reference to source library item when cloning
-  ceremonyTypeUuid: z.string().nullable().optional(), // NEW: UUID FK to ceremony_types.id
-  ceremonyTypeId: z.string(), // DEPRECATED: Legacy slug FK to ceremony_types.ceremonyId
+  // PRIMARY: UUID FK to ceremony_types.id - optional at validation time, auto-resolved from slug if missing
+  ceremonyTypeUuid: z.string().optional(),
+  // DEPRECATED: Legacy slug FK - used for auto-resolution to UUID, will be removed in future
+  ceremonyTypeId: z.string().nullable().optional(),
   budgetBucketId: z.enum(BUDGET_BUCKETS), // References budget_bucket_categories.id
   unit: z.enum(['fixed', 'per_hour', 'per_person']),
   lowCost: z.string(),

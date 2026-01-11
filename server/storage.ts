@@ -10709,7 +10709,7 @@ export class DBStorage implements IStorage {
         eq(ceremonyBudgetCategories.isActive, true),
         isNull(ceremonyBudgetCategories.weddingId)
       ))
-      .orderBy(sql`${ceremonyBudgetCategories.ceremonyTypeId} ASC, ${ceremonyBudgetCategories.displayOrder} ASC`);
+      .orderBy(sql`${ceremonyBudgetCategories.ceremonyTypeUuid} ASC, ${ceremonyBudgetCategories.displayOrder} ASC`);
   }
 
   async getAllCeremonyBudgetCategoriesForWedding(weddingId: string): Promise<CeremonyBudgetCategory[]> {
@@ -10720,7 +10720,7 @@ export class DBStorage implements IStorage {
         eq(ceremonyBudgetCategories.isActive, true),
         eq(ceremonyBudgetCategories.weddingId, weddingId)
       ))
-      .orderBy(sql`${ceremonyBudgetCategories.ceremonyTypeId} ASC, ${ceremonyBudgetCategories.displayOrder} ASC`);
+      .orderBy(sql`${ceremonyBudgetCategories.ceremonyTypeUuid} ASC, ${ceremonyBudgetCategories.displayOrder} ASC`);
   }
 
   async getCeremonyBudgetCategory(id: string): Promise<CeremonyBudgetCategory | undefined> {
@@ -10738,6 +10738,11 @@ export class DBStorage implements IStorage {
       if (ceremonyType) {
         ceremonyTypeUuid = ceremonyType.id;
       }
+    }
+    
+    // Ensure we have a valid UUID - required by NOT NULL constraint
+    if (!ceremonyTypeUuid) {
+      throw new Error("ceremonyTypeUuid is required - provide directly or via ceremonyTypeId for auto-resolution");
     }
     
     const result = await this.db.insert(ceremonyBudgetCategories).values({
@@ -10806,8 +10811,9 @@ export class DBStorage implements IStorage {
   }
 
   async hydrateWeddingLineItemsFromTemplate(weddingId: string, ceremonyId: string, templateId: string): Promise<WeddingLineItem[]> {
-    // Get template items
-    const templateItems = await this.getCeremonyBudgetCategories(templateId);
+    // Get template items using UUID-based lookup
+    // templateId should be the ceremony type UUID (ceremony_types.id)
+    const templateItems = await this.getCeremonyBudgetCategoriesByUuid(templateId);
     
     // Create wedding line items from template
     const createdItems: WeddingLineItem[] = [];

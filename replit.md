@@ -16,17 +16,16 @@ The platform utilizes a modern web stack: **React**, **TypeScript**, **Tailwind 
 Key architectural decisions and features include:
 - **Comprehensive Data Model**: Designed to support the intricate nature of multi-day South Asian weddings with database-driven wedding traditions and sub-traditions for flexible management.
 - **Cultural Templates**: Pre-populated event timelines, task templates, and normalized ceremony cost estimates for 9 wedding traditions, supporting regional pricing variations.
-- **Ceremony Types System**: Database-driven ceremony definitions (table: `ceremony_types`) with cost breakdowns via `ceremony_budget_categories` junction table. TypeScript layer uses canonical naming: `ceremonyTypes` table export, `CeremonyType` type, `ceremonyBudgetCategories` table export, `CeremonyBudgetCategory` type. Junction table uses dual-column FK approach: `ceremony_type_uuid` (UUID FK to `ceremony_types.id`) and legacy `ceremony_type_id` (slug FK to `ceremony_types.ceremony_id`). Single API endpoint `/api/ceremony-types`.
-  - **UUID Migration in Progress**: `ceremony_budget_categories` table now has `ceremony_type_uuid` column referencing `ceremony_types.id`. Storage layer auto-resolves slugs to UUIDs on create operations. Use `getCeremonyBudgetCategoriesByUuid()` for new code.
-  - **DEPRECATED**: The `costBreakdown` JSON column in `ceremony_types` table is deprecated. The `ceremony_type_id` (slug) column in `ceremony_budget_categories` is deprecated - use `ceremony_type_uuid` instead.
-- **UUID-Based Foreign Key Architecture**: Dual-column approach for referential integrity with backward compatibility:
-  - Core tables (`wedding_traditions`, `wedding_sub_traditions`, `budget_bucket_categories`) have both UUID `id` and `slug` fields
-  - Referencing tables (`weddings`, `ceremony_types`, `budget_allocations`) have new UUID FK columns (`traditionId`, `bucketCategoryId`) alongside legacy string columns (`tradition`, `bucket`)
+- **Ceremony Types System**: Database-driven ceremony definitions (table: `ceremony_types`) with cost breakdowns via `ceremony_budget_categories` junction table. TypeScript layer uses canonical naming: `ceremonyTypes` table export, `CeremonyType` type, `ceremonyBudgetCategories` table export, `CeremonyBudgetCategory` type. Single API endpoint `/api/ceremony-types`.
+  - **UUID Migration Complete**: `ceremony_budget_categories` table uses `ceremony_type_uuid` (NOT NULL) as the primary FK to `ceremony_types.id`. All storage methods use `getCeremonyBudgetCategoriesByUuid()` for lookups. The legacy `ceremony_type_id` slug column is nullable and deprecated - do not use in new code.
+  - **DEPRECATED**: The `costBreakdown` JSON column in `ceremony_types` table is deprecated. The `ceremony_type_id` (slug) column in `ceremony_budget_categories` is deprecated and nullable - use `ceremonyTypeUuid` for all new code.
+- **UUID-Based Foreign Key Architecture**: UUID-first approach with legacy slug support for backward compatibility:
+  - Core tables (`wedding_traditions`, `wedding_sub_traditions`, `budget_bucket_categories`, `ceremony_types`) have both UUID `id` and `slug` fields
+  - Referencing tables use UUID FK columns as primary references: `ceremony_budget_categories.ceremonyTypeUuid` (NOT NULL), `weddings.traditionId`, `budget_allocations.bucketCategoryId`
   - Storage layer auto-resolves slugs to UUIDs on create/update operations via helpers: `getWeddingTraditionBySlug()`, `getBudgetCategoryBySlug()`
-  - **Routes actively use UUID-based methods**: `/api/ceremony-types/tradition/:tradition` resolves slugs to UUIDs before querying; new `/api/ceremony-types/tradition-id/:traditionId` endpoint for direct UUID access; wedding creation uses `upsertBudgetAllocationByUUID()` for initial budget allocations
-  - **New UUID-based storage methods**: `getCeremonyTypesByTraditionId()`, `getBudgetAllocationByBucketCategoryId()`, `upsertBudgetAllocationByUUID()`, `getBudgetTotalAllocatedByUUID()`
-  - **Deprecated legacy methods**: `getCeremonyTypesByTradition()`, `getBudgetAllocationsByBucket()`, `upsertBudgetAllocation()` marked @deprecated for future removal
-  - Enables gradual migration while maintaining backward compatibility for existing callers
+  - **Primary UUID-based storage methods**: `getCeremonyBudgetCategoriesByUuid()`, `getCeremonyTypesByTraditionId()`, `getBudgetAllocationByBucketCategoryId()`, `upsertBudgetAllocationByUUID()`
+  - **Deprecated legacy methods**: `getCeremonyBudgetCategories()`, `getCeremonyTypesByTradition()`, `getBudgetAllocationsByBucket()` marked @deprecated for future removal
+  - API routes resolve slugs to UUIDs internally: `/api/ceremony-types/tradition/:tradition` and `/api/ceremony-types/:ceremonyId/line-items` use UUID-based storage
 - **Vendor Specialization**: Support for 32 distinct vendor categories, including culturally-specific services.
 - **Budget Intelligence System**: Employs a Unified Single Ledger Model with a three-tier budget hierarchy, smart budget recommendations, dual-view aggregation, and a refined pricing engine using three-factor multipliers for precise estimates.
   - **Three-Layer Budget Architecture**:

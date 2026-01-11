@@ -230,8 +230,8 @@ export async function seedSpendCategoriesFromCeremonies(storage: IStorage): Prom
   for (const template of templates) {
     const ceremonyId = template.ceremonyId;
     
-    // Fetch line items from the normalized ceremony_budget_categories table
-    const lineItems = await storage.getCeremonyBudgetCategories(ceremonyId);
+    // Fetch line items from the normalized ceremony_budget_categories table using UUID
+    const lineItems = await storage.getCeremonyBudgetCategoriesByUuid(template.id);
     
     if (!lineItems || lineItems.length === 0) {
       continue;
