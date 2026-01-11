@@ -111,7 +111,18 @@ export default function Budget() {
   });
 
   const { data: expenseTotals } = useQuery<{
-    bucketTotals: Array<{ bucket: string; label: string; allocated: number; spent: number; remaining: number }>;
+    bucketTotals: Array<{ 
+      bucket: string; 
+      label: string; 
+      allocated: number; 
+      spent: number; 
+      remaining: number;
+      autoLow: number;
+      autoHigh: number;
+      autoItemCount: number;
+      isManualOverride: boolean;
+      allocationId: string | null;
+    }>;
     totalSpent: number;
     totalAllocated: number;
     totalRemaining: number;
@@ -1613,8 +1624,8 @@ export default function Budget() {
               <div className="space-y-3">
                 {(expenseTotals?.bucketTotals || []).map((bucketTotal) => {
                   const percentSpent = bucketTotal.allocated > 0 ? (bucketTotal.spent / bucketTotal.allocated) * 100 : 0;
-                  const bucketEstimate = estimatedBudgetByBucket[bucketTotal.bucket];
-                  const hasEstimate = bucketEstimate && bucketEstimate.itemCount > 0;
+                  // Use API auto values instead of client-side computation
+                  const hasAutoEstimate = bucketTotal.autoItemCount > 0;
                   const lineItems = lineItemBreakdownByBucket[bucketTotal.bucket] || [];
                   const isExpanded = expandedBudgetCategories.has(bucketTotal.bucket);
 
@@ -1627,18 +1638,25 @@ export default function Budget() {
                       <div className="p-4">
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex-1">
-                            <p className="font-medium">{bucketTotal.label}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium">{bucketTotal.label}</p>
+                              {bucketTotal.isManualOverride && hasAutoEstimate && (
+                                <Badge variant="outline" className="text-xs h-5 px-1.5">
+                                  Manual
+                                </Badge>
+                              )}
+                            </div>
                             <p className="text-sm text-muted-foreground">
                               ${bucketTotal.spent.toLocaleString()} of ${bucketTotal.allocated.toLocaleString()} spent
                             </p>
-                            {hasEstimate && (
+                            {hasAutoEstimate && (
                               <button
                                 onClick={() => toggleBudgetCategoryExpansion(bucketTotal.bucket)}
                                 className="text-xs text-muted-foreground mt-1 hover:text-foreground flex items-center gap-1"
                                 data-testid={`toggle-breakdown-${bucketTotal.bucket}`}
                               >
-                                Est. from ceremonies: ${bucketEstimate.low.toLocaleString()} - ${bucketEstimate.high.toLocaleString()}
-                                <span className="ml-1">({bucketEstimate.itemCount} items)</span>
+                                Est. from ceremonies: ${bucketTotal.autoLow.toLocaleString()} - ${bucketTotal.autoHigh.toLocaleString()}
+                                <span className="ml-1">({bucketTotal.autoItemCount} items)</span>
                                 {isExpanded ? (
                                   <ChevronDown className="w-3 h-3 ml-1" />
                                 ) : (
@@ -1648,13 +1666,13 @@ export default function Budget() {
                             )}
                           </div>
                           <div className="flex items-center gap-1">
-                            {hasEstimate && bucketTotal.allocated === 0 && (
+                            {hasAutoEstimate && bucketTotal.allocated === 0 && (
                               <Button
                                 variant="outline"
                                 size="sm"
                                 className="h-8 text-xs"
                                 onClick={() => {
-                                  const avgEstimate = Math.round((bucketEstimate.low + bucketEstimate.high) / 2);
+                                  const avgEstimate = Math.round((bucketTotal.autoLow + bucketTotal.autoHigh) / 2);
                                   setEditingBucket(bucketTotal.bucket as BudgetBucket);
                                   setEditingBucketAmount(avgEstimate.toString());
                                 }}
@@ -1718,7 +1736,7 @@ export default function Budget() {
                           <div className="flex justify-between mt-3 pt-2 border-t text-sm font-medium">
                             <span>Total Estimate</span>
                             <span className="font-mono">
-                              ${bucketEstimate.low.toLocaleString()} - ${bucketEstimate.high.toLocaleString()}
+                              ${bucketTotal.autoLow.toLocaleString()} - ${bucketTotal.autoHigh.toLocaleString()}
                             </span>
                           </div>
                         </div>

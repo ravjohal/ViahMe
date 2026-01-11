@@ -457,6 +457,9 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
       
       const newItem = await storage.createCeremonyBudgetCategory(validatedData);
       
+      // Trigger recalculation of bucket allocations for this wedding
+      await storage.recalculateBucketAllocationsFromCeremonies(weddingId);
+      
       res.status(201).json({
         id: newItem.id,
         name: newItem.itemName,
@@ -528,6 +531,9 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
       
       // Delete the item
       await storage.deleteCeremonyBudgetCategory(itemId);
+      
+      // Trigger recalculation of bucket allocations for this wedding
+      await storage.recalculateBucketAllocationsFromCeremonies(weddingId);
       
       res.json({ success: true, deletedId: itemId });
     } catch (error) {

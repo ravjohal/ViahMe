@@ -80,6 +80,11 @@ export async function registerExpenseRoutes(router: Router, storage: IStorage) {
         );
         const spent = bucketExpenses.reduce((sum, e) => sum + parseFloat(e.amount || '0'), 0);
         const allocated = parseFloat(allocation?.allocatedAmount || '0');
+        // Auto-calculated values from ceremony budget categories
+        const autoLow = parseFloat(allocation?.autoLowAmount || '0');
+        const autoHigh = parseFloat(allocation?.autoHighAmount || '0');
+        const autoItemCount = allocation?.autoItemCount || 0;
+        const isManualOverride = allocation?.isManualOverride || false;
         return {
           bucket: category.id, // UUID as primary key
           slug: category.slug, // For backward compatibility during transition
@@ -87,6 +92,12 @@ export async function registerExpenseRoutes(router: Router, storage: IStorage) {
           allocated,
           spent,
           remaining: allocated - spent,
+          // Auto-aggregation from ceremony budget categories
+          autoLow,
+          autoHigh,
+          autoItemCount,
+          isManualOverride,
+          allocationId: allocation?.id || null,
         };
       });
       

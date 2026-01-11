@@ -47,10 +47,20 @@ export async function registerEventRoutes(router: Router, storage: IStorage) {
       if (updateData.date && typeof updateData.date === 'string') {
         updateData.date = new Date(updateData.date);
       }
+      
+      // Check if guestCount is being updated (affects per-person budget calculations)
+      const guestCountChanging = updateData.guestCount !== undefined;
+      
       const event = await storage.updateEvent(req.params.id, updateData);
       if (!event) {
         return res.status(404).json({ error: "Event not found" });
       }
+      
+      // Trigger recalculation of bucket allocations if guest count changed
+      if (guestCountChanging && event.weddingId) {
+        await storage.recalculateBucketAllocationsFromCeremonies(event.weddingId);
+      }
+      
       res.json(event);
     } catch (error) {
       console.error("Error updating event:", error);

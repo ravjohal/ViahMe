@@ -360,6 +360,7 @@ export interface IStorage {
   getCeremonyTotalAllocated(weddingId: string, ceremonyId: string): Promise<number>;
   getBucketTotalAllocated(weddingId: string, bucket: BudgetBucket): Promise<number>; // @deprecated - use getBucketTotalAllocatedByUUID
   getBucketTotalAllocatedByUUID(weddingId: string, bucketCategoryId: string): Promise<number>;
+  recalculateBucketAllocationsFromCeremonies(weddingId: string): Promise<void>; // Sync auto amounts from ceremony budget categories
 
   // Expenses (Single Ledger Model)
   getExpense(id: string): Promise<Expense | undefined>;
@@ -1855,6 +1856,11 @@ export class MemStorage implements IStorage {
   async getBucketTotalAllocatedByUUID(weddingId: string, bucketCategoryId: string): Promise<number> {
     const allocations = await this.getBudgetAllocationsByBucketCategoryId(weddingId, bucketCategoryId);
     return allocations.reduce((sum, a) => sum + parseFloat(a.allocatedAmount || '0'), 0);
+  }
+
+  async recalculateBucketAllocationsFromCeremonies(weddingId: string): Promise<void> {
+    // MemStorage stub - not fully implemented, just updates existing allocations
+    // Full implementation is in DatabaseStorage
   }
 
   // Expenses (Single Ledger Model)
@@ -5106,6 +5112,112 @@ export class DBStorage implements IStorage {
   async getBucketTotalAllocatedByUUID(weddingId: string, bucketCategoryId: string): Promise<number> {
     const allocations = await this.getBudgetAllocationsByBucketCategoryId(weddingId, bucketCategoryId);
     return allocations.reduce((sum, a) => sum + parseFloat(a.allocatedAmount || '0'), 0);
+  }
+
+  async recalculateBucketAllocationsFromCeremonies(weddingId: string): Promise<void> {
+    // Get all events for the wedding with their ceremonyTypeId and guest counts
+    const weddingEvents = await this.db.select()
+      .from(schema.events)
+      .where(eq(schema.events.weddingId, weddingId));
+
+    // Get all budget categories first to build a slug-to-UUID lookup
+    const allCategories = await this.db.select().from(schema.budgetBucketCategories);
+    const slugToUuid: Record<string, string> = {};
+    for (const cat of allCategories) {
+      slugToUuid[cat.slug] = cat.id;
+    }
+
+    // Aggregate ceremony budget categories by UUID (not slug)
+    const bucketAggregates: Record<string, { low: number; high: number; itemCount: number }> = {};
+
+    for (const event of weddingEvents) {
+      if (!event.ceremonyTypeId) continue;
+
+      const guestCount = event.guestCount || 100;
+
+      // Get ceremony budget categories for this ceremony type (both system and wedding-specific)
+      const lineItems = await this.db.select()
+        .from(schema.ceremonyBudgetCategories)
+        .where(
+          and(
+            eq(schema.ceremonyBudgetCategories.ceremonyTypeId, event.ceremonyTypeId),
+            eq(schema.ceremonyBudgetCategories.isActive, true),
+            or(
+              isNull(schema.ceremonyBudgetCategories.weddingId),
+              eq(schema.ceremonyBudgetCategories.weddingId, weddingId)
+            )
+          )
+        );
+
+      for (const item of lineItems) {
+        let bucketIdRaw = item.budgetBucketId;
+        if (!bucketIdRaw) continue;
+
+        // Resolve slug to UUID if needed (budgetBucketId may be slug or UUID)
+        const bucketUuid = slugToUuid[bucketIdRaw] || bucketIdRaw;
+
+        if (!bucketAggregates[bucketUuid]) {
+          bucketAggregates[bucketUuid] = { low: 0, high: 0, itemCount: 0 };
+        }
+
+        let itemLow = parseFloat(item.lowCost || '0');
+        let itemHigh = parseFloat(item.highCost || '0');
+
+        // Apply unit multipliers
+        if (item.unit === 'per_person') {
+          itemLow *= guestCount;
+          itemHigh *= guestCount;
+        } else if (item.unit === 'per_hour') {
+          const hoursLow = item.hoursLow || 1;
+          const hoursHigh = item.hoursHigh || hoursLow;
+          itemLow *= hoursLow;
+          itemHigh *= hoursHigh;
+        }
+
+        bucketAggregates[bucketUuid].low += Math.round(itemLow);
+        bucketAggregates[bucketUuid].high += Math.round(itemHigh);
+        bucketAggregates[bucketUuid].itemCount += 1;
+      }
+    }
+
+    // Upsert budget allocations with auto values
+    for (const category of allCategories) {
+      const aggregate = bucketAggregates[category.id] || { low: 0, high: 0, itemCount: 0 };
+      const avgAmount = Math.round((aggregate.low + aggregate.high) / 2);
+
+      // Check if an allocation exists for this bucket
+      const existing = await this.getBudgetAllocationByBucketCategoryId(weddingId, category.id, null, null);
+
+      if (existing) {
+        // Update auto values, but only update allocatedAmount if NOT manual override
+        const updates: Partial<schema.InsertBudgetAllocation> = {
+          autoLowAmount: aggregate.low.toString(),
+          autoHighAmount: aggregate.high.toString(),
+          autoItemCount: aggregate.itemCount,
+        };
+
+        // If not a manual override, also update the allocated amount to the average
+        if (!existing.isManualOverride) {
+          updates.allocatedAmount = avgAmount.toString();
+        }
+
+        await this.db.update(schema.budgetAllocations)
+          .set(updates)
+          .where(eq(schema.budgetAllocations.id, existing.id));
+      } else if (aggregate.itemCount > 0) {
+        // Create new allocation with auto values (only if there are items)
+        await this.db.insert(schema.budgetAllocations).values({
+          weddingId,
+          bucketCategoryId: category.id,
+          bucket: category.slug,
+          allocatedAmount: avgAmount.toString(),
+          autoLowAmount: aggregate.low.toString(),
+          autoHighAmount: aggregate.high.toString(),
+          autoItemCount: aggregate.itemCount,
+          isManualOverride: false,
+        });
+      }
+    }
   }
 
   // Expenses (Single Ledger Model)

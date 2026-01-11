@@ -213,7 +213,13 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
         }
       }
 
-      const allocation = await storage.updateBudgetAllocation(req.params.id, req.body);
+      // When user manually changes allocatedAmount, mark as manual override
+      const updateData = { ...req.body };
+      if (req.body.allocatedAmount !== undefined) {
+        updateData.isManualOverride = true;
+      }
+      
+      const allocation = await storage.updateBudgetAllocation(req.params.id, updateData);
       res.json(allocation);
     } catch (error) {
       res.status(500).json({ error: "Failed to update budget allocation" });
