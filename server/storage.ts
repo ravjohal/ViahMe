@@ -1102,6 +1102,7 @@ export interface IStorage {
 
   // Budget Categories
   getBudgetCategory(id: string): Promise<BudgetCategory | undefined>;
+  getBudgetCategoryBySlug(slug: string): Promise<BudgetCategory | undefined>;
   getAllBudgetCategories(): Promise<BudgetCategory[]>;
   getActiveBudgetCategories(): Promise<BudgetCategory[]>;
   createBudgetCategory(category: InsertBudgetCategory): Promise<BudgetCategory>;
@@ -1111,6 +1112,7 @@ export interface IStorage {
 
   // Wedding Traditions (data-driven tradition system)
   getWeddingTradition(id: string): Promise<WeddingTradition | undefined>;
+  getWeddingTraditionBySlug(slug: string): Promise<WeddingTradition | undefined>;
   getAllWeddingTraditions(): Promise<WeddingTradition[]>;
   getActiveWeddingTraditions(): Promise<WeddingTradition[]>;
   createWeddingTradition(tradition: InsertWeddingTradition): Promise<WeddingTradition>;
@@ -1120,6 +1122,7 @@ export interface IStorage {
 
   // Wedding Sub-Traditions (regional variations)
   getWeddingSubTradition(id: string): Promise<WeddingSubTradition | undefined>;
+  getWeddingSubTraditionBySlug(slug: string): Promise<WeddingSubTradition | undefined>;
   getWeddingSubTraditionsByTradition(traditionId: string): Promise<WeddingSubTradition[]>;
   getAllWeddingSubTraditions(): Promise<WeddingSubTradition[]>;
   getActiveWeddingSubTraditions(): Promise<WeddingSubTradition[]>;
@@ -4311,6 +4314,7 @@ export class MemStorage implements IStorage {
 
   // Budget Categories (stubs - use DBStorage for production)
   async getBudgetCategory(id: string): Promise<BudgetCategory | undefined> { return undefined; }
+  async getBudgetCategoryBySlug(slug: string): Promise<BudgetCategory | undefined> { return undefined; }
   async getAllBudgetCategories(): Promise<BudgetCategory[]> { return []; }
   async getActiveBudgetCategories(): Promise<BudgetCategory[]> { return []; }
   async createBudgetCategory(category: InsertBudgetCategory): Promise<BudgetCategory> { throw new Error('MemStorage does not support Budget Categories. Use DBStorage.'); }
@@ -4320,6 +4324,7 @@ export class MemStorage implements IStorage {
 
   // Wedding Traditions (stubs - use DBStorage for production)
   async getWeddingTradition(id: string): Promise<WeddingTradition | undefined> { return undefined; }
+  async getWeddingTraditionBySlug(slug: string): Promise<WeddingTradition | undefined> { return undefined; }
   async getAllWeddingTraditions(): Promise<WeddingTradition[]> { return []; }
   async getActiveWeddingTraditions(): Promise<WeddingTradition[]> { return []; }
   async createWeddingTradition(tradition: InsertWeddingTradition): Promise<WeddingTradition> { throw new Error('MemStorage does not support Wedding Traditions. Use DBStorage.'); }
@@ -4329,6 +4334,7 @@ export class MemStorage implements IStorage {
 
   // Wedding Sub-Traditions (stubs - use DBStorage for production)
   async getWeddingSubTradition(id: string): Promise<WeddingSubTradition | undefined> { return undefined; }
+  async getWeddingSubTraditionBySlug(slug: string): Promise<WeddingSubTradition | undefined> { return undefined; }
   async getWeddingSubTraditionsByTradition(traditionId: string): Promise<WeddingSubTradition[]> { return []; }
   async getAllWeddingSubTraditions(): Promise<WeddingSubTradition[]> { return []; }
   async getActiveWeddingSubTraditions(): Promise<WeddingSubTradition[]> { return []; }
@@ -4543,7 +4549,19 @@ export class DBStorage implements IStorage {
   }
 
   async createWedding(insertWedding: InsertWedding): Promise<Wedding> {
-    const result = await this.db.insert(schema.weddings).values(insertWedding).returning();
+    // Resolve tradition slug to UUID for the new FK column
+    let traditionId = insertWedding.traditionId;
+    if (!traditionId && insertWedding.tradition) {
+      const tradition = await this.getWeddingTraditionBySlug(insertWedding.tradition);
+      if (tradition) {
+        traditionId = tradition.id;
+      }
+    }
+    
+    const result = await this.db.insert(schema.weddings).values({
+      ...insertWedding,
+      traditionId,
+    }).returning();
     return result[0];
   }
 
@@ -4879,7 +4897,19 @@ export class DBStorage implements IStorage {
   }
 
   async createBudgetAllocation(insertAllocation: InsertBudgetAllocation): Promise<BudgetAllocation> {
-    const result = await this.db.insert(budgetAllocations).values(insertAllocation).returning();
+    // Resolve bucket slug to UUID for the new FK column
+    let bucketCategoryId = insertAllocation.bucketCategoryId;
+    if (!bucketCategoryId && insertAllocation.bucket) {
+      const bucketCategory = await this.getBudgetCategoryBySlug(insertAllocation.bucket);
+      if (bucketCategory) {
+        bucketCategoryId = bucketCategory.id;
+      }
+    }
+    
+    const result = await this.db.insert(budgetAllocations).values({
+      ...insertAllocation,
+      bucketCategoryId,
+    }).returning();
     return result[0];
   }
 
@@ -10425,8 +10455,20 @@ export class DBStorage implements IStorage {
   }
 
   async createCeremonyType(template: InsertCeremonyType): Promise<CeremonyType> {
+    // Resolve tradition slug to UUID for the new FK column
+    let traditionId = template.traditionId;
+    if (!traditionId && template.tradition) {
+      const tradition = await this.getWeddingTraditionBySlug(template.tradition);
+      if (tradition) {
+        traditionId = tradition.id;
+      }
+    }
+    
     const result = await this.db.insert(ceremonyTypes)
-      .values(template)
+      .values({
+        ...template,
+        traditionId,
+      })
       .returning();
     return result[0];
   }
@@ -10628,6 +10670,13 @@ export class DBStorage implements IStorage {
     return result[0];
   }
 
+  async getBudgetCategoryBySlug(slug: string): Promise<BudgetCategory | undefined> {
+    const result = await this.db.select()
+      .from(schema.budgetCategories)
+      .where(eq(schema.budgetCategories.slug, slug));
+    return result[0];
+  }
+
   async getAllBudgetCategories(): Promise<BudgetCategory[]> {
     return await this.db.select()
       .from(schema.budgetCategories)
@@ -10754,18 +10803,26 @@ export class DBStorage implements IStorage {
     return true;
   }
 
+  async getWeddingTraditionBySlug(slug: string): Promise<WeddingTradition | undefined> {
+    const result = await this.db.select()
+      .from(weddingTraditions)
+      .where(eq(weddingTraditions.slug, slug));
+    return result[0];
+  }
+
   async seedWeddingTraditions(): Promise<WeddingTradition[]> {
     const seededTraditions: WeddingTradition[] = [];
     
     for (const traditionData of DEFAULT_TRADITIONS) {
-      const existing = await this.getWeddingTradition(traditionData.id);
+      // Check by slug (new approach)
+      const existing = await this.getWeddingTraditionBySlug(traditionData.slug);
       if (existing) {
         seededTraditions.push(existing);
         continue;
       }
       
       const tradition = await this.createWeddingTradition({
-        id: traditionData.id,
+        slug: traditionData.slug,
         displayName: traditionData.displayName,
         description: traditionData.description,
         displayOrder: traditionData.displayOrder,
@@ -10832,19 +10889,34 @@ export class DBStorage implements IStorage {
     return true;
   }
 
+  async getWeddingSubTraditionBySlug(slug: string): Promise<WeddingSubTradition | undefined> {
+    const result = await this.db.select()
+      .from(weddingSubTraditions)
+      .where(eq(weddingSubTraditions.slug, slug));
+    return result[0];
+  }
+
   async seedWeddingSubTraditions(): Promise<WeddingSubTradition[]> {
     const seededSubTraditions: WeddingSubTradition[] = [];
     
     for (const subTraditionData of DEFAULT_SUB_TRADITIONS) {
-      const existing = await this.getWeddingSubTradition(subTraditionData.id);
+      // Check by slug (new approach)
+      const existing = await this.getWeddingSubTraditionBySlug(subTraditionData.slug);
       if (existing) {
         seededSubTraditions.push(existing);
         continue;
       }
       
+      // Resolve parent tradition UUID from slug
+      const parentTradition = await this.getWeddingTraditionBySlug(subTraditionData.traditionSlug);
+      if (!parentTradition) {
+        console.warn(`Parent tradition ${subTraditionData.traditionSlug} not found for sub-tradition ${subTraditionData.slug}`);
+        continue;
+      }
+      
       const subTradition = await this.createWeddingSubTradition({
-        id: subTraditionData.id,
-        traditionId: subTraditionData.traditionId,
+        slug: subTraditionData.slug,
+        traditionId: parentTradition.id, // Use the UUID of the parent tradition
         displayName: subTraditionData.displayName,
         description: subTraditionData.description,
         displayOrder: subTraditionData.displayOrder,
