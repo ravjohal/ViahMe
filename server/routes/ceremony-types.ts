@@ -38,10 +38,30 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
   router.get("/tradition/:tradition", async (req, res) => {
     try {
       const { tradition } = req.params;
-      const types = await storage.getCeremonyTypesByTradition(tradition);
-      res.json(types);
+      // Resolve tradition slug to UUID and use FK-based query
+      const traditionRecord = await storage.getWeddingTraditionBySlug(tradition);
+      if (traditionRecord) {
+        const types = await storage.getCeremonyTypesByTraditionId(traditionRecord.id);
+        res.json(types);
+      } else {
+        // Fallback to legacy query for backward compatibility
+        const types = await storage.getCeremonyTypesByTradition(tradition);
+        res.json(types);
+      }
     } catch (error) {
       console.error("[Ceremony Types] Error fetching by tradition:", error);
+      res.status(500).json({ error: "Failed to fetch ceremony types" });
+    }
+  });
+
+  // New UUID-based endpoint for direct traditionId lookups
+  router.get("/tradition-id/:traditionId", async (req, res) => {
+    try {
+      const { traditionId } = req.params;
+      const types = await storage.getCeremonyTypesByTraditionId(traditionId);
+      res.json(types);
+    } catch (error) {
+      console.error("[Ceremony Types] Error fetching by traditionId:", error);
       res.status(500).json({ error: "Failed to fetch ceremony types" });
     }
   });

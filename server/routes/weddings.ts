@@ -403,19 +403,23 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
       if (wedding.totalBudget && parseFloat(wedding.totalBudget) > 0) {
         const totalBudget = parseFloat(wedding.totalBudget);
         const bucketAllocations = [
-          { bucket: "catering" as const, percentage: 40 },
-          { bucket: "venue" as const, percentage: 15 },
-          { bucket: "entertainment" as const, percentage: 12 },
-          { bucket: "photography" as const, percentage: 10 },
-          { bucket: "decor" as const, percentage: 8 },
-          { bucket: "attire" as const, percentage: 8 },
-          { bucket: "transportation" as const, percentage: 4 },
-          { bucket: "other" as const, percentage: 3 },
+          { bucketSlug: "catering", percentage: 40 },
+          { bucketSlug: "venue", percentage: 15 },
+          { bucketSlug: "entertainment", percentage: 12 },
+          { bucketSlug: "photography", percentage: 10 },
+          { bucketSlug: "decor", percentage: 8 },
+          { bucketSlug: "attire", percentage: 8 },
+          { bucketSlug: "transportation", percentage: 4 },
+          { bucketSlug: "other", percentage: 3 },
         ];
 
+        // Use UUID-based allocation method for proper FK relationships
         for (const allocation of bucketAllocations) {
           const allocatedAmount = ((totalBudget * allocation.percentage) / 100).toFixed(2);
-          await storage.upsertBudgetAllocation(wedding.id, allocation.bucket, allocatedAmount);
+          const bucketCategory = await storage.getBudgetCategoryBySlug(allocation.bucketSlug);
+          if (bucketCategory) {
+            await storage.upsertBudgetAllocationByUUID(wedding.id, bucketCategory.id, allocatedAmount);
+          }
         }
       }
 
