@@ -370,7 +370,7 @@ export const VENDOR_CATEGORY_INFO: Record<string, VendorCategoryInfo> = {
     faqs: [
       { question: 'Should I get a trial?', answer: 'Absolutely. Trials are essential to test products on your skin, perfect your look, and build rapport with your artist. Most artists charge $150-300 for trials.' },
       { question: 'How many touch-up sessions do I need?', answer: 'For multi-day weddings, most brides book separate appointments for each major event. Your artist should be available for touch-ups before key moments like first dance or ceremony.' },
-      { question: 'What about my bridal party?', answer: 'Many MUAs offer bridal party pricing ($100-200 per person). Book early as they\'ll need a timeline to complete everyone before photos.' },
+      { question: 'What about my bridal party?', answer: 'Many makeup artists offer bridal party pricing ($100-200 per person). Book early as they\'ll need a timeline to complete everyone before photos.' },
       { question: 'Should I use airbrush or traditional makeup?', answer: 'Airbrush lasts longer and photographs beautifully but costs more. Traditional allows more buildable coverage. Many artists combine both techniques.' },
     ],
   },

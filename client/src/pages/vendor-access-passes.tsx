@@ -239,7 +239,7 @@ export default function VendorAccessPassesPage() {
                 <Label htmlFor="pass-name">Access Pass Name</Label>
                 <Input
                   id="pass-name"
-                  placeholder="e.g., Sarah's MUA Timeline"
+                  placeholder="e.g., Sarah's Makeup Artist Timeline"
                   value={passName}
                   onChange={(e) => setPassName(e.target.value)}
                   data-testid="input-pass-name"
@@ -460,7 +460,7 @@ export default function VendorAccessPassesPage() {
             <strong>1. Create an access pass</strong> for each vendor you want to share timeline information with.
           </p>
           <p>
-            <strong>2. Select which events</strong> they should see. For example, your MUA only needs to see morning prep schedules.
+            <strong>2. Select which events</strong> they should see. For example, your makeup artist only needs to see morning prep schedules.
           </p>
           <p>
             <strong>3. Share the link</strong> with your vendor via email or message. They don't need to create an account.
