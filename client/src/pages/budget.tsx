@@ -1356,7 +1356,8 @@ export default function Budget() {
           </div>
         </div>
 
-        {/* Budget Summary Card */}
+        {/* Budget Summary Card - conditionally rendered based on showBudgetOverview preference */}
+        {wedding?.showBudgetOverview !== false && (
         <Card className="p-6 mb-6" data-testid="card-budget-summary">
           <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
             <div className="flex flex-wrap items-center gap-6">
@@ -1370,6 +1371,9 @@ export default function Budget() {
                   ${total.toLocaleString()}
                 </button>
               </div>
+              {/* By Ceremonies metric - only show when showCeremonyBudgets is enabled */}
+              {wedding?.showCeremonyBudgets !== false && (
+              <>
               <div className="h-12 w-px bg-border hidden sm:block" />
               <div>
                 <p className="text-sm text-muted-foreground flex items-center gap-1">
@@ -1380,6 +1384,8 @@ export default function Budget() {
                   ${totalByCeremonies.toLocaleString()}
                 </p>
               </div>
+              </>
+              )}
               {totalByCategories > 0 && (
                 <>
                   <div className="h-12 w-px bg-border hidden sm:block" />
@@ -1403,17 +1409,19 @@ export default function Budget() {
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-4">
-              {unallocatedBudget > 0 && (
+              {/* Unallocated budget badges - only show when showCeremonyBudgets is enabled since unallocatedBudget is derived from ceremony totals */}
+              {wedding?.showCeremonyBudgets !== false && unallocatedBudget > 0 && (
                 <Badge variant="outline" className="px-3 py-1.5 text-base font-mono bg-emerald-50 dark:bg-emerald-900/20 border-emerald-300 text-emerald-700 dark:text-emerald-300" data-testid="badge-unallocated">
                   ${unallocatedBudget.toLocaleString()} left to plan
                 </Badge>
               )}
-              {unallocatedBudget < 0 && (
+              {wedding?.showCeremonyBudgets !== false && unallocatedBudget < 0 && (
                 <Badge variant="destructive" className="px-3 py-1.5 text-base font-mono" data-testid="badge-over-allocated">
                   ${Math.abs(unallocatedBudget).toLocaleString()} over target
                 </Badge>
               )}
-              {totalByCategories > 0 && totalByCeremonies > 0 && Math.abs(totalByCategories - totalByCeremonies) > 100 && (
+              {/* Category/Ceremony mismatch badge - only show when showCeremonyBudgets is enabled */}
+              {wedding?.showCeremonyBudgets !== false && totalByCategories > 0 && totalByCeremonies > 0 && Math.abs(totalByCategories - totalByCeremonies) > 100 && (
                 <Badge variant="outline" className="px-3 py-1.5 text-sm font-mono bg-orange-50 dark:bg-orange-900/20 border-orange-300 text-orange-700 dark:text-orange-300" data-testid="badge-allocation-mismatch">
                   <AlertTriangle className="w-3 h-3 mr-1" />
                   {totalByCategories > totalByCeremonies 
@@ -1435,15 +1443,18 @@ export default function Budget() {
             <p className="text-sm text-muted-foreground">
               {spentPercentage.toFixed(0)}% of budget spent
             </p>
-            {totalByCeremonies > 0 && (
+            {/* Ceremony budget percentage - only show when showCeremonyBudgets is enabled */}
+            {wedding?.showCeremonyBudgets !== false && totalByCeremonies > 0 && (
               <p className="text-sm text-muted-foreground">
                 {((totalSpent / totalByCeremonies) * 100).toFixed(0)}% of ceremony budgets spent
               </p>
             )}
           </div>
         </Card>
+        )}
 
-        {/* Side-Based Budget & Spending Breakdown */}
+        {/* Side-Based Budget & Spending Breakdown - requires both showBudgetOverview and showCeremonyBudgets since it displays ceremony analytics */}
+        {wedding?.showBudgetOverview !== false && wedding?.showCeremonyBudgets !== false && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <Card 
             className={`p-4 border-l-4 border-l-pink-500 cursor-pointer transition-all hover-elevate ${sideFilter === 'bride' ? 'ring-2 ring-pink-500' : ''}`}
@@ -1572,9 +1583,10 @@ export default function Budget() {
             </p>
           </Card>
         </div>
+        )}
 
-        {/* Clear Side Filter */}
-        {sideFilter !== 'all' && (
+        {/* Clear Side Filter - only show when side filter is active and side-based breakdown is visible */}
+        {wedding?.showBudgetOverview !== false && wedding?.showCeremonyBudgets !== false && sideFilter !== 'all' && (
           <div className="mb-4">
             <Button 
               variant="outline" 
@@ -1588,7 +1600,8 @@ export default function Budget() {
           </div>
         )}
 
-        {/* Budget Categories Breakdown */}
+        {/* Budget Categories Breakdown - conditionally rendered based on showBucketBudgets preference */}
+        {wedding?.showBucketBudgets !== false && (
         <Card className="p-4 mb-6">
           <Collapsible open={showCategories} onOpenChange={setShowCategories}>
             <CollapsibleTrigger asChild>
@@ -1748,8 +1761,10 @@ export default function Budget() {
             </CollapsibleContent>
           </Collapsible>
         </Card>
+        )}
 
-        {/* Ceremony Planning Cards - Main Section */}
+        {/* Ceremony Planning Cards - Main Section - conditionally rendered based on showCeremonyBudgets preference */}
+        {wedding?.showCeremonyBudgets !== false && (
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
@@ -2200,9 +2215,10 @@ export default function Budget() {
             )}
           </div>
         </div>
+        )}
 
-        {/* Unassigned Expenses Card */}
-        {expensesByEvent["unassigned"]?.expenses.length > 0 && (
+        {/* Unassigned Expenses Card - also conditionally rendered based on showCeremonyBudgets preference */}
+        {wedding?.showCeremonyBudgets !== false && expensesByEvent["unassigned"]?.expenses.length > 0 && (
           <Card className="border-l-4 border-l-gray-400 overflow-hidden mb-6" data-testid="card-unassigned-expenses">
             <Collapsible open={expandedEvents.has("unassigned")} onOpenChange={() => toggleEvent("unassigned")}>
               <CollapsibleTrigger asChild>
@@ -2258,8 +2274,8 @@ export default function Budget() {
           </Card>
         )}
 
-        {/* Upcoming Payments */}
-        {upcomingPayments.length > 0 && (
+        {/* Upcoming Payments - shows regardless of ceremony preference since it's about overall vendor payments */}
+        {wedding?.showBudgetOverview !== false && upcomingPayments.length > 0 && (
           <Card className="p-6" data-testid="card-upcoming-payments">
             <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <Clock className="w-5 h-5" />
