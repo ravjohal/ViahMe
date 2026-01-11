@@ -4000,7 +4000,7 @@ export const insertCeremonyBudgetCategorySchema = createInsertSchema(ceremonyBud
   sourceCategoryId: z.string().nullable().optional(), // Reference to source library item when cloning
   // UUID FK to ceremony_types.id
   ceremonyTypeId: z.string(),
-  budgetBucketId: z.enum(BUDGET_BUCKETS), // References budget_bucket_categories.id
+  budgetBucketId: z.string(), // UUID FK to budget_bucket_categories.id
   unit: z.enum(['fixed', 'per_hour', 'per_person']),
   lowCost: z.string(),
   highCost: z.string(),
