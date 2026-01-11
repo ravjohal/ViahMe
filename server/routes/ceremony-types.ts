@@ -595,7 +595,7 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
         
         const { itemName, budgetBucketId, lowCost, highCost, unit, hoursLow, hoursHigh, notes, displayOrder } = req.body;
         
-        if (!itemName || !budgetBucketId || !lowCost || !highCost || !unit) {
+        if (!itemName || !budgetBucketId || lowCost === undefined || lowCost === null || highCost === undefined || highCost === null || !unit) {
           return res.status(400).json({ error: "itemName, budgetBucketId, lowCost, highCost, and unit are required" });
         }
         

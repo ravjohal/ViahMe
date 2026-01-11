@@ -72,7 +72,7 @@ export default function AdminCeremonyTemplatesPage() {
   } | null>(null);
   const [newLineItem, setNewLineItem] = useState({
     itemName: "",
-    budgetBucketId: "other",
+    budgetBucketId: "",
     lowCost: "",
     highCost: "",
     unit: "fixed",
@@ -197,9 +197,10 @@ export default function AdminCeremonyTemplatesPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ceremony-types", selectedCeremonyForLineItems, "line-items"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/ceremony-types/all/line-items"] });
       toast({ title: "Budget line item added successfully" });
       setIsAddLineItemDialogOpen(false);
-      setNewLineItem({ itemName: "", budgetBucketId: "other", lowCost: "", highCost: "", unit: "fixed", notes: "" });
+      setNewLineItem({ itemName: "", budgetBucketId: "", lowCost: "", highCost: "", unit: "fixed", notes: "" });
     },
     onError: (error: Error) => {
       toast({ title: "Failed to add line item", description: error.message, variant: "destructive" });
@@ -664,7 +665,7 @@ export default function AdminCeremonyTemplatesPage() {
           <DialogFooter>
             <Button
               onClick={() => {
-                if (selectedCeremonyForLineItems && newLineItem.itemName && newLineItem.lowCost && newLineItem.highCost) {
+                if (selectedCeremonyForLineItems && newLineItem.itemName && newLineItem.budgetBucketId && newLineItem.lowCost !== "" && newLineItem.highCost !== "") {
                   createLineItemMutation.mutate({
                     ceremonyId: selectedCeremonyForLineItems,
                     data: {
@@ -675,7 +676,7 @@ export default function AdminCeremonyTemplatesPage() {
                   });
                 }
               }}
-              disabled={createLineItemMutation.isPending || !newLineItem.itemName || !newLineItem.lowCost || !newLineItem.highCost}
+              disabled={createLineItemMutation.isPending || !newLineItem.itemName || !newLineItem.budgetBucketId || newLineItem.lowCost === "" || newLineItem.highCost === ""}
               data-testid="button-save-line-item"
             >
               {createLineItemMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
