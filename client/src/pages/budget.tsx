@@ -598,6 +598,50 @@ export default function Budget() {
     return expenseTotals.bucketTotals.reduce((sum, bucket) => sum + bucket.allocated, 0);
   }, [expenseTotals?.bucketTotals]);
 
+  // Aggregate ceremony line items by budgetBucketId to calculate estimated budget per bucket
+  // This uses the ceremony line items from all events to provide suggested bucket allocations
+  const estimatedBudgetByBucket = useMemo(() => {
+    const bucketEstimates: Record<string, { low: number; high: number; itemCount: number }> = {};
+    
+    // Get all events with ceremonyTypeId and calculate their line item contributions
+    const eventsWithCeremony = events.filter(e => e.ceremonyTypeId);
+    
+    for (const event of eventsWithCeremony) {
+      const lineItems = ceremonyBreakdownMap[event.ceremonyTypeId!];
+      if (!lineItems) continue;
+      
+      const guestCount = event.guestCount || 100;
+      
+      for (const item of lineItems) {
+        const bucketId = item.budgetBucketId || item.budgetBucket || 'other';
+        
+        if (!bucketEstimates[bucketId]) {
+          bucketEstimates[bucketId] = { low: 0, high: 0, itemCount: 0 };
+        }
+        
+        let itemLow = item.lowCost;
+        let itemHigh = item.highCost;
+        
+        // Apply unit multipliers
+        if (item.unit === 'per_person') {
+          itemLow *= guestCount;
+          itemHigh *= guestCount;
+        } else if (item.unit === 'per_hour') {
+          const hoursLow = item.hoursLow || 1;
+          const hoursHigh = item.hoursHigh || hoursLow;
+          itemLow *= hoursLow;
+          itemHigh *= hoursHigh;
+        }
+        
+        bucketEstimates[bucketId].low += Math.round(itemLow);
+        bucketEstimates[bucketId].high += Math.round(itemHigh);
+        bucketEstimates[bucketId].itemCount += 1;
+      }
+    }
+    
+    return bucketEstimates;
+  }, [events, ceremonyBreakdownMap]);
+
   // For display, use ceremony totals as the primary "planned" amount
   const totalAllocated = totalByCeremonies;
   const unallocatedBudget = total - totalAllocated;
@@ -1490,6 +1534,9 @@ export default function Budget() {
               <div className="space-y-3">
                 {(expenseTotals?.bucketTotals || []).map((bucketTotal) => {
                   const percentSpent = bucketTotal.allocated > 0 ? (bucketTotal.spent / bucketTotal.allocated) * 100 : 0;
+                  // Get estimated budget from ceremony line items for this bucket
+                  const bucketEstimate = estimatedBudgetByBucket[bucketTotal.bucket];
+                  const hasEstimate = bucketEstimate && bucketEstimate.itemCount > 0;
 
                   return (
                     <div 
@@ -1503,15 +1550,39 @@ export default function Budget() {
                           <p className="text-sm text-muted-foreground">
                             ${bucketTotal.spent.toLocaleString()} of ${bucketTotal.allocated.toLocaleString()} spent
                           </p>
+                          {hasEstimate && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Est. from ceremonies: ${bucketEstimate.low.toLocaleString()} - ${bucketEstimate.high.toLocaleString()}
+                              <span className="ml-1">({bucketEstimate.itemCount} items)</span>
+                            </p>
+                          )}
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setEditingBucket(bucketTotal.bucket as BudgetBucket)}
-                          data-testid={`button-edit-category-${bucketTotal.bucket}`}
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          {hasEstimate && bucketTotal.allocated === 0 && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 text-xs"
+                              onClick={() => {
+                                // Use average of low/high as default
+                                const avgEstimate = Math.round((bucketEstimate.low + bucketEstimate.high) / 2);
+                                setEditingBucket(bucketTotal.bucket as BudgetBucket);
+                                setEditingBucketAmount(avgEstimate.toString());
+                              }}
+                              data-testid={`button-use-estimate-${bucketTotal.bucket}`}
+                            >
+                              Use Estimate
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setEditingBucket(bucketTotal.bucket as BudgetBucket)}
+                            data-testid={`button-edit-category-${bucketTotal.bucket}`}
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
                       <Progress value={Math.min(percentSpent, 100)} className="h-2" />
                       <div className="flex justify-between mt-1 text-xs text-muted-foreground">
