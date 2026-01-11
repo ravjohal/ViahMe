@@ -256,15 +256,66 @@ export default function Budget() {
     },
   });
 
-  // Handle line item budget change
+  // Calculate line item total for a ceremony from local edits and saved budgets
+  const calculateLineItemTotalForEvent = (
+    eventId: string,
+    eventName: string,
+    localEdits: Record<string, Record<string, string>>,
+    categoryOverride?: { category: string; value: string }
+  ): number | null => {
+    const lineItems = getLineItemsForEvent(eventId, eventName);
+    if (!lineItems) return null;
+    
+    let total = 0;
+    for (const item of lineItems) {
+      // Use override value for the specific category being edited
+      if (categoryOverride && item.category === categoryOverride.category) {
+        total += parseFloat(categoryOverride.value) || 0;
+      } else {
+        // Check local edits first
+        const localValue = localEdits[eventId]?.[item.category];
+        if (localValue !== undefined) {
+          total += parseFloat(localValue) || 0;
+        } else {
+          // Then check saved budgets
+          const saved = lineItemBudgets.find(
+            b => b.eventId === eventId && b.lineItemCategory === item.category
+          );
+          total += parseFloat(saved?.budgetedAmount || "0") || 0;
+        }
+      }
+    }
+    return total;
+  };
+
+  // Handle line item budget change - also updates ceremony total in real-time
   const handleLineItemChange = (eventId: string, category: string, value: string) => {
-    setEditingLineItems(prev => ({
-      ...prev,
+    // First update line items state
+    const newEditingLineItems = {
+      ...editingLineItems,
       [eventId]: {
-        ...(prev[eventId] || {}),
+        ...(editingLineItems[eventId] || {}),
         [category]: value,
       },
-    }));
+    };
+    setEditingLineItems(newEditingLineItems);
+    
+    // Then calculate and update ceremony total separately
+    const event = events.find(e => e.id === eventId);
+    if (event) {
+      const total = calculateLineItemTotalForEvent(
+        eventId, 
+        event.name, 
+        newEditingLineItems,
+        { category, value }
+      );
+      if (total !== null) {
+        setEditingCeremonyTotals(prev => ({
+          ...prev,
+          [eventId]: total.toString(),
+        }));
+      }
+    }
   };
 
   // Save line item budgets for an event (includes zeros to clear existing budgets)
