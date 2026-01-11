@@ -82,6 +82,21 @@ export default function AdminCeremonyTemplatesPage() {
     queryKey: ["/api/regional-pricing"],
   });
   
+  // Fetch all ceremony line items (grouped by ceremony ID) for displaying in templates tab
+  type AllLineItemsMap = Record<string, Array<{
+    id: string;
+    name: string;
+    budgetBucketId: string;
+    lowCost: number;
+    highCost: number;
+    unit: string;
+    isCustom: boolean;
+  }>>;
+  
+  const { data: allLineItemsMap = {} } = useQuery<AllLineItemsMap>({
+    queryKey: ["/api/ceremony-types/all/line-items"],
+  });
+  
   // Fetch ceremony budget categories for the selected ceremony
   interface CeremonyLineItemsResponse {
     ceremonyId: string;
@@ -283,22 +298,36 @@ export default function AdminCeremonyTemplatesPage() {
                     </div>
 
                     <div className="mt-4">
-                      <h4 className="text-sm font-medium mb-2">Cost Breakdown ({(template.costBreakdown as any[]).length} categories)</h4>
-                      <div className="grid gap-1 text-xs">
-                        {(template.costBreakdown as any[]).slice(0, 5).map((item: any, idx: number) => (
-                          <div key={idx} className="flex justify-between text-muted-foreground">
-                            <span>{item.category}</span>
-                            <span>
-                              ${item.lowCost} - ${item.highCost}
-                              {item.unit === "per_person" && "/person"}
-                              {item.unit === "per_hour" && "/hour"}
-                            </span>
-                          </div>
-                        ))}
-                        {(template.costBreakdown as any[]).length > 5 && (
-                          <span className="text-muted-foreground">+{(template.costBreakdown as any[]).length - 5} more...</span>
-                        )}
-                      </div>
+                      {(() => {
+                        const lineItems = allLineItemsMap[template.ceremonyId] || [];
+                        const systemItems = lineItems.filter(item => !item.isCustom);
+                        return (
+                          <>
+                            <h4 className="text-sm font-medium mb-2">Budget Line Items ({systemItems.length} categories)</h4>
+                            <div className="grid gap-1 text-xs">
+                              {systemItems.slice(0, 5).map((item) => {
+                                const bucketLabel = BUDGET_BUCKETS.find(b => b.value === item.budgetBucketId)?.label || item.budgetBucketId;
+                                return (
+                                  <div key={item.id} className="flex justify-between text-muted-foreground">
+                                    <span>{item.name} <Badge variant="outline" className="ml-1 text-[10px] py-0">{bucketLabel}</Badge></span>
+                                    <span>
+                                      ${item.lowCost.toLocaleString()} - ${item.highCost.toLocaleString()}
+                                      {item.unit === "per_person" && "/person"}
+                                      {item.unit === "per_hour" && "/hour"}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                              {systemItems.length > 5 && (
+                                <span className="text-muted-foreground">+{systemItems.length - 5} more...</span>
+                              )}
+                              {systemItems.length === 0 && (
+                                <span className="text-muted-foreground italic">No line items defined. Use the Budget Line Items tab to add them.</span>
+                              )}
+                            </div>
+                          </>
+                        );
+                      })()}
                     </div>
                   </CardContent>
                 </Card>
@@ -628,38 +657,6 @@ function TemplateEditForm({
   const [defaultGuests, setDefaultGuests] = useState(template.defaultGuests.toString());
   const [isActive, setIsActive] = useState(template.isActive);
   const [displayOrder, setDisplayOrder] = useState(template.displayOrder.toString());
-  const [costBreakdown, setCostBreakdown] = useState(template.costBreakdown as any[]);
-
-  const updateCategory = (idx: number, field: string, value: any) => {
-    const updated = [...costBreakdown];
-    updated[idx] = { ...updated[idx], [field]: value };
-    setCostBreakdown(updated);
-  };
-
-  const calculateTotals = () => {
-    const guests = parseInt(defaultGuests) || 100;
-    let totalLow = 0;
-    let totalHigh = 0;
-
-    for (const item of costBreakdown) {
-      if (item.unit === "per_person") {
-        totalLow += item.lowCost * guests;
-        totalHigh += item.highCost * guests;
-      } else {
-        totalLow += item.lowCost;
-        totalHigh += item.highCost;
-      }
-    }
-
-    return {
-      totalLow: Math.round(totalLow),
-      totalHigh: Math.round(totalHigh),
-      perGuestLow: (totalLow / guests).toFixed(2),
-      perGuestHigh: (totalHigh / guests).toFixed(2),
-    };
-  };
-
-  const totals = calculateTotals();
 
   const handleSubmit = () => {
     onSave({
@@ -668,9 +665,6 @@ function TemplateEditForm({
       defaultGuests: parseInt(defaultGuests),
       isActive,
       displayOrder: parseInt(displayOrder),
-      costBreakdown,
-      costPerGuestLow: totals.perGuestLow,
-      costPerGuestHigh: totals.perGuestHigh,
     });
   };
 
@@ -720,78 +714,11 @@ function TemplateEditForm({
         </div>
       </div>
 
-      <div>
-        <Label className="text-base font-semibold">Cost Breakdown</Label>
-        <div className="mt-2 space-y-3 max-h-64 overflow-y-auto">
-          {costBreakdown.map((item, idx) => (
-            <div key={idx} className="grid grid-cols-5 gap-2 items-center text-sm">
-              <Input
-                value={item.category}
-                onChange={(e) => updateCategory(idx, "category", e.target.value)}
-                placeholder="Category"
-                className="text-xs"
-                data-testid={`input-category-${idx}`}
-              />
-              <Input
-                type="number"
-                value={item.lowCost}
-                onChange={(e) => updateCategory(idx, "lowCost", parseFloat(e.target.value) || 0)}
-                placeholder="Min"
-                className="text-xs"
-                data-testid={`input-low-${idx}`}
-              />
-              <Input
-                type="number"
-                value={item.highCost}
-                onChange={(e) => updateCategory(idx, "highCost", parseFloat(e.target.value) || 0)}
-                placeholder="Max"
-                className="text-xs"
-                data-testid={`input-high-${idx}`}
-              />
-              <Select value={item.unit} onValueChange={(v) => updateCategory(idx, "unit", v)}>
-                <SelectTrigger className="text-xs" data-testid={`select-unit-${idx}`}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {UNIT_TYPES.map(u => (
-                    <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setCostBreakdown(costBreakdown.filter((_, i) => i !== idx))}
-                data-testid={`button-remove-${idx}`}
-              >
-                <Trash2 className="h-3 w-3" />
-              </Button>
-            </div>
-          ))}
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="mt-2"
-          onClick={() => setCostBreakdown([...costBreakdown, { category: "", lowCost: 0, highCost: 0, unit: "fixed" }])}
-          data-testid="button-add-category"
-        >
-          <Plus className="h-3 w-3 mr-1" />
-          Add Category
-        </Button>
-      </div>
-
       <Card className="bg-muted/50">
         <CardContent className="py-4">
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="text-muted-foreground">Total Estimate:</span>
-              <span className="ml-2 font-semibold">${totals.totalLow.toLocaleString()} - ${totals.totalHigh.toLocaleString()}</span>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Per Guest:</span>
-              <span className="ml-2 font-semibold">${totals.perGuestLow} - ${totals.perGuestHigh}</span>
-            </div>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <AlertCircle className="h-4 w-4" />
+            <span>To edit budget line items for this ceremony, use the <strong>Budget Line Items</strong> tab.</span>
           </div>
         </CardContent>
       </Card>
