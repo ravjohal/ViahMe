@@ -63,6 +63,10 @@ export async function registerExpenseRoutes(router: Router, storage: IStorage) {
 
   router.get("/:weddingId/totals", async (req, res) => {
     try {
+      // Auto-recalculate ceremony aggregates on each load to ensure fresh data
+      // This aggregates ceremony budget categories by budgetBucketId → autoLow/autoHigh/autoItemCount
+      await storage.recalculateBucketAllocationsFromCeremonies(req.params.weddingId);
+      
       const expenses = await storage.getExpensesByWedding(req.params.weddingId);
       const allocations = await storage.getBudgetAllocationsByWedding(req.params.weddingId);
       

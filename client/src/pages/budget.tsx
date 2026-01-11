@@ -705,7 +705,7 @@ export default function Budget() {
           eventId: event.id,
           eventName: event.name,
           ceremonyName: item.category || event.name,
-          itemName: item.itemName,
+          itemName: item.category,
           lowCost: item.lowCost,
           highCost: item.highCost,
           unit: item.unit || 'fixed',

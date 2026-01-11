@@ -32,6 +32,12 @@ export async function registerEventRoutes(router: Router, storage: IStorage) {
     try {
       const validatedData = insertEventSchema.parse(req.body);
       const event = await storage.createEvent(validatedData);
+      
+      // Trigger recalculation of bucket allocations for new events with ceremonyTypeId
+      if (event.weddingId && event.ceremonyTypeId) {
+        await storage.recalculateBucketAllocationsFromCeremonies(event.weddingId);
+      }
+      
       res.json(event);
     } catch (error) {
       if (error instanceof Error && "issues" in error) {

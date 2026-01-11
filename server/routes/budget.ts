@@ -151,6 +151,19 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
     }
   });
 
+  // Recalculate auto values from ceremony budget categories for a wedding
+  // This aggregates line item costs by budgetBucketId and updates autoLow/autoHigh/autoItemCount
+  router.post("/allocations/:weddingId/recalculate", await requireAuth(storage, false), ensureCoupleAccess(storage, (req) => req.params.weddingId), async (req, res) => {
+    try {
+      const weddingId = req.params.weddingId;
+      await storage.recalculateBucketAllocationsFromCeremonies(weddingId);
+      res.json({ success: true, message: "Budget allocations recalculated from ceremony items" });
+    } catch (error) {
+      console.error("Failed to recalculate budget allocations:", error);
+      res.status(500).json({ error: "Failed to recalculate budget allocations" });
+    }
+  });
+
   router.post("/allocations", await requireAuth(storage, false), async (req, res) => {
     try {
       const authReq = req as AuthRequest;
