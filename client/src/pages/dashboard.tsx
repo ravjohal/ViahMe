@@ -897,13 +897,11 @@ export default function Dashboard() {
           if (!open) setSelectedEvent(null);
         }}
         event={selectedEvent}
+        weddingId={wedding.id}
         costItems={costItems}
         costItemsLoading={costItemsLoading}
         budgetCategories={budgetCategories}
-        onEdit={() => {
-          setLocation(`/timeline?eventId=${selectedEvent?.id}`);
-          setSelectedEvent(null);
-        }}
+        tasks={selectedEvent ? tasks.filter(t => t.eventId === selectedEvent.id) : []}
         onDelete={handleDeleteEvent}
       />
 
