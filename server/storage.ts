@@ -1081,8 +1081,7 @@ export interface IStorage {
 
   // Ceremony Budget Categories (junction table: ceremony type + budget bucket)
   // weddingId: NULL = system templates only, undefined = system templates only, string = system + wedding-specific
-  getCeremonyBudgetCategories(ceremonyTypeId: string, weddingId?: string | null): Promise<CeremonyBudgetCategory[]>; // @deprecated - use getCeremonyBudgetCategoriesByUuid
-  getCeremonyBudgetCategoriesByUuid(ceremonyTypeUuid: string, weddingId?: string | null): Promise<CeremonyBudgetCategory[]>;
+  getCeremonyBudgetCategoriesByCeremonyTypeId(ceremonyTypeId: string, weddingId?: string | null): Promise<CeremonyBudgetCategory[]>;
   getCeremonyBudgetCategoriesByBucket(budgetBucketId: string): Promise<CeremonyBudgetCategory[]>;
   getAllCeremonyBudgetCategories(): Promise<CeremonyBudgetCategory[]>;
   getAllCeremonyBudgetCategoriesForWedding(weddingId: string): Promise<CeremonyBudgetCategory[]>;
@@ -4342,8 +4341,7 @@ export class MemStorage implements IStorage {
   async deleteCeremonyType(ceremonyId: string): Promise<boolean> { return false; }
 
   // Ceremony Budget Categories (stubs - use DBStorage for production)
-  async getCeremonyBudgetCategories(ceremonyTypeId: string, weddingId?: string | null): Promise<CeremonyBudgetCategory[]> { return []; }
-  async getCeremonyBudgetCategoriesByUuid(ceremonyTypeUuid: string, weddingId?: string | null): Promise<CeremonyBudgetCategory[]> { return []; }
+  async getCeremonyBudgetCategoriesByCeremonyTypeId(ceremonyTypeId: string, weddingId?: string | null): Promise<CeremonyBudgetCategory[]> { return []; }
   async getCeremonyBudgetCategoriesByBucket(budgetBucketId: string): Promise<CeremonyBudgetCategory[]> { return []; }
   async getAllCeremonyBudgetCategories(): Promise<CeremonyBudgetCategory[]> { return []; }
   async getAllCeremonyBudgetCategoriesForWedding(weddingId: string): Promise<CeremonyBudgetCategory[]> { return []; }
@@ -4648,29 +4646,29 @@ export class DBStorage implements IStorage {
   }
 
   async createEvent(insertEvent: InsertEvent): Promise<Event> {
-    // Auto-resolve ceremonyTypeId slug to UUID if ceremonyTypeUuid not provided
-    let ceremonyTypeUuid = insertEvent.ceremonyTypeUuid;
-    if (!ceremonyTypeUuid && insertEvent.ceremonyTypeId) {
-      const ceremonyType = await this.getCeremonyType(insertEvent.ceremonyTypeId);
-      if (ceremonyType) {
-        ceremonyTypeUuid = ceremonyType.id;
-      }
-    }
-    // Also try to resolve from wedding tradition + event type if still not found
-    if (!ceremonyTypeUuid && insertEvent.type && insertEvent.weddingId) {
+    // Auto-resolve ceremonyTypeId from type+tradition if not provided
+    let ceremonyTypeId = insertEvent.ceremonyTypeId;
+    
+    // Try to resolve from wedding tradition + event type if not provided
+    if (!ceremonyTypeId && insertEvent.type && insertEvent.weddingId) {
       const wedding = await this.getWedding(insertEvent.weddingId);
       if (wedding?.tradition) {
-        const ceremonyId = `${wedding.tradition.toLowerCase()}_${insertEvent.type}`;
-        const ceremonyType = await this.getCeremonyType(ceremonyId);
+        const ceremonySlug = `${wedding.tradition.toLowerCase()}_${insertEvent.type}`;
+        const ceremonyType = await this.getCeremonyType(ceremonySlug);
         if (ceremonyType) {
-          ceremonyTypeUuid = ceremonyType.id;
+          ceremonyTypeId = ceremonyType.id;
         }
       }
     }
     
+    // Ensure we have a valid ceremonyTypeId - required by NOT NULL constraint
+    if (!ceremonyTypeId) {
+      throw new Error("ceremonyTypeId is required - provide directly or ensure type+weddingId allows auto-resolution");
+    }
+    
     const result = await this.db.insert(schema.events).values({
       ...insertEvent,
-      ceremonyTypeUuid,
+      ceremonyTypeId,
     }).returning();
     return result[0];
   }
@@ -10680,28 +10678,7 @@ export class DBStorage implements IStorage {
 
   // Ceremony Budget Categories (junction: ceremony type + budget bucket)
   // Returns system templates (weddingId = NULL) plus any wedding-specific custom items
-  // @deprecated - use getCeremonyBudgetCategoriesByUuid
-  async getCeremonyBudgetCategories(ceremonyTypeId: string, weddingId?: string | null): Promise<CeremonyBudgetCategory[]> {
-    // Build filter: ceremonyTypeId (slug) matches AND (weddingId is NULL OR weddingId matches)
-    const weddingFilter = weddingId
-      ? or(
-          isNull(ceremonyBudgetCategories.weddingId),
-          eq(ceremonyBudgetCategories.weddingId, weddingId)
-        )
-      : isNull(ceremonyBudgetCategories.weddingId); // Only system templates when no weddingId provided
-    
-    return await this.db.select()
-      .from(ceremonyBudgetCategories)
-      .where(and(
-        eq(ceremonyBudgetCategories.ceremonyTypeId, ceremonyTypeId),
-        eq(ceremonyBudgetCategories.isActive, true),
-        weddingFilter
-      ))
-      .orderBy(sql`${ceremonyBudgetCategories.displayOrder} ASC`);
-  }
-
-  // NEW: UUID-based method for ceremony budget categories lookup
-  async getCeremonyBudgetCategoriesByUuid(ceremonyTypeUuid: string, weddingId?: string | null): Promise<CeremonyBudgetCategory[]> {
+  async getCeremonyBudgetCategoriesByCeremonyTypeId(ceremonyTypeId: string, weddingId?: string | null): Promise<CeremonyBudgetCategory[]> {
     const weddingFilter = weddingId
       ? or(
           isNull(ceremonyBudgetCategories.weddingId),
@@ -10712,7 +10689,7 @@ export class DBStorage implements IStorage {
     return await this.db.select()
       .from(ceremonyBudgetCategories)
       .where(and(
-        eq(ceremonyBudgetCategories.ceremonyTypeUuid, ceremonyTypeUuid),
+        eq(ceremonyBudgetCategories.ceremonyTypeId, ceremonyTypeId),
         eq(ceremonyBudgetCategories.isActive, true),
         weddingFilter
       ))
@@ -10737,7 +10714,7 @@ export class DBStorage implements IStorage {
         eq(ceremonyBudgetCategories.isActive, true),
         isNull(ceremonyBudgetCategories.weddingId)
       ))
-      .orderBy(sql`${ceremonyBudgetCategories.ceremonyTypeUuid} ASC, ${ceremonyBudgetCategories.displayOrder} ASC`);
+      .orderBy(sql`${ceremonyBudgetCategories.ceremonyTypeId} ASC, ${ceremonyBudgetCategories.displayOrder} ASC`);
   }
 
   async getAllCeremonyBudgetCategoriesForWedding(weddingId: string): Promise<CeremonyBudgetCategory[]> {
@@ -10748,7 +10725,7 @@ export class DBStorage implements IStorage {
         eq(ceremonyBudgetCategories.isActive, true),
         eq(ceremonyBudgetCategories.weddingId, weddingId)
       ))
-      .orderBy(sql`${ceremonyBudgetCategories.ceremonyTypeUuid} ASC, ${ceremonyBudgetCategories.displayOrder} ASC`);
+      .orderBy(sql`${ceremonyBudgetCategories.ceremonyTypeId} ASC, ${ceremonyBudgetCategories.displayOrder} ASC`);
   }
 
   async getCeremonyBudgetCategory(id: string): Promise<CeremonyBudgetCategory | undefined> {
@@ -10759,24 +10736,12 @@ export class DBStorage implements IStorage {
   }
 
   async createCeremonyBudgetCategory(item: InsertCeremonyBudgetCategory): Promise<CeremonyBudgetCategory> {
-    // Auto-resolve ceremonyTypeId slug to UUID if ceremonyTypeUuid not provided
-    let ceremonyTypeUuid = item.ceremonyTypeUuid;
-    if (!ceremonyTypeUuid && item.ceremonyTypeId) {
-      const ceremonyType = await this.getCeremonyType(item.ceremonyTypeId);
-      if (ceremonyType) {
-        ceremonyTypeUuid = ceremonyType.id;
-      }
+    // Ensure we have a valid ceremonyTypeId - required by NOT NULL constraint
+    if (!item.ceremonyTypeId) {
+      throw new Error("ceremonyTypeId is required");
     }
     
-    // Ensure we have a valid UUID - required by NOT NULL constraint
-    if (!ceremonyTypeUuid) {
-      throw new Error("ceremonyTypeUuid is required - provide directly or via ceremonyTypeId for auto-resolution");
-    }
-    
-    const result = await this.db.insert(ceremonyBudgetCategories).values({
-      ...item,
-      ceremonyTypeUuid,
-    }).returning();
+    const result = await this.db.insert(ceremonyBudgetCategories).values(item).returning();
     return result[0];
   }
 
@@ -10839,9 +10804,8 @@ export class DBStorage implements IStorage {
   }
 
   async hydrateWeddingLineItemsFromTemplate(weddingId: string, ceremonyId: string, templateId: string): Promise<WeddingLineItem[]> {
-    // Get template items using UUID-based lookup
-    // templateId should be the ceremony type UUID (ceremony_types.id)
-    const templateItems = await this.getCeremonyBudgetCategoriesByUuid(templateId);
+    // Get template items - templateId is the ceremony_types.id UUID
+    const templateItems = await this.getCeremonyBudgetCategoriesByCeremonyTypeId(templateId);
     
     // Create wedding line items from template
     const createdItems: WeddingLineItem[] = [];

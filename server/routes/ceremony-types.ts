@@ -91,19 +91,19 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
         hoursLow?: number;
         hoursHigh?: number;
         notes?: string;
-        ceremonies: Array<{ ceremonyId: string; ceremonyTypeUuid?: string; ceremonyName: string; tradition: string }>;
+        ceremonies: Array<{ ceremonyId: string; ceremonyTypeId: string; ceremonyName: string; tradition: string }>;
       }>();
       
       for (const item of allSystemItems) {
         // Use itemName + budgetBucketId as composite key for deduplication
         const key = `${item.itemName.toLowerCase().trim()}|${item.budgetBucketId}`;
         
-        // Prefer UUID lookup, fallback to slug for backward compatibility
-        const ceremonyType = (item.ceremonyTypeUuid ? ceremonyTypeMapByUuid.get(item.ceremonyTypeUuid) : null) 
+        // ceremonyTypeId is now the UUID FK (after column rename)
+        const ceremonyType = ceremonyTypeMapByUuid.get(item.ceremonyTypeId) 
           || ceremonyTypeMapBySlug.get(item.ceremonyTypeId);
         const ceremonyInfo = {
           ceremonyId: ceremonyType?.ceremonyId || item.ceremonyTypeId,
-          ceremonyTypeUuid: ceremonyType?.id || item.ceremonyTypeUuid,
+          ceremonyTypeId: ceremonyType?.id || item.ceremonyTypeId,
           ceremonyName: ceremonyType?.name || item.ceremonyTypeId,
           tradition: ceremonyType?.tradition || 'general',
         };
@@ -285,8 +285,8 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
       }
       
       // Pass validated weddingId to get system templates + wedding-specific custom items
-      // Use UUID-based lookup (type.id is the UUID)
-      const budgetCategories = await storage.getCeremonyBudgetCategoriesByUuid(
+      // type.id is the UUID FK (ceremony_type_id column)
+      const budgetCategories = await storage.getCeremonyBudgetCategoriesByCeremonyTypeId(
         type.id, 
         validatedWeddingId
       );
@@ -377,7 +377,7 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
         // Check if this item already exists for this wedding+ceremony combination
         const existingItems = await storage.getAllCeremonyBudgetCategoriesForWedding(weddingId);
         const duplicate = existingItems.find(
-          item => item.ceremonyTypeUuid === type.id && 
+          item => item.ceremonyTypeId === type.id && 
                   item.sourceCategoryId === sourceCategoryId
         );
         if (duplicate) {
@@ -432,7 +432,6 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
       }
       
       // Build the data object, only including hours if they have values
-      // Use type.id (UUID) as primary FK, keep ceremonyId (slug) for backward compatibility
       const insertData: Record<string, any> = {
         itemName: finalItemName,
         budgetBucketId: finalBudgetBucketId,
@@ -440,8 +439,7 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
         highCost: finalHighCost,
         unit: finalUnit,
         notes: finalNotes,
-        ceremonyTypeUuid: type.id, // PRIMARY: UUID FK to ceremony_types.id
-        ceremonyTypeId: ceremonyId, // DEPRECATED: Legacy slug for backward compatibility
+        ceremonyTypeId: type.id, // UUID FK to ceremony_types.id
         weddingId,
         sourceCategoryId: finalSourceCategoryId,
       };

@@ -17,24 +17,21 @@ Key architectural decisions and features include:
 - **Comprehensive Data Model**: Designed to support the intricate nature of multi-day South Asian weddings with database-driven wedding traditions and sub-traditions for flexible management.
 - **Cultural Templates**: Pre-populated event timelines, task templates, and normalized ceremony cost estimates for 9 wedding traditions, supporting regional pricing variations.
 - **Ceremony Types System**: Database-driven ceremony definitions (table: `ceremony_types`) with cost breakdowns via `ceremony_budget_categories` junction table. TypeScript layer uses canonical naming: `ceremonyTypes` table export, `CeremonyType` type, `ceremonyBudgetCategories` table export, `CeremonyBudgetCategory` type. Single API endpoint `/api/ceremony-types`.
-  - **UUID Migration Complete**: `ceremony_budget_categories` table uses `ceremony_type_uuid` (NOT NULL) as the primary FK to `ceremony_types.id`. All storage methods use `getCeremonyBudgetCategoriesByUuid()` for lookups. The legacy `ceremony_type_id` slug column is nullable and deprecated - do not use in new code.
-  - **DEPRECATED**: The `costBreakdown` JSON column in `ceremony_types` table is deprecated. The `ceremony_type_id` (slug) column in `ceremony_budget_categories` is deprecated and nullable - use `ceremonyTypeUuid` for all new code.
-- **UUID-Based Foreign Key Architecture**: UUID-first approach with legacy slug support for backward compatibility. **Full migration complete** (January 2026):
+  - **DEPRECATED**: The `costBreakdown` JSON column in `ceremony_types` table is deprecated.
+- **UUID-Based Foreign Key Architecture**: UUID-first approach with consistent `xxx_id` naming convention. **Full migration complete** (January 2026):
   - Core tables (`wedding_traditions`, `wedding_sub_traditions`, `budget_bucket_categories`, `ceremony_types`) have both UUID `id` and `slug` fields
-  - **All UUID FK columns are now NOT NULL** across referencing tables:
+  - **All UUID FK columns are now NOT NULL** with standard `xxx_id` naming:
     - `weddings.traditionId` (NOT NULL) → `wedding_traditions.id`
-    - `events.ceremonyTypeUuid` (NOT NULL) → `ceremony_types.id`
+    - `events.ceremonyTypeId` (NOT NULL) → `ceremony_types.id`
     - `ceremony_types.traditionId` (NOT NULL) → `wedding_traditions.id`
-    - `ceremony_budget_categories.ceremonyTypeUuid` (NOT NULL) → `ceremony_types.id`
+    - `ceremony_budget_categories.ceremonyTypeId` (NOT NULL) → `ceremony_types.id`
     - `expenses.bucketCategoryId` (NOT NULL) → `budget_bucket_categories.id`
     - `budget_allocations.bucketCategoryId` (NOT NULL) → `budget_bucket_categories.id`
-  - Storage layer auto-resolves slugs to UUIDs on create/update operations via helpers: `getWeddingTraditionBySlug()`, `getBudgetCategoryBySlug()`, `getCeremonyType()`
-  - **Primary UUID-based storage methods**: `getCeremonyBudgetCategoriesByUuid()`, `getCeremonyTypesByTraditionId()`, `getBudgetAllocationByBucketCategoryId()`, `upsertBudgetAllocationByUUID()`
-  - **Deprecated legacy columns** (kept for backward compatibility, do not use in new code):
+  - Storage layer auto-resolves slugs to UUIDs on create/update operations via helpers: `getWeddingTraditionBySlug()`, `getCeremonyType()`
+  - **Primary UUID-based storage methods**: `getCeremonyBudgetCategoriesByCeremonyTypeId()`, `getCeremonyTypesByTraditionId()`, `getBudgetAllocationByBucketCategoryId()`, `upsertBudgetAllocationByUUID()`
+  - **Deprecated legacy columns** (kept for backward compatibility on some tables):
     - `weddings.tradition` (slug) - use `traditionId`
-    - `events.ceremonyTypeId` (slug) - use `ceremonyTypeUuid`
     - `ceremony_types.tradition` (slug) - use `traditionId`
-    - `ceremony_budget_categories.ceremonyTypeId` (slug) - use `ceremonyTypeUuid`
     - `expenses.parentCategory` (slug) - use `bucketCategoryId`
     - `budget_allocations.bucket` (slug) - use `bucketCategoryId`
   - API routes resolve slugs to UUIDs internally: `/api/ceremony-types/tradition/:tradition` and `/api/ceremony-types/:ceremonyId/line-items` use UUID-based storage

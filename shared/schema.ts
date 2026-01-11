@@ -535,9 +535,7 @@ export const events = pgTable("events", {
   name: text("name").notNull(),
   type: text("type").notNull(), // Legacy: 'paath' | 'mehndi' | 'maiyan' | 'sangeet' | 'anand_karaj' | 'reception' | 'custom'
   // PRIMARY: UUID FK to ceremony_types.id (required)
-  ceremonyTypeUuid: varchar("ceremony_type_uuid").notNull().references(() => ceremonyTypes.id),
-  // DEPRECATED: Legacy slug FK - nullable, auto-resolved from UUID
-  ceremonyTypeId: varchar("ceremony_type_id"),
+  ceremonyTypeId: varchar("ceremony_type_id").notNull().references(() => ceremonyTypes.id),
   date: timestamp("date"),
   time: text("time"),
   location: text("location"),
@@ -561,15 +559,14 @@ export const events = pgTable("events", {
   livestreamUrl: text("livestream_url"), // YouTube live stream URL for remote guests
 }, (table) => ({
   weddingIdIdx: index("events_wedding_id_idx").on(table.weddingId),
-  ceremonyTypeUuidIdx: index("events_ceremony_type_uuid_idx").on(table.ceremonyTypeUuid),
   ceremonyTypeIdIdx: index("events_ceremony_type_id_idx").on(table.ceremonyTypeId),
 }));
 
 export const insertEventSchema = createInsertSchema(events).omit({
   id: true,
 }).extend({
-  ceremonyTypeUuid: z.string().nullable().optional(), // NEW: UUID FK to ceremony_types.id
-  ceremonyTypeId: z.string().nullable().optional(), // DEPRECATED: Legacy slug FK
+  // UUID FK to ceremony_types.id - optional at validation, auto-resolved from type+tradition in storage layer
+  ceremonyTypeId: z.string().optional(),
   type: z.enum([
     // Sikh events
     'engagement', 'paath', 'mehndi', 'maiyan', 'sangeet', 'anand_karaj', 'reception', 'day_after',
@@ -3973,9 +3970,7 @@ export const ceremonyBudgetCategories = pgTable("ceremony_budget_categories", {
   // Reference to source library item when cloning from master library (nullable)
   sourceCategoryId: varchar("source_category_id"), // References ceremony_budget_categories.id (library item)
   // PRIMARY: UUID FK to ceremony_types.id
-  ceremonyTypeUuid: varchar("ceremony_type_uuid").notNull().references(() => ceremonyTypes.id),
-  // DEPRECATED: Legacy slug FK - kept for backward compatibility, will be removed in future migration
-  ceremonyTypeId: text("ceremony_type_id"),
+  ceremonyTypeId: varchar("ceremony_type_id").notNull().references(() => ceremonyTypes.id),
   // Foreign key to budget_bucket_categories.id (slug-style ID like 'venue', 'attire')
   budgetBucketId: text("budget_bucket_id").notNull(),
   itemName: text("item_name").notNull(), // e.g., "Gurdwara Donation", "Turban Tying"
@@ -3992,7 +3987,6 @@ export const ceremonyBudgetCategories = pgTable("ceremony_budget_categories", {
 }, (table) => ({
   weddingIdx: index("ceremony_budget_categories_wedding_idx").on(table.weddingId),
   ceremonyTypeIdx: index("ceremony_budget_categories_type_idx").on(table.ceremonyTypeId),
-  ceremonyTypeUuidIdx: index("ceremony_budget_categories_type_uuid_idx").on(table.ceremonyTypeUuid),
   budgetBucketIdx: index("ceremony_budget_categories_bucket_idx").on(table.budgetBucketId),
   sourceCategoryIdx: index("ceremony_budget_categories_source_idx").on(table.sourceCategoryId),
 }));
@@ -4004,10 +3998,8 @@ export const insertCeremonyBudgetCategorySchema = createInsertSchema(ceremonyBud
 }).extend({
   weddingId: z.string().nullable().optional(), // NULL = system template, value = custom for wedding
   sourceCategoryId: z.string().nullable().optional(), // Reference to source library item when cloning
-  // PRIMARY: UUID FK to ceremony_types.id - optional at validation time, auto-resolved from slug if missing
-  ceremonyTypeUuid: z.string().optional(),
-  // DEPRECATED: Legacy slug FK - used for auto-resolution to UUID, will be removed in future
-  ceremonyTypeId: z.string().nullable().optional(),
+  // UUID FK to ceremony_types.id
+  ceremonyTypeId: z.string(),
   budgetBucketId: z.enum(BUDGET_BUCKETS), // References budget_bucket_categories.id
   unit: z.enum(['fixed', 'per_hour', 'per_person']),
   lowCost: z.string(),
