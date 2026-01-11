@@ -3,7 +3,7 @@ import {
   MessageSquare, Music, Image, UserCircle, ShoppingBag, 
   Package, BookOpen, Radio, UsersRound, Globe, Bot, 
   Calendar, Wallet, BarChart3, Briefcase, Star, Send, Gamepad2,
-  Mic, Shield, Sparkles, Link2,
+  Mic, Shield, Sparkles,
   type LucideIcon
 } from "lucide-react";
 import type { PermissionCategory } from "@shared/schema";
@@ -69,7 +69,6 @@ export const COUPLE_NAV_SECTIONS: NavSection[] = [
     label: "More Tools",
     items: [
       { path: "/ritual-roles", label: "Ritual Roles", icon: Sparkles, permission: "guests", description: "Assign ceremony duties" },
-      { path: "/vendor-collaboration", label: "Vendor Hub", icon: Link2, permission: "vendors", description: "Share timelines with vendors" },
       { path: "/engagement-games", label: "Guest Games", icon: Gamepad2, permission: "guests", description: "Scavenger hunts & trivia" },
       { path: "/shopping", label: "Shopping List", icon: Package, permission: "shopping", description: "Shopping list" },
       { path: "/cultural-info", label: "Cultural Info", icon: BookOpen, description: "Learn traditions" },
