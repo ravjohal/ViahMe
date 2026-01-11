@@ -38,6 +38,10 @@ const questionnaireSchema = z.object({
   totalBudget: z.string().optional(),
   budgetContribution: z.enum(['couple_only', 'both_families', 'mix']).optional(),
   partnerNewToTraditions: z.boolean().optional(),
+  // Budget granularity preferences
+  showBudgetOverview: z.boolean().optional(),
+  showBucketBudgets: z.boolean().optional(),
+  showCeremonyBudgets: z.boolean().optional(),
 });
 
 import { Flame, Moon, Sparkles, Flower2, Church, Leaf, Heart, Star, BookOpen, Palette, Plus, Trash2 } from "lucide-react";
@@ -221,6 +225,10 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
       totalBudget: "",
       budgetContribution: "both_families",
       partnerNewToTraditions: false,
+      // Budget granularity - default all to true for complete tracking
+      showBudgetOverview: true,
+      showBucketBudgets: true,
+      showCeremonyBudgets: true,
     },
   });
 
@@ -1128,6 +1136,85 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                         </FormItem>
                       )}
                     />
+
+                    {/* Budget Tracking Granularity */}
+                    <div className="p-4 rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border border-blue-200 dark:border-blue-800">
+                      <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">How would you like to track your budget?</h4>
+                      <p className="text-sm text-blue-700 dark:text-blue-300 mb-4">
+                        Choose the level of detail that works best for you. You can change this anytime in settings.
+                      </p>
+                      <div className="space-y-3">
+                        <FormField
+                          control={form.control}
+                          name="showBudgetOverview"
+                          render={({ field }) => (
+                            <FormItem className="flex items-start space-x-3 space-y-0">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                  data-testid="checkbox-budget-overview"
+                                />
+                              </FormControl>
+                              <div className="space-y-1 leading-none">
+                                <FormLabel className="font-medium cursor-pointer">
+                                  Overall Budget Overview
+                                </FormLabel>
+                                <p className="text-xs text-muted-foreground">
+                                  See your total budget, spending, and remaining balance at a glance
+                                </p>
+                              </div>
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="showBucketBudgets"
+                          render={({ field }) => (
+                            <FormItem className="flex items-start space-x-3 space-y-0">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                  data-testid="checkbox-bucket-budgets"
+                                />
+                              </FormControl>
+                              <div className="space-y-1 leading-none">
+                                <FormLabel className="font-medium cursor-pointer">
+                                  Budget by Category
+                                </FormLabel>
+                                <p className="text-xs text-muted-foreground">
+                                  Track spending by type: venue, catering, photography, attire, etc.
+                                </p>
+                              </div>
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="showCeremonyBudgets"
+                          render={({ field }) => (
+                            <FormItem className="flex items-start space-x-3 space-y-0">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                  data-testid="checkbox-ceremony-budgets"
+                                />
+                              </FormControl>
+                              <div className="space-y-1 leading-none">
+                                <FormLabel className="font-medium cursor-pointer">
+                                  Budget by Ceremony
+                                </FormLabel>
+                                <p className="text-xs text-muted-foreground">
+                                  Plan and track costs for each ceremony: Mehndi, Sangeet, Reception, etc.
+                                </p>
+                              </div>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
 
                   </div>
                 )}

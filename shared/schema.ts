@@ -494,6 +494,10 @@ export const weddings = pgTable("weddings", {
   eventsConfirmed: boolean("events_confirmed").default(false),
   budgetContribution: text("budget_contribution"), // 'couple_only' | 'both_families' | 'mix'
   partnerNewToTraditions: boolean("partner_new_to_traditions").default(false), // Culture Bridge feature
+  // Budget granularity preferences (set during onboarding)
+  showBudgetOverview: boolean("show_budget_overview").default(true), // High-level total budget
+  showBucketBudgets: boolean("show_bucket_budgets").default(true), // Budget by category (venue, catering, etc.)
+  showCeremonyBudgets: boolean("show_ceremony_budgets").default(true), // Budget by ceremony/event
   status: text("status").notNull().default('planning'), // 'planning' | 'active' | 'completed'
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => ({
@@ -520,6 +524,10 @@ export const insertWeddingSchema = createInsertSchema(weddings).omit({
   totalBudget: z.string().nullable().optional(),
   budgetContribution: z.enum(['couple_only', 'both_families', 'mix']).nullable().optional(),
   partnerNewToTraditions: z.boolean().optional(),
+  // Budget granularity preferences
+  showBudgetOverview: z.boolean().optional(),
+  showBucketBudgets: z.boolean().optional(),
+  showCeremonyBudgets: z.boolean().optional(),
 });
 
 export type InsertWedding = z.infer<typeof insertWeddingSchema>;
