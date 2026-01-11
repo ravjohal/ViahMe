@@ -83,8 +83,11 @@ export function getBucketLabel(bucket: string | null | undefined): string {
 // ============================================================================
 
 export const budgetBucketCategories = pgTable("budget_bucket_categories", {
-  // Use slug-style IDs (e.g., 'venue', 'catering') so code can still reference them
-  id: varchar("id").primaryKey(),
+  // UUID primary key for proper relational integrity
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Slug for code compatibility (e.g., 'venue', 'catering')
+  slug: varchar("slug").notNull().unique(),
   
   // Display metadata
   displayName: text("display_name").notNull(), // e.g., "Catering & Food"
@@ -232,8 +235,11 @@ export const DEFAULT_CATEGORY_METADATA: Record<BudgetBucket, {
 // ============================================================================
 
 export const weddingTraditions = pgTable("wedding_traditions", {
-  // Use slug-style IDs (e.g., 'sikh', 'hindu') for code compatibility
-  id: varchar("id").primaryKey(),
+  // UUID primary key for proper relational integrity
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Slug for code compatibility and display (e.g., 'sikh', 'hindu')
+  slug: varchar("slug").notNull().unique(),
   
   // Display metadata
   displayName: text("display_name").notNull(), // e.g., "Sikh", "Hindu"
@@ -261,10 +267,13 @@ export type WeddingTradition = typeof weddingTraditions.$inferSelect;
 // ============================================================================
 
 export const weddingSubTraditions = pgTable("wedding_sub_traditions", {
-  // Use slug-style IDs (e.g., 'punjabi', 'tamil') for code compatibility
-  id: varchar("id").primaryKey(),
+  // UUID primary key for proper relational integrity
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   
-  // Parent tradition reference
+  // Slug for code compatibility (e.g., 'punjabi', 'tamil')
+  slug: varchar("slug").notNull().unique(),
+  
+  // Parent tradition reference (UUID FK)
   traditionId: varchar("tradition_id").notNull().references(() => weddingTraditions.id),
   
   // Display metadata
@@ -289,59 +298,59 @@ export const insertWeddingSubTraditionSchema = createInsertSchema(weddingSubTrad
 export type InsertWeddingSubTradition = z.infer<typeof insertWeddingSubTraditionSchema>;
 export type WeddingSubTradition = typeof weddingSubTraditions.$inferSelect;
 
-// Default traditions data for seeding
+// Default traditions data for seeding (slug is the code-friendly identifier)
 export const DEFAULT_TRADITIONS: Array<{
-  id: string;
+  slug: string;
   displayName: string;
   description: string;
   displayOrder: number;
 }> = [
-  { id: "sikh", displayName: "Sikh", description: "Punjabi Sikh wedding traditions with Anand Karaj ceremony", displayOrder: 1 },
-  { id: "hindu", displayName: "Hindu", description: "Hindu wedding traditions across regional variations", displayOrder: 2 },
-  { id: "muslim", displayName: "Muslim", description: "Islamic wedding traditions with Nikah ceremony", displayOrder: 3 },
-  { id: "gujarati", displayName: "Gujarati", description: "Gujarati Hindu wedding traditions with Garba celebrations", displayOrder: 4 },
-  { id: "south_indian", displayName: "South Indian", description: "South Indian traditions including Tamil, Telugu, Malayalam, Kannada", displayOrder: 5 },
-  { id: "christian", displayName: "Christian", description: "Christian wedding traditions with church ceremony", displayOrder: 6 },
-  { id: "jain", displayName: "Jain", description: "Jain wedding traditions with unique rituals", displayOrder: 7 },
-  { id: "parsi", displayName: "Parsi", description: "Zoroastrian Parsi wedding traditions", displayOrder: 8 },
-  { id: "mixed", displayName: "Mixed/Fusion", description: "Multi-tradition or fusion wedding combining elements", displayOrder: 9 },
-  { id: "general", displayName: "General", description: "Non-specific or secular wedding celebration", displayOrder: 10 },
+  { slug: "sikh", displayName: "Sikh", description: "Punjabi Sikh wedding traditions with Anand Karaj ceremony", displayOrder: 1 },
+  { slug: "hindu", displayName: "Hindu", description: "Hindu wedding traditions across regional variations", displayOrder: 2 },
+  { slug: "muslim", displayName: "Muslim", description: "Islamic wedding traditions with Nikah ceremony", displayOrder: 3 },
+  { slug: "gujarati", displayName: "Gujarati", description: "Gujarati Hindu wedding traditions with Garba celebrations", displayOrder: 4 },
+  { slug: "south_indian", displayName: "South Indian", description: "South Indian traditions including Tamil, Telugu, Malayalam, Kannada", displayOrder: 5 },
+  { slug: "christian", displayName: "Christian", description: "Christian wedding traditions with church ceremony", displayOrder: 6 },
+  { slug: "jain", displayName: "Jain", description: "Jain wedding traditions with unique rituals", displayOrder: 7 },
+  { slug: "parsi", displayName: "Parsi", description: "Zoroastrian Parsi wedding traditions", displayOrder: 8 },
+  { slug: "mixed", displayName: "Mixed/Fusion", description: "Multi-tradition or fusion wedding combining elements", displayOrder: 9 },
+  { slug: "general", displayName: "General", description: "Non-specific or secular wedding celebration", displayOrder: 10 },
 ];
 
-// Default sub-traditions data for seeding
+// Default sub-traditions data for seeding (slug is the code-friendly identifier, traditionSlug references parent)
 export const DEFAULT_SUB_TRADITIONS: Array<{
-  id: string;
-  traditionId: string;
+  slug: string;
+  traditionSlug: string; // References parent tradition by slug (will be resolved to UUID at seed time)
   displayName: string;
   description: string;
   displayOrder: number;
 }> = [
   // Sikh sub-traditions
-  { id: "punjabi_sikh", traditionId: "sikh", displayName: "Punjabi Sikh", description: "Traditional Punjabi Sikh wedding", displayOrder: 1 },
+  { slug: "punjabi_sikh", traditionSlug: "sikh", displayName: "Punjabi Sikh", description: "Traditional Punjabi Sikh wedding", displayOrder: 1 },
   
   // Hindu sub-traditions (regional variations)
-  { id: "punjabi_hindu", traditionId: "hindu", displayName: "Punjabi Hindu", description: "North Indian Punjabi Hindu traditions", displayOrder: 1 },
-  { id: "bengali", traditionId: "hindu", displayName: "Bengali", description: "Bengali Hindu wedding traditions", displayOrder: 2 },
-  { id: "marathi", traditionId: "hindu", displayName: "Marathi", description: "Maharashtrian Hindu wedding traditions", displayOrder: 3 },
-  { id: "rajasthani", traditionId: "hindu", displayName: "Rajasthani", description: "Rajasthani Hindu wedding traditions", displayOrder: 4 },
-  { id: "bihari", traditionId: "hindu", displayName: "Bihari", description: "Bihar/Jharkhand Hindu wedding traditions", displayOrder: 5 },
-  { id: "kashmiri", traditionId: "hindu", displayName: "Kashmiri Pandit", description: "Kashmiri Pandit wedding traditions", displayOrder: 6 },
+  { slug: "punjabi_hindu", traditionSlug: "hindu", displayName: "Punjabi Hindu", description: "North Indian Punjabi Hindu traditions", displayOrder: 1 },
+  { slug: "bengali", traditionSlug: "hindu", displayName: "Bengali", description: "Bengali Hindu wedding traditions", displayOrder: 2 },
+  { slug: "marathi", traditionSlug: "hindu", displayName: "Marathi", description: "Maharashtrian Hindu wedding traditions", displayOrder: 3 },
+  { slug: "rajasthani", traditionSlug: "hindu", displayName: "Rajasthani", description: "Rajasthani Hindu wedding traditions", displayOrder: 4 },
+  { slug: "bihari", traditionSlug: "hindu", displayName: "Bihari", description: "Bihar/Jharkhand Hindu wedding traditions", displayOrder: 5 },
+  { slug: "kashmiri", traditionSlug: "hindu", displayName: "Kashmiri Pandit", description: "Kashmiri Pandit wedding traditions", displayOrder: 6 },
   
   // South Indian sub-traditions
-  { id: "tamil", traditionId: "south_indian", displayName: "Tamil", description: "Tamil Nadu wedding traditions", displayOrder: 1 },
-  { id: "telugu", traditionId: "south_indian", displayName: "Telugu", description: "Andhra/Telangana wedding traditions", displayOrder: 2 },
-  { id: "malayalam", traditionId: "south_indian", displayName: "Malayalam (Kerala)", description: "Kerala wedding traditions", displayOrder: 3 },
-  { id: "kannada", traditionId: "south_indian", displayName: "Kannada", description: "Karnataka wedding traditions", displayOrder: 4 },
+  { slug: "tamil", traditionSlug: "south_indian", displayName: "Tamil", description: "Tamil Nadu wedding traditions", displayOrder: 1 },
+  { slug: "telugu", traditionSlug: "south_indian", displayName: "Telugu", description: "Andhra/Telangana wedding traditions", displayOrder: 2 },
+  { slug: "malayalam", traditionSlug: "south_indian", displayName: "Malayalam (Kerala)", description: "Kerala wedding traditions", displayOrder: 3 },
+  { slug: "kannada", traditionSlug: "south_indian", displayName: "Kannada", description: "Karnataka wedding traditions", displayOrder: 4 },
   
   // Gujarati sub-traditions
-  { id: "gujarati_patel", traditionId: "gujarati", displayName: "Patidar/Patel", description: "Patidar community traditions", displayOrder: 1 },
-  { id: "gujarati_brahmin", traditionId: "gujarati", displayName: "Gujarati Brahmin", description: "Gujarati Brahmin traditions", displayOrder: 2 },
-  { id: "kutchi", traditionId: "gujarati", displayName: "Kutchi", description: "Kutch region traditions", displayOrder: 3 },
+  { slug: "gujarati_patel", traditionSlug: "gujarati", displayName: "Patidar/Patel", description: "Patidar community traditions", displayOrder: 1 },
+  { slug: "gujarati_brahmin", traditionSlug: "gujarati", displayName: "Gujarati Brahmin", description: "Gujarati Brahmin traditions", displayOrder: 2 },
+  { slug: "kutchi", traditionSlug: "gujarati", displayName: "Kutchi", description: "Kutch region traditions", displayOrder: 3 },
   
   // Muslim sub-traditions
-  { id: "sunni", traditionId: "muslim", displayName: "Sunni", description: "Sunni Muslim traditions", displayOrder: 1 },
-  { id: "shia", traditionId: "muslim", displayName: "Shia", description: "Shia Muslim traditions", displayOrder: 2 },
-  { id: "hyderabadi_muslim", traditionId: "muslim", displayName: "Hyderabadi", description: "Hyderabadi Muslim traditions", displayOrder: 3 },
+  { slug: "sunni", traditionSlug: "muslim", displayName: "Sunni", description: "Sunni Muslim traditions", displayOrder: 1 },
+  { slug: "shia", traditionSlug: "muslim", displayName: "Shia", description: "Shia Muslim traditions", displayOrder: 2 },
+  { slug: "hyderabadi_muslim", traditionSlug: "muslim", displayName: "Hyderabadi", description: "Hyderabadi Muslim traditions", displayOrder: 3 },
 ];
 
 // Mapping from vendor categories to budget buckets
@@ -464,7 +473,10 @@ export type User = typeof users.$inferSelect;
 export const weddings = pgTable("weddings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull(),
-  tradition: text("tradition").notNull(), // Main tradition: 'sikh' | 'hindu' | 'muslim' | etc
+  // Foreign key to wedding_traditions (UUID)
+  traditionId: varchar("tradition_id").references(() => weddingTraditions.id),
+  // Legacy: kept for backward compatibility, will be deprecated
+  tradition: text("tradition").notNull(), // Main tradition slug: 'sikh' | 'hindu' | 'muslim' | etc
   subTradition: text("sub_tradition"), // Single sub-tradition for most main traditions
   subTraditions: text("sub_traditions").array(), // Multiple sub-traditions for Mixed tradition
   role: text("role").notNull(), // 'bride' | 'groom' | 'planner'
@@ -484,7 +496,9 @@ export const weddings = pgTable("weddings", {
   partnerNewToTraditions: boolean("partner_new_to_traditions").default(false), // Culture Bridge feature
   status: text("status").notNull().default('planning'), // 'planning' | 'active' | 'completed'
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (table) => ({
+  traditionIdx: index("weddings_tradition_idx").on(table.traditionId),
+}));
 
 export const insertWeddingSchema = createInsertSchema(weddings).omit({
   id: true,
@@ -1019,6 +1033,9 @@ export type ExpenseSplit = typeof expenseSplits.$inferSelect;
 export const budgetAllocations = pgTable("budget_allocations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   weddingId: varchar("wedding_id").notNull(),
+  // Foreign key to budget_bucket_categories (UUID)
+  bucketCategoryId: varchar("bucket_category_id").references(() => budgetBucketCategories.id),
+  // Legacy: kept for backward compatibility, will be deprecated
   bucket: text("bucket").notNull(), // From BUDGET_BUCKETS (venue, catering, etc.)
   ceremonyId: varchar("ceremony_id"), // Optional: References events.id - if set, this is ceremony-specific
   lineItemLabel: text("line_item_label"), // Optional: "Turban Tying", "DJ", etc. - granular line item
@@ -1029,6 +1046,7 @@ export const budgetAllocations = pgTable("budget_allocations", {
   weddingBucketIdx: index("budget_allocations_wedding_bucket_idx").on(table.weddingId, table.bucket),
   weddingCeremonyIdx: index("budget_allocations_wedding_ceremony_idx").on(table.weddingId, table.ceremonyId),
   weddingBucketCeremonyIdx: index("budget_allocations_wedding_bucket_ceremony_idx").on(table.weddingId, table.bucket, table.ceremonyId),
+  weddingBucketCategoryIdx: index("budget_allocations_bucket_category_idx").on(table.weddingId, table.bucketCategoryId),
   uniqueAllocation: uniqueIndex("budget_allocations_unique").on(table.weddingId, table.bucket, table.ceremonyId, table.lineItemLabel),
 }));
 
@@ -3870,9 +3888,12 @@ export type DashboardWidget = typeof dashboardWidgets.$inferSelect;
 
 export const ceremonyTypes = pgTable("ceremony_types", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  ceremonyId: text("ceremony_id").notNull().unique(), // e.g., 'sikh_maiyan', 'sikh_anand_karaj'
+  ceremonyId: text("ceremony_id").notNull().unique(), // e.g., 'sikh_maiyan', 'sikh_anand_karaj' - slug identifier
   name: text("name").notNull(), // Display name e.g., "Maiyan"
   description: text("description"), // Description of the ceremony
+  // Foreign key to wedding_traditions (UUID)
+  traditionId: varchar("tradition_id").references(() => weddingTraditions.id),
+  // Legacy: kept for backward compatibility, will be deprecated
   tradition: text("tradition").notNull(), // Text field: 'sikh', 'hindu', etc.
   costPerGuestLow: decimal("cost_per_guest_low", { precision: 10, scale: 2 }).notNull(),
   costPerGuestHigh: decimal("cost_per_guest_high", { precision: 10, scale: 2 }).notNull(),
@@ -3884,6 +3905,7 @@ export const ceremonyTypes = pgTable("ceremony_types", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (table) => ({
   traditionIdx: index("ceremony_types_tradition_idx").on(table.tradition),
+  traditionIdIdx: index("ceremony_types_tradition_id_idx").on(table.traditionId),
 }));
 
 export const insertCeremonyTypeSchema = createInsertSchema(ceremonyTypes).omit({
