@@ -531,7 +531,10 @@ export const events = pgTable("events", {
   weddingId: varchar("wedding_id").notNull(),
   name: text("name").notNull(),
   type: text("type").notNull(), // Legacy: 'paath' | 'mehndi' | 'maiyan' | 'sangeet' | 'anand_karaj' | 'reception' | 'custom'
-  ceremonyTypeId: varchar("ceremony_type_id"), // FK to ceremony_templates.ceremonyId (nullable during migration)
+  // NEW: UUID FK to ceremony_types.id (primary approach)
+  ceremonyTypeUuid: varchar("ceremony_type_uuid").references(() => ceremonyTypes.id),
+  // DEPRECATED: Legacy slug FK to ceremony_types.ceremonyId
+  ceremonyTypeId: varchar("ceremony_type_id"),
   date: timestamp("date"),
   time: text("time"),
   location: text("location"),
@@ -555,12 +558,15 @@ export const events = pgTable("events", {
   livestreamUrl: text("livestream_url"), // YouTube live stream URL for remote guests
 }, (table) => ({
   weddingIdIdx: index("events_wedding_id_idx").on(table.weddingId),
+  ceremonyTypeUuidIdx: index("events_ceremony_type_uuid_idx").on(table.ceremonyTypeUuid),
   ceremonyTypeIdIdx: index("events_ceremony_type_id_idx").on(table.ceremonyTypeId),
 }));
 
 export const insertEventSchema = createInsertSchema(events).omit({
   id: true,
 }).extend({
+  ceremonyTypeUuid: z.string().nullable().optional(), // NEW: UUID FK to ceremony_types.id
+  ceremonyTypeId: z.string().nullable().optional(), // DEPRECATED: Legacy slug FK
   type: z.enum([
     // Sikh events
     'engagement', 'paath', 'mehndi', 'maiyan', 'sangeet', 'anand_karaj', 'reception', 'day_after',
@@ -578,7 +584,6 @@ export const insertEventSchema = createInsertSchema(events).omit({
     // Generic
     'custom', 'other'
   ]),
-  ceremonyTypeId: z.string().nullable().optional(), // FK to ceremony_templates.ceremonyId
   date: z.string().optional().transform(val => val ? new Date(val) : undefined),
   costPerHead: z.string().nullable().optional(),
   allocatedBudget: z.string().nullable().optional(),

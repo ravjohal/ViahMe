@@ -4648,7 +4648,19 @@ export class DBStorage implements IStorage {
   }
 
   async createEvent(insertEvent: InsertEvent): Promise<Event> {
-    const result = await this.db.insert(schema.events).values(insertEvent).returning();
+    // Auto-resolve ceremonyTypeId slug to UUID if ceremonyTypeUuid not provided
+    let ceremonyTypeUuid = insertEvent.ceremonyTypeUuid;
+    if (!ceremonyTypeUuid && insertEvent.ceremonyTypeId) {
+      const ceremonyType = await this.getCeremonyType(insertEvent.ceremonyTypeId);
+      if (ceremonyType) {
+        ceremonyTypeUuid = ceremonyType.id;
+      }
+    }
+    
+    const result = await this.db.insert(schema.events).values({
+      ...insertEvent,
+      ceremonyTypeUuid,
+    }).returning();
     return result[0];
   }
 

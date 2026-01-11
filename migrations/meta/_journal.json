@@ -15,6 +15,13 @@
       "when": 1768112372604,
       "tag": "0001_stormy_dust",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1768113037315,
+      "tag": "0002_magical_odin",
+      "breakpoints": true
     }
   ]
 }
