@@ -12,8 +12,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus, Pencil, Trash2, DollarSign, MapPin, Users, Clock, ShieldCheck, AlertCircle } from "lucide-react";
-import type { CeremonyType, RegionalPricing } from "@shared/schema";
+import { Loader2, Plus, Pencil, Trash2, DollarSign, MapPin, Users, Clock, ShieldCheck, AlertCircle, List } from "lucide-react";
+import type { CeremonyType, RegionalPricing, CeremonyBudgetCategory, BudgetBucketCategory } from "@shared/schema";
 
 const TRADITIONS = [
   { value: "sikh", label: "Sikh" },
@@ -34,6 +34,21 @@ const UNIT_TYPES = [
   { value: "per_hour", label: "Per Hour" },
 ];
 
+const BUDGET_BUCKETS = [
+  { value: "venue", label: "Venue" },
+  { value: "catering", label: "Catering" },
+  { value: "photography", label: "Photography" },
+  { value: "decor", label: "Decor" },
+  { value: "attire", label: "Attire" },
+  { value: "entertainment", label: "Entertainment" },
+  { value: "transportation", label: "Transportation" },
+  { value: "beauty", label: "Beauty" },
+  { value: "invitations", label: "Invitations" },
+  { value: "gifts", label: "Gifts" },
+  { value: "religious", label: "Religious" },
+  { value: "other", label: "Other" },
+];
+
 export default function AdminCeremonyTemplatesPage() {
   const { toast } = useToast();
   const [selectedTradition, setSelectedTradition] = useState("sikh");
@@ -41,6 +56,18 @@ export default function AdminCeremonyTemplatesPage() {
   const [editingPricing, setEditingPricing] = useState<RegionalPricing | null>(null);
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
   const [isPricingDialogOpen, setIsPricingDialogOpen] = useState(false);
+  
+  // Budget line items state
+  const [selectedCeremonyForLineItems, setSelectedCeremonyForLineItems] = useState<string | null>(null);
+  const [isAddLineItemDialogOpen, setIsAddLineItemDialogOpen] = useState(false);
+  const [newLineItem, setNewLineItem] = useState({
+    itemName: "",
+    budgetBucketId: "other",
+    lowCost: "",
+    highCost: "",
+    unit: "fixed",
+    notes: "",
+  });
 
   const { data: authData } = useQuery<{ user: { id: string; email: string; isSiteAdmin: boolean } | null }>({
     queryKey: ["/api/auth/me"],
@@ -54,6 +81,32 @@ export default function AdminCeremonyTemplatesPage() {
   const { data: regionalPricing = [], isLoading: pricingLoading } = useQuery<RegionalPricing[]>({
     queryKey: ["/api/regional-pricing"],
   });
+  
+  // Fetch ceremony budget categories for the selected ceremony
+  interface CeremonyLineItemsResponse {
+    ceremonyId: string;
+    ceremonyName: string;
+    tradition: string;
+    lineItems: Array<{
+      id: string;
+      category: string;
+      bucket: string;
+      lowCost: number;
+      highCost: number;
+      unit: string;
+      notes?: string;
+      weddingId?: string;
+      isCustom: boolean;
+    }>;
+  }
+  
+  const { data: ceremonyLineItems, isLoading: lineItemsLoading } = useQuery<CeremonyLineItemsResponse>({
+    queryKey: ["/api/ceremony-types", selectedCeremonyForLineItems, "line-items"],
+    enabled: !!selectedCeremonyForLineItems,
+  });
+  
+  // System-only line items (weddingId is null)
+  const systemLineItems = ceremonyLineItems?.lineItems?.filter(item => !item.isCustom) || [];
 
   const updateTemplateMutation = useMutation({
     mutationFn: async ({ ceremonyId, data }: { ceremonyId: string; data: Partial<CeremonyType> }) => {
@@ -84,6 +137,36 @@ export default function AdminCeremonyTemplatesPage() {
       toast({ title: "Failed to update pricing", description: error.message, variant: "destructive" });
     },
   });
+  
+  // Mutation to create a new system budget line item
+  const createLineItemMutation = useMutation({
+    mutationFn: async ({ ceremonyId, data }: { ceremonyId: string; data: typeof newLineItem }) => {
+      return apiRequest("POST", `/api/ceremony-types/${ceremonyId}/budget-categories`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/ceremony-types", selectedCeremonyForLineItems, "line-items"] });
+      toast({ title: "Budget line item added successfully" });
+      setIsAddLineItemDialogOpen(false);
+      setNewLineItem({ itemName: "", budgetBucketId: "other", lowCost: "", highCost: "", unit: "fixed", notes: "" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Failed to add line item", description: error.message, variant: "destructive" });
+    },
+  });
+  
+  // Mutation to delete a system budget line item
+  const deleteLineItemMutation = useMutation({
+    mutationFn: async ({ ceremonyId, categoryId }: { ceremonyId: string; categoryId: string }) => {
+      return apiRequest("DELETE", `/api/ceremony-types/${ceremonyId}/budget-categories/${categoryId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/ceremony-types", selectedCeremonyForLineItems, "line-items"] });
+      toast({ title: "Budget line item deleted" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Failed to delete line item", description: error.message, variant: "destructive" });
+    },
+  });
 
   const filteredTemplates = templates.filter(t => t.tradition === selectedTradition);
 
@@ -111,6 +194,7 @@ export default function AdminCeremonyTemplatesPage() {
         <TabsList>
           <TabsTrigger value="templates" data-testid="tab-templates">Ceremony Templates</TabsTrigger>
           <TabsTrigger value="pricing" data-testid="tab-pricing">Regional Pricing</TabsTrigger>
+          <TabsTrigger value="line-items" data-testid="tab-line-items">Budget Line Items</TabsTrigger>
         </TabsList>
 
         <TabsContent value="templates" className="space-y-6">
@@ -276,7 +360,207 @@ export default function AdminCeremonyTemplatesPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="line-items" className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Label>Select Ceremony:</Label>
+              <Select value={selectedCeremonyForLineItems || ""} onValueChange={setSelectedCeremonyForLineItems}>
+                <SelectTrigger className="w-64" data-testid="select-ceremony-for-items">
+                  <SelectValue placeholder="Choose a ceremony..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {templates.map(t => (
+                    <SelectItem key={t.ceremonyId} value={t.ceremonyId}>
+                      {t.name} ({t.tradition})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {selectedCeremonyForLineItems && (
+              <Button onClick={() => setIsAddLineItemDialogOpen(true)} data-testid="button-add-line-item">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Line Item
+              </Button>
+            )}
+          </div>
+
+          {!selectedCeremonyForLineItems ? (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <List className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">Select a ceremony above to manage its budget line items.</p>
+              </CardContent>
+            </Card>
+          ) : lineItemsLoading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : systemLineItems.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <p className="text-muted-foreground">No system budget line items for this ceremony yet.</p>
+                <p className="text-sm text-muted-foreground mt-2">Click "Add Line Item" to create budget categories.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5" />
+                  {ceremonyLineItems?.ceremonyName} - Budget Line Items
+                </CardTitle>
+                <CardDescription>
+                  These are the default budget categories couples will see for this ceremony type.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Item Name</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Low Cost</TableHead>
+                      <TableHead>High Cost</TableHead>
+                      <TableHead>Unit</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {systemLineItems.map((item) => (
+                      <TableRow key={item.id} data-testid={`row-line-item-${item.id}`}>
+                        <TableCell className="font-medium">{item.category}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{item.bucket}</Badge>
+                        </TableCell>
+                        <TableCell>${parseFloat(String(item.lowCost)).toLocaleString()}</TableCell>
+                        <TableCell>${parseFloat(String(item.highCost)).toLocaleString()}</TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">
+                            {item.unit === "per_person" ? "Per Person" : item.unit === "per_hour" ? "Per Hour" : "Fixed"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              if (selectedCeremonyForLineItems && confirm("Delete this line item?")) {
+                                deleteLineItemMutation.mutate({
+                                  ceremonyId: selectedCeremonyForLineItems,
+                                  categoryId: item.id,
+                                });
+                              }
+                            }}
+                            data-testid={`button-delete-item-${item.id}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
       </Tabs>
+
+      <Dialog open={isAddLineItemDialogOpen} onOpenChange={setIsAddLineItemDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Budget Line Item</DialogTitle>
+            <DialogDescription>Add a new budget category for {ceremonyLineItems?.ceremonyName || "this ceremony"}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Item Name</Label>
+              <Input
+                value={newLineItem.itemName}
+                onChange={(e) => setNewLineItem({ ...newLineItem, itemName: e.target.value })}
+                placeholder="e.g., Gurdwara Donation"
+                data-testid="input-new-item-name"
+              />
+            </div>
+            <div>
+              <Label>Budget Category</Label>
+              <Select value={newLineItem.budgetBucketId} onValueChange={(v) => setNewLineItem({ ...newLineItem, budgetBucketId: v })}>
+                <SelectTrigger data-testid="select-new-item-bucket">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {BUDGET_BUCKETS.map(b => (
+                    <SelectItem key={b.value} value={b.value}>{b.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Low Cost ($)</Label>
+                <Input
+                  type="number"
+                  value={newLineItem.lowCost}
+                  onChange={(e) => setNewLineItem({ ...newLineItem, lowCost: e.target.value })}
+                  placeholder="500"
+                  data-testid="input-new-item-low"
+                />
+              </div>
+              <div>
+                <Label>High Cost ($)</Label>
+                <Input
+                  type="number"
+                  value={newLineItem.highCost}
+                  onChange={(e) => setNewLineItem({ ...newLineItem, highCost: e.target.value })}
+                  placeholder="2000"
+                  data-testid="input-new-item-high"
+                />
+              </div>
+            </div>
+            <div>
+              <Label>Unit Type</Label>
+              <Select value={newLineItem.unit} onValueChange={(v) => setNewLineItem({ ...newLineItem, unit: v })}>
+                <SelectTrigger data-testid="select-new-item-unit">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {UNIT_TYPES.map(u => (
+                    <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Notes (optional)</Label>
+              <Textarea
+                value={newLineItem.notes}
+                onChange={(e) => setNewLineItem({ ...newLineItem, notes: e.target.value })}
+                placeholder="Any additional notes..."
+                data-testid="input-new-item-notes"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={() => {
+                if (selectedCeremonyForLineItems && newLineItem.itemName && newLineItem.lowCost && newLineItem.highCost) {
+                  createLineItemMutation.mutate({
+                    ceremonyId: selectedCeremonyForLineItems,
+                    data: newLineItem,
+                  });
+                }
+              }}
+              disabled={createLineItemMutation.isPending || !newLineItem.itemName || !newLineItem.lowCost || !newLineItem.highCost}
+              data-testid="button-save-line-item"
+            >
+              {createLineItemMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Add Line Item
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isTemplateDialogOpen} onOpenChange={setIsTemplateDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">

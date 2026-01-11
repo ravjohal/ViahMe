@@ -574,6 +574,106 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
     }, storage);
   });
 
+  // ADMIN: Create system-level ceremony budget category (weddingId = null)
+  router.post("/:ceremonyId/budget-categories", async (req, res, next) => {
+    await requireSiteAdmin(req, res, async () => {
+      try {
+        const { ceremonyId } = req.params;
+        
+        // Verify ceremony type exists
+        const type = await storage.getCeremonyType(ceremonyId);
+        if (!type) {
+          return res.status(404).json({ error: "Ceremony type not found" });
+        }
+        
+        const { itemName, budgetBucketId, lowCost, highCost, unit, hoursLow, hoursHigh, notes, displayOrder } = req.body;
+        
+        if (!itemName || !budgetBucketId || !lowCost || !highCost || !unit) {
+          return res.status(400).json({ error: "itemName, budgetBucketId, lowCost, highCost, and unit are required" });
+        }
+        
+        const insertData = {
+          weddingId: null, // System template (not wedding-specific)
+          ceremonyTypeId: ceremonyId,
+          budgetBucketId,
+          itemName,
+          lowCost: lowCost.toString(),
+          highCost: highCost.toString(),
+          unit,
+          hoursLow: hoursLow?.toString() || null,
+          hoursHigh: hoursHigh?.toString() || null,
+          notes: notes || null,
+          displayOrder: displayOrder || 0,
+        };
+        
+        const validatedData = insertCeremonyBudgetCategorySchema.parse(insertData);
+        const newItem = await storage.createCeremonyBudgetCategory(validatedData);
+        
+        res.status(201).json(newItem);
+      } catch (error) {
+        if (error instanceof Error && "issues" in error) {
+          return res.status(400).json({ error: "Validation failed", details: error });
+        }
+        console.error("[Ceremony Types] Error creating budget category:", error);
+        res.status(500).json({ error: "Failed to create ceremony budget category" });
+      }
+    }, storage);
+  });
+
+  // ADMIN: Update system-level ceremony budget category
+  router.patch("/:ceremonyId/budget-categories/:categoryId", async (req, res, next) => {
+    await requireSiteAdmin(req, res, async () => {
+      try {
+        const { ceremonyId, categoryId } = req.params;
+        
+        // Verify the item exists and is a system template
+        const item = await storage.getCeremonyBudgetCategory(categoryId);
+        if (!item) {
+          return res.status(404).json({ error: "Budget category not found" });
+        }
+        if (item.weddingId) {
+          return res.status(403).json({ error: "Cannot edit wedding-specific items through admin route" });
+        }
+        if (item.ceremonyTypeId !== ceremonyId) {
+          return res.status(400).json({ error: "Budget category does not belong to this ceremony" });
+        }
+        
+        const updatedItem = await storage.updateCeremonyBudgetCategory(categoryId, req.body);
+        res.json(updatedItem);
+      } catch (error) {
+        console.error("[Ceremony Types] Error updating budget category:", error);
+        res.status(500).json({ error: "Failed to update ceremony budget category" });
+      }
+    }, storage);
+  });
+
+  // ADMIN: Delete system-level ceremony budget category
+  router.delete("/:ceremonyId/budget-categories/:categoryId", async (req, res, next) => {
+    await requireSiteAdmin(req, res, async () => {
+      try {
+        const { ceremonyId, categoryId } = req.params;
+        
+        // Verify the item exists and is a system template
+        const item = await storage.getCeremonyBudgetCategory(categoryId);
+        if (!item) {
+          return res.status(404).json({ error: "Budget category not found" });
+        }
+        if (item.weddingId) {
+          return res.status(403).json({ error: "Cannot delete wedding-specific items through admin route" });
+        }
+        if (item.ceremonyTypeId !== ceremonyId) {
+          return res.status(400).json({ error: "Budget category does not belong to this ceremony" });
+        }
+        
+        await storage.deleteCeremonyBudgetCategory(categoryId);
+        res.json({ success: true });
+      } catch (error) {
+        console.error("[Ceremony Types] Error deleting budget category:", error);
+        res.status(500).json({ error: "Failed to delete ceremony budget category" });
+      }
+    }, storage);
+  });
+
   return router;
 }
 
