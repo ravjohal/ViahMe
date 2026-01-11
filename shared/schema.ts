@@ -1048,6 +1048,11 @@ export const budgetAllocations = pgTable("budget_allocations", {
   ceremonyId: varchar("ceremony_id"), // Optional: References events.id - if set, this is ceremony-specific
   lineItemLabel: text("line_item_label"), // Optional: "Turban Tying", "DJ", etc. - granular line item
   allocatedAmount: decimal("allocated_amount", { precision: 12, scale: 2 }).notNull().default('0'),
+  // Auto-aggregation: calculated amounts from ceremony budget categories
+  autoLowAmount: decimal("auto_low_amount", { precision: 12, scale: 2 }).notNull().default('0'),
+  autoHighAmount: decimal("auto_high_amount", { precision: 12, scale: 2 }).notNull().default('0'),
+  autoItemCount: integer("auto_item_count").notNull().default(0),
+  isManualOverride: boolean("is_manual_override").notNull().default(false), // True if user manually set allocatedAmount
   notes: text("notes"), // Optional notes
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => ({
@@ -1069,6 +1074,11 @@ export const insertBudgetAllocationSchema = createInsertSchema(budgetAllocations
   ceremonyId: z.string().nullable().optional(),
   lineItemLabel: z.string().nullable().optional(),
   allocatedAmount: z.string().regex(/^\d+(\.\d{1,2})?$/, "Amount must be a valid decimal"),
+  // Auto-aggregation fields (optional - set by backend service)
+  autoLowAmount: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(),
+  autoHighAmount: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(),
+  autoItemCount: z.number().int().optional(),
+  isManualOverride: z.boolean().optional(),
   notes: z.string().nullable().optional(),
 });
 
