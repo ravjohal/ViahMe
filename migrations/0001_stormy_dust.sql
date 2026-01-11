@@ -1,0 +1,4 @@
+ALTER TABLE "ceremony_budget_categories" ADD COLUMN "ceremony_type_uuid" varchar;--> statement-breakpoint
+ALTER TABLE "ceremony_budget_categories" ADD CONSTRAINT "ceremony_budget_categories_ceremony_type_uuid_ceremony_types_id_fk" FOREIGN KEY ("ceremony_type_uuid") REFERENCES "public"."ceremony_types"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+CREATE INDEX "ceremony_budget_categories_type_uuid_idx" ON "ceremony_budget_categories" USING btree ("ceremony_type_uuid");--> statement-breakpoint
+UPDATE ceremony_budget_categories cbc SET ceremony_type_uuid = ct.id FROM ceremony_types ct WHERE cbc.ceremony_type_id = ct.ceremony_id AND cbc.ceremony_type_uuid IS NULL;

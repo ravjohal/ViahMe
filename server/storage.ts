@@ -1081,7 +1081,8 @@ export interface IStorage {
 
   // Ceremony Budget Categories (junction table: ceremony type + budget bucket)
   // weddingId: NULL = system templates only, undefined = system templates only, string = system + wedding-specific
-  getCeremonyBudgetCategories(ceremonyTypeId: string, weddingId?: string | null): Promise<CeremonyBudgetCategory[]>;
+  getCeremonyBudgetCategories(ceremonyTypeId: string, weddingId?: string | null): Promise<CeremonyBudgetCategory[]>; // @deprecated - use getCeremonyBudgetCategoriesByUuid
+  getCeremonyBudgetCategoriesByUuid(ceremonyTypeUuid: string, weddingId?: string | null): Promise<CeremonyBudgetCategory[]>;
   getCeremonyBudgetCategoriesByBucket(budgetBucketId: string): Promise<CeremonyBudgetCategory[]>;
   getAllCeremonyBudgetCategories(): Promise<CeremonyBudgetCategory[]>;
   getAllCeremonyBudgetCategoriesForWedding(weddingId: string): Promise<CeremonyBudgetCategory[]>;
@@ -4342,6 +4343,7 @@ export class MemStorage implements IStorage {
 
   // Ceremony Budget Categories (stubs - use DBStorage for production)
   async getCeremonyBudgetCategories(ceremonyTypeId: string, weddingId?: string | null): Promise<CeremonyBudgetCategory[]> { return []; }
+  async getCeremonyBudgetCategoriesByUuid(ceremonyTypeUuid: string, weddingId?: string | null): Promise<CeremonyBudgetCategory[]> { return []; }
   async getCeremonyBudgetCategoriesByBucket(budgetBucketId: string): Promise<CeremonyBudgetCategory[]> { return []; }
   async getAllCeremonyBudgetCategories(): Promise<CeremonyBudgetCategory[]> { return []; }
   async getAllCeremonyBudgetCategoriesForWedding(weddingId: string): Promise<CeremonyBudgetCategory[]> { return []; }
@@ -10638,8 +10640,9 @@ export class DBStorage implements IStorage {
 
   // Ceremony Budget Categories (junction: ceremony type + budget bucket)
   // Returns system templates (weddingId = NULL) plus any wedding-specific custom items
+  // @deprecated - use getCeremonyBudgetCategoriesByUuid
   async getCeremonyBudgetCategories(ceremonyTypeId: string, weddingId?: string | null): Promise<CeremonyBudgetCategory[]> {
-    // Build filter: ceremonyTypeId matches AND (weddingId is NULL OR weddingId matches)
+    // Build filter: ceremonyTypeId (slug) matches AND (weddingId is NULL OR weddingId matches)
     const weddingFilter = weddingId
       ? or(
           isNull(ceremonyBudgetCategories.weddingId),
@@ -10651,6 +10654,25 @@ export class DBStorage implements IStorage {
       .from(ceremonyBudgetCategories)
       .where(and(
         eq(ceremonyBudgetCategories.ceremonyTypeId, ceremonyTypeId),
+        eq(ceremonyBudgetCategories.isActive, true),
+        weddingFilter
+      ))
+      .orderBy(sql`${ceremonyBudgetCategories.displayOrder} ASC`);
+  }
+
+  // NEW: UUID-based method for ceremony budget categories lookup
+  async getCeremonyBudgetCategoriesByUuid(ceremonyTypeUuid: string, weddingId?: string | null): Promise<CeremonyBudgetCategory[]> {
+    const weddingFilter = weddingId
+      ? or(
+          isNull(ceremonyBudgetCategories.weddingId),
+          eq(ceremonyBudgetCategories.weddingId, weddingId)
+        )
+      : isNull(ceremonyBudgetCategories.weddingId);
+    
+    return await this.db.select()
+      .from(ceremonyBudgetCategories)
+      .where(and(
+        eq(ceremonyBudgetCategories.ceremonyTypeUuid, ceremonyTypeUuid),
         eq(ceremonyBudgetCategories.isActive, true),
         weddingFilter
       ))
@@ -10697,7 +10719,19 @@ export class DBStorage implements IStorage {
   }
 
   async createCeremonyBudgetCategory(item: InsertCeremonyBudgetCategory): Promise<CeremonyBudgetCategory> {
-    const result = await this.db.insert(ceremonyBudgetCategories).values(item).returning();
+    // Auto-resolve ceremonyTypeId slug to UUID if ceremonyTypeUuid not provided
+    let ceremonyTypeUuid = item.ceremonyTypeUuid;
+    if (!ceremonyTypeUuid && item.ceremonyTypeId) {
+      const ceremonyType = await this.getCeremonyType(item.ceremonyTypeId);
+      if (ceremonyType) {
+        ceremonyTypeUuid = ceremonyType.id;
+      }
+    }
+    
+    const result = await this.db.insert(ceremonyBudgetCategories).values({
+      ...item,
+      ceremonyTypeUuid,
+    }).returning();
     return result[0];
   }
 

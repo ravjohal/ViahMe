@@ -3958,7 +3958,9 @@ export const ceremonyBudgetCategories = pgTable("ceremony_budget_categories", {
   weddingId: varchar("wedding_id"), // References weddings.id (nullable for system templates)
   // Reference to source library item when cloning from master library (nullable)
   sourceCategoryId: varchar("source_category_id"), // References ceremony_budget_categories.id (library item)
-  // Foreign key to ceremony_types.ceremonyId (slug-style ID like 'sikh_anand_karaj')
+  // NEW: UUID FK to ceremony_types.id (primary approach)
+  ceremonyTypeUuid: varchar("ceremony_type_uuid").references(() => ceremonyTypes.id),
+  // DEPRECATED: Legacy slug FK to ceremony_types.ceremonyId - kept for backward compatibility
   ceremonyTypeId: text("ceremony_type_id").notNull(),
   // Foreign key to budget_bucket_categories.id (slug-style ID like 'venue', 'attire')
   budgetBucketId: text("budget_bucket_id").notNull(),
@@ -3976,6 +3978,7 @@ export const ceremonyBudgetCategories = pgTable("ceremony_budget_categories", {
 }, (table) => ({
   weddingIdx: index("ceremony_budget_categories_wedding_idx").on(table.weddingId),
   ceremonyTypeIdx: index("ceremony_budget_categories_type_idx").on(table.ceremonyTypeId),
+  ceremonyTypeUuidIdx: index("ceremony_budget_categories_type_uuid_idx").on(table.ceremonyTypeUuid),
   budgetBucketIdx: index("ceremony_budget_categories_bucket_idx").on(table.budgetBucketId),
   sourceCategoryIdx: index("ceremony_budget_categories_source_idx").on(table.sourceCategoryId),
 }));
@@ -3987,7 +3990,8 @@ export const insertCeremonyBudgetCategorySchema = createInsertSchema(ceremonyBud
 }).extend({
   weddingId: z.string().nullable().optional(), // NULL = system template, value = custom for wedding
   sourceCategoryId: z.string().nullable().optional(), // Reference to source library item when cloning
-  ceremonyTypeId: z.string(), // References ceremony_types.ceremonyId
+  ceremonyTypeUuid: z.string().nullable().optional(), // NEW: UUID FK to ceremony_types.id
+  ceremonyTypeId: z.string(), // DEPRECATED: Legacy slug FK to ceremony_types.ceremonyId
   budgetBucketId: z.enum(BUDGET_BUCKETS), // References budget_bucket_categories.id
   unit: z.enum(['fixed', 'per_hour', 'per_person']),
   lowCost: z.string(),
