@@ -172,10 +172,11 @@ export default function Budget() {
   const { data: budgetCategories = [], isLoading: categoriesLoading } = useBudgetCategories();
   const { getCategoryLabel, categoryById, allCategoryIds } = useBudgetCategoryLookup();
 
-  // Get line items for an event using its type (ceremony slug)
-  const getLineItemsForEvent = (eventType: string | null | undefined): CeremonyBudgetCategoryItem[] | null => {
-    if (!eventType) return null;
-    return ceremonyBreakdownMap[eventType] || null;
+  // Get line items for an event using its ceremonyTypeId (UUID)
+  // The API returns data keyed by ceremonyTypeId (UUID) for direct lookup
+  const getLineItemsForEvent = (ceremonyTypeId: string | null | undefined): CeremonyBudgetCategoryItem[] | null => {
+    if (!ceremonyTypeId) return null;
+    return ceremonyBreakdownMap[ceremonyTypeId] || null;
   };
 
   // Toggle ceremony expansion
@@ -616,11 +617,11 @@ export default function Budget() {
   const estimatedBudgetByBucket = useMemo(() => {
     const bucketEstimates: Record<string, { low: number; high: number; itemCount: number }> = {};
     
-    // Get all events with type (ceremony slug) and calculate their line item contributions
-    const eventsWithCeremony = events.filter(e => e.type);
+    // Get all events with ceremonyTypeId and calculate their line item contributions
+    const eventsWithCeremony = events.filter(e => e.ceremonyTypeId);
     
     for (const event of eventsWithCeremony) {
-      const lineItems = ceremonyBreakdownMap[event.type];
+      const lineItems = ceremonyBreakdownMap[event.ceremonyTypeId!];
       if (!lineItems) continue;
       
       const guestCount = event.guestCount || 100;
@@ -669,10 +670,10 @@ export default function Budget() {
   const lineItemBreakdownByBucket = useMemo(() => {
     const breakdown: Record<string, LineItemBreakdown[]> = {};
     
-    const eventsWithCeremony = events.filter(e => e.type);
+    const eventsWithCeremony = events.filter(e => e.ceremonyTypeId);
     
     for (const event of eventsWithCeremony) {
-      const lineItems = ceremonyBreakdownMap[event.type];
+      const lineItems = ceremonyBreakdownMap[event.ceremonyTypeId!];
       if (!lineItems) continue;
       
       for (const item of lineItems) {

@@ -197,13 +197,7 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
       // Combine system items + custom items
       const combinedItems = [...allItems, ...customItems];
       
-      // Build a map of ceremonyTypeId (UUID) -> ceremonyId (slug) for lookup
-      const allCeremonyTypes = await storage.getAllCeremonyTypes();
-      const uuidToSlugMap: Record<string, string> = {};
-      for (const ct of allCeremonyTypes) {
-        uuidToSlugMap[ct.id] = ct.ceremonyId;
-      }
-      
+      // Key line items by ceremonyTypeId (UUID) for direct lookup using event.ceremonyTypeId
       const grouped: Record<string, Array<{
         id: string;
         category: string;
@@ -219,15 +213,15 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
       }>> = {};
       
       for (const item of combinedItems) {
-        // Key by ceremonyId (slug) for client-side lookup compatibility
-        const slug = uuidToSlugMap[item.ceremonyTypeId];
-        if (!slug) continue; // Skip items without valid ceremony type
+        // Key by ceremonyTypeId (UUID) for direct lookup using event.ceremonyTypeId
+        const ceremonyTypeId = item.ceremonyTypeId;
+        if (!ceremonyTypeId) continue; // Skip items without valid ceremony type
         
-        if (!grouped[slug]) {
-          grouped[slug] = [];
+        if (!grouped[ceremonyTypeId]) {
+          grouped[ceremonyTypeId] = [];
         }
         const bucketId = item.budgetBucketId ?? 'other';
-        grouped[slug].push({
+        grouped[ceremonyTypeId].push({
           id: item.id,
           category: item.itemName,
           lowCost: parseFloat(item.lowCost),
