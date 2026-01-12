@@ -25,7 +25,6 @@ import {
   UserCheck,
   CreditCard
 } from "lucide-react";
-import { SiWhatsapp } from "react-icons/si";
 import logoUrl from "@assets/viah-logo_1763669612969.png";
 
 const FEATURES = [
@@ -409,58 +408,64 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* WhatsApp Integration */}
-      <section className="py-12 sm:py-20 lg:py-32 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-green-950/20 dark:via-emerald-950/20 dark:to-teal-950/20">
+      {/* Guest-Friendly Access */}
+      <section className="py-12 sm:py-20 lg:py-32 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-950/20 dark:via-indigo-950/20 dark:to-purple-950/20">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="max-w-3xl mx-auto text-center mb-10 sm:mb-16">
-            <Badge variant="outline" className="mb-4 text-xs sm:text-sm px-3 py-1 border-green-300 dark:border-green-800 bg-white/50 dark:bg-green-950/50">
-              <SiWhatsapp className="w-3 h-3 mr-1 text-green-600" />
-              WhatsApp-Native Communication
+            <Badge variant="outline" className="mb-4 text-xs sm:text-sm px-3 py-1 border-blue-300 dark:border-blue-800 bg-white/50 dark:bg-blue-950/50">
+              <Link2 className="w-3 h-3 mr-1 text-blue-600" />
+              No Login Required
             </Badge>
             <h2 
-              className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent px-2"
+              className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent px-2"
               style={{ fontFamily: 'Cormorant Garamond, serif' }}
             >
-              Because 99% of Desi Coordination Happens on WhatsApp
+              Guests Access Everything with One Link
             </h2>
             <p className="text-base sm:text-xl text-muted-foreground px-2">
-              Not another app your parents won't use. We meet families where they already are.
+              No apps to download, no accounts to create. Share a simple link and guests see everything they need.
             </p>
           </div>
 
-          <div className="max-w-md mx-auto">
-            <Card className="p-0 overflow-hidden border-2 border-green-200 dark:border-green-800">
-              <div className="bg-green-600 text-white p-3 flex items-center gap-2">
-                <SiWhatsapp className="w-5 h-5" />
-                <span className="font-medium">WhatsApp</span>
-              </div>
-              <div className="p-4 bg-[#e5ddd5] dark:bg-green-950/30 space-y-3">
-                <div className="bg-white dark:bg-green-900/50 rounded-lg p-3 max-w-[85%] shadow-sm">
-                  <p className="text-sm">
-                    Hi Aunty! We haven't received your RSVP for the <strong>Sangeet</strong> yet. 
-                    Tap here to respond: <span className="text-green-600 underline">viah.me/rsvp/abc123</span>
-                  </p>
-                  <div className="text-xs text-muted-foreground mt-1 text-right">10:30 AM</div>
+          <div className="max-w-2xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card className="p-6 border-2 border-blue-200 dark:border-blue-800">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900">
+                    <Link2 className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <h3 className="font-semibold text-lg">Magic Links</h3>
                 </div>
-                <div className="bg-white dark:bg-green-900/50 rounded-lg p-3 max-w-[85%] shadow-sm ml-auto">
-                  <p className="text-sm">
-                    Beta, we are coming! All 4 of us. Can't wait to dance!
-                  </p>
-                  <div className="text-xs text-muted-foreground mt-1 text-right">10:32 AM</div>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Each guest gets a personalized link. One tap opens their complete wedding itinerary - no passwords needed.
+                </p>
+                <div className="bg-muted/50 rounded-lg p-3 text-sm font-mono text-muted-foreground">
+                  viah.me/guest/sharma-family
                 </div>
-              </div>
-              <div className="p-4 bg-white dark:bg-green-950/50 border-t">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Send className="w-4 h-4 text-green-600" />
-                  Pre-filled RSVP nudges in one tap
+              </Card>
+
+              <Card className="p-6 border-2 border-indigo-200 dark:border-indigo-800">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 rounded-full bg-indigo-100 dark:bg-indigo-900">
+                    <Calendar className="w-5 h-5 text-indigo-600" />
+                  </div>
+                  <h3 className="font-semibold text-lg">Downloadable Itineraries</h3>
                 </div>
-              </div>
-            </Card>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Guests can download complete event schedules, venue details, and directions - works offline too.
+                </p>
+                <div className="flex gap-2">
+                  <Badge variant="secondary" className="text-xs">PDF</Badge>
+                  <Badge variant="secondary" className="text-xs">Calendar</Badge>
+                  <Badge variant="secondary" className="text-xs">Maps</Badge>
+                </div>
+              </Card>
+            </div>
           </div>
 
           <div className="mt-8 text-center">
             <p className="text-sm text-muted-foreground">
-              Transform from a "Database Tool" into a <span className="font-semibold text-green-600">Communication Hub</span> that parents can actually use.
+              Perfect for aunties and uncles who just need the <span className="font-semibold text-blue-600">where, when, and what to wear</span>.
             </p>
           </div>
         </div>
