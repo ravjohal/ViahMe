@@ -852,7 +852,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                         <div className="mt-2 p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800">
                           <p className="text-sm text-blue-700 dark:text-blue-300 flex items-center gap-2">
                             <Info className="w-4 h-4 shrink-0" />
-                            These events are for your side of the family. Your partner can add their own events after you invite them.
+                            These events are for your side of the family. You can add your partner's events too, or they can add their own after you invite them.
                           </p>
                         </div>
                       </div>
