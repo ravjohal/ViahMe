@@ -12,11 +12,10 @@ import { Progress } from "@/components/ui/progress";
 import { Calendar, MapPin, Users, DollarSign, Crown, Gift, Lightbulb, TrendingUp, Info } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TRADITION_HIERARCHY, getSubTraditionsForMain, getAllSubTraditions, getMainTraditionByValue } from "@/lib/tradition-hierarchy";
-import { getCeremoniesForTradition, getCeremonyById, getDefaultCeremoniesForTradition, type CeremonyDefinition } from "@shared/ceremonies";
-import { useCeremonyTypesByTradition, useRegionalPricing, useAllCeremonyLineItems, calculateCeremonyTotalFromBreakdown } from "@/hooks/use-ceremony-types";
+import { useCeremonyTypesByTradition, useRegionalPricing, useAllCeremonyLineItems, calculateCeremonyTotalFromBreakdown, type CeremonyType } from "@/hooks/use-ceremony-types";
 
 const customEventSchema = z.object({
-  ceremonyId: z.string().optional(),
+  ceremonyTypeId: z.string().optional(), // UUID from ceremony_types table
   customName: z.string().optional(),
   guestCount: z.string().optional(),
 });
@@ -253,21 +252,8 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
     form.setValue("tradition", value as any);
     form.setValue("subTradition", null);
     form.setValue("subTraditions", []);
-    // Reset ceremonies to defaults for the new tradition only if events are empty or all default
-    const currentEvents = form.getValues("customEvents") || [];
-    const hasUserEdits = currentEvents.some(e => 
-      (e.guestCount && e.guestCount !== "") || 
-      (e.ceremonyId === "custom" && e.customName)
-    );
-    if (!hasUserEdits) {
-      const defaultCeremonyIds = getDefaultCeremoniesForTradition(value);
-      const defaultEvents = defaultCeremonyIds.map(id => ({
-        ceremonyId: id,
-        customName: "",
-        guestCount: "",
-      }));
-      form.setValue("customEvents", defaultEvents);
-    }
+    // Reset ceremonies when tradition changes - will be populated from ceremonyTypes once loaded
+    form.setValue("customEvents", []);
   };
 
   const handleSubTraditionMultiSelect = (subValue: string, checked: boolean) => {
@@ -282,47 +268,45 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
   // Custom event management helpers
   const customEvents = form.watch("customEvents") || [];
   const autoCreateCeremonies = form.watch("autoCreateCeremonies") ?? true;
+
+  // Fetch ceremony types from database - the single source of truth (UUID-keyed)
+  const { data: ceremonyTypes } = useCeremonyTypesByTradition(selectedMainTradition);
+  const { data: regionalPricingData } = useRegionalPricing();
+  const { data: lineItemsMap = {} } = useAllCeremonyLineItems();
   
-  // Repopulate default ceremonies when autoCreateCeremonies is re-enabled
+  // Available ceremonies for the selected tradition - directly from database
+  const availableCeremonies = useMemo(() => {
+    return ceremonyTypes || [];
+  }, [ceremonyTypes]);
+  
+  // Build UUID lookup map for quick ceremony type access
+  const ceremonyTypeById = useMemo(() => {
+    const map: Record<string, CeremonyType> = {};
+    if (ceremonyTypes) {
+      for (const ct of ceremonyTypes) {
+        map[ct.id] = ct;
+      }
+    }
+    return map;
+  }, [ceremonyTypes]);
+  
+  // Populate default ceremonies when ceremonyTypes loads or autoCreateCeremonies is enabled
   useEffect(() => {
-    if (autoCreateCeremonies) {
+    if (autoCreateCeremonies && ceremonyTypes && ceremonyTypes.length > 0) {
       const currentEvents = form.getValues("customEvents") || [];
       if (currentEvents.length === 0) {
-        const tradition = form.getValues("tradition") || "sikh";
-        const defaultCeremonyIds = getDefaultCeremoniesForTradition(tradition);
-        const defaultEvents = defaultCeremonyIds.map(id => ({
-          ceremonyId: id,
+        // Use first 5 ceremonies sorted by displayOrder as defaults
+        const sortedCeremonies = [...ceremonyTypes].sort((a, b) => a.displayOrder - b.displayOrder);
+        const defaultCeremonies = sortedCeremonies.slice(0, 5);
+        const defaultEvents = defaultCeremonies.map(ct => ({
+          ceremonyTypeId: ct.id, // Use UUID directly
           customName: "",
           guestCount: "",
         }));
         form.setValue("customEvents", defaultEvents);
       }
     }
-  }, [autoCreateCeremonies]);
-
-  // Get ceremonies available for the selected tradition
-  const availableCeremonies = useMemo(() => {
-    const tradition = form.watch("tradition") || "general";
-    return getCeremoniesForTradition(tradition);
-  }, [selectedMainTradition]);
-
-  // Fetch ceremony templates from database for budget estimation
-  const { data: ceremonyTypes } = useCeremonyTypesByTradition(selectedMainTradition);
-  const { data: regionalPricingData } = useRegionalPricing();
-  const { data: lineItemsMap = {} } = useAllCeremonyLineItems();
-  
-  // Build slug→UUID map from ceremonyTypes for line item lookups
-  // The lineItemsMap is keyed by UUID, but onboarding uses ceremony slugs
-  const slugToUuidMap = useMemo(() => {
-    const map: Record<string, string> = {};
-    if (ceremonyTypes) {
-      for (const ct of ceremonyTypes) {
-        // ceremonyId is the slug (e.g., "sikh_roka"), id is the UUID
-        map[ct.ceremonyId] = ct.id;
-      }
-    }
-    return map;
-  }, [ceremonyTypes]);
+  }, [autoCreateCeremonies, ceremonyTypes]);
   
   // Get regional multiplier based on selected location
   const regionalMultiplier = useMemo((): number => {
@@ -345,29 +329,13 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
   // Get user's role (bride or groom) for messaging
   const userRole = form.watch("role");
 
-  // Initialize default ceremonies on mount only
-  useEffect(() => {
-    const currentEvents = form.getValues("customEvents") || [];
-    // Only set defaults if no events exist
-    if (currentEvents.length === 0) {
-      const tradition = form.getValues("tradition") || "sikh";
-      const defaultCeremonyIds = getDefaultCeremoniesForTradition(tradition);
-      const defaultEvents = defaultCeremonyIds.map(id => ({
-        ceremonyId: id,
-        customName: "",
-        guestCount: "",
-      }));
-      form.setValue("customEvents", defaultEvents);
-    }
-  }, []); // Run only on mount
-
   const handleAddEvent = () => {
     const current = form.getValues("customEvents") || [];
-    // Find an unselected ceremony from the catalog to suggest
-    const selectedIds = new Set(current.map(e => e.ceremonyId));
+    // Find an unselected ceremony from the available ceremonies to suggest
+    const selectedIds = new Set(current.map(e => e.ceremonyTypeId));
     const unselected = availableCeremonies.find(c => !selectedIds.has(c.id));
-    const defaultCeremonyId = unselected?.id || "";
-    form.setValue("customEvents", [...current, { ceremonyId: defaultCeremonyId, customName: "", guestCount: "" }]);
+    const defaultCeremonyTypeId = unselected?.id || "";
+    form.setValue("customEvents", [...current, { ceremonyTypeId: defaultCeremonyTypeId, customName: "", guestCount: "" }]);
   };
 
   const handleRemoveEvent = (index: number) => {
@@ -377,13 +345,13 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
     }
   };
 
-  const handleEventChange = (index: number, field: "ceremonyId" | "customName" | "guestCount", value: string) => {
+  const handleEventChange = (index: number, field: "ceremonyTypeId" | "customName" | "guestCount", value: string) => {
     const current = form.getValues("customEvents") || [];
     const updated = current.map((event, i) => {
       if (i === index) {
-        if (field === "ceremonyId") {
+        if (field === "ceremonyTypeId") {
           // If selecting a ceremony from dropdown, clear customName. If selecting "custom", keep customName.
-          return { ...event, ceremonyId: value, customName: value === "custom" ? event.customName : "" };
+          return { ...event, ceremonyTypeId: value, customName: value === "custom" ? event.customName : "" };
         }
         return { ...event, [field]: value };
       }
@@ -876,8 +844,8 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                             <div className="flex-1 w-full space-y-2">
                               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                                 <Select
-                                  value={event.ceremonyId || ""}
-                                  onValueChange={(value) => handleEventChange(index, "ceremonyId", value)}
+                                  value={event.ceremonyTypeId || ""}
+                                  onValueChange={(value) => handleEventChange(index, "ceremonyTypeId", value)}
                                 >
                                   <SelectTrigger className="h-10 w-full sm:flex-1" data-testid={`select-ceremony-${index}`}>
                                     <SelectValue placeholder="Select ceremony type" />
@@ -913,7 +881,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                                   className="h-10 w-full sm:w-32"
                                 />
                               </div>
-                              {event.ceremonyId === "custom" && (
+                              {event.ceremonyTypeId === "custom" && (
                                 <Input
                                   type="text"
                                   placeholder="Enter custom event name"
@@ -1007,50 +975,35 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                   <div className="space-y-6">
                     {/* Overall Budget Estimate - Uses ceremony templates from database */}
                     {(() => {
-                      // Include all events with a ceremonyId selected (excluding empty/unselected ones)
+                      // Include all events with a ceremonyTypeId selected (excluding empty/unselected ones)
                       const validEvents = customEvents.filter(e => 
-                        e.ceremonyId && e.ceremonyId !== ""
+                        e.ceremonyTypeId && e.ceremonyTypeId !== ""
                       );
                       
                       let totalLow = 0;
                       let totalHigh = 0;
                       let ceremonyCount = 0;
 
-                      // Calculate totals from database ceremony templates
+                      // Calculate totals from database ceremony types (UUID-only architecture)
                       validEvents.forEach(event => {
-                        if (event.ceremonyId && event.ceremonyId !== "custom") {
-                          // Try to find template in database first
-                          const template = ceremonyTypes?.find(t => t.ceremonyId === event.ceremonyId);
+                        if (event.ceremonyTypeId && event.ceremonyTypeId !== "custom") {
+                          // Look up ceremony type by UUID directly from database
+                          const template = ceremonyTypeById[event.ceremonyTypeId];
                           
                           if (template) {
                             // Use database template with regional multiplier
-                            const ceremony = getCeremonyById(event.ceremonyId);
-                            const defaultGuests = Number(ceremony?.defaultGuests) || 150;
+                            const defaultGuests = Number(template.defaultGuests) || 150;
                             const parsedGuests = Number(event.guestCount) || 0;
                             const guestCount = parsedGuests > 0 ? parsedGuests : defaultGuests;
                             
-                            // Convert ceremony slug to UUID for line item lookup (UUID-only architecture)
-                            const ceremonyTypeUuid = slugToUuidMap[event.ceremonyId];
-                            const breakdown = ceremonyTypeUuid ? (lineItemsMap[ceremonyTypeUuid] || []) : [];
+                            // Look up line items directly by UUID
+                            const breakdown = lineItemsMap[event.ceremonyTypeId] || [];
                             const costs = calculateCeremonyTotalFromBreakdown(breakdown, guestCount, regionalMultiplier);
                             totalLow += costs.low;
                             totalHigh += costs.high;
                             ceremonyCount++;
-                          } else {
-                            // Fallback to shared ceremonies catalog if template not in database
-                            const ceremony = getCeremonyById(event.ceremonyId);
-                            if (ceremony) {
-                              const defaultGuests = Number(ceremony.defaultGuests) || 150;
-                              const parsedGuests = Number(event.guestCount) || 0;
-                              const guestCount = parsedGuests > 0 ? parsedGuests : defaultGuests;
-                              const lowCost = Math.round(Number(ceremony.costPerGuestLow) * guestCount * regionalMultiplier);
-                              const highCost = Math.round(Number(ceremony.costPerGuestHigh) * guestCount * regionalMultiplier);
-                              totalLow += lowCost;
-                              totalHigh += highCost;
-                              ceremonyCount++;
-                            }
                           }
-                        } else if (event.ceremonyId === "custom" && event.customName) {
+                        } else if (event.ceremonyTypeId === "custom" && event.customName) {
                           // Custom ceremony - use default estimates
                           const parsedGuests = Number(event.guestCount) || 0;
                           const guestCount = parsedGuests > 0 ? parsedGuests : 150;

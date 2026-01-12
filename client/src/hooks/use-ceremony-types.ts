@@ -2,6 +2,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { CeremonyType, RegionalPricing, CeremonyBudgetCategoryItem, CeremonyBudgetCategory } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 
+// Re-export CeremonyType for consumers
+export type { CeremonyType };
+
 type CeremonyTypeItem = CeremonyBudgetCategory;
 
 export function useCeremonyTypes() {
