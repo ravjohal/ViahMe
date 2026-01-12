@@ -269,8 +269,12 @@ async function seedCeremonyTemplates() {
   for (const template of sikhCeremonyTemplates) {
     const costPerGuest = calculateCostPerGuest(template.costBreakdown, template.defaultGuests);
     
+    // Extract costBreakdown for ceremony_budget_categories seeding (separate script)
+    // Don't include costBreakdown in ceremony_types table as that column is removed
+    const { costBreakdown, ...templateWithoutBreakdown } = template;
+    
     const fullTemplate = {
-      ...template,
+      ...templateWithoutBreakdown,
       costPerGuestLow: costPerGuest.low,
       costPerGuestHigh: costPerGuest.high,
     };

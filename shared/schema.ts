@@ -3968,7 +3968,6 @@ export const ceremonyTypes = pgTable("ceremony_types", {
   costPerGuestLow: decimal("cost_per_guest_low", { precision: 10, scale: 2 }).notNull(),
   costPerGuestHigh: decimal("cost_per_guest_high", { precision: 10, scale: 2 }).notNull(),
   defaultGuests: integer("default_guests").notNull().default(100),
-  costBreakdown: jsonb("cost_breakdown"), // DEPRECATED: Use ceremony_budget_categories table instead. Kept for backward compatibility.
   isActive: boolean("is_active").notNull().default(true),
   displayOrder: integer("display_order").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -3986,17 +3985,6 @@ export const insertCeremonyTypeSchema = createInsertSchema(ceremonyTypes).omit({
   tradition: z.string(), // Text field for tradition
   costPerGuestLow: z.string(),
   costPerGuestHigh: z.string(),
-  // DEPRECATED: Use ceremony_budget_categories table instead
-  costBreakdown: z.array(z.object({
-    category: z.string(),
-    lowCost: z.number(),
-    highCost: z.number(),
-    unit: z.enum(['fixed', 'per_hour', 'per_person']),
-    hoursLow: z.number().optional(),
-    hoursHigh: z.number().optional(),
-    notes: z.string().optional(),
-    budgetBucket: z.enum(BUDGET_BUCKETS).optional(),
-  })).optional().nullable(),
 });
 
 export type InsertCeremonyType = z.infer<typeof insertCeremonyTypeSchema>;

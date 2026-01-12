@@ -17,7 +17,7 @@ Key architectural decisions and features include:
 - **Comprehensive Data Model**: Designed to support the intricate nature of multi-day South Asian weddings with database-driven wedding traditions and sub-traditions for flexible management.
 - **Cultural Templates**: Pre-populated event timelines, task templates, and normalized ceremony cost estimates for 9 wedding traditions, supporting regional pricing variations.
 - **Ceremony Types System**: Database-driven ceremony definitions (table: `ceremony_types`) with cost breakdowns via `ceremony_budget_categories` junction table. TypeScript layer uses canonical naming: `ceremonyTypes` table export, `CeremonyType` type, `ceremonyBudgetCategories` table export, `CeremonyBudgetCategory` type. Single API endpoint `/api/ceremony-types`.
-  - **DEPRECATED**: The `costBreakdown` JSON column in `ceremony_types` table is deprecated.
+  - **REMOVED** (January 2026): The `costBreakdown` JSON column in `ceremony_types` table has been removed. All cost line items now live in `ceremony_budget_categories` table.
 - **UUID-Based Foreign Key Architecture**: UUID-first approach with consistent `xxx_id` naming convention. **Full migration complete** (January 2026):
   - Core tables (`wedding_traditions`, `wedding_sub_traditions`, `budget_bucket_categories`, `ceremony_types`) have both UUID `id` and `slug` fields
   - **All UUID FK columns are now NOT NULL** with standard `xxx_id` naming:
