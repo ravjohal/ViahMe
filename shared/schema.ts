@@ -495,7 +495,7 @@ export const weddings = pgTable("weddings", {
   budgetContribution: text("budget_contribution"), // 'couple_only' | 'both_families' | 'mix'
   partnerNewToTraditions: boolean("partner_new_to_traditions").default(false), // Culture Bridge feature
   // Budget tracking mode (set during onboarding)
-  budgetTrackingMode: text("budget_tracking_mode").notNull().default('category'), // 'category' | 'ceremony' - primary tracking mode
+  budgetTrackingMode: text("budget_tracking_mode").notNull().default('ceremony'), // 'category' | 'ceremony' - primary tracking mode
   // Legacy budget granularity preferences (kept for backward compatibility)
   showBudgetOverview: boolean("show_budget_overview").default(true), // High-level total budget
   showBucketBudgets: boolean("show_bucket_budgets").default(true), // Budget by category (venue, catering, etc.)
