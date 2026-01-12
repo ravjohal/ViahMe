@@ -1403,7 +1403,7 @@ export default function Budget() {
               </div>
               </>
               )}
-              {totalByCategories > 0 && (
+              {wedding.budgetTrackingMode !== "ceremony" && totalByCategories > 0 && (
                 <>
                   <div className="h-12 w-px bg-border hidden sm:block" />
                   <div>
@@ -1437,8 +1437,8 @@ export default function Budget() {
                   ${Math.abs(unallocatedBudget).toLocaleString()} over target
                 </Badge>
               )}
-              {/* Category/Ceremony mismatch badge - only show when showCeremonyBudgets is enabled */}
-              {wedding?.showCeremonyBudgets !== false && totalByCategories > 0 && totalByCeremonies > 0 && Math.abs(totalByCategories - totalByCeremonies) > 100 && (
+              {/* Category/Ceremony mismatch badge - only show when tracking by category and showCeremonyBudgets is enabled */}
+              {wedding.budgetTrackingMode !== "ceremony" && wedding?.showCeremonyBudgets !== false && totalByCategories > 0 && totalByCeremonies > 0 && Math.abs(totalByCategories - totalByCeremonies) > 100 && (
                 <Badge variant="outline" className="px-3 py-1.5 text-sm font-mono bg-orange-50 dark:bg-orange-900/20 border-orange-300 text-orange-700 dark:text-orange-300" data-testid="badge-allocation-mismatch">
                   <AlertTriangle className="w-3 h-3 mr-1" />
                   {totalByCategories > totalByCeremonies 

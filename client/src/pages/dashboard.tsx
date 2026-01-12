@@ -723,6 +723,7 @@ export default function Dashboard() {
                     totalByCeremonies={totalByCeremonies}
                     totalByCategories={totalByCategories}
                     showCeremonyBudgets={wedding.showCeremonyBudgets !== false}
+                    budgetTrackingMode={(wedding.budgetTrackingMode as "category" | "ceremony") || "ceremony"}
                     onNavigate={() => setLocation("/budget")}
                   />
                 </>

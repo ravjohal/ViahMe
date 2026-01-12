@@ -10,6 +10,7 @@ interface BudgetDashboardProps {
   totalByCeremonies?: number;
   totalByCategories?: number;
   showCeremonyBudgets?: boolean;
+  budgetTrackingMode?: "category" | "ceremony";
   onNavigate?: () => void;
 }
 
@@ -19,6 +20,7 @@ export function BudgetDashboard({
   totalByCeremonies = 0,
   totalByCategories = 0,
   showCeremonyBudgets = true,
+  budgetTrackingMode = "ceremony",
   onNavigate 
 }: BudgetDashboardProps) {
   const total = parseFloat(totalBudget || "0");
@@ -61,7 +63,7 @@ export function BudgetDashboard({
             </>
           )}
           
-          {totalByCategories > 0 && (
+          {budgetTrackingMode !== "ceremony" && totalByCategories > 0 && (
             <>
               <div className="h-10 w-px bg-border hidden sm:block" />
               <div>
@@ -96,7 +98,7 @@ export function BudgetDashboard({
               ${Math.abs(unallocatedBudget).toLocaleString()} over target
             </Badge>
           )}
-          {showCeremonyBudgets && totalByCategories > 0 && totalByCeremonies > 0 && Math.abs(totalByCategories - totalByCeremonies) > 100 && (
+          {budgetTrackingMode !== "ceremony" && showCeremonyBudgets && totalByCategories > 0 && totalByCeremonies > 0 && Math.abs(totalByCategories - totalByCeremonies) > 100 && (
             <Badge variant="outline" className="px-2 py-1 text-xs font-mono bg-orange-50 dark:bg-orange-900/20 border-orange-300 text-orange-700 dark:text-orange-300">
               <AlertTriangle className="w-3 h-3 mr-1" />
               Mismatch
