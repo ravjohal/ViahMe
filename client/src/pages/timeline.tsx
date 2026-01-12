@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation, Link } from "wouter";
 import type { Event, InsertEvent, EventCostItem, Task } from "@shared/schema";
+import { formatTimeToAMPM } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Calendar, MapPin, Users, Clock, Pencil, Trash2, DollarSign, X, Tag, HelpCircle, ChevronDown, ChevronRight, Sun, Sunset, Moon, Sunrise, CheckCircle2, CircleDot, GripVertical, CalendarPlus } from "lucide-react";
@@ -271,7 +272,7 @@ function DraggableEventNode({ event, isLast, onView, onEdit, onDelete, getEventS
                 {event.time && (
                   <div className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
-                    <span>{event.time}</span>
+                    <span>{formatTimeToAMPM(event.time)}</span>
                   </div>
                 )}
                 {event.location && (

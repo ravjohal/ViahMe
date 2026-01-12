@@ -4,6 +4,7 @@ import { TimelineView } from "@/components/timeline-view";
 import { BudgetDashboard } from "@/components/budget-dashboard";
 import { WelcomeTour } from "@/components/welcome-tour";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatTimeToAMPM } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -785,7 +786,7 @@ export default function Dashboard() {
                             {event.time && (
                               <span className="flex items-center gap-1">
                                 <Clock className="w-3.5 h-3.5" />
-                                {event.time}
+                                {formatTimeToAMPM(event.time)}
                               </span>
                             )}
                             {event.guestCount && event.guestCount > 0 && (
