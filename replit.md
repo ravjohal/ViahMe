@@ -35,6 +35,12 @@ Key architectural decisions and features include:
     - `expenses.parentCategory` (slug) - use `bucketCategoryId`
     - `budget_allocations.bucket` (slug) - use `bucketCategoryId`
   - API routes resolve slugs to UUIDs internally: `/api/ceremony-types/tradition/:tradition` and `/api/ceremony-types/:ceremonyId/line-items` use UUID-based storage
+  - **Onboarding UUID Migration** (January 2026): Onboarding questionnaire now uses ceremony types directly from database with UUIDs:
+    - Uses `useCeremonyTypesByTradition()` hook instead of CEREMONY_CATALOG
+    - Form data uses `ceremonyTypeId` (UUID) instead of `ceremonyId` (slug)
+    - Line items lookup via `/api/ceremony-types/all/line-items` returns UUID-keyed data
+    - Budget estimation uses UUID-keyed `lineItemsMap` for cost calculations
+    - Custom ceremonies use `ceremonyTypeId: "custom"` with `customName` field
 - **Vendor Specialization**: Support for 32 distinct vendor categories, including culturally-specific services.
 - **Budget Intelligence System**: Employs a Unified Single Ledger Model with a three-tier budget hierarchy, smart budget recommendations, dual-view aggregation, and a refined pricing engine using three-factor multipliers for precise estimates.
   - **Three-Layer Budget Architecture**:
