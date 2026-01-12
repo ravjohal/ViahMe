@@ -197,7 +197,16 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
       // Combine system items + custom items
       const combinedItems = [...allItems, ...customItems];
       
-      // Key line items by ceremonyTypeId (UUID) for direct lookup using event.ceremonyTypeId
+      // Build UUID-to-slug lookup map for dual-keying
+      const allCeremonyTypes = await storage.getAllCeremonyTypes();
+      const uuidToSlugMap: Record<string, string> = {};
+      for (const ct of allCeremonyTypes) {
+        uuidToSlugMap[ct.id] = ct.ceremonyId;
+      }
+      
+      // Key line items by BOTH ceremonyTypeId (UUID) AND ceremonyId (slug)
+      // UUID keys: for budget page which uses event.ceremonyTypeId
+      // Slug keys: for onboarding which uses ceremony slugs like "sikh_roka"
       const grouped: Record<string, Array<{
         id: string;
         category: string;
@@ -213,15 +222,11 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
       }>> = {};
       
       for (const item of combinedItems) {
-        // Key by ceremonyTypeId (UUID) for direct lookup using event.ceremonyTypeId
         const ceremonyTypeId = item.ceremonyTypeId;
         if (!ceremonyTypeId) continue; // Skip items without valid ceremony type
         
-        if (!grouped[ceremonyTypeId]) {
-          grouped[ceremonyTypeId] = [];
-        }
         const bucketId = item.budgetBucketId ?? 'other';
-        grouped[ceremonyTypeId].push({
+        const lineItem = {
           id: item.id,
           category: item.itemName,
           lowCost: parseFloat(item.lowCost),
@@ -233,7 +238,22 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
           budgetBucket: bucketId,
           budgetBucketId: bucketId,
           isCustom: !!item.weddingId,
-        });
+        };
+        
+        // Key by UUID for budget page
+        if (!grouped[ceremonyTypeId]) {
+          grouped[ceremonyTypeId] = [];
+        }
+        grouped[ceremonyTypeId].push(lineItem);
+        
+        // Also key by slug for onboarding (which doesn't have UUIDs yet)
+        const slug = uuidToSlugMap[ceremonyTypeId];
+        if (slug && slug !== ceremonyTypeId) {
+          if (!grouped[slug]) {
+            grouped[slug] = [];
+          }
+          grouped[slug].push(lineItem);
+        }
       }
       
       res.json(grouped);
