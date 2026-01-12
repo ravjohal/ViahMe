@@ -86,7 +86,7 @@ export default function Settings() {
 
   const { data: weddings } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
-    enabled: !!user && user.role === "couple",
+    enabled: !!user && (user.role === "couple" || user.role === "admin"),
   });
 
   const wedding = weddings?.[0];
@@ -323,8 +323,8 @@ export default function Settings() {
             </div>
           </Card>
 
-          {/* Wedding Details - Only for couples */}
-          {user.role === "couple" && wedding && (
+          {/* Wedding Details - For couples and admins */}
+          {(user.role === "couple" || user.role === "admin") && wedding && (
             <Card className="p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="p-2 rounded-lg bg-pink-100">
@@ -515,8 +515,8 @@ export default function Settings() {
             </Card>
           )}
 
-          {/* Budget Settings - Only for couples */}
-          {user.role === "couple" && wedding && (
+          {/* Budget Settings - For couples and admins */}
+          {(user.role === "couple" || user.role === "admin") && wedding && (
             <Card className="p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="p-2 rounded-lg bg-emerald-100">
