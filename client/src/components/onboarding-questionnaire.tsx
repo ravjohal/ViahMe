@@ -728,28 +728,36 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                 )}
 
                 {currentStep === 2 && (
-                  <FormField
-                    control={form.control}
-                    name="role"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-lg font-semibold tracking-wide" style={{ fontFamily: 'Cormorant Garamond, serif' }}>Your Role</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger data-testid="select-role" className="h-12">
-                              <SelectValue placeholder="Select your role..." />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="bride" data-testid="option-bride">Bride</SelectItem>
-                            <SelectItem value="groom" data-testid="option-groom">Groom</SelectItem>
-                            <SelectItem value="planner" data-testid="option-planner">Wedding Planner</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="role"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-lg font-semibold tracking-wide" style={{ fontFamily: 'Cormorant Garamond, serif' }}>Your Role</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger data-testid="select-role" className="h-12">
+                                <SelectValue placeholder="Select your role..." />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="bride" data-testid="option-bride">Bride</SelectItem>
+                              <SelectItem value="groom" data-testid="option-groom">Groom</SelectItem>
+                              <SelectItem value="planner" data-testid="option-planner">Wedding Planner</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="p-3 rounded-lg bg-muted/50 border border-dashed">
+                      <p className="text-sm text-muted-foreground flex items-center gap-2">
+                        <Users className="w-4 h-4 text-primary" />
+                        Your partner can be invited to collaborate after you set up the wedding.
+                      </p>
+                    </div>
+                  </div>
                 )}
 
                 {currentStep === 3 && (
@@ -836,8 +844,14 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                           Your Wedding Events
                         </h3>
                         <p className="text-sm text-muted-foreground">
-                          Add the ceremonies and events you're planning. Guest counts are optional — we'll use typical defaults if left blank.
+                          We've pre-populated typical ceremonies for your tradition. Feel free to add, remove, or customize. Guest counts are optional — we'll use typical defaults if left blank.
                         </p>
+                        <div className="mt-2 p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800">
+                          <p className="text-sm text-blue-700 dark:text-blue-300 flex items-center gap-2">
+                            <Info className="w-4 h-4 shrink-0" />
+                            These events are for your side of the family. Your partner can add their own events after you invite them.
+                          </p>
+                        </div>
                       </div>
 
                       <div className="space-y-3">
