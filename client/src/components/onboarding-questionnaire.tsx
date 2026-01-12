@@ -311,6 +311,19 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
   const { data: regionalPricingData } = useRegionalPricing();
   const { data: lineItemsMap = {} } = useAllCeremonyLineItems();
   
+  // Build slug→UUID map from ceremonyTypes for line item lookups
+  // The lineItemsMap is keyed by UUID, but onboarding uses ceremony slugs
+  const slugToUuidMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    if (ceremonyTypes) {
+      for (const ct of ceremonyTypes) {
+        // ceremonyId is the slug (e.g., "sikh_roka"), id is the UUID
+        map[ct.ceremonyId] = ct.id;
+      }
+    }
+    return map;
+  }, [ceremonyTypes]);
+  
   // Get regional multiplier based on selected location
   const regionalMultiplier = useMemo((): number => {
     if (!regionalPricingData) return 1.0;
@@ -1016,7 +1029,9 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                             const parsedGuests = Number(event.guestCount) || 0;
                             const guestCount = parsedGuests > 0 ? parsedGuests : defaultGuests;
                             
-                            const breakdown = lineItemsMap[event.ceremonyId] || [];
+                            // Convert ceremony slug to UUID for line item lookup (UUID-only architecture)
+                            const ceremonyTypeUuid = slugToUuidMap[event.ceremonyId];
+                            const breakdown = ceremonyTypeUuid ? (lineItemsMap[ceremonyTypeUuid] || []) : [];
                             const costs = calculateCeremonyTotalFromBreakdown(breakdown, guestCount, regionalMultiplier);
                             totalLow += costs.low;
                             totalHigh += costs.high;
