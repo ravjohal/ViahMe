@@ -857,76 +857,89 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                         </div>
                       </div>
 
-                      <div className="space-y-3">
-                        {customEvents.map((event, index) => (
-                          <div 
-                            key={index} 
-                            className="flex flex-col sm:flex-row items-start gap-3 p-3 rounded-lg border bg-card"
-                          >
-                            <div className="flex-1 w-full space-y-2">
-                              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                                <Select
-                                  value={event.ceremonyTypeId || ""}
-                                  onValueChange={(value) => handleEventChange(index, "ceremonyTypeId", value)}
-                                >
-                                  <SelectTrigger className="h-10 w-full sm:flex-1" data-testid={`select-ceremony-${index}`}>
-                                    <SelectValue placeholder="Select ceremony type" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {availableCeremonies.map((ceremony) => (
-                                      <SelectItem 
-                                        key={ceremony.id} 
-                                        value={ceremony.id}
-                                        data-testid={`option-ceremony-${ceremony.id}`}
-                                      >
-                                        <div className="flex flex-col">
-                                          <span>{ceremony.name}</span>
-                                          <span className="text-xs text-muted-foreground">{ceremony.description}</span>
+                      <div className="space-y-2">
+                        {customEvents.map((event, index) => {
+                          const selectedCeremony = availableCeremonies.find(c => c.id === event.ceremonyTypeId);
+                          return (
+                            <div 
+                              key={index} 
+                              className="relative rounded-lg border bg-card p-3 pr-12"
+                            >
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleRemoveEvent(index)}
+                                disabled={customEvents.length <= 1}
+                                className="absolute top-1 right-1 text-muted-foreground hover:text-destructive"
+                                data-testid={`button-remove-event-${index}`}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                              
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <Select
+                                    value={event.ceremonyTypeId || ""}
+                                    onValueChange={(value) => handleEventChange(index, "ceremonyTypeId", value)}
+                                  >
+                                    <SelectTrigger className="h-9 flex-1" data-testid={`select-ceremony-${index}`}>
+                                      <SelectValue placeholder="Select ceremony">
+                                        {selectedCeremony ? selectedCeremony.name : (event.ceremonyTypeId === "custom" ? "Custom Event" : "Select ceremony")}
+                                      </SelectValue>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {availableCeremonies.map((ceremony) => (
+                                        <SelectItem 
+                                          key={ceremony.id} 
+                                          value={ceremony.id}
+                                          data-testid={`option-ceremony-${ceremony.id}`}
+                                        >
+                                          <div className="flex flex-col items-start text-left">
+                                            <span>{ceremony.name}</span>
+                                            <span className="text-xs text-muted-foreground line-clamp-1">{ceremony.description}</span>
+                                          </div>
+                                        </SelectItem>
+                                      ))}
+                                      <SelectItem value="custom" data-testid="option-ceremony-custom">
+                                        <div className="flex flex-col items-start text-left">
+                                          <span className="font-medium">Custom Event</span>
+                                          <span className="text-xs text-muted-foreground">Add your own</span>
                                         </div>
                                       </SelectItem>
-                                    ))}
-                                    <SelectItem value="custom" data-testid="option-ceremony-custom">
-                                      <div className="flex flex-col">
-                                        <span className="font-medium">Custom Event</span>
-                                        <span className="text-xs text-muted-foreground">Add your own ceremony or event</span>
-                                      </div>
-                                    </SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                <Input
-                                  type="number"
-                                  placeholder="Guests (optional)"
-                                  title="Leave blank to use default guest count for this ceremony"
-                                  value={event.guestCount || ""}
-                                  onChange={(e) => handleEventChange(index, "guestCount", e.target.value)}
-                                  data-testid={`input-event-guests-${index}`}
-                                  className="h-10 w-full sm:w-32"
-                                />
+                                    </SelectContent>
+                                  </Select>
+                                  <Input
+                                    type="number"
+                                    placeholder="Guests"
+                                    title="Leave blank to use default guest count"
+                                    value={event.guestCount || ""}
+                                    onChange={(e) => handleEventChange(index, "guestCount", e.target.value)}
+                                    data-testid={`input-event-guests-${index}`}
+                                    className="h-9 w-20 text-center"
+                                  />
+                                </div>
+                                
+                                {selectedCeremony?.description && event.ceremonyTypeId !== "custom" && (
+                                  <p className="text-xs text-muted-foreground text-left line-clamp-2 pl-1">
+                                    {selectedCeremony.description}
+                                  </p>
+                                )}
+                                
+                                {event.ceremonyTypeId === "custom" && (
+                                  <Input
+                                    type="text"
+                                    placeholder="Enter custom event name"
+                                    value={event.customName || ""}
+                                    onChange={(e) => handleEventChange(index, "customName", e.target.value)}
+                                    data-testid={`input-custom-event-name-${index}`}
+                                    className="h-9"
+                                  />
+                                )}
                               </div>
-                              {event.ceremonyTypeId === "custom" && (
-                                <Input
-                                  type="text"
-                                  placeholder="Enter custom event name"
-                                  value={event.customName || ""}
-                                  onChange={(e) => handleEventChange(index, "customName", e.target.value)}
-                                  data-testid={`input-custom-event-name-${index}`}
-                                  className="h-10"
-                                />
-                              )}
                             </div>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleRemoveEvent(index)}
-                              disabled={customEvents.length <= 1}
-                              className="text-muted-foreground hover:text-destructive self-end sm:self-start sm:mt-1"
-                              data-testid={`button-remove-event-${index}`}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
 
                       <Button
