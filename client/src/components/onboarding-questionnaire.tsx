@@ -274,9 +274,31 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
   const { data: regionalPricingData } = useRegionalPricing();
   const { data: lineItemsMap = {} } = useAllCeremonyLineItems();
   
-  // Available ceremonies for the selected tradition - directly from database
+  // Available ceremonies for the selected tradition - deduplicated by normalized name
+  // This handles database duplicates like "Chunni Chadana" appearing twice or "Maiyan" vs "Mayian"
   const availableCeremonies = useMemo(() => {
-    return ceremonyTypes || [];
+    if (!ceremonyTypes) return [];
+    
+    // Normalize name for comparison (lowercase, remove spaces/special chars)
+    const normalizeName = (name: string) => name.toLowerCase().replace(/[\s\/\-]/g, '');
+    
+    // Deduplicate by normalized name, keeping the one with better displayOrder or more complete data
+    const seenNames = new Map<string, CeremonyType>();
+    for (const ct of ceremonyTypes) {
+      const normalized = normalizeName(ct.name);
+      const existing = seenNames.get(normalized);
+      if (!existing) {
+        seenNames.set(normalized, ct);
+      } else {
+        // Keep the one with higher displayOrder (more specific) or better data
+        // Higher displayOrder usually means more complete ceremony data
+        if (ct.displayOrder > existing.displayOrder) {
+          seenNames.set(normalized, ct);
+        }
+      }
+    }
+    
+    return Array.from(seenNames.values());
   }, [ceremonyTypes]);
   
   // Build UUID lookup map for quick ceremony type access
@@ -291,13 +313,13 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
   }, [ceremonyTypes]);
   
   // Populate default ceremonies when ceremonyTypes loads or autoCreateCeremonies is enabled
-  // Pre-populate ALL ceremonies for the tradition (sorted by displayOrder)
+  // Pre-populate ALL ceremonies for the tradition (deduplicated and sorted by displayOrder)
   useEffect(() => {
-    if (autoCreateCeremonies && ceremonyTypes && ceremonyTypes.length > 0) {
+    if (autoCreateCeremonies && availableCeremonies && availableCeremonies.length > 0) {
       const currentEvents = form.getValues("customEvents") || [];
       if (currentEvents.length === 0) {
-        // Use all ceremonies for the tradition, sorted by displayOrder
-        const sortedCeremonies = [...ceremonyTypes].sort((a, b) => a.displayOrder - b.displayOrder);
+        // Use all deduplicated ceremonies for the tradition, sorted by displayOrder
+        const sortedCeremonies = [...availableCeremonies].sort((a, b) => a.displayOrder - b.displayOrder);
         const defaultEvents = sortedCeremonies.map(ct => ({
           ceremonyTypeId: ct.id,
           customName: "",
@@ -306,7 +328,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
         form.setValue("customEvents", defaultEvents);
       }
     }
-  }, [autoCreateCeremonies, ceremonyTypes]);
+  }, [autoCreateCeremonies, availableCeremonies]);
   
   // Get regional multiplier based on selected location
   const regionalMultiplier = useMemo((): number => {
