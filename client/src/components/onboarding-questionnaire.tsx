@@ -227,8 +227,8 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
       totalBudget: "",
       budgetContribution: "both_families",
       partnerNewToTraditions: false,
-      // Budget tracking mode - default to category for simpler tracking
-      budgetTrackingMode: "category",
+      // Budget tracking mode - default to ceremony for detailed tracking
+      budgetTrackingMode: "ceremony",
       // Budget granularity - default all to true for complete tracking
       showBudgetOverview: true,
       showBucketBudgets: true,
@@ -312,7 +312,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
   const { data: lineItemsMap = {} } = useAllCeremonyLineItems();
   
   // Get regional multiplier based on selected location
-  const regionalMultiplier = useMemo(() => {
+  const regionalMultiplier = useMemo((): number => {
     if (!regionalPricingData) return 1.0;
     const locationToCity: Record<string, string> = {
       "San Francisco Bay Area": "bay_area",
@@ -325,7 +325,8 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
     // Default to 1.0 (no multiplier) for locations not in our pricing database
     if (!cityKey) return 1.0;
     const pricing = regionalPricingData.find(p => p.city === cityKey);
-    return pricing?.multiplier || 1.0;
+    // Ensure multiplier is a number (may be string from database)
+    return pricing?.multiplier ? Number(pricing.multiplier) : 1.0;
   }, [regionalPricingData, selectedLocation]);
   
   // Get user's role (bride or groom) for messaging
@@ -1156,35 +1157,6 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                           <div className="grid gap-3">
                             <button
                               type="button"
-                              onClick={() => field.onChange("category")}
-                              className={`p-4 rounded-lg border-2 text-left transition-all ${
-                                field.value === "category"
-                                  ? "border-primary bg-primary/5"
-                                  : "border-muted hover-elevate"
-                              }`}
-                              data-testid="radio-budget-category"
-                            >
-                              <div className="flex items-start gap-3">
-                                <div className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                                  field.value === "category" ? "border-primary" : "border-muted-foreground"
-                                }`}>
-                                  {field.value === "category" && (
-                                    <div className="w-2.5 h-2.5 rounded-full bg-primary" />
-                                  )}
-                                </div>
-                                <div className="flex-1">
-                                  <h4 className="font-semibold">Track by Category</h4>
-                                  <p className="text-sm text-muted-foreground mt-1">
-                                    Simpler approach - track spending by type: Venue, Catering, Photography, Attire, etc.
-                                  </p>
-                                  <p className="text-xs text-muted-foreground mt-2 italic">
-                                    Best for couples who want straightforward budget tracking
-                                  </p>
-                                </div>
-                              </div>
-                            </button>
-                            <button
-                              type="button"
                               onClick={() => field.onChange("ceremony")}
                               className={`p-4 rounded-lg border-2 text-left transition-all ${
                                 field.value === "ceremony"
@@ -1208,6 +1180,35 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                                   </p>
                                   <p className="text-xs text-muted-foreground mt-2 italic">
                                     Best for multi-day celebrations with distinct budgets per event
+                                  </p>
+                                </div>
+                              </div>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => field.onChange("category")}
+                              className={`p-4 rounded-lg border-2 text-left transition-all ${
+                                field.value === "category"
+                                  ? "border-primary bg-primary/5"
+                                  : "border-muted hover-elevate"
+                              }`}
+                              data-testid="radio-budget-category"
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                                  field.value === "category" ? "border-primary" : "border-muted-foreground"
+                                }`}>
+                                  {field.value === "category" && (
+                                    <div className="w-2.5 h-2.5 rounded-full bg-primary" />
+                                  )}
+                                </div>
+                                <div className="flex-1">
+                                  <h4 className="font-semibold">Track by Category</h4>
+                                  <p className="text-sm text-muted-foreground mt-1">
+                                    Simpler approach - track spending by type: Venue, Catering, Photography, Attire, etc.
+                                  </p>
+                                  <p className="text-xs text-muted-foreground mt-2 italic">
+                                    Best for couples who want straightforward budget tracking
                                   </p>
                                 </div>
                               </div>

@@ -332,7 +332,7 @@ export function useCeremonyLineItemsWithCustom(ceremonyId: string | null | undef
 }
 
 // Hook to fetch ALL ceremony line items including wedding-specific custom items
-// Returns a map of ceremonyTypeId -> CeremonyBudgetCategoryItem[] (with isCustom flag)
+// Returns a map of ceremonyId (slug) -> CeremonyBudgetCategoryItem[] (with isCustom flag)
 export function useWeddingCeremonyLineItemsMap(weddingId: string | undefined) {
   return useQuery<Record<string, CeremonyBudgetCategoryItem[]>>({
     queryKey: ['/api/ceremony-types/all/line-items', weddingId || null],

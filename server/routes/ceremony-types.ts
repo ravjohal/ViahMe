@@ -197,6 +197,13 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
       // Combine system items + custom items
       const combinedItems = [...allItems, ...customItems];
       
+      // Build a map of ceremonyTypeId (UUID) -> ceremonyId (slug) for lookup
+      const allCeremonyTypes = await storage.getAllCeremonyTypes();
+      const uuidToSlugMap: Record<string, string> = {};
+      for (const ct of allCeremonyTypes) {
+        uuidToSlugMap[ct.id] = ct.ceremonyId;
+      }
+      
       const grouped: Record<string, Array<{
         id: string;
         category: string;
@@ -212,13 +219,15 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
       }>> = {};
       
       for (const item of combinedItems) {
-        // Key by ceremonyTypeId (UUID)
-        const key = item.ceremonyTypeId;
-        if (!grouped[key]) {
-          grouped[key] = [];
+        // Key by ceremonyId (slug) for client-side lookup compatibility
+        const slug = uuidToSlugMap[item.ceremonyTypeId];
+        if (!slug) continue; // Skip items without valid ceremony type
+        
+        if (!grouped[slug]) {
+          grouped[slug] = [];
         }
         const bucketId = item.budgetBucketId ?? 'other';
-        grouped[key].push({
+        grouped[slug].push({
           id: item.id,
           category: item.itemName,
           lowCost: parseFloat(item.lowCost),
@@ -777,7 +786,8 @@ export function createCeremonyEstimateRouter(storage: IStorage): Router {
         }
       }
 
-      const typeItems = await storage.getCeremonyTypeItems(ceremonyId);
+      // Get ceremony budget categories (line items) using the UUID
+      const typeItems = await storage.getCeremonyBudgetCategoriesByCeremonyTypeId(type.id);
 
       let totalLow = 0;
       let totalHigh = 0;
@@ -814,7 +824,7 @@ export function createCeremonyEstimateRouter(storage: IStorage): Router {
           lowCost: Math.round(itemLow),
           highCost: Math.round(itemHigh),
           notes: item.notes || undefined,
-          budgetBucket: item.budgetBucket,
+          budgetBucket: item.budgetBucketId,
         });
       }
 
