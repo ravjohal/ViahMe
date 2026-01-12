@@ -1227,6 +1227,19 @@ export default function Budget() {
     }
   }, [wedding?.id, wedding?.totalBudget]);
 
+  // Set initial view based on budget tracking mode preference
+  useEffect(() => {
+    if (wedding?.id && wedding.budgetTrackingMode) {
+      if (wedding.budgetTrackingMode === "ceremony") {
+        setShowCeremonyBudgets(true);
+        setShowCategories(false);
+      } else {
+        setShowCategories(true);
+        setShowCeremonyBudgets(false);
+      }
+    }
+  }, [wedding?.id, wedding?.budgetTrackingMode]);
+
   // Set initial amount when opening category budget editor
   useEffect(() => {
     if (editingBucket && expenseTotals?.bucketTotals) {
@@ -1339,6 +1352,25 @@ export default function Budget() {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
+        </div>
+
+        {/* Tracking Mode Indicator */}
+        <div className="flex items-center justify-between mb-4 p-3 rounded-lg bg-muted/30 border border-muted">
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-muted-foreground">Tracking by:</span>
+            <Badge variant={wedding.budgetTrackingMode === "ceremony" ? "default" : "secondary"}>
+              {wedding.budgetTrackingMode === "ceremony" ? "Ceremony" : "Category"}
+            </Badge>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setLocation("/settings")}
+            className="text-xs"
+            data-testid="button-change-tracking-mode"
+          >
+            Change in Settings
+          </Button>
         </div>
 
         {/* Budget Summary Card - conditionally rendered based on showBudgetOverview preference */}

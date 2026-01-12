@@ -18,7 +18,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Settings as SettingsIcon, User, Lock, Bell, LogOut, Trash2, Heart, MapPin, Calendar, Users, Sparkles } from "lucide-react";
+import { Settings as SettingsIcon, User, Lock, Bell, LogOut, Trash2, Heart, MapPin, Calendar, Users, Sparkles, DollarSign, Tag, LayoutList } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -49,7 +49,9 @@ export default function Settings() {
   const [tradition, setTradition] = useState("");
   const [subTradition, setSubTradition] = useState<string | null>(null);
   const [subTraditions, setSubTraditions] = useState<string[]>([]);
+  const [budgetTrackingMode, setBudgetTrackingMode] = useState<"category" | "ceremony">("category");
   const [isSavingWedding, setIsSavingWedding] = useState(false);
+  const [isSavingBudgetSettings, setIsSavingBudgetSettings] = useState(false);
 
   const availableSubTraditions = useMemo(() => {
     if (tradition === "mixed") {
@@ -99,6 +101,7 @@ export default function Settings() {
       setTradition(wedding.tradition || "");
       setSubTradition(wedding.subTradition || null);
       setSubTraditions(wedding.subTraditions || []);
+      setBudgetTrackingMode((wedding.budgetTrackingMode as "category" | "ceremony") || "category");
     }
   }, [wedding]);
 
@@ -219,6 +222,32 @@ export default function Settings() {
       });
     } finally {
       setIsSavingWedding(false);
+    }
+  };
+
+  const handleSaveBudgetSettings = async () => {
+    if (!wedding) return;
+
+    setIsSavingBudgetSettings(true);
+    try {
+      await apiRequest("PATCH", `/api/weddings/${wedding.id}`, {
+        budgetTrackingMode,
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings"] });
+
+      toast({
+        title: "Budget Settings Updated",
+        description: "Your budget tracking preferences have been saved.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update budget settings",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingBudgetSettings(false);
     }
   };
 
@@ -483,6 +512,96 @@ export default function Settings() {
                   {isSavingWedding ? "Saving..." : "Save Wedding Details"}
                 </Button>
               </form>
+            </Card>
+          )}
+
+          {/* Budget Settings - Only for couples */}
+          {user.role === "couple" && wedding && (
+            <Card className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-lg bg-emerald-100">
+                  <DollarSign className="w-5 h-5 text-emerald-600" />
+                </div>
+                <h2 className="text-xl font-semibold">Budget Settings</h2>
+              </div>
+              <Separator className="mb-4" />
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm font-medium mb-3 block">Budget Tracking Mode</Label>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Choose how you prefer to track your wedding budget. This affects how expenses are organized.
+                  </p>
+                  <div className="grid gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setBudgetTrackingMode("category")}
+                      className={`p-4 rounded-lg border-2 text-left transition-all ${
+                        budgetTrackingMode === "category"
+                          ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/20"
+                          : "border-muted hover-elevate"
+                      }`}
+                      data-testid="settings-radio-budget-category"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                          budgetTrackingMode === "category" ? "border-emerald-500" : "border-muted-foreground"
+                        }`}>
+                          {budgetTrackingMode === "category" && (
+                            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <Tag className="w-4 h-4 text-emerald-600" />
+                            <h4 className="font-semibold">Track by Category</h4>
+                          </div>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Simpler approach - track spending by type: Venue, Catering, Photography, Attire, etc.
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setBudgetTrackingMode("ceremony")}
+                      className={`p-4 rounded-lg border-2 text-left transition-all ${
+                        budgetTrackingMode === "ceremony"
+                          ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/20"
+                          : "border-muted hover-elevate"
+                      }`}
+                      data-testid="settings-radio-budget-ceremony"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                          budgetTrackingMode === "ceremony" ? "border-emerald-500" : "border-muted-foreground"
+                        }`}>
+                          {budgetTrackingMode === "ceremony" && (
+                            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <LayoutList className="w-4 h-4 text-emerald-600" />
+                            <h4 className="font-semibold">Track by Ceremony</h4>
+                          </div>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Detailed approach - plan costs per ceremony (Mehndi, Sangeet, Reception), then aggregate to categories.
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  onClick={handleSaveBudgetSettings}
+                  disabled={isSavingBudgetSettings}
+                  className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
+                  data-testid="button-save-budget-settings"
+                >
+                  {isSavingBudgetSettings ? "Saving..." : "Save Budget Settings"}
+                </Button>
+              </div>
             </Card>
           )}
 

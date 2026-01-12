@@ -38,7 +38,9 @@ const questionnaireSchema = z.object({
   totalBudget: z.string().optional(),
   budgetContribution: z.enum(['couple_only', 'both_families', 'mix']).optional(),
   partnerNewToTraditions: z.boolean().optional(),
-  // Budget granularity preferences
+  // Budget tracking mode - primary tracking approach
+  budgetTrackingMode: z.enum(['category', 'ceremony']).optional(),
+  // Legacy budget granularity preferences (kept for compatibility)
   showBudgetOverview: z.boolean().optional(),
   showBucketBudgets: z.boolean().optional(),
   showCeremonyBudgets: z.boolean().optional(),
@@ -225,6 +227,8 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
       totalBudget: "",
       budgetContribution: "both_families",
       partnerNewToTraditions: false,
+      // Budget tracking mode - default to category for simpler tracking
+      budgetTrackingMode: "category",
       // Budget granularity - default all to true for complete tracking
       showBudgetOverview: true,
       showBucketBudgets: true,
@@ -1137,84 +1141,82 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                       )}
                     />
 
-                    {/* Budget Tracking Granularity */}
-                    <div className="p-4 rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border border-blue-200 dark:border-blue-800">
-                      <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">How would you like to track your budget?</h4>
-                      <p className="text-sm text-blue-700 dark:text-blue-300 mb-4">
-                        Choose the level of detail that works best for you. You can change this anytime in settings.
-                      </p>
-                      <div className="space-y-3">
-                        <FormField
-                          control={form.control}
-                          name="showBudgetOverview"
-                          render={({ field }) => (
-                            <FormItem className="flex items-start space-x-3 space-y-0">
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                  data-testid="checkbox-budget-overview"
-                                />
-                              </FormControl>
-                              <div className="space-y-1 leading-none">
-                                <FormLabel className="font-medium cursor-pointer">
-                                  Overall Budget Overview
-                                </FormLabel>
-                                <p className="text-xs text-muted-foreground">
-                                  See your total budget, spending, and remaining balance at a glance
-                                </p>
+                    {/* Budget Tracking Mode */}
+                    <FormField
+                      control={form.control}
+                      name="budgetTrackingMode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-lg font-semibold tracking-wide" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+                            How would you like to track your budget?
+                          </FormLabel>
+                          <p className="text-sm text-muted-foreground mb-3">
+                            Choose your preferred approach. You can change this anytime in wedding settings.
+                          </p>
+                          <div className="grid gap-3">
+                            <button
+                              type="button"
+                              onClick={() => field.onChange("category")}
+                              className={`p-4 rounded-lg border-2 text-left transition-all ${
+                                field.value === "category"
+                                  ? "border-primary bg-primary/5"
+                                  : "border-muted hover-elevate"
+                              }`}
+                              data-testid="radio-budget-category"
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                                  field.value === "category" ? "border-primary" : "border-muted-foreground"
+                                }`}>
+                                  {field.value === "category" && (
+                                    <div className="w-2.5 h-2.5 rounded-full bg-primary" />
+                                  )}
+                                </div>
+                                <div className="flex-1">
+                                  <h4 className="font-semibold">Track by Category</h4>
+                                  <p className="text-sm text-muted-foreground mt-1">
+                                    Simpler approach - track spending by type: Venue, Catering, Photography, Attire, etc.
+                                  </p>
+                                  <p className="text-xs text-muted-foreground mt-2 italic">
+                                    Best for couples who want straightforward budget tracking
+                                  </p>
+                                </div>
                               </div>
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="showBucketBudgets"
-                          render={({ field }) => (
-                            <FormItem className="flex items-start space-x-3 space-y-0">
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                  data-testid="checkbox-bucket-budgets"
-                                />
-                              </FormControl>
-                              <div className="space-y-1 leading-none">
-                                <FormLabel className="font-medium cursor-pointer">
-                                  Budget by Category
-                                </FormLabel>
-                                <p className="text-xs text-muted-foreground">
-                                  Track spending by type: venue, catering, photography, attire, etc.
-                                </p>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => field.onChange("ceremony")}
+                              className={`p-4 rounded-lg border-2 text-left transition-all ${
+                                field.value === "ceremony"
+                                  ? "border-primary bg-primary/5"
+                                  : "border-muted hover-elevate"
+                              }`}
+                              data-testid="radio-budget-ceremony"
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                                  field.value === "ceremony" ? "border-primary" : "border-muted-foreground"
+                                }`}>
+                                  {field.value === "ceremony" && (
+                                    <div className="w-2.5 h-2.5 rounded-full bg-primary" />
+                                  )}
+                                </div>
+                                <div className="flex-1">
+                                  <h4 className="font-semibold">Track by Ceremony</h4>
+                                  <p className="text-sm text-muted-foreground mt-1">
+                                    Detailed approach - plan costs per ceremony (Mehndi, Sangeet, Reception), then aggregate to categories.
+                                  </p>
+                                  <p className="text-xs text-muted-foreground mt-2 italic">
+                                    Best for multi-day celebrations with distinct budgets per event
+                                  </p>
+                                </div>
                               </div>
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="showCeremonyBudgets"
-                          render={({ field }) => (
-                            <FormItem className="flex items-start space-x-3 space-y-0">
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                  data-testid="checkbox-ceremony-budgets"
-                                />
-                              </FormControl>
-                              <div className="space-y-1 leading-none">
-                                <FormLabel className="font-medium cursor-pointer">
-                                  Budget by Ceremony
-                                </FormLabel>
-                                <p className="text-xs text-muted-foreground">
-                                  Plan and track costs for each ceremony: Mehndi, Sangeet, Reception, etc.
-                                </p>
-                              </div>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </div>
+                            </button>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
                   </div>
                 )}

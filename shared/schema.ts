@@ -494,7 +494,9 @@ export const weddings = pgTable("weddings", {
   eventsConfirmed: boolean("events_confirmed").default(false),
   budgetContribution: text("budget_contribution"), // 'couple_only' | 'both_families' | 'mix'
   partnerNewToTraditions: boolean("partner_new_to_traditions").default(false), // Culture Bridge feature
-  // Budget granularity preferences (set during onboarding)
+  // Budget tracking mode (set during onboarding)
+  budgetTrackingMode: text("budget_tracking_mode").notNull().default('category'), // 'category' | 'ceremony' - primary tracking mode
+  // Legacy budget granularity preferences (kept for backward compatibility)
   showBudgetOverview: boolean("show_budget_overview").default(true), // High-level total budget
   showBucketBudgets: boolean("show_bucket_budgets").default(true), // Budget by category (venue, catering, etc.)
   showCeremonyBudgets: boolean("show_ceremony_budgets").default(true), // Budget by ceremony/event
@@ -524,6 +526,8 @@ export const insertWeddingSchema = createInsertSchema(weddings).omit({
   totalBudget: z.string().nullable().optional(),
   budgetContribution: z.enum(['couple_only', 'both_families', 'mix']).nullable().optional(),
   partnerNewToTraditions: z.boolean().optional(),
+  // Budget tracking mode
+  budgetTrackingMode: z.enum(['category', 'ceremony']).optional(),
   // Budget granularity preferences
   showBudgetOverview: z.boolean().optional(),
   showBucketBudgets: z.boolean().optional(),
