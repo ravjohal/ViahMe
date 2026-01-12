@@ -290,23 +290,58 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
     return map;
   }, [ceremonyTypes]);
   
+  // Canonical default ceremonies by tradition (main ceremonies that most couples have)
+  const DEFAULT_CEREMONIES_BY_TRADITION: Record<string, string[]> = {
+    sikh: ["Anand Karaj", "Baraat", "Milni", "Sangeet", "Reception"],
+    hindu: ["Wedding Ceremony", "Baraat", "Sangeet", "Mehndi", "Reception"],
+    muslim: ["Nikah", "Mehndi", "Walima", "Baraat", "Reception"],
+    gujarati: ["Wedding Ceremony", "Garba", "Mehndi", "Baraat", "Reception"],
+    south_indian: ["Wedding Ceremony", "Sangeet", "Mehndi", "Reception", "Haldi"],
+    christian: ["Wedding Ceremony", "Rehearsal Dinner", "Cocktail Hour", "Reception"],
+    jain: ["Wedding Ceremony", "Baraat", "Sangeet", "Reception", "Mehndi"],
+    parsi: ["Wedding Ceremony", "Sangeet", "Reception", "Mehndi"],
+    mixed: ["Wedding Ceremony", "Sangeet", "Mehndi", "Reception", "Cocktail"],
+    other: ["Wedding Ceremony", "Reception", "Cocktail", "Rehearsal Dinner"],
+  };
+  
   // Populate default ceremonies when ceremonyTypes loads or autoCreateCeremonies is enabled
   useEffect(() => {
     if (autoCreateCeremonies && ceremonyTypes && ceremonyTypes.length > 0) {
       const currentEvents = form.getValues("customEvents") || [];
       if (currentEvents.length === 0) {
-        // Use first 5 ceremonies sorted by displayOrder as defaults
-        const sortedCeremonies = [...ceremonyTypes].sort((a, b) => a.displayOrder - b.displayOrder);
-        const defaultCeremonies = sortedCeremonies.slice(0, 5);
+        // Get canonical ceremony names for this tradition
+        const canonicalNames = DEFAULT_CEREMONIES_BY_TRADITION[selectedMainTradition] || DEFAULT_CEREMONIES_BY_TRADITION.other;
+        
+        // Find matching ceremonies by name (case-insensitive)
+        const defaultCeremonies: CeremonyType[] = [];
+        for (const name of canonicalNames) {
+          const match = ceremonyTypes.find(ct => 
+            ct.name.toLowerCase() === name.toLowerCase()
+          );
+          if (match && !defaultCeremonies.find(c => c.id === match.id)) {
+            defaultCeremonies.push(match);
+          }
+        }
+        
+        // If we didn't find enough, fill with ceremonies that have line items (more complete data)
+        if (defaultCeremonies.length < 5) {
+          const remainingNeeded = 5 - defaultCeremonies.length;
+          const selectedIds = new Set(defaultCeremonies.map(c => c.id));
+          const ceremoniesWithLineItems = ceremonyTypes.filter(
+            ct => !selectedIds.has(ct.id) && lineItemsMap[ct.id]?.length > 0
+          );
+          defaultCeremonies.push(...ceremoniesWithLineItems.slice(0, remainingNeeded));
+        }
+        
         const defaultEvents = defaultCeremonies.map(ct => ({
-          ceremonyTypeId: ct.id, // Use UUID directly
+          ceremonyTypeId: ct.id,
           customName: "",
           guestCount: "",
         }));
         form.setValue("customEvents", defaultEvents);
       }
     }
-  }, [autoCreateCeremonies, ceremonyTypes]);
+  }, [autoCreateCeremonies, ceremonyTypes, selectedMainTradition, lineItemsMap]);
   
   // Get regional multiplier based on selected location
   const regionalMultiplier = useMemo((): number => {
