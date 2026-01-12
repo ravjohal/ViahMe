@@ -2997,7 +2997,44 @@ export const insertRitualRoleAssignmentSchema = createInsertSchema(ritualRoleAss
 export type InsertRitualRoleAssignment = z.infer<typeof insertRitualRoleAssignmentSchema>;
 export type RitualRoleAssignment = typeof ritualRoleAssignments.$inferSelect;
 
-// Predefined ritual role templates by ceremony type
+// ============================================================================
+// RITUAL ROLE TEMPLATES - Database-driven ceremony role templates
+// ============================================================================
+
+export const ritualRoleTemplates = pgTable("ritual_role_templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  ceremonySlug: text("ceremony_slug").notNull(), // e.g., 'anand_karaj', 'mehndi', 'reception'
+  roleName: text("role_name").notNull(), // Unique identifier: 'ardas_leader', 'palla_holder'
+  roleDisplayName: text("role_display_name").notNull(), // User-friendly: "Ardas Leader", "Palla Holder"
+  description: text("description").notNull(), // What this role entails
+  instructions: text("instructions").notNull(), // Detailed instructions for the guest
+  timing: text("timing").notNull(), // When they need to perform this duty
+  priority: text("priority").notNull().default("medium"), // 'high' | 'medium' | 'low'
+  displayOrder: integer("display_order").notNull().default(0), // For sorting within ceremony
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  ceremonySlugIdx: index("ritual_role_templates_ceremony_slug_idx").on(table.ceremonySlug),
+  roleNameIdx: index("ritual_role_templates_role_name_idx").on(table.roleName),
+  uniqueCeremonyRole: uniqueIndex("ritual_role_templates_ceremony_role_idx").on(table.ceremonySlug, table.roleName),
+}));
+
+export const insertRitualRoleTemplateSchema = createInsertSchema(ritualRoleTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  priority: z.enum(["high", "medium", "low"]).optional(),
+  displayOrder: z.number().optional(),
+  isActive: z.boolean().optional(),
+});
+
+export type InsertRitualRoleTemplate = z.infer<typeof insertRitualRoleTemplateSchema>;
+export type RitualRoleTemplate = typeof ritualRoleTemplates.$inferSelect;
+
+// DEPRECATED: Legacy constant - kept temporarily for seeding database
+// Use ritualRoleTemplates table via API instead
 export const RITUAL_ROLE_TEMPLATES: Record<string, Array<{
   roleName: string;
   roleDisplayName: string;

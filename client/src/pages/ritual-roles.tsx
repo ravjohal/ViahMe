@@ -13,8 +13,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Users, Sparkles, Clock, AlertTriangle, CheckCircle, ChevronRight, Plus, Trash2, Send, MapPin, Shirt } from "lucide-react";
-import type { Event, Guest, RitualRoleAssignment, Wedding } from "@shared/schema";
-import { RITUAL_ROLE_TEMPLATES } from "@shared/schema";
+import type { Event, Guest, RitualRoleAssignment, Wedding, RitualRoleTemplate } from "@shared/schema";
+
+type RoleTemplateMap = Record<string, RitualRoleTemplate[]>;
 
 function RitualRolesContent({ weddingId }: { weddingId: string }) {
   const { toast } = useToast();
@@ -38,6 +39,10 @@ function RitualRolesContent({ weddingId }: { weddingId: string }) {
 
   const { data: assignments = [], isLoading: assignmentsLoading } = useQuery<RitualRoleAssignment[]>({
     queryKey: ["/api/ritual-roles", "wedding", weddingId],
+  });
+
+  const { data: roleTemplates = {} } = useQuery<RoleTemplateMap>({
+    queryKey: ["/api/ritual-roles/templates"],
   });
 
   const createMutation = useMutation({
@@ -95,7 +100,7 @@ function RitualRolesContent({ weddingId }: { weddingId: string }) {
 
     const event = events.find((e) => e.id === selectedEvent);
     const eventType = event?.type || "custom";
-    const templates = RITUAL_ROLE_TEMPLATES[eventType] || RITUAL_ROLE_TEMPLATES.custom || [];
+    const templates = roleTemplates[eventType] || roleTemplates.custom || [];
     const template = templates.find((t) => t.roleName === selectedTemplate);
 
     if (!template) {
@@ -120,7 +125,7 @@ function RitualRolesContent({ weddingId }: { weddingId: string }) {
 
   const currentEvent = events.find((e) => e.id === selectedEvent);
   const eventType = currentEvent?.type || "custom";
-  const availableTemplates = RITUAL_ROLE_TEMPLATES[eventType] || RITUAL_ROLE_TEMPLATES.custom || [];
+  const availableTemplates = roleTemplates[eventType] || roleTemplates.custom || [];
   const eventAssignments = assignments.filter((a) => a.eventId === selectedEvent);
 
   const getGuestName = (guestId: string) => {
@@ -180,7 +185,7 @@ function RitualRolesContent({ weddingId }: { weddingId: string }) {
                     <div className="space-y-1 p-3">
                       {events.map((event) => {
                         const eventRoles = assignmentsByEvent[event.id] || [];
-                        const hasRoles = RITUAL_ROLE_TEMPLATES[event.type]?.length > 0;
+                        const hasRoles = (roleTemplates[event.type]?.length || 0) > 0;
                         return (
                           <button
                             key={event.id}

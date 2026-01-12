@@ -196,6 +196,10 @@ import {
   type InsertBudgetAllocation,
   type RitualRoleAssignment,
   type InsertRitualRoleAssignment,
+  type RitualRoleTemplate,
+  type InsertRitualRoleTemplate,
+  ritualRoleTemplates,
+  RITUAL_ROLE_TEMPLATES,
   vendorAccessPasses,
   type VendorAccessPass,
   type InsertVendorAccessPass,
@@ -1147,6 +1151,16 @@ export interface IStorage {
   deleteRitualRoleAssignment(id: string): Promise<boolean>;
   acknowledgeRitualRole(id: string): Promise<RitualRoleAssignment | undefined>;
   markRitualRoleNotificationSent(id: string): Promise<RitualRoleAssignment | undefined>;
+
+  // Ritual Role Templates (database-driven)
+  getRitualRoleTemplate(id: string): Promise<RitualRoleTemplate | undefined>;
+  getRitualRoleTemplatesByCeremony(ceremonySlug: string): Promise<RitualRoleTemplate[]>;
+  getAllRitualRoleTemplates(): Promise<RitualRoleTemplate[]>;
+  getActiveRitualRoleTemplates(): Promise<RitualRoleTemplate[]>;
+  createRitualRoleTemplate(template: InsertRitualRoleTemplate): Promise<RitualRoleTemplate>;
+  updateRitualRoleTemplate(id: string, template: Partial<InsertRitualRoleTemplate>): Promise<RitualRoleTemplate | undefined>;
+  deleteRitualRoleTemplate(id: string): Promise<boolean>;
+  seedRitualRoleTemplates(): Promise<RitualRoleTemplate[]>;
 
   // Vendor Access Passes
   getVendorAccessPass(id: string): Promise<VendorAccessPass | undefined>;
@@ -11302,6 +11316,90 @@ export class DBStorage implements IStorage {
       .where(eq(ritualRoleAssignments.id, id))
       .returning();
     return result[0];
+  }
+
+  // Ritual Role Templates (database-driven)
+  async getRitualRoleTemplate(id: string): Promise<RitualRoleTemplate | undefined> {
+    const result = await this.db.select()
+      .from(ritualRoleTemplates)
+      .where(eq(ritualRoleTemplates.id, id));
+    return result[0];
+  }
+
+  async getRitualRoleTemplatesByCeremony(ceremonySlug: string): Promise<RitualRoleTemplate[]> {
+    return await this.db.select()
+      .from(ritualRoleTemplates)
+      .where(and(
+        eq(ritualRoleTemplates.ceremonySlug, ceremonySlug),
+        eq(ritualRoleTemplates.isActive, true)
+      ))
+      .orderBy(sql`${ritualRoleTemplates.displayOrder} ASC, ${ritualRoleTemplates.createdAt} ASC`);
+  }
+
+  async getAllRitualRoleTemplates(): Promise<RitualRoleTemplate[]> {
+    return await this.db.select()
+      .from(ritualRoleTemplates)
+      .orderBy(sql`${ritualRoleTemplates.ceremonySlug} ASC, ${ritualRoleTemplates.displayOrder} ASC`);
+  }
+
+  async getActiveRitualRoleTemplates(): Promise<RitualRoleTemplate[]> {
+    return await this.db.select()
+      .from(ritualRoleTemplates)
+      .where(eq(ritualRoleTemplates.isActive, true))
+      .orderBy(sql`${ritualRoleTemplates.ceremonySlug} ASC, ${ritualRoleTemplates.displayOrder} ASC`);
+  }
+
+  async createRitualRoleTemplate(template: InsertRitualRoleTemplate): Promise<RitualRoleTemplate> {
+    const result = await this.db.insert(ritualRoleTemplates)
+      .values(template)
+      .returning();
+    return result[0];
+  }
+
+  async updateRitualRoleTemplate(id: string, template: Partial<InsertRitualRoleTemplate>): Promise<RitualRoleTemplate | undefined> {
+    const result = await this.db.update(ritualRoleTemplates)
+      .set({ ...template, updatedAt: new Date() })
+      .where(eq(ritualRoleTemplates.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteRitualRoleTemplate(id: string): Promise<boolean> {
+    await this.db.delete(ritualRoleTemplates)
+      .where(eq(ritualRoleTemplates.id, id));
+    return true;
+  }
+
+  async seedRitualRoleTemplates(): Promise<RitualRoleTemplate[]> {
+    const existingTemplates = await this.getAllRitualRoleTemplates();
+    if (existingTemplates.length > 0) {
+      return existingTemplates;
+    }
+
+    const templatesToInsert: InsertRitualRoleTemplate[] = [];
+    for (const [ceremonySlug, roles] of Object.entries(RITUAL_ROLE_TEMPLATES)) {
+      roles.forEach((role, index) => {
+        templatesToInsert.push({
+          ceremonySlug,
+          roleName: role.roleName,
+          roleDisplayName: role.roleDisplayName,
+          description: role.description,
+          instructions: role.instructions,
+          timing: role.timing,
+          priority: role.priority,
+          displayOrder: index,
+          isActive: true,
+        });
+      });
+    }
+
+    if (templatesToInsert.length > 0) {
+      const result = await this.db.insert(ritualRoleTemplates)
+        .values(templatesToInsert)
+        .returning();
+      return result;
+    }
+    return [];
   }
 
   // Vendor Access Passes
