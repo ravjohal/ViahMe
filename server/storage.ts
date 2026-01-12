@@ -1857,8 +1857,14 @@ export class MemStorage implements IStorage {
     if (existing) {
       return (await this.updateBudgetAllocation(existing.id, { allocatedAmount, notes }))!;
     }
+    
+    // Look up the bucket category to get the slug for the legacy 'bucket' column
+    const bucketCategory = await this.getBudgetBucketCategory(bucketCategoryId);
+    const bucketSlug = bucketCategory?.slug as BudgetBucket || 'other';
+    
     return this.createBudgetAllocation({
       weddingId,
+      bucket: bucketSlug,
       bucketCategoryId,
       allocatedAmount,
       ceremonyId: ceremonyId ?? null,
@@ -5113,8 +5119,14 @@ export class DBStorage implements IStorage {
     if (existing) {
       return (await this.updateBudgetAllocation(existing.id, { allocatedAmount, notes }))!;
     }
+    
+    // Look up the bucket category to get the slug for the legacy 'bucket' column
+    const bucketCategory = await this.getBudgetBucketCategory(bucketCategoryId);
+    const bucketSlug = bucketCategory?.slug as BudgetBucket || 'other';
+    
     return this.createBudgetAllocation({
       weddingId,
+      bucket: bucketSlug,
       bucketCategoryId,
       allocatedAmount,
       ceremonyId: ceremonyId ?? null,
