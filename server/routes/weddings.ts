@@ -186,16 +186,29 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
           let eventName: string;
           let eventDescription: string;
           let eventType: string;
+          let ceremonyTypeId: string | undefined;
           
           if (customEvent.ceremonyId === "custom" && customEvent.customName) {
             eventName = customEvent.customName;
             eventDescription = "Custom event";
             eventType = "other";
+            // For custom events, try to find a generic "other" ceremony type
+            const otherCeremony = await storage.getCeremonyType(`${wedding.tradition}_other`);
+            ceremonyTypeId = otherCeremony?.id;
           } else if (ceremony) {
             eventName = ceremony.name;
             eventDescription = ceremony.description;
-            eventType = customEvent.ceremonyId.replace(/^(hindu_|sikh_|muslim_|gujarati_|south_indian_)/, "");
+            eventType = customEvent.ceremonyId.replace(/^(hindu_|sikh_|muslim_|gujarati_|south_indian_|christian_|jain_|parsi_|mixed_|other_)/, "");
+            // Look up the ceremony type directly using the full ceremonyId slug
+            const ceremonyType = await storage.getCeremonyType(customEvent.ceremonyId);
+            ceremonyTypeId = ceremonyType?.id;
           } else {
+            continue;
+          }
+          
+          // If we still don't have ceremonyTypeId, skip this event with a warning
+          if (!ceremonyTypeId) {
+            console.warn(`Could not find ceremony type for: ${customEvent.ceremonyId}, skipping event creation`);
             continue;
           }
           
@@ -225,6 +238,7 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
             guestCount: guestCount,
             date: eventDate,
             side: side,
+            ceremonyTypeId: ceremonyTypeId,
           });
         }
       } else if (wedding.tradition === "sikh") {
