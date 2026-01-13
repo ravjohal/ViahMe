@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import type { Task, Event, WeddingRoleAssignment, TaskComment } from "@shared/schema";
@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Calendar, CheckCircle2, Circle, AlertCircle, Trash2, Filter, Bell, BellOff, Mail, MessageSquare, User, Send, Sparkles, Lightbulb, X, ChevronDown, ChevronUp, Wand2, MessageCircle } from "lucide-react";
+import { Plus, Calendar, CheckCircle2, Circle, AlertCircle, Trash2, Filter, Bell, BellOff, Mail, MessageSquare, User, Send, Sparkles, Lightbulb, X, ChevronDown, ChevronUp, Wand2, MessageCircle, List, Clock } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/use-auth";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -62,6 +62,65 @@ const PRIORITY_LABELS = {
   low: "Low Priority",
 };
 
+// Timeline periods for grouping tasks by days before the wedding date
+// daysMin/daysMax represent how many days BEFORE the wedding the task should be due
+const TIMELINE_PERIODS = [
+  { key: "overdue", label: "Overdue", daysMin: null, daysMax: null },
+  { key: "after_wedding", label: "After Wedding", daysMin: null, daysMax: null },
+  { key: "day_of", label: "Day Of Wedding", daysMin: 0, daysMax: 0 },
+  { key: "day_before", label: "Day Before Wedding", daysMin: 1, daysMax: 1 },
+  { key: "one_week", label: "1 Week Before", daysMin: 2, daysMax: 7 },
+  { key: "two_weeks", label: "2 Weeks Before", daysMin: 8, daysMax: 14 },
+  { key: "one_month", label: "1 Month Before", daysMin: 15, daysMax: 31 },
+  { key: "two_months", label: "2 Months Before", daysMin: 32, daysMax: 61 },
+  { key: "three_months", label: "3 Months Before", daysMin: 62, daysMax: 92 },
+  { key: "four_months", label: "4 Months Before", daysMin: 93, daysMax: 122 },
+  { key: "six_months", label: "6 Months Before", daysMin: 123, daysMax: 184 },
+  { key: "eight_months", label: "8 Months Before", daysMin: 185, daysMax: 245 },
+  { key: "ten_months", label: "10 Months Before", daysMin: 246, daysMax: 306 },
+  { key: "twelve_plus", label: "12+ Months Before", daysMin: 307, daysMax: Infinity },
+  { key: "no_date", label: "No Due Date", daysMin: null, daysMax: null },
+];
+
+function getTimelinePeriod(task: Task, weddingDate: Date | null): string {
+  if (!task.dueDate) return "no_date";
+  if (!weddingDate) return "no_date";
+  
+  const dueDate = new Date(task.dueDate);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  dueDate.setHours(0, 0, 0, 0);
+  
+  // Calculate days until due date from today (for overdue check)
+  const daysFromNow = Math.floor((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  
+  // Check if overdue (due date has passed and task not completed)
+  if (daysFromNow < 0 && !task.completed) return "overdue";
+  
+  // Calculate days before wedding (how many days before the wedding is this task due)
+  const weddingDateCopy = new Date(weddingDate);
+  weddingDateCopy.setHours(0, 0, 0, 0);
+  const daysBeforeWedding = Math.floor((weddingDateCopy.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
+  
+  // If the task is due after the wedding (negative daysBeforeWedding)
+  if (daysBeforeWedding < 0) return "after_wedding";
+  
+  // Find matching period based on days before wedding
+  for (const period of TIMELINE_PERIODS) {
+    if (period.daysMin === null || period.daysMax === null) continue;
+    if (period.key === "overdue" || period.key === "after_wedding") continue; // Already handled
+    
+    if (daysBeforeWedding >= period.daysMin && daysBeforeWedding <= period.daysMax) {
+      return period.key;
+    }
+  }
+  
+  // Default to 12+ months if very far before wedding
+  if (daysBeforeWedding > 306) return "twelve_plus";
+  
+  return "no_date";
+}
+
 interface Collaborator {
   id: string;
   userId: string;
@@ -85,6 +144,7 @@ export default function TasksPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { user } = useAuth();
+  const [viewMode, setViewMode] = useState<"list" | "timeline">("timeline");
   const [filterPriority, setFilterPriority] = useState<string>("all");
   const [filterCompleted, setFilterCompleted] = useState<string>("all");
   const [filterEvent, setFilterEvent] = useState<string>("all");
@@ -95,6 +155,7 @@ export default function TasksPage() {
   const [aiRecommendations, setAiRecommendations] = useState<AiRecommendation[]>([]);
   const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set());
   const [newComment, setNewComment] = useState<{ [taskId: string]: string }>({});
+  const [expandedPeriods, setExpandedPeriods] = useState<Set<string>>(new Set(TIMELINE_PERIODS.map(p => p.key)));
   
   // Load dismissed recommendations from localStorage for persistence across sessions
   const [dismissedRecommendations, setDismissedRecommendations] = useState<Set<string>>(() => {
@@ -418,6 +479,39 @@ export default function TasksPage() {
     }).length,
   };
 
+  // Group tasks by timeline period for timeline view
+  const timelineGroupedTasks = useMemo(() => {
+    const weddingDate = wedding?.weddingDate ? new Date(wedding.weddingDate) : null;
+    const grouped: { [key: string]: Task[] } = {};
+    
+    TIMELINE_PERIODS.forEach(period => {
+      grouped[period.key] = [];
+    });
+    
+    filteredTasks.forEach(task => {
+      const periodKey = getTimelinePeriod(task, weddingDate);
+      if (grouped[periodKey]) {
+        grouped[periodKey].push(task);
+      } else {
+        grouped["no_date"].push(task);
+      }
+    });
+    
+    return grouped;
+  }, [filteredTasks, wedding?.weddingDate]);
+
+  const togglePeriodExpanded = (periodKey: string) => {
+    setExpandedPeriods(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(periodKey)) {
+        newSet.delete(periodKey);
+      } else {
+        newSet.add(periodKey);
+      }
+      return newSet;
+    });
+  };
+
   if (weddingsLoading) {
     return (
       <div className="container mx-auto px-6 py-8">
@@ -567,6 +661,27 @@ export default function TasksPage() {
             </SelectContent>
           </Select>
         )}
+
+        <div className="flex items-center gap-1 border rounded-md p-1">
+          <Button
+            variant={viewMode === "timeline" ? "secondary" : "ghost"}
+            size="sm"
+            onClick={() => setViewMode("timeline")}
+            data-testid="button-view-timeline"
+          >
+            <Clock className="w-4 h-4 mr-1" />
+            Timeline
+          </Button>
+          <Button
+            variant={viewMode === "list" ? "secondary" : "ghost"}
+            size="sm"
+            onClick={() => setViewMode("list")}
+            data-testid="button-view-list"
+          >
+            <List className="w-4 h-4 mr-1" />
+            List
+          </Button>
+        </div>
 
         <div className="ml-auto">
           <Dialog open={dialogOpen} onOpenChange={(open) => {
@@ -805,6 +920,145 @@ export default function TasksPage() {
                 Add Your First Task
               </Button>
             )}
+          </div>
+        ) : viewMode === "timeline" ? (
+          <div className="space-y-4">
+            {TIMELINE_PERIODS.map((period) => {
+              const periodTasks = timelineGroupedTasks[period.key] || [];
+              if (periodTasks.length === 0) return null;
+              
+              const completedCount = periodTasks.filter(t => t.completed).length;
+              const isExpanded = expandedPeriods.has(period.key);
+              
+              return (
+                <Collapsible key={period.key} open={isExpanded} onOpenChange={() => togglePeriodExpanded(period.key)}>
+                  <CollapsibleTrigger asChild>
+                    <div 
+                      className={`flex items-center justify-between p-4 rounded-lg border cursor-pointer hover-elevate ${
+                        period.key === "overdue" ? "bg-red-500/5 border-red-500/20" : "bg-muted/30"
+                      }`}
+                      data-testid={`timeline-period-${period.key}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        {isExpanded ? (
+                          <ChevronUp className="w-5 h-5 text-muted-foreground" />
+                        ) : (
+                          <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                        )}
+                        <div>
+                          <h3 className={`font-semibold ${period.key === "overdue" ? "text-red-600" : "text-foreground"}`}>
+                            {period.label}
+                          </h3>
+                          <p className="text-sm text-muted-foreground">
+                            {completedCount} of {periodTasks.length} completed
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full rounded-full ${period.key === "overdue" ? "bg-red-500" : "bg-primary"}`}
+                            style={{ width: `${periodTasks.length > 0 ? (completedCount / periodTasks.length) * 100 : 0}%` }}
+                          />
+                        </div>
+                        <Badge variant="secondary">
+                          {periodTasks.length}
+                        </Badge>
+                      </div>
+                    </div>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="space-y-2 pl-8 mt-2">
+                      {periodTasks.map((task) => {
+                        const isOverdue = task.dueDate && !task.completed && new Date(task.dueDate) < new Date();
+                        const relatedEvent = task.eventId ? events.find((e) => e.id === task.eventId) : null;
+
+                        return (
+                          <div
+                            key={task.id}
+                            className={`p-3 rounded-lg border transition-all hover-elevate ${
+                              task.completed ? "bg-muted/30 opacity-60" : "bg-card"
+                            }`}
+                            data-testid={`task-item-${task.id}`}
+                          >
+                            <div className="flex items-start gap-3">
+                              <Checkbox
+                                checked={task.completed || false}
+                                onCheckedChange={() => toggleComplete(task)}
+                                className="mt-0.5"
+                                data-testid={`checkbox-task-${task.id}`}
+                              />
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-start justify-between gap-2">
+                                  <h4
+                                    className={`font-medium ${
+                                      task.completed ? "line-through text-muted-foreground" : "text-foreground"
+                                    }`}
+                                    data-testid={`text-task-title-${task.id}`}
+                                  >
+                                    {task.title}
+                                  </h4>
+                                  <div className="flex items-center gap-1 shrink-0">
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      className="h-7 w-7"
+                                      onClick={() => handleEdit(task)}
+                                      data-testid={`button-edit-task-${task.id}`}
+                                    >
+                                      <Calendar className="w-3 h-3" />
+                                    </Button>
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      className="h-7 w-7"
+                                      onClick={() => handleDelete(task.id)}
+                                      data-testid={`button-delete-task-${task.id}`}
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                </div>
+                                {task.description && (
+                                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                                    {task.description}
+                                  </p>
+                                )}
+                                <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                                  <Badge
+                                    variant="outline"
+                                    className={`text-xs ${PRIORITY_COLORS[task.priority as keyof typeof PRIORITY_COLORS] || PRIORITY_COLORS.medium}`}
+                                  >
+                                    {task.priority}
+                                  </Badge>
+                                  {task.dueDate && (
+                                    <Badge variant="outline" className={`text-xs ${isOverdue ? "bg-red-500/10 text-red-700 dark:text-red-400" : ""}`}>
+                                      <Calendar className="w-3 h-3 mr-1" />
+                                      {format(new Date(task.dueDate), "MMM d")}
+                                    </Badge>
+                                  )}
+                                  {relatedEvent && (
+                                    <Badge variant="outline" className="text-xs">
+                                      {relatedEvent.name}
+                                    </Badge>
+                                  )}
+                                  {task.assignedToName && (
+                                    <Badge variant="outline" className="text-xs bg-chart-2/10 text-chart-2">
+                                      <User className="w-3 h-3 mr-1" />
+                                      {task.assignedToName}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              );
+            })}
           </div>
         ) : (
           <div className="space-y-3">
