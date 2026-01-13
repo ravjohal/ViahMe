@@ -225,6 +225,18 @@ import {
   type DayOfTimelineItem,
   type InsertDayOfTimelineItem,
   SIKH_WEDDING_DAY_TEMPLATE,
+  honeymoonFlights,
+  type HoneymoonFlight,
+  type InsertHoneymoonFlight,
+  honeymoonHotels,
+  type HoneymoonHotel,
+  type InsertHoneymoonHotel,
+  honeymoonActivities,
+  type HoneymoonActivity,
+  type InsertHoneymoonActivity,
+  honeymoonBudgetItems,
+  type HoneymoonBudgetItem,
+  type InsertHoneymoonBudgetItem,
   budgetAllocations,
   budgetAlerts,
   dashboardWidgets,
@@ -1249,6 +1261,36 @@ export interface IStorage {
   toggleDayOfTimelineItemCompleted(id: string): Promise<DayOfTimelineItem | undefined>;
   importDayOfTimelineTemplate(weddingId: string, templateName: string): Promise<DayOfTimelineItem[]>;
   clearDayOfTimeline(weddingId: string): Promise<boolean>;
+
+  // Honeymoon Planner - Flights
+  getHoneymoonFlight(id: string): Promise<HoneymoonFlight | undefined>;
+  getHoneymoonFlightsByWedding(weddingId: string): Promise<HoneymoonFlight[]>;
+  createHoneymoonFlight(flight: InsertHoneymoonFlight): Promise<HoneymoonFlight>;
+  updateHoneymoonFlight(id: string, flight: Partial<InsertHoneymoonFlight>): Promise<HoneymoonFlight | undefined>;
+  deleteHoneymoonFlight(id: string): Promise<boolean>;
+
+  // Honeymoon Planner - Hotels
+  getHoneymoonHotel(id: string): Promise<HoneymoonHotel | undefined>;
+  getHoneymoonHotelsByWedding(weddingId: string): Promise<HoneymoonHotel[]>;
+  createHoneymoonHotel(hotel: InsertHoneymoonHotel): Promise<HoneymoonHotel>;
+  updateHoneymoonHotel(id: string, hotel: Partial<InsertHoneymoonHotel>): Promise<HoneymoonHotel | undefined>;
+  deleteHoneymoonHotel(id: string): Promise<boolean>;
+
+  // Honeymoon Planner - Activities
+  getHoneymoonActivity(id: string): Promise<HoneymoonActivity | undefined>;
+  getHoneymoonActivitiesByWedding(weddingId: string): Promise<HoneymoonActivity[]>;
+  createHoneymoonActivity(activity: InsertHoneymoonActivity): Promise<HoneymoonActivity>;
+  updateHoneymoonActivity(id: string, activity: Partial<InsertHoneymoonActivity>): Promise<HoneymoonActivity | undefined>;
+  deleteHoneymoonActivity(id: string): Promise<boolean>;
+  toggleHoneymoonActivityCompleted(id: string): Promise<HoneymoonActivity | undefined>;
+
+  // Honeymoon Planner - Budget
+  getHoneymoonBudgetItem(id: string): Promise<HoneymoonBudgetItem | undefined>;
+  getHoneymoonBudgetItemsByWedding(weddingId: string): Promise<HoneymoonBudgetItem[]>;
+  createHoneymoonBudgetItem(item: InsertHoneymoonBudgetItem): Promise<HoneymoonBudgetItem>;
+  updateHoneymoonBudgetItem(id: string, item: Partial<InsertHoneymoonBudgetItem>): Promise<HoneymoonBudgetItem | undefined>;
+  deleteHoneymoonBudgetItem(id: string): Promise<boolean>;
+  toggleHoneymoonBudgetItemPaid(id: string): Promise<HoneymoonBudgetItem | undefined>;
 }
 
 // Guest Planning Snapshot - comprehensive view of all guests and per-event costs
@@ -11970,6 +12012,176 @@ export class DBStorage implements IStorage {
     await this.db.delete(dayOfTimelineItems)
       .where(eq(dayOfTimelineItems.weddingId, weddingId));
     return true;
+  }
+
+  // ============================================================================
+  // HONEYMOON PLANNER IMPLEMENTATIONS
+  // ============================================================================
+
+  // Honeymoon Flights
+  async getHoneymoonFlight(id: string): Promise<HoneymoonFlight | undefined> {
+    const result = await this.db.select()
+      .from(honeymoonFlights)
+      .where(eq(honeymoonFlights.id, id));
+    return result[0];
+  }
+
+  async getHoneymoonFlightsByWedding(weddingId: string): Promise<HoneymoonFlight[]> {
+    return await this.db.select()
+      .from(honeymoonFlights)
+      .where(eq(honeymoonFlights.weddingId, weddingId))
+      .orderBy(honeymoonFlights.departureDate, honeymoonFlights.departureTime);
+  }
+
+  async createHoneymoonFlight(flight: InsertHoneymoonFlight): Promise<HoneymoonFlight> {
+    const result = await this.db.insert(honeymoonFlights)
+      .values(flight)
+      .returning();
+    return result[0];
+  }
+
+  async updateHoneymoonFlight(id: string, flight: Partial<InsertHoneymoonFlight>): Promise<HoneymoonFlight | undefined> {
+    const result = await this.db.update(honeymoonFlights)
+      .set({ ...flight, updatedAt: new Date() })
+      .where(eq(honeymoonFlights.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteHoneymoonFlight(id: string): Promise<boolean> {
+    await this.db.delete(honeymoonFlights)
+      .where(eq(honeymoonFlights.id, id));
+    return true;
+  }
+
+  // Honeymoon Hotels
+  async getHoneymoonHotel(id: string): Promise<HoneymoonHotel | undefined> {
+    const result = await this.db.select()
+      .from(honeymoonHotels)
+      .where(eq(honeymoonHotels.id, id));
+    return result[0];
+  }
+
+  async getHoneymoonHotelsByWedding(weddingId: string): Promise<HoneymoonHotel[]> {
+    return await this.db.select()
+      .from(honeymoonHotels)
+      .where(eq(honeymoonHotels.weddingId, weddingId))
+      .orderBy(honeymoonHotels.checkInDate);
+  }
+
+  async createHoneymoonHotel(hotel: InsertHoneymoonHotel): Promise<HoneymoonHotel> {
+    const result = await this.db.insert(honeymoonHotels)
+      .values(hotel)
+      .returning();
+    return result[0];
+  }
+
+  async updateHoneymoonHotel(id: string, hotel: Partial<InsertHoneymoonHotel>): Promise<HoneymoonHotel | undefined> {
+    const result = await this.db.update(honeymoonHotels)
+      .set({ ...hotel, updatedAt: new Date() })
+      .where(eq(honeymoonHotels.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteHoneymoonHotel(id: string): Promise<boolean> {
+    await this.db.delete(honeymoonHotels)
+      .where(eq(honeymoonHotels.id, id));
+    return true;
+  }
+
+  // Honeymoon Activities
+  async getHoneymoonActivity(id: string): Promise<HoneymoonActivity | undefined> {
+    const result = await this.db.select()
+      .from(honeymoonActivities)
+      .where(eq(honeymoonActivities.id, id));
+    return result[0];
+  }
+
+  async getHoneymoonActivitiesByWedding(weddingId: string): Promise<HoneymoonActivity[]> {
+    return await this.db.select()
+      .from(honeymoonActivities)
+      .where(eq(honeymoonActivities.weddingId, weddingId))
+      .orderBy(honeymoonActivities.date, honeymoonActivities.time);
+  }
+
+  async createHoneymoonActivity(activity: InsertHoneymoonActivity): Promise<HoneymoonActivity> {
+    const result = await this.db.insert(honeymoonActivities)
+      .values(activity)
+      .returning();
+    return result[0];
+  }
+
+  async updateHoneymoonActivity(id: string, activity: Partial<InsertHoneymoonActivity>): Promise<HoneymoonActivity | undefined> {
+    const result = await this.db.update(honeymoonActivities)
+      .set({ ...activity, updatedAt: new Date() })
+      .where(eq(honeymoonActivities.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteHoneymoonActivity(id: string): Promise<boolean> {
+    await this.db.delete(honeymoonActivities)
+      .where(eq(honeymoonActivities.id, id));
+    return true;
+  }
+
+  async toggleHoneymoonActivityCompleted(id: string): Promise<HoneymoonActivity | undefined> {
+    const activity = await this.getHoneymoonActivity(id);
+    if (!activity) return undefined;
+    
+    const result = await this.db.update(honeymoonActivities)
+      .set({ completed: !activity.completed, updatedAt: new Date() })
+      .where(eq(honeymoonActivities.id, id))
+      .returning();
+    return result[0];
+  }
+
+  // Honeymoon Budget
+  async getHoneymoonBudgetItem(id: string): Promise<HoneymoonBudgetItem | undefined> {
+    const result = await this.db.select()
+      .from(honeymoonBudgetItems)
+      .where(eq(honeymoonBudgetItems.id, id));
+    return result[0];
+  }
+
+  async getHoneymoonBudgetItemsByWedding(weddingId: string): Promise<HoneymoonBudgetItem[]> {
+    return await this.db.select()
+      .from(honeymoonBudgetItems)
+      .where(eq(honeymoonBudgetItems.weddingId, weddingId))
+      .orderBy(honeymoonBudgetItems.category, honeymoonBudgetItems.createdAt);
+  }
+
+  async createHoneymoonBudgetItem(item: InsertHoneymoonBudgetItem): Promise<HoneymoonBudgetItem> {
+    const result = await this.db.insert(honeymoonBudgetItems)
+      .values(item)
+      .returning();
+    return result[0];
+  }
+
+  async updateHoneymoonBudgetItem(id: string, item: Partial<InsertHoneymoonBudgetItem>): Promise<HoneymoonBudgetItem | undefined> {
+    const result = await this.db.update(honeymoonBudgetItems)
+      .set({ ...item, updatedAt: new Date() })
+      .where(eq(honeymoonBudgetItems.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteHoneymoonBudgetItem(id: string): Promise<boolean> {
+    await this.db.delete(honeymoonBudgetItems)
+      .where(eq(honeymoonBudgetItems.id, id));
+    return true;
+  }
+
+  async toggleHoneymoonBudgetItemPaid(id: string): Promise<HoneymoonBudgetItem | undefined> {
+    const item = await this.getHoneymoonBudgetItem(id);
+    if (!item) return undefined;
+    
+    const result = await this.db.update(honeymoonBudgetItems)
+      .set({ isPaid: !item.isPaid, updatedAt: new Date() })
+      .where(eq(honeymoonBudgetItems.id, id))
+      .returning();
+    return result[0];
   }
 }
 
