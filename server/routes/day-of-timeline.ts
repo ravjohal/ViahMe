@@ -123,7 +123,7 @@ export async function createDayOfTimelineRouter(storage: IStorage): Promise<Rout
       // Use strict whitelist validation
       const updateSchema = insertDayOfTimelineItemSchema
         .pick({
-          time: true,
+          scheduledTime: true,
           endTime: true,
           activity: true,
           assignee: true,
