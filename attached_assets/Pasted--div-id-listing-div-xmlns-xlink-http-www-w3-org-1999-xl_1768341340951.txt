@@ -1,0 +1,1148 @@
+<div id="listing_div" xmlns:xlink="http://www.w3.org/1999/xlink"><input type="hidden" id="hdn_onetimecookie" value="2052290,2195187,2102873" name="hdn_onetimecookie" xmlns:xlink="http://www.w3.org/1999/xlink"><div class="common-promo-blk" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="promote">Ad</div><article id="div_promotionads" class="owl-carousel owl-theme" style="opacity: 1; display: block;"><div class="owl-wrapper-outer"><div class="owl-wrapper" style="width: 2622px; left: 0px; display: block;"><div class="owl-item" style="width: 437px;"><div class="item">
+      <div class="listing-column">
+        <div class="single-promo">
+          <h3><a title="DJ Services - Suhane Pal Music, DJ &amp; Karaoke Services" href="https://us.sulekha.com/san-francisco-ca/dj-service/suhane-pal-karaoke-1228555">Suhane Pal Music, DJ &amp; Karaoke Services</a></h3>
+          <div class="city-txt"><span class="material-icons-outlined">location_on</span><b>
+                      Serving in Alturas, CA</b></div>
+          <div class="my-serv"><span class="material-icons-outlined">work_outline</span>Services:&nbsp;
+            <a title="Punjabi DJs in Alturas, CA" href="/alturas-ca/punjabi-djs">Punjabi DJs</a><a title="+7 more services from Suhane Pal Music, DJ &amp; Karaoke Services" href="https://us.sulekha.com/san-francisco-ca/dj-service/suhane-pal-karaoke-1228555#services">
+                + 7 more</a></div>
+          <div class="more-detail">
+            <ul>
+              <li>
+                <div class="rating"><a title="View all reviews" href="https://us.sulekha.com/san-francisco-ca/dj-service/suhane-pal-karaoke-1228555#reviews">5<span class="material-icons-outlined">star</span></a><b>90 Reviews
+                          </b></div>
+              </li>
+              <li>
+                <div class="rating">
+                  <div class="sul-rate">9.5</div><b>Sulekha score</b></div>
+              </li>
+            </ul>
+          </div>
+          <div class="btn-outer">
+            <ul class="">
+              <li><a title="Enquire Suhane Pal Music, DJ &amp; Karaoke Services" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1228555',&quot;Suhane Pal Music, DJ &amp; Karaoke Services&quot;);gaclicktrack('send','event', 'Promoted Ad','Enquire Now', '1228555');" class="red-but"><b>Enquire Now</b></a></li>
+              <li><a title="Call Suhane Pal Music, DJ &amp; Karaoke Services" href="javascript:void(0);" onclick="javascript:openphoneConnect('Suhane Pal Music, DJ &amp; Karaoke Services','89857','5125159579');"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+                      <path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+                    </svg></span><b>Call</b></a></li>
+              <li><a title="Connect via Whatsapp" href="javascript:void()" onclick="Before_openEnquiryModal('2','1228555',&quot;Suhane Pal Music, DJ &amp; Karaoke Services&quot;);gaclicktrack('send','event', 'Promoted Ad-Whatsapp Chat','Whatsapp', '1228555');" class="whatsapp"><span><svg class="svg-inline--fa fa-whatsapp fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="whatsapp" role="img" viewBox="0 0 448 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+                      <path fill="currentColor" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"></path>
+                    </svg></span></a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div></div><div class="owl-item" style="width: 437px;"><div class="item">
+      <div class="listing-column">
+        <div class="single-promo">
+          <h3><a title="Entertainment - Mehekte Sur" href="https://us.sulekha.com/edison-nj/entertainment/mehekte-sur-1039065">Mehekte Sur</a></h3>
+          <div class="city-txt"><span class="material-icons-outlined">location_on</span><b>
+                      Serving in Sacramento, CA</b></div>
+          <div class="my-serv"><span class="material-icons-outlined">work_outline</span>Services:&nbsp;
+            <a title="Punjabi DJs in Sacramento, CA" href="/sacramento-ca/punjabi-djs">Punjabi DJs</a><a title="+15 more services from Mehekte Sur" href="https://us.sulekha.com/edison-nj/entertainment/mehekte-sur-1039065#services">
+                + 15 more</a></div>
+          <div class="more-detail">
+            <ul>
+              <li>
+                <div class="rating"><a title="View all reviews" href="https://us.sulekha.com/edison-nj/entertainment/mehekte-sur-1039065#reviews">5<span class="material-icons-outlined">star</span></a><b>629 Reviews
+                          </b></div>
+              </li>
+              <li>
+                <div class="rating">
+                  <div class="sul-rate">9.5</div><b>Sulekha score</b></div>
+              </li>
+            </ul>
+          </div>
+          <div class="btn-outer">
+            <ul class="">
+              <li><a title="Enquire Mehekte Sur" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1039065',&quot;Mehekte Sur&quot;);gaclicktrack('send','event', 'Promoted Ad','Enquire Now', '1039065');" class="red-but"><b>Enquire Now</b></a></li>
+              <li><a title="Call Mehekte Sur" href="javascript:void(0);" onclick="javascript:openphoneConnect('Mehekte Sur','37015','7738861257');"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+                      <path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+                    </svg></span><b>Call</b></a></li>
+              <li><a title="Connect via Whatsapp" href="javascript:void()" onclick="Before_openEnquiryModal('2','1039065',&quot;Mehekte Sur&quot;);gaclicktrack('send','event', 'Promoted Ad-Whatsapp Chat','Whatsapp', '1039065');" class="whatsapp"><span><svg class="svg-inline--fa fa-whatsapp fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="whatsapp" role="img" viewBox="0 0 448 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+                      <path fill="currentColor" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"></path>
+                    </svg></span></a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div></div><div class="owl-item" style="width: 437px;"><div class="item">
+      <div class="listing-column">
+        <div class="single-promo">
+          <h3><a title="DJ Services - DJ Raj Entertainment &amp; Event Lighting" href="https://us.sulekha.com/clifton-nj/dj-service/dj-raj-entertainment-699197">DJ Raj Entertainment &amp; Event Lighting</a></h3>
+          <div class="city-txt"><span class="material-icons-outlined">location_on</span><b>
+                      Serving in Sacramento, CA</b></div>
+          <div class="my-serv"><span class="material-icons-outlined">work_outline</span>Services:&nbsp;
+            <a title="Punjabi DJs in Sacramento, CA" href="/sacramento-ca/punjabi-djs">Punjabi DJs</a><a title="+5 more services from DJ Raj Entertainment &amp; Event Lighting" href="https://us.sulekha.com/clifton-nj/dj-service/dj-raj-entertainment-699197#services">
+                + 5 more</a></div>
+          <div class="more-detail">
+            <ul>
+              <li>
+                <div class="rating"><a title="View all reviews" href="https://us.sulekha.com/clifton-nj/dj-service/dj-raj-entertainment-699197#reviews">5<span class="material-icons-outlined">star</span></a><b>57 Reviews
+                          </b></div>
+              </li>
+              <li>
+                <div class="rating">
+                  <div class="sul-rate">7</div><b>Sulekha score</b></div>
+              </li>
+            </ul>
+          </div>
+          <div class="btn-outer">
+            <ul class="">
+              <li><a title="Enquire DJ Raj Entertainment &amp; Event Lighting" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '699197',&quot;DJ Raj Entertainment &amp; Event Lighting&quot;);gaclicktrack('send','event', 'Promoted Ad','Enquire Now', '699197');" class="red-but"><b>Enquire Now</b></a></li>
+              <li><a title="Call DJ Raj Entertainment &amp; Event Lighting" href="javascript:void(0);" onclick="javascript:openphoneConnect('DJ Raj Entertainment &amp; Event Lighting','65777','3126264366');"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+                      <path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+                    </svg></span><b>Call</b></a></li>
+              <li><a title="Connect via Whatsapp" href="javascript:void()" onclick="Before_openEnquiryModal('2','699197',&quot;DJ Raj Entertainment &amp; Event Lighting&quot;);gaclicktrack('send','event', 'Promoted Ad-Whatsapp Chat','Whatsapp', '699197');" class="whatsapp"><span><svg class="svg-inline--fa fa-whatsapp fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="whatsapp" role="img" viewBox="0 0 448 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+                      <path fill="currentColor" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"></path>
+                    </svg></span></a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div></div></div></div>
+    
+    <div class="owl-controls"><div class="owl-buttons"><div class="owl-prev"><span class="material-icons-outlined">chevron_left</span></div><div class="owl-next"><span class="material-icons-outlined">chevron_right</span></div></div></div></article></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2023-11-19-02-27-28-707_8.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Dj Jimmy in Sacramento, CA"></figure><div class="content "><h3><a title="Indian DJ Services - Dj Jimmy" href="/fremont-ca/dj-service/dj-jimmy-1775685">Dj Jimmy</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>
+Serving customers in  Sacramento area</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">call</span><a title="Call Dj Jimmy" href="javascript:void(0);" onclick="javascript:openphoneConnect('Dj Jimmy','25765','3126264366');"><b>312-626-4366</b></a><i>
+(pin:25765)
+</i></div><div class="experience"><span class="material-icons-outlined">work_history</span>5 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/fremont-ca/dj-service/dj-jimmy-1775685#reviews">5<span class="material-icons-outlined">star</span></a><b>7
+Reviews</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">8.3<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-trust"><ul><li>
+<div class="trust"><a href="javascript:void(0);" onclick="javascript:openSULTrust();" title="This business Information is been trusted based on users ratings and reviews."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-29-54-504.svg"></span>Trust</a></div></li><li>
+<div class="verified"><a href="javascript:void(0);" onclick="javascript:openSULVerified();" title="This business Information is verified by Sulekha."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-57-40-539.svg"></span>Verified</a></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:</a></b>
+<a title="Asian DJs in Fremont, CA" href="/fremont-ca/asian-djs">Asian DJs</a>, <a title="Event DJs in Fremont, CA" href="/fremont-ca/event-djs">Event DJs</a>, <a title="Mariachi Band DJ in Fremont, CA" href="/fremont-ca/mariachi-band-dj">Mariachi Band DJ</a>, <a title="Party DJs in Fremont, CA" href="/fremont-ca/party-djs">Party DJs</a>, <a title="Punjabi DJs in Fremont, CA" href="/fremont-ca/punjabi-djs">Punjabi DJs</a>, <a title="Sweet 16 DJs in Fremont, CA" href="/fremont-ca/sweet-16-djs">Sweet 16 DJs</a>, <a title="Wedding Band DJ in Fremont, CA" href="/fremont-ca/wedding-band-dj">Wedding Band DJ</a>, <a title="Bollywood Djs in Fremont, CA" href="/fremont-ca/bollywood-djs">Bollywood Djs</a></div><div class="more-links" style="display: none;"><a title="View all services offered by Dj Jimmy" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>DJ Jimmy is a dynamic and versatile figure in the music industry, known for his skills as a DJ, music producer, and curator. With a career spanning over several years, DJ Jimmy has become renowned for his ability to blend various genres, creating high-energy sets that captivate audiences. His deep understanding of music allows him to craft seamless transitions, ensuring that every performance resonates with listeners.
+While he initially gained recognition through his work in live events, DJ Jimmy's impact extends far beyond the stage. He has played a key role in shaping the local music scene, particularly by helping emerging artists gain exposure and providing them with opportunities to collaborate on his projects. His mixes are known for their innovative use of different sounds, combining traditional and modern elements that reflect his diverse musical taste.
+In addition to his DJing, DJ Jimmy has also contributed to music production, working with various artists to create memorable tracks. His dedication to the craft and his passion for music have earned him a loyal following and a reputation as one of the most influential DJs of his generation. With each performance, DJ Jimmy continues to push the boundaries of music, ensuring his legacy in the industry remains strong.<span class="more-links"><a title="Read More about Dj Jimmy" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class="double-link"><li><a title="Call Dj Jimmy" href="javascript:void(0);" onclick="javascript:openphoneConnect('Dj Jimmy','25765','3126264366');" class="red-but"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+</svg></span><b>Call</b></a></li><li><a title="Enquire Jimmy Singh" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1775685',&quot;Dj Jimmy&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1775685');"><b>Enquire Now</b></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2018-02-16-12-29-55-494_16.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="DJ Raj Entertainment &amp; Event Lighting in Sacramento, CA"></figure><div class="content "><h3><a title="Indian DJ Services - DJ Raj Entertainment &amp; Event Lighting" href="/clifton-nj/dj-service/dj-raj-entertainment-699197">DJ Raj Entertainment &amp; Event Lighting</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>
+Serving customers in  Sacramento area</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">call</span><a title="Call DJ Raj Entertainment &amp; Event Lighting" href="javascript:void(0);" onclick="javascript:openphoneConnect('DJ Raj Entertainment &amp; Event Lighting','65777','3126264366');"><b>312-626-4366</b></a><i>
+(pin:65777)
+</i></div><div class="experience"><span class="material-icons-outlined">work_history</span>18 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/clifton-nj/dj-service/dj-raj-entertainment-699197#reviews">5<span class="material-icons-outlined">star</span></a><b>57
+Reviews</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">7<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-trust"><ul><li>
+<div class="trust"><a href="javascript:void(0);" onclick="javascript:openSULTrust();" title="This business Information is been trusted based on users ratings and reviews."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-29-54-504.svg"></span>Trust</a></div></li><li>
+<div class="verified"><a href="javascript:void(0);" onclick="javascript:openSULVerified();" title="This business Information is verified by Sulekha."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-57-40-539.svg"></span>Verified</a></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:</a></b>
+<a title="Asian DJs in Clifton, NJ" href="/clifton-nj/asian-djs">Asian DJs</a>, <a title="Event DJs in Clifton, NJ" href="/clifton-nj/event-djs">Event DJs</a>, <a title="Party DJs in Clifton, NJ" href="/clifton-nj/party-djs">Party DJs</a>, <a title="Punjabi DJs in Clifton, NJ" href="/clifton-nj/punjabi-djs">Punjabi DJs</a>, <a title="Sweet 16 DJs in Clifton, NJ" href="/clifton-nj/sweet-16-djs">Sweet 16 DJs</a>, <a title="Wedding Band DJ in Clifton, NJ" href="/clifton-nj/wedding-band-dj">Wedding Band DJ</a></div><div class="more-links" style="display: none;"><a title="View all services offered by DJ Raj Entertainment &amp; Event Lighting" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p></p><p>DJ Raj Entertainment offers more than 18 years experience in providing talented, energetic DJ's, MC's, Singers, Musicians, Dancers, Sound, Event Lighting, Audio and Visual equipment to clients in North America and Worldwide.Services are custom tailored to fit your exact needs, from providing the perfect entertainment and event lighting to complete event planning and coordination. DJ Raj Entertainment will transform your occasion into an extra ordinary event!We are the most recommended name in the South Asian wedding market.We are fully insured and can provide any necessary paperwork to your banquet hall or catering facility upon request.</p><span class="more-links"><a title="Read More about DJ Raj Entertainment &amp; Event Lighting" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span><p></p></div><div class="btn-outer"><ul class=""><li><a title="Call DJ Raj Entertainment &amp; Event Lighting" href="javascript:void(0);" onclick="javascript:openphoneConnect('DJ Raj Entertainment &amp; Event Lighting','65777','3126264366');" class="red-but"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+</svg></span><b>Call</b></a></li><li><a title="Enquire DJ Raj Entertainment" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '699197',&quot;DJ Raj Entertainment &amp; Event Lighting&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '699197');"><b>Enquire Now</b></a></li><li><a title="WhatsApp DJ Raj Entertainment" href="javascript:void()" onclick="Before_openEnquiryModal('2','699197',&quot;DJ Raj Entertainment &amp; Event Lighting&quot;);gaclicktrack('send','event', 'Response-Whatsapp Chat','Whatsapp', '699197');" class="whatsapp"><span><svg class="svg-inline--fa fa-whatsapp fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="whatsapp" role="img" viewBox="0 0 448 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"></path>
+</svg></span></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2021-09-20-10-25-17-610_582.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="777 Events &amp; Entertainment in Sacramento, CA"></figure><div class="content "><h3><a title="Indian Entertainment - 777 Events &amp; Entertainment" href="/princeton-nj/entertainment/777-events-entertainment-1499234">777 Events &amp; Entertainment</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>
+Serving customers in  Sacramento area</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">call</span><a title="Call 777 Events &amp; Entertainment" href="javascript:void(0);" onclick="javascript:openphoneConnect('777 Events &amp; Entertainment','16887','3252084010');"><b>325-208-4010</b></a><i>
+(pin:16887)
+</i></div><div class="experience"><span class="material-icons-outlined">work_history</span>10 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/princeton-nj/entertainment/777-events-entertainment-1499234#reviews">5<span class="material-icons-outlined">star</span></a><b>27
+Reviews</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-trust"><ul><li>
+<div class="trust"><a href="javascript:void(0);" onclick="javascript:openSULTrust();" title="This business Information is been trusted based on users ratings and reviews."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-29-54-504.svg"></span>Trust</a></div></li><li>
+<div class="verified"><a href="javascript:void(0);" onclick="javascript:openSULVerified();" title="This business Information is verified by Sulekha."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-57-40-539.svg"></span>Verified</a></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="entertainment">Entertainment:</a></b>
+<a title="Asian DJs in Princeton, NJ" href="/princeton-nj/asian-djs">Asian DJs</a>, <a title="Bhajan Singers in Princeton, NJ" href="/princeton-nj/bhajan-singers">Bhajan Singers</a>, <a title="Dance Show in Princeton, NJ" href="/princeton-nj/dance-show">Dance Show</a>, <a title="DJ Equipment in Princeton, NJ" href="/princeton-nj/dj-equipment">DJ Equipment</a>, <a title="Ghazal Singers in Princeton, NJ" href="/princeton-nj/ghazal-singers">Ghazal Singers</a>, <a title="Karaoke Singers in Princeton, NJ" href="/princeton-nj/karaoke-singers">Karaoke Singers</a>, <a title="Music Shows in Princeton, NJ" href="/princeton-nj/music-shows">Music Shows</a>, <a title="Party DJs in Princeton, NJ" href="/princeton-nj/party-djs">Party DJs</a>, <a title="Punjabi DJs in Princeton, NJ" href="/princeton-nj/punjabi-djs">Punjabi DJs</a>, <a title="Singers in Princeton, NJ" href="/princeton-nj/singers">Singers</a>, <a title="Sweet 16 DJs in Princeton, NJ" href="/princeton-nj/sweet-16-djs">Sweet 16 DJs</a>, <a title="Wedding Band DJ in Princeton, NJ" href="/princeton-nj/wedding-band-dj">Wedding Band DJ</a>, <a title="Wedding Band Singers in Princeton, NJ" href="/princeton-nj/wedding-band-singers">Wedding Band Singers</a>, <a title="Wedding Singers in Princeton, NJ" href="/princeton-nj/wedding-singers">Wedding Singers</a></div><div class="more-links" style="display: none;"><a title="View all services offered by 777 Events &amp; Entertainment" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>Party Like Never Before!
+Elevate Your Events with 777 Events &amp; Entertainment
+Experience the ultimate in event services with 777 Events &amp; Entertainment. We offer a wide range of professional event management solutions, including live singing, DJ and emcee services, choreography, fog and dance on cloud, sparklers, decorations, photography and videography, and photo booth/360 services. Our team of experts will work with you to create an unforgettable event that exceeds your expectations. singing, dj, choreography, photo &amp; video, decoration.
+Kaushal S is one of the most distinguished &amp; versatile singers in entertainment. He specializes in Bollywood, Ghazal, Live Band, Karaoke Singing, and Music Shows &amp; his wife is a choreographer (Bollywood and Garba)  for various events, weddings, shows etc. He performs all over USA.<span class="more-links"><a title="Read More about 777 Events &amp; Entertainment" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class=""><li><a title="Call 777 Events &amp; Entertainment" href="javascript:void(0);" onclick="javascript:openphoneConnect('777 Events &amp; Entertainment','16887','3252084010');" class="red-but"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+</svg></span><b>Call</b></a></li><li><a title="Enquire Kaushal Sampat" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1499234',&quot;777 Events &amp; Entertainment&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1499234');"><b>Enquire Now</b></a></li><li><a title="WhatsApp Kaushal Sampat" href="javascript:void()" onclick="Before_openEnquiryModal('2','1499234',&quot;777 Events &amp; Entertainment&quot;);gaclicktrack('send','event', 'Response-Whatsapp Chat','Whatsapp', '1499234');" class="whatsapp"><span><svg class="svg-inline--fa fa-whatsapp fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="whatsapp" role="img" viewBox="0 0 448 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"></path>
+</svg></span></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://d3aew4oo17ml6.cloudfront.net/localservices/images/large/IMG-20151005-WA0003-copy-2016-7-16-23-6-37.jpg?v=2131?v=8580" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Nirvana Entertainment Bollywood And Punjabi DJ in Sacramento, CA"></figure><div class="content "><h3><a title="Indian DJ Services - Nirvana Entertainment Bollywood And Punjabi DJ" href="/san-jose-ca/dj-service/nirvana-entertainment-bollywood-and-punjabi-dj-843024">Nirvana Entertainment Bollywood And Punjabi DJ</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>39356 Blacow Road, Fremont, CA, United States</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/san-jose-ca/dj-service/nirvana-entertainment-bollywood-and-punjabi-dj-843024#reviews">5<span class="material-icons-outlined">star</span></a><b>1
+Review</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">2<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:</a></b>
+<a title="Punjabi DJs in San Jose, CA" href="/san-jose-ca/punjabi-djs">Punjabi DJs</a>, <a title="DJs Band Services in San Jose, CA" href="/san-jose-ca/djs-band-services">DJs Band Services</a>, <a title="DJ Party Music Consultants in San Jose, CA" href="/san-jose-ca/dj-party-music-consultants">DJ Party Music Consultants</a>, <a title="Pop DJ in San Jose, CA" href="/san-jose-ca/pop-dj">Pop DJ</a>, <a title="Solo Musician DJ in San Jose, CA" href="/san-jose-ca/solo-musician-dj">Solo Musician DJ</a>, <a title="Wedding Band DJ in San Jose, CA" href="/san-jose-ca/wedding-band-dj">Wedding Band DJ</a>, <a title="Bhangra DJ in San Jose, CA" href="/san-jose-ca/bhangra-dj">Bhangra DJ</a>, <a title="Party DJs in San Jose, CA" href="/san-jose-ca/party-djs">Party DJs</a>, <a title="Sweet 16 DJs in San Jose, CA" href="/san-jose-ca/sweet-16-djs">Sweet 16 DJs</a>, <a title="Event DJs in San Jose, CA" href="/san-jose-ca/event-djs">Event DJs</a></div><div class="more-links" style="display: none;"><a title="View all services offered by Nirvana Entertainment Bollywood And Punjabi DJ" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>Providing complete DJ entertainment and quality lighting for all Indian events, including Weddings, Sangeets, Birthdays, Private and Corporate events.  Nivana Entertainment rocks all events with the latest in Punjabi Bhangra, Bollywood and American Music.  With a large variety of our Music collection, we are ready to make all events quite entertaining and memorable.  In addition to music, Nirvana Entertainment offers a variety of options from uplighting, dance floor lighting, live dhol players, visuals and more. Email or contact Raju for more info.<span class="more-links"><a title="Read More about Nirvana Entertainment Bollywood And Punjabi DJ" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class="double-link"><input type="hidden" id="hdn_show_contactnumber843024" value="+1 510-938-0677"><li><a href="javascript:void(0);" onclick="Before_openEnquiryModal('3' , '843024',&quot;Nirvana Entertainment Bollywood And Punjabi DJ&quot;);gaclicktrack('send','event', 'Response-show Number', 'Show number', '843024');" class="red-but"><b>Show Number</b></a></li><li><a title="Enquire Raju" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '843024',&quot;Nirvana Entertainment Bollywood And Punjabi DJ&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '843024');"><b>Enquire Now</b></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2022-04-01-01-04-11-997_68.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="DJK Music/Entertainment Event Services in Sacramento, CA"></figure><div class="content "><h3><a title="Indian DJ Services - DJK Music/Entertainment Event Services" href="/san-jose-ca/dj-service/djk-event-services-1566375">DJK Music/Entertainment Event Services</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>San Jose, CA, USA</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">work_history</span>5 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/san-jose-ca/dj-service/djk-event-services-1566375#reviews">5<span class="material-icons-outlined">star</span></a><b>2
+Reviews</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">3.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:</a></b>
+<a title="Punjabi DJs in San Jose, CA" href="/san-jose-ca/punjabi-djs">Punjabi DJs</a>, <a title="Mariachi Band DJ in San Jose, CA" href="/san-jose-ca/mariachi-band-dj">Mariachi Band DJ</a>, <a title="Wedding Band DJ in San Jose, CA" href="/san-jose-ca/wedding-band-dj">Wedding Band DJ</a>, <a title="Party DJs in San Jose, CA" href="/san-jose-ca/party-djs">Party DJs</a>, <a title="Sweet 16 DJs in San Jose, CA" href="/san-jose-ca/sweet-16-djs">Sweet 16 DJs</a>, <a title="Asian DJs in San Jose, CA" href="/san-jose-ca/asian-djs">Asian DJs</a>, <a title="Event DJs in San Jose, CA" href="/san-jose-ca/event-djs">Event DJs</a></div><div class="more-links" style="display: none;"><a title="View all services offered by DJK Music/Entertainment Event Services" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>Music Lover, regularly playing in night clubs and besides that, I am mobile DJ and I bring the party to wherever you are, the services include DJ Services, Required Audio System, Lights &amp; beyond. 
+Price is reasonable as this is just my passion and I enjoy celebrating with people.
+Types of Music :  Bollywood, South Indian including Tollywood, Punjabi,  Electronic, Global 40 and Everything In Between.
+Specialized in Theme Parties and all kind of events.<span class="more-links"><a title="Read More about DJK Music/Entertainment Event Services" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class="double-link"><input type="hidden" id="hdn_show_contactnumber1566375" value="+1 408-612-1299"><li><a href="javascript:void(0);" onclick="Before_openEnquiryModal('3' , '1566375',&quot;DJK Music/Entertainment Event Services&quot;);gaclicktrack('send','event', 'Response-show Number', 'Show number', '1566375');" class="red-but"><b>Show Number</b></a></li><li><a title="Enquire Kiran" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1566375',&quot;DJK Music/Entertainment Event Services&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1566375');"><b>Enquire Now</b></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://d3aew4oo17ml6.cloudfront.net/localservices/images/large/DJManish_390-2016-6-21-12-8-0.jpg?v=7986?v=8098?v=2422?v=2107?v=2323" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Music Masti Magic DJ Manish in Sacramento, CA"></figure><div class="content "><h3><a title="Indian DJ Services - Music Masti Magic DJ Manish" href="/irving-tx/dj-service/music-masti-magic-dj-manish-698721">Music Masti Magic DJ Manish</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>1395 E Dove Rd, Southlake, TX 76092, USA</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/irving-tx/dj-service/music-masti-magic-dj-manish-698721#reviews">5<span class="material-icons-outlined">star</span></a><b>5
+Reviews</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">3.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:</a></b>
+<a title="Punjabi DJs in Irving, TX" href="/irving-tx/punjabi-djs">Punjabi DJs</a>, <a title="Wedding Band DJ in Irving, TX" href="/irving-tx/wedding-band-dj">Wedding Band DJ</a>, <a title="Party DJs in Irving, TX" href="/irving-tx/party-djs">Party DJs</a>, <a title="Sweet 16 DJs in Irving, TX" href="/irving-tx/sweet-16-djs">Sweet 16 DJs</a>, <a title="Asian DJs in Irving, TX" href="/irving-tx/asian-djs">Asian DJs</a>, <a title="Event DJs in Irving, TX" href="/irving-tx/event-djs">Event DJs</a>, <a title="Bollywood Djs in Irving, TX" href="/irving-tx/bollywood-djs">Bollywood Djs</a></div><div class="more-links" style="display: none;"><a title="View all services offered by Music Masti Magic DJ Manish" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>Music Masti Magic offer services in Bollywood, Punjabi Bhangra, US Top 40, Hip-Hop, Progressive Remixes, Gujarati, Telugu, Arabic and any musical genre. As a full-service entertainment provider Music Masti Magic has been serving the Dallas-Fort Worth area for nearly a decade. Our events include - Wedding, Baraat, Reception, Engagement, Birthday, Graduation, Corporate Event, House Party, School Dance &amp; Sweet 16. We are experts at customizing everything from small family gatherings to large corporate events and everything in between.<span class="more-links"><a title="Read More about Music Masti Magic DJ Manish" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class="double-link"><input type="hidden" id="hdn_show_contactnumber698721" value="+1 972-836-6972"><li><a href="javascript:void(0);" onclick="Before_openEnquiryModal('3' , '698721',&quot;Music Masti Magic DJ Manish&quot;);gaclicktrack('send','event', 'Response-show Number', 'Show number', '698721');" class="red-but"><b>Show Number</b></a></li><li><a title="Enquire DJ Manish" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '698721',&quot;Music Masti Magic DJ Manish&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '698721');"><b>Enquire Now</b></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2019-03-12-07-47-37-001_44.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Skyvision Events in Sacramento, CA"></figure><div class="content "><h3><a title="Indian DJ Services - Skyvision Events" href="/new-york-ny/dj-service/skyvision-events-751875">Skyvision Events</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>1750 Hylan Boulevard, Staten Island, NY, United States</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">work_history</span>16 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/new-york-ny/dj-service/skyvision-events-751875#reviews">5<span class="material-icons-outlined">star</span></a><b>3
+Reviews</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">3.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:</a></b>
+<a title="Wedding Band DJ in New York, NY" href="/new-york-ny/wedding-band-dj">Wedding Band DJ</a>, <a title="Party DJs in New York, NY" href="/new-york-ny/party-djs">Party DJs</a>, <a title="Sweet 16 DJs in New York, NY" href="/new-york-ny/sweet-16-djs">Sweet 16 DJs</a>, <a title="Asian DJs in New York, NY" href="/new-york-ny/asian-djs">Asian DJs</a>, <a title="Event DJs in New York, NY" href="/new-york-ny/event-djs">Event DJs</a></div><div class="more-links" style="display: none;"><a title="View all services offered by Skyvision Events" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>Looking for DJ services at New York? DJ Alpesh is the exact answer for it. He is specialized in DJs Band Services, Bollywood, Music Duo DJ, DJ Party Music Consultants, Solo Musician DJ, Wedding Band DJ, South Indian Music DJ and Bhangra DJ. He is servicing both US and Canada. He is also expertise in performing the following services like Anniversaries, Dholis, Engagement, Fashion Show, Get Together Parties, Intelligent Lightings, Karaoke or Live Singing, LED Lightings, Live Sound, Monograms, New Year Parties, Night Club Events, Premiere Bollywood DJs, Private Party, Quinceanera, Sangeet or Garba, Sound Rentals and Wedding Events. Some of the other events he provides DJ services are Sangeet Ceremony, Wedding Receptions, Birthday Parties, Anniversaries, Baby Showers, Corporate Events, Mehndi Functions, Retirement Functions, Surprise Parties, Sweet Sixteen, Dandiya Night, Baraat, Holiday Events and Fashion Shows. There are available only on weekdays from 10:00 to 19:00. He is skilled in performing DJ services. Do you want to have a stress-free event and enjoy yourself? Are you concerned that you may forget a few details? Do you want to save money and have access to special resources and vendors? You can have the event you imagine. We’ve been building our reputation and ability for years, perfecting the art of creating amazing weddings. Working with only the best partners, our little black book means no time is wasted finding exactly the right baker for exactly the right cake. It’s not just our contacts that count. It’s our approach to your wedding: respectful, collaborative, creative and cool under pressure. You get surprise and delight in all the right places and calm, comforting professionalism just when you need it most. There’s no single secret formula to a perfect wedding. Every couple is unique and so is every wedding. We always combine passion with efficiency, strategy with originality, detail with dreams and perfection with fun.<span class="more-links"><a title="Read More about Skyvision Events" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class=""><input type="hidden" id="hdn_show_contactnumber751875" value="+1 718-737-8737"><li><a href="javascript:void(0);" onclick="Before_openEnquiryModal('3' , '751875',&quot;Skyvision Events&quot;);gaclicktrack('send','event', 'Response-show Number', 'Show number', '751875');" class="red-but"><b>Show Number</b></a></li><li><a title="Enquire Alpesh Kumar Patel" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '751875',&quot;Skyvision Events&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '751875');"><b>Enquire Now</b></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2017-01-06-06-00-47-047_8634172.jpg?v=1533?v=8147" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="DJ Kumar Entertainment in Sacramento, CA"></figure><div class="content "><h3><a title="Indian DJ Services - DJ Kumar Entertainment" href="/peoria-az/dj-service/dj-kumar-entertainment-755272">DJ Kumar Entertainment</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>16301 N 73rd Dr, Peoria, AZ, USA</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/peoria-az/dj-service/dj-kumar-entertainment-755272#reviews">5<span class="material-icons-outlined">star</span></a><b>4
+Reviews</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">3.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:</a></b>
+<a title="Asian DJs in Peoria, AZ" href="/peoria-az/asian-djs">Asian DJs</a>, <a title="Event DJs in Peoria, AZ" href="/peoria-az/event-djs">Event DJs</a>, <a title="Mariachi Band DJ in Peoria, AZ" href="/peoria-az/mariachi-band-dj">Mariachi Band DJ</a>, <a title="Party DJs in Peoria, AZ" href="/peoria-az/party-djs">Party DJs</a>, <a title="Punjabi DJs in Peoria, AZ" href="/peoria-az/punjabi-djs">Punjabi DJs</a>, <a title="Sweet 16 DJs in Peoria, AZ" href="/peoria-az/sweet-16-djs">Sweet 16 DJs</a>, <a title="Wedding Band DJ in Peoria, AZ" href="/peoria-az/wedding-band-dj">Wedding Band DJ</a></div><div class="more-links" style="display: none;"><a title="View all services offered by DJ Kumar Entertainment" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>Looking for Desi Dj who can rock your party.  Dj kumar is ready to host your event! why be ordinary? let your party be extraordinary! years of happy clients in the valley, Dj kumar has many years of experience playing music and providing led lighting's.  I play Bollywood, Punjabi, Telugu, Tamil, and as well as American top 40. 
+let Dj kumar offers a memorable and unique service to ensure your event is an unforgettable experience. we are dedicated to making your special occasion one to remember offering diverse packages to fit any event specification.
+Top 40, Hip Hop for Birthdays, Wedding Receptions, Celebrations &amp; More. Contact DJ Kumar for your next music occasion.<span class="more-links"><a title="Read More about DJ Kumar Entertainment" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class=""><input type="hidden" id="hdn_show_contactnumber755272" value="+1 480-329-0246"><li><a href="javascript:void(0);" onclick="Before_openEnquiryModal('3' , '755272',&quot;DJ Kumar Entertainment&quot;);gaclicktrack('send','event', 'Response-show Number', 'Show number', '755272');" class="red-but"><b>Show Number</b></a></li><li><a title="Enquire DJ Kumar" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '755272',&quot;DJ Kumar Entertainment&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '755272');"><b>Enquire Now</b></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2024-07-29-07-29-14-708_53.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="DJ Amit in Sacramento, CA"></figure><div class="content "><h3><a title="Indian DJ Services - DJ Amit" href="/carmichael-ca/dj-service/dj-amit-1848786">DJ Amit</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>Carmichael, CA, United States</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">work_history</span>
+Established Since 2010</div><div class="business-rate"><ul><li>
+<div class="mob-rating">
+<div class="sul-rate">2.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:</a></b>
+<a title="Asian DJs in Carmichael, CA" href="/carmichael-ca/asian-djs">Asian DJs</a>, <a title="Bollywood Djs in Carmichael, CA" href="/carmichael-ca/bollywood-djs">Bollywood Djs</a>, <a title="Event DJs in Carmichael, CA" href="/carmichael-ca/event-djs">Event DJs</a>, <a title="Mariachi Band DJ in Carmichael, CA" href="/carmichael-ca/mariachi-band-dj">Mariachi Band DJ</a>, <a title="Party DJs in Carmichael, CA" href="/carmichael-ca/party-djs">Party DJs</a>, <a title="Punjabi DJs in Carmichael, CA" href="/carmichael-ca/punjabi-djs">Punjabi DJs</a>, <a title="Sweet 16 DJs in Carmichael, CA" href="/carmichael-ca/sweet-16-djs">Sweet 16 DJs</a>, <a title="Wedding Band DJ in Carmichael, CA" href="/carmichael-ca/wedding-band-dj">Wedding Band DJ</a></div><div class="more-links" style="display: none;"><a title="View all services offered by DJ Amit" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>I am one of the most distinguished DJ Services in Carmichael, CA. I specialize in Asian DJs,Bollywood Djs,Event DJs,Mariachi Band DJ,Party DJs,Punjabi DJs,Sweet 16 DJs,Wedding Band DJ Hello all, providing production services throughout the area, founded on the belief that your wedding should be special and one of a kind. We take great efforts in going above and beyond for your wedding. All our events are different and tailored to be custom. We make sure to deliver clients' goals and expectations. Our entertainment company provides top-level services such as lighting, sparklers, dancing on clouds and visual led walls. We would love to sit down with you and learn more about your event. Thanks in advance!!<span class="more-links"><a title="Read More about DJ Amit" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class="single-link"><li><a title="Enquire DJ Amit" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1848786',&quot;DJ Amit&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1848786');"><b>Enquire Now</b></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2024-04-18-02-42-23-795_70.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Apni Awaaz in Sacramento, CA"></figure><div class="content "><h3><a title="Indian DJ Services - Apni Awaaz" href="/sacramento-ca/dj-service/apni-awaaz-1818193">Apni Awaaz</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>Sacramento, CA, United States</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating">
+<div class="sul-rate">2.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:</a></b>
+<a title="Asian DJs in Sacramento, CA" href="/sacramento-ca/asian-djs">Asian DJs</a>, <a title="Bollywood Djs in Sacramento, CA" href="/sacramento-ca/bollywood-djs">Bollywood Djs</a>, <a title="Event DJs in Sacramento, CA" href="/sacramento-ca/event-djs">Event DJs</a>, <a title="Mariachi Band DJ in Sacramento, CA" href="/sacramento-ca/mariachi-band-dj">Mariachi Band DJ</a>, <a title="Party DJs in Sacramento, CA" href="/sacramento-ca/party-djs">Party DJs</a>, <a title="Punjabi DJs in Sacramento, CA" href="/sacramento-ca/punjabi-djs">Punjabi DJs</a>, <a title="Sweet 16 DJs in Sacramento, CA" href="/sacramento-ca/sweet-16-djs">Sweet 16 DJs</a>, <a title="Wedding Band DJ in Sacramento, CA" href="/sacramento-ca/wedding-band-dj">Wedding Band DJ</a>, </div><div class="more-links" style="display: none;"><a title="View all services offered by Apni Awaaz" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>We are California's Premier Entertainment Services, providing high-quality services to clients across the state and country. Apni Awaaz was founded by Dev Khalasi, who, from day one, has strived to provide the best customer service for his clients and guests in the event industry.With over 15 years in the industry, Apni Awaaz has created the perfect formula for all fusion events. This consists of a diverse music playlist of Bollywood, Punjabi and Western music. All music playlists are tailored to what the client desires but the most important part of any event is understanding and reading the crowd, which we strive on Trust us when when we say you are in good hands with your next event!
+?<span class="more-links"><a title="Read More about Apni Awaaz" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class="single-link"><li><a title="Enquire Devendra Khalasi" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1818193',&quot;Apni Awaaz&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1818193');"><b>Enquire Now</b></a></li></ul></div></div><div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2024-07-29-07-29-14-708_53.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="DJ Amit in , "></figure><div class="content ">
+      <h3><a title="Indian DJ Services - DJ Amit" href="/carmichael-ca/dj-service/dj-amit-1848786">DJ Amit</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>Carmichael, CA, United States</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>
+              Established Since 2010</div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">2.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Asian DJs in Carmichael, CA" href="/carmichael-ca/asian-djs">Asian DJs</a>, 
+          &nbsp;<a title="Bollywood Djs in Carmichael, CA" href="/carmichael-ca/bollywood-djs">Bollywood Djs</a>, 
+          &nbsp;<a title="Event DJs in Carmichael, CA" href="/carmichael-ca/event-djs">Event DJs</a>, 
+          &nbsp;<a title="Mariachi Band DJ in Carmichael, CA" href="/carmichael-ca/mariachi-band-dj">Mariachi Band DJ</a>, 
+          &nbsp;<a title="Party DJs in Carmichael, CA" href="/carmichael-ca/party-djs">Party DJs</a>, 
+          &nbsp;<a title="Punjabi DJs in Carmichael, CA" href="/carmichael-ca/punjabi-djs">Punjabi DJs</a>, 
+          &nbsp;<a title="Sweet 16 DJs in Carmichael, CA" href="/carmichael-ca/sweet-16-djs">Sweet 16 DJs</a>, 
+          &nbsp;<a title="Wedding Band DJ in Carmichael, CA" href="/carmichael-ca/wedding-band-dj">Wedding Band DJ</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by DJ Amit" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>I am one of the most distinguished DJ Services in Carmichael, CA. I specialize in Asian DJs,Bollywood Djs,Event DJs,Mariachi Band DJ,Party DJs,Punjabi DJs,Sweet 16 DJs,Wedding Band DJ Hello all, providing production services throughout the area, founded on the belief that your wedding should be special and one of a kind. We take great efforts in going above and beyond for your wedding. All our events are different and tailored to be custom. We make sure to deliver clients' goals and expectations. Our entertainment company provides top-level services such as lighting, sparklers, dancing on clouds and visual led walls. We would love to sit down with you and learn more about your event. Thanks in advance!!<span class="more-links"><a title="Read More about DJ Amit" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="single-link">
+      <li><a title="Enquire DJ Amit" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1848786',&quot;DJ Amit&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1848786');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2024-04-18-02-42-23-795_70.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Apni Awaaz in , "></figure><div class="content ">
+      <h3><a title="Indian DJ Services - Apni Awaaz" href="/sacramento-ca/dj-service/apni-awaaz-1818193">Apni Awaaz</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>Sacramento, CA, United States</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">2.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Asian DJs in Sacramento, CA" href="/sacramento-ca/asian-djs">Asian DJs</a>, 
+          &nbsp;<a title="Bollywood Djs in Sacramento, CA" href="/sacramento-ca/bollywood-djs">Bollywood Djs</a>, 
+          &nbsp;<a title="Event DJs in Sacramento, CA" href="/sacramento-ca/event-djs">Event DJs</a>, 
+          &nbsp;<a title="Mariachi Band DJ in Sacramento, CA" href="/sacramento-ca/mariachi-band-dj">Mariachi Band DJ</a>, 
+          &nbsp;<a title="Party DJs in Sacramento, CA" href="/sacramento-ca/party-djs">Party DJs</a>, 
+          &nbsp;<a title="Punjabi DJs in Sacramento, CA" href="/sacramento-ca/punjabi-djs">Punjabi DJs</a>, 
+          &nbsp;<a title="Sweet 16 DJs in Sacramento, CA" href="/sacramento-ca/sweet-16-djs">Sweet 16 DJs</a>, 
+          &nbsp;<a title="Wedding Band DJ in Sacramento, CA" href="/sacramento-ca/wedding-band-dj">Wedding Band DJ</a>, </div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by Apni Awaaz" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>We are California's Premier Entertainment Services, providing high-quality services to clients across the state and country. Apni Awaaz was founded by Dev Khalasi, who, from day one, has strived to provide the best customer service for his clients and guests in the event industry.With over 15 years in the industry, Apni Awaaz has created the perfect formula for all fusion events. This consists of a diverse music playlist of Bollywood, Punjabi and Western music. All music playlists are tailored to what the client desires but the most important part of any event is understanding and reading the crowd, which we strive on Trust us when when we say you are in good hands with your next event!
+
+ 
+
+?<span class="more-links"><a title="Read More about Apni Awaaz" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="single-link">
+      <li><a title="Enquire Devendra Khalasi" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1818193',&quot;Apni Awaaz&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1818193');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2024-03-15-02-25-27-258_57.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="DJ Amit in , "></figure><div class="content ">
+      <h3><a title="Indian DJ Services - DJ Amit" href="/sacramento-ca/dj-service/dj-amit-1808206">DJ Amit</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>Sacramento, CA, USA</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">1.7<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Asian DJs in Sacramento, CA" href="/sacramento-ca/asian-djs">Asian DJs</a>, 
+          &nbsp;<a title="Bollywood Djs in Sacramento, CA" href="/sacramento-ca/bollywood-djs">Bollywood Djs</a>, 
+          &nbsp;<a title="Event DJs in Sacramento, CA" href="/sacramento-ca/event-djs">Event DJs</a>, 
+          &nbsp;<a title="Mariachi Band DJ in Sacramento, CA" href="/sacramento-ca/mariachi-band-dj">Mariachi Band DJ</a>, 
+          &nbsp;<a title="Party DJs in Sacramento, CA" href="/sacramento-ca/party-djs">Party DJs</a>, 
+          &nbsp;<a title="Punjabi DJs in Sacramento, CA" href="/sacramento-ca/punjabi-djs">Punjabi DJs</a>, 
+          &nbsp;<a title="Sweet 16 DJs in Sacramento, CA" href="/sacramento-ca/sweet-16-djs">Sweet 16 DJs</a>, 
+          &nbsp;<a title="Wedding Band DJ in Sacramento, CA" href="/sacramento-ca/wedding-band-dj">Wedding Band DJ</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by DJ Amit" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>I am one of the most distinguished DJ services in Sacramento, CA. I specialize in Asian DJs,Bollywood DJs,Event DJs,Mariachi Band DJ,Party DJs,Punjabi DJs,Sweet 16 DJs, and  and Wedding Band DJ Hello all, providing production services throughout the area, founded on the belief that your wedding should be special and one of a kind. We take great efforts in going above and beyond for your wedding. All our events are different and tailored to be custom. We make sure to deliver clients' goals and expectations. Our entertainment company provides top-level services such as lighting, sparklers, dancing on clouds and visual led walls. We would love to sit down with you and learn more about your event. Thanks in advance!!<span class="more-links"><a title="Read More about DJ Amit" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="single-link">
+      <li><a title="Enquire Amit" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1808206',&quot;DJ Amit&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1808206');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2023-04-12-01-41-16-982_49.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="DJ Kirpal in , "></figure><div class="content ">
+      <h3><a title="Indian DJ Services - DJ Kirpal" href="/sacramento-ca/dj-service/dj-kirpal-1699180">DJ Kirpal</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>Sacramento, CA, United States</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>
+              Established Since 2018</div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">2.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Asian DJs in Sacramento, CA" href="/sacramento-ca/asian-djs">Asian DJs</a>, 
+          &nbsp;<a title="Event DJs in Sacramento, CA" href="/sacramento-ca/event-djs">Event DJs</a>, 
+          &nbsp;<a title="Party DJs in Sacramento, CA" href="/sacramento-ca/party-djs">Party DJs</a>, 
+          &nbsp;<a title="Punjabi DJs in Sacramento, CA" href="/sacramento-ca/punjabi-djs">Punjabi DJs</a>, 
+          &nbsp;<a title="Wedding Band DJ in Sacramento, CA" href="/sacramento-ca/wedding-band-dj">Wedding Band DJ</a>, </div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by DJ Kirpal" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>I am one of the most distinguished DJ Services in Sacramento, CA. I specialize in Asian DJs, Event DJs, Party DJs, Punjabi DJs, Wedding Band DJs, and EntertainmentHello All, which provides production services throughout the area, founded on the belief that your wedding should be special and one of a kind. We take great efforts in going above and beyond for your wedding. All our events are different and tailored to be custom. We make sure to deliver clients' goals and expectations. Our entertainment company provides top-level services such as lighting, sparklers, dancing on clouds, and visually led walls. We would love to sit down with you and learn more about your event. <span class="more-links"><a title="Read More about DJ Kirpal" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="single-link">
+      <li><a title="Enquire DJ Kirpal" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1699180',&quot;DJ Kirpal&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1699180');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2022-10-21-03-21-33-727_61.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="DJ Brock &amp; Steele Weddings in , "></figure><div class="content ">
+      <h3><a title="Indian DJ Services - DJ Brock &amp; Steele Weddings" href="/incline-village-nv/dj-service/dj-brock-steele-weddings-1640571">DJ Brock &amp; Steele Weddings</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>Incline Village, NV 89451, USA</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>
+              Established Since 2015</div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating"><a title="View All Reviews" href="/incline-village-nv/dj-service/dj-brock-steele-weddings-1640571#reviews">5<span class="material-icons-outlined">star</span></a><b>4
+                          Reviews
+                        </b></div>
+      </li>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">3.4<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Event DJs in Incline Village, NV" href="/incline-village-nv/event-djs">Event DJs</a>, 
+          &nbsp;<a title="Party DJs in Incline Village, NV" href="/incline-village-nv/party-djs">Party DJs</a>, 
+          &nbsp;<a title="Sweet 16 DJs in Incline Village, NV" href="/incline-village-nv/sweet-16-djs">Sweet 16 DJs</a>, 
+          &nbsp;<a title="Wedding Band DJ in Incline Village, NV" href="/incline-village-nv/wedding-band-dj">Wedding Band DJ</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by DJ Brock &amp; Steele Weddings" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>Logan Steele and Kyle Brock have truly enjoyed being a part of helping couples celebrate one of the most important and happiest days of their lives. Their wedding day! This is the day that your journey begins! We would both consider it a great honor to be chosen to MC on your special day and help with creating happy memories.
+Great music is an important key to any great wedding. That is why both DJ Brock and DJ Steele go above and beyond to provide nothing but the best for their clients. Wedding planning can be stressful, but you can feel confident that you are in good hands with DJ Brock and Steele Weddings. If you have a vision for the music that you would like to see at your wedding, or a particular musical interest- no problem! Whether you have DJ Steele or DJ Brock you can rest assured knowing that they will make your visions a reality.
+We appreciate the opportunity to help make your wedding day truly better than you could have imagined, and celebrating with the people you love most! It would be a privilege to interact with your guests, and even dance with your grandma =) Your vows, emotions, and packed dance floor are just a few of the things that we really look forward to on your special day.<span class="more-links"><a title="Read More about DJ Brock &amp; Steele Weddings" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="single-link">
+      <li><a title="Enquire DJ Brock Steele Wedding" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1640571',&quot;DJ Brock &amp; Steele Weddings&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1640571');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg" alt="All Pro Entertainment in , "></figure><div class="content ">
+      <h3><a title="Indian DJ Services - All Pro Entertainment" href="/sacramento-ca/dj-service/all-pro-entertainment-812339">All Pro Entertainment</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>Sacramento, CA, United States</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">1.5<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:&nbsp;
+                      </a></b>
+          &nbsp;<a title="DJs Band Services in Sacramento, CA" href="/sacramento-ca/djs-band-services">DJs Band Services</a>, 
+          &nbsp;<a title="Hip Hop/ Rap DJ in Sacramento, CA" href="/sacramento-ca/hip-hop-rap-dj">Hip Hop/ Rap DJ</a>, 
+          &nbsp;<a title="Pop DJ in Sacramento, CA" href="/sacramento-ca/pop-dj">Pop DJ</a>, 
+          &nbsp;<a title="Rock DJ in Sacramento, CA" href="/sacramento-ca/rock-dj">Rock DJ</a>, 
+          &nbsp;<a title="Solo Musician DJ in Sacramento, CA" href="/sacramento-ca/solo-musician-dj">Solo Musician DJ</a>, 
+          &nbsp;<a title="Wedding Band DJ in Sacramento, CA" href="/sacramento-ca/wedding-band-dj">Wedding Band DJ</a>, 
+          &nbsp;<a title="Reggae Music DJ in Sacramento, CA" href="/sacramento-ca/reggae-music-dj">Reggae Music DJ</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by All Pro Entertainment" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>All Pro Entertainment only uses professional sound equipment similar to what they have in nightclubs. This means you get the best possible quality sound available. The difference when hiring our services is that you are using the service of a company owned by Professional DJ's. All Pro Entertainment is the best choice for the entertainment at your next event! We have been proudly serving Northern California for over 5 years. We are a company specializing in, but not limited to: Weddings, Corporate Parties, School Dances, Sorority &amp; Frat Parties, Large Venues, Outdoor Shows, and events with large attendance. All Pro Entertainment's equipment is without doubt the best available enabling us to cater for a variety of functions from Weddings, Corporate Events, Private Events, Social and Club Functions, and More.<span class="more-links"><a title="Read More about All Pro Entertainment" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="single-link">
+      <li><a title="Enquire All Pro Entertainment" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '812339',&quot;All Pro Entertainment&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '812339');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg" alt="DJ Sneh Entertainment LLC in , "></figure><div class="content ">
+      <h3><a title="Indian DJ Services - DJ Sneh Entertainment LLC" href="/roseville-ca/dj-service/dj-sneh-entertainment-llc-812333">DJ Sneh Entertainment LLC</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>333 Aspen Ct, Roseville, CA, United States</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">1.5<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:&nbsp;
+                      </a></b>
+          &nbsp;<a title="DJs Band Services in Roseville, CA" href="/roseville-ca/djs-band-services">DJs Band Services</a>, 
+          &nbsp;<a title="Solo Musician DJ in Roseville, CA" href="/roseville-ca/solo-musician-dj">Solo Musician DJ</a>, 
+          &nbsp;<a title="Wedding Band DJ in Roseville, CA" href="/roseville-ca/wedding-band-dj">Wedding Band DJ</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by DJ Sneh Entertainment LLC" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>State of the Art DJ System by Pioneer, World's NO#1 Bose Digital Surround Sound Enforcement and Quality Event Lighting including Up-Lighting using efficient LED light source will not only make your event colorful it will make it a Memorable One!! 10+ Years of Pro-Audio and Stage Lighting experiences in entire Norther California have made us the Chosen ONE!! Whether it’s a small scale live community event or a full blown Live Concert we got the skill, experience and equipment’s you need.<span class="more-links"><a title="Read More about DJ Sneh Entertainment LLC" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="single-link">
+      <li><a title="Enquire DJ Sneh Entertainment LLC" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '812333',&quot;DJ Sneh Entertainment LLC&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '812333');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg" alt="The BPR Crew in , "></figure><div class="content ">
+      <h3><a title="Indian DJ Services - The BPR Crew" href="/elk-grove-ca/dj-service/the-bpr-crew-802061">The BPR Crew</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>Elk Grove, California, United States</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>16 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">1.5<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:&nbsp;
+                      </a></b>
+          &nbsp;<a title="DJs Band Services in Elk Grove, CA" href="/elk-grove-ca/djs-band-services">DJs Band Services</a>, 
+          &nbsp;<a title="Jazz Band DJ in Elk Grove, CA" href="/elk-grove-ca/jazz-band-dj">Jazz Band DJ</a>, 
+          &nbsp;<a title="DJ Party Music Consultants in Elk Grove, CA" href="/elk-grove-ca/dj-party-music-consultants">DJ Party Music Consultants</a>, 
+          &nbsp;<a title="Wedding Band DJ in Elk Grove, CA" href="/elk-grove-ca/wedding-band-dj">Wedding Band DJ</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by The BPR Crew" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>Are you or any one you know planning a wedding or other special event and must have the very best DJ's, MC's, Dance Teams or Live Performers? Well look no further! The Bpr Crew - Bhangra Perfections Roadshow is one of the nation's largest DJ and entertainment companies with over 21yrs experience. We have performed at more than 2000 events worldwide. we provide State-of – the- art Sound, Lights, Screens, Lazer Lights Shows,Special Effects Lighting,Video &amp; Photography,Planning &amp; Management,Decor,Party Favor CD's .Bar Tenders &amp; Servers, Security &amp; Personal Body Guards. no matter how large or small your event may be. There are many differnt packages to fit your venue &amp; budget.<span class="more-links"><a title="Read More about The BPR Crew" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="single-link">
+      <li><a title="Enquire Sukhi" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '802061',&quot;The BPR Crew&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '802061');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg" alt="Dj Desi Tigerz in , "></figure><div class="content ">
+      <h3><a title="Indian DJ Services - Dj Desi Tigerz" href="/sacramento-ca/dj-service/dj-desi-tigerz-792485">Dj Desi Tigerz</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>Sacramento, CA, United States</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>5 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">1.5<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Wedding Band DJ in Sacramento, CA" href="/sacramento-ca/wedding-band-dj">Wedding Band DJ</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by Dj Desi Tigerz" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>Professional and experienced Djs for any Occasional Desi (Punjabi,Hindi,Pakistani) Parties. Great value ! Dholi, full decoration, catering, Projection, Video and Camera service available.For more details contact us.
+<span class="more-links"><a title="Read More about Dj Desi Tigerz" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="single-link">
+      <li><a title="Enquire Dj Desi Tigerz" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '792485',&quot;Dj Desi Tigerz&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '792485');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg" alt="Ronak Mela in , "></figure><div class="content ">
+      <h3><a title="Indian DJ Services - Ronak Mela" href="/davis-ca/dj-service/ronak-mela-787454">Ronak Mela</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>Davis, CA 95618, United States</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>5 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">1.5<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Hip Hop/ Rap DJ in Davis, CA" href="/davis-ca/hip-hop-rap-dj">Hip Hop/ Rap DJ</a>, 
+          &nbsp;<a title="Wedding Band DJ in Davis, CA" href="/davis-ca/wedding-band-dj">Wedding Band DJ</a>, 
+          &nbsp;<a title="Bhangra DJ in Davis, CA" href="/davis-ca/bhangra-dj">Bhangra DJ</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by Ronak Mela" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>Ronak Mela performs the following DJ services: Remixes Hindi, Bhangra &amp; Hip-Hop. This summer, look out for their new album. For further inquiries, contact via phone or email.<span class="more-links"><a title="Read More about Ronak Mela" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="single-link">
+      <li><a title="Enquire Ronak Mela" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '787454',&quot;Ronak Mela&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '787454');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2021-09-03-08-51-18-038_94.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Dj Hinda in , "></figure><div class="content ">
+      <h3><a title="Indian DJ Services - Dj Hinda" href="/antelope-ca/dj-service/dj-hinda-1492500">Dj Hinda</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>Antelope, CA, USA</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>5 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">1.7<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Asian DJs in Antelope, CA" href="/antelope-ca/asian-djs">Asian DJs</a>, 
+          &nbsp;<a title="Event DJs in Antelope, CA" href="/antelope-ca/event-djs">Event DJs</a>, 
+          &nbsp;<a title="Party DJs in Antelope, CA" href="/antelope-ca/party-djs">Party DJs</a>, 
+          &nbsp;<a title="Punjabi DJs in Antelope, CA" href="/antelope-ca/punjabi-djs">Punjabi DJs</a>, 
+          &nbsp;<a title="Wedding Band DJ in Antelope, CA" href="/antelope-ca/wedding-band-dj">Wedding Band DJ</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by Dj Hinda" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>Hello all, providing production services throughout the area, founded on the belief that your wedding should be special and one of a kind. We take great efforts in going above and beyond for your wedding. All our events are different and tailored to be custom. We make sure to deliver clients' goals and expectations. Our entertainment company provides top-level services such as lighting, sparklers, dancing on clouds and visual led walls. We would love to sit down with you and learn more about your event. Thanks in advance!!<span class="more-links"><a title="Read More about Dj Hinda" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="single-link">
+      <li><a title="Enquire Hinda Phagura" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1492500',&quot;Dj Hinda&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1492500');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2020-02-27-08-25-45-518_20.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Dhol Baaje in , "></figure><div class="content ">
+      <h3><a title="Indian DJ Services - Dhol Baaje" href="/sacramento-ca/dj-service/dhol-baaje-1339750">Dhol Baaje</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>Sacramento, CA, USA</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">2.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Event DJs in Sacramento, CA" href="/sacramento-ca/event-djs">Event DJs</a>, 
+          &nbsp;<a title="Party DJs in Sacramento, CA" href="/sacramento-ca/party-djs">Party DJs</a>, 
+          &nbsp;<a title="Sweet 16 DJs in Sacramento, CA" href="/sacramento-ca/sweet-16-djs">Sweet 16 DJs</a>, 
+          &nbsp;<a title="Wedding Band DJ in Sacramento, CA" href="/sacramento-ca/wedding-band-dj">Wedding Band DJ</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by Dhol Baaje" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>Dhol Baaje has set the standard for the DJ industry in ca and its suburbs for the past 3 years. Since our inception, our number one priority has been simple, to meet or exceed our client’s expectations for their event entertainment. Our success in doing this is reflected not only in the very positive reviews we consistently receive but even more in the fact that a majority of our clients are repeat or referral customers. With our company’s standards &amp; level of professionalism and our DJs talent &amp; experience, you can be assured that Relimai Entertainment will meet your highest expectations for your event entertainment. We utilize the highest quality, most up to date technology in equipment, and the highest level of professionalism to ensure everyone who trusts us to be a part of their event is amazing in every way!<span class="more-links"><a title="Read More about Dhol Baaje" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="single-link">
+      <li><a title="Enquire Dhol Baaje" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1339750',&quot;Dhol Baaje&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1339750');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2020-01-21-08-36-10-573_93.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="DJ Regal Weddings Entertainment Group in , "></figure><div class="content ">
+      <h3><a title="Indian DJ Services - DJ Regal Weddings Entertainment Group" href="/sacramento-ca/dj-service/dj-regal-weddings-entertainment-group-1314239">DJ Regal Weddings Entertainment Group</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>Sacramento, CA, USA</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>5 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">2.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Asian DJs in Sacramento, CA" href="/sacramento-ca/asian-djs">Asian DJs</a>, 
+          &nbsp;<a title="Event DJs in Sacramento, CA" href="/sacramento-ca/event-djs">Event DJs</a>, 
+          &nbsp;<a title="Wedding Band DJ in Sacramento, CA" href="/sacramento-ca/wedding-band-dj">Wedding Band DJ</a>, </div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by DJ Regal Weddings Entertainment Group" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>Regal Weddings is the leading expert in luxury Indian weddings. Providing production services throughout California and the USA. Regal Weddings is founded on the belief that your wedding should be special and one of a kind. We take great efforts in going above and beyond for your wedding. All our events are different and tailored to be custom. We make sure to deliver clients' goals and expectations. Our entertainment company provides top-level services such as lighting, sparklers, dancing on clouds and visual led walls.  We would love to sit down with you and learn more about your event.
+
+
+
+
+
+<span class="more-links"><a title="Read More about DJ Regal Weddings Entertainment Group" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="single-link">
+      <li><a title="Enquire DJ Regal" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1314239',&quot;DJ Regal Weddings Entertainment Group&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1314239');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://d3aew4oo17ml6.cloudfront.net/localservices/images/large/service-2016-11-17-3-54-39.jpg?v=6468?v=9892" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Punjabi Virsa Entertainment in , "></figure><div class="content ">
+      <h3><a title="Indian DJ Services - Punjabi Virsa Entertainment" href="/stockton-ca/dj-service/punjabi-virsa-entertainment-889587">Punjabi Virsa Entertainment</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>Stockton, CA, United States</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating"><a title="View All Reviews" href="/stockton-ca/dj-service/punjabi-virsa-entertainment-889587#reviews">5<span class="material-icons-outlined">star</span></a><b>13
+                          Reviews
+                        </b></div>
+      </li>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">3.2<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:&nbsp;
+                      </a></b>
+          &nbsp;<a title="DJs Band Services in Stockton, CA" href="/stockton-ca/djs-band-services">DJs Band Services</a>, 
+          &nbsp;<a title="Hip Hop/ Rap DJ in Stockton, CA" href="/stockton-ca/hip-hop-rap-dj">Hip Hop/ Rap DJ</a>, 
+          &nbsp;<a title="Wedding Band DJ in Stockton, CA" href="/stockton-ca/wedding-band-dj">Wedding Band DJ</a>, 
+          &nbsp;<a title="Punjabi DJs in Stockton, CA" href="/stockton-ca/punjabi-djs">Punjabi DJs</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by Punjabi Virsa Entertainment" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>PVE is your one stop Entertainment Company. We have a LARGE selection of songs to fit your music needs. PVE also offers rentals on most of our products! We have a variety of entertainment services available for any occasion, big or small. We have performed at thousands of events and have years of experience behind us. We specialize in Punjabi, Hindi, Top 40's, Old School and Hip-Hop. Our Company Offers: DJ service, Sound systems, Pa systems, Screens and projectors, Moving heads, Laser lighting, Uplighting, Custom gobos (monograms), Gobo patterns, Spotlights, Dhol players, Photo booths, Acrylic led glow bars, Led bistro tables, White dance floors. <span class="more-links"><a title="Read More about Punjabi Virsa Entertainment" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="single-link">
+      <li><a title="Enquire Karamjeet S" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '889587',&quot;Punjabi Virsa Entertainment&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '889587');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg" alt="DJ Malhi Entertainment in , "></figure><div class="content ">
+      <h3><a title="Indian DJ Services - DJ Malhi Entertainment" href="/clovis-ca/dj-service/dj-malhi-entertainment-780439">DJ Malhi Entertainment</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>Clovis, CA, United States</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>5 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">1.5<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:&nbsp;
+                      </a></b>
+          &nbsp;<a title="DJs Band Services in Clovis, CA" href="/clovis-ca/djs-band-services">DJs Band Services</a>, 
+          &nbsp;<a title="South Indian Music DJ in Clovis, CA" href="/clovis-ca/south-indian-music-dj">South Indian Music DJ</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by DJ Malhi Entertainment" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>DJ Malhi Entertainment can also rent or provide various types of wedding accessories and services such as; Up Lighting, Monogram Gobo Lights, Projector screens, Plasma TVs, Decoration, Limousine Service, organising Cakes, Security guards, Bar Tender/Waitress, Photography &amp; Video, Turban(Pagg) tying, Make-up and Hair stylist, Wedding Website design, Catering and Banquet halls (which can be organized at a special price).
+<span class="more-links"><a title="Read More about DJ Malhi Entertainment" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="single-link">
+      <li><a title="Enquire DJ Malhi Entertainment" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '780439',&quot;DJ Malhi Entertainment&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '780439');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2018-11-21-05-47-21-594_12.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Sound Image Entertainment in , "></figure><div class="content ">
+      <h3><a title="Indian DJ Services - Sound Image Entertainment" href="/sacramento-ca/dj-service/sound-image-entertainment-1153415">Sound Image Entertainment</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>1808 Tribute Rd, Sacramento, California, USA</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>
+              Established Since 1996</div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating"><a title="View All Reviews" href="/sacramento-ca/dj-service/sound-image-entertainment-1153415#reviews">5<span class="material-icons-outlined">star</span></a><b>4
+                          Reviews
+                        </b></div>
+      </li>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">3.4<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Asian DJs in Sacramento, CA" href="/sacramento-ca/asian-djs">Asian DJs</a>, 
+          &nbsp;<a title="DJs Band Services in Sacramento, CA" href="/sacramento-ca/djs-band-services">DJs Band Services</a>, 
+          &nbsp;<a title="Event DJs in Sacramento, CA" href="/sacramento-ca/event-djs">Event DJs</a>, 
+          &nbsp;<a title="House Music DJ in Sacramento, CA" href="/sacramento-ca/house-music-dj">House Music DJ</a>, 
+          &nbsp;<a title="Party DJs in Sacramento, CA" href="/sacramento-ca/party-djs">Party DJs</a>, 
+          &nbsp;<a title="Punjabi DJs in Sacramento, CA" href="/sacramento-ca/punjabi-djs">Punjabi DJs</a>, 
+          &nbsp;<a title="South Indian Music DJ in Sacramento, CA" href="/sacramento-ca/south-indian-music-dj">South Indian Music DJ</a>, 
+          &nbsp;<a title="Sweet 16 DJs in Sacramento, CA" href="/sacramento-ca/sweet-16-djs">Sweet 16 DJs</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by Sound Image Entertainment" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>Sacramento Wedding DJ (Disc Jockey) Services – Is a mobile disc jockey company specializing in Sacramento weddings. Sound Image Entertainment has also been providing disc jockey entertainment throughout all of California and Nevada since 1996. Our mission at Sound Image Entertainment is to provide the highest quality, most reliable and exceptional disc jockey service to the quality conscious client who demands only the very best. Today, value is more important than ever. We’re determined to give you the most complete disc jockey entertainment package with no hidden costs. We invite you to compare Sound Image Entertainment’s quality of service with other Sacramento Disc Jockey services. If you are planning a Sacramento Wedding, anniversary party, birthday party, or holiday party. Maybe a corporate function, prom, school dance, reunion, sweet 16 party, or any other type of event or celebration, we hope your search will end here. Take your time to look around but don’t hesitate to contact us right now! Let’s make your next event a success! <span class="more-links"><a title="Read More about Sound Image Entertainment" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="single-link">
+      <li><a title="Enquire Sound Image Entertainment" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1153415',&quot;Sound Image Entertainment&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1153415');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2018-04-11-01-46-10-003_23.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Behind The Scene Sounds in , "></figure><div class="content ">
+      <h3><a title="Indian DJ Services - Behind The Scene Sounds" href="/elk-grove-ca/dj-service/behind-the-scene-sounds-1066771">Behind The Scene Sounds</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>Elk Grove, CA, USA</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>5 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating"><a title="View All Reviews" href="/elk-grove-ca/dj-service/behind-the-scene-sounds-1066771#reviews">5<span class="material-icons-outlined">star</span></a><b>1
+                          Review
+                        </b></div>
+      </li>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">2.7<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:&nbsp;
+                      </a></b>
+          &nbsp;<a title="DJ Party Music Consultants in Elk Grove, CA" href="/elk-grove-ca/dj-party-music-consultants">DJ Party Music Consultants</a>, 
+          &nbsp;<a title="Hip Hop/ Rap DJ in Elk Grove, CA" href="/elk-grove-ca/hip-hop-rap-dj">Hip Hop/ Rap DJ</a>, 
+          &nbsp;<a title="Music Duo DJ in Elk Grove, CA" href="/elk-grove-ca/music-duo-dj">Music Duo DJ</a>, 
+          &nbsp;<a title="Party DJs in Elk Grove, CA" href="/elk-grove-ca/party-djs">Party DJs</a>, 
+          &nbsp;<a title="Pop DJ in Elk Grove, CA" href="/elk-grove-ca/pop-dj">Pop DJ</a>, 
+          &nbsp;<a title="Rock DJ in Elk Grove, CA" href="/elk-grove-ca/rock-dj">Rock DJ</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by Behind The Scene Sounds" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>Behind the Scene Sounds is located in Elk Grove, CA. Derwin will coordinate each event with your other event professionals to make sure everyone is on the same page. Dee will satisfy your event needs completely, professionally &amp; timely. DJ Elizabeth is a Musical Entertainer. She is Dee’s beautiful wife and business partner. Elizabeth has a passion for the perfect party. She’s able to read any crowd and play music that will keep your party rockin all night long. <span class="more-links"><a title="Read More about Behind The Scene Sounds" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="single-link">
+      <li><a title="Enquire Behind The Scene Sounds" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1066771',&quot;Behind The Scene Sounds&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1066771');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2018-03-30-06-35-13-436_62.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="DYNAMIK Soundz DJ And Lighting in , "></figure><div class="content ">
+      <h3><a title="Indian DJ Services - DYNAMIK Soundz DJ And Lighting" href="/elk-grove-ca/dj-service/dynamik-soundz-dj-and-lighting-1062625">DYNAMIK Soundz DJ And Lighting</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>Elk Grove, CA, USA</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>
+              Established Since 1992</div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating"><a title="View All Reviews" href="/elk-grove-ca/dj-service/dynamik-soundz-dj-and-lighting-1062625#reviews">5<span class="material-icons-outlined">star</span></a><b>1
+                          Review
+                        </b></div>
+      </li>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">2.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:&nbsp;
+                      </a></b>
+          &nbsp;<a title="DJ Party Music Consultants in Elk Grove, CA" href="/elk-grove-ca/dj-party-music-consultants">DJ Party Music Consultants</a>, 
+          &nbsp;<a title="DJs Band Services in Elk Grove, CA" href="/elk-grove-ca/djs-band-services">DJs Band Services</a>, 
+          &nbsp;<a title="Electronic DJ in Elk Grove, CA" href="/elk-grove-ca/electronic-dj">Electronic DJ</a>, 
+          &nbsp;<a title="Event DJs in Elk Grove, CA" href="/elk-grove-ca/event-djs">Event DJs</a>, 
+          &nbsp;<a title="Hip Hop/ Rap DJ in Elk Grove, CA" href="/elk-grove-ca/hip-hop-rap-dj">Hip Hop/ Rap DJ</a>, 
+          &nbsp;<a title="Jazz Band DJ in Elk Grove, CA" href="/elk-grove-ca/jazz-band-dj">Jazz Band DJ</a>, 
+          &nbsp;<a title="Karaoke DJ in Elk Grove, CA" href="/elk-grove-ca/karaoke-dj">Karaoke DJ</a>, 
+          &nbsp;<a title="Music Duo DJ in Elk Grove, CA" href="/elk-grove-ca/music-duo-dj">Music Duo DJ</a>, 
+          &nbsp;<a title="Party DJs in Elk Grove, CA" href="/elk-grove-ca/party-djs">Party DJs</a>, 
+          &nbsp;<a title="Wedding Band DJ in Elk Grove, CA" href="/elk-grove-ca/wedding-band-dj">Wedding Band DJ</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by DYNAMIK Soundz DJ And Lighting" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>DYNAMIK soundz DJ and Lighting is located in Elk Grove, California. Specialized to provide you with DJ and lighting solutions to take your party from bland to Grande. DYNAMIK soundz will give you a partner to work with, side by side, in creating your dream wedding and reception with the use of high end sound and lighting equipment along with 30 years of wedding DJ experiences. <span class="more-links"><a title="Read More about DYNAMIK Soundz DJ And Lighting" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="single-link">
+      <li><a title="Enquire DYNAMIK Soundz DJ" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1062625',&quot;DYNAMIK Soundz DJ And Lighting&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1062625');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2018-03-05-05-46-40-875_22.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Bolly Record Music in , "></figure><div class="content ">
+      <h3><a title="Indian DJ Services - Bolly Record Music" href="/elk-grove-ca/dj-service/bolly-record-music-1053179">Bolly Record Music</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>Elk Grove, CA, USA</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>
+              Established Since 2017</div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">1.7<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:&nbsp;
+                      </a></b>
+          &nbsp;<a title="DJ Party Music Consultants in Elk Grove, CA" href="/elk-grove-ca/dj-party-music-consultants">DJ Party Music Consultants</a>, 
+          &nbsp;<a title="DJs Band Services in Elk Grove, CA" href="/elk-grove-ca/djs-band-services">DJs Band Services</a>, 
+          &nbsp;<a title="Event DJs in Elk Grove, CA" href="/elk-grove-ca/event-djs">Event DJs</a>, 
+          &nbsp;<a title="Party DJs in Elk Grove, CA" href="/elk-grove-ca/party-djs">Party DJs</a>, 
+          &nbsp;<a title="South Indian Music DJ in Elk Grove, CA" href="/elk-grove-ca/south-indian-music-dj">South Indian Music DJ</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by Bolly Record Music" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>BollyRecord Music invading the space with fresh music and innovative beats. Singh and Sharma founded the company five years ago organizing events to cater to the large Indian American community in Sacramento and the Central Valley. BollyRecords Deejays have performed at hundreds of top venues around USA. The company has a network of 15 Deejays operating all around the West Coast. and they have worked with many talented people DJ Ravi,DJHPS,Aman statis,Mc Gora And also one of the producer's for Californian Desi 1 and 2 by Dj ravi,Amped by Djhps,djravi,Mc gora,Truthfully Speaking by Aman statis,Solo by Dj HPS and many more. Desi LifeStyle is the hip thing and BollyRecord is promoting that in the entire West Coast. For more information and booking contact us. <span class="more-links"><a title="Read More about Bolly Record Music" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="single-link">
+      <li><a title="Enquire Ritesh Sharma" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1053179',&quot;Bolly Record Music&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1053179');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2018-01-12-01-30-42-693_92.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Fusion Roadshow in , "></figure><div class="content ">
+      <h3><a title="Indian DJ Services - Fusion Roadshow" href="/sacramento-ca/dj-service/fusion-roadshow-1034942">Fusion Roadshow</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>Sacramento, CA, United States</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>
+              Established Since 2004</div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">2.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:&nbsp;
+                      </a></b>
+          &nbsp;<a title="DJ Party Music Consultants in Sacramento, CA" href="/sacramento-ca/dj-party-music-consultants">DJ Party Music Consultants</a>, 
+          &nbsp;<a title="Electronic DJ in Sacramento, CA" href="/sacramento-ca/electronic-dj">Electronic DJ</a>, 
+          &nbsp;<a title="Event DJs in Sacramento, CA" href="/sacramento-ca/event-djs">Event DJs</a>, 
+          &nbsp;<a title="Hip Hop/ Rap DJ in Sacramento, CA" href="/sacramento-ca/hip-hop-rap-dj">Hip Hop/ Rap DJ</a>, 
+          &nbsp;<a title="Party DJs in Sacramento, CA" href="/sacramento-ca/party-djs">Party DJs</a>, 
+          &nbsp;<a title="Pop DJ in Sacramento, CA" href="/sacramento-ca/pop-dj">Pop DJ</a>, 
+          &nbsp;<a title="Rock DJ in Sacramento, CA" href="/sacramento-ca/rock-dj">Rock DJ</a>, 
+          &nbsp;<a title="South Indian Music DJ in Sacramento, CA" href="/sacramento-ca/south-indian-music-dj">South Indian Music DJ</a>, 
+          &nbsp;<a title="Asian DJs in Sacramento, CA" href="/sacramento-ca/asian-djs">Asian DJs</a>, 
+          &nbsp;<a title="DJs Band Services in Sacramento, CA" href="/sacramento-ca/djs-band-services">DJs Band Services</a>, 
+          &nbsp;<a title="Wedding Band DJ in Sacramento, CA" href="/sacramento-ca/wedding-band-dj">Wedding Band DJ</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by Fusion Roadshow" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>Since 2004 Fusion Roadshow has become one of the most impressive and creative DJ establishments in the country. Housing Djs, Dhol Players, musicians, dancers, lighting technicians, and overall staff with extensive experience, skill and talent. Fusion Roadshow thrives to make your event perfect for you as if it were one of our own. We understand that every event is unique, and we aim in tailoring our entertainment packages to make sure every minute is as perfect as you can imagine. Our years of extensive experience makes us the definite addition to your event, and we ensure your guests leave feeling entertained and exhilarated. Our motto is simple, "we design your difference"<span class="more-links"><a title="Read More about Fusion Roadshow" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="single-link">
+      <li><a title="Enquire Fusion Roadshow" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1034942',&quot;Fusion Roadshow&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1034942');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2017-01-05-08-57-10-229_9024088.jpg?v=3117" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Sangeet Khazana in , "></figure><div class="content ">
+      <h3><a title="Indian DJ Services - Sangeet Khazana" href="/sacramento-ca/dj-service/sangeet-khazana-905168">Sangeet Khazana</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>Sacramento, CA, United States</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>5 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">2.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:&nbsp;
+                      </a></b>
+          &nbsp;<a title="DJs Band Services in Sacramento, CA" href="/sacramento-ca/djs-band-services">DJs Band Services</a>, 
+          &nbsp;<a title="DJ Blues Band in Sacramento, CA" href="/sacramento-ca/dj-blues-band">DJ Blues Band</a>, 
+          &nbsp;<a title="Jazz Band DJ in Sacramento, CA" href="/sacramento-ca/jazz-band-dj">Jazz Band DJ</a>, 
+          &nbsp;<a title="Karaoke DJ in Sacramento, CA" href="/sacramento-ca/karaoke-dj">Karaoke DJ</a>, 
+          &nbsp;<a title="DJ Party Music Consultants in Sacramento, CA" href="/sacramento-ca/dj-party-music-consultants">DJ Party Music Consultants</a>, 
+          &nbsp;<a title="Wedding Band DJ in Sacramento, CA" href="/sacramento-ca/wedding-band-dj">Wedding Band DJ</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by Sangeet Khazana" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>Sangeet Khazana provides full music entertainment. Decided to enlarge our services providing talented karaoke singers, energetic DJ's, MC's, sound and event and Offering karaoke singing for Gujarati Lagan Geeto wedding sangeet in Gujarati during vidhi (ceremony). We also provides singing with Harmonium, Tabla and Keyboard with full band as per your requirement. We can also put you in contact with other artists you may need for your functions. We will provide you the services for all the function is a fundraiser, wedding sangeet, engagement, anniversary, birthday party, graduation, baby shower, holiday party, or any private entertainment occasion for your family.<span class="more-links"><a title="Read More about Sangeet Khazana" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="single-link">
+      <li><a title="Enquire Sangita Dave" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '905168',&quot;Sangeet Khazana&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '905168');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div></div>
