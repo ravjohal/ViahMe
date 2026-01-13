@@ -221,6 +221,10 @@ import {
   type DecorItem,
   type InsertDecorItem,
   DEFAULT_DECOR_LIBRARY,
+  dayOfTimelineItems,
+  type DayOfTimelineItem,
+  type InsertDayOfTimelineItem,
+  SIKH_WEDDING_DAY_TEMPLATE,
   budgetAllocations,
   budgetAlerts,
   dashboardWidgets,
@@ -1233,6 +1237,18 @@ export interface IStorage {
   deleteDecorItem(id: string): Promise<boolean>;
   toggleDecorItemSourced(id: string): Promise<DecorItem | undefined>;
   importDefaultDecorLibrary(weddingId: string): Promise<DecorItem[]>;
+
+  // Day-of Timeline Items - Wedding Day Schedule
+  getDayOfTimelineItem(id: string): Promise<DayOfTimelineItem | undefined>;
+  getDayOfTimelineItemsByWedding(weddingId: string): Promise<DayOfTimelineItem[]>;
+  getDayOfTimelineItemsByAssignee(weddingId: string, assignee: string): Promise<DayOfTimelineItem[]>;
+  createDayOfTimelineItem(item: InsertDayOfTimelineItem): Promise<DayOfTimelineItem>;
+  createDayOfTimelineItems(items: InsertDayOfTimelineItem[]): Promise<DayOfTimelineItem[]>;
+  updateDayOfTimelineItem(id: string, item: Partial<InsertDayOfTimelineItem>): Promise<DayOfTimelineItem | undefined>;
+  deleteDayOfTimelineItem(id: string): Promise<boolean>;
+  toggleDayOfTimelineItemCompleted(id: string): Promise<DayOfTimelineItem | undefined>;
+  importDayOfTimelineTemplate(weddingId: string, templateName: string): Promise<DayOfTimelineItem[]>;
+  clearDayOfTimeline(weddingId: string): Promise<boolean>;
 }
 
 // Guest Planning Snapshot - comprehensive view of all guests and per-event costs
@@ -11864,6 +11880,96 @@ export class DBStorage implements IStorage {
     }
     
     return createdItems;
+  }
+
+  // Day-of Timeline Items - Wedding Day Schedule
+  async getDayOfTimelineItem(id: string): Promise<DayOfTimelineItem | undefined> {
+    const result = await this.db.select()
+      .from(dayOfTimelineItems)
+      .where(eq(dayOfTimelineItems.id, id));
+    return result[0];
+  }
+
+  async getDayOfTimelineItemsByWedding(weddingId: string): Promise<DayOfTimelineItem[]> {
+    return await this.db.select()
+      .from(dayOfTimelineItems)
+      .where(eq(dayOfTimelineItems.weddingId, weddingId))
+      .orderBy(dayOfTimelineItems.sortOrder, dayOfTimelineItems.time);
+  }
+
+  async getDayOfTimelineItemsByAssignee(weddingId: string, assignee: string): Promise<DayOfTimelineItem[]> {
+    return await this.db.select()
+      .from(dayOfTimelineItems)
+      .where(and(
+        eq(dayOfTimelineItems.weddingId, weddingId),
+        eq(dayOfTimelineItems.assignee, assignee)
+      ))
+      .orderBy(dayOfTimelineItems.sortOrder, dayOfTimelineItems.time);
+  }
+
+  async createDayOfTimelineItem(item: InsertDayOfTimelineItem): Promise<DayOfTimelineItem> {
+    const result = await this.db.insert(dayOfTimelineItems)
+      .values(item)
+      .returning();
+    return result[0];
+  }
+
+  async createDayOfTimelineItems(items: InsertDayOfTimelineItem[]): Promise<DayOfTimelineItem[]> {
+    if (items.length === 0) return [];
+    const result = await this.db.insert(dayOfTimelineItems)
+      .values(items)
+      .returning();
+    return result;
+  }
+
+  async updateDayOfTimelineItem(id: string, item: Partial<InsertDayOfTimelineItem>): Promise<DayOfTimelineItem | undefined> {
+    const result = await this.db.update(dayOfTimelineItems)
+      .set({ ...item, updatedAt: new Date() })
+      .where(eq(dayOfTimelineItems.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteDayOfTimelineItem(id: string): Promise<boolean> {
+    await this.db.delete(dayOfTimelineItems)
+      .where(eq(dayOfTimelineItems.id, id));
+    return true;
+  }
+
+  async toggleDayOfTimelineItemCompleted(id: string): Promise<DayOfTimelineItem | undefined> {
+    const item = await this.getDayOfTimelineItem(id);
+    if (!item) return undefined;
+    
+    const result = await this.db.update(dayOfTimelineItems)
+      .set({ completed: !item.completed, updatedAt: new Date() })
+      .where(eq(dayOfTimelineItems.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async importDayOfTimelineTemplate(weddingId: string, templateName: string): Promise<DayOfTimelineItem[]> {
+    // For now, only support Sikh wedding template
+    if (templateName !== 'sikh') {
+      return [];
+    }
+
+    const itemsToCreate: InsertDayOfTimelineItem[] = SIKH_WEDDING_DAY_TEMPLATE.map(item => ({
+      weddingId,
+      time: item.time,
+      activity: item.activity,
+      assignee: item.assignee as "bride" | "groom" | "bridal_party" | "vendor",
+      vendorCategory: item.vendorCategory as any,
+      sortOrder: item.sortOrder,
+      isFromTemplate: true,
+    }));
+
+    return await this.createDayOfTimelineItems(itemsToCreate);
+  }
+
+  async clearDayOfTimeline(weddingId: string): Promise<boolean> {
+    await this.db.delete(dayOfTimelineItems)
+      .where(eq(dayOfTimelineItems.weddingId, weddingId));
+    return true;
   }
 }
 
