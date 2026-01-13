@@ -414,6 +414,7 @@ export default function Guests() {
       email: "",
       phone: "",
       side: "bride",
+      familySide: null,
       rsvpStatus: "pending",
       plusOne: false,
       eventIds: [],
@@ -967,6 +968,7 @@ export default function Guests() {
       email: "",
       phone: "",
       side: "bride" as const,
+      familySide: null,
       rsvpStatus: "pending" as const,
       plusOne: false,
       eventIds: [],
@@ -990,6 +992,7 @@ export default function Guests() {
       email: guest.email || "",
       phone: guest.phone || "",
       side: (guest.side || "bride") as "bride" | "groom" | "mutual",
+      familySide: (guest.familySide || null) as "nanke" | "dadke" | "other" | null,
       rsvpStatus: (guest.rsvpStatus || "pending") as "confirmed" | "declined" | "pending",
       plusOne: guest.plusOne || false,
       eventIds: guest.eventIds || [],
@@ -2666,6 +2669,27 @@ export default function Guests() {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="familySide">Family Side (Ritual Groups)</Label>
+                <Select
+                  value={form.watch("familySide") || "none"}
+                  onValueChange={(value) => form.setValue("familySide", value === "none" ? null : value as "nanke" | "dadke" | "other")}
+                >
+                  <SelectTrigger id="familySide" data-testid="select-guest-family-side">
+                    <SelectValue placeholder="Select family side" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Not Specified</SelectItem>
+                    <SelectItem value="nanke">Nanke (Maternal)</SelectItem>
+                    <SelectItem value="dadke">Dadke (Paternal)</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">Important for Sikh rituals like Choora, Jaggo</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="rsvpStatus">RSVP Status</Label>
                 <Select
