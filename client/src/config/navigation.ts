@@ -3,7 +3,7 @@ import {
   MessageSquare, Music, Image, UserCircle, ShoppingBag, 
   Package, BookOpen, Radio, UsersRound, Globe, Bot, 
   Calendar, Wallet, BarChart3, Briefcase, Star, Send, Gamepad2,
-  Mic, Shield, Sparkles, Flower2, AlarmClock, Palmtree,
+  Mic, Shield, Sparkles, Flower2, AlarmClock, Palmtree, Gift,
   type LucideIcon
 } from "lucide-react";
 import type { PermissionCategory } from "@shared/schema";
@@ -70,6 +70,7 @@ export const COUPLE_NAV_SECTIONS: NavSection[] = [
     items: [
       { path: "/day-of-timeline", label: "Day-of Schedule", icon: AlarmClock, permission: "timeline", description: "Minute-by-minute wedding day plan" },
       { path: "/honeymoon", label: "Honeymoon Planner", icon: Palmtree, permission: "planning", description: "Plan your dream honeymoon" },
+      { path: "/favours", label: "Favour Log", icon: Gift, permission: "planning", description: "Track gifts for guests" },
       { path: "/ritual-roles", label: "Ritual Roles", icon: Sparkles, permission: "guests", description: "Assign ceremony duties" },
       { path: "/milni", label: "Milni List", icon: Users, permission: "guests", description: "Milni pairings & gifts" },
       { path: "/engagement-games", label: "Guest Games", icon: Gamepad2, permission: "guests", description: "Scavenger hunts & trivia" },

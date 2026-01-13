@@ -73,6 +73,7 @@ import MilniPage from "@/pages/milni";
 import DecorPage from "@/pages/decor";
 import DayOfTimelinePage from "@/pages/day-of-timeline";
 import HoneymoonPlannerPage from "@/pages/honeymoon-planner";
+import FavoursPage from "@/pages/favours";
 import VendorAccessPasses from "@/pages/vendor-access-passes";
 import VendorTimeline from "@/pages/vendor-timeline";
 import BudgetEstimatorPage from "@/pages/budget-estimator";
@@ -195,6 +196,11 @@ function Router() {
       <Route path="/honeymoon">
         <ProtectedRoute requiredPermission="planning">
           <HoneymoonPlannerPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/favours">
+        <ProtectedRoute requiredPermission="planning">
+          <FavoursPage />
         </ProtectedRoute>
       </Route>
       <Route path="/budget">

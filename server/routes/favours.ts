@@ -108,10 +108,9 @@ export async function createFavoursRouter(storage: IStorage): Promise<Router> {
           description: true,
           category: true,
           quantityPurchased: true,
-          quantityRemaining: true,
-          costPerUnit: true,
+          unitCost: true,
           totalCost: true,
-          supplier: true,
+          vendor: true,
           notes: true,
         })
         .partial()
