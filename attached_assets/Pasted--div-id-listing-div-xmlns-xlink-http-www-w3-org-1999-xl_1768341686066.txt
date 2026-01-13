@@ -1,0 +1,679 @@
+<div id="listing_div" xmlns:xlink="http://www.w3.org/1999/xlink"><input type="hidden" id="hdn_onetimecookie" value="2195519" name="hdn_onetimecookie" xmlns:xlink="http://www.w3.org/1999/xlink"><div class="common-promo-blk" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="promote">Ad</div><article id="div_promotionads" class="owl-carousel owl-theme" style="opacity: 1; display: block;"><div class="owl-wrapper-outer"><div class="owl-wrapper" style="width: 874px; left: 0px; display: block;"><div class="owl-item" style="width: 437px;"><div class="item">
+      <div class="listing-column">
+        <div class="single-promo">
+          <h3><a title="Entertainment - Mehekte Sur" href="https://us.sulekha.com/edison-nj/entertainment/mehekte-sur-1039065">Mehekte Sur</a></h3>
+          <div class="city-txt"><span class="material-icons-outlined">location_on</span><b>
+                      Serving in Sacramento, CA</b></div>
+          <div class="my-serv"><span class="material-icons-outlined">work_outline</span>Services:&nbsp;
+            <a title="Punjabi DJs in Sacramento, CA" href="/sacramento-ca/punjabi-djs">Punjabi DJs</a><a title="+15 more services from Mehekte Sur" href="https://us.sulekha.com/edison-nj/entertainment/mehekte-sur-1039065#services">
+                + 15 more</a></div>
+          <div class="more-detail">
+            <ul>
+              <li>
+                <div class="rating"><a title="View all reviews" href="https://us.sulekha.com/edison-nj/entertainment/mehekte-sur-1039065#reviews">5<span class="material-icons-outlined">star</span></a><b>629 Reviews
+                          </b></div>
+              </li>
+              <li>
+                <div class="rating">
+                  <div class="sul-rate">9.5</div><b>Sulekha score</b></div>
+              </li>
+            </ul>
+          </div>
+          <div class="btn-outer">
+            <ul class="">
+              <li><a title="Enquire Mehekte Sur" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1039065',&quot;Mehekte Sur&quot;);gaclicktrack('send','event', 'Promoted Ad','Enquire Now', '1039065');" class="red-but"><b>Enquire Now</b></a></li>
+              <li><a title="Call Mehekte Sur" href="javascript:void(0);" onclick="javascript:openphoneConnect('Mehekte Sur','37015','7738861257');"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+                      <path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+                    </svg></span><b>Call</b></a></li>
+              <li><a title="Connect via Whatsapp" href="javascript:void()" onclick="Before_openEnquiryModal('2','1039065',&quot;Mehekte Sur&quot;);gaclicktrack('send','event', 'Promoted Ad-Whatsapp Chat','Whatsapp', '1039065');" class="whatsapp"><span><svg class="svg-inline--fa fa-whatsapp fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="whatsapp" role="img" viewBox="0 0 448 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+                      <path fill="currentColor" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"></path>
+                    </svg></span></a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div></div></div></div><div class="owl-controls" style="display: none;"><div class="owl-buttons"><div class="owl-prev"><span class="material-icons-outlined">chevron_left</span></div><div class="owl-next"><span class="material-icons-outlined">chevron_right</span></div></div></div></article></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2023-03-31-09-31-39-570_542.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Bollywood Bingo Entertainment in Sacramento, CA"></figure><div class="content "><h3><a title="Indian Entertainment - Bollywood Bingo Entertainment" href="/fremont-ca/entertainment/bollywood-bingo-entertainment-916842">Bollywood Bingo Entertainment</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>
+Serving customers in  Sacramento area</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">call</span><a title="Call Bollywood Bingo Entertainment" href="javascript:void(0);" onclick="javascript:openphoneConnect('Bollywood Bingo Entertainment','76184','5165188867');"><b>516-518-8867</b></a><i>
+(pin:76184)
+</i></div><div class="experience"><span class="material-icons-outlined">work_history</span>6 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/fremont-ca/entertainment/bollywood-bingo-entertainment-916842#reviews">5<span class="material-icons-outlined">star</span></a><b>35
+Reviews</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">9.5<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-trust"><ul><li>
+<div class="trust"><a href="javascript:void(0);" onclick="javascript:openSULTrust();" title="This business Information is been trusted based on users ratings and reviews."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-29-54-504.svg"></span>Trust</a></div></li><li>
+<div class="verified"><a href="javascript:void(0);" onclick="javascript:openSULVerified();" title="This business Information is verified by Sulekha."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-57-40-539.svg"></span>Verified</a></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="entertainment">Entertainment:</a></b>
+<a title="Animal Show Entertainment in Fremont, CA" href="/fremont-ca/animal-show-entertainment">Animal Show Entertainment</a>, <a title="Balloon Artistry in Fremont, CA" href="/fremont-ca/balloon-artistry">Balloon Artistry</a>, <a title="Bubble Blowing Shows in Fremont, CA" href="/fremont-ca/bubble-blowing-shows">Bubble Blowing Shows</a>, <a title="Circus Acting in Fremont, CA" href="/fremont-ca/circus-acting">Circus Acting</a>, <a title="Costumed Character in Fremont, CA" href="/fremont-ca/costumed-character">Costumed Character</a>, <a title="Dance Choreographers in Fremont, CA" href="/fremont-ca/dance-choreographers">Dance Choreographers</a>, <a title="Dance Show in Fremont, CA" href="/fremont-ca/dance-show">Dance Show</a>, <a title="Face Painting in Fremont, CA" href="/fremont-ca/face-painting">Face Painting</a>, <a title="Fireworks Show in Fremont, CA" href="/fremont-ca/fireworks-show">Fireworks Show</a>, <a title="Karaoke Singers in Fremont, CA" href="/fremont-ca/karaoke-singers">Karaoke Singers</a>, <a title="Laser Show in Fremont, CA" href="/fremont-ca/laser-show">Laser Show</a>, <a title="Magician in Fremont, CA" href="/fremont-ca/magician">Magician</a>, <a title="MC And Host in Fremont, CA" href="/fremont-ca/mc-and-host">MC And Host</a>, <a title="Music Shows in Fremont, CA" href="/fremont-ca/music-shows">Music Shows</a>, <a title="Stand Up Comedians in Fremont, CA" href="/fremont-ca/stand-up-comedians">Stand Up Comedians</a>, <a title="Storytelling in Fremont, CA" href="/fremont-ca/storytelling">Storytelling</a>, <a title="Wedding Singers in Fremont, CA" href="/fremont-ca/wedding-singers">Wedding Singers</a></div><div class="more-links" style="display: none;"><a title="View all services offered by Bollywood Bingo Entertainment" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>Bollywood Bingo is a combination of Bollywood songs and Bingo / Housie During private events like milestone Birthdays Anniversaries etc. we weave the story of their lives into a game of Bingo - along with Bollywood songs Things like key events (birth, college romance, marriage, kids, business start date etc.) tell the complete picture of a person’s life When painted with Bollywood songs and trivia etc. It makes for a memorable evening for the guests We sell Bollywood Bingo in a game box - that you can buy online at our site www.BollywoodBingo.com and you can create the same experience at home Bring Bollywood Home <span class="more-links"><a title="Read More about Bollywood Bingo Entertainment" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class=""><li><a title="Call Bollywood Bingo Entertainment" href="javascript:void(0);" onclick="javascript:openphoneConnect('Bollywood Bingo Entertainment','76184','5165188867');" class="red-but"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+</svg></span><b>Call</b></a></li><li><a title="Enquire Himanshu Jolly" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '916842',&quot;Bollywood Bingo Entertainment&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '916842');"><b>Enquire Now</b></a></li><li><a title="WhatsApp Himanshu Jolly" href="javascript:void()" onclick="Before_openEnquiryModal('2','916842',&quot;Bollywood Bingo Entertainment&quot;);gaclicktrack('send','event', 'Response-Whatsapp Chat','Whatsapp', '916842');" class="whatsapp"><span><svg class="svg-inline--fa fa-whatsapp fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="whatsapp" role="img" viewBox="0 0 448 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"></path>
+</svg></span></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2022-02-14-05-54-25-384_59.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Bollywood Rhythms in Sacramento, CA"></figure><div class="content "><h3><a title="Indian Entertainment - Bollywood Rhythms" href="/scottsdale-az/entertainment/bollywood-rhythms-957277">Bollywood Rhythms</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>
+Serving customers in  Sacramento area</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">call</span><a title="Call Bollywood Rhythms" href="javascript:void(0);" onclick="javascript:openphoneConnect('Bollywood Rhythms','78809','3126264366');"><b>312-626-4366</b></a><i>
+(pin:78809)
+</i></div><div class="experience"><span class="material-icons-outlined">work_history</span>23 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/scottsdale-az/entertainment/bollywood-rhythms-957277#reviews">4<span class="material-icons-outlined">star</span></a><b>1
+Review</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-trust"><ul><li>
+<div class="trust"><a href="javascript:void(0);" onclick="javascript:openSULTrust();" title="This business Information is been trusted based on users ratings and reviews."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-29-54-504.svg"></span>Trust</a></div></li><li>
+<div class="verified"><a href="javascript:void(0);" onclick="javascript:openSULVerified();" title="This business Information is verified by Sulekha."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-57-40-539.svg"></span>Verified</a></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="entertainment">Entertainment:</a></b>
+<a title="Dance Show in Scottsdale, AZ" href="/scottsdale-az/dance-show">Dance Show</a>, <a title="Ghazal Singers in Scottsdale, AZ" href="/scottsdale-az/ghazal-singers">Ghazal Singers</a>, <a title="Music Shows in Scottsdale, AZ" href="/scottsdale-az/music-shows">Music Shows</a>, <a title="Singers in Scottsdale, AZ" href="/scottsdale-az/singers">Singers</a>, <a title="Wedding Singers in Scottsdale, AZ" href="/scottsdale-az/wedding-singers">Wedding Singers</a></div><div class="more-links" style="display: none;"><a title="View all services offered by Bollywood Rhythms" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>Anjalee is a gifted singer whose passion for music started in her childhood in the Indian capital. She received training in Hindustani classical music under the tutelage of stalwarts like Vilayat Khan, Indira Nalini, followed by Nirmal Bajekal in USA, an advanced disciple of Dr. Prabha Atre. Anjalee was a regular performer at All India Radio (AIR) Delhi, for Ghazals. Besides AIR Delhi, Anjalee has performed and enthralled audiences in U.K. and USA. Some of her major performances have been in BBC West Midlands, Birmingham Conservatoire, Norwalk, CA and Virginia.Currently she is pursuing her training under the renowned classical musician Pandit Pritam Bhattacharjee - one of most accomplished disciples of Pandit Jasraj and recipient of the prestigious Mallikarjun Mansur award. She is also taking voice coaching lessons along with her husband from the world famous Opera singer Augusto Paglialunga.Anjalee renders her voice to any style of music be it Old Hindi classics, Bollywood fast numbers, Ghazals or Bhajans.She lives in the Valley and performs on request.<span class="more-links"><a title="Read More about Bollywood Rhythms" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class="double-link"><li><a title="Call Bollywood Rhythms" href="javascript:void(0);" onclick="javascript:openphoneConnect('Bollywood Rhythms','78809','3126264366');" class="red-but"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+</svg></span><b>Call</b></a></li><li><a title="Enquire Anjalee Swamy" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '957277',&quot;Bollywood Rhythms&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '957277');"><b>Enquire Now</b></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2024-05-09-05-50-59-312_64.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="SaReGa Music Group - Bollywood Singers in Sacramento, CA"></figure><div class="content "><h3><a title="Indian Entertainment - SaReGa Music Group - Bollywood Singers" href="/morganville-nj/entertainment/sarega-bansuri-and-harmonium-class-bollywood-tunes-1024342">SaReGa Music Group - Bollywood Singers</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>
+Serving customers in  Sacramento area</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">call</span><a title="Call SaReGa Music Group - Bollywood Singers" href="javascript:void(0);" onclick="javascript:openphoneConnect('SaReGa Music Group - Bollywood Singers','39844','4244002358');"><b>424-400-2358</b></a><i>
+(pin:39844)
+</i></div><div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/morganville-nj/entertainment/sarega-bansuri-and-harmonium-class-bollywood-tunes-1024342#reviews">5<span class="material-icons-outlined">star</span></a><b>3
+Reviews</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">9.5<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-trust"><ul><li>
+<div class="trust"><a href="javascript:void(0);" onclick="javascript:openSULTrust();" title="This business Information is been trusted based on users ratings and reviews."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-29-54-504.svg"></span>Trust</a></div></li><li>
+<div class="verified"><a href="javascript:void(0);" onclick="javascript:openSULVerified();" title="This business Information is verified by Sulekha."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-57-40-539.svg"></span>Verified</a></div></li></ul></div><div class="two-details"><ul><li><label>Price Range:</label><b>$1k-$1k</b></li></ul></div><div class="prop-details"><ul><li><span>Bansuri Leassons</span> <b> Avg - $250</b></li><li><span>Musical Events</span> <b> Avg - $833</b></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="entertainment">Entertainment:</a></b>
+<a title="Music Shows in Morganville, NJ" href="/morganville-nj/music-shows">Music Shows</a>, <a title="Singers in Morganville, NJ" href="/morganville-nj/singers">Singers</a>, <a title="Ghazal Singers in Morganville, NJ" href="/morganville-nj/ghazal-singers">Ghazal Singers</a>, <a title="Wedding Singers in Morganville, NJ" href="/morganville-nj/wedding-singers">Wedding Singers</a>, <a title="Karaoke Singers in Morganville, NJ" href="/morganville-nj/karaoke-singers">Karaoke Singers</a></div><div class="more-links" style="display: none;"><a title="View all services offered by SaReGa Music Group - Bollywood Singers" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>We are a group of trained musicians that will bring joy to your celebrations.
+We do  Live Instrumental including bansuri/accordion/guitar as well as Karaoke, Bollywood songs, Ghazals, Bhajan, Light Classical rendition on Bansuri. Please  Check our videos.
+We also offer lessons in Hindistani Classical on Bansuri and Harmonium.<span class="more-links"><a title="Read More about SaReGa Music Group - Bollywood Singers" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class=""><li><a title="Call SaReGa Music Group - Bollywood Singers" href="javascript:void(0);" onclick="javascript:openphoneConnect('SaReGa Music Group - Bollywood Singers','39844','4244002358');" class="red-but"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+</svg></span><b>Call</b></a></li><li><a title="Enquire Madhukar M Kshirsagar" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1024342',&quot;SaReGa Music Group - Bollywood Singers&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1024342');"><b>Enquire Now</b></a></li><li><a title="WhatsApp Madhukar M Kshirsagar" href="javascript:void()" onclick="Before_openEnquiryModal('2','1024342',&quot;SaReGa Music Group - Bollywood Singers&quot;);gaclicktrack('send','event', 'Response-Whatsapp Chat','Whatsapp', '1024342');" class="whatsapp"><span><svg class="svg-inline--fa fa-whatsapp fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="whatsapp" role="img" viewBox="0 0 448 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"></path>
+</svg></span></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2019-05-30-07-15-31-728_73.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="BWJ Productions in Sacramento, CA"></figure><div class="content "><h3><a title="Indian Entertainment - BWJ Productions" href="/richboro-pa/entertainment/vickyy-kohhli-bollywood-singer-1097971">BWJ Productions</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"></div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">call</span><a title="Call BWJ Productions" href="javascript:void(0);" onclick="javascript:openphoneConnect('BWJ Productions','67560','5125159579');"><b>512-515-9579</b></a><i>
+(pin:67560)
+</i></div><div class="experience"><span class="material-icons-outlined">work_history</span>12 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/richboro-pa/entertainment/vickyy-kohhli-bollywood-singer-1097971#reviews">5<span class="material-icons-outlined">star</span></a><b>1
+Review</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">6.5<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-trust"><ul><li>
+<div class="trust"><a href="javascript:void(0);" onclick="javascript:openSULTrust();" title="This business Information is been trusted based on users ratings and reviews."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-29-54-504.svg"></span>Trust</a></div></li><li>
+<div class="verified"><a href="javascript:void(0);" onclick="javascript:openSULVerified();" title="This business Information is verified by Sulekha."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-57-40-539.svg"></span>Verified</a></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="entertainment">Entertainment:</a></b>
+<a title="Ghazal Singers in Richboro, PA" href="/richboro-pa/ghazal-singers">Ghazal Singers</a>, <a title="Music Shows in Richboro, PA" href="/richboro-pa/music-shows">Music Shows</a>, <a title="Singers in Richboro, PA" href="/richboro-pa/singers">Singers</a>, <a title="Wedding Singers in Richboro, PA" href="/richboro-pa/wedding-singers">Wedding Singers</a></div><div class="more-links" style="display: none;"><a title="View all services offered by BWJ Productions" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>Create your event memorable with the only original Bollywood singer available in Tri-State in USA. Vickyy Kohhli has sung for many Bollywood Movies. His song 'Gudd Nalon Ishq Mitha' was at number #1 position in youtube in 2017. Options are available ranging from Live Band, On tracks and have Dancers in the crew. Vickyy is Bollywood Singer and Music Director. He has given songs for Bollywood movies Mr. Majnu, Pyar Mein Kyun, Anjali’s Secret Box, Hang Up. Vickyy is currently staying in Philadelphia, USA with his family and operating his studio and event company. He is also helping produce songs for many local Desi artists in US and Canada. He has shared prestigious stage with Indian Idol Abhijeet Sawant during Indian Independence Day Celebrations in New York in August 2011. Vicky’s Songs and interviews have been broadcasted by major Indian/Pakistani TV channels like B4U, Sahara, Jus Punjabi, Namaste America, TV Asia etc. and Radio Stations like EBC Radio in New Jersey, 88.1 FM in Philadelphia, 1460AM (Radio Sangeet) in Houston, 1530AM (Desi Junction) in Chicago, and Radio Humsafar in Canada and Californian America. Vicky has credit of performing in over 300 hundred live shows with large audiences in India, Singapore and USA.<span class="more-links"><a title="Read More about BWJ Productions" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class="double-link"><li><a title="Call BWJ Productions" href="javascript:void(0);" onclick="javascript:openphoneConnect('BWJ Productions','67560','5125159579');" class="red-but"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+</svg></span><b>Call</b></a></li><li><a title="Enquire Vickyy Kohhli" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1097971',&quot;BWJ Productions&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1097971');"><b>Enquire Now</b></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io//cdn/localservices/images/large/localservices_2025-02-24-03-41-40-219_80.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Avinash Music in Sacramento, CA"></figure><div class="content "><h3><a title="Indian Entertainment - Avinash Music" href="/tracy-ca/entertainment/avinash-musicals-953205">Avinash Music</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>
+Serving customers in  Sacramento area</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">call</span><a title="Call Avinash Music" href="javascript:void(0);" onclick="javascript:openphoneConnect('Avinash Music','43816','7207091517');"><b>720-709-1517</b></a><i>
+(pin:43816)
+</i></div><div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/tracy-ca/entertainment/avinash-musicals-953205#reviews">5<span class="material-icons-outlined">star</span></a><b>21
+Reviews</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">9.5<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-trust"><ul><li>
+<div class="trust"><a href="javascript:void(0);" onclick="javascript:openSULTrust();" title="This business Information is been trusted based on users ratings and reviews."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-29-54-504.svg"></span>Trust</a></div></li><li>
+<div class="verified"><a href="javascript:void(0);" onclick="javascript:openSULVerified();" title="This business Information is verified by Sulekha."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-57-40-539.svg"></span>Verified</a></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="entertainment">Entertainment:</a></b>
+<a title="Ghazal Singers in Tracy, CA" href="/tracy-ca/ghazal-singers">Ghazal Singers</a>, <a title="Karaoke Singers in Tracy, CA" href="/tracy-ca/karaoke-singers">Karaoke Singers</a>, <a title="Music Shows in Tracy, CA" href="/tracy-ca/music-shows">Music Shows</a>, <a title="Singers in Tracy, CA" href="/tracy-ca/singers">Singers</a>, <a title="Wedding Singers in Tracy, CA" href="/tracy-ca/wedding-singers">Wedding Singers</a></div><div class="more-links" style="display: none;"><a title="View all services offered by Avinash Music" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>Listen to live Ghazals/Geet/Bhazans at your home/party/club by Avinash on your special occasions like wedding or Anniversary etc.<span class="more-links"><a title="Read More about Avinash Music" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class="double-link"><li><a title="Call Avinash Music" href="javascript:void(0);" onclick="javascript:openphoneConnect('Avinash Music','43816','7207091517');" class="red-but"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+</svg></span><b>Call</b></a></li><li><a title="Enquire Avinash" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '953205',&quot;Avinash Music&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '953205');"><b>Enquire Now</b></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2019-12-20-06-07-35-832_63.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Mehekte Sur in Sacramento, CA"></figure><div class="content "><h3><a title="Indian Entertainment - Mehekte Sur" href="/edison-nj/entertainment/mehekte-sur-1039065">Mehekte Sur</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>
+Serving customers in  Sacramento area</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">call</span><a title="Call Mehekte Sur" href="javascript:void(0);" onclick="javascript:openphoneConnect('Mehekte Sur','37015','7738861257');"><b>773-886-1257</b></a><i>
+(pin:37015)
+</i></div><div class="experience"><span class="material-icons-outlined">work_history</span>13 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/edison-nj/entertainment/mehekte-sur-1039065#reviews">5<span class="material-icons-outlined">star</span></a><b>629
+Reviews</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">9.5<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-trust"><ul><li>
+<div class="trust"><a href="javascript:void(0);" onclick="javascript:openSULTrust();" title="This business Information is been trusted based on users ratings and reviews."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-29-54-504.svg"></span>Trust</a></div></li><li>
+<div class="verified"><a href="javascript:void(0);" onclick="javascript:openSULVerified();" title="This business Information is verified by Sulekha."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-57-40-539.svg"></span>Verified</a></div></li></ul></div><div class="my-adv"><ul><li>
+<div class="off-blk"><a rel="nofollow" onclick="ga('send', 'event', 'list', 'clickedoffer', 'clickedoffer');" href="/edison-nj/entertainment/mehekte-sur-1039065#offers"><span>2</span>
+Deals</a></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="entertainment">Entertainment:</a></b>
+<a title="Asian DJs in Edison, NJ" href="/edison-nj/asian-djs">Asian DJs</a>, <a title="Bhangra Dancers in Edison, NJ" href="/edison-nj/bhangra-dancers">Bhangra Dancers</a>, <a title="Event DJs in Edison, NJ" href="/edison-nj/event-djs">Event DJs</a>, <a title="Ghazal Singers in Edison, NJ" href="/edison-nj/ghazal-singers">Ghazal Singers</a>, <a title="Karaoke Singers in Edison, NJ" href="/edison-nj/karaoke-singers">Karaoke Singers</a>, <a title="Mariachi Band DJ in Edison, NJ" href="/edison-nj/mariachi-band-dj">Mariachi Band DJ</a>, <a title="MC And Host in Edison, NJ" href="/edison-nj/mc-and-host">MC And Host</a>, <a title="Music Shows in Edison, NJ" href="/edison-nj/music-shows">Music Shows</a>, <a title="Party DJs in Edison, NJ" href="/edison-nj/party-djs">Party DJs</a>, <a title="Punjabi DJs in Edison, NJ" href="/edison-nj/punjabi-djs">Punjabi DJs</a>, <a title="Singers in Edison, NJ" href="/edison-nj/singers">Singers</a>, <a title="Sweet 16 DJs in Edison, NJ" href="/edison-nj/sweet-16-djs">Sweet 16 DJs</a>, <a title="Wedding Band DJ in Edison, NJ" href="/edison-nj/wedding-band-dj">Wedding Band DJ</a>, <a title="Wedding Singers in Edison, NJ" href="/edison-nj/wedding-singers">Wedding Singers</a>, </div><div class="more-links" style="display: none;"><a title="View all services offered by Mehekte Sur" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>Mehekte Sur is a musical duo comprised of a wife and husband team, Aparna and Vinay. We are a one stop shop for everything that you need to make your event a life time memory. We sing in multiple Indian languages and cater to different size events. Our services include managing the entire event end-to-end for birthday celebrations, baby showers, pre-wedding sangeet, anniversary party, holiday parties, public shows, private parties, fundraisers and similar initiatives. We bring soulful music to your event which is customized based on the specific event. We also partner with other professionals to cover all aspects of the event like photography/videography, decoration and live music based on the requirements and budget.<span class="more-links"><a title="Read More about Mehekte Sur" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class=""><li><a title="Call Mehekte Sur" href="javascript:void(0);" onclick="javascript:openphoneConnect('Mehekte Sur','37015','7738861257');" class="red-but"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+</svg></span><b>Call</b></a></li><li><a title="Enquire Vinay Kamulkar" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1039065',&quot;Mehekte Sur&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1039065');"><b>Enquire Now</b></a></li><li><a title="WhatsApp Vinay Kamulkar" href="javascript:void()" onclick="Before_openEnquiryModal('2','1039065',&quot;Mehekte Sur&quot;);gaclicktrack('send','event', 'Response-Whatsapp Chat','Whatsapp', '1039065');" class="whatsapp"><span><svg class="svg-inline--fa fa-whatsapp fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="whatsapp" role="img" viewBox="0 0 448 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"></path>
+</svg></span></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg" alt="Dilshaan Music in Sacramento, CA"></figure><div class="content "><h3><a title="Indian Entertainment - Dilshaan Music" href="/raleigh-nc/entertainment/dilshaan-music-entertainment-1765247">Dilshaan Music</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>
+Serving customers in  Sacramento area</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">call</span><a title="Call Dilshaan Music" href="javascript:void(0);" onclick="javascript:openphoneConnect('Dilshaan Music','20666','7372005290');"><b>737-200-5290</b></a><i>
+(pin:20666)
+</i></div><div class="experience"><span class="material-icons-outlined">work_history</span>16 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/raleigh-nc/entertainment/dilshaan-music-entertainment-1765247#reviews">5<span class="material-icons-outlined">star</span></a><b>27
+Reviews</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-trust"><ul><li>
+<div class="trust"><a href="javascript:void(0);" onclick="javascript:openSULTrust();" title="This business Information is been trusted based on users ratings and reviews."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-29-54-504.svg"></span>Trust</a></div></li><li>
+<div class="verified"><a href="javascript:void(0);" onclick="javascript:openSULVerified();" title="This business Information is verified by Sulekha."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-57-40-539.svg"></span>Verified</a></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="entertainment">Entertainment:</a></b>
+<a title="MC And Host in Raleigh, NC" href="/raleigh-nc/mc-and-host">MC And Host</a>, <a title="Music Shows in Raleigh, NC" href="/raleigh-nc/music-shows">Music Shows</a>, <a title="Singers in Raleigh, NC" href="/raleigh-nc/singers">Singers</a>, <a title="Ghazal Singers in Raleigh, NC" href="/raleigh-nc/ghazal-singers">Ghazal Singers</a>, <a title="Wedding Singers in Raleigh, NC" href="/raleigh-nc/wedding-singers">Wedding Singers</a>, <a title="Karaoke Singers in Raleigh, NC" href="/raleigh-nc/karaoke-singers">Karaoke Singers</a></div><div class="more-links" style="display: none;"><a title="View all services offered by Dilshaan Music" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>Immerse your special moments in the enchanting world of live music with us.  From the rhythmic beats of Dhol and Tabla to soul-stirring Bollywood melodies, Qawali/Ghazal, Punjabi Bhangra, Lady Sangeet and more.  Our talented vocalists and musicians create the perfect symphony for your events.  Elevate your celebrations with the magic of live music, and let us be the soundtrack to your unforgettable memories.  Plus we offer sound system rentals and connect you with trusted vendors for all event needs. Contact us to transform your worldwide events into harmonious experiences.<span class="more-links"><a title="Read More about Dilshaan Music" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class="double-link"><li><a title="Call Dilshaan Music" href="javascript:void(0);" onclick="javascript:openphoneConnect('Dilshaan Music','20666','7372005290');" class="red-but"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+</svg></span><b>Call</b></a></li><li><a title="Enquire Dilshaan" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1765247',&quot;Dilshaan Music&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1765247');"><b>Enquire Now</b></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2021-09-20-10-25-17-610_582.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="777 Events &amp; Entertainment in Sacramento, CA"></figure><div class="content "><h3><a title="Indian Entertainment - 777 Events &amp; Entertainment" href="/princeton-nj/entertainment/777-events-entertainment-1499234">777 Events &amp; Entertainment</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>
+Serving customers in  Sacramento area</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">call</span><a title="Call 777 Events &amp; Entertainment" href="javascript:void(0);" onclick="javascript:openphoneConnect('777 Events &amp; Entertainment','16887','3252084010');"><b>325-208-4010</b></a><i>
+(pin:16887)
+</i></div><div class="experience"><span class="material-icons-outlined">work_history</span>10 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/princeton-nj/entertainment/777-events-entertainment-1499234#reviews">5<span class="material-icons-outlined">star</span></a><b>27
+Reviews</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-trust"><ul><li>
+<div class="trust"><a href="javascript:void(0);" onclick="javascript:openSULTrust();" title="This business Information is been trusted based on users ratings and reviews."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-29-54-504.svg"></span>Trust</a></div></li><li>
+<div class="verified"><a href="javascript:void(0);" onclick="javascript:openSULVerified();" title="This business Information is verified by Sulekha."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-57-40-539.svg"></span>Verified</a></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="entertainment">Entertainment:</a></b>
+<a title="Asian DJs in Princeton, NJ" href="/princeton-nj/asian-djs">Asian DJs</a>, <a title="Bhajan Singers in Princeton, NJ" href="/princeton-nj/bhajan-singers">Bhajan Singers</a>, <a title="Dance Show in Princeton, NJ" href="/princeton-nj/dance-show">Dance Show</a>, <a title="DJ Equipment in Princeton, NJ" href="/princeton-nj/dj-equipment">DJ Equipment</a>, <a title="Ghazal Singers in Princeton, NJ" href="/princeton-nj/ghazal-singers">Ghazal Singers</a>, <a title="Karaoke Singers in Princeton, NJ" href="/princeton-nj/karaoke-singers">Karaoke Singers</a>, <a title="Music Shows in Princeton, NJ" href="/princeton-nj/music-shows">Music Shows</a>, <a title="Party DJs in Princeton, NJ" href="/princeton-nj/party-djs">Party DJs</a>, <a title="Punjabi DJs in Princeton, NJ" href="/princeton-nj/punjabi-djs">Punjabi DJs</a>, <a title="Singers in Princeton, NJ" href="/princeton-nj/singers">Singers</a>, <a title="Sweet 16 DJs in Princeton, NJ" href="/princeton-nj/sweet-16-djs">Sweet 16 DJs</a>, <a title="Wedding Band DJ in Princeton, NJ" href="/princeton-nj/wedding-band-dj">Wedding Band DJ</a>, <a title="Wedding Band Singers in Princeton, NJ" href="/princeton-nj/wedding-band-singers">Wedding Band Singers</a>, <a title="Wedding Singers in Princeton, NJ" href="/princeton-nj/wedding-singers">Wedding Singers</a></div><div class="more-links" style="display: none;"><a title="View all services offered by 777 Events &amp; Entertainment" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>Party Like Never Before!
+Elevate Your Events with 777 Events &amp; Entertainment
+Experience the ultimate in event services with 777 Events &amp; Entertainment. We offer a wide range of professional event management solutions, including live singing, DJ and emcee services, choreography, fog and dance on cloud, sparklers, decorations, photography and videography, and photo booth/360 services. Our team of experts will work with you to create an unforgettable event that exceeds your expectations. singing, dj, choreography, photo &amp; video, decoration.
+Kaushal S is one of the most distinguished &amp; versatile singers in entertainment. He specializes in Bollywood, Ghazal, Live Band, Karaoke Singing, and Music Shows &amp; his wife is a choreographer (Bollywood and Garba)  for various events, weddings, shows etc. He performs all over USA.<span class="more-links"><a title="Read More about 777 Events &amp; Entertainment" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class=""><li><a title="Call 777 Events &amp; Entertainment" href="javascript:void(0);" onclick="javascript:openphoneConnect('777 Events &amp; Entertainment','16887','3252084010');" class="red-but"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+</svg></span><b>Call</b></a></li><li><a title="Enquire Kaushal Sampat" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1499234',&quot;777 Events &amp; Entertainment&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1499234');"><b>Enquire Now</b></a></li><li><a title="WhatsApp Kaushal Sampat" href="javascript:void()" onclick="Before_openEnquiryModal('2','1499234',&quot;777 Events &amp; Entertainment&quot;);gaclicktrack('send','event', 'Response-Whatsapp Chat','Whatsapp', '1499234');" class="whatsapp"><span><svg class="svg-inline--fa fa-whatsapp fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="whatsapp" role="img" viewBox="0 0 448 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"></path>
+</svg></span></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2024-07-12-12-56-15-125_53.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Bollywood California in Sacramento, CA"></figure><div class="content "><h3><a title="Indian Entertainment - Bollywood California" href="/san-francisco-ca/entertainment/bollywood-california-1840543">Bollywood California</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>California, USA</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">work_history</span>16 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/san-francisco-ca/entertainment/bollywood-california-1840543#reviews">5<span class="material-icons-outlined">star</span></a><b>7
+Reviews</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">3.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="entertainment">Entertainment:</a></b>
+<a title="Music Shows in San Francisco, CA" href="/san-francisco-ca/music-shows">Music Shows</a>, <a title="Wedding Singers in San Francisco, CA" href="/san-francisco-ca/wedding-singers">Wedding Singers</a></div><div class="more-links" style="display: none;"><a title="View all services offered by Bollywood California" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>Bollywood California is 2 violinists who blend the vibrancy, energy and glamour of Indian popular songs with the easy charm of the Golden State - lyrical romantic songs and upbeat dance numbers - the perfect addition to weddings, corporate events, receptions and any excuse for a party <span class="more-links"><a title="Read More about Bollywood California" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class="double-link"><input type="hidden" id="hdn_show_contactnumber1840543" value="+1 707-931-1011"><li><a href="javascript:void(0);" onclick="Before_openEnquiryModal('3' , '1840543',&quot;Bollywood California&quot;);gaclicktrack('send','event', 'Response-show Number', 'Show number', '1840543');" class="red-but"><b>Show Number</b></a></li><li><a title="Enquire Katrina Wreede" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1840543',&quot;Bollywood California&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1840543');"><b>Enquire Now</b></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2023-07-05-09-21-01-695_20.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Seetha The Indian Comedian And Entertainer in Sacramento, CA"></figure><div class="content "><h3><a title="Indian Entertainment - Seetha The Indian Comedian And Entertainer" href="/boynton-beach-fl/entertainment/seetha-the-indian-comedian-and-entertainer-1728782">Seetha The Indian Comedian And Entertainer</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>10845 Bitternut Hickory Lane, Boynton Beach, FL, USA</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">work_history</span>5 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/boynton-beach-fl/entertainment/seetha-the-indian-comedian-and-entertainer-1728782#reviews">5<span class="material-icons-outlined">star</span></a><b>7
+Reviews</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">3.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="entertainment">Entertainment:</a></b>
+<a title="Dance Show in Boynton Beach, FL" href="/boynton-beach-fl/dance-show">Dance Show</a>, <a title="Magician in Boynton Beach, FL" href="/boynton-beach-fl/magician">Magician</a>, <a title="MC And Host in Boynton Beach, FL" href="/boynton-beach-fl/mc-and-host">MC And Host</a>, <a title="Stand Up Comedians in Boynton Beach, FL" href="/boynton-beach-fl/stand-up-comedians">Stand Up Comedians</a>, <a title="Music Shows in Boynton Beach, FL" href="/boynton-beach-fl/music-shows">Music Shows</a>, <a title="Singers in Boynton Beach, FL" href="/boynton-beach-fl/singers">Singers</a>, <a title="Karaoke Singers in Boynton Beach, FL" href="/boynton-beach-fl/karaoke-singers">Karaoke Singers</a></div><div class="more-links" style="display: none;"><a title="View all services offered by Seetha The Indian Comedian And Entertainer" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>Looking for some side-splitting comedy that knows no bounds? Look no further than Seetha the Comic. With his sharp wit and hilarious take on life in America and Indian family dynamics, he'll have you laughing out loud in no time. Catch him live in Florida, where he's got fans clamoring for more at every show from Orlando to Miami. And if you're looking to add some laughter to your next private event or showcase book Seetha The Comic - he's sure to leave your audience in stitches!Meet Seetha The Comic, the Indian-born standup comedian who lives in Boynton Beach, Florida. Seetha's quick and razor-sharp jokes take the audience on a journey through his culture, career, and family with wit and self-deprecating charm.  Seetha is not just a comedian who performs in major comedy clubs across Florida, including Improv, Off The Hook, Snappers Clubs, Gregory’s, Laugh Out Lounge, Bonkerz Clubs, Comedy Zone Clubs, Villain Theater, Library Comedy Club, and Grouchos Clubs. He is also a producer who performs at private shows such as birthdays, graduations, weddings, get-togethers, HOA, and any private parties. When it comes to unexpected, hilarious comedy, look no further than Seetha The Comic.<span class="more-links"><a title="Read More about Seetha The Indian Comedian And Entertainer" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class=""><input type="hidden" id="hdn_show_contactnumber1728782" value="+1 617-755-0754"><li><a href="javascript:void(0);" onclick="Before_openEnquiryModal('3' , '1728782',&quot;Seetha The Indian Comedian And Entertainer&quot;);gaclicktrack('send','event', 'Response-show Number', 'Show number', '1728782');" class="red-but"><b>Show Number</b></a></li><li><a title="Enquire Seetharaman Radhakrishnan" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1728782',&quot;Seetha The Indian Comedian And Entertainer&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1728782');"><b>Enquire Now</b></a></li></ul></div></div><div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2023-03-17-06-43-26-384_28.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Singer Manmeet Kaur in , "></figure><div class="content ">
+      <h3><a title="Indian Entertainment - Singer Manmeet Kaur" href="/chicago-il/entertainment/singer-manmeet-kaur-1685896">Singer Manmeet Kaur</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>Chicago, IL, USA</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">3.4<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="entertainment">Entertainment:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Ghazal Singers in Chicago, IL" href="/chicago-il/ghazal-singers">Ghazal Singers</a>, 
+          &nbsp;<a title="Karaoke Singers in Chicago, IL" href="/chicago-il/karaoke-singers">Karaoke Singers</a>, 
+          &nbsp;<a title="Music Shows in Chicago, IL" href="/chicago-il/music-shows">Music Shows</a>, 
+          &nbsp;<a title="Singers in Chicago, IL" href="/chicago-il/singers">Singers</a>, 
+          &nbsp;<a title="Wedding Singers in Chicago, IL" href="/chicago-il/wedding-singers">Wedding Singers</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by Singer Manmeet Kaur" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>I am one of the most distinguished singers in the USA. I specialize in singing Bollywood songs, Pakistani songs, Ghazals, Wedding songs, Punjabi songs. I sing for corporate events, fundraisers, birthdays, graduations, Sangeet, and anniversary parties. I do public stage events. <span class="more-links"><a title="Read More about Singer Manmeet Kaur" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="double-link"><input type="hidden" id="hdn_show_contactnumber1685896" value="+1 630-362-3249"><li><a href="javascript:void(0);" onclick="Before_openEnquiryModal('3' , '1685896',&quot;Singer Manmeet Kaur&quot;);gaclicktrack('send','event', 'Response-show Number', 'Show number', '1685896');" class="red-but"><b>Show Number</b></a></li>
+      <li><a title="Enquire Manmeet Kaur" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1685896',&quot;Singer Manmeet Kaur&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1685896');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2023-09-30-10-35-34-226_25.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Umesh Patel's Krish Entertainment in , "></figure><div class="content ">
+      <h3><a title="Indian Entertainment - Umesh Patel's Krish Entertainment" href="/piscataway-nj/entertainment/premanand-music-academy-1670888">Umesh Patel's Krish Entertainment</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>28 Fuller Ave, Piscataway, NJ, United States</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>
+              Established Since 2004</div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">3.4<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="entertainment">Entertainment:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Ghazal Singers in Piscataway, NJ" href="/piscataway-nj/ghazal-singers">Ghazal Singers</a>, 
+          &nbsp;<a title="Karaoke Singers in Piscataway, NJ" href="/piscataway-nj/karaoke-singers">Karaoke Singers</a>, 
+          &nbsp;<a title="Music Shows in Piscataway, NJ" href="/piscataway-nj/music-shows">Music Shows</a>, 
+          &nbsp;<a title="Singers in Piscataway, NJ" href="/piscataway-nj/singers">Singers</a>, 
+          &nbsp;<a title="Wedding Singers in Piscataway, NJ" href="/piscataway-nj/wedding-singers">Wedding Singers</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by Umesh Patel's Krish Entertainment" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p> I’m Umesh Patel, a vocalist. I have earned a diploma in Vocal and Tabla from Ramamanu Kalakendra, Vidhyanagar, Gujarat in 2003. During my study, I have managed to reach state level competition in youth festival. 
+I moved to Canada in 2004 and have performed in many Indo- Canadian events.  I have won radio CMR 101.3 FM competition.  As a reward, they gave me opportunity to record my Vocals in their musical album. I Have performed in Greater toronto area, North America etc. and my actual journey started.
+I moved to United States in 2010 and likewise I have been performing in Indian events.  In addition, I have hosted many live shows like Indian classical, semi-classical, bhajans, festival shows, Garba, Voluntary works for Indian community residence in USA and all kind of Indian musical events.  Moreover, I have visited to UK and Zambia doing live performances and shows.  I continued my teaching passion and have been teaching at BAPS Mandir, Edidin, NJ and under the banner of Premanand Music House.<span class="more-links"><a title="Read More about Umesh Patel's Krish Entertainment" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class=""><input type="hidden" id="hdn_show_contactnumber1670888" value="+1 732-766-9856"><li><a href="javascript:void(0);" onclick="Before_openEnquiryModal('3' , '1670888',&quot;Umesh Patel's Krish Entertainment&quot;);gaclicktrack('send','event', 'Response-show Number', 'Show number', '1670888');" class="red-but"><b>Show Number</b></a></li>
+      <li><a title="Enquire Umesh Patel" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1670888',&quot;Umesh Patel's Krish Entertainment&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1670888');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2022-06-29-12-18-37-556_1.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Singalong Saikat in , "></figure><div class="content ">
+      <h3><a title="Indian Entertainment - Singalong Saikat" href="/edison-nj/entertainment/sing-along-saikat-1596156">Singalong Saikat</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>66 13th Street, Somerset, NJ, USA</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating"><a title="View All Reviews" href="/edison-nj/entertainment/sing-along-saikat-1596156#reviews">5<span class="material-icons-outlined">star</span></a><b>28
+                          Reviews
+                        </b></div>
+      </li>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">3.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="entertainment">Entertainment:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Music Shows in Edison, NJ" href="/edison-nj/music-shows">Music Shows</a>, 
+          &nbsp;<a title="Singers in Edison, NJ" href="/edison-nj/singers">Singers</a>, 
+          &nbsp;<a title="Wedding Singers in Edison, NJ" href="/edison-nj/wedding-singers">Wedding Singers</a>, 
+          &nbsp;<a title="Dance Choreographers in Edison, NJ" href="/edison-nj/dance-choreographers">Dance Choreographers</a>, 
+          &nbsp;<a title="Dance Show in Edison, NJ" href="/edison-nj/dance-show">Dance Show</a>, 
+          &nbsp;<a title="MC And Host in Edison, NJ" href="/edison-nj/mc-and-host">MC And Host</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by Singalong Saikat" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>Saikat is passionate about music and singing. Though an techie by profession, his zeal for music has always inspired him to pursue his passion professionally.
+He has rocked several places in India, Middlle East, USA, Europe, Canada and Caribbean countries with his dazzling performances. He is associated with Bengal’s eminent music director and his mentor Mr. Ashok Bhadra and his team and has performed across India with renowned actors. He has been spinning the web of his magic voice across several states and neighboring countries. He has toured with several celebrities in India and US and performed with legendary singer Kavitha Krishnamurthy ji and several other saregama and Indian Idol singers.  Saikat has produced, directed, sung and acted in several Music Videos. He has acted in bengali soaps and telefilms and has done modeling assignments as well in India. Not only his singing but acting skills has been appreciated by press and audience across the world.
+He has gone through voice training under the guidance of his mentor, teachers at Hartford Repository, Scranton School of Music and Shankar Mahadevan Academy.
+On stage, Saikat is sometimes an aura and sometimes a streak of lightning energy. From evergreens to remixes, from old to new songs – He performs with an invigorating and captivating energy. Welcome the New age Don of Bollywood Music.<span class="more-links"><a title="Read More about Singalong Saikat" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class=""><input type="hidden" id="hdn_show_contactnumber1596156" value="+1 973-462-1695"><li><a href="javascript:void(0);" onclick="Before_openEnquiryModal('3' , '1596156',&quot;Singalong Saikat&quot;);gaclicktrack('send','event', 'Response-show Number', 'Show number', '1596156');" class="red-but"><b>Show Number</b></a></li>
+      <li><a title="Enquire Saikat" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1596156',&quot;Singalong Saikat&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1596156');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2019-09-26-01-21-05-076_16.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Sunny Moza- Best Desi MC in , "></figure><div class="content ">
+      <h3><a title="Indian Entertainment - Sunny Moza- Best Desi MC" href="/fremont-ca/entertainment/sunny-moza-1250895">Sunny Moza- Best Desi MC</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>Fremont, CA 94538, USA</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating"><a title="View All Reviews" href="/fremont-ca/entertainment/sunny-moza-1250895#reviews">5<span class="material-icons-outlined">star</span></a><b>15
+                          Reviews
+                        </b></div>
+      </li>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">3.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="entertainment">Entertainment:&nbsp;
+                      </a></b>
+          &nbsp;<a title="MC And Host in Fremont, CA" href="/fremont-ca/mc-and-host">MC And Host</a>, 
+          &nbsp;<a title="Singers in Fremont, CA" href="/fremont-ca/singers">Singers</a>, 
+          &nbsp;<a title="Stand Up Comedians in Fremont, CA" href="/fremont-ca/stand-up-comedians">Stand Up Comedians</a>, 
+          &nbsp;<a title="Wedding Singers in Fremont, CA" href="/fremont-ca/wedding-singers">Wedding Singers</a>, </div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by Sunny Moza- Best Desi MC" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>Sunny is one of the most distinguished Desi entertainers in Bay Area, He specializes in Stand-up Comedy, MC and Host. From hosting Bollywood concerts, corporate parties, private birthdays, anniversaries and weddings to stand-up comedy gigs along with well-renowned comedians from India, Sunny does it all. He is a versatile entertainer and engages the audience with his wits, humor and a charming personality. 
+Having hosted hundreds of shows across the USA, Sunny Moza is considered by many as America’s Best Desi M.C. and Host. Sunny Moza has acted in over 100 stage plays, commercials, music videos, and independent films. Sunny Moza likes to discuss current topics and social issues on his radio show while keeping the discussion light and fun. Major celebrities have appeared on his radio show. <span class="more-links"><a title="Read More about Sunny Moza- Best Desi MC" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class=""><input type="hidden" id="hdn_show_contactnumber1250895" value="+1 510-396-1253"><li><a href="javascript:void(0);" onclick="Before_openEnquiryModal('3' , '1250895',&quot;Sunny Moza- Best Desi MC&quot;);gaclicktrack('send','event', 'Response-show Number', 'Show number', '1250895');" class="red-but"><b>Show Number</b></a></li>
+      <li><a title="Enquire Mary Krishna" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1250895',&quot;Sunny Moza- Best Desi MC&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1250895');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2018-12-05-06-47-41-358_64.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="TreatForYourSoul Entertainment LLC in , "></figure><div class="content ">
+      <h3><a title="Indian Entertainment - TreatForYourSoul Entertainment LLC" href="/marlboro-nj/entertainment/treatforyoursoul-entertainment-llc-667535">TreatForYourSoul Entertainment LLC</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>Marlboro, NJ, USA</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>16 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating"><a title="View All Reviews" href="/marlboro-nj/entertainment/treatforyoursoul-entertainment-llc-667535#reviews">5<span class="material-icons-outlined">star</span></a><b>39
+                          Reviews
+                        </b></div>
+      </li>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">3.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="entertainment">Entertainment:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Singers in Marlboro, NJ" href="/marlboro-nj/singers">Singers</a>, 
+          &nbsp;<a title="Ghazal Singers in Marlboro, NJ" href="/marlboro-nj/ghazal-singers">Ghazal Singers</a>, 
+          &nbsp;<a title="Wedding Singers in Marlboro, NJ" href="/marlboro-nj/wedding-singers">Wedding Singers</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by TreatForYourSoul Entertainment LLC" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>Sankumani’s Mehfil aspires to bring people together into the blissful joy of listening to beautiful poetry. Sankumani Sarma was a regular singer in All India Radio. He has been doing ghazal and geet concerts for the last 15 years all over the USA. Invite ghazal singer Sankumani Sarma from New Jersey to entertain you with his magical voice and melodious rendition of popular ghazals and Hindi film songs. Sankumani's concerts are especially suited for celebrations like 40/50/60/70th birthdays/marriage anniversary/ Indian cocktail party/engagement party etc. Sankumani is accompanied by top-class musicians on Harmonium, Tabla, Guitar, Bulbul Tarang, Keyboard, etc.
+
+Being one of the leading Bollywood singers in the USA, Sankumani Sarma is well known for singing ghazals and has been a regular artist for All India Radio. Sankumani brings people together into the blissful joy of listening to beautiful poetry in an intimate setting. Singing being his passion, now he travels all over the United States to conduct mehfil in his spare time. There is great joy in listening to his select list of very popular ghazals and geets. If you’re looking for Indian singers in the USA, please invite Sankumani from New Jersey to entertain you on your special occasion with his magical voice.
+
+Sankumani's Mehfil will make your event a memorable one!<span class="more-links"><a title="Read More about TreatForYourSoul Entertainment LLC" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="double-link"><input type="hidden" id="hdn_show_contactnumber667535" value="+1 732-851-3054"><li><a href="javascript:void(0);" onclick="Before_openEnquiryModal('3' , '667535',&quot;TreatForYourSoul Entertainment LLC&quot;);gaclicktrack('send','event', 'Response-show Number', 'Show number', '667535');" class="red-but"><b>Show Number</b></a></li>
+      <li><a title="Enquire Sankumani Sarma" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '667535',&quot;TreatForYourSoul Entertainment LLC&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '667535');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2023-04-12-01-41-16-982_49.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="DJ Kirpal in , "></figure><div class="content ">
+      <h3><a title="Indian DJ Services - DJ Kirpal" href="/sacramento-ca/dj-service/dj-kirpal-1699180">DJ Kirpal</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>Sacramento, CA, United States</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>
+              Established Since 2018</div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">2.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Asian DJs in Sacramento, CA" href="/sacramento-ca/asian-djs">Asian DJs</a>, 
+          &nbsp;<a title="Event DJs in Sacramento, CA" href="/sacramento-ca/event-djs">Event DJs</a>, 
+          &nbsp;<a title="Party DJs in Sacramento, CA" href="/sacramento-ca/party-djs">Party DJs</a>, 
+          &nbsp;<a title="Punjabi DJs in Sacramento, CA" href="/sacramento-ca/punjabi-djs">Punjabi DJs</a>, 
+          &nbsp;<a title="Wedding Band DJ in Sacramento, CA" href="/sacramento-ca/wedding-band-dj">Wedding Band DJ</a>, </div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by DJ Kirpal" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>I am one of the most distinguished DJ Services in Sacramento, CA. I specialize in Asian DJs, Event DJs, Party DJs, Punjabi DJs, Wedding Band DJs, and EntertainmentHello All, which provides production services throughout the area, founded on the belief that your wedding should be special and one of a kind. We take great efforts in going above and beyond for your wedding. All our events are different and tailored to be custom. We make sure to deliver clients' goals and expectations. Our entertainment company provides top-level services such as lighting, sparklers, dancing on clouds, and visually led walls. We would love to sit down with you and learn more about your event. <span class="more-links"><a title="Read More about DJ Kirpal" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="single-link">
+      <li><a title="Enquire DJ Kirpal" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1699180',&quot;DJ Kirpal&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1699180');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2023-02-27-06-20-23-261_50.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Mehfilz in , "></figure><div class="content ">
+      <h3><a title="Indian Entertainment - Mehfilz" href="/sacramento-ca/entertainment/mehfilz-1684412">Mehfilz</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>Sacramento, CA, USA</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>
+              Established Since 2010</div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">2.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="entertainment">Entertainment:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Music Shows in Sacramento, CA" href="/sacramento-ca/music-shows">Music Shows</a>, 
+          &nbsp;<a title="Singers in Sacramento, CA" href="/sacramento-ca/singers">Singers</a>, </div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by Mehfilz" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>I am one of the most distinguished Entertainment in Sacramento, CA. I specialize in Music Shows, Singers, Musician/Band Private events in SF, the Bayarea. we will bring you the best entertainment Music knows no you and me. It belongs to everyone who sings!" Seeking all your blessings to wish me in this continued support to preserve and pass on this wonderful ancient Art form to benefit next-generation. For more details kindly contact me. Thanks <span class="more-links"><a title="Read More about Mehfilz" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="single-link">
+      <li><a title="Enquire Mehfilz" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1684412',&quot;Mehfilz&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1684412');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2019-07-10-07-04-27-847_59.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Dk Productions in , "></figure><div class="content ">
+      <h3><a title="Indian Entertainment - Dk Productions" href="/las-vegas-nv/entertainment/dk-productions-1233964">Dk Productions</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>1980 Festival Plaza Dr, Las Vegas, NV, USA</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">2.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="entertainment">Entertainment:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Costumed Character in Las Vegas, NV" href="/las-vegas-nv/costumed-character">Costumed Character</a>, 
+          &nbsp;<a title="Mobile Video Gaming in Las Vegas, NV" href="/las-vegas-nv/mobile-video-gaming">Mobile Video Gaming</a>, 
+          &nbsp;<a title="Music Shows in Las Vegas, NV" href="/las-vegas-nv/music-shows">Music Shows</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by Dk Productions" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>DK Productions, Inc. is a high-end, full-service production company known for bringing Hollywood quality to Las Vegas Video Production.  DK has been Nevada’s premier film and video production and post-production company since 1990. While every client’s production budget and editing needs are different, we specialize in providing high production value on every project. Dimitri Sotirakis, the President of DK, is a member of the Director’s Guild of America and has produced and directed six Hollywood feature films and hundreds of commercials, music videos, and corporate videos. <span class="more-links"><a title="Read More about Dk Productions" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="single-link">
+      <li><a title="Enquire Dk Productions" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1233964',&quot;Dk Productions&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1233964');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2018-05-14-05-32-40-281_13.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Bliss Entertainment Event Group in , "></figure><div class="content ">
+      <h3><a title="Indian Entertainment - Bliss Entertainment Event Group" href="/las-vegas-nv/entertainment/bliss-entertainment-event-group-1079224">Bliss Entertainment Event Group</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>3871 S Valley View Blvd, Las Vegas, NV, USA</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>16 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating"><a title="View All Reviews" href="/las-vegas-nv/entertainment/bliss-entertainment-event-group-1079224#reviews">5<span class="material-icons-outlined">star</span></a><b>1
+                          Review
+                        </b></div>
+      </li>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">2.7<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="entertainment">Entertainment:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Dance Show in Las Vegas, NV" href="/las-vegas-nv/dance-show">Dance Show</a>, 
+          &nbsp;<a title="Ghazal Singers in Las Vegas, NV" href="/las-vegas-nv/ghazal-singers">Ghazal Singers</a>, 
+          &nbsp;<a title="Karaoke Singers in Las Vegas, NV" href="/las-vegas-nv/karaoke-singers">Karaoke Singers</a>, 
+          &nbsp;<a title="Mobile Video Gaming in Las Vegas, NV" href="/las-vegas-nv/mobile-video-gaming">Mobile Video Gaming</a>, 
+          &nbsp;<a title="Singers in Las Vegas, NV" href="/las-vegas-nv/singers">Singers</a>, 
+          &nbsp;<a title="Wedding Singers in Las Vegas, NV" href="/las-vegas-nv/wedding-singers">Wedding Singers</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by Bliss Entertainment Event Group" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>Ryan Fernandez had a vision that raised the bar in the entertainment industry in 2008 when he established Bliss Entertainment Event Group. The team has more than 16 years of event experience exceeding 500 different types of events throughout the nation. Associates take pride in their work and their promise is to make your event as joyous and memorable while keeping your absolute satisfaction in mind. Bliss Entertainment Event Group spends countless hours researching the market in the attempt to provide you with cutting-edge technology in all aspects of the field including pre-event planning and even recommends additional experts to ensure an experience of excellence. Our company’s success can be credited to our one of a kind process. With the event industry transforming at such a rapid pace, our knowledge, experience and tactics are what will make you happy you chose us to help you make your day even more special. Thank you for visiting our site, and we hope we can be your next entertainment event company.<span class="more-links"><a title="Read More about Bliss Entertainment Event Group" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="single-link">
+      <li><a title="Enquire Ryan Fernandez" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1079224',&quot;Bliss Entertainment Event Group&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1079224');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg" alt="Desi Rhythm in , "></figure><div class="content ">
+      <h3><a title="Indian Entertainment - Desi Rhythm" href="/sacramento-ca/entertainment/desi-rhythm-786918">Desi Rhythm</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>Sacramento, CA 94203, United States</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>5 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">1.5<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="entertainment">Entertainment:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Dance Show in Sacramento, CA" href="/sacramento-ca/dance-show">Dance Show</a>, 
+          &nbsp;<a title="Carnival Games in Sacramento, CA" href="/sacramento-ca/carnival-games">Carnival Games</a>, 
+          &nbsp;<a title="Bouncy Castle in Sacramento, CA" href="/sacramento-ca/bouncy-castle">Bouncy Castle</a>, 
+          &nbsp;<a title="Caricaturists in Sacramento, CA" href="/sacramento-ca/caricaturists">Caricaturists</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by Desi Rhythm" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>Desi Rhythm is a dance team that performs bollywood/Indian dances. We are a group of individuals from Sacramento area who have gotten together to pursue our Dance Dream. Desi Rhythm represents the face of modern India and we assure that we will provide a wholesome entertainment!!<span class="more-links"><a title="Read More about Desi Rhythm" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="single-link">
+      <li><a title="Enquire Desi Rhythm" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '786918',&quot;Desi Rhythm&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '786918');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2025-11-24-05-20-32-594_46.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="AZ Desi Events in , "></figure><div class="content ">
+      <h3><a title="Indian Entertainment - AZ Desi Events" href="/woodland-ca/entertainment/az-desi-events-1985035">AZ Desi Events</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>Woodland, CA, United States</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>
+              Established Since 2015</div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">3.4<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="entertainment">Entertainment:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Dance Show in Woodland, CA" href="/woodland-ca/dance-show">Dance Show</a>, 
+          &nbsp;<a title="MC And Host in Woodland, CA" href="/woodland-ca/mc-and-host">MC And Host</a>, 
+          &nbsp;<a title="Music Shows in Woodland, CA" href="/woodland-ca/music-shows">Music Shows</a>, 
+          &nbsp;<a title="Singers in Woodland, CA" href="/woodland-ca/singers">Singers</a>, 
+          &nbsp;<a title="Wedding Singers in Woodland, CA" href="/woodland-ca/wedding-singers">Wedding Singers</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by AZ Desi Events" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>AZ Desi Events, LLC is a key event organizing and promoting company based in Arizona that specializes in catering to the South Asian (or "Desi") community. The company focuses on bringing high-profile cultural entertainment, including live concerts, musical performances, stand-up comedy shows, and celebrity meet-and-greets featuring artists primarily from India and the South Asian diaspora. By curating a calendar of vibrant and culturally relevant programs, AZ Desi Events serves as a major platform for connecting the local community to its heritage, ensuring that the diverse population in and around Arizona has access to large-scale, professional, and well-organized cultural experiences that resonate with their identity. The company's operations often involve ticketing, event logistics, and marketing to ensure high visibility and successful turnout for their numerous annual events.<span class="more-links"><a title="Read More about AZ Desi Events" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="single-link">
+      <li><a title="Enquire AZ Desi Events" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1985035',&quot;AZ Desi Events&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1985035');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div></div>
