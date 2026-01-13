@@ -461,6 +461,7 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
             isAiRecommended: true,
             aiCategory: template.ceremony || template.category,
             aiReason: `Auto-generated task for ${wedding.tradition} wedding tradition`,
+            linkTo: template.linkTo, // Smart link for task completion
           });
         }
       }

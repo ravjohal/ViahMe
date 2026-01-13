@@ -1468,6 +1468,8 @@ export const tasks = pgTable("tasks", {
   aiReason: text("ai_reason"), // Why AI recommended this task
   aiCategory: text("ai_category"), // AI categorization (e.g., 'vendor', 'venue', 'attire', 'ceremony')
   dismissed: boolean("dismissed").default(false), // If user dismissed the AI recommendation
+  // Smart link to navigate user to the relevant page for completing this task
+  linkTo: text("link_to"), // Route path (e.g., '/budget', '/vendors?category=venue')
 }, (table) => ({
   weddingIdIdx: index("tasks_wedding_id_idx").on(table.weddingId),
   eventIdIdx: index("tasks_event_id_idx").on(table.eventId),

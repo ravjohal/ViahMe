@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Calendar, CheckCircle2, Circle, AlertCircle, Trash2, Filter, Bell, BellOff, Mail, MessageSquare, User, Send, Sparkles, Lightbulb, X, ChevronDown, ChevronUp, Wand2, MessageCircle, List, Clock } from "lucide-react";
+import { Plus, Calendar, CheckCircle2, Circle, AlertCircle, Trash2, Filter, Bell, BellOff, Mail, MessageSquare, User, Send, Sparkles, Lightbulb, X, ChevronDown, ChevronUp, Wand2, MessageCircle, List, Clock, ExternalLink } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/use-auth";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -999,6 +999,18 @@ export default function TasksPage() {
                                     {task.title}
                                   </h4>
                                   <div className="flex items-center gap-1 shrink-0">
+                                    {(task as any).linkTo && !task.completed && (
+                                      <Button
+                                        size="sm"
+                                        variant="default"
+                                        className="h-7 text-xs gap-1"
+                                        onClick={() => setLocation((task as any).linkTo)}
+                                        data-testid={`button-go-task-${task.id}`}
+                                      >
+                                        <ExternalLink className="w-3 h-3" />
+                                        Go
+                                      </Button>
+                                    )}
                                     <Button
                                       size="icon"
                                       variant="ghost"
@@ -1101,6 +1113,18 @@ export default function TasksPage() {
                         </div>
 
                         <div className="flex items-center gap-2">
+                          {(task as any).linkTo && !task.completed && (
+                            <Button
+                              size="sm"
+                              variant="default"
+                              className="gap-1"
+                              onClick={() => setLocation((task as any).linkTo)}
+                              data-testid={`button-go-task-${task.id}`}
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                              Go
+                            </Button>
+                          )}
                           <Button
                             size="icon"
                             variant="ghost"
