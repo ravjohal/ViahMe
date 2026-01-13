@@ -70,6 +70,7 @@ import EngagementGames from "@/pages/engagement-games";
 import GamePortal from "@/pages/game-portal";
 import RitualRoles from "@/pages/ritual-roles";
 import MilniPage from "@/pages/milni";
+import DecorPage from "@/pages/decor";
 import VendorAccessPasses from "@/pages/vendor-access-passes";
 import VendorTimeline from "@/pages/vendor-timeline";
 import BudgetEstimatorPage from "@/pages/budget-estimator";
@@ -150,6 +151,11 @@ function Router() {
       <Route path="/milni">
         <ProtectedRoute requiredPermission="guests">
           <MilniPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/decor">
+        <ProtectedRoute requiredPermission="shopping">
+          <DecorPage />
         </ProtectedRoute>
       </Route>
       <Route path="/vendor-collaboration">

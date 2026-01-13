@@ -217,6 +217,10 @@ import {
   ceremonyExplainers,
   type CeremonyExplainer,
   type InsertCeremonyExplainer,
+  decorItems,
+  type DecorItem,
+  type InsertDecorItem,
+  DEFAULT_DECOR_LIBRARY,
   budgetAllocations,
   budgetAlerts,
   dashboardWidgets,
@@ -1219,6 +1223,16 @@ export interface IStorage {
   deleteCeremonyExplainer(id: string): Promise<boolean>;
   publishCeremonyExplainer(id: string): Promise<CeremonyExplainer | undefined>;
   unpublishCeremonyExplainer(id: string): Promise<CeremonyExplainer | undefined>;
+
+  // Decor Items - Decor Inventory & Sourcing Tracker
+  getDecorItem(id: string): Promise<DecorItem | undefined>;
+  getDecorItemsByWedding(weddingId: string): Promise<DecorItem[]>;
+  getDecorItemsByWeddingAndCategory(weddingId: string, category: string): Promise<DecorItem[]>;
+  createDecorItem(item: InsertDecorItem): Promise<DecorItem>;
+  updateDecorItem(id: string, item: Partial<InsertDecorItem>): Promise<DecorItem | undefined>;
+  deleteDecorItem(id: string): Promise<boolean>;
+  toggleDecorItemSourced(id: string): Promise<DecorItem | undefined>;
+  importDefaultDecorLibrary(weddingId: string): Promise<DecorItem[]>;
 }
 
 // Guest Planning Snapshot - comprehensive view of all guests and per-event costs
@@ -11772,6 +11786,84 @@ export class DBStorage implements IStorage {
       .where(eq(ceremonyExplainers.id, id))
       .returning();
     return result[0];
+  }
+
+  // Decor Items - Decor Inventory & Sourcing Tracker
+  async getDecorItem(id: string): Promise<DecorItem | undefined> {
+    const result = await this.db.select()
+      .from(decorItems)
+      .where(eq(decorItems.id, id));
+    return result[0];
+  }
+
+  async getDecorItemsByWedding(weddingId: string): Promise<DecorItem[]> {
+    return await this.db.select()
+      .from(decorItems)
+      .where(eq(decorItems.weddingId, weddingId))
+      .orderBy(decorItems.category, decorItems.sortOrder, decorItems.itemName);
+  }
+
+  async getDecorItemsByWeddingAndCategory(weddingId: string, category: string): Promise<DecorItem[]> {
+    return await this.db.select()
+      .from(decorItems)
+      .where(and(
+        eq(decorItems.weddingId, weddingId),
+        eq(decorItems.category, category)
+      ))
+      .orderBy(decorItems.sortOrder, decorItems.itemName);
+  }
+
+  async createDecorItem(item: InsertDecorItem): Promise<DecorItem> {
+    const result = await this.db.insert(decorItems)
+      .values(item)
+      .returning();
+    return result[0];
+  }
+
+  async updateDecorItem(id: string, item: Partial<InsertDecorItem>): Promise<DecorItem | undefined> {
+    const result = await this.db.update(decorItems)
+      .set({ ...item, updatedAt: new Date() })
+      .where(eq(decorItems.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteDecorItem(id: string): Promise<boolean> {
+    await this.db.delete(decorItems)
+      .where(eq(decorItems.id, id));
+    return true;
+  }
+
+  async toggleDecorItemSourced(id: string): Promise<DecorItem | undefined> {
+    const item = await this.getDecorItem(id);
+    if (!item) return undefined;
+    
+    const result = await this.db.update(decorItems)
+      .set({ sourced: !item.sourced, updatedAt: new Date() })
+      .where(eq(decorItems.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async importDefaultDecorLibrary(weddingId: string): Promise<DecorItem[]> {
+    const createdItems: DecorItem[] = [];
+    let sortOrder = 0;
+    
+    for (const libraryItem of DEFAULT_DECOR_LIBRARY) {
+      const result = await this.db.insert(decorItems)
+        .values({
+          weddingId,
+          itemName: libraryItem.itemName,
+          category: libraryItem.category,
+          sourcing: libraryItem.sourcing,
+          quantity: 1,
+          sortOrder: sortOrder++,
+        })
+        .returning();
+      createdItems.push(result[0]);
+    }
+    
+    return createdItems;
   }
 }
 
