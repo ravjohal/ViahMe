@@ -1,0 +1,482 @@
+<div id="listing_div" xmlns:xlink="http://www.w3.org/1999/xlink"><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2024-04-04-09-55-11-372_43.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Bombay Flavors in Sacramento, CA"></figure><div class="content "><h3><a title="Indian Catering Services - Bombay Flavors" href="/fremont-ca/catering-service/bombay-flavors-llc-1812652">Bombay Flavors</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>
+Serving customers in  Sacramento area</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">call</span><a title="Call Bombay Flavors" href="javascript:void(0);" onclick="javascript:openphoneConnect('Bombay Flavors','32067','5869999901');"><b>586-999-9901</b></a><i>
+(pin:32067)
+</i></div><div class="experience"><span class="material-icons-outlined">work_history</span>18 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/fremont-ca/catering-service/bombay-flavors-llc-1812652#reviews">5<span class="material-icons-outlined">star</span></a><b>71
+Reviews</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">9.5<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-trust"><ul><li>
+<div class="trust"><a href="javascript:void(0);" onclick="javascript:openSULTrust();" title="This business Information is been trusted based on users ratings and reviews."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-29-54-504.svg"></span>Trust</a></div></li><li>
+<div class="verified"><a href="javascript:void(0);" onclick="javascript:openSULVerified();" title="This business Information is verified by Sulekha."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-57-40-539.svg"></span>Verified</a></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="catering-service">Catering Services:</a></b>
+<a title="Event &amp; Party Catering in Fremont, CA" href="/fremont-ca/event-party-catering">Event &amp; Party Catering</a>, <a title="Wedding Catering Services in Fremont, CA" href="/fremont-ca/wedding-catering-services">Wedding Catering Services</a></div><div class="more-links" style="display: none;"><a title="View all services offered by Bombay Flavors" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>Welcome to Bombay Flavors, It all began simply, with a passion for sharing the vibrant flavors of India. At Bombay Flavors, we specialize in creating unforgettable experiences through our exquisite catering services. Immerse yourself in the rich tapestry of North Indian cuisine, savor the bold fusion of Indo-Chinese flavors, and indulge in the vibrant street food culture that Bombay is famous for.
+Our culinary journey is rooted in authenticity, capturing the true essence of each dish. Whether it’s the aromatic spices of North India, the savory Indo-Chinese blends, or the iconic street foods from Bombay’s bustling streets, our chefs infuse their passion into every plate.
+At Bombay Flavors, we don’t just serve meals; we create moments. Our commitment to quality ingredients, expert craftsmanship, and personalized service transforms your event into a gastronomic celebration.
+Join us in exploring the diverse flavors of India, meticulously prepared and beautifully presented. Choose Bombay Flavors for your catering needs, where every bite tells a story of tradition, innovation, and the vibrant spirit of Indian cuisine.<span class="more-links"><a title="Read More about Bombay Flavors" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class=""><li><a title="Call Bombay Flavors" href="javascript:void(0);" onclick="javascript:openphoneConnect('Bombay Flavors','32067','5869999901');" class="red-but"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+</svg></span><b>Call</b></a></li><li><a title="Enquire Bombay Flavors" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1812652',&quot;Bombay Flavors&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1812652');"><b>Enquire Now</b></a></li><li><a title="WhatsApp Bombay Flavors" href="javascript:void()" onclick="Before_openEnquiryModal('2','1812652',&quot;Bombay Flavors&quot;);gaclicktrack('send','event', 'Response-Whatsapp Chat','Whatsapp', '1812652');" class="whatsapp"><span><svg class="svg-inline--fa fa-whatsapp fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="whatsapp" role="img" viewBox="0 0 448 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"></path>
+</svg></span></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2020-01-09-06-53-08-004_16.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Z India Catering Co in Sacramento, CA"></figure><div class="content "><h3><a title="Indian Catering Services - Z India Catering Co" href="/las-vegas-nv/catering-service/z-india-catering-co-1309439">Z India Catering Co</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>1116 S Rainbow Blvd, Las Vegas, NV, USA</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">work_history</span>5 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/las-vegas-nv/catering-service/z-india-catering-co-1309439#reviews">5<span class="material-icons-outlined">star</span></a><b>1
+Review</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">2.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="catering-service">Catering Services:</a></b>
+<a title="Event &amp; Party Catering in Las Vegas, NV" href="/las-vegas-nv/event-party-catering">Event &amp; Party Catering</a>, <a title="Wedding Catering Services in Las Vegas, NV" href="/las-vegas-nv/wedding-catering-services">Wedding Catering Services</a>, <a title="South Indian Restaurants in Las Vegas, NV" href="/las-vegas-nv/south-indian-restaurants">South Indian Restaurants</a>, <a title="North Indian Restaurants in Las Vegas, NV" href="/las-vegas-nv/north-indian-restaurants">North Indian Restaurants</a></div><div class="more-links" style="display: none;"><a title="View all services offered by Z India Catering Co" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>Z India Catering Co. is a full-service catering company specializing in Indian cuisine in Las Vegas. We do Casino Banquets for corporate events, Convention Centers, Trade Shows, and Private Parties. We cater to Indian cuisine in multiple styles. From traditional Family-Style to Buffet-Style, we even provide modern Gourmet-Style Plates. For those who would like to try the dishes we are open to the public and offer carry-out and delivery.<span class="more-links"><a title="Read More about Z India Catering Co" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class="single-link"><li><a title="Enquire RajSingh" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1309439',&quot;Z India Catering Co&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1309439');"><b>Enquire Now</b></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2018-07-19-01-41-40-875_62.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Porottas South Indian Cusine Catering Services in Sacramento, CA"></figure><div class="content "><h3><a title="Indian Catering Services - Porottas South Indian Cusine Catering Services" href="/roseville-ca/catering-service/porottas-south-indian-cusine-catering-services-1105394">Porottas South Indian Cusine Catering Services</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>1245 Pleasant Grove Blvd, Roseville, California, USA</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/roseville-ca/catering-service/porottas-south-indian-cusine-catering-services-1105394#reviews">5<span class="material-icons-outlined">star</span></a><b>1
+Review</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">2.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="catering-service">Catering Services:</a></b>
+<a title="Asian Catering in Roseville, CA" href="/roseville-ca/asian-catering">Asian Catering</a>, <a title="Asian Food Catering in Roseville, CA" href="/roseville-ca/asian-food-catering">Asian Food Catering</a>, <a title="Buffet Catering in Roseville, CA" href="/roseville-ca/buffet-catering">Buffet Catering</a>, <a title="Continental Food Service in Roseville, CA" href="/roseville-ca/continental-food-service">Continental Food Service</a>, <a title="Desserts Catering in Roseville, CA" href="/roseville-ca/desserts-catering">Desserts Catering</a>, <a title="Healthy Food Catering in Roseville, CA" href="/roseville-ca/healthy-food-catering">Healthy Food Catering</a>, <a title="Indian Sweets Catering in Roseville, CA" href="/roseville-ca/indian-sweets-catering">Indian Sweets Catering</a>, <a title="Lunch Catering in Roseville, CA" href="/roseville-ca/lunch-catering">Lunch Catering</a>, <a title="Snacks Catering in Roseville, CA" href="/roseville-ca/snacks-catering">Snacks Catering</a>, <a title="South-Indian Food Catering in Roseville, CA" href="/roseville-ca/south-indian-food-catering">South-Indian Food Catering</a>, <a title="Vegetarian Catering in Roseville, CA" href="/roseville-ca/vegetarian-catering">Vegetarian Catering</a>, <a title="Vegetarian/Vegan Food Catering in Roseville, CA" href="/roseville-ca/vegetarian-vegan-food-catering">Vegetarian/Vegan Food Catering</a>, <a title="Wedding Catering Services in Roseville, CA" href="/roseville-ca/wedding-catering-services">Wedding Catering Services</a>, <a title="Wedding Catering Services in Roseville, CA" href="/roseville-ca/wedding-catering-services">Wedding Catering Services</a>, <a title="Event &amp; Party Catering in Roseville, CA" href="/roseville-ca/event-party-catering">Event &amp; Party Catering</a></div><div class="more-links" style="display: none;"><a title="View all services offered by Porottas South Indian Cusine Catering Services" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>Porottas South Indian  Cusine Catering Services, Cooking authentic cuisine from the southern region of India runs in our family. In fact, our founder’s father spent decades running several restaurants in Tamil Nadu. Now, following in his footsteps, we’re bringing the family’s recipes to California. Our dishes have been perfected over decades, let us serve the best of traditional South Indian cuisine to our community. And we even have options from each of the five states. So gather your friends and family and stop in for a meal that will taste like you’re actually in India.<span class="more-links"><a title="Read More about Porottas South Indian Cusine Catering Services" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class="single-link"><li><a title="Enquire Porottas South Indian" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1105394',&quot;Porottas South Indian Cusine Catering Services&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1105394');"><b>Enquire Now</b></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2017-12-13-01-55-53-422_68.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Eat Up in Sacramento, CA"></figure><div class="content "><h3><a title="Indian Catering Services - Eat Up" href="/sacramento-ca/catering-service/eat-up-1025002">Eat Up</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>Sacramento, California, United States</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/sacramento-ca/catering-service/eat-up-1025002#reviews">5<span class="material-icons-outlined">star</span></a><b>2
+Reviews</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">3.4<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="catering-service">Catering Services:</a></b>
+<a title="Andhra Food Catering in Sacramento, CA" href="/sacramento-ca/andhra-food-catering">Andhra Food Catering</a>, <a title="Asian Catering in Sacramento, CA" href="/sacramento-ca/asian-catering">Asian Catering</a>, <a title="Breakfast Catering in Sacramento, CA" href="/sacramento-ca/breakfast-catering">Breakfast Catering</a>, <a title="Dinner Catering in Sacramento, CA" href="/sacramento-ca/dinner-catering">Dinner Catering</a>, <a title="Indian Sweets Catering in Sacramento, CA" href="/sacramento-ca/indian-sweets-catering">Indian Sweets Catering</a>, <a title="Lunch Catering in Sacramento, CA" href="/sacramento-ca/lunch-catering">Lunch Catering</a>, <a title="Vegetarian/Vegan Food Catering in Sacramento, CA" href="/sacramento-ca/vegetarian-vegan-food-catering">Vegetarian/Vegan Food Catering</a>, <a title="Wedding Catering Services in Sacramento, CA" href="/sacramento-ca/wedding-catering-services">Wedding Catering Services</a>, <a title="Wedding Catering Services in Sacramento, CA" href="/sacramento-ca/wedding-catering-services">Wedding Catering Services</a>, <a title="Event &amp; Party Catering in Sacramento, CA" href="/sacramento-ca/event-party-catering">Event &amp; Party Catering</a></div><div class="more-links" style="display: none;"><a title="View all services offered by Eat Up" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>EatUp is an attempt to serve you with authentic Desi street food. When was the last time you had pani puri and felt nostalgic, when was the last time Bhelpuri reminded you of home, when was the last time Dabeli made its way to your heart, when was the last time frankie seemed like soul food? It will this time! Come visit us and wake those desi taste buds up. We specialize in tantalizing your taste buds with authentic desi street food. Either we receive you at our food stall at a public event or you receive us for a food order service for your private event until we make a home. Our products include every street food of true desi cooking specialized in chaat items and Frankie rolls. If you have an event coming up, we are open to setting up a food stall for you. If you have a celebration at home, we are happy to cater for you.<span class="more-links"><a title="Read More about Eat Up" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class="single-link"><li><a title="Enquire Srikanth TP" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1025002',&quot;Eat Up&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1025002');"><b>Enquire Now</b></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2017-07-27-01-25-01-856_97.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="India Oven Catering in Sacramento, CA"></figure><div class="content "><h3><a title="Indian Catering Services - India Oven Catering" href="/sacramento-ca/catering-service/india-oven-catering-977578">India Oven Catering</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>3511 Truxel Road, Sacramento, CA, United States</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">work_history</span>
+Established Since 2002</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/sacramento-ca/catering-service/india-oven-catering-977578#reviews">5<span class="material-icons-outlined">star</span></a><b>3
+Reviews</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">3.4<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="prop-details"><ul><li><span>Appetizers</span> <b> Avg - $5</b></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="catering-service">Catering Services:</a></b>
+<a title="Asian Catering in Sacramento, CA" href="/sacramento-ca/asian-catering">Asian Catering</a>, <a title="Asian Food Catering in Sacramento, CA" href="/sacramento-ca/asian-food-catering">Asian Food Catering</a>, <a title="Desserts Catering in Sacramento, CA" href="/sacramento-ca/desserts-catering">Desserts Catering</a>, <a title="Dinner Catering in Sacramento, CA" href="/sacramento-ca/dinner-catering">Dinner Catering</a>, <a title="Homemade Catering Service in Sacramento, CA" href="/sacramento-ca/homemade-catering-service">Homemade Catering Service</a>, <a title="Indian Sweets Catering in Sacramento, CA" href="/sacramento-ca/indian-sweets-catering">Indian Sweets Catering</a>, <a title="Lunch Catering in Sacramento, CA" href="/sacramento-ca/lunch-catering">Lunch Catering</a>, <a title="Seafood Catering in Sacramento, CA" href="/sacramento-ca/seafood-catering">Seafood Catering</a>, <a title="South-Indian Food Catering in Sacramento, CA" href="/sacramento-ca/south-indian-food-catering">South-Indian Food Catering</a>, <a title="Vegetarian Catering in Sacramento, CA" href="/sacramento-ca/vegetarian-catering">Vegetarian Catering</a>, <a title="Wedding Catering Services in Sacramento, CA" href="/sacramento-ca/wedding-catering-services">Wedding Catering Services</a>, <a title="Event &amp; Party Catering in Sacramento, CA" href="/sacramento-ca/event-party-catering">Event &amp; Party Catering</a></div><div class="more-links" style="display: none;"><a title="View all services offered by India Oven Catering" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>India Oven provides customized catering, whether for a small intimate dinner party or a grand celebration. We work with each of our customers to put together a personalized, unique menu and presentation that best suits their individual tastes. We are specialized to offer Multi Cuisine lunch and dinner. From birthday parties to wedding festivities to office functions, our experienced catering team will meet all of your specific requirements. We cater for all Occasions Wedding Birthday Parties Business Luncheons Conferences. <span class="more-links"><a title="Read More about India Oven Catering" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class="single-link"><li><a title="Enquire India Oven Catering" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '977578',&quot;India Oven Catering&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '977578');"><b>Enquire Now</b></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2017-07-07-07-47-58-651_92.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Affordable Indian Homemade Food Catering in Sacramento, CA"></figure><div class="content "><h3><a title="Indian Catering Services - Affordable Indian Homemade Food Catering" href="/sacramento-ca/catering-service/affordable-indian-homemade-food-catering-969531">Affordable Indian Homemade Food Catering</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>Sacramento, CA 95835, United States</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">work_history</span>5 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating">
+<div class="sul-rate">1.5<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="catering-service">Catering Services:</a></b>
+<a title="Homemade Catering Service in Sacramento, CA" href="/sacramento-ca/homemade-catering-service">Homemade Catering Service</a>, <a title="Breakfast Catering in Sacramento, CA" href="/sacramento-ca/breakfast-catering">Breakfast Catering</a>, <a title="Snacks Catering in Sacramento, CA" href="/sacramento-ca/snacks-catering">Snacks Catering</a>, <a title="South-Indian Food Catering in Sacramento, CA" href="/sacramento-ca/south-indian-food-catering">South-Indian Food Catering</a>, <a title="Vegetarian Catering in Sacramento, CA" href="/sacramento-ca/vegetarian-catering">Vegetarian Catering</a>, <a title="Vegetarian/Vegan Food Catering in Sacramento, CA" href="/sacramento-ca/vegetarian-vegan-food-catering">Vegetarian/Vegan Food Catering</a>, <a title="Wedding Catering Services in Sacramento, CA" href="/sacramento-ca/wedding-catering-services">Wedding Catering Services</a>, <a title="Event &amp; Party Catering in Sacramento, CA" href="/sacramento-ca/event-party-catering">Event &amp; Party Catering</a></div><div class="more-links" style="display: none;"><a title="View all services offered by Affordable Indian Homemade Food Catering" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>We provide Affordable Indian homemade food catering services for Students, Professionals and Foodies. We also provide delicious, freshly cooked homemade Indian food items for tiffin. We are Located in Sacramento (Natomas). Might deliver depending on the proximity. (Delivery charges extra). For more details about our catering services please contact us.<span class="more-links"><a title="Read More about Affordable Indian Homemade Food Catering" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class="single-link"><li><a title="Enquire Dockishpat" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '969531',&quot;Affordable Indian Homemade Food Catering&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '969531');"><b>Enquire Now</b></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://d3aew4oo17ml6.cloudfront.net/localservices/images/large/service-2016-11-8-7-48-5.jpg?v=632" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Kabab N Chutney Catering in Sacramento, CA"></figure><div class="content "><h3><a title="Indian Catering Services - Kabab N Chutney Catering" href="/sacramento-ca/catering-service/kabab-n-chutney-catering-886689">Kabab N Chutney Catering</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>7850 Stockton Blvd, Sacramento, CA, United States</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">work_history</span>5 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/sacramento-ca/catering-service/kabab-n-chutney-catering-886689#reviews">5<span class="material-icons-outlined">star</span></a><b>2
+Reviews</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">3.2<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="catering-service">Catering Services:</a></b>
+<a title="North-Indian Food Catering in Sacramento, CA" href="/sacramento-ca/north-indian-food-catering">North-Indian Food Catering</a>, <a title="South-Indian Food Catering in Sacramento, CA" href="/sacramento-ca/south-indian-food-catering">South-Indian Food Catering</a>, <a title="Wedding Catering Services in Sacramento, CA" href="/sacramento-ca/wedding-catering-services">Wedding Catering Services</a>, <a title="Event &amp; Party Catering in Sacramento, CA" href="/sacramento-ca/event-party-catering">Event &amp; Party Catering</a></div><div class="more-links" style="display: none;"><a title="View all services offered by Kabab N Chutney Catering" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>Kabab N Chutney provides catering services to Small and Large events, Weddings, Graduations, Birthdays, Anniversaries, Religious, Corporate and Holiday Parties, and Executive Events. We invite you, your family and friends to celebrate the special times of your life. We will also be happy to customize your catering menu according to your needs and budget. Please call us for a price quote and menu customization.<span class="more-links"><a title="Read More about Kabab N Chutney Catering" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class="single-link"><li><a title="Enquire Kabab N Chutney Catering" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '886689',&quot;Kabab N Chutney Catering&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '886689');"><b>Enquire Now</b></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://d3aew4oo17ml6.cloudfront.net/localservices/images/large/o-(9)-2016-7-13-4-40-2.jpg?v=2104" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Kathmandu Kitchen Catering in Sacramento, CA"></figure><div class="content "><h3><a title="Indian Catering Services - Kathmandu Kitchen Catering" href="/davis-ca/catering-service/kathmandu-kitchen-catering-841412">Kathmandu Kitchen Catering</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>234 G St, Davis, CA, United States</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">work_history</span>16 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/davis-ca/catering-service/kathmandu-kitchen-catering-841412#reviews">5<span class="material-icons-outlined">star</span></a><b>3
+Reviews</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">2<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="catering-service">Catering Services:</a></b>
+<a title="Desserts Catering in Davis, CA" href="/davis-ca/desserts-catering">Desserts Catering</a>, <a title="North-Indian Food Catering in Davis, CA" href="/davis-ca/north-indian-food-catering">North-Indian Food Catering</a>, <a title="South-Indian Food Catering in Davis, CA" href="/davis-ca/south-indian-food-catering">South-Indian Food Catering</a>, <a title="Wedding Catering Services in Davis, CA" href="/davis-ca/wedding-catering-services">Wedding Catering Services</a>, <a title="Event &amp; Party Catering in Davis, CA" href="/davis-ca/event-party-catering">Event &amp; Party Catering</a></div><div class="more-links" style="display: none;"><a title="View all services offered by Kathmandu Kitchen Catering" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>We at Kathmandu Kitchen specialize in catering events of all sizes. Whether it's a small family reunion, a private family party, or an important business luncheon, put Kathmandu's expertise to work for you. We will prepare a distinctive menu for your function which will not only meet your individual needs, but also will satisfy your guests' every taste bud. We cater for all major functions: Weddings, Baby Showers, Anniversaries, Luaus, Theme Parties, Children's Events, Class Reunions, Cocktail Parties, Golf Outings, Grand Openings, Fund-raising Events, Promotional Events, Funerals, Trade Shows &amp; Conventions, and Meetings &amp; Seminars.<span class="more-links"><a title="Read More about Kathmandu Kitchen Catering" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class="single-link"><li><a title="Enquire Kathmandu Kitchen Catering" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '841412',&quot;Kathmandu Kitchen Catering&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '841412');"><b>Enquire Now</b></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg" alt="Kathmandu Kitchen in Sacramento, CA"></figure><div class="content "><h3><a title="Indian Catering Services - Kathmandu Kitchen" href="/sacramento-ca/catering-service/kathmandu-kitchen-818573">Kathmandu Kitchen</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>1728 Broadway, Sacramento, CA, United States</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">work_history</span>5 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating">
+<div class="sul-rate">1.5<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="catering-service">Catering Services:</a></b>
+<a title="Andhra Food Catering in Sacramento, CA" href="/sacramento-ca/andhra-food-catering">Andhra Food Catering</a>, <a title="Asian Food Catering in Sacramento, CA" href="/sacramento-ca/asian-food-catering">Asian Food Catering</a>, <a title="North-Indian Food Catering in Sacramento, CA" href="/sacramento-ca/north-indian-food-catering">North-Indian Food Catering</a>, <a title="South-Indian Food Catering in Sacramento, CA" href="/sacramento-ca/south-indian-food-catering">South-Indian Food Catering</a>, <a title="Vegetarian/Vegan Food Catering in Sacramento, CA" href="/sacramento-ca/vegetarian-vegan-food-catering">Vegetarian/Vegan Food Catering</a>, <a title="Wedding Catering Services in Sacramento, CA" href="/sacramento-ca/wedding-catering-services">Wedding Catering Services</a>, <a title="Event &amp; Party Catering in Sacramento, CA" href="/sacramento-ca/event-party-catering">Event &amp; Party Catering</a></div><div class="more-links" style="display: none;"><a title="View all services offered by Kathmandu Kitchen" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>We at Kathmandu Kitchen specialize in catering events of all sizes. Whether it's a small family reunion, a private family party, or an important business luncheon, put Kathmandu's expertise to work for you. We will prepare a distinctive menu for your function which will not only meet your individual needs, but also will satisfy your guests' every taste bud.<span class="more-links"><a title="Read More about Kathmandu Kitchen" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class="single-link"><li><a title="Enquire Kathmandu Kitchen" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '818573',&quot;Kathmandu Kitchen&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '818573');"><b>Enquire Now</b></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg" alt="Lalitha Catering And Tiffins in Sacramento, CA"></figure><div class="content "><h3><a title="Indian Catering Services - Lalitha Catering And Tiffins" href="/sacramento-ca/catering-service/lalitha-catering-and-tiffins-816482">Lalitha Catering And Tiffins</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>Sacramento, CA, United States</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">work_history</span>5 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating">
+<div class="sul-rate">1.5<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="catering-service">Catering Services:</a></b>
+<a title="North-Indian Food Catering in Sacramento, CA" href="/sacramento-ca/north-indian-food-catering">North-Indian Food Catering</a>, <a title="South-Indian Food Catering in Sacramento, CA" href="/sacramento-ca/south-indian-food-catering">South-Indian Food Catering</a>, <a title="Vegetarian/Vegan Food Catering in Sacramento, CA" href="/sacramento-ca/vegetarian-vegan-food-catering">Vegetarian/Vegan Food Catering</a>, <a title="Wedding Catering Services in Sacramento, CA" href="/sacramento-ca/wedding-catering-services">Wedding Catering Services</a>, <a title="Event &amp; Party Catering in Sacramento, CA" href="/sacramento-ca/event-party-catering">Event &amp; Party Catering</a></div><div class="more-links" style="display: none;"><a title="View all services offered by Lalitha Catering And Tiffins" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>Hi friends I do pure vegetarian catering and tiffins for north Indian as well as South Indian...mouth watering chaat too..and also snacks. So please call me for more information.<span class="more-links"><a title="Read More about Lalitha Catering And Tiffins" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class="single-link"><li><a title="Enquire Lalitha" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '816482',&quot;Lalitha Catering And Tiffins&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '816482');"><b>Enquire Now</b></a></li></ul></div></div><div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2017-07-07-07-47-58-651_92.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Affordable Indian Homemade Food Catering in , "></figure><div class="content ">
+      <h3><a title="Indian Catering Services - Affordable Indian Homemade Food Catering" href="/sacramento-ca/catering-service/affordable-indian-homemade-food-catering-969531">Affordable Indian Homemade Food Catering</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>Sacramento, CA 95835, United States</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>5 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">1.5<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="catering-service">Catering Services:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Homemade Catering Service in Sacramento, CA" href="/sacramento-ca/homemade-catering-service">Homemade Catering Service</a>, 
+          &nbsp;<a title="Breakfast Catering in Sacramento, CA" href="/sacramento-ca/breakfast-catering">Breakfast Catering</a>, 
+          &nbsp;<a title="Snacks Catering in Sacramento, CA" href="/sacramento-ca/snacks-catering">Snacks Catering</a>, 
+          &nbsp;<a title="South-Indian Food Catering in Sacramento, CA" href="/sacramento-ca/south-indian-food-catering">South-Indian Food Catering</a>, 
+          &nbsp;<a title="Vegetarian Catering in Sacramento, CA" href="/sacramento-ca/vegetarian-catering">Vegetarian Catering</a>, 
+          &nbsp;<a title="Vegetarian/Vegan Food Catering in Sacramento, CA" href="/sacramento-ca/vegetarian-vegan-food-catering">Vegetarian/Vegan Food Catering</a>, 
+          &nbsp;<a title="Wedding Catering Services in Sacramento, CA" href="/sacramento-ca/wedding-catering-services">Wedding Catering Services</a>, 
+          &nbsp;<a title="Event &amp; Party Catering in Sacramento, CA" href="/sacramento-ca/event-party-catering">Event &amp; Party Catering</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by Affordable Indian Homemade Food Catering" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>We provide Affordable Indian homemade food catering services for Students, Professionals and Foodies. We also provide delicious, freshly cooked homemade Indian food items for tiffin. We are Located in Sacramento (Natomas). Might deliver depending on the proximity. (Delivery charges extra). For more details about our catering services please contact us.<span class="more-links"><a title="Read More about Affordable Indian Homemade Food Catering" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="single-link">
+      <li><a title="Enquire Dockishpat" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '969531',&quot;Affordable Indian Homemade Food Catering&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '969531');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2017-07-27-01-25-01-856_97.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="India Oven Catering in , "></figure><div class="content ">
+      <h3><a title="Indian Catering Services - India Oven Catering" href="/sacramento-ca/catering-service/india-oven-catering-977578">India Oven Catering</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>3511 Truxel Road, Sacramento, CA, United States</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>
+              Established Since 2002</div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating"><a title="View All Reviews" href="/sacramento-ca/catering-service/india-oven-catering-977578#reviews">5<span class="material-icons-outlined">star</span></a><b>3
+                          Reviews
+                        </b></div>
+      </li>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">3.4<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="prop-details">
+    <ul>
+      <li><span>Appetizers</span> <b> Avg - $5</b></li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="catering-service">Catering Services:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Asian Catering in Sacramento, CA" href="/sacramento-ca/asian-catering">Asian Catering</a>, 
+          &nbsp;<a title="Asian Food Catering in Sacramento, CA" href="/sacramento-ca/asian-food-catering">Asian Food Catering</a>, 
+          &nbsp;<a title="Desserts Catering in Sacramento, CA" href="/sacramento-ca/desserts-catering">Desserts Catering</a>, 
+          &nbsp;<a title="Dinner Catering in Sacramento, CA" href="/sacramento-ca/dinner-catering">Dinner Catering</a>, 
+          &nbsp;<a title="Homemade Catering Service in Sacramento, CA" href="/sacramento-ca/homemade-catering-service">Homemade Catering Service</a>, 
+          &nbsp;<a title="Indian Sweets Catering in Sacramento, CA" href="/sacramento-ca/indian-sweets-catering">Indian Sweets Catering</a>, 
+          &nbsp;<a title="Lunch Catering in Sacramento, CA" href="/sacramento-ca/lunch-catering">Lunch Catering</a>, 
+          &nbsp;<a title="Seafood Catering in Sacramento, CA" href="/sacramento-ca/seafood-catering">Seafood Catering</a>, 
+          &nbsp;<a title="South-Indian Food Catering in Sacramento, CA" href="/sacramento-ca/south-indian-food-catering">South-Indian Food Catering</a>, 
+          &nbsp;<a title="Vegetarian Catering in Sacramento, CA" href="/sacramento-ca/vegetarian-catering">Vegetarian Catering</a>, 
+          &nbsp;<a title="Wedding Catering Services in Sacramento, CA" href="/sacramento-ca/wedding-catering-services">Wedding Catering Services</a>, 
+          &nbsp;<a title="Event &amp; Party Catering in Sacramento, CA" href="/sacramento-ca/event-party-catering">Event &amp; Party Catering</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by India Oven Catering" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>India Oven provides customized catering, whether for a small intimate dinner party or a grand celebration. We work with each of our customers to put together a personalized, unique menu and presentation that best suits their individual tastes. We are specialized to offer Multi Cuisine lunch and dinner. From birthday parties to wedding festivities to office functions, our experienced catering team will meet all of your specific requirements. We cater for all Occasions Wedding Birthday Parties Business Luncheons Conferences. <span class="more-links"><a title="Read More about India Oven Catering" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="single-link">
+      <li><a title="Enquire India Oven Catering" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '977578',&quot;India Oven Catering&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '977578');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2017-12-13-01-55-53-422_68.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Eat Up in , "></figure><div class="content ">
+      <h3><a title="Indian Catering Services - Eat Up" href="/sacramento-ca/catering-service/eat-up-1025002">Eat Up</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>Sacramento, California, United States</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating"><a title="View All Reviews" href="/sacramento-ca/catering-service/eat-up-1025002#reviews">5<span class="material-icons-outlined">star</span></a><b>2
+                          Reviews
+                        </b></div>
+      </li>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">3.4<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="catering-service">Catering Services:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Andhra Food Catering in Sacramento, CA" href="/sacramento-ca/andhra-food-catering">Andhra Food Catering</a>, 
+          &nbsp;<a title="Asian Catering in Sacramento, CA" href="/sacramento-ca/asian-catering">Asian Catering</a>, 
+          &nbsp;<a title="Breakfast Catering in Sacramento, CA" href="/sacramento-ca/breakfast-catering">Breakfast Catering</a>, 
+          &nbsp;<a title="Dinner Catering in Sacramento, CA" href="/sacramento-ca/dinner-catering">Dinner Catering</a>, 
+          &nbsp;<a title="Indian Sweets Catering in Sacramento, CA" href="/sacramento-ca/indian-sweets-catering">Indian Sweets Catering</a>, 
+          &nbsp;<a title="Lunch Catering in Sacramento, CA" href="/sacramento-ca/lunch-catering">Lunch Catering</a>, 
+          &nbsp;<a title="Vegetarian/Vegan Food Catering in Sacramento, CA" href="/sacramento-ca/vegetarian-vegan-food-catering">Vegetarian/Vegan Food Catering</a>, 
+          &nbsp;<a title="Wedding Catering Services in Sacramento, CA" href="/sacramento-ca/wedding-catering-services">Wedding Catering Services</a>, 
+          &nbsp;<a title="Wedding Catering Services in Sacramento, CA" href="/sacramento-ca/wedding-catering-services">Wedding Catering Services</a>, 
+          &nbsp;<a title="Event &amp; Party Catering in Sacramento, CA" href="/sacramento-ca/event-party-catering">Event &amp; Party Catering</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by Eat Up" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>EatUp is an attempt to serve you with authentic Desi street food. When was the last time you had pani puri and felt nostalgic, when was the last time Bhelpuri reminded you of home, when was the last time Dabeli made its way to your heart, when was the last time frankie seemed like soul food? It will this time! Come visit us and wake those desi taste buds up. We specialize in tantalizing your taste buds with authentic desi street food. Either we receive you at our food stall at a public event or you receive us for a food order service for your private event until we make a home. Our products include every street food of true desi cooking specialized in chaat items and Frankie rolls. If you have an event coming up, we are open to setting up a food stall for you. If you have a celebration at home, we are happy to cater for you.<span class="more-links"><a title="Read More about Eat Up" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="single-link">
+      <li><a title="Enquire Srikanth TP" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1025002',&quot;Eat Up&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1025002');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2018-07-19-01-41-40-875_62.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Porottas South Indian Cusine Catering Services in , "></figure><div class="content ">
+      <h3><a title="Indian Catering Services - Porottas South Indian Cusine Catering Services" href="/roseville-ca/catering-service/porottas-south-indian-cusine-catering-services-1105394">Porottas South Indian Cusine Catering Services</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>1245 Pleasant Grove Blvd, Roseville, California, USA</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating"><a title="View All Reviews" href="/roseville-ca/catering-service/porottas-south-indian-cusine-catering-services-1105394#reviews">5<span class="material-icons-outlined">star</span></a><b>1
+                          Review
+                        </b></div>
+      </li>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">2.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="catering-service">Catering Services:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Asian Catering in Roseville, CA" href="/roseville-ca/asian-catering">Asian Catering</a>, 
+          &nbsp;<a title="Asian Food Catering in Roseville, CA" href="/roseville-ca/asian-food-catering">Asian Food Catering</a>, 
+          &nbsp;<a title="Buffet Catering in Roseville, CA" href="/roseville-ca/buffet-catering">Buffet Catering</a>, 
+          &nbsp;<a title="Continental Food Service in Roseville, CA" href="/roseville-ca/continental-food-service">Continental Food Service</a>, 
+          &nbsp;<a title="Desserts Catering in Roseville, CA" href="/roseville-ca/desserts-catering">Desserts Catering</a>, 
+          &nbsp;<a title="Healthy Food Catering in Roseville, CA" href="/roseville-ca/healthy-food-catering">Healthy Food Catering</a>, 
+          &nbsp;<a title="Indian Sweets Catering in Roseville, CA" href="/roseville-ca/indian-sweets-catering">Indian Sweets Catering</a>, 
+          &nbsp;<a title="Lunch Catering in Roseville, CA" href="/roseville-ca/lunch-catering">Lunch Catering</a>, 
+          &nbsp;<a title="Snacks Catering in Roseville, CA" href="/roseville-ca/snacks-catering">Snacks Catering</a>, 
+          &nbsp;<a title="South-Indian Food Catering in Roseville, CA" href="/roseville-ca/south-indian-food-catering">South-Indian Food Catering</a>, 
+          &nbsp;<a title="Vegetarian Catering in Roseville, CA" href="/roseville-ca/vegetarian-catering">Vegetarian Catering</a>, 
+          &nbsp;<a title="Vegetarian/Vegan Food Catering in Roseville, CA" href="/roseville-ca/vegetarian-vegan-food-catering">Vegetarian/Vegan Food Catering</a>, 
+          &nbsp;<a title="Wedding Catering Services in Roseville, CA" href="/roseville-ca/wedding-catering-services">Wedding Catering Services</a>, 
+          &nbsp;<a title="Wedding Catering Services in Roseville, CA" href="/roseville-ca/wedding-catering-services">Wedding Catering Services</a>, 
+          &nbsp;<a title="Event &amp; Party Catering in Roseville, CA" href="/roseville-ca/event-party-catering">Event &amp; Party Catering</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by Porottas South Indian Cusine Catering Services" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>Porottas South Indian  Cusine Catering Services, Cooking authentic cuisine from the southern region of India runs in our family. In fact, our founder’s father spent decades running several restaurants in Tamil Nadu. Now, following in his footsteps, we’re bringing the family’s recipes to California. Our dishes have been perfected over decades, let us serve the best of traditional South Indian cuisine to our community. And we even have options from each of the five states. So gather your friends and family and stop in for a meal that will taste like you’re actually in India.<span class="more-links"><a title="Read More about Porottas South Indian Cusine Catering Services" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="single-link">
+      <li><a title="Enquire Porottas South Indian" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1105394',&quot;Porottas South Indian Cusine Catering Services&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1105394');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2020-01-09-06-53-08-004_16.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Z India Catering Co in , "></figure><div class="content ">
+      <h3><a title="Indian Catering Services - Z India Catering Co" href="/las-vegas-nv/catering-service/z-india-catering-co-1309439">Z India Catering Co</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>1116 S Rainbow Blvd, Las Vegas, NV, USA</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>5 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating"><a title="View All Reviews" href="/las-vegas-nv/catering-service/z-india-catering-co-1309439#reviews">5<span class="material-icons-outlined">star</span></a><b>1
+                          Review
+                        </b></div>
+      </li>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">2.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="catering-service">Catering Services:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Event &amp; Party Catering in Las Vegas, NV" href="/las-vegas-nv/event-party-catering">Event &amp; Party Catering</a>, 
+          &nbsp;<a title="Wedding Catering Services in Las Vegas, NV" href="/las-vegas-nv/wedding-catering-services">Wedding Catering Services</a>, 
+          &nbsp;<a title="South Indian Restaurants in Las Vegas, NV" href="/las-vegas-nv/south-indian-restaurants">South Indian Restaurants</a>, 
+          &nbsp;<a title="North Indian Restaurants in Las Vegas, NV" href="/las-vegas-nv/north-indian-restaurants">North Indian Restaurants</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by Z India Catering Co" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>Z India Catering Co. is a full-service catering company specializing in Indian cuisine in Las Vegas. We do Casino Banquets for corporate events, Convention Centers, Trade Shows, and Private Parties. We cater to Indian cuisine in multiple styles. From traditional Family-Style to Buffet-Style, we even provide modern Gourmet-Style Plates. For those who would like to try the dishes we are open to the public and offer carry-out and delivery.
+
+
+<span class="more-links"><a title="Read More about Z India Catering Co" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="single-link">
+      <li><a title="Enquire RajSingh" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1309439',&quot;Z India Catering Co&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1309439');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2021-03-01-08-01-25-439_16.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Curry Pot in , "></figure><div class="content ">
+      <h3><a title="Indian Restaurants - Curry Pot" href="/las-vegas-nv/restaurants/curry-pot-1427451">Curry Pot</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>3377 S Las Vegas Blvd, Las Vegas, NV 89109, USA</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>
+              Established Since 2016</div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">2.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="restaurants">Restaurants:&nbsp;
+                      </a></b>
+          &nbsp;<a title="North Indian Restaurants in Las Vegas, NV" href="/las-vegas-nv/north-indian-restaurants">North Indian Restaurants</a>, 
+          &nbsp;<a title="South Indian Restaurants in Las Vegas, NV" href="/las-vegas-nv/south-indian-restaurants">South Indian Restaurants</a>, </div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by Curry Pot" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>Curry Pot is a family owned restaurant and is one of the first of its kind. An amazing combination of authentic Indian food with a modern tasty flair. There is something for everyone at Curry Pot with plenty of vegetarian and vegan options for everyone. Our experienced chef and his team makes everything fresh. Please come join us for bold flavors and a great time at Curry Pot.<span class="more-links"><a title="Read More about Curry Pot" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="single-link">
+      <li><a title="Enquire Raj S" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1427451',&quot;Curry Pot&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1427451');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2025-12-01-08-08-02-231_1.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Taj Palace Las Vegas in , "></figure><div class="content ">
+      <h3><a title="Indian Catering Services - Taj Palace Las Vegas" href="/las-vegas-nv/catering-service/taj-palace-las-vegas-1986210">Taj Palace Las Vegas</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>Las Vegas, Nevada, USA</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">3.2<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="catering-service">Catering Services:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Birthday Party Catering in Las Vegas, NV" href="/las-vegas-nv/birthday-party-catering">Birthday Party Catering</a>, 
+          &nbsp;<a title="Corporate Catering in Las Vegas, NV" href="/las-vegas-nv/corporate-catering">Corporate Catering</a>, 
+          &nbsp;<a title="Event &amp; Party Catering in Las Vegas, NV" href="/las-vegas-nv/event-party-catering">Event &amp; Party Catering</a>, 
+          &nbsp;<a title="Wedding Catering Service in Las Vegas, NV" href="/las-vegas-nv/wedding-catering-service">Wedding Catering Service</a>, 
+          &nbsp;<a title="Wedding Catering Services in Las Vegas, NV" href="/las-vegas-nv/wedding-catering-services">Wedding Catering Services</a>, 
+          &nbsp;<a title="Vegetarian Catering in Las Vegas, NV" href="/las-vegas-nv/vegetarian-catering">Vegetarian Catering</a>, </div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by Taj Palace Las Vegas" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>There is a saying in Sanskrit ” Athithi Devo Bhava” meaning “Guest is as good as God.” We at Taj Palace go by this principle and invite you to allow us to show our Hospitality and off course the pure flavors of India.Give our customers a place to celebrate life’s special moments by offering the authentic Indian food, service, and ambiance in Las Vegas.<span class="more-links"><a title="Read More about Taj Palace Las Vegas" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="single-link">
+      <li><a title="Enquire Taj Palace" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1986210',&quot;Taj Palace Las Vegas&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1986210');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2025-12-01-08-57-04-610_79.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Rutba Indian Kitchen in , "></figure><div class="content ">
+      <h3><a title="Indian Catering Services - Rutba Indian Kitchen" href="/las-vegas-nv/catering-service/rutba-indian-kitchen-1986212">Rutba Indian Kitchen</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>5115 Spring Mountain Rd 223 a, Las Vegas, NV 89146, United States</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">2<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="catering-service">Catering Services:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Birthday Party Catering in Las Vegas, NV" href="/las-vegas-nv/birthday-party-catering">Birthday Party Catering</a>, 
+          &nbsp;<a title="Breakfast Catering in Las Vegas, NV" href="/las-vegas-nv/breakfast-catering">Breakfast Catering</a>, 
+          &nbsp;<a title="Event &amp; Party Catering in Las Vegas, NV" href="/las-vegas-nv/event-party-catering">Event &amp; Party Catering</a>, 
+          &nbsp;<a title="Vegetarian Caterers in Las Vegas, NV" href="/las-vegas-nv/vegetarian-caterers">Vegetarian Caterers</a>, 
+          &nbsp;<a title="Vegetarian Catering in Las Vegas, NV" href="/las-vegas-nv/vegetarian-catering">Vegetarian Catering</a>, 
+          &nbsp;<a title="Wedding Catering Service in Las Vegas, NV" href="/las-vegas-nv/wedding-catering-service">Wedding Catering Service</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by Rutba Indian Kitchen" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>We bring the authentic taste of India to you, with dishes crafted from traditional recipes infused with love and care. Proudly serving meals that immerse you in the true essence of India.We started Rutba Kitchen with a mission to bring authentic Indian cuisine to Las Vegas. Holding the secrets to the perfect combination of flavors and spices, we aim to satisfy your taste buds with every delightful bite.<span class="more-links"><a title="Read More about Rutba Indian Kitchen" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="single-link">
+      <li><a title="Enquire Rutba" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1986212',&quot;Rutba Indian Kitchen&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1986212');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div></div>
