@@ -89,26 +89,88 @@ export const SOUTH_INDIAN_TASKS: TaskTemplate[] = [
 ];
 
 export const SIKH_TASKS: TaskTemplate[] = [
-  { id: "SK01", task: "Book Gurdwara for Anand Karaj", category: "Venue", description: "Reserve the Gurdwara and confirm ceremony timings.", ceremony: "Anand Karaj", priority: "high", daysBeforeWedding: 180 },
-  { id: "SK02", task: "Arrange Ragis/Kirtan Singers", category: "Music", description: "Book professional Ragis for the ceremony.", ceremony: "Anand Karaj", priority: "high", daysBeforeWedding: 120 },
-  { id: "SK03", task: "Source Rumala Sahib and Chanani", category: "Rituals", description: "Sacred cloths and canopy for Guru Granth Sahib.", ceremony: "Anand Karaj", priority: "high", daysBeforeWedding: 60 },
-  { id: "SK04", task: "Order Karah Prasad Ingredients", category: "Food", description: "Prepare or order the sacred sweet offering.", ceremony: "Anand Karaj", priority: "medium", daysBeforeWedding: 7 },
-  { id: "SK05", task: "Arrange Phulkari or Chunni for Bride", category: "Attire", description: "Traditional embroidered headscarf for the ceremony.", priority: "high", daysBeforeWedding: 90 },
-  { id: "SK06", task: "Plan Mehndi/Ladies Sangeet", category: "Pre-Wedding", description: "Book henna artists and entertainment.", ceremony: "Mehndi", priority: "medium", daysBeforeWedding: 60 },
-  { id: "SK07", task: "Organize Jaggo Night", category: "Pre-Wedding", description: "Arrange decorated pot and dance procession.", ceremony: "Jaggo", priority: "medium", daysBeforeWedding: 30 },
-  { id: "SK08", task: "Coordinate Milni Ceremony", category: "Rituals", description: "Matching garlands and gifts for family introductions.", ceremony: "Milni", priority: "medium", daysBeforeWedding: 30 },
-  { id: "SK09", task: "Book Doli/Vidaai Arrangements", category: "Logistics", description: "Decorated car and flower petals for bride's departure.", ceremony: "Doli", priority: "medium", daysBeforeWedding: 14 },
-  { id: "SK10", task: "Plan Reception/Dinner", category: "Venue", description: "Book venue for evening celebration.", ceremony: "Reception", priority: "high", daysBeforeWedding: 180 },
-  { id: "SK11", task: "Order Groom's Sherwani/Kurta", category: "Attire", description: "Traditional outfit with matching turban.", priority: "high", daysBeforeWedding: 90 },
-  { id: "SK12", task: "Purchase Bridal Lehenga", category: "Attire", description: "Red or pink traditional bridal outfit.", priority: "high", daysBeforeWedding: 120 },
-  { id: "SK13", task: "Arrange Baraat Procession", category: "Logistics", description: "Book dhol players and transportation.", ceremony: "Baraat", priority: "high", daysBeforeWedding: 60 },
-  { id: "SK14", task: "Plan Choora Ceremony", category: "Pre-Wedding", description: "Red and white bangles ceremony for bride.", ceremony: "Choora", priority: "medium", daysBeforeWedding: 14 },
-  { id: "SK15", task: "Organize Vatna/Haldi", category: "Pre-Wedding", description: "Turmeric ceremony with family.", ceremony: "Vatna", priority: "medium", daysBeforeWedding: 7 },
-  { id: "SK16", task: "Confirm Laavan Phere Procedure", category: "Rituals", description: "Discuss four circumambulations with Granthi.", ceremony: "Anand Karaj", priority: "high", daysBeforeWedding: 30 },
-  { id: "SK17", task: "Book Langar/Catering", category: "Food", description: "Arrange vegetarian meal for all guests.", ceremony: "Anand Karaj", priority: "high", daysBeforeWedding: 90 },
-  { id: "SK18", task: "Create Ceremony Program", category: "Experience", description: "Guide explaining Sikh wedding traditions for guests.", ceremony: "Anand Karaj", priority: "low", daysBeforeWedding: 21 },
-  { id: "SK19", task: "Arrange Head Coverings for Guests", category: "Logistics", description: "Provide scarves/bandanas for non-Sikh guests.", ceremony: "Anand Karaj", priority: "medium", daysBeforeWedding: 14 },
-  { id: "SK20", task: "Book Wedding Photographer", category: "Photography", description: "Hire photographer experienced with Gurdwara ceremonies.", priority: "high", daysBeforeWedding: 150 },
+  // 12+ MONTHS BEFORE (365 days)
+  { id: "SK01", task: "Set Budget", category: "Planning", description: "Determine your overall wedding budget and allocate funds to different categories.", priority: "high", daysBeforeWedding: 365 },
+  { id: "SK02", task: "Create a guest list", category: "Planning", description: "Create an initial guest list to help determine venue size and budget needs.", priority: "high", daysBeforeWedding: 365 },
+  { id: "SK03", task: "Decide on budget", category: "Planning", description: "Finalize budget allocations for each wedding category and event.", priority: "high", daysBeforeWedding: 365 },
+  { id: "SK04", task: "Decide how many events to have", category: "Planning", description: "Plan out all pre-wedding and post-wedding events (Mehndi, Jaggo, Choora, etc.).", priority: "high", daysBeforeWedding: 365 },
+  { id: "SK05", task: "Book Gurdwara", category: "Venue", description: "Reserve the Gurdwara for the Anand Karaj ceremony and confirm timing requirements.", ceremony: "Anand Karaj", priority: "high", daysBeforeWedding: 365 },
+  { id: "SK06", task: "Book reception/pre-wedding party venues", category: "Venue", description: "Secure venues for reception, mehndi, sangeet, and other pre-wedding events.", ceremony: "Reception", priority: "high", daysBeforeWedding: 365 },
+  { id: "SK07", task: "Hire wedding planner", category: "Planning", description: "Hire a wedding planner experienced with Sikh/Punjabi weddings.", priority: "medium", daysBeforeWedding: 365 },
+  { id: "SK08", task: "Book wedding venue", category: "Venue", description: "Finalize and book the main wedding venue.", priority: "high", daysBeforeWedding: 365 },
+  { id: "SK09", task: "Send out save the dates", category: "Stationery", description: "Design and send save-the-date cards to guests.", priority: "medium", daysBeforeWedding: 365 },
+
+  // 10 MONTHS BEFORE (306 days)
+  { id: "SK10", task: "Start looking for bridal outfit", category: "Attire", description: "Begin shopping for the bridal lehenga or outfit for the main ceremony.", priority: "high", daysBeforeWedding: 306 },
+  { id: "SK11", task: "Book paath", category: "Rituals", description: "Arrange for Akhand Paath or other religious ceremonies before the wedding.", ceremony: "Anand Karaj", priority: "medium", daysBeforeWedding: 306 },
+  { id: "SK12", task: "Book honeymoon", category: "Planning", description: "Research and book your honeymoon destination and accommodations.", priority: "medium", daysBeforeWedding: 306 },
+  { id: "SK13", task: "Choose bridesmaids/groomsmen", category: "Planning", description: "Finalize your bridal party and groomsmen selections.", priority: "medium", daysBeforeWedding: 306 },
+  { id: "SK14", task: "Book caterer", category: "Food", description: "Hire a caterer experienced with Punjabi cuisine for all events.", priority: "high", daysBeforeWedding: 306 },
+  { id: "SK15", task: "Book decor", category: "Decor", description: "Secure a decorator for the venue, mandap, and event styling.", priority: "high", daysBeforeWedding: 306 },
+  { id: "SK16", task: "Start looking for pre-wedding events outfits", category: "Attire", description: "Begin shopping for outfits for mehndi, jaggo, choora, and other events.", priority: "medium", daysBeforeWedding: 306 },
+  { id: "SK17", task: "Book DJ", category: "Entertainment", description: "Book a DJ for the reception and pre-wedding events.", priority: "high", daysBeforeWedding: 306 },
+
+  // 8 MONTHS BEFORE (245 days)
+  { id: "SK18", task: "Book florist", category: "Florals", description: "Hire a florist for ceremony and venue decorations.", priority: "high", daysBeforeWedding: 245 },
+  { id: "SK19", task: "Book transport", category: "Logistics", description: "Arrange transportation for the wedding day and baraat procession.", ceremony: "Baraat", priority: "medium", daysBeforeWedding: 245 },
+  { id: "SK20", task: "Book cake", category: "Food", description: "Order the wedding cake for the reception.", ceremony: "Reception", priority: "medium", daysBeforeWedding: 245 },
+  { id: "SK21", task: "Book photographer / videographer", category: "Photography", description: "Hire professionals experienced with Sikh/Punjabi weddings and Gurdwara ceremonies.", priority: "high", daysBeforeWedding: 245 },
+  { id: "SK22", task: "Book wedding stationery", category: "Stationery", description: "Order wedding invitations, programs, and other printed materials.", priority: "medium", daysBeforeWedding: 245 },
+  { id: "SK23", task: "Book makeup and hair artist trial", category: "Beauty", description: "Schedule trial sessions with makeup and hair stylists.", priority: "medium", daysBeforeWedding: 245 },
+  { id: "SK24", task: "Book mehndi artist", category: "Beauty", description: "Hire mehndi artists for the bride and family.", ceremony: "Mehndi", priority: "high", daysBeforeWedding: 245 },
+  { id: "SK25", task: "Book turban tying", category: "Attire", description: "Arrange for a professional turban tyer (pagri) for the groom.", priority: "medium", daysBeforeWedding: 245 },
+  { id: "SK26", task: "Book dhol players/band bhaja", category: "Music", description: "Book dhol players for the baraat and other celebrations.", ceremony: "Baraat", priority: "high", daysBeforeWedding: 245 },
+
+  // 4 MONTHS BEFORE (122 days)
+  { id: "SK27", task: "Dress fitting", category: "Attire", description: "Schedule fittings for bridal and groom outfits.", priority: "high", daysBeforeWedding: 122 },
+  { id: "SK28", task: "Choose shoes and jewellery", category: "Attire", description: "Select shoes and jewelry for the bride and groom.", priority: "medium", daysBeforeWedding: 122 },
+  { id: "SK29", task: "Order wedding rings", category: "Jewelry", description: "Select and order wedding bands.", priority: "high", daysBeforeWedding: 122 },
+  { id: "SK30", task: "Arrange outfits for bridal party", category: "Attire", description: "Coordinate outfits for bridesmaids and groomsmen.", priority: "medium", daysBeforeWedding: 122 },
+  { id: "SK31", task: "Order favors and stationery", category: "Stationery", description: "Order guest favors, place cards, and ceremony programs.", priority: "low", daysBeforeWedding: 122 },
+  { id: "SK32", task: "Doli props and games", category: "Logistics", description: "Prepare doli (bride's departure) props and any traditional games.", ceremony: "Doli", priority: "medium", daysBeforeWedding: 122 },
+  { id: "SK33", task: "Source jago and sticks", category: "Rituals", description: "Get the decorated jago pot and sticks for the Jaggo ceremony.", ceremony: "Jaggo", priority: "medium", daysBeforeWedding: 122 },
+
+  // 3 MONTHS BEFORE (92 days)
+  { id: "SK34", task: "Arrange marriage license", category: "Legal", description: "Research requirements and begin the marriage license application process.", priority: "high", daysBeforeWedding: 92 },
+  { id: "SK35", task: "Send invitations", category: "Stationery", description: "Mail formal wedding invitations to all guests.", priority: "high", daysBeforeWedding: 92 },
+  { id: "SK36", task: "Create wedding registry", category: "Planning", description: "Set up wedding registries at preferred stores.", priority: "medium", daysBeforeWedding: 92 },
+  { id: "SK37", task: "Draft seating plans", category: "Planning", description: "Create initial seating arrangements for reception.", priority: "medium", daysBeforeWedding: 92 },
+  { id: "SK38", task: "Buy final touches (e.g. guestbook)", category: "Decor", description: "Purchase guestbook, card box, and other finishing touches.", priority: "low", daysBeforeWedding: 92 },
+  { id: "SK39", task: "Buy welcome signs", category: "Decor", description: "Order or create welcome signage for venue entrances.", priority: "low", daysBeforeWedding: 92 },
+
+  // 2 MONTHS BEFORE (61 days)
+  { id: "SK40", task: "Finalise music", category: "Entertainment", description: "Confirm playlists and song selections with DJ and musicians.", priority: "medium", daysBeforeWedding: 61 },
+  { id: "SK41", task: "Finalise seating plans", category: "Planning", description: "Complete final seating arrangements for all events.", priority: "medium", daysBeforeWedding: 61 },
+  { id: "SK42", task: "Finalise milni list", category: "Rituals", description: "Confirm milni pairings and gift arrangements between families.", ceremony: "Milni", priority: "medium", daysBeforeWedding: 61 },
+  { id: "SK43", task: "Purchase gifts for bridal party", category: "Planning", description: "Buy thank-you gifts for bridesmaids and groomsmen.", priority: "medium", daysBeforeWedding: 61 },
+  { id: "SK44", task: "Create wedding day timeline", category: "Planning", description: "Develop detailed schedule for the wedding day with all vendors.", priority: "high", daysBeforeWedding: 61 },
+
+  // 1 MONTH BEFORE (31 days)
+  { id: "SK45", task: "Confirm arrangements with vendors", category: "Planning", description: "Final confirmation calls with all vendors and service providers.", priority: "high", daysBeforeWedding: 31 },
+  { id: "SK46", task: "Final dress fitting", category: "Attire", description: "Complete final alterations and fittings for all outfits.", priority: "high", daysBeforeWedding: 31 },
+  { id: "SK47", task: "Write wedding speeches", category: "Experience", description: "Prepare any speeches for the reception.", priority: "medium", daysBeforeWedding: 31 },
+  { id: "SK48", task: "Hen / Stag party", category: "Pre-Wedding", description: "Organize bachelor and bachelorette parties.", priority: "medium", daysBeforeWedding: 31 },
+  { id: "SK49", task: "Pick up wedding rings", category: "Jewelry", description: "Collect wedding rings from the jeweler.", priority: "high", daysBeforeWedding: 31 },
+  { id: "SK50", task: "Pick up marriage license", category: "Legal", description: "Obtain the official marriage license from the relevant authority.", priority: "high", daysBeforeWedding: 31 },
+
+  // 2 WEEKS BEFORE (14 days)
+  { id: "SK51", task: "Check on RSVPs", category: "Planning", description: "Follow up with guests who haven't responded to invitations.", priority: "high", daysBeforeWedding: 14 },
+  { id: "SK52", task: "Give final count to caterer", category: "Food", description: "Provide final guest count to catering and venue.", priority: "high", daysBeforeWedding: 14 },
+  { id: "SK53", task: "Break in wedding shoes", category: "Attire", description: "Wear wedding shoes around the house to break them in.", priority: "low", daysBeforeWedding: 14 },
+  { id: "SK54", task: "Arrange head coverings for guests", category: "Logistics", description: "Provide scarves/bandanas for non-Sikh guests at Gurdwara.", ceremony: "Anand Karaj", priority: "medium", daysBeforeWedding: 14 },
+  { id: "SK55", task: "Plan Choora Ceremony", category: "Pre-Wedding", description: "Finalize details for the red and white bangles ceremony.", ceremony: "Choora", priority: "medium", daysBeforeWedding: 14 },
+
+  // 1 WEEK BEFORE (7 days)
+  { id: "SK56", task: "Pack for overnight stay", category: "Logistics", description: "Prepare bags for wedding night and any overnight stays.", priority: "medium", daysBeforeWedding: 7 },
+  { id: "SK57", task: "Pack for honeymoon", category: "Logistics", description: "Pack all luggage and documents needed for honeymoon.", priority: "medium", daysBeforeWedding: 7 },
+  { id: "SK58", task: "Run through bridal party duties", category: "Planning", description: "Brief wedding party on their roles and responsibilities.", priority: "medium", daysBeforeWedding: 7 },
+  { id: "SK59", task: "Prepare final payments", category: "Planning", description: "Prepare final vendor payments and tips.", priority: "high", daysBeforeWedding: 7 },
+  { id: "SK60", task: "Organize Vatna/Haldi", category: "Pre-Wedding", description: "Complete final preparations for the turmeric ceremony.", ceremony: "Vatna", priority: "medium", daysBeforeWedding: 7 },
+  { id: "SK61", task: "Order Karah Prasad ingredients", category: "Food", description: "Prepare or order the sacred sweet offering for Anand Karaj.", ceremony: "Anand Karaj", priority: "medium", daysBeforeWedding: 7 },
+
+  // THE DAY BEFORE (1 day)
+  { id: "SK62", task: "Go to beauty appointments", category: "Beauty", description: "Complete any final beauty treatments (waxing, facials, etc.).", priority: "high", daysBeforeWedding: 1 },
+  { id: "SK63", task: "Get lots of beauty sleep", category: "Personal", description: "Rest well and get a good night's sleep before the big day.", priority: "high", daysBeforeWedding: 1 },
 ];
 
 export const MUSLIM_TASKS: TaskTemplate[] = [

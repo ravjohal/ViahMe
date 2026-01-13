@@ -4,6 +4,7 @@ import type { IStorage } from "../storage";
 import { insertWeddingSchema } from "@shared/schema";
 
 import type { CeremonyDefinition } from "@shared/ceremonies";
+import { getTasksForTradition, calculateDueDate as calculateTaskDueDate } from "../task-templates";
 
 // Determine the side for a ceremony using the canonical ceremony catalog
 function getDefaultSideForCeremony(ceremony: CeremonyDefinition | undefined): 'bride' | 'groom' | 'mutual' {
@@ -438,18 +439,19 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
       }
 
       if (wedding.tradition) {
-        const templates = await storage.getTaskTemplatesByTradition(wedding.tradition);
+        // Use in-memory task templates with comprehensive Sikh wedding checklist
+        const templates = getTasksForTradition(wedding.tradition);
         
         for (const template of templates) {
           let dueDate: Date | undefined = undefined;
           
           if (wedding.weddingDate && template.daysBeforeWedding) {
-            dueDate = calculateDueDate(new Date(wedding.weddingDate), template.daysBeforeWedding);
+            dueDate = calculateTaskDueDate(new Date(wedding.weddingDate), template.daysBeforeWedding);
           }
           
           await storage.createTask({
             weddingId: wedding.id,
-            title: template.title,
+            title: template.task, // In-memory templates use 'task' field
             description: template.description,
             category: template.category,
             priority: (template.priority as 'high' | 'medium' | 'low') || 'medium',
