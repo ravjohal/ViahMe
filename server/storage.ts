@@ -237,6 +237,12 @@ import {
   honeymoonBudgetItems,
   type HoneymoonBudgetItem,
   type InsertHoneymoonBudgetItem,
+  favours,
+  type Favour,
+  type InsertFavour,
+  favourRecipients,
+  type FavourRecipient,
+  type InsertFavourRecipient,
   budgetAllocations,
   budgetAlerts,
   dashboardWidgets,
@@ -1291,6 +1297,22 @@ export interface IStorage {
   updateHoneymoonBudgetItem(id: string, item: Partial<InsertHoneymoonBudgetItem>): Promise<HoneymoonBudgetItem | undefined>;
   deleteHoneymoonBudgetItem(id: string): Promise<boolean>;
   toggleHoneymoonBudgetItemPaid(id: string): Promise<HoneymoonBudgetItem | undefined>;
+
+  // Favours - Gift/favour tracking
+  getFavour(id: string): Promise<Favour | undefined>;
+  getFavoursByWedding(weddingId: string): Promise<Favour[]>;
+  createFavour(favour: InsertFavour): Promise<Favour>;
+  updateFavour(id: string, favour: Partial<InsertFavour>): Promise<Favour | undefined>;
+  deleteFavour(id: string): Promise<boolean>;
+
+  // Favour Recipients
+  getFavourRecipient(id: string): Promise<FavourRecipient | undefined>;
+  getFavourRecipientsByFavour(favourId: string): Promise<FavourRecipient[]>;
+  getFavourRecipientsByWedding(weddingId: string): Promise<FavourRecipient[]>;
+  createFavourRecipient(recipient: InsertFavourRecipient): Promise<FavourRecipient>;
+  updateFavourRecipient(id: string, recipient: Partial<InsertFavourRecipient>): Promise<FavourRecipient | undefined>;
+  deleteFavourRecipient(id: string): Promise<boolean>;
+  toggleFavourRecipientDelivered(id: string): Promise<FavourRecipient | undefined>;
 }
 
 // Guest Planning Snapshot - comprehensive view of all guests and per-event costs
@@ -12180,6 +12202,127 @@ export class DBStorage implements IStorage {
     const result = await this.db.update(honeymoonBudgetItems)
       .set({ isPaid: !item.isPaid, updatedAt: new Date() })
       .where(eq(honeymoonBudgetItems.id, id))
+      .returning();
+    return result[0];
+  }
+
+  // Favours
+  async getFavour(id: string): Promise<Favour | undefined> {
+    const result = await this.db.select()
+      .from(favours)
+      .where(eq(favours.id, id));
+    return result[0];
+  }
+
+  async getFavoursByWedding(weddingId: string): Promise<Favour[]> {
+    return await this.db.select()
+      .from(favours)
+      .where(eq(favours.weddingId, weddingId))
+      .orderBy(favours.category, favours.createdAt);
+  }
+
+  async createFavour(favour: InsertFavour): Promise<Favour> {
+    const result = await this.db.insert(favours)
+      .values(favour)
+      .returning();
+    return result[0];
+  }
+
+  async updateFavour(id: string, favour: Partial<InsertFavour>): Promise<Favour | undefined> {
+    const result = await this.db.update(favours)
+      .set({ ...favour, updatedAt: new Date() })
+      .where(eq(favours.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteFavour(id: string): Promise<boolean> {
+    // First delete all recipients for this favour
+    await this.db.delete(favourRecipients)
+      .where(eq(favourRecipients.favourId, id));
+    // Then delete the favour
+    await this.db.delete(favours)
+      .where(eq(favours.id, id));
+    return true;
+  }
+
+  // Favour Recipients
+  async getFavourRecipient(id: string): Promise<FavourRecipient | undefined> {
+    const result = await this.db.select()
+      .from(favourRecipients)
+      .where(eq(favourRecipients.id, id));
+    return result[0];
+  }
+
+  async getFavourRecipientsByFavour(favourId: string): Promise<FavourRecipient[]> {
+    return await this.db.select()
+      .from(favourRecipients)
+      .where(eq(favourRecipients.favourId, favourId))
+      .orderBy(favourRecipients.recipientName);
+  }
+
+  async getFavourRecipientsByWedding(weddingId: string): Promise<FavourRecipient[]> {
+    return await this.db.select()
+      .from(favourRecipients)
+      .where(eq(favourRecipients.weddingId, weddingId))
+      .orderBy(favourRecipients.createdAt);
+  }
+
+  async createFavourRecipient(recipient: InsertFavourRecipient): Promise<FavourRecipient> {
+    const result = await this.db.insert(favourRecipients)
+      .values(recipient)
+      .returning();
+    
+    // Update the favour's remaining quantity
+    const favour = await this.getFavour(recipient.favourId);
+    if (favour) {
+      const newRemaining = Math.max(0, favour.quantityRemaining - (recipient.quantity || 1));
+      await this.db.update(favours)
+        .set({ quantityRemaining: newRemaining, updatedAt: new Date() })
+        .where(eq(favours.id, recipient.favourId));
+    }
+    
+    return result[0];
+  }
+
+  async updateFavourRecipient(id: string, recipient: Partial<InsertFavourRecipient>): Promise<FavourRecipient | undefined> {
+    const result = await this.db.update(favourRecipients)
+      .set({ ...recipient, updatedAt: new Date() })
+      .where(eq(favourRecipients.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteFavourRecipient(id: string): Promise<boolean> {
+    // Get the recipient to restore quantity
+    const recipient = await this.getFavourRecipient(id);
+    if (recipient) {
+      const favour = await this.getFavour(recipient.favourId);
+      if (favour) {
+        const newRemaining = favour.quantityRemaining + (recipient.quantity || 1);
+        await this.db.update(favours)
+          .set({ quantityRemaining: Math.min(newRemaining, favour.quantityPurchased), updatedAt: new Date() })
+          .where(eq(favours.id, recipient.favourId));
+      }
+    }
+    
+    await this.db.delete(favourRecipients)
+      .where(eq(favourRecipients.id, id));
+    return true;
+  }
+
+  async toggleFavourRecipientDelivered(id: string): Promise<FavourRecipient | undefined> {
+    const recipient = await this.getFavourRecipient(id);
+    if (!recipient) return undefined;
+    
+    const newStatus = recipient.deliveryStatus === 'delivered' ? 'pending' : 'delivered';
+    const result = await this.db.update(favourRecipients)
+      .set({ 
+        deliveryStatus: newStatus, 
+        deliveryDate: newStatus === 'delivered' ? new Date().toISOString().split('T')[0] : null,
+        updatedAt: new Date() 
+      })
+      .where(eq(favourRecipients.id, id))
       .returning();
     return result[0];
   }

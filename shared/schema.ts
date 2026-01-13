@@ -4633,3 +4633,89 @@ export const insertHoneymoonBudgetItemSchema = createInsertSchema(honeymoonBudge
 });
 export type InsertHoneymoonBudgetItem = z.infer<typeof insertHoneymoonBudgetItemSchema>;
 export type HoneymoonBudgetItem = typeof honeymoonBudgetItems.$inferSelect;
+
+// ============================================================================
+// FAVOURS - Wedding favour/gift tracking and recipient management
+// ============================================================================
+
+export const FAVOUR_CATEGORIES = [
+  { value: "mithai", label: "Mithai (Sweets)" },
+  { value: "dry_fruits", label: "Dry Fruits" },
+  { value: "clothing", label: "Clothing/Accessories" },
+  { value: "jewelry", label: "Jewelry" },
+  { value: "home_decor", label: "Home Decor" },
+  { value: "cosmetics", label: "Cosmetics/Beauty" },
+  { value: "gift_cards", label: "Gift Cards" },
+  { value: "cash_envelope", label: "Cash Envelopes" },
+  { value: "religious_items", label: "Religious Items" },
+  { value: "personalized", label: "Personalized Gifts" },
+  { value: "other", label: "Other" },
+] as const;
+
+export type FavourCategoryValue = typeof FAVOUR_CATEGORIES[number]['value'];
+
+export const favours = pgTable("favours", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  name: text("name").notNull(),
+  category: text("category").notNull().default("other"),
+  description: text("description"),
+  quantityPurchased: integer("quantity_purchased").notNull().default(0),
+  quantityRemaining: integer("quantity_remaining").notNull().default(0),
+  unitCost: numeric("unit_cost"),
+  totalCost: numeric("total_cost"),
+  vendor: text("vendor"),
+  purchaseDate: text("purchase_date"),
+  eventId: varchar("event_id"), // Optional: link to specific event (e.g., Sangeet favours vs Wedding favours)
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  weddingIdx: index("favours_wedding_idx").on(table.weddingId),
+  categoryIdx: index("favours_category_idx").on(table.category),
+}));
+
+export const insertFavourSchema = createInsertSchema(favours).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  category: z.enum(["mithai", "dry_fruits", "clothing", "jewelry", "home_decor", "cosmetics", "gift_cards", "cash_envelope", "religious_items", "personalized", "other"]).optional(),
+  quantityPurchased: z.number().int().min(0).optional(),
+  quantityRemaining: z.number().int().min(0).optional(),
+});
+export type InsertFavour = z.infer<typeof insertFavourSchema>;
+export type Favour = typeof favours.$inferSelect;
+
+// Favour Recipients - Track who received which favours
+export const favourRecipients = pgTable("favour_recipients", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  favourId: varchar("favour_id").notNull(),
+  weddingId: varchar("wedding_id").notNull(),
+  recipientName: text("recipient_name").notNull(),
+  recipientType: text("recipient_type").notNull().default("guest"), // 'guest' | 'vendor' | 'family' | 'other'
+  guestId: varchar("guest_id"), // Optional link to guests table
+  householdId: varchar("household_id"), // Optional link to households table
+  quantity: integer("quantity").notNull().default(1),
+  deliveryStatus: text("delivery_status").notNull().default("pending"), // 'pending' | 'delivered' | 'shipped' | 'returned'
+  deliveryDate: text("delivery_date"),
+  deliveryNotes: text("delivery_notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  favourIdx: index("favour_recipients_favour_idx").on(table.favourId),
+  weddingIdx: index("favour_recipients_wedding_idx").on(table.weddingId),
+  guestIdx: index("favour_recipients_guest_idx").on(table.guestId),
+}));
+
+export const insertFavourRecipientSchema = createInsertSchema(favourRecipients).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  recipientType: z.enum(["guest", "vendor", "family", "other"]).optional(),
+  deliveryStatus: z.enum(["pending", "delivered", "shipped", "returned"]).optional(),
+  quantity: z.number().int().min(1).optional(),
+});
+export type InsertFavourRecipient = z.infer<typeof insertFavourRecipientSchema>;
+export type FavourRecipient = typeof favourRecipients.$inferSelect;
