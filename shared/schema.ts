@@ -4306,3 +4306,97 @@ export const insertCeremonyExplainerSchema = createInsertSchema(ceremonyExplaine
 
 export type InsertCeremonyExplainer = z.infer<typeof insertCeremonyExplainerSchema>;
 export type CeremonyExplainer = typeof ceremonyExplainers.$inferSelect;
+
+// ============================================================================
+// DECOR ITEMS - Decor Inventory & Sourcing Tracker
+// ============================================================================
+
+// Decor sourcing options
+export const DECOR_SOURCING_OPTIONS = [
+  { value: "hire", label: "Hire/Rent" },
+  { value: "diy", label: "DIY" },
+  { value: "etsy", label: "Etsy" },
+  { value: "ebay", label: "eBay" },
+  { value: "amazon", label: "Amazon" },
+  { value: "local_store", label: "Local Store" },
+  { value: "family", label: "Family/Friends" },
+  { value: "vendor", label: "Vendor Provided" },
+  { value: "other", label: "Other" },
+] as const;
+
+export type DecorSourcingValue = typeof DECOR_SOURCING_OPTIONS[number]['value'];
+
+// Decor category types
+export const DECOR_CATEGORIES = [
+  { value: "general_decor", label: "General Decor" },
+  { value: "florist_list", label: "Florist List" },
+] as const;
+
+export type DecorCategoryValue = typeof DECOR_CATEGORIES[number]['value'];
+
+export const decorItems = pgTable("decor_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  eventId: varchar("event_id"), // Optional link to specific event
+  category: text("category").notNull().default("general_decor"), // 'general_decor' | 'florist_list'
+  itemName: text("item_name").notNull(),
+  quantity: integer("quantity").notNull().default(1),
+  sourcing: text("sourcing").default("hire"), // 'hire' | 'diy' | 'etsy' | 'ebay' | etc.
+  sourced: boolean("sourced").notNull().default(false), // Sourced toggle
+  notes: text("notes"), // Additional notes
+  estimatedCost: decimal("estimated_cost", { precision: 10, scale: 2 }),
+  actualCost: decimal("actual_cost", { precision: 10, scale: 2 }),
+  vendor: text("vendor"), // Vendor or store name
+  link: text("link"), // Link to purchase
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  weddingIdx: index("decor_items_wedding_idx").on(table.weddingId),
+  eventIdx: index("decor_items_event_idx").on(table.eventId),
+  categoryIdx: index("decor_items_category_idx").on(table.category),
+}));
+
+export const insertDecorItemSchema = createInsertSchema(decorItems).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  category: z.enum(["general_decor", "florist_list"]).optional(),
+  sourcing: z.enum(["hire", "diy", "etsy", "ebay", "amazon", "local_store", "family", "vendor", "other"]).optional(),
+  estimatedCost: z.string().optional().nullable(),
+  actualCost: z.string().optional().nullable(),
+});
+
+export type InsertDecorItem = z.infer<typeof insertDecorItemSchema>;
+export type DecorItem = typeof decorItems.$inferSelect;
+
+// Default library items for South Asian weddings
+export const DEFAULT_DECOR_LIBRARY = [
+  // General Decor
+  { itemName: "Aisle runner", category: "general_decor", sourcing: "hire" },
+  { itemName: "Postbox for cards", category: "general_decor", sourcing: "diy" },
+  { itemName: "Chair sashes", category: "general_decor", sourcing: "hire" },
+  { itemName: "Welcome sign", category: "general_decor", sourcing: "diy" },
+  { itemName: "Table numbers", category: "general_decor", sourcing: "diy" },
+  { itemName: "Centerpieces", category: "general_decor", sourcing: "hire" },
+  { itemName: "Fairy lights", category: "general_decor", sourcing: "amazon" },
+  { itemName: "Photo backdrop", category: "general_decor", sourcing: "hire" },
+  { itemName: "Guest book", category: "general_decor", sourcing: "etsy" },
+  { itemName: "Candles", category: "general_decor", sourcing: "local_store" },
+  { itemName: "Mandap draping", category: "general_decor", sourcing: "vendor" },
+  { itemName: "Jago sticks", category: "general_decor", sourcing: "etsy" },
+  // Florist List
+  { itemName: "Palki Sahib flowers", category: "florist_list", sourcing: "vendor" },
+  { itemName: "Rumalla Sahib sets", category: "florist_list", sourcing: "vendor" },
+  { itemName: "Bridal bouquet", category: "florist_list", sourcing: "vendor" },
+  { itemName: "Groom's boutonniere", category: "florist_list", sourcing: "vendor" },
+  { itemName: "Mandap garlands", category: "florist_list", sourcing: "vendor" },
+  { itemName: "Table centerpiece flowers", category: "florist_list", sourcing: "vendor" },
+  { itemName: "Flower girl petals", category: "florist_list", sourcing: "vendor" },
+  { itemName: "Ceremony arch flowers", category: "florist_list", sourcing: "vendor" },
+  { itemName: "Hair flowers", category: "florist_list", sourcing: "vendor" },
+  { itemName: "Sehra flowers (groom)", category: "florist_list", sourcing: "vendor" },
+  { itemName: "Varmala/Jai Mala", category: "florist_list", sourcing: "vendor" },
+  { itemName: "Doli flowers", category: "florist_list", sourcing: "vendor" },
+] as const;
