@@ -1173,6 +1173,7 @@ export const guests = pgTable("guests", {
   addressCountry: text("address_country"),
   isMainHouseholdContact: boolean("is_main_household_contact").default(false), // If true, this guest is the main contact for their household
   side: text("side").notNull().default('mutual'), // 'bride' | 'groom' | 'mutual' (Affiliation)
+  familySide: text("family_side"), // 'nanke' (maternal) | 'dadke' (paternal) | 'other' - Important for Sikh rituals like Choora, Jaggo
   relationshipTier: text("relationship_tier"), // 'immediate_family' | 'extended_family' | 'friend' | 'parents_friend'
   group: text("group"), // Legacy field - deprecated, use householdId
   eventIds: text("event_ids").array(), // Which events they're invited to (deprecated - use invitations table)
@@ -1207,6 +1208,7 @@ export const insertGuestSchema = createInsertSchema(guests).omit({
   addressCountry: z.string().nullable().optional(),
   isMainHouseholdContact: z.boolean().optional(),
   side: z.enum(['bride', 'groom', 'mutual']).optional(),
+  familySide: z.enum(['nanke', 'dadke', 'other']).nullable().optional(),
   relationshipTier: z.enum(['immediate_family', 'extended_family', 'friend', 'parents_friend']).optional(),
   rsvpStatus: z.enum(['pending', 'confirmed', 'declined', 'uninvited']).optional(),
   visibility: z.enum(['private', 'shared']).optional(),
