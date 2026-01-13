@@ -313,14 +313,22 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
   }, [ceremonyTypes]);
   
   // Populate default ceremonies when ceremonyTypes loads or autoCreateCeremonies is enabled
-  // Pre-populate ALL ceremonies for the tradition (deduplicated and sorted by displayOrder)
+  // Pre-populate only ceremonies marked as isDefaultPrepopulated, sorted by displayOrder
   useEffect(() => {
     if (autoCreateCeremonies && availableCeremonies && availableCeremonies.length > 0) {
       const currentEvents = form.getValues("customEvents") || [];
       if (currentEvents.length === 0) {
-        // Use all deduplicated ceremonies for the tradition, sorted by displayOrder
-        const sortedCeremonies = [...availableCeremonies].sort((a, b) => a.displayOrder - b.displayOrder);
-        const defaultEvents = sortedCeremonies.map(ct => ({
+        // Filter to only ceremonies marked as default prepopulated, sorted by displayOrder
+        const prepopulatedCeremonies = [...availableCeremonies]
+          .filter(ct => ct.isDefaultPrepopulated)
+          .sort((a, b) => a.displayOrder - b.displayOrder);
+        
+        // If no ceremonies are marked as prepopulated, fall back to all ceremonies
+        const ceremoniesToUse = prepopulatedCeremonies.length > 0 
+          ? prepopulatedCeremonies 
+          : [...availableCeremonies].sort((a, b) => a.displayOrder - b.displayOrder);
+        
+        const defaultEvents = ceremoniesToUse.map(ct => ({
           ceremonyTypeId: ct.id,
           customName: "",
           guestCount: "",

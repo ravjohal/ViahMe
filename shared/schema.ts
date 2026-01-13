@@ -4123,6 +4123,7 @@ export const ceremonyTypes = pgTable("ceremony_types", {
   defaultGuests: integer("default_guests").notNull().default(100),
   isActive: boolean("is_active").notNull().default(true),
   displayOrder: integer("display_order").notNull().default(0),
+  isDefaultPrepopulated: boolean("is_default_prepopulated").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (table) => ({
