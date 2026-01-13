@@ -18,6 +18,7 @@ const customEventSchema = z.object({
   ceremonyTypeId: z.string().optional(), // UUID from ceremony_types table
   customName: z.string().optional(),
   guestCount: z.string().optional(),
+  date: z.string().optional(), // Event date in YYYY-MM-DD format
 });
 
 const questionnaireSchema = z.object({
@@ -45,7 +46,7 @@ const questionnaireSchema = z.object({
   showCeremonyBudgets: z.boolean().optional(),
 });
 
-import { Flame, Moon, Sparkles, Flower2, Church, Leaf, Heart, Star, BookOpen, Palette, Plus, Trash2 } from "lucide-react";
+import { Flame, Moon, Sparkles, Flower2, Church, Leaf, Heart, Star, BookOpen, Palette, Plus, Trash2, CalendarDays } from "lucide-react";
 
 // Visual tradition cards with descriptions and vibes
 const TRADITION_CARDS = [
@@ -328,10 +329,11 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
           ? prepopulatedCeremonies 
           : [...availableCeremonies].sort((a, b) => a.displayOrder - b.displayOrder);
         
-        const defaultEvents = ceremoniesToUse.map(ct => ({
+        const defaultEvents = ceremoniesToUse.map((ct, idx) => ({
           ceremonyTypeId: ct.id,
           customName: "",
           guestCount: "",
+          date: "", // Dates will be suggested based on wedding date
         }));
         form.setValue("customEvents", defaultEvents);
       }
@@ -365,7 +367,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
     const selectedIds = new Set(current.map(e => e.ceremonyTypeId));
     const unselected = availableCeremonies.find(c => !selectedIds.has(c.id));
     const defaultCeremonyTypeId = unselected?.id || "";
-    form.setValue("customEvents", [...current, { ceremonyTypeId: defaultCeremonyTypeId, customName: "", guestCount: "" }]);
+    form.setValue("customEvents", [...current, { ceremonyTypeId: defaultCeremonyTypeId, customName: "", guestCount: "", date: "" }]);
   };
 
   const handleRemoveEvent = (index: number) => {
@@ -375,7 +377,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
     }
   };
 
-  const handleEventChange = (index: number, field: "ceremonyTypeId" | "customName" | "guestCount", value: string) => {
+  const handleEventChange = (index: number, field: "ceremonyTypeId" | "customName" | "guestCount" | "date", value: string) => {
     const current = form.getValues("customEvents") || [];
     const updated = current.map((event, i) => {
       if (i === index) {
@@ -388,6 +390,20 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
       return event;
     });
     form.setValue("customEvents", updated);
+  };
+  
+  // Helper to suggest dates based on wedding date and ceremony order
+  const suggestEventDate = (index: number, totalEvents: number, weddingDate: string | undefined): string => {
+    if (!weddingDate) return "";
+    const wedding = new Date(weddingDate);
+    if (isNaN(wedding.getTime())) return "";
+    
+    // Suggest dates leading up to wedding - last event is wedding day
+    // Earlier events spread out before the wedding
+    const daysBeforeWedding = totalEvents - 1 - index;
+    const eventDate = new Date(wedding);
+    eventDate.setDate(wedding.getDate() - daysBeforeWedding);
+    return eventDate.toISOString().split('T')[0];
   };
 
   const onSubmit = (data: QuestionnaireData) => {
@@ -855,7 +871,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                           Your Wedding Events
                         </h3>
                         <p className="text-sm text-muted-foreground">
-                          We've pre-populated typical ceremonies for your tradition. Feel free to add, remove, or customize. Guest counts are optional — we'll use typical defaults if left blank.
+                          We've pre-populated typical ceremonies for your tradition. Add dates, guest counts, and customize as needed. <span className="font-medium text-orange-600 dark:text-orange-400">Don't worry — you can always change these later!</span>
                         </p>
                         <div className="mt-2 p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800">
                           <p className="text-sm text-blue-700 dark:text-blue-300 flex items-center gap-2">
@@ -922,6 +938,32 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                                         className="h-10 w-16 text-center border-0 p-0 focus-visible:ring-0"
                                       />
                                     </div>
+                                  </div>
+                                  
+                                  {/* Date input with suggested date */}
+                                  <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 bg-white dark:bg-background rounded-md border px-2 flex-1">
+                                      <CalendarDays className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                                      <Input
+                                        type="date"
+                                        placeholder={suggestEventDate(index, customEvents.length, form.watch("weddingDate"))}
+                                        value={event.date || ""}
+                                        onChange={(e) => handleEventChange(index, "date", e.target.value)}
+                                        data-testid={`input-event-date-${index}`}
+                                        className="h-10 border-0 p-0 focus-visible:ring-0"
+                                      />
+                                    </div>
+                                    {!event.date && suggestEventDate(index, customEvents.length, form.watch("weddingDate")) && (
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleEventChange(index, "date", suggestEventDate(index, customEvents.length, form.watch("weddingDate")))}
+                                        className="text-xs text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-950/20 whitespace-nowrap"
+                                      >
+                                        Use suggested
+                                      </Button>
+                                    )}
                                   </div>
                                   
                                   {selectedCeremony?.description && event.ceremonyTypeId !== "custom" && (
