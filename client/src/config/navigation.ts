@@ -69,6 +69,7 @@ export const COUPLE_NAV_SECTIONS: NavSection[] = [
     label: "More Tools",
     items: [
       { path: "/ritual-roles", label: "Ritual Roles", icon: Sparkles, permission: "guests", description: "Assign ceremony duties" },
+      { path: "/milni", label: "Milni List", icon: Users, permission: "guests", description: "Milni pairings & gifts" },
       { path: "/engagement-games", label: "Guest Games", icon: Gamepad2, permission: "guests", description: "Scavenger hunts & trivia" },
       { path: "/shopping", label: "Shopping List", icon: Package, permission: "shopping", description: "Shopping list" },
       { path: "/cultural-info", label: "Cultural Info", icon: BookOpen, description: "Learn traditions" },

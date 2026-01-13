@@ -3142,6 +3142,140 @@ export type RitualRoleWithGuest = RitualRoleAssignment & {
 };
 
 // ============================================================================
+// MILNI LIST - Sikh/Punjabi wedding ceremony pairing and gift tracking
+// ============================================================================
+
+// Milni Lists - Container for a set of milni pairings for a wedding
+export const milniLists = pgTable("milni_lists", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  eventId: varchar("event_id"), // Optional link to specific ceremony/event
+  title: text("title").notNull().default("Milni Ceremony"),
+  description: text("description"),
+  notes: text("notes"), // Private notes for the couple
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertMilniListSchema = createInsertSchema(milniLists).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertMilniList = z.infer<typeof insertMilniListSchema>;
+export type MilniList = typeof milniLists.$inferSelect;
+
+// Milni Participants - Family members from either side (can be linked to guests or standalone)
+export const milniParticipants = pgTable("milni_participants", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  milniListId: varchar("milni_list_id").notNull(),
+  side: text("side").notNull(), // 'bride' | 'groom'
+  guestId: varchar("guest_id"), // Optional link to existing guest
+  displayName: text("display_name").notNull(), // Name as displayed (can differ from guest name)
+  relation: text("relation").notNull(), // 'grandfather', 'father', 'uncle_paternal', 'uncle_maternal', etc.
+  relationLabel: text("relation_label"), // Human-readable: "Paternal Grandfather", "Maternal Uncle"
+  phone: text("phone"), // Contact info (optional)
+  email: text("email"),
+  notes: text("notes"), // Any special notes about this participant
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertMilniParticipantSchema = createInsertSchema(milniParticipants).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  side: z.enum(["bride", "groom"]),
+});
+
+export type InsertMilniParticipant = z.infer<typeof insertMilniParticipantSchema>;
+export type MilniParticipant = typeof milniParticipants.$inferSelect;
+
+// Milni Pairs - The actual pairings with sequence and gift tracking
+export const milniPairs = pgTable("milni_pairs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  milniListId: varchar("milni_list_id").notNull(),
+  sequence: integer("sequence").notNull().default(0), // Order of exchange (0 = first)
+  brideParticipantId: varchar("bride_participant_id"), // Participant from bride's side
+  groomParticipantId: varchar("groom_participant_id"), // Participant from groom's side
+  relationSlug: text("relation_slug"), // Template relation: 'grandfather', 'father', 'uncle_paternal'
+  relationLabel: text("relation_label"), // Display label: "Grandfathers", "Fathers", "Paternal Uncles"
+  // Gift tracking - From groom's side to bride's side (traditional)
+  giftFromGroomAmount: integer("gift_from_groom_amount"), // Amount in cents
+  giftFromGroomDescription: text("gift_from_groom_description"),
+  // Gift tracking - From bride's side to groom's side (reciprocal)
+  giftFromBrideAmount: integer("gift_from_bride_amount"), // Amount in cents  
+  giftFromBrideDescription: text("gift_from_bride_description"),
+  // Status tracking
+  status: text("status").notNull().default("pending"), // 'pending' | 'confirmed' | 'completed'
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertMilniPairSchema = createInsertSchema(milniPairs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  status: z.enum(["pending", "confirmed", "completed"]).optional(),
+  giftFromGroomAmount: z.number().int().nullable().optional(),
+  giftFromBrideAmount: z.number().int().nullable().optional(),
+});
+
+export type InsertMilniPair = z.infer<typeof insertMilniPairSchema>;
+export type MilniPair = typeof milniPairs.$inferSelect;
+
+// Extended types with related data
+export type MilniPairWithParticipants = MilniPair & {
+  brideParticipant: MilniParticipant | null;
+  groomParticipant: MilniParticipant | null;
+};
+
+export type MilniListWithDetails = MilniList & {
+  pairs: MilniPairWithParticipants[];
+  participants: MilniParticipant[];
+  event?: Event;
+};
+
+// Default Milni Templates - Common pairings for Sikh/Punjabi weddings
+export const DEFAULT_MILNI_TEMPLATES = [
+  { sequence: 1, relationSlug: "grandfather_paternal", relationLabel: "Paternal Grandfathers" },
+  { sequence: 2, relationSlug: "grandfather_maternal", relationLabel: "Maternal Grandfathers" },
+  { sequence: 3, relationSlug: "father", relationLabel: "Fathers" },
+  { sequence: 4, relationSlug: "uncle_paternal_1", relationLabel: "Paternal Uncles (Eldest)" },
+  { sequence: 5, relationSlug: "uncle_paternal_2", relationLabel: "Paternal Uncles (2nd)" },
+  { sequence: 6, relationSlug: "uncle_maternal_1", relationLabel: "Maternal Uncles (Eldest)" },
+  { sequence: 7, relationSlug: "uncle_maternal_2", relationLabel: "Maternal Uncles (2nd)" },
+  { sequence: 8, relationSlug: "brother_1", relationLabel: "Brothers (Eldest)" },
+  { sequence: 9, relationSlug: "brother_2", relationLabel: "Brothers (2nd)" },
+  { sequence: 10, relationSlug: "cousin_brother_1", relationLabel: "Cousin Brothers (Eldest)" },
+] as const;
+
+// Relation options for participant selection
+export const MILNI_RELATION_OPTIONS = [
+  { value: "grandfather_paternal", label: "Paternal Grandfather (Dada Ji)" },
+  { value: "grandfather_maternal", label: "Maternal Grandfather (Nana Ji)" },
+  { value: "grandmother_paternal", label: "Paternal Grandmother (Dadi Ji)" },
+  { value: "grandmother_maternal", label: "Maternal Grandmother (Nani Ji)" },
+  { value: "father", label: "Father" },
+  { value: "mother", label: "Mother" },
+  { value: "uncle_paternal", label: "Paternal Uncle (Taya/Chacha Ji)" },
+  { value: "uncle_maternal", label: "Maternal Uncle (Mama Ji)" },
+  { value: "aunt_paternal", label: "Paternal Aunt (Bua Ji)" },
+  { value: "aunt_maternal", label: "Maternal Aunt (Masi Ji)" },
+  { value: "brother", label: "Brother" },
+  { value: "sister", label: "Sister" },
+  { value: "cousin_brother", label: "Cousin Brother" },
+  { value: "cousin_sister", label: "Cousin Sister" },
+  { value: "brother_in_law", label: "Brother-in-Law (Jija Ji)" },
+  { value: "nephew", label: "Nephew" },
+  { value: "other", label: "Other Family Member" },
+] as const;
+
+export type MilniRelation = typeof MILNI_RELATION_OPTIONS[number]['value'];
+
+// ============================================================================
 // VENDOR ACCESS PASS & COLLABORATION HUB - Share filtered timelines with vendors
 // ============================================================================
 

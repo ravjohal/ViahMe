@@ -51,6 +51,7 @@ import { createGuestSideRouter, createGuestConsensusRouter, createScenariosRoute
 import { createTimelineRouter, createEventTimeRouter, createTimelineChangesRouter, createVendorAcknowledgmentsRouter } from "./timeline";
 import { createCeremonyTypesRouter, createRegionalPricingRouter, createCeremonyEstimateRouter } from "./ceremony-types";
 import { registerRitualRoleRoutes } from "./ritual-roles";
+import { registerMilniRoutes } from "./milni";
 import { registerTraditionsRoutes } from "./traditions";
 import { createVendorAccessPassesRouter, createVendorCollaborationViewRouter } from "./vendor-access-passes";
 import { createCeremonyExplainersRouter, createPublicCeremonyExplainersRouter } from "./ceremony-explainers";
@@ -186,6 +187,10 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   const ritualRoleRouter = Router();
   await registerRitualRoleRoutes(ritualRoleRouter, storage);
   app.use("/api", ritualRoleRouter);
+
+  const milniRouter = Router();
+  await registerMilniRoutes(milniRouter, storage);
+  app.use("/api", milniRouter);
 
   app.use("/api/vendor-access-passes", await createVendorAccessPassesRouter(storage));
   app.use("/api/vendor-collaboration", createVendorCollaborationViewRouter(storage));

@@ -200,6 +200,17 @@ import {
   type InsertRitualRoleTemplate,
   ritualRoleTemplates,
   RITUAL_ROLE_TEMPLATES,
+  type MilniList,
+  type InsertMilniList,
+  type MilniParticipant,
+  type InsertMilniParticipant,
+  type MilniPair,
+  type InsertMilniPair,
+  type MilniPairWithParticipants,
+  type MilniListWithDetails,
+  milniLists,
+  milniParticipants,
+  milniPairs,
   vendorAccessPasses,
   type VendorAccessPass,
   type InsertVendorAccessPass,
@@ -1161,6 +1172,31 @@ export interface IStorage {
   updateRitualRoleTemplate(id: string, template: Partial<InsertRitualRoleTemplate>): Promise<RitualRoleTemplate | undefined>;
   deleteRitualRoleTemplate(id: string): Promise<boolean>;
   seedRitualRoleTemplates(): Promise<RitualRoleTemplate[]>;
+
+  // Milni Lists - Sikh/Punjabi wedding pairing ceremony
+  getMilniList(id: string): Promise<MilniList | undefined>;
+  getMilniListsByWedding(weddingId: string): Promise<MilniList[]>;
+  getMilniListWithDetails(id: string): Promise<MilniListWithDetails | undefined>;
+  createMilniList(list: InsertMilniList): Promise<MilniList>;
+  updateMilniList(id: string, list: Partial<InsertMilniList>): Promise<MilniList | undefined>;
+  deleteMilniList(id: string): Promise<boolean>;
+  
+  // Milni Participants
+  getMilniParticipant(id: string): Promise<MilniParticipant | undefined>;
+  getMilniParticipantsByList(milniListId: string): Promise<MilniParticipant[]>;
+  getMilniParticipantsBySide(milniListId: string, side: 'bride' | 'groom'): Promise<MilniParticipant[]>;
+  createMilniParticipant(participant: InsertMilniParticipant): Promise<MilniParticipant>;
+  updateMilniParticipant(id: string, participant: Partial<InsertMilniParticipant>): Promise<MilniParticipant | undefined>;
+  deleteMilniParticipant(id: string): Promise<boolean>;
+  
+  // Milni Pairs
+  getMilniPair(id: string): Promise<MilniPair | undefined>;
+  getMilniPairsByList(milniListId: string): Promise<MilniPair[]>;
+  getMilniPairsWithParticipants(milniListId: string): Promise<MilniPairWithParticipants[]>;
+  createMilniPair(pair: InsertMilniPair): Promise<MilniPair>;
+  updateMilniPair(id: string, pair: Partial<InsertMilniPair>): Promise<MilniPair | undefined>;
+  deleteMilniPair(id: string): Promise<boolean>;
+  reorderMilniPairs(milniListId: string, pairIds: string[]): Promise<MilniPair[]>;
 
   // Vendor Access Passes
   getVendorAccessPass(id: string): Promise<VendorAccessPass | undefined>;
@@ -11412,6 +11448,188 @@ export class DBStorage implements IStorage {
       return result;
     }
     return [];
+  }
+
+  // Milni Lists - Sikh/Punjabi wedding pairing ceremony
+  async getMilniList(id: string): Promise<MilniList | undefined> {
+    const result = await this.db.select()
+      .from(milniLists)
+      .where(eq(milniLists.id, id));
+    return result[0];
+  }
+
+  async getMilniListsByWedding(weddingId: string): Promise<MilniList[]> {
+    return await this.db.select()
+      .from(milniLists)
+      .where(eq(milniLists.weddingId, weddingId))
+      .orderBy(milniLists.createdAt);
+  }
+
+  async getMilniListWithDetails(id: string): Promise<MilniListWithDetails | undefined> {
+    const list = await this.getMilniList(id);
+    if (!list) return undefined;
+
+    const participants = await this.getMilniParticipantsByList(id);
+    const pairs = await this.getMilniPairsWithParticipants(id);
+    
+    let event: Event | undefined;
+    if (list.eventId) {
+      event = await this.getEvent(list.eventId);
+    }
+
+    return {
+      ...list,
+      pairs,
+      participants,
+      event,
+    };
+  }
+
+  async createMilniList(list: InsertMilniList): Promise<MilniList> {
+    const result = await this.db.insert(milniLists)
+      .values(list)
+      .returning();
+    return result[0];
+  }
+
+  async updateMilniList(id: string, list: Partial<InsertMilniList>): Promise<MilniList | undefined> {
+    const result = await this.db.update(milniLists)
+      .set({ ...list, updatedAt: new Date() })
+      .where(eq(milniLists.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteMilniList(id: string): Promise<boolean> {
+    // Delete all pairs and participants first
+    await this.db.delete(milniPairs).where(eq(milniPairs.milniListId, id));
+    await this.db.delete(milniParticipants).where(eq(milniParticipants.milniListId, id));
+    await this.db.delete(milniLists).where(eq(milniLists.id, id));
+    return true;
+  }
+
+  // Milni Participants
+  async getMilniParticipant(id: string): Promise<MilniParticipant | undefined> {
+    const result = await this.db.select()
+      .from(milniParticipants)
+      .where(eq(milniParticipants.id, id));
+    return result[0];
+  }
+
+  async getMilniParticipantsByList(milniListId: string): Promise<MilniParticipant[]> {
+    return await this.db.select()
+      .from(milniParticipants)
+      .where(eq(milniParticipants.milniListId, milniListId))
+      .orderBy(milniParticipants.createdAt);
+  }
+
+  async getMilniParticipantsBySide(milniListId: string, side: 'bride' | 'groom'): Promise<MilniParticipant[]> {
+    return await this.db.select()
+      .from(milniParticipants)
+      .where(and(
+        eq(milniParticipants.milniListId, milniListId),
+        eq(milniParticipants.side, side)
+      ))
+      .orderBy(milniParticipants.createdAt);
+  }
+
+  async createMilniParticipant(participant: InsertMilniParticipant): Promise<MilniParticipant> {
+    const result = await this.db.insert(milniParticipants)
+      .values(participant)
+      .returning();
+    return result[0];
+  }
+
+  async updateMilniParticipant(id: string, participant: Partial<InsertMilniParticipant>): Promise<MilniParticipant | undefined> {
+    const result = await this.db.update(milniParticipants)
+      .set(participant)
+      .where(eq(milniParticipants.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteMilniParticipant(id: string): Promise<boolean> {
+    // Also remove from any pairs
+    await this.db.update(milniPairs)
+      .set({ brideParticipantId: null })
+      .where(eq(milniPairs.brideParticipantId, id));
+    await this.db.update(milniPairs)
+      .set({ groomParticipantId: null })
+      .where(eq(milniPairs.groomParticipantId, id));
+    
+    await this.db.delete(milniParticipants)
+      .where(eq(milniParticipants.id, id));
+    return true;
+  }
+
+  // Milni Pairs
+  async getMilniPair(id: string): Promise<MilniPair | undefined> {
+    const result = await this.db.select()
+      .from(milniPairs)
+      .where(eq(milniPairs.id, id));
+    return result[0];
+  }
+
+  async getMilniPairsByList(milniListId: string): Promise<MilniPair[]> {
+    return await this.db.select()
+      .from(milniPairs)
+      .where(eq(milniPairs.milniListId, milniListId))
+      .orderBy(milniPairs.sequence);
+  }
+
+  async getMilniPairsWithParticipants(milniListId: string): Promise<MilniPairWithParticipants[]> {
+    const pairs = await this.getMilniPairsByList(milniListId);
+    const participants = await this.getMilniParticipantsByList(milniListId);
+    
+    const participantMap = new Map(participants.map(p => [p.id, p]));
+    
+    return pairs.map(pair => ({
+      ...pair,
+      brideParticipant: pair.brideParticipantId ? participantMap.get(pair.brideParticipantId) || null : null,
+      groomParticipant: pair.groomParticipantId ? participantMap.get(pair.groomParticipantId) || null : null,
+    }));
+  }
+
+  async createMilniPair(pair: InsertMilniPair): Promise<MilniPair> {
+    // Auto-assign sequence if not provided
+    if (pair.sequence === undefined || pair.sequence === null) {
+      const existingPairs = await this.getMilniPairsByList(pair.milniListId);
+      pair.sequence = existingPairs.length;
+    }
+    
+    const result = await this.db.insert(milniPairs)
+      .values(pair)
+      .returning();
+    return result[0];
+  }
+
+  async updateMilniPair(id: string, pair: Partial<InsertMilniPair>): Promise<MilniPair | undefined> {
+    const result = await this.db.update(milniPairs)
+      .set({ ...pair, updatedAt: new Date() })
+      .where(eq(milniPairs.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteMilniPair(id: string): Promise<boolean> {
+    await this.db.delete(milniPairs)
+      .where(eq(milniPairs.id, id));
+    return true;
+  }
+
+  async reorderMilniPairs(milniListId: string, pairIds: string[]): Promise<MilniPair[]> {
+    // Update sequence for each pair based on position in array
+    const updates = pairIds.map((pairId, index) => 
+      this.db.update(milniPairs)
+        .set({ sequence: index, updatedAt: new Date() })
+        .where(and(
+          eq(milniPairs.id, pairId),
+          eq(milniPairs.milniListId, milniListId)
+        ))
+    );
+    
+    await Promise.all(updates);
+    return this.getMilniPairsByList(milniListId);
   }
 
   // Vendor Access Passes
