@@ -4400,3 +4400,109 @@ export const DEFAULT_DECOR_LIBRARY = [
   { itemName: "Varmala/Jai Mala", category: "florist_list", sourcing: "vendor" },
   { itemName: "Doli flowers", category: "florist_list", sourcing: "vendor" },
 ] as const;
+
+// ============================================================================
+// DAY-OF TIMELINE ITEMS - Minute-by-Minute Wedding Day Schedule
+// ============================================================================
+
+// Assignee types for day-of timeline
+export const TIMELINE_ASSIGNEES = [
+  { value: "bride", label: "Bride" },
+  { value: "groom", label: "Groom" },
+  { value: "bridal_party", label: "Bridal Party" },
+  { value: "vendor", label: "Vendors" },
+] as const;
+
+export type TimelineAssigneeValue = typeof TIMELINE_ASSIGNEES[number]['value'];
+
+// Vendor categories for vendor-specific tasks
+export const VENDOR_TASK_CATEGORIES = [
+  { value: "mua", label: "Hair & Makeup" },
+  { value: "photographer", label: "Photography" },
+  { value: "videographer", label: "Videography" },
+  { value: "caterer", label: "Catering" },
+  { value: "florist", label: "Florist" },
+  { value: "dj", label: "DJ/Music" },
+  { value: "decorator", label: "Decorator" },
+  { value: "coordinator", label: "Coordinator" },
+  { value: "transport", label: "Transportation" },
+  { value: "priest", label: "Priest/Officiant" },
+  { value: "dhol", label: "Dhol Players" },
+  { value: "baraat", label: "Baraat Coordinator" },
+  { value: "other", label: "Other" },
+] as const;
+
+export type VendorTaskCategoryValue = typeof VENDOR_TASK_CATEGORIES[number]['value'];
+
+export const dayOfTimelineItems = pgTable("day_of_timeline_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  eventId: varchar("event_id"), // Optional link to specific ceremony/event
+  time: text("time").notNull(), // e.g., "5:00 AM", "10:30 AM"
+  endTime: text("end_time"), // Optional end time for duration display
+  activity: text("activity").notNull(), // Description of the activity
+  assignee: text("assignee").notNull().default("bride"), // 'bride' | 'groom' | 'bridal_party' | 'vendor'
+  vendorCategory: text("vendor_category"), // Only used when assignee is 'vendor'
+  location: text("location"), // Where this takes place
+  notes: text("notes"), // Additional notes
+  completed: boolean("completed").notNull().default(false),
+  sortOrder: integer("sort_order").notNull().default(0),
+  isFromTemplate: boolean("is_from_template").notNull().default(false), // Track if from template
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  weddingIdx: index("day_of_timeline_wedding_idx").on(table.weddingId),
+  eventIdx: index("day_of_timeline_event_idx").on(table.eventId),
+  assigneeIdx: index("day_of_timeline_assignee_idx").on(table.assignee),
+  timeIdx: index("day_of_timeline_time_idx").on(table.time),
+}));
+
+export const insertDayOfTimelineItemSchema = createInsertSchema(dayOfTimelineItems).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  assignee: z.enum(["bride", "groom", "bridal_party", "vendor"]).optional(),
+  vendorCategory: z.enum(["mua", "photographer", "videographer", "caterer", "florist", "dj", "decorator", "coordinator", "transport", "priest", "dhol", "baraat", "other"]).optional().nullable(),
+  completed: z.boolean().optional(),
+  isFromTemplate: z.boolean().optional(),
+});
+
+export type InsertDayOfTimelineItem = z.infer<typeof insertDayOfTimelineItemSchema>;
+export type DayOfTimelineItem = typeof dayOfTimelineItems.$inferSelect;
+
+// Default Sikh Wedding Day-of Timeline Template
+export const SIKH_WEDDING_DAY_TEMPLATE = [
+  // Early morning preparation
+  { time: "5:00 AM", activity: "MUA Arrival - Begin bride's hair and makeup", assignee: "vendor", vendorCategory: "mua", sortOrder: 1 },
+  { time: "5:00 AM", activity: "Bride wakes up, light breakfast", assignee: "bride", sortOrder: 2 },
+  { time: "5:30 AM", activity: "Bridal party arrives for getting ready", assignee: "bridal_party", sortOrder: 3 },
+  { time: "6:00 AM", activity: "Groom's preparation begins", assignee: "groom", sortOrder: 4 },
+  { time: "6:30 AM", activity: "Photographer arrival for getting ready shots", assignee: "vendor", vendorCategory: "photographer", sortOrder: 5 },
+  { time: "6:45 AM", activity: "Pagh (Turban) Tying ceremony", assignee: "groom", sortOrder: 6 },
+  { time: "7:00 AM", activity: "Bride's makeup completion, begin dressing", assignee: "bride", sortOrder: 7 },
+  { time: "7:30 AM", activity: "Videographer arrival", assignee: "vendor", vendorCategory: "videographer", sortOrder: 8 },
+  { time: "8:00 AM", activity: "Final bridal touches, jewelry, dupatta draping", assignee: "bride", sortOrder: 9 },
+  { time: "8:00 AM", activity: "Groom fully dressed, family photos", assignee: "groom", sortOrder: 10 },
+  { time: "8:15 AM", activity: "Decorator final venue check", assignee: "vendor", vendorCategory: "decorator", sortOrder: 11 },
+  { time: "8:30 AM", activity: "Bridal party dressed, group photos", assignee: "bridal_party", sortOrder: 12 },
+  { time: "8:30 AM", activity: "Dhol players arrive at groom's location", assignee: "vendor", vendorCategory: "dhol", sortOrder: 13 },
+  { time: "8:45 AM", activity: "Groom departs for Gurdwara", assignee: "groom", sortOrder: 14 },
+  // Baraat and ceremony
+  { time: "9:00 AM", activity: "Barat Arrival at Gurdwara", assignee: "groom", sortOrder: 15 },
+  { time: "9:00 AM", activity: "Milni ceremony begins", assignee: "bridal_party", sortOrder: 16 },
+  { time: "9:15 AM", activity: "Bride arrives/waits for procession", assignee: "bride", sortOrder: 17 },
+  { time: "9:30 AM", activity: "Tea/light refreshments served", assignee: "vendor", vendorCategory: "caterer", sortOrder: 18 },
+  { time: "10:00 AM", activity: "Guests seated in Darbar Sahib", assignee: "bridal_party", sortOrder: 19 },
+  { time: "10:15 AM", activity: "Bride's entrance procession", assignee: "bride", sortOrder: 20 },
+  { time: "10:30 AM", activity: "Anand Karaj ceremony begins", assignee: "bride", sortOrder: 21 },
+  { time: "10:30 AM", activity: "Granthi begins Anand Karaj", assignee: "vendor", vendorCategory: "priest", sortOrder: 22 },
+  { time: "11:30 AM", activity: "Lavaan (four rounds) completed", assignee: "bride", sortOrder: 23 },
+  { time: "12:00 PM", activity: "Ardas and ceremony conclusion", assignee: "groom", sortOrder: 24 },
+  // Post-ceremony
+  { time: "12:15 PM", activity: "Family photos at Gurdwara", assignee: "bridal_party", sortOrder: 25 },
+  { time: "12:30 PM", activity: "Langar (lunch) service begins", assignee: "vendor", vendorCategory: "caterer", sortOrder: 26 },
+  { time: "1:00 PM", activity: "Couple photos session", assignee: "bride", sortOrder: 27 },
+  { time: "1:30 PM", activity: "Doli ceremony - Bride's departure", assignee: "bride", sortOrder: 28 },
+  { time: "1:30 PM", activity: "Transport ready for couple departure", assignee: "vendor", vendorCategory: "transport", sortOrder: 29 },
+] as const;
