@@ -243,6 +243,8 @@ export default function Expenses() {
   };
 
   const totalExpenses = expenses.reduce((sum, e) => sum + parseFloat(e.amount), 0);
+  const totalPaid = expenses.reduce((sum, e) => sum + parseFloat(e.amountPaid || "0"), 0);
+  const totalBalance = totalExpenses - totalPaid;
 
   if (!weddingId) {
     return (
@@ -566,27 +568,45 @@ export default function Expenses() {
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Expenses</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Contracted</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold flex items-center gap-2" data-testid="text-total-expenses">
               <DollarSign className="h-5 w-5 text-primary" />
               ${totalExpenses.toLocaleString("en-US", { minimumFractionDigits: 2 })}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">{expenses.length} expenses tracked</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Number of Expenses</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Deposits & Payments</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold flex items-center gap-2" data-testid="text-expense-count">
-              <Receipt className="h-5 w-5 text-primary" />
-              {expenses.length}
+            <div className="text-2xl font-bold flex items-center gap-2 text-green-600" data-testid="text-total-paid">
+              <Check className="h-5 w-5" />
+              ${totalPaid.toLocaleString("en-US", { minimumFractionDigits: 2 })}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {totalExpenses > 0 ? Math.round((totalPaid / totalExpenses) * 100) : 0}% paid
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Balance Due</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className={`text-2xl font-bold flex items-center gap-2 ${totalBalance > 0 ? "text-orange-600" : "text-green-600"}`} data-testid="text-balance-due">
+              <Calendar className="h-5 w-5" />
+              ${totalBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {totalBalance > 0 ? "Still owed to vendors" : "All paid up!"}
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -598,9 +618,8 @@ export default function Expenses() {
               <Users className="h-5 w-5 text-primary" />
               {teamMembers.length}
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              Bride, Groom, and Parents by default. Add more via{" "}
-              <a href="/collaborators" className="text-primary hover:underline">Team Settings</a>.
+            <p className="text-xs text-muted-foreground mt-1">
+              <a href="/collaborators" className="text-primary hover:underline">Manage team</a>
             </p>
           </CardContent>
         </Card>
@@ -773,7 +792,18 @@ export default function Expenses() {
                           <h3 className="font-medium">{expense.expenseName}</h3>
                           {expense.parentCategory && <Badge variant="default" data-testid={`badge-category-${expense.id}`}>{getCategoryLabel(expense.parentCategory)}</Badge>}
                           {event && <Badge variant="outline">{event.name}</Badge>}
-                          <Badge variant="secondary">{expense.status}</Badge>
+                          <Badge 
+                            variant={
+                              expense.status === "paid" ? "default" : 
+                              (expense.status === "booked" || expense.status === "deposit_paid") ? "outline" : 
+                              "secondary"
+                            }
+                            data-testid={`badge-status-${expense.id}`}
+                          >
+                            {expense.status === "paid" ? "Paid" : 
+                             (expense.status === "booked" || expense.status === "deposit_paid") ? "Deposit Paid" : 
+                             (expense.status === "pending" ? "Pending" : "Estimated")}
+                          </Badge>
                         </div>
                         <p className="text-sm text-muted-foreground mt-1">
                           Paid by {expense.paidByName === "Couple" ? "Me/Partner" : expense.paidByName} on {format(new Date(expense.expenseDate), "MMM d, yyyy")}
@@ -803,7 +833,19 @@ export default function Expenses() {
                         )}
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-lg font-bold">${parseFloat(expense.amount).toFixed(2)}</span>
+                        <div className="text-right">
+                          <div className="text-lg font-bold">${parseFloat(expense.amount).toFixed(2)}</div>
+                          {parseFloat(expense.amountPaid || "0") > 0 && parseFloat(expense.amountPaid || "0") < parseFloat(expense.amount) && (
+                            <div className="text-xs">
+                              <span className="text-green-600">Paid: ${parseFloat(expense.amountPaid || "0").toFixed(2)}</span>
+                              <span className="text-muted-foreground"> | </span>
+                              <span className="text-orange-600">Due: ${(parseFloat(expense.amount) - parseFloat(expense.amountPaid || "0")).toFixed(2)}</span>
+                            </div>
+                          )}
+                          {parseFloat(expense.amountPaid || "0") === 0 && expense.status !== "paid" && (
+                            <div className="text-xs text-orange-600">Unpaid</div>
+                          )}
+                        </div>
                         <Button
                           variant="ghost"
                           size="icon"

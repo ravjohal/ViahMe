@@ -72,6 +72,9 @@ export function AddExpenseDialog({
   const [selectedLineItem, setSelectedLineItem] = useState<string | null>(null);
   const [payer, setPayer] = useState<PayerType>("me_partner");
   const [amount, setAmount] = useState("");
+  const [depositAmount, setDepositAmount] = useState("");
+  const [paymentStatus, setPaymentStatus] = useState<"estimated" | "deposit_paid" | "paid">("paid");
+  const [paymentDueDate, setPaymentDueDate] = useState("");
   const [expenseDate, setExpenseDate] = useState(new Date().toISOString().split('T')[0]);
   const [expenseName, setExpenseName] = useState("");
   const [notes, setNotes] = useState("");
@@ -128,6 +131,9 @@ export function AddExpenseDialog({
     setSelectedLineItem(null);
     setPayer("me_partner");
     setAmount("");
+    setDepositAmount("");
+    setPaymentStatus("paid");
+    setPaymentDueDate("");
     setExpenseDate(new Date().toISOString().split('T')[0]);
     setExpenseName("");
     setNotes("");
@@ -195,19 +201,37 @@ export function AddExpenseDialog({
       isPaid: true,
     }];
 
+    // Calculate amount paid based on payment status
+    let amountPaidValue = "0";
+    if (paymentStatus === "paid") {
+      amountPaidValue = parsedAmount.toFixed(2);
+    } else if (paymentStatus === "deposit_paid") {
+      const parsedDeposit = parseFloat(depositAmount.replace(/,/g, "") || "0");
+      if (isNaN(parsedDeposit) || parsedDeposit <= 0) {
+        toast({ title: "Please enter a deposit amount", variant: "destructive" });
+        return;
+      }
+      if (parsedDeposit >= parsedAmount) {
+        toast({ title: "Deposit must be less than total cost", variant: "destructive" });
+        return;
+      }
+      amountPaidValue = parsedDeposit.toFixed(2);
+    }
+
     createExpenseMutation.mutate({
       weddingId,
       parentCategory: bucket,
       lineItem: selectedLineItem,
       expenseName: expenseName.trim(),
       amount: parsedAmount.toFixed(2),
-      amountPaid: parsedAmount.toFixed(2),
+      amountPaid: amountPaidValue,
       ceremonyId: selectedCeremonyId,
       paidById: payerId,
       paidByName: payerName,
-      status: "paid",
+      status: paymentStatus === "paid" ? "paid" : paymentStatus === "deposit_paid" ? "booked" : "estimated",
       notes: notes.trim() || null,
       expenseDate,
+      paymentDueDate: paymentDueDate || null,
       splits,
     });
   };
@@ -419,12 +443,12 @@ export function AddExpenseDialog({
         return (
           <div className="space-y-6">
             <div className="text-center mb-6">
-              <h3 className="text-lg font-semibold">How much was it?</h3>
-              <p className="text-sm text-muted-foreground mt-1">Enter the amount and date of payment</p>
+              <h3 className="text-lg font-semibold">How much is it?</h3>
+              <p className="text-sm text-muted-foreground mt-1">Enter the total cost and payment details</p>
             </div>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label className="text-sm font-medium">Amount</Label>
+                <Label className="text-sm font-medium">Total Cost</Label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-lg">$</span>
                   <Input
@@ -441,8 +465,73 @@ export function AddExpenseDialog({
                   />
                 </div>
               </div>
+
               <div className="space-y-2">
-                <Label className="text-sm font-medium">Date of Payment</Label>
+                <Label className="text-sm font-medium">Payment Status</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { id: "estimated", label: "Estimated", desc: "Not yet booked" },
+                    { id: "deposit_paid", label: "Deposit Paid", desc: "Partially paid" },
+                    { id: "paid", label: "Paid in Full", desc: "Fully paid" },
+                  ].map((option) => (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => setPaymentStatus(option.id as typeof paymentStatus)}
+                      className={`p-3 rounded-lg text-center transition-all border-2 ${
+                        paymentStatus === option.id
+                          ? "border-primary bg-primary/10"
+                          : "border-muted hover-elevate"
+                      }`}
+                      data-testid={`button-status-${option.id}`}
+                    >
+                      <div className="text-sm font-medium">{option.label}</div>
+                      <div className="text-xs text-muted-foreground">{option.desc}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {paymentStatus === "deposit_paid" && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Deposit Amount Paid</Label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                    <Input
+                      type="text"
+                      value={depositAmount}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9.,]/g, "");
+                        setDepositAmount(val);
+                      }}
+                      placeholder="0.00"
+                      className="pl-8 h-12"
+                      data-testid="input-deposit-amount"
+                    />
+                  </div>
+                  {amount && depositAmount && (
+                    <p className="text-xs text-muted-foreground">
+                      Balance remaining: ${(parseFloat(amount.replace(/,/g, "")) - parseFloat(depositAmount.replace(/,/g, "") || "0")).toFixed(2)}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {(paymentStatus === "estimated" || paymentStatus === "deposit_paid") && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Payment Due Date (optional)</Label>
+                  <Input
+                    type="date"
+                    value={paymentDueDate}
+                    onChange={(e) => setPaymentDueDate(e.target.value)}
+                    className="h-12"
+                    data-testid="input-payment-due-date"
+                  />
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">{paymentStatus === "paid" ? "Date of Payment" : "Date Added"}</Label>
                 <Input
                   type="date"
                   value={expenseDate}
