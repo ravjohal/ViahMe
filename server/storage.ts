@@ -243,6 +243,9 @@ import {
   favourRecipients,
   type FavourRecipient,
   type InsertFavourRecipient,
+  budgetScenarios,
+  type BudgetScenario,
+  type InsertBudgetScenario,
   budgetAllocations,
   budgetAlerts,
   dashboardWidgets,
@@ -1313,6 +1316,13 @@ export interface IStorage {
   updateFavourRecipient(id: string, recipient: Partial<InsertFavourRecipient>): Promise<FavourRecipient | undefined>;
   deleteFavourRecipient(id: string): Promise<boolean>;
   toggleFavourRecipientDelivered(id: string): Promise<FavourRecipient | undefined>;
+
+  // Budget Scenarios - What-if scenario planning
+  getBudgetScenario(id: string): Promise<BudgetScenario | undefined>;
+  getBudgetScenariosByWedding(weddingId: string): Promise<BudgetScenario[]>;
+  createBudgetScenario(scenario: InsertBudgetScenario): Promise<BudgetScenario>;
+  updateBudgetScenario(id: string, scenario: Partial<InsertBudgetScenario>): Promise<BudgetScenario | undefined>;
+  deleteBudgetScenario(id: string): Promise<boolean>;
 }
 
 // Guest Planning Snapshot - comprehensive view of all guests and per-event costs
@@ -12325,6 +12335,39 @@ export class DBStorage implements IStorage {
       .where(eq(favourRecipients.id, id))
       .returning();
     return result[0];
+  }
+
+  // Budget Scenarios - What-if scenario planning
+  async getBudgetScenario(id: string): Promise<BudgetScenario | undefined> {
+    const result = await this.db.select().from(budgetScenarios).where(eq(budgetScenarios.id, id));
+    return result[0];
+  }
+
+  async getBudgetScenariosByWedding(weddingId: string): Promise<BudgetScenario[]> {
+    return await this.db.select()
+      .from(budgetScenarios)
+      .where(eq(budgetScenarios.weddingId, weddingId))
+      .orderBy(budgetScenarios.createdAt);
+  }
+
+  async createBudgetScenario(scenario: InsertBudgetScenario): Promise<BudgetScenario> {
+    const result = await this.db.insert(budgetScenarios)
+      .values(scenario)
+      .returning();
+    return result[0];
+  }
+
+  async updateBudgetScenario(id: string, scenario: Partial<InsertBudgetScenario>): Promise<BudgetScenario | undefined> {
+    const result = await this.db.update(budgetScenarios)
+      .set({ ...scenario, updatedAt: new Date() })
+      .where(eq(budgetScenarios.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteBudgetScenario(id: string): Promise<boolean> {
+    await this.db.delete(budgetScenarios).where(eq(budgetScenarios.id, id));
+    return true;
   }
 }
 

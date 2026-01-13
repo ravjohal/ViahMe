@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { requireAuth, type AuthRequest } from "../auth-middleware";
 import type { IStorage } from "../storage";
-import { insertExpenseSchema, insertBudgetAllocationSchema, BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket, insertBudgetCategorySchema } from "@shared/schema";
+import { insertExpenseSchema, insertBudgetAllocationSchema, BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket, insertBudgetCategorySchema, insertBudgetScenarioSchema, type BudgetForecast } from "@shared/schema";
 import { ensureCoupleAccess } from "./middleware";
 
 export async function registerBudgetRoutes(router: Router, storage: IStorage) {
@@ -1099,6 +1099,196 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
     } catch (error) {
       console.error("Error fetching budget matrix:", error);
       res.status(500).json({ error: "Failed to fetch budget matrix" });
+    }
+  });
+
+  // ============================================================================
+  // Budget Scenarios - What-if scenario planning
+  // ============================================================================
+
+  router.get("/scenarios/:weddingId", await requireAuth(storage, false), ensureCoupleAccess(storage, (req) => req.params.weddingId), async (req, res) => {
+    try {
+      const scenarios = await storage.getBudgetScenariosByWedding(req.params.weddingId);
+      res.json(scenarios);
+    } catch (error) {
+      console.error("Error fetching budget scenarios:", error);
+      res.status(500).json({ error: "Failed to fetch budget scenarios" });
+    }
+  });
+
+  router.get("/scenarios/:weddingId/:id", await requireAuth(storage, false), ensureCoupleAccess(storage, (req) => req.params.weddingId), async (req, res) => {
+    try {
+      const scenario = await storage.getBudgetScenario(req.params.id);
+      if (!scenario) {
+        return res.status(404).json({ error: "Scenario not found" });
+      }
+      if (scenario.weddingId !== req.params.weddingId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      res.json(scenario);
+    } catch (error) {
+      console.error("Error fetching budget scenario:", error);
+      res.status(500).json({ error: "Failed to fetch budget scenario" });
+    }
+  });
+
+  router.post("/scenarios", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      const validatedData = insertBudgetScenarioSchema.parse(req.body);
+      
+      const wedding = await storage.getWedding(validatedData.weddingId);
+      if (!wedding || wedding.userId !== authReq.session.userId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const scenario = await storage.createBudgetScenario(validatedData);
+      res.status(201).json(scenario);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      console.error("Error creating budget scenario:", error);
+      res.status(500).json({ error: "Failed to create budget scenario" });
+    }
+  });
+
+  const updateBudgetScenarioSchema = insertBudgetScenarioSchema
+    .pick({
+      name: true,
+      description: true,
+      guestCount: true,
+      guestCountChange: true,
+      venueMultiplier: true,
+      cateringMultiplier: true,
+      overallMultiplier: true,
+      isBaseline: true,
+    })
+    .partial()
+    .strict();
+
+  router.patch("/scenarios/:id", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      const scenario = await storage.getBudgetScenario(req.params.id);
+      if (!scenario) {
+        return res.status(404).json({ error: "Scenario not found" });
+      }
+
+      const wedding = await storage.getWedding(scenario.weddingId);
+      if (!wedding || wedding.userId !== authReq.session.userId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const validatedData = updateBudgetScenarioSchema.parse(req.body);
+      const updated = await storage.updateBudgetScenario(req.params.id, validatedData);
+      res.json(updated);
+    } catch (error) {
+      if (error instanceof Error && "issues" in error) {
+        return res.status(400).json({ error: "Validation failed", details: error });
+      }
+      console.error("Error updating budget scenario:", error);
+      res.status(500).json({ error: "Failed to update budget scenario" });
+    }
+  });
+
+  router.delete("/scenarios/:id", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      const scenario = await storage.getBudgetScenario(req.params.id);
+      if (!scenario) {
+        return res.status(404).json({ error: "Scenario not found" });
+      }
+
+      const wedding = await storage.getWedding(scenario.weddingId);
+      if (!wedding || wedding.userId !== authReq.session.userId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      await storage.deleteBudgetScenario(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting budget scenario:", error);
+      res.status(500).json({ error: "Failed to delete budget scenario" });
+    }
+  });
+
+  // Financial forecast endpoint
+  router.get("/forecast/:weddingId", await requireAuth(storage, false), ensureCoupleAccess(storage, (req) => req.params.weddingId), async (req, res) => {
+    try {
+      const weddingId = req.params.weddingId;
+      const wedding = await storage.getWedding(weddingId);
+      if (!wedding) {
+        return res.status(404).json({ error: "Wedding not found" });
+      }
+
+      const expenses = await storage.getExpensesByWedding(weddingId);
+      const contracts = await storage.getContractsByWedding(weddingId);
+      
+      const now = new Date();
+      const weddingDate = wedding.date ? new Date(wedding.date) : new Date(now.getTime() + 180 * 24 * 60 * 60 * 1000);
+      const monthsUntilWedding = Math.max(1, Math.ceil((weddingDate.getTime() - now.getTime()) / (30 * 24 * 60 * 60 * 1000)));
+
+      // Calculate totals
+      const totalPaid = expenses.reduce((sum, e) => sum + parseFloat(e.amountPaid || "0"), 0);
+      const totalCommitted = expenses.reduce((sum, e) => sum + parseFloat(e.amount || "0"), 0);
+      const contractTotal = contracts.reduce((sum, c) => sum + parseFloat(c.amount || "0"), 0);
+      const totalRemaining = Math.max(0, totalCommitted - totalPaid);
+
+      // Build payment schedule from expenses with due dates
+      const paymentSchedule = expenses
+        .filter(e => e.paymentDueDate && parseFloat(e.amount || "0") > parseFloat(e.amountPaid || "0"))
+        .map(e => ({
+          date: e.paymentDueDate!,
+          vendor: e.vendorName || e.expenseName,
+          amount: parseFloat(e.amount || "0") - parseFloat(e.amountPaid || "0"),
+          category: e.parentCategory || "other",
+          isPaid: false,
+        }))
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+      // Monthly projections
+      const monthlyProjections: BudgetForecast["monthlyProjections"] = [];
+      const avgMonthlySpend = totalPaid / Math.max(1, monthsUntilWedding);
+      
+      for (let i = 0; i < Math.min(12, monthsUntilWedding + 1); i++) {
+        const month = new Date(now.getFullYear(), now.getMonth() + i, 1);
+        const monthStr = month.toISOString().slice(0, 7);
+        
+        const upcomingPayments = paymentSchedule
+          .filter(p => p.date.startsWith(monthStr))
+          .reduce((sum, p) => sum + p.amount, 0);
+
+        const cumulativeSpent = totalPaid + (avgMonthlySpend * i);
+        const projectedSpent = i === 0 ? totalPaid : cumulativeSpent;
+        const budgetRemaining = totalCommitted - projectedSpent;
+
+        monthlyProjections.push({
+          month: monthStr,
+          cumulativeSpent: Math.round(cumulativeSpent * 100) / 100,
+          projectedSpent: Math.round(projectedSpent * 100) / 100,
+          upcomingPayments: Math.round(upcomingPayments * 100) / 100,
+          budgetRemaining: Math.round(budgetRemaining * 100) / 100,
+        });
+      }
+
+      const forecast: BudgetForecast = {
+        monthlyProjections,
+        paymentSchedule,
+        cashFlowSummary: {
+          totalCommitted: Math.round(totalCommitted * 100) / 100,
+          totalPaid: Math.round(totalPaid * 100) / 100,
+          totalRemaining: Math.round(totalRemaining * 100) / 100,
+          averageMonthlySpend: Math.round(avgMonthlySpend * 100) / 100,
+          projectedMonthlySpend: Math.round((totalRemaining / monthsUntilWedding) * 100) / 100,
+          monthsUntilWedding,
+        },
+      };
+
+      res.json(forecast);
+    } catch (error) {
+      console.error("Error generating budget forecast:", error);
+      res.status(500).json({ error: "Failed to generate budget forecast" });
     }
   });
 

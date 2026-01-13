@@ -4734,3 +4734,73 @@ export const insertFavourRecipientSchema = createInsertSchema(favourRecipients).
 });
 export type InsertFavourRecipient = z.infer<typeof insertFavourRecipientSchema>;
 export type FavourRecipient = typeof favourRecipients.$inferSelect;
+
+// ============================================================================
+// BUDGET SCENARIOS - What-if scenario planning for budget forecasting
+// ============================================================================
+
+export const budgetScenarios = pgTable("budget_scenarios", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  isBaseline: boolean("is_baseline").notNull().default(false),
+  guestCount: integer("guest_count").notNull(),
+  guestCountChange: integer("guest_count_change").default(0),
+  venueMultiplier: decimal("venue_multiplier", { precision: 4, scale: 2 }).default("1.00"),
+  cateringMultiplier: decimal("catering_multiplier", { precision: 4, scale: 2 }).default("1.00"),
+  overallMultiplier: decimal("overall_multiplier", { precision: 4, scale: 2 }).default("1.00"),
+  additionalCeremonies: jsonb("additional_ceremonies").$type<string[]>().default([]),
+  removedCeremonies: jsonb("removed_ceremonies").$type<string[]>().default([]),
+  categoryAdjustments: jsonb("category_adjustments").$type<Record<string, number>>().default({}),
+  totalEstimate: decimal("total_estimate", { precision: 12, scale: 2 }),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  weddingIdx: index("budget_scenarios_wedding_idx").on(table.weddingId),
+}));
+
+export const insertBudgetScenarioSchema = createInsertSchema(budgetScenarios).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  guestCount: z.number().int().min(1),
+  guestCountChange: z.number().int().optional(),
+  venueMultiplier: z.string().optional(),
+  cateringMultiplier: z.string().optional(),
+  overallMultiplier: z.string().optional(),
+  additionalCeremonies: z.array(z.string()).optional(),
+  removedCeremonies: z.array(z.string()).optional(),
+  categoryAdjustments: z.record(z.string(), z.number()).optional(),
+  totalEstimate: z.string().optional(),
+});
+export type InsertBudgetScenario = z.infer<typeof insertBudgetScenarioSchema>;
+export type BudgetScenario = typeof budgetScenarios.$inferSelect;
+
+// Budget Forecast Response Type
+export interface BudgetForecast {
+  monthlyProjections: Array<{
+    month: string;
+    cumulativeSpent: number;
+    projectedSpent: number;
+    upcomingPayments: number;
+    budgetRemaining: number;
+  }>;
+  paymentSchedule: Array<{
+    date: string;
+    vendor: string;
+    amount: number;
+    category: string;
+    isPaid: boolean;
+  }>;
+  cashFlowSummary: {
+    totalCommitted: number;
+    totalPaid: number;
+    totalRemaining: number;
+    averageMonthlySpend: number;
+    projectedMonthlySpend: number;
+    monthsUntilWedding: number;
+  };
+}

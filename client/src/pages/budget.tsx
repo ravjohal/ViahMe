@@ -1330,6 +1330,15 @@ export default function Budget() {
               <BarChart3 className="w-4 h-4 mr-2" />
               Dashboard
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setLocation("/scenario-planner")}
+              data-testid="button-scenario-planner"
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              Scenarios
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" data-testid="button-share-budget">
