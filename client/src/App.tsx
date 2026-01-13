@@ -71,6 +71,7 @@ import GamePortal from "@/pages/game-portal";
 import RitualRoles from "@/pages/ritual-roles";
 import MilniPage from "@/pages/milni";
 import DecorPage from "@/pages/decor";
+import DayOfTimelinePage from "@/pages/day-of-timeline";
 import VendorAccessPasses from "@/pages/vendor-access-passes";
 import VendorTimeline from "@/pages/vendor-timeline";
 import BudgetEstimatorPage from "@/pages/budget-estimator";
@@ -183,6 +184,11 @@ function Router() {
       <Route path="/live-timeline">
         <ProtectedRoute requiredPermission="timeline">
           <LiveTimeline />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/day-of-timeline">
+        <ProtectedRoute requiredPermission="timeline">
+          <DayOfTimelinePage />
         </ProtectedRoute>
       </Route>
       <Route path="/budget">
