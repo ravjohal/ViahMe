@@ -89,6 +89,7 @@ const calculateStringSimilarity = (str1: string, str2: string): number => {
 export function GuestListManager({ guests, households = [], onAddGuest, onImportGuests, onEditGuest, onUninviteGuest, onDeleteGuest, onSendInvitation }: GuestListManagerProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterSide, setFilterSide] = useState<string>("all");
+  const [filterFamilySide, setFilterFamilySide] = useState<string>("all");
   const [filterRsvp, setFilterRsvp] = useState<string>("all");
   
   const householdById = new Map(households.map(h => [h.id, h]));
@@ -104,8 +105,11 @@ export function GuestListManager({ guests, households = [], onAddGuest, onImport
   const filteredGuests = guests.filter((guest) => {
     const matchesSearch = guest.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesSide = filterSide === "all" || guest.side === filterSide;
+    const matchesFamilySide = filterFamilySide === "all" || 
+      (filterFamilySide === "unset" && !guest.familySide) ||
+      guest.familySide === filterFamilySide;
     const matchesRsvp = filterRsvp === "all" || guest.rsvpStatus === filterRsvp;
-    return matchesSearch && matchesSide && matchesRsvp;
+    return matchesSearch && matchesSide && matchesFamilySide && matchesRsvp;
   });
 
   const stats = {
@@ -207,7 +211,7 @@ export function GuestListManager({ guests, households = [], onAddGuest, onImport
           </div>
 
           <Select value={filterSide} onValueChange={setFilterSide}>
-            <SelectTrigger className="w-full md:w-[180px]" data-testid="select-filter-side">
+            <SelectTrigger className="w-full md:w-[150px]" data-testid="select-filter-side">
               <Filter className="w-4 h-4 mr-2" />
               <SelectValue placeholder="Filter by side" />
             </SelectTrigger>
@@ -216,6 +220,20 @@ export function GuestListManager({ guests, households = [], onAddGuest, onImport
               <SelectItem value="bride">Bride's Side</SelectItem>
               <SelectItem value="groom">Groom's Side</SelectItem>
               <SelectItem value="mutual">Mutual</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={filterFamilySide} onValueChange={setFilterFamilySide}>
+            <SelectTrigger className="w-full md:w-[160px]" data-testid="select-filter-family-side">
+              <Filter className="w-4 h-4 mr-2" />
+              <SelectValue placeholder="Family side" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Family</SelectItem>
+              <SelectItem value="nanke">Nanke (Maternal)</SelectItem>
+              <SelectItem value="dadke">Dadke (Paternal)</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
+              <SelectItem value="unset">Not Set</SelectItem>
             </SelectContent>
           </Select>
 
@@ -239,7 +257,7 @@ export function GuestListManager({ guests, households = [], onAddGuest, onImport
             <Users className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
             <h3 className="font-semibold text-lg mb-2">No Guests Found</h3>
             <p className="text-muted-foreground mb-4">
-              {searchTerm || filterSide !== "all" || filterRsvp !== "all"
+              {searchTerm || filterSide !== "all" || filterFamilySide !== "all" || filterRsvp !== "all"
                 ? "Try adjusting your filters"
                 : "Start building your guest list"}
             </p>
@@ -252,6 +270,7 @@ export function GuestListManager({ guests, households = [], onAddGuest, onImport
                   <TableHead>Name</TableHead>
                   <TableHead>Household</TableHead>
                   <TableHead>Side</TableHead>
+                  <TableHead>Family</TableHead>
                   <TableHead>Contact</TableHead>
                   <TableHead>RSVP Status</TableHead>
                   <TableHead>Events</TableHead>
@@ -325,6 +344,24 @@ export function GuestListManager({ guests, households = [], onAddGuest, onImport
                         <Badge variant="outline">
                           {guest.side.charAt(0).toUpperCase() + guest.side.slice(1)}
                         </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {guest.familySide ? (
+                        <Badge 
+                          variant="secondary" 
+                          className={
+                            guest.familySide === 'nanke' 
+                              ? 'bg-pink-100 text-pink-700 border-pink-300' 
+                              : guest.familySide === 'dadke'
+                              ? 'bg-blue-100 text-blue-700 border-blue-300'
+                              : ''
+                          }
+                        >
+                          {guest.familySide === 'nanke' ? 'Nanke' : guest.familySide === 'dadke' ? 'Dadke' : 'Other'}
+                        </Badge>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">-</span>
                       )}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
