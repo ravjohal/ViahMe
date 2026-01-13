@@ -314,6 +314,24 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
     return map;
   }, [ceremonyTypes]);
   
+  // Helper to calculate event date based on ceremony type and wedding date
+  const calculateEventDateStr = (ceremonyTypeId: string | undefined, weddingDateStr: string | undefined): string => {
+    if (!weddingDateStr || !ceremonyTypeId || ceremonyTypeId === "custom") return "";
+    const wedding = new Date(weddingDateStr);
+    if (isNaN(wedding.getTime())) return "";
+    
+    // Look up the ceremony type to get the slug
+    const ceremonyType = ceremonyTypeById[ceremonyTypeId];
+    if (!ceremonyType) return "";
+    
+    const slug = ceremonyType.ceremonyId;
+    const offset = preWeddingOffsets[slug] ?? 1;
+    
+    const eventDate = new Date(wedding);
+    eventDate.setDate(wedding.getDate() - offset);
+    return eventDate.toISOString().split('T')[0];
+  };
+  
   // Populate default ceremonies when ceremonyTypes loads or autoCreateCeremonies is enabled
   // Pre-populate only ceremonies marked as isDefaultPrepopulated, sorted by displayOrder
   useEffect(() => {
@@ -330,16 +348,39 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
           ? prepopulatedCeremonies 
           : [...availableCeremonies].sort((a, b) => a.displayOrder - b.displayOrder);
         
-        const defaultEvents = ceremoniesToUse.map((ct, idx) => ({
+        const weddingDateStr = form.getValues("weddingDate");
+        const defaultEvents = ceremoniesToUse.map((ct) => ({
           ceremonyTypeId: ct.id,
           customName: "",
           guestCount: "",
-          date: "", // Dates will be suggested based on wedding date
+          date: calculateEventDateStr(ct.id, weddingDateStr),
         }));
         form.setValue("customEvents", defaultEvents);
       }
     }
   }, [autoCreateCeremonies, availableCeremonies]);
+  
+  // Watch for wedding date changes and update event dates accordingly
+  const weddingDateValue = form.watch("weddingDate");
+  useEffect(() => {
+    if (!weddingDateValue) return;
+    const currentEvents = form.getValues("customEvents") || [];
+    if (currentEvents.length === 0) return;
+    
+    // Update dates for all events that don't have a manually-set date different from the calculated one
+    const updatedEvents = currentEvents.map((event) => {
+      if (event.ceremonyTypeId && event.ceremonyTypeId !== "custom") {
+        const calculatedDate = calculateEventDateStr(event.ceremonyTypeId, weddingDateValue);
+        // Only auto-fill if date is empty or matches previous calculation
+        if (!event.date || event.date === "") {
+          return { ...event, date: calculatedDate };
+        }
+      }
+      return event;
+    });
+    
+    form.setValue("customEvents", updatedEvents);
+  }, [weddingDateValue, ceremonyTypeById]);
   
   // Get regional multiplier based on selected location
   const regionalMultiplier = useMemo((): number => {
@@ -368,7 +409,9 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
     const selectedIds = new Set(current.map(e => e.ceremonyTypeId));
     const unselected = availableCeremonies.find(c => !selectedIds.has(c.id));
     const defaultCeremonyTypeId = unselected?.id || "";
-    form.setValue("customEvents", [...current, { ceremonyTypeId: defaultCeremonyTypeId, customName: "", guestCount: "", date: "" }]);
+    const weddingDateStr = form.getValues("weddingDate");
+    const suggestedDate = calculateEventDateStr(defaultCeremonyTypeId, weddingDateStr);
+    form.setValue("customEvents", [...current, { ceremonyTypeId: defaultCeremonyTypeId, customName: "", guestCount: "", date: suggestedDate }]);
   };
 
   const handleRemoveEvent = (index: number) => {
@@ -380,11 +423,18 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
 
   const handleEventChange = (index: number, field: "ceremonyTypeId" | "customName" | "guestCount" | "date", value: string) => {
     const current = form.getValues("customEvents") || [];
+    const weddingDateStr = form.getValues("weddingDate");
     const updated = current.map((event, i) => {
       if (i === index) {
         if (field === "ceremonyTypeId") {
-          // If selecting a ceremony from dropdown, clear customName. If selecting "custom", keep customName.
-          return { ...event, ceremonyTypeId: value, customName: value === "custom" ? event.customName : "" };
+          // If selecting a ceremony from dropdown, clear customName and auto-fill date
+          const suggestedDate = calculateEventDateStr(value, weddingDateStr);
+          return { 
+            ...event, 
+            ceremonyTypeId: value, 
+            customName: value === "custom" ? event.customName : "",
+            date: suggestedDate || event.date // Use suggested date or keep existing
+          };
         }
         return { ...event, [field]: value };
       }
@@ -393,28 +443,6 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
     form.setValue("customEvents", updated);
   };
   
-  // Helper to suggest dates based on wedding date and ceremony type
-  // Uses the same logic as post-onboarding event creation
-  const suggestEventDate = (ceremonyId: string | undefined, weddingDate: string | undefined): string => {
-    if (!weddingDate || !ceremonyId || ceremonyId === "custom") return "";
-    const wedding = new Date(weddingDate);
-    if (isNaN(wedding.getTime())) return "";
-    
-    // Look up the ceremony type to get the slug (ceremonyId)
-    const ceremonyType = ceremonyTypeById[ceremonyId];
-    if (!ceremonyType) return "";
-    
-    const slug = ceremonyType.ceremonyId; // e.g., 'sikh_mehndi', 'sikh_anand_karaj'
-    
-    // Get the days offset for this ceremony from the shared mapping
-    const offset = preWeddingOffsets[slug] ?? 1;
-    
-    // Calculate the suggested date
-    const eventDate = new Date(wedding);
-    eventDate.setDate(wedding.getDate() - offset);
-    return eventDate.toISOString().split('T')[0];
-  };
-
   const onSubmit = (data: QuestionnaireData) => {
     if (currentStep < STEPS.length) {
       setCurrentStep(currentStep + 1);
@@ -949,35 +977,17 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                                     </div>
                                   </div>
                                   
-                                  {/* Date input with suggested date */}
-                                  {(() => {
-                                    const suggestedDate = suggestEventDate(event.ceremonyTypeId, form.watch("weddingDate"));
-                                    return (
-                                      <div className="flex items-center gap-2">
-                                        <div className="flex items-center gap-2 bg-white dark:bg-background rounded-md border px-2 flex-1">
-                                          <CalendarDays className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                                          <Input
-                                            type="date"
-                                            value={event.date || ""}
-                                            onChange={(e) => handleEventChange(index, "date", e.target.value)}
-                                            data-testid={`input-event-date-${index}`}
-                                            className="h-10 border-0 p-0 focus-visible:ring-0"
-                                          />
-                                        </div>
-                                        {!event.date && suggestedDate && (
-                                          <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => handleEventChange(index, "date", suggestedDate)}
-                                            className="text-xs text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-950/20 whitespace-nowrap"
-                                          >
-                                            Use suggested
-                                          </Button>
-                                        )}
-                                      </div>
-                                    );
-                                  })()}
+                                  {/* Date input - auto-populated based on ceremony type */}
+                                  <div className="flex items-center gap-2 bg-white dark:bg-background rounded-md border px-2">
+                                    <CalendarDays className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                                    <Input
+                                      type="date"
+                                      value={event.date || ""}
+                                      onChange={(e) => handleEventChange(index, "date", e.target.value)}
+                                      data-testid={`input-event-date-${index}`}
+                                      className="h-10 border-0 p-0 focus-visible:ring-0 flex-1"
+                                    />
+                                  </div>
                                   
                                   {selectedCeremony?.description && event.ceremonyTypeId !== "custom" && (
                                     <p className="text-sm text-muted-foreground italic">
