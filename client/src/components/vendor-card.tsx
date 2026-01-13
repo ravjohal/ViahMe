@@ -601,16 +601,16 @@ export function VendorCard({
           {/* NOT LOGGED IN USER BEHAVIOR */}
           {!isLoggedIn && (
             <>
-              {/* Vendor IS claimed: Sign Up and Book */}
+              {/* Vendor IS claimed: Sign Up and View Details */}
               {vendor.claimed && (
                 <Link href="/onboarding" onClick={(e) => e.stopPropagation()}>
                   <Button
                     className="w-full"
                     size="sm"
-                    data-testid={`button-signup-book-${vendor.id}`}
+                    data-testid={`button-signup-view-${vendor.id}`}
                   >
                     <UserPlus className="w-3.5 h-3.5 mr-1.5" />
-                    Sign Up and Book
+                    Sign Up and View Details
                   </Button>
                 </Link>
               )}
