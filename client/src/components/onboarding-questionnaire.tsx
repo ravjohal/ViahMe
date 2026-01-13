@@ -13,6 +13,7 @@ import { Calendar, MapPin, Users, DollarSign, Crown, Gift, Lightbulb, TrendingUp
 import { motion, AnimatePresence } from "framer-motion";
 import { TRADITION_HIERARCHY, getSubTraditionsForMain, getAllSubTraditions, getMainTraditionByValue } from "@/lib/tradition-hierarchy";
 import { useCeremonyTypesByTradition, useRegionalPricing, useAllCeremonyLineItems, calculateCeremonyTotalFromBreakdown, type CeremonyType } from "@/hooks/use-ceremony-types";
+import { preWeddingOffsets, mainCeremonies } from "@shared/ceremony-dates";
 
 const customEventSchema = z.object({
   ceremonyTypeId: z.string().optional(), // UUID from ceremony_types table
@@ -392,17 +393,25 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
     form.setValue("customEvents", updated);
   };
   
-  // Helper to suggest dates based on wedding date and ceremony order
-  const suggestEventDate = (index: number, totalEvents: number, weddingDate: string | undefined): string => {
-    if (!weddingDate) return "";
+  // Helper to suggest dates based on wedding date and ceremony type
+  // Uses the same logic as post-onboarding event creation
+  const suggestEventDate = (ceremonyId: string | undefined, weddingDate: string | undefined): string => {
+    if (!weddingDate || !ceremonyId || ceremonyId === "custom") return "";
     const wedding = new Date(weddingDate);
     if (isNaN(wedding.getTime())) return "";
     
-    // Suggest dates leading up to wedding - last event is wedding day
-    // Earlier events spread out before the wedding
-    const daysBeforeWedding = totalEvents - 1 - index;
+    // Look up the ceremony type to get the slug (ceremonyId)
+    const ceremonyType = ceremonyTypeById[ceremonyId];
+    if (!ceremonyType) return "";
+    
+    const slug = ceremonyType.ceremonyId; // e.g., 'sikh_mehndi', 'sikh_anand_karaj'
+    
+    // Get the days offset for this ceremony from the shared mapping
+    const offset = preWeddingOffsets[slug] ?? 1;
+    
+    // Calculate the suggested date
     const eventDate = new Date(wedding);
-    eventDate.setDate(wedding.getDate() - daysBeforeWedding);
+    eventDate.setDate(wedding.getDate() - offset);
     return eventDate.toISOString().split('T')[0];
   };
 
@@ -941,30 +950,34 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                                   </div>
                                   
                                   {/* Date input with suggested date */}
-                                  <div className="flex items-center gap-2">
-                                    <div className="flex items-center gap-2 bg-white dark:bg-background rounded-md border px-2 flex-1">
-                                      <CalendarDays className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                                      <Input
-                                        type="date"
-                                        placeholder={suggestEventDate(index, customEvents.length, form.watch("weddingDate"))}
-                                        value={event.date || ""}
-                                        onChange={(e) => handleEventChange(index, "date", e.target.value)}
-                                        data-testid={`input-event-date-${index}`}
-                                        className="h-10 border-0 p-0 focus-visible:ring-0"
-                                      />
-                                    </div>
-                                    {!event.date && suggestEventDate(index, customEvents.length, form.watch("weddingDate")) && (
-                                      <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => handleEventChange(index, "date", suggestEventDate(index, customEvents.length, form.watch("weddingDate")))}
-                                        className="text-xs text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-950/20 whitespace-nowrap"
-                                      >
-                                        Use suggested
-                                      </Button>
-                                    )}
-                                  </div>
+                                  {(() => {
+                                    const suggestedDate = suggestEventDate(event.ceremonyTypeId, form.watch("weddingDate"));
+                                    return (
+                                      <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-2 bg-white dark:bg-background rounded-md border px-2 flex-1">
+                                          <CalendarDays className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                                          <Input
+                                            type="date"
+                                            value={event.date || ""}
+                                            onChange={(e) => handleEventChange(index, "date", e.target.value)}
+                                            data-testid={`input-event-date-${index}`}
+                                            className="h-10 border-0 p-0 focus-visible:ring-0"
+                                          />
+                                        </div>
+                                        {!event.date && suggestedDate && (
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handleEventChange(index, "date", suggestedDate)}
+                                            className="text-xs text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-950/20 whitespace-nowrap"
+                                          >
+                                            Use suggested
+                                          </Button>
+                                        )}
+                                      </div>
+                                    );
+                                  })()}
                                   
                                   {selectedCeremony?.description && event.ceremonyTypeId !== "custom" && (
                                     <p className="text-sm text-muted-foreground italic">
