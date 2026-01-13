@@ -865,13 +865,13 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                         </div>
                       </div>
 
-                      <div className="space-y-2">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {customEvents.map((event, index) => {
                           const selectedCeremony = availableCeremonies.find(c => c.id === event.ceremonyTypeId);
                           return (
                             <div 
                               key={index} 
-                              className="relative rounded-lg border bg-card p-3 pr-12"
+                              className="relative rounded-lg border bg-card p-3 pr-10"
                             >
                               <Button
                                 type="button"
