@@ -15,7 +15,8 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Plane, Hotel, MapPin, DollarSign, Plus, Trash2, Edit2, 
-  Check, Calendar, Clock, CreditCard, Palmtree
+  Check, Calendar, Clock, CreditCard, Palmtree, Utensils,
+  Car, ShoppingBag, Shield, Package
 } from "lucide-react";
 import type { 
   Wedding, HoneymoonFlight, HoneymoonHotel, 
@@ -27,11 +28,11 @@ const BUDGET_CATEGORY_ICONS: Record<string, React.ReactNode> = {
   flights: <Plane className="h-4 w-4" />,
   accommodation: <Hotel className="h-4 w-4" />,
   activities: <Palmtree className="h-4 w-4" />,
-  food: <span className="text-sm">🍽️</span>,
-  transportation: <span className="text-sm">🚗</span>,
-  shopping: <span className="text-sm">🛍️</span>,
-  insurance: <span className="text-sm">🛡️</span>,
-  other: <span className="text-sm">📦</span>,
+  food: <Utensils className="h-4 w-4" />,
+  transportation: <Car className="h-4 w-4" />,
+  shopping: <ShoppingBag className="h-4 w-4" />,
+  insurance: <Shield className="h-4 w-4" />,
+  other: <Package className="h-4 w-4" />,
 };
 
 function formatDate(dateStr: string | Date | null): string {

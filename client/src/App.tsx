@@ -72,6 +72,7 @@ import RitualRoles from "@/pages/ritual-roles";
 import MilniPage from "@/pages/milni";
 import DecorPage from "@/pages/decor";
 import DayOfTimelinePage from "@/pages/day-of-timeline";
+import HoneymoonPlannerPage from "@/pages/honeymoon-planner";
 import VendorAccessPasses from "@/pages/vendor-access-passes";
 import VendorTimeline from "@/pages/vendor-timeline";
 import BudgetEstimatorPage from "@/pages/budget-estimator";
@@ -189,6 +190,11 @@ function Router() {
       <Route path="/day-of-timeline">
         <ProtectedRoute requiredPermission="timeline">
           <DayOfTimelinePage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/honeymoon">
+        <ProtectedRoute requiredPermission="planning">
+          <HoneymoonPlannerPage />
         </ProtectedRoute>
       </Route>
       <Route path="/budget">
