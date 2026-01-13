@@ -54,6 +54,7 @@ import { registerRitualRoleRoutes } from "./ritual-roles";
 import { registerMilniRoutes } from "./milni";
 import { registerDecorRoutes } from "./decor";
 import { createDayOfTimelineRouter } from "./day-of-timeline";
+import { createHoneymoonRouter } from "./honeymoon";
 import { registerTraditionsRoutes } from "./traditions";
 import { createVendorAccessPassesRouter, createVendorCollaborationViewRouter } from "./vendor-access-passes";
 import { createCeremonyExplainersRouter, createPublicCeremonyExplainersRouter } from "./ceremony-explainers";
@@ -200,6 +201,9 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
 
   // Day-of Timeline routes
   app.use("/api", await createDayOfTimelineRouter(storage));
+
+  // Honeymoon Planner routes
+  app.use("/api", await createHoneymoonRouter(storage));
 
   app.use("/api/vendor-access-passes", await createVendorAccessPassesRouter(storage));
   app.use("/api/vendor-collaboration", createVendorCollaborationViewRouter(storage));
