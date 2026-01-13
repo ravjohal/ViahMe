@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, decimal, boolean, timestamp, jsonb, index, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, decimal, numeric, boolean, timestamp, jsonb, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -4506,3 +4506,128 @@ export const SIKH_WEDDING_DAY_TEMPLATE = [
   { time: "1:30 PM", activity: "Doli ceremony - Bride's departure", assignee: "bride", sortOrder: 28 },
   { time: "1:30 PM", activity: "Transport ready for couple departure", assignee: "vendor", vendorCategory: "transport", sortOrder: 29 },
 ] as const;
+
+// ============================================================================
+// HONEYMOON PLANNER - Flights, Hotels, Activities, and Budget
+// ============================================================================
+
+export const honeymoonFlights = pgTable("honeymoon_flights", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  flightType: text("flight_type").notNull().default("departure"), // 'departure' | 'return' | 'connecting'
+  airline: text("airline"),
+  flightNumber: text("flight_number"),
+  departureAirport: text("departure_airport"),
+  arrivalAirport: text("arrival_airport"),
+  departureDate: text("departure_date"),
+  departureTime: text("departure_time"),
+  arrivalDate: text("arrival_date"),
+  arrivalTime: text("arrival_time"),
+  confirmationNumber: text("confirmation_number"),
+  cost: numeric("cost"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  weddingIdx: index("honeymoon_flights_wedding_idx").on(table.weddingId),
+}));
+
+export const insertHoneymoonFlightSchema = createInsertSchema(honeymoonFlights).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertHoneymoonFlight = z.infer<typeof insertHoneymoonFlightSchema>;
+export type HoneymoonFlight = typeof honeymoonFlights.$inferSelect;
+
+export const honeymoonHotels = pgTable("honeymoon_hotels", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  hotelName: text("hotel_name").notNull(),
+  address: text("address"),
+  city: text("city"),
+  country: text("country"),
+  checkInDate: text("check_in_date"),
+  checkOutDate: text("check_out_date"),
+  confirmationNumber: text("confirmation_number"),
+  roomType: text("room_type"),
+  costPerNight: numeric("cost_per_night"),
+  totalCost: numeric("total_cost"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  weddingIdx: index("honeymoon_hotels_wedding_idx").on(table.weddingId),
+}));
+
+export const insertHoneymoonHotelSchema = createInsertSchema(honeymoonHotels).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertHoneymoonHotel = z.infer<typeof insertHoneymoonHotelSchema>;
+export type HoneymoonHotel = typeof honeymoonHotels.$inferSelect;
+
+export const honeymoonActivities = pgTable("honeymoon_activities", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  activityName: text("activity_name").notNull(),
+  date: text("date"),
+  time: text("time"),
+  location: text("location"),
+  cost: numeric("cost"),
+  confirmationNumber: text("confirmation_number"),
+  notes: text("notes"),
+  completed: boolean("completed").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  weddingIdx: index("honeymoon_activities_wedding_idx").on(table.weddingId),
+}));
+
+export const insertHoneymoonActivitySchema = createInsertSchema(honeymoonActivities).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertHoneymoonActivity = z.infer<typeof insertHoneymoonActivitySchema>;
+export type HoneymoonActivity = typeof honeymoonActivities.$inferSelect;
+
+export const HONEYMOON_BUDGET_CATEGORIES = [
+  { value: "flights", label: "Flights" },
+  { value: "accommodation", label: "Accommodation" },
+  { value: "activities", label: "Activities & Excursions" },
+  { value: "food", label: "Food & Dining" },
+  { value: "transportation", label: "Local Transportation" },
+  { value: "shopping", label: "Shopping & Souvenirs" },
+  { value: "insurance", label: "Travel Insurance" },
+  { value: "other", label: "Other" },
+] as const;
+
+export type HoneymoonBudgetCategoryValue = typeof HONEYMOON_BUDGET_CATEGORIES[number]['value'];
+
+export const honeymoonBudgetItems = pgTable("honeymoon_budget_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  category: text("category").notNull().default("other"),
+  description: text("description").notNull(),
+  estimatedCost: numeric("estimated_cost"),
+  actualCost: numeric("actual_cost"),
+  isPaid: boolean("is_paid").notNull().default(false),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  weddingIdx: index("honeymoon_budget_wedding_idx").on(table.weddingId),
+  categoryIdx: index("honeymoon_budget_category_idx").on(table.category),
+}));
+
+export const insertHoneymoonBudgetItemSchema = createInsertSchema(honeymoonBudgetItems).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  category: z.enum(["flights", "accommodation", "activities", "food", "transportation", "shopping", "insurance", "other"]).optional(),
+});
+export type InsertHoneymoonBudgetItem = z.infer<typeof insertHoneymoonBudgetItemSchema>;
+export type HoneymoonBudgetItem = typeof honeymoonBudgetItems.$inferSelect;
