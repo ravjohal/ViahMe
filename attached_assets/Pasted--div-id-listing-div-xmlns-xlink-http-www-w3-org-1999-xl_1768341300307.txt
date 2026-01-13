@@ -1,0 +1,952 @@
+<div id="listing_div" xmlns:xlink="http://www.w3.org/1999/xlink"><input type="hidden" id="hdn_onetimecookie" value="2102873,2195187,2052290" name="hdn_onetimecookie" xmlns:xlink="http://www.w3.org/1999/xlink"><div class="common-promo-blk" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="promote">Ad</div><article id="div_promotionads" class="owl-carousel owl-theme" style="opacity: 1; display: block;"><div class="owl-wrapper-outer"><div class="owl-wrapper" style="width: 2622px; left: 0px; display: block;"><div class="owl-item" style="width: 437px;"><div class="item">
+      <div class="listing-column">
+        <div class="single-promo">
+          <h3><a title="DJ Services - DJ Raj Entertainment &amp; Event Lighting" href="https://us.sulekha.com/clifton-nj/dj-service/dj-raj-entertainment-699197">DJ Raj Entertainment &amp; Event Lighting</a></h3>
+          <div class="city-txt"><span class="material-icons-outlined">location_on</span><b>
+                      Serving in Sacramento, CA</b></div>
+          <div class="my-serv"><span class="material-icons-outlined">work_outline</span>Services:&nbsp;
+            <a title="Punjabi DJs in Sacramento, CA" href="/sacramento-ca/punjabi-djs">Punjabi DJs</a><a title="+5 more services from DJ Raj Entertainment &amp; Event Lighting" href="https://us.sulekha.com/clifton-nj/dj-service/dj-raj-entertainment-699197#services">
+                + 5 more</a></div>
+          <div class="more-detail">
+            <ul>
+              <li>
+                <div class="rating"><a title="View all reviews" href="https://us.sulekha.com/clifton-nj/dj-service/dj-raj-entertainment-699197#reviews">5<span class="material-icons-outlined">star</span></a><b>57 Reviews
+                          </b></div>
+              </li>
+              <li>
+                <div class="rating">
+                  <div class="sul-rate">7</div><b>Sulekha score</b></div>
+              </li>
+            </ul>
+          </div>
+          <div class="btn-outer">
+            <ul class="">
+              <li><a title="Enquire DJ Raj Entertainment &amp; Event Lighting" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '699197',&quot;DJ Raj Entertainment &amp; Event Lighting&quot;);gaclicktrack('send','event', 'Promoted Ad','Enquire Now', '699197');" class="red-but"><b>Enquire Now</b></a></li>
+              <li><a title="Call DJ Raj Entertainment &amp; Event Lighting" href="javascript:void(0);" onclick="javascript:openphoneConnect('DJ Raj Entertainment &amp; Event Lighting','65777','3126264366');"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+                      <path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+                    </svg></span><b>Call</b></a></li>
+              <li><a title="Connect via Whatsapp" href="javascript:void()" onclick="Before_openEnquiryModal('2','699197',&quot;DJ Raj Entertainment &amp; Event Lighting&quot;);gaclicktrack('send','event', 'Promoted Ad-Whatsapp Chat','Whatsapp', '699197');" class="whatsapp"><span><svg class="svg-inline--fa fa-whatsapp fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="whatsapp" role="img" viewBox="0 0 448 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+                      <path fill="currentColor" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"></path>
+                    </svg></span></a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div></div><div class="owl-item" style="width: 437px;"><div class="item">
+      <div class="listing-column">
+        <div class="single-promo">
+          <h3><a title="Entertainment - Mehekte Sur" href="https://us.sulekha.com/edison-nj/entertainment/mehekte-sur-1039065">Mehekte Sur</a></h3>
+          <div class="city-txt"><span class="material-icons-outlined">location_on</span><b>
+                      Serving in Sacramento, CA</b></div>
+          <div class="my-serv"><span class="material-icons-outlined">work_outline</span>Services:&nbsp;
+            <a title="Punjabi DJs in Sacramento, CA" href="/sacramento-ca/punjabi-djs">Punjabi DJs</a><a title="+15 more services from Mehekte Sur" href="https://us.sulekha.com/edison-nj/entertainment/mehekte-sur-1039065#services">
+                + 15 more</a></div>
+          <div class="more-detail">
+            <ul>
+              <li>
+                <div class="rating"><a title="View all reviews" href="https://us.sulekha.com/edison-nj/entertainment/mehekte-sur-1039065#reviews">5<span class="material-icons-outlined">star</span></a><b>629 Reviews
+                          </b></div>
+              </li>
+              <li>
+                <div class="rating">
+                  <div class="sul-rate">9.5</div><b>Sulekha score</b></div>
+              </li>
+            </ul>
+          </div>
+          <div class="btn-outer">
+            <ul class="">
+              <li><a title="Enquire Mehekte Sur" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1039065',&quot;Mehekte Sur&quot;);gaclicktrack('send','event', 'Promoted Ad','Enquire Now', '1039065');" class="red-but"><b>Enquire Now</b></a></li>
+              <li><a title="Call Mehekte Sur" href="javascript:void(0);" onclick="javascript:openphoneConnect('Mehekte Sur','37015','7738861257');"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+                      <path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+                    </svg></span><b>Call</b></a></li>
+              <li><a title="Connect via Whatsapp" href="javascript:void()" onclick="Before_openEnquiryModal('2','1039065',&quot;Mehekte Sur&quot;);gaclicktrack('send','event', 'Promoted Ad-Whatsapp Chat','Whatsapp', '1039065');" class="whatsapp"><span><svg class="svg-inline--fa fa-whatsapp fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="whatsapp" role="img" viewBox="0 0 448 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+                      <path fill="currentColor" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"></path>
+                    </svg></span></a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div></div><div class="owl-item" style="width: 437px;"><div class="item">
+      <div class="listing-column">
+        <div class="single-promo">
+          <h3><a title="DJ Services - Suhane Pal Music, DJ &amp; Karaoke Services" href="https://us.sulekha.com/san-francisco-ca/dj-service/suhane-pal-karaoke-1228555">Suhane Pal Music, DJ &amp; Karaoke Services</a></h3>
+          <div class="city-txt"><span class="material-icons-outlined">location_on</span><b>
+                      Serving in Alturas, CA</b></div>
+          <div class="my-serv"><span class="material-icons-outlined">work_outline</span>Services:&nbsp;
+            <a title="Punjabi DJs in Alturas, CA" href="/alturas-ca/punjabi-djs">Punjabi DJs</a><a title="+7 more services from Suhane Pal Music, DJ &amp; Karaoke Services" href="https://us.sulekha.com/san-francisco-ca/dj-service/suhane-pal-karaoke-1228555#services">
+                + 7 more</a></div>
+          <div class="more-detail">
+            <ul>
+              <li>
+                <div class="rating"><a title="View all reviews" href="https://us.sulekha.com/san-francisco-ca/dj-service/suhane-pal-karaoke-1228555#reviews">5<span class="material-icons-outlined">star</span></a><b>90 Reviews
+                          </b></div>
+              </li>
+              <li>
+                <div class="rating">
+                  <div class="sul-rate">9.5</div><b>Sulekha score</b></div>
+              </li>
+            </ul>
+          </div>
+          <div class="btn-outer">
+            <ul class="">
+              <li><a title="Enquire Suhane Pal Music, DJ &amp; Karaoke Services" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1228555',&quot;Suhane Pal Music, DJ &amp; Karaoke Services&quot;);gaclicktrack('send','event', 'Promoted Ad','Enquire Now', '1228555');" class="red-but"><b>Enquire Now</b></a></li>
+              <li><a title="Call Suhane Pal Music, DJ &amp; Karaoke Services" href="javascript:void(0);" onclick="javascript:openphoneConnect('Suhane Pal Music, DJ &amp; Karaoke Services','89857','5125159579');"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+                      <path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+                    </svg></span><b>Call</b></a></li>
+              <li><a title="Connect via Whatsapp" href="javascript:void()" onclick="Before_openEnquiryModal('2','1228555',&quot;Suhane Pal Music, DJ &amp; Karaoke Services&quot;);gaclicktrack('send','event', 'Promoted Ad-Whatsapp Chat','Whatsapp', '1228555');" class="whatsapp"><span><svg class="svg-inline--fa fa-whatsapp fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="whatsapp" role="img" viewBox="0 0 448 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+                      <path fill="currentColor" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"></path>
+                    </svg></span></a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div></div></div></div>
+    
+    <div class="owl-controls"><div class="owl-buttons"><div class="owl-prev"><span class="material-icons-outlined">chevron_left</span></div><div class="owl-next"><span class="material-icons-outlined">chevron_right</span></div></div></div></article></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2026-01-13-01-01-23-047_90.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="JS Wedding Services in Sacramento, CA"></figure><div class="content "><h3><a title="Indian DJ Services - JS Wedding Services" href="/morrisville-nc/dj-service/js-wedding-services-1996417">JS Wedding Services</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>
+Serving customers in  Sacramento area</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">call</span><a title="Call JS Wedding Services" href="javascript:void(0);" onclick="javascript:openphoneConnect('JS Wedding Services','92565','4085604939');"><b>408-560-4939</b></a><i>
+(pin:92565)
+</i></div><div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating">
+<div class="sul-rate">6<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-trust"><ul><li>
+<div class="trust"><a href="javascript:void(0);" onclick="javascript:openSULTrust();" title="This business Information is been trusted based on users ratings and reviews."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-29-54-504.svg"></span>Trust</a></div></li><li>
+<div class="verified"><a href="javascript:void(0);" onclick="javascript:openSULVerified();" title="This business Information is verified by Sulekha."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-57-40-539.svg"></span>Verified</a></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:</a></b>
+<a title="Asian DJs in Morrisville, NC" href="/morrisville-nc/asian-djs">Asian DJs</a>, <a title="Dhol Players in Morrisville, NC" href="/morrisville-nc/dhol-players">Dhol Players</a>, <a title="Event DJs in Morrisville, NC" href="/morrisville-nc/event-djs">Event DJs</a>, <a title="Mariachi Band DJ in Morrisville, NC" href="/morrisville-nc/mariachi-band-dj">Mariachi Band DJ</a>, <a title="Music Shows in Morrisville, NC" href="/morrisville-nc/music-shows">Music Shows</a>, <a title="Party DJs in Morrisville, NC" href="/morrisville-nc/party-djs">Party DJs</a>, <a title="Punjabi DJs in Morrisville, NC" href="/morrisville-nc/punjabi-djs">Punjabi DJs</a>, <a title="Sweet 16 DJs in Morrisville, NC" href="/morrisville-nc/sweet-16-djs">Sweet 16 DJs</a>, <a title="Wedding Band Baja in Morrisville, NC" href="/morrisville-nc/wedding-band-baja">Wedding Band Baja</a>, <a title="Wedding Band DJ in Morrisville, NC" href="/morrisville-nc/wedding-band-dj">Wedding Band DJ</a>, <a title="Wedding Band Singers in Morrisville, NC" href="/morrisville-nc/wedding-band-singers">Wedding Band Singers</a>, </div><div class="more-links" style="display: none;"><a title="View all services offered by JS Wedding Services" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>JS Wedding Services is led by founders Jeetu Singh and Surpreet Kaur, who together bring [X]+ years of combined experience in the wedding industry.
+Jeetu Singh, Founder, oversees operations and client experience, ensuring every event is planned and executed flawlessly with a strong focus on quality and reliability.
+Surpreet Kaur, Co-Founder and Lead Henna Artist, is the creative visionary behind the brand’s signature henna artistry. With a lifelong passion for art and years of professional experience, she creates elegant, detailed designs that blend tradition with individuality, making every celebration memorable.
+Together, they are committed to delivering personalized, beautiful, and unforgettable wedding experiences.<span class="more-links"><a title="Read More about JS Wedding Services" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class=""><li><a title="Call JS Wedding Services" href="javascript:void(0);" onclick="javascript:openphoneConnect('JS Wedding Services','92565','4085604939');" class="red-but"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+</svg></span><b>Call</b></a></li><li><a title="Enquire Jeetu" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1996417',&quot;JS Wedding Services&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1996417');"><b>Enquire Now</b></a></li><li><a title="WhatsApp Jeetu" href="javascript:void()" onclick="Before_openEnquiryModal('2','1996417',&quot;JS Wedding Services&quot;);gaclicktrack('send','event', 'Response-Whatsapp Chat','Whatsapp', '1996417');" class="whatsapp"><span><svg class="svg-inline--fa fa-whatsapp fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="whatsapp" role="img" viewBox="0 0 448 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"></path>
+</svg></span></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2025-12-03-08-12-42-384_35.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="DJ Elaz in Sacramento, CA"></figure><div class="content "><h3><a title="Indian DJ Services - DJ Elaz" href="/san-francisco-ca/dj-service/dj-elaz-659189">DJ Elaz</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>
+Serving customers in  Sacramento area</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">call</span><a title="Call DJ Elaz" href="javascript:void(0);" onclick="javascript:openphoneConnect('DJ Elaz','28198','3126264366');"><b>312-626-4366</b></a><i>
+(pin:28198)
+</i></div><div class="experience"><span class="material-icons-outlined">work_history</span>13 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/san-francisco-ca/dj-service/dj-elaz-659189#reviews">5<span class="material-icons-outlined">star</span></a><b>3
+Reviews</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">9.5<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-trust"><ul><li>
+<div class="trust"><a href="javascript:void(0);" onclick="javascript:openSULTrust();" title="This business Information is been trusted based on users ratings and reviews."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-29-54-504.svg"></span>Trust</a></div></li><li>
+<div class="verified"><a href="javascript:void(0);" onclick="javascript:openSULVerified();" title="This business Information is verified by Sulekha."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-57-40-539.svg"></span>Verified</a></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:</a></b>
+<a title="Asian DJs in San Francisco, CA" href="/san-francisco-ca/asian-djs">Asian DJs</a>, <a title="Bollywood Djs in San Francisco, CA" href="/san-francisco-ca/bollywood-djs">Bollywood Djs</a>, <a title="Event DJs in San Francisco, CA" href="/san-francisco-ca/event-djs">Event DJs</a>, <a title="Mariachi Band DJ in San Francisco, CA" href="/san-francisco-ca/mariachi-band-dj">Mariachi Band DJ</a>, <a title="Party DJs in San Francisco, CA" href="/san-francisco-ca/party-djs">Party DJs</a>, <a title="Punjabi DJs in San Francisco, CA" href="/san-francisco-ca/punjabi-djs">Punjabi DJs</a>, <a title="Sweet 16 DJs in San Francisco, CA" href="/san-francisco-ca/sweet-16-djs">Sweet 16 DJs</a>, <a title="Wedding Band DJ in San Francisco, CA" href="/san-francisco-ca/wedding-band-dj">Wedding Band DJ</a></div><div class="more-links" style="display: none;"><a title="View all services offered by DJ Elaz" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>We bring music to your life! We are your your affordable Desi DJ, VJ (Video DJ), Karaoke DJ in San Francisco Bay Area. Also serving all of California.Our specialty is our ability to create custom DJ packages that fits to our client needs. It's your special day and we take the extra steps to make sure your event goes as planned. Client satisfaction is our top priority and hence, most of our business is from past customers.Our goal is to provide a professional, honest, dependable and affordable DJ service. Each event is unique and we make sure we get to know all the needs for the event loud and clear, so that we can provide the right service.<span class="more-links"><a title="Read More about DJ Elaz" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class=""><li><a title="Call DJ Elaz" href="javascript:void(0);" onclick="javascript:openphoneConnect('DJ Elaz','28198','3126264366');" class="red-but"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+</svg></span><b>Call</b></a></li><li><a title="Enquire Elango" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '659189',&quot;DJ Elaz&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '659189');"><b>Enquire Now</b></a></li><li><a title="WhatsApp Elango" href="javascript:void()" onclick="Before_openEnquiryModal('2','659189',&quot;DJ Elaz&quot;);gaclicktrack('send','event', 'Response-Whatsapp Chat','Whatsapp', '659189');" class="whatsapp"><span><svg class="svg-inline--fa fa-whatsapp fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="whatsapp" role="img" viewBox="0 0 448 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"></path>
+</svg></span></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2018-03-26-08-56-31-173_65.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Fusion Sounds in Sacramento, CA"></figure><div class="content "><h3><a title="Indian DJ Services - Fusion Sounds" href="/anaheim-ca/dj-service/fusion-sounds-697051">Fusion Sounds</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>
+Serving customers in  Sacramento area</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">call</span><a title="Call Fusion Sounds" href="javascript:void(0);" onclick="javascript:openphoneConnect('Fusion Sounds','74850','3016865058');"><b>301-686-5058</b></a><i>
+(pin:74850)
+</i></div><div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/anaheim-ca/dj-service/fusion-sounds-697051#reviews">5<span class="material-icons-outlined">star</span></a><b>33
+Reviews</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">7<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-trust"><ul><li>
+<div class="trust"><a href="javascript:void(0);" onclick="javascript:openSULTrust();" title="This business Information is been trusted based on users ratings and reviews."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-29-54-504.svg"></span>Trust</a></div></li><li>
+<div class="verified"><a href="javascript:void(0);" onclick="javascript:openSULVerified();" title="This business Information is verified by Sulekha."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-57-40-539.svg"></span>Verified</a></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:</a></b>
+<a title="Asian DJs in Anaheim, CA" href="/anaheim-ca/asian-djs">Asian DJs</a>, <a title="Bollywood Djs in Anaheim, CA" href="/anaheim-ca/bollywood-djs">Bollywood Djs</a>, <a title="Event DJs in Anaheim, CA" href="/anaheim-ca/event-djs">Event DJs</a>, <a title="Mariachi Band DJ in Anaheim, CA" href="/anaheim-ca/mariachi-band-dj">Mariachi Band DJ</a>, <a title="Party DJs in Anaheim, CA" href="/anaheim-ca/party-djs">Party DJs</a>, <a title="Punjabi DJs in Anaheim, CA" href="/anaheim-ca/punjabi-djs">Punjabi DJs</a>, <a title="Sweet 16 DJs in Anaheim, CA" href="/anaheim-ca/sweet-16-djs">Sweet 16 DJs</a>, <a title="Wedding Band DJ in Anaheim, CA" href="/anaheim-ca/wedding-band-dj">Wedding Band DJ</a></div><div class="more-links" style="display: none;"><a title="View all services offered by Fusion Sounds" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>Fusion Sounds in Anaheim is specialized in DJs Band Services, Bollywood, Hip Hop or Rap DJ, Jazz Band DJ, Pop DJ, Rock DJ, Bhangra Dancers and Dhol Players. They are servicing at Los Angeles Metro area, Bay area and San Diego Metro area. Some of the services provided by them are Dholis, Disk Jockey Service, Engagement, Night Club Events, Fashion Show, Live Sound, New Year Parties, Premiere Bollywood DJs, Private Party and Wedding Events. They are offering DJ services for more than 15 years. They can be reached on all days of the week. Fusion Sounds DJs have served Indian, Pakistani and Mixed Wedding Events, Corporate Events, Private Events and Ethnic Events of all kinds with cent percent success. They also offer services for Weddings, Baraat, Receptions, Pre Wedding Events, Birthdays, Graduations, Anniversaries, Quinceanra, Bar Mitzvahs, and other special occasion you are celebrating. They offer professional entertainers, DJ, Dhol Players, state of the art sound system and lighting with special effects, AV, PA system and much more. Some of the other services provided by them are Free One to One Consulting at the time of meeting, Event Co-ordination and Planning, Dhol Players for Baraat and Reception, Bhangra and Bollywood Dancers, Projector and Screen set and Slideshow Creation, Pipe and Drape. In lighting services they provide DMX Controlled LED Up lights, Stage Wash or Spot Light for the stage, Gobo Lights, Pinspot Lighting for table centerpiece and cake, Follow Spot Lights, Ambience Lighting, Intelligent Lighting and Color Wash for dance floor.<span class="more-links"><a title="Read More about Fusion Sounds" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class=""><li><a title="Call Fusion Sounds" href="javascript:void(0);" onclick="javascript:openphoneConnect('Fusion Sounds','74850','3016865058');" class="red-but"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+</svg></span><b>Call</b></a></li><li><a title="Enquire Sandeep Sandhu" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '697051',&quot;Fusion Sounds&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '697051');"><b>Enquire Now</b></a></li><li><a title="WhatsApp Sandeep Sandhu" href="javascript:void()" onclick="Before_openEnquiryModal('2','697051',&quot;Fusion Sounds&quot;);gaclicktrack('send','event', 'Response-Whatsapp Chat','Whatsapp', '697051');" class="whatsapp"><span><svg class="svg-inline--fa fa-whatsapp fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="whatsapp" role="img" viewBox="0 0 448 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"></path>
+</svg></span></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2024-07-22-12-54-13-013_57.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="DJ Simba in Sacramento, CA"></figure><div class="content "><h3><a title="Indian DJ Services - DJ Simba" href="/fremont-ca/dj-service/dj-simba-1742247">DJ Simba</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>
+Serving customers in  Sacramento area</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">call</span><a title="Call DJ Simba" href="javascript:void(0);" onclick="javascript:openphoneConnect('DJ Simba','98490','5599003359');"><b>559-900-3359</b></a><i>
+(pin:98490)
+</i></div><div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/fremont-ca/dj-service/dj-simba-1742247#reviews">5<span class="material-icons-outlined">star</span></a><b>9
+Reviews</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">9.5<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-trust"><ul><li>
+<div class="trust"><a href="javascript:void(0);" onclick="javascript:openSULTrust();" title="This business Information is been trusted based on users ratings and reviews."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-29-54-504.svg"></span>Trust</a></div></li><li>
+<div class="verified"><a href="javascript:void(0);" onclick="javascript:openSULVerified();" title="This business Information is verified by Sulekha."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-57-40-539.svg"></span>Verified</a></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:</a></b>
+<a title="Asian DJs in Fremont, CA" href="/fremont-ca/asian-djs">Asian DJs</a>, <a title="Bollywood Djs in Fremont, CA" href="/fremont-ca/bollywood-djs">Bollywood Djs</a>, <a title="Event DJs in Fremont, CA" href="/fremont-ca/event-djs">Event DJs</a>, <a title="Mariachi Band DJ in Fremont, CA" href="/fremont-ca/mariachi-band-dj">Mariachi Band DJ</a>, <a title="Party DJs in Fremont, CA" href="/fremont-ca/party-djs">Party DJs</a>, <a title="Punjabi DJs in Fremont, CA" href="/fremont-ca/punjabi-djs">Punjabi DJs</a>, <a title="Sweet 16 DJs in Fremont, CA" href="/fremont-ca/sweet-16-djs">Sweet 16 DJs</a>, <a title="Wedding Band DJ in Fremont, CA" href="/fremont-ca/wedding-band-dj">Wedding Band DJ</a></div><div class="more-links" style="display: none;"><a title="View all services offered by DJ Simba" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>Music is the heartbeat of any celebration. At DJ-Simba, we believe every event is a unique story waiting to be told through MUSIC! Let's work together to craft an unforgettable narrative that reflects your style, energy and JOY.Let's Elevate your celebratioDJ Simba is a dynamic and high-energy entertainer known for electrifying crowds with his infectious beats and magnetic stage presence. Specializing in a wide range of genres—from Afrobeat and hip-hop to EDM and Bollywood—DJ Simba seamlessly blends cultures and sounds to create unforgettable party experiences. Whether performing at nightclubs, private events, or international festivals, he keeps the dance floor alive with expertly curated sets and flawless transitions. With a deep passion for music and a talent for reading the crowd, DJ Simba delivers not just music, but a vibe that resonates long after the event ends.<span class="more-links"><a title="Read More about DJ Simba" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class=""><li><a title="Call DJ Simba" href="javascript:void(0);" onclick="javascript:openphoneConnect('DJ Simba','98490','5599003359');" class="red-but"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+</svg></span><b>Call</b></a></li><li><a title="Enquire Jatinder Pancar" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1742247',&quot;DJ Simba&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1742247');"><b>Enquire Now</b></a></li><li><a title="WhatsApp Jatinder Pancar" href="javascript:void()" onclick="Before_openEnquiryModal('2','1742247',&quot;DJ Simba&quot;);gaclicktrack('send','event', 'Response-Whatsapp Chat','Whatsapp', '1742247');" class="whatsapp"><span><svg class="svg-inline--fa fa-whatsapp fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="whatsapp" role="img" viewBox="0 0 448 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"></path>
+</svg></span></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2025-12-05-01-16-48-167_20.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Suhane Pal Music, DJ &amp; Karaoke Services in Sacramento, CA"></figure><div class="content "><h3><a title="Indian DJ Services - Suhane Pal Music, DJ &amp; Karaoke Services" href="/san-francisco-ca/dj-service/suhane-pal-karaoke-1228555">Suhane Pal Music, DJ &amp; Karaoke Services</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>
+Serving customers in  Sacramento area</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">call</span><a title="Call Suhane Pal Music, DJ &amp; Karaoke Services" href="javascript:void(0);" onclick="javascript:openphoneConnect('Suhane Pal Music, DJ &amp; Karaoke Services','89857','5125159579');"><b>512-515-9579</b></a><i>
+(pin:89857)
+</i></div><div class="experience"><span class="material-icons-outlined">work_history</span>22 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/san-francisco-ca/dj-service/suhane-pal-karaoke-1228555#reviews">5<span class="material-icons-outlined">star</span></a><b>90
+Reviews</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">9.5<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-trust"><ul><li>
+<div class="trust"><a href="javascript:void(0);" onclick="javascript:openSULTrust();" title="This business Information is been trusted based on users ratings and reviews."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-29-54-504.svg"></span>Trust</a></div></li><li>
+<div class="verified"><a href="javascript:void(0);" onclick="javascript:openSULVerified();" title="This business Information is verified by Sulekha."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-57-40-539.svg"></span>Verified</a></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:</a></b>
+<a title="Asian DJs in San Francisco, CA" href="/san-francisco-ca/asian-djs">Asian DJs</a>, <a title="Bollywood Djs in San Francisco, CA" href="/san-francisco-ca/bollywood-djs">Bollywood Djs</a>, <a title="Event DJs in San Francisco, CA" href="/san-francisco-ca/event-djs">Event DJs</a>, <a title="Mariachi Band DJ in San Francisco, CA" href="/san-francisco-ca/mariachi-band-dj">Mariachi Band DJ</a>, <a title="Party DJs in San Francisco, CA" href="/san-francisco-ca/party-djs">Party DJs</a>, <a title="Punjabi DJs in San Francisco, CA" href="/san-francisco-ca/punjabi-djs">Punjabi DJs</a>, <a title="Sweet 16 DJs in San Francisco, CA" href="/san-francisco-ca/sweet-16-djs">Sweet 16 DJs</a>, <a title="Wedding Band DJ in San Francisco, CA" href="/san-francisco-ca/wedding-band-dj">Wedding Band DJ</a></div><div class="more-links" style="display: none;"><a title="View all services offered by Suhane Pal Music, DJ &amp; Karaoke Services" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p></p><p>Turn up the volume on your party with our standout Music, DJ, and Karaoke singing services! Whether it's a milestone bash or a special celebration, we harmonize every note to create unforgettable memories. With a chorus of 5-star reviews backing us, we're here to ensure your event hits all the high notes. Let's orchestrate an unforgettable experience that keeps the dance floor buzzing and the music flowing all night long! Let&amp;rsquo;s elevate your party from ordinary to extraordinary! We provide music, karaoke and DJ services for any celebrations. We are here to entertain you, be it providing background music, dancing, karaoke singing, live bands, singers, professional dancers, photographers, etc. and make your party or event memorable! We bring and setup the sound system, so you can relax and have fun! We can help you, your family and friends for birthdays, weddings, receptions, graduation, anniversaries, Mehndi, Haldi and other family occasions. Let me help you to make magical memories celebrating your special events.</p><span class="more-links"><a title="Read More about Suhane Pal Music, DJ &amp; Karaoke Services" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span><p></p></div><div class="btn-outer"><ul class=""><li><a title="Call Suhane Pal Music, DJ &amp; Karaoke Services" href="javascript:void(0);" onclick="javascript:openphoneConnect('Suhane Pal Music, DJ &amp; Karaoke Services','89857','5125159579');" class="red-but"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+</svg></span><b>Call</b></a></li><li><a title="Enquire Devshi Pindoria" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1228555',&quot;Suhane Pal Music, DJ &amp; Karaoke Services&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1228555');"><b>Enquire Now</b></a></li><li><a title="WhatsApp Devshi Pindoria" href="javascript:void()" onclick="Before_openEnquiryModal('2','1228555',&quot;Suhane Pal Music, DJ &amp; Karaoke Services&quot;);gaclicktrack('send','event', 'Response-Whatsapp Chat','Whatsapp', '1228555');" class="whatsapp"><span><svg class="svg-inline--fa fa-whatsapp fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="whatsapp" role="img" viewBox="0 0 448 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"></path>
+</svg></span></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2025-12-05-08-20-41-297_35.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Bhangra West DJ Service in Sacramento, CA"></figure><div class="content "><h3><a title="Indian DJ Services - Bhangra West DJ Service" href="/irvine-ca/dj-service/bhangra-west-1668710">Bhangra West DJ Service</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>
+Serving customers in  Sacramento area</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">call</span><a title="Call Bhangra West DJ Service" href="javascript:void(0);" onclick="javascript:openphoneConnect('Bhangra West DJ Service','39982','6467605257');"><b>646-760-5257</b></a><i>
+(pin:39982)
+</i></div><div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/irvine-ca/dj-service/bhangra-west-1668710#reviews">5<span class="material-icons-outlined">star</span></a><b>73
+Reviews</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">8.1<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-trust"><ul><li>
+<div class="trust"><a href="javascript:void(0);" onclick="javascript:openSULTrust();" title="This business Information is been trusted based on users ratings and reviews."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-29-54-504.svg"></span>Trust</a></div></li><li>
+<div class="verified"><a href="javascript:void(0);" onclick="javascript:openSULVerified();" title="This business Information is verified by Sulekha."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-57-40-539.svg"></span>Verified</a></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:</a></b>
+<a title="Asian DJs in Irvine, CA" href="/irvine-ca/asian-djs">Asian DJs</a>, <a title="Bollywood Djs in Irvine, CA" href="/irvine-ca/bollywood-djs">Bollywood Djs</a>, <a title="Event DJs in Irvine, CA" href="/irvine-ca/event-djs">Event DJs</a>, <a title="Mariachi Band DJ in Irvine, CA" href="/irvine-ca/mariachi-band-dj">Mariachi Band DJ</a>, <a title="Party DJs in Irvine, CA" href="/irvine-ca/party-djs">Party DJs</a>, <a title="Punjabi DJs in Irvine, CA" href="/irvine-ca/punjabi-djs">Punjabi DJs</a>, <a title="Sweet 16 DJs in Irvine, CA" href="/irvine-ca/sweet-16-djs">Sweet 16 DJs</a>, <a title="Wedding Band DJ in Irvine, CA" href="/irvine-ca/wedding-band-dj">Wedding Band DJ</a></div><div class="more-links" style="display: none;"><a title="View all services offered by Bhangra West DJ Service" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>I am one of the most distinguished DJ Services in Los Angeles, CA. I specialize in Asian DJs,Bollywood Djs,Event DJs,Mariachi Band DJ,Party DJs,Punjabi DJs,Sweet 16 DJs,Wedding Band DJ
+My name is DJ Verma. Born and brought up in India. I been providing Dj service from last 15 years. I am Registered and Insured DJ. Will be glad to rock at your event . I cover the entire Los Angeles, Pasedena, Long Beach, Santa Ana, Riverside, Irvine, Anaheim. I also do Orange County. I Provide my service all through the Valley
+I have strong hold on Indian , Bollywood, Punjabi , Bhangra, Garba (Be Taali, Tran Taali, Raas) , Nepali, Telugu and Tamil, Top 40, Hip-Hop, Persian and Afghani Music
+I do perform Birthday events, Sari events, Prom , home coming school events, Weddings, Surprise parties, House warming parties, Backyard parties, ceremony events, Baraat- specialized in Mobile Baraat.
+I have top of the line music system RCF speakers and RCF subwoofers, awesome American DJ disco lights, American DJ Moving heads, Façade to cover the dj table , low lying fog machine for first dance, Best Wireless Microphone. Wireless uplighting for your hall /venue using IPAD , Cake lighting, follow spot for bride and groom entrances and your family entrances...
+You can request videos of my latest event for reference.<span class="more-links"><a title="Read More about Bhangra West DJ Service" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class=""><li><a title="Call Bhangra West DJ Service" href="javascript:void(0);" onclick="javascript:openphoneConnect('Bhangra West DJ Service','39982','6467605257');" class="red-but"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+</svg></span><b>Call</b></a></li><li><a title="Enquire Johny Verma" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1668710',&quot;Bhangra West DJ Service&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1668710');"><b>Enquire Now</b></a></li><li><a title="WhatsApp Johny Verma" href="javascript:void()" onclick="Before_openEnquiryModal('2','1668710',&quot;Bhangra West DJ Service&quot;);gaclicktrack('send','event', 'Response-Whatsapp Chat','Whatsapp', '1668710');" class="whatsapp"><span><svg class="svg-inline--fa fa-whatsapp fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="whatsapp" role="img" viewBox="0 0 448 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"></path>
+</svg></span></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2017-12-19-12-17-26-707_50.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="SAAF ENTERTAINMENTS in Sacramento, CA"></figure><div class="content "><h3><a title="Indian DJ Services - SAAF ENTERTAINMENTS" href="/fremont-ca/dj-service/dj-saleem-saaf-entertainment-856424">SAAF ENTERTAINMENTS</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>
+Serving customers in  Sacramento area</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">call</span><a title="Call SAAF ENTERTAINMENTS" href="javascript:void(0);" onclick="javascript:openphoneConnect('SAAF ENTERTAINMENTS','03288','6204504636');"><b>620-450-4636</b></a><i>
+(pin:03288)
+</i></div><div class="experience"><span class="material-icons-outlined">work_history</span>10 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating">
+<div class="sul-rate">6.5<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-trust"><ul><li>
+<div class="trust"><a href="javascript:void(0);" onclick="javascript:openSULTrust();" title="This business Information is been trusted based on users ratings and reviews."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-29-54-504.svg"></span>Trust</a></div></li><li>
+<div class="verified"><a href="javascript:void(0);" onclick="javascript:openSULVerified();" title="This business Information is verified by Sulekha."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-57-40-539.svg"></span>Verified</a></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:</a></b>
+<a title="Asian DJs in Fremont, CA" href="/fremont-ca/asian-djs">Asian DJs</a>, <a title="Event DJs in Fremont, CA" href="/fremont-ca/event-djs">Event DJs</a>, <a title="Party DJs in Fremont, CA" href="/fremont-ca/party-djs">Party DJs</a>, <a title="Punjabi DJs in Fremont, CA" href="/fremont-ca/punjabi-djs">Punjabi DJs</a>, <a title="Sweet 16 DJs in Fremont, CA" href="/fremont-ca/sweet-16-djs">Sweet 16 DJs</a>, <a title="Wedding Band DJ in Fremont, CA" href="/fremont-ca/wedding-band-dj">Wedding Band DJ</a></div><div class="more-links" style="display: none;"><a title="View all services offered by SAAF ENTERTAINMENTS" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p></p><p>Your Local Wedding, Graduation, Reception, Religious, Birthday, General get together Parties providing DJ, AV Live Sound System, Karaoke (Indian/Pakistani), DJ/AV Training, RentalDJ includes 2 speakers, 2 speaker stands, DJ Console, Amplifier, 2 wireless Mic, Stage stand, DJ strobe lights, Music Song Bank or tailor your song list, all cables, Tech on site, erection/dismantle/transportation. Sound System Rental includes 2 speakers, 2 speaker stands, 1 amplifier, 2 wired mics, 2 mic stands, 1 stage stand, all cables, erection/dismantle/transportation Extras Hall Decoration Lights Laser Show Fog Machine Bubble Machine Overhead Reflection Paper Projector Digital Projector Screen 100&amp;rdquo; diagonal Aluminum Strobe Light Stand Moving head sound activated DJ Strobe lights Extra DJ Strobe Lights Indian/Pakistani Karaoke System/Singer42" TV for video display</p><span class="more-links"><a title="Read More about SAAF ENTERTAINMENTS" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span><p></p></div><div class="btn-outer"><ul class=""><li><a title="Call SAAF ENTERTAINMENTS" href="javascript:void(0);" onclick="javascript:openphoneConnect('SAAF ENTERTAINMENTS','03288','6204504636');" class="red-but"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+</svg></span><b>Call</b></a></li><li><a title="Enquire Saleem" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '856424',&quot;SAAF ENTERTAINMENTS&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '856424');"><b>Enquire Now</b></a></li><li><a title="WhatsApp Saleem" href="javascript:void()" onclick="Before_openEnquiryModal('2','856424',&quot;SAAF ENTERTAINMENTS&quot;);gaclicktrack('send','event', 'Response-Whatsapp Chat','Whatsapp', '856424');" class="whatsapp"><span><svg class="svg-inline--fa fa-whatsapp fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="whatsapp" role="img" viewBox="0 0 448 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"></path>
+</svg></span></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2018-03-09-12-26-24-334_50.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="DJ Gabbar in Sacramento, CA"></figure><div class="content "><h3><a title="Indian DJ Services - DJ Gabbar" href="/seattle-wa/dj-service/dj-gabbar-900507">DJ Gabbar</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>
+Serving customers in  Sacramento area</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">call</span><a title="Call DJ Gabbar" href="javascript:void(0);" onclick="javascript:openphoneConnect('DJ Gabbar','99318','3109127663');"><b>310-912-7663</b></a><i>
+(pin:99318)
+</i></div><div class="experience"><span class="material-icons-outlined">work_history</span>11 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/seattle-wa/dj-service/dj-gabbar-900507#reviews">5<span class="material-icons-outlined">star</span></a><b>5
+Reviews</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">7<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-trust"><ul><li>
+<div class="trust"><a href="javascript:void(0);" onclick="javascript:openSULTrust();" title="This business Information is been trusted based on users ratings and reviews."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-29-54-504.svg"></span>Trust</a></div></li><li>
+<div class="verified"><a href="javascript:void(0);" onclick="javascript:openSULVerified();" title="This business Information is verified by Sulekha."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-57-40-539.svg"></span>Verified</a></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:</a></b>
+<a title="Asian DJs in Seattle, WA" href="/seattle-wa/asian-djs">Asian DJs</a>, <a title="Event DJs in Seattle, WA" href="/seattle-wa/event-djs">Event DJs</a>, <a title="Mariachi Band DJ in Seattle, WA" href="/seattle-wa/mariachi-band-dj">Mariachi Band DJ</a>, <a title="Party DJs in Seattle, WA" href="/seattle-wa/party-djs">Party DJs</a>, <a title="Punjabi DJs in Seattle, WA" href="/seattle-wa/punjabi-djs">Punjabi DJs</a>, <a title="Sweet 16 DJs in Seattle, WA" href="/seattle-wa/sweet-16-djs">Sweet 16 DJs</a>, <a title="Wedding Band DJ in Seattle, WA" href="/seattle-wa/wedding-band-dj">Wedding Band DJ</a>, <a title="Bollywood Djs in Seattle, WA" href="/seattle-wa/bollywood-djs">Bollywood Djs</a></div><div class="more-links" style="display: none;"><a title="View all services offered by DJ Gabbar" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>Welcome to the world of DJ Gabbar, Seattle's premier Bollywood DJ, Emcee, and Dholi! With a reputation for creating electrifying atmospheres at every event, DJ Gabbar has become the go-to name for unforgettable parties in the Pacific Northwest. Known for his ability to blend the latest Bollywood beats with classic hits, DJ Gabbar ensures that every guest is on their feet, dancing the night away.
+But DJ Gabbar is more than just a DJ. As a skilled Emcee, he knows how to engage and entertain any crowd, making sure your event flows seamlessly from start to finish. His energetic and charismatic presence ensures that your guests are not just attendees but active participants in the celebration.
+With years of experience and a deep passion for music, DJ Gabbar is the ultimate entertainer for any Bollywood-themed event in Seattle. Let DJ Gabbar turn your celebration into a night to remember!<span class="more-links"><a title="Read More about DJ Gabbar" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class="double-link"><li><a title="Call DJ Gabbar" href="javascript:void(0);" onclick="javascript:openphoneConnect('DJ Gabbar','99318','3109127663');" class="red-but"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+</svg></span><b>Call</b></a></li><li><a title="Enquire DJ Gabbar" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '900507',&quot;DJ Gabbar&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '900507');"><b>Enquire Now</b></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2025-01-24-05-57-05-945_56.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="DJ Jas in Sacramento, CA"></figure><div class="content "><h3><a title="Indian DJ Services - DJ Jas" href="/california-city-ca/dj-service/dj-jas-1908463">DJ Jas</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>
+Serving customers in  Sacramento area</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">call</span><a title="Call DJ Jas" href="javascript:void(0);" onclick="javascript:openphoneConnect('DJ Jas','51267','2159774882');"><b>215-977-4882</b></a><i>
+(pin:51267)
+</i></div><div class="experience"><span class="material-icons-outlined">work_history</span>
+Established Since 2010</div><div class="business-rate"><ul><li>
+<div class="mob-rating">
+<div class="sul-rate">5.3<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-trust"><ul><li>
+<div class="trust"><a href="javascript:void(0);" onclick="javascript:openSULTrust();" title="This business Information is been trusted based on users ratings and reviews."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-29-54-504.svg"></span>Trust</a></div></li><li>
+<div class="verified"><a href="javascript:void(0);" onclick="javascript:openSULVerified();" title="This business Information is verified by Sulekha."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-57-40-539.svg"></span>Verified</a></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:</a></b>
+<a title="Asian DJs in California City, CA" href="/california-city-ca/asian-djs">Asian DJs</a>, <a title="Event DJs in California City, CA" href="/california-city-ca/event-djs">Event DJs</a>, <a title="Mariachi Band DJ in California City, CA" href="/california-city-ca/mariachi-band-dj">Mariachi Band DJ</a>, <a title="Party DJs in California City, CA" href="/california-city-ca/party-djs">Party DJs</a>, <a title="Punjabi DJs in California City, CA" href="/california-city-ca/punjabi-djs">Punjabi DJs</a>, <a title="Sweet 16 DJs in California City, CA" href="/california-city-ca/sweet-16-djs">Sweet 16 DJs</a>, <a title="Wedding Band DJ in California City, CA" href="/california-city-ca/wedding-band-dj">Wedding Band DJ</a></div><div class="more-links" style="display: none;"><a title="View all services offered by DJ Jas" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>DJ Jas is a talented and versatile DJ known for creating unforgettable musical experiences at weddings, parties, corporate events, and club nights. With a passion for music and a deep understanding of different genres, DJ Jas seamlessly blends tracks to keep the crowd energized and the dance floor packed. Whether it’s the latest chart-toppers, timeless classics, or cultural beats, he tailors his mixes to match the vibe and preferences of the audience. Equipped with professional sound and lighting setups, DJ Jas ensures top-quality entertainment that leaves guests talking long after the event. His friendly personality, professionalism, and ability to read the crowd make him a go-to choice for those seeking a lively and memorable celebration. providing production services throughout the area, founded on the belief that your wedding should be special and one of a kind. We take great efforts in going above and beyond for your wedding. All our events are different and tailored to be custom. We make sure to deliver clients' goals and expectations. Our entertainment company provides top-level services such as lighting, sparklers, dancing on clouds and visual led walls. We would love to sit down with you and learn more about your event. <span class="more-links"><a title="Read More about DJ Jas" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class=""><li><a title="Call DJ Jas" href="javascript:void(0);" onclick="javascript:openphoneConnect('DJ Jas','51267','2159774882');" class="red-but"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+</svg></span><b>Call</b></a></li><li><a title="Enquire Jaswinder Singh" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1908463',&quot;DJ Jas&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1908463');"><b>Enquire Now</b></a></li><li><a title="WhatsApp Jaswinder Singh" href="javascript:void()" onclick="Before_openEnquiryModal('2','1908463',&quot;DJ Jas&quot;);gaclicktrack('send','event', 'Response-Whatsapp Chat','Whatsapp', '1908463');" class="whatsapp"><span><svg class="svg-inline--fa fa-whatsapp fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="whatsapp" role="img" viewBox="0 0 448 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"></path>
+</svg></span></a></li></ul></div></div><div class="mobile-single-listing"><div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2019-12-20-06-07-35-832_63.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Mehekte Sur in Sacramento, CA"></figure><div class="content "><h3><a title="Indian Entertainment - Mehekte Sur" href="/edison-nj/entertainment/mehekte-sur-1039065">Mehekte Sur</a></h3><div class="main-det">
+<ul>
+<li>
+<div class="experience"><span class="material-icons-outlined">location_on</span>
+Serving customers in  Sacramento area</div>
+</li>
+</ul></div></div></div><div class="experience"><span class="material-icons-outlined">call</span><a title="Call Mehekte Sur" href="javascript:void(0);" onclick="javascript:openphoneConnect('Mehekte Sur','37015','7738861257');"><b>773-886-1257</b></a><i>
+(pin:37015)
+</i></div><div class="experience"><span class="material-icons-outlined">work_history</span>13 Years in Business</div><div class="business-rate"><ul><li>
+<div class="mob-rating"><a title="View All Reviews" href="/edison-nj/entertainment/mehekte-sur-1039065#reviews">5<span class="material-icons-outlined">star</span></a><b>629
+Reviews</b></div></li><li>
+<div class="mob-rating">
+<div class="sul-rate">9.5<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div></li></ul></div><div class="busi-trust"><ul><li>
+<div class="trust"><a href="javascript:void(0);" onclick="javascript:openSULTrust();" title="This business Information is been trusted based on users ratings and reviews."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-29-54-504.svg"></span>Trust</a></div></li><li>
+<div class="verified"><a href="javascript:void(0);" onclick="javascript:openSULVerified();" title="This business Information is verified by Sulekha."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-57-40-539.svg"></span>Verified</a></div></li></ul></div><div class="my-adv"><ul><li>
+<div class="off-blk"><a rel="nofollow" onclick="ga('send', 'event', 'list', 'clickedoffer', 'clickedoffer');" href="/edison-nj/entertainment/mehekte-sur-1039065#offers"><span>2</span>
+Deals</a></div></li></ul></div><div class="busi-serv"><div id="showFullView1" class="serv-list"><b><a href="entertainment">Entertainment:</a></b>
+<a title="Asian DJs in Edison, NJ" href="/edison-nj/asian-djs">Asian DJs</a>, <a title="Bhangra Dancers in Edison, NJ" href="/edison-nj/bhangra-dancers">Bhangra Dancers</a>, <a title="Event DJs in Edison, NJ" href="/edison-nj/event-djs">Event DJs</a>, <a title="Ghazal Singers in Edison, NJ" href="/edison-nj/ghazal-singers">Ghazal Singers</a>, <a title="Karaoke Singers in Edison, NJ" href="/edison-nj/karaoke-singers">Karaoke Singers</a>, <a title="Mariachi Band DJ in Edison, NJ" href="/edison-nj/mariachi-band-dj">Mariachi Band DJ</a>, <a title="MC And Host in Edison, NJ" href="/edison-nj/mc-and-host">MC And Host</a>, <a title="Music Shows in Edison, NJ" href="/edison-nj/music-shows">Music Shows</a>, <a title="Party DJs in Edison, NJ" href="/edison-nj/party-djs">Party DJs</a>, <a title="Punjabi DJs in Edison, NJ" href="/edison-nj/punjabi-djs">Punjabi DJs</a>, <a title="Singers in Edison, NJ" href="/edison-nj/singers">Singers</a>, <a title="Sweet 16 DJs in Edison, NJ" href="/edison-nj/sweet-16-djs">Sweet 16 DJs</a>, <a title="Wedding Band DJ in Edison, NJ" href="/edison-nj/wedding-band-dj">Wedding Band DJ</a>, <a title="Wedding Singers in Edison, NJ" href="/edison-nj/wedding-singers">Wedding Singers</a>, </div><div class="more-links" style="display: none;"><a title="View all services offered by Mehekte Sur" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div></div><div class="description" id="showFullDesc"><p>Mehekte Sur is a musical duo comprised of a wife and husband team, Aparna and Vinay. We are a one stop shop for everything that you need to make your event a life time memory. We sing in multiple Indian languages and cater to different size events. Our services include managing the entire event end-to-end for birthday celebrations, baby showers, pre-wedding sangeet, anniversary party, holiday parties, public shows, private parties, fundraisers and similar initiatives. We bring soulful music to your event which is customized based on the specific event. We also partner with other professionals to cover all aspects of the event like photography/videography, decoration and live music based on the requirements and budget.<span class="more-links"><a title="Read More about Mehekte Sur" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p></div><div class="btn-outer"><ul class=""><li><a title="Call Mehekte Sur" href="javascript:void(0);" onclick="javascript:openphoneConnect('Mehekte Sur','37015','7738861257');" class="red-but"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+</svg></span><b>Call</b></a></li><li><a title="Enquire Vinay Kamulkar" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1039065',&quot;Mehekte Sur&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1039065');"><b>Enquire Now</b></a></li><li><a title="WhatsApp Vinay Kamulkar" href="javascript:void()" onclick="Before_openEnquiryModal('2','1039065',&quot;Mehekte Sur&quot;);gaclicktrack('send','event', 'Response-Whatsapp Chat','Whatsapp', '1039065');" class="whatsapp"><span><svg class="svg-inline--fa fa-whatsapp fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="whatsapp" role="img" viewBox="0 0 448 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"></path>
+</svg></span></a></li></ul></div></div><div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2019-12-20-06-07-35-832_63.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Mehekte Sur in , "></figure><div class="content ">
+      <h3><a title="Indian Entertainment - Mehekte Sur" href="/edison-nj/entertainment/mehekte-sur-1039065">Mehekte Sur</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>
+                            Serving customers in Sacramento area</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">call</span><a title="Call Mehekte Sur" href="javascript:void(0);" onclick="javascript:openphoneConnect('Mehekte Sur','37015','7738861257');"><b>773-886-1257</b></a><i>
+              (pin:37015)
+            </i></div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>13 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating"><a title="View All Reviews" href="/edison-nj/entertainment/mehekte-sur-1039065#reviews">5<span class="material-icons-outlined">star</span></a><b>629
+                          Reviews
+                        </b></div>
+      </li>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">9.5<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-trust">
+    <ul>
+      <li>
+        <div class="trust"><a href="javascript:void(0);" onclick="javascript:openSULTrust();" title="This business Information is been trusted based on users ratings and reviews."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-29-54-504.svg"></span>Trust
+                </a></div>
+      </li>
+      <li>
+        <div class="verified"><a href="javascript:void(0);" onclick="javascript:openSULVerified();" title="This business Information is verified by Sulekha."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-57-40-539.svg"></span>Verified
+                </a></div>
+      </li>
+    </ul>
+  </div>
+  <div class="my-adv">
+    <ul>
+      <li>
+        <div class="off-blk"><a rel="nofollow" onclick="ga('send', 'event', 'list', 'clickedoffer', 'clickedoffer');" href="/edison-nj/entertainment/mehekte-sur-1039065#offers"><span>2</span>
+                        Deals
+                      </a></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="entertainment">Entertainment:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Asian DJs in Edison, NJ" href="/edison-nj/asian-djs">Asian DJs</a>, 
+          &nbsp;<a title="Bhangra Dancers in Edison, NJ" href="/edison-nj/bhangra-dancers">Bhangra Dancers</a>, 
+          &nbsp;<a title="Event DJs in Edison, NJ" href="/edison-nj/event-djs">Event DJs</a>, 
+          &nbsp;<a title="Ghazal Singers in Edison, NJ" href="/edison-nj/ghazal-singers">Ghazal Singers</a>, 
+          &nbsp;<a title="Karaoke Singers in Edison, NJ" href="/edison-nj/karaoke-singers">Karaoke Singers</a>, 
+          &nbsp;<a title="Mariachi Band DJ in Edison, NJ" href="/edison-nj/mariachi-band-dj">Mariachi Band DJ</a>, 
+          &nbsp;<a title="MC And Host in Edison, NJ" href="/edison-nj/mc-and-host">MC And Host</a>, 
+          &nbsp;<a title="Music Shows in Edison, NJ" href="/edison-nj/music-shows">Music Shows</a>, 
+          &nbsp;<a title="Party DJs in Edison, NJ" href="/edison-nj/party-djs">Party DJs</a>, 
+          &nbsp;<a title="Punjabi DJs in Edison, NJ" href="/edison-nj/punjabi-djs">Punjabi DJs</a>, 
+          &nbsp;<a title="Singers in Edison, NJ" href="/edison-nj/singers">Singers</a>, 
+          &nbsp;<a title="Sweet 16 DJs in Edison, NJ" href="/edison-nj/sweet-16-djs">Sweet 16 DJs</a>, 
+          &nbsp;<a title="Wedding Band DJ in Edison, NJ" href="/edison-nj/wedding-band-dj">Wedding Band DJ</a>, 
+          &nbsp;<a title="Wedding Singers in Edison, NJ" href="/edison-nj/wedding-singers">Wedding Singers</a>, </div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by Mehekte Sur" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>Mehekte Sur is a musical duo comprised of a wife and husband team, Aparna and Vinay. We are a one stop shop for everything that you need to make your event a life time memory. We sing in multiple Indian languages and cater to different size events. Our services include managing the entire event end-to-end for birthday celebrations, baby showers, pre-wedding sangeet, anniversary party, holiday parties, public shows, private parties, fundraisers and similar initiatives. We bring soulful music to your event which is customized based on the specific event. We also partner with other professionals to cover all aspects of the event like photography/videography, decoration and live music based on the requirements and budget.<span class="more-links"><a title="Read More about Mehekte Sur" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="">
+      <li><a title="Call Mehekte Sur" href="javascript:void(0);" onclick="javascript:openphoneConnect('Mehekte Sur','37015','7738861257');" class="red-but"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+              <path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+            </svg></span><b>Call</b></a></li>
+      <li><a title="Enquire Vinay Kamulkar" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1039065',&quot;Mehekte Sur&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1039065');"><b>Enquire Now</b></a></li>
+      <li><a title="WhatsApp Vinay Kamulkar" href="javascript:void()" onclick="Before_openEnquiryModal('2','1039065',&quot;Mehekte Sur&quot;);gaclicktrack('send','event', 'Response-Whatsapp Chat','Whatsapp', '1039065');" class="whatsapp"><span><svg class="svg-inline--fa fa-whatsapp fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="whatsapp" role="img" viewBox="0 0 448 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+              <path fill="currentColor" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"></path>
+            </svg></span></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2023-11-19-02-27-28-707_8.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Dj Jimmy in , "></figure><div class="content ">
+      <h3><a title="Indian DJ Services - Dj Jimmy" href="/fremont-ca/dj-service/dj-jimmy-1775685">Dj Jimmy</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>
+                            Serving customers in Sacramento area</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">call</span><a title="Call Dj Jimmy" href="javascript:void(0);" onclick="javascript:openphoneConnect('Dj Jimmy','25765','3126264366');"><b>312-626-4366</b></a><i>
+              (pin:25765)
+            </i></div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>5 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating"><a title="View All Reviews" href="/fremont-ca/dj-service/dj-jimmy-1775685#reviews">5<span class="material-icons-outlined">star</span></a><b>7
+                          Reviews
+                        </b></div>
+      </li>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">8.3<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-trust">
+    <ul>
+      <li>
+        <div class="trust"><a href="javascript:void(0);" onclick="javascript:openSULTrust();" title="This business Information is been trusted based on users ratings and reviews."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-29-54-504.svg"></span>Trust
+                </a></div>
+      </li>
+      <li>
+        <div class="verified"><a href="javascript:void(0);" onclick="javascript:openSULVerified();" title="This business Information is verified by Sulekha."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-57-40-539.svg"></span>Verified
+                </a></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Asian DJs in Fremont, CA" href="/fremont-ca/asian-djs">Asian DJs</a>, 
+          &nbsp;<a title="Event DJs in Fremont, CA" href="/fremont-ca/event-djs">Event DJs</a>, 
+          &nbsp;<a title="Mariachi Band DJ in Fremont, CA" href="/fremont-ca/mariachi-band-dj">Mariachi Band DJ</a>, 
+          &nbsp;<a title="Party DJs in Fremont, CA" href="/fremont-ca/party-djs">Party DJs</a>, 
+          &nbsp;<a title="Punjabi DJs in Fremont, CA" href="/fremont-ca/punjabi-djs">Punjabi DJs</a>, 
+          &nbsp;<a title="Sweet 16 DJs in Fremont, CA" href="/fremont-ca/sweet-16-djs">Sweet 16 DJs</a>, 
+          &nbsp;<a title="Wedding Band DJ in Fremont, CA" href="/fremont-ca/wedding-band-dj">Wedding Band DJ</a>, 
+          &nbsp;<a title="Bollywood Djs in Fremont, CA" href="/fremont-ca/bollywood-djs">Bollywood Djs</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by Dj Jimmy" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>DJ Jimmy is a dynamic and versatile figure in the music industry, known for his skills as a DJ, music producer, and curator. With a career spanning over several years, DJ Jimmy has become renowned for his ability to blend various genres, creating high-energy sets that captivate audiences. His deep understanding of music allows him to craft seamless transitions, ensuring that every performance resonates with listeners.
+While he initially gained recognition through his work in live events, DJ Jimmy's impact extends far beyond the stage. He has played a key role in shaping the local music scene, particularly by helping emerging artists gain exposure and providing them with opportunities to collaborate on his projects. His mixes are known for their innovative use of different sounds, combining traditional and modern elements that reflect his diverse musical taste.
+In addition to his DJing, DJ Jimmy has also contributed to music production, working with various artists to create memorable tracks. His dedication to the craft and his passion for music have earned him a loyal following and a reputation as one of the most influential DJs of his generation. With each performance, DJ Jimmy continues to push the boundaries of music, ensuring his legacy in the industry remains strong.<span class="more-links"><a title="Read More about Dj Jimmy" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="double-link">
+      <li><a title="Call Dj Jimmy" href="javascript:void(0);" onclick="javascript:openphoneConnect('Dj Jimmy','25765','3126264366');" class="red-but"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+              <path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+            </svg></span><b>Call</b></a></li>
+      <li><a title="Enquire Jimmy Singh" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1775685',&quot;Dj Jimmy&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1775685');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2018-02-16-12-29-55-494_16.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="DJ Raj Entertainment &amp; Event Lighting in , "></figure><div class="content ">
+      <h3><a title="Indian DJ Services - DJ Raj Entertainment &amp; Event Lighting" href="/clifton-nj/dj-service/dj-raj-entertainment-699197">DJ Raj Entertainment &amp; Event Lighting</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>
+                            Serving customers in Sacramento area</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">call</span><a title="Call DJ Raj Entertainment &amp; Event Lighting" href="javascript:void(0);" onclick="javascript:openphoneConnect('DJ Raj Entertainment &amp; Event Lighting','65777','3126264366');"><b>312-626-4366</b></a><i>
+              (pin:65777)
+            </i></div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>18 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating"><a title="View All Reviews" href="/clifton-nj/dj-service/dj-raj-entertainment-699197#reviews">5<span class="material-icons-outlined">star</span></a><b>57
+                          Reviews
+                        </b></div>
+      </li>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">7<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-trust">
+    <ul>
+      <li>
+        <div class="trust"><a href="javascript:void(0);" onclick="javascript:openSULTrust();" title="This business Information is been trusted based on users ratings and reviews."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-29-54-504.svg"></span>Trust
+                </a></div>
+      </li>
+      <li>
+        <div class="verified"><a href="javascript:void(0);" onclick="javascript:openSULVerified();" title="This business Information is verified by Sulekha."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-57-40-539.svg"></span>Verified
+                </a></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Asian DJs in Clifton, NJ" href="/clifton-nj/asian-djs">Asian DJs</a>, 
+          &nbsp;<a title="Event DJs in Clifton, NJ" href="/clifton-nj/event-djs">Event DJs</a>, 
+          &nbsp;<a title="Party DJs in Clifton, NJ" href="/clifton-nj/party-djs">Party DJs</a>, 
+          &nbsp;<a title="Punjabi DJs in Clifton, NJ" href="/clifton-nj/punjabi-djs">Punjabi DJs</a>, 
+          &nbsp;<a title="Sweet 16 DJs in Clifton, NJ" href="/clifton-nj/sweet-16-djs">Sweet 16 DJs</a>, 
+          &nbsp;<a title="Wedding Band DJ in Clifton, NJ" href="/clifton-nj/wedding-band-dj">Wedding Band DJ</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by DJ Raj Entertainment &amp; Event Lighting" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p></p><p>DJ Raj Entertainment offers more than 18 years experience in providing talented, energetic DJ's, MC's, Singers, Musicians, Dancers, Sound, Event Lighting, Audio and Visual equipment to clients in North America and Worldwide.Services are custom tailored to fit your exact needs, from providing the perfect entertainment and event lighting to complete event planning and coordination. DJ Raj Entertainment will transform your occasion into an extra ordinary event!We are the most recommended name in the South Asian wedding market.We are fully insured and can provide any necessary paperwork to your banquet hall or catering facility upon request.</p><span class="more-links"><a title="Read More about DJ Raj Entertainment &amp; Event Lighting" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span><p></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="">
+      <li><a title="Call DJ Raj Entertainment &amp; Event Lighting" href="javascript:void(0);" onclick="javascript:openphoneConnect('DJ Raj Entertainment &amp; Event Lighting','65777','3126264366');" class="red-but"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+              <path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+            </svg></span><b>Call</b></a></li>
+      <li><a title="Enquire DJ Raj Entertainment" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '699197',&quot;DJ Raj Entertainment &amp; Event Lighting&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '699197');"><b>Enquire Now</b></a></li>
+      <li><a title="WhatsApp DJ Raj Entertainment" href="javascript:void()" onclick="Before_openEnquiryModal('2','699197',&quot;DJ Raj Entertainment &amp; Event Lighting&quot;);gaclicktrack('send','event', 'Response-Whatsapp Chat','Whatsapp', '699197');" class="whatsapp"><span><svg class="svg-inline--fa fa-whatsapp fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="whatsapp" role="img" viewBox="0 0 448 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+              <path fill="currentColor" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"></path>
+            </svg></span></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2021-09-20-10-25-17-610_582.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="777 Events &amp; Entertainment in , "></figure><div class="content ">
+      <h3><a title="Indian Entertainment - 777 Events &amp; Entertainment" href="/princeton-nj/entertainment/777-events-entertainment-1499234">777 Events &amp; Entertainment</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>
+                            Serving customers in Sacramento area</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">call</span><a title="Call 777 Events &amp; Entertainment" href="javascript:void(0);" onclick="javascript:openphoneConnect('777 Events &amp; Entertainment','16887','3252084010');"><b>325-208-4010</b></a><i>
+              (pin:16887)
+            </i></div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>10 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating"><a title="View All Reviews" href="/princeton-nj/entertainment/777-events-entertainment-1499234#reviews">5<span class="material-icons-outlined">star</span></a><b>27
+                          Reviews
+                        </b></div>
+      </li>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-trust">
+    <ul>
+      <li>
+        <div class="trust"><a href="javascript:void(0);" onclick="javascript:openSULTrust();" title="This business Information is been trusted based on users ratings and reviews."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-29-54-504.svg"></span>Trust
+                </a></div>
+      </li>
+      <li>
+        <div class="verified"><a href="javascript:void(0);" onclick="javascript:openSULVerified();" title="This business Information is verified by Sulekha."><span><img src="https://usimg.sulekha.io/cdn/others/images/others_2025-03-19-09-57-40-539.svg"></span>Verified
+                </a></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="entertainment">Entertainment:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Asian DJs in Princeton, NJ" href="/princeton-nj/asian-djs">Asian DJs</a>, 
+          &nbsp;<a title="Bhajan Singers in Princeton, NJ" href="/princeton-nj/bhajan-singers">Bhajan Singers</a>, 
+          &nbsp;<a title="Dance Show in Princeton, NJ" href="/princeton-nj/dance-show">Dance Show</a>, 
+          &nbsp;<a title="DJ Equipment in Princeton, NJ" href="/princeton-nj/dj-equipment">DJ Equipment</a>, 
+          &nbsp;<a title="Ghazal Singers in Princeton, NJ" href="/princeton-nj/ghazal-singers">Ghazal Singers</a>, 
+          &nbsp;<a title="Karaoke Singers in Princeton, NJ" href="/princeton-nj/karaoke-singers">Karaoke Singers</a>, 
+          &nbsp;<a title="Music Shows in Princeton, NJ" href="/princeton-nj/music-shows">Music Shows</a>, 
+          &nbsp;<a title="Party DJs in Princeton, NJ" href="/princeton-nj/party-djs">Party DJs</a>, 
+          &nbsp;<a title="Punjabi DJs in Princeton, NJ" href="/princeton-nj/punjabi-djs">Punjabi DJs</a>, 
+          &nbsp;<a title="Singers in Princeton, NJ" href="/princeton-nj/singers">Singers</a>, 
+          &nbsp;<a title="Sweet 16 DJs in Princeton, NJ" href="/princeton-nj/sweet-16-djs">Sweet 16 DJs</a>, 
+          &nbsp;<a title="Wedding Band DJ in Princeton, NJ" href="/princeton-nj/wedding-band-dj">Wedding Band DJ</a>, 
+          &nbsp;<a title="Wedding Band Singers in Princeton, NJ" href="/princeton-nj/wedding-band-singers">Wedding Band Singers</a>, 
+          &nbsp;<a title="Wedding Singers in Princeton, NJ" href="/princeton-nj/wedding-singers">Wedding Singers</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by 777 Events &amp; Entertainment" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>Party Like Never Before!
+Elevate Your Events with 777 Events &amp; Entertainment
+Experience the ultimate in event services with 777 Events &amp; Entertainment. We offer a wide range of professional event management solutions, including live singing, DJ and emcee services, choreography, fog and dance on cloud, sparklers, decorations, photography and videography, and photo booth/360 services. Our team of experts will work with you to create an unforgettable event that exceeds your expectations. singing, dj, choreography, photo &amp; video, decoration.
+Kaushal S is one of the most distinguished &amp; versatile singers in entertainment. He specializes in Bollywood, Ghazal, Live Band, Karaoke Singing, and Music Shows &amp; his wife is a choreographer (Bollywood and Garba)  for various events, weddings, shows etc. He performs all over USA.<span class="more-links"><a title="Read More about 777 Events &amp; Entertainment" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="">
+      <li><a title="Call 777 Events &amp; Entertainment" href="javascript:void(0);" onclick="javascript:openphoneConnect('777 Events &amp; Entertainment','16887','3252084010');" class="red-but"><span><svg class="svg-inline--fa fa-phone fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="phone" role="img" viewBox="0 0 512 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+              <path fill="currentColor" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"></path>
+            </svg></span><b>Call</b></a></li>
+      <li><a title="Enquire Kaushal Sampat" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1499234',&quot;777 Events &amp; Entertainment&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1499234');"><b>Enquire Now</b></a></li>
+      <li><a title="WhatsApp Kaushal Sampat" href="javascript:void()" onclick="Before_openEnquiryModal('2','1499234',&quot;777 Events &amp; Entertainment&quot;);gaclicktrack('send','event', 'Response-Whatsapp Chat','Whatsapp', '1499234');" class="whatsapp"><span><svg class="svg-inline--fa fa-whatsapp fa-fw rate-icon" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="whatsapp" role="img" viewBox="0 0 448 512" data-fa-i2svg="" xmlns="http://www.w3.org/2000/svg">
+              <path fill="currentColor" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"></path>
+            </svg></span></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://d3aew4oo17ml6.cloudfront.net/localservices/images/large/IMG-20151005-WA0003-copy-2016-7-16-23-6-37.jpg?v=2131?v=8580" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Nirvana Entertainment Bollywood And Punjabi DJ in , "></figure><div class="content ">
+      <h3><a title="Indian DJ Services - Nirvana Entertainment Bollywood And Punjabi DJ" href="/san-jose-ca/dj-service/nirvana-entertainment-bollywood-and-punjabi-dj-843024">Nirvana Entertainment Bollywood And Punjabi DJ</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>39356 Blacow Road, Fremont, CA, United States</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating"><a title="View All Reviews" href="/san-jose-ca/dj-service/nirvana-entertainment-bollywood-and-punjabi-dj-843024#reviews">5<span class="material-icons-outlined">star</span></a><b>1
+                          Review
+                        </b></div>
+      </li>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">2<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Punjabi DJs in San Jose, CA" href="/san-jose-ca/punjabi-djs">Punjabi DJs</a>, 
+          &nbsp;<a title="DJs Band Services in San Jose, CA" href="/san-jose-ca/djs-band-services">DJs Band Services</a>, 
+          &nbsp;<a title="DJ Party Music Consultants in San Jose, CA" href="/san-jose-ca/dj-party-music-consultants">DJ Party Music Consultants</a>, 
+          &nbsp;<a title="Pop DJ in San Jose, CA" href="/san-jose-ca/pop-dj">Pop DJ</a>, 
+          &nbsp;<a title="Solo Musician DJ in San Jose, CA" href="/san-jose-ca/solo-musician-dj">Solo Musician DJ</a>, 
+          &nbsp;<a title="Wedding Band DJ in San Jose, CA" href="/san-jose-ca/wedding-band-dj">Wedding Band DJ</a>, 
+          &nbsp;<a title="Bhangra DJ in San Jose, CA" href="/san-jose-ca/bhangra-dj">Bhangra DJ</a>, 
+          &nbsp;<a title="Party DJs in San Jose, CA" href="/san-jose-ca/party-djs">Party DJs</a>, 
+          &nbsp;<a title="Sweet 16 DJs in San Jose, CA" href="/san-jose-ca/sweet-16-djs">Sweet 16 DJs</a>, 
+          &nbsp;<a title="Event DJs in San Jose, CA" href="/san-jose-ca/event-djs">Event DJs</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by Nirvana Entertainment Bollywood And Punjabi DJ" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>Providing complete DJ entertainment and quality lighting for all Indian events, including Weddings, Sangeets, Birthdays, Private and Corporate events.  Nivana Entertainment rocks all events with the latest in Punjabi Bhangra, Bollywood and American Music.  With a large variety of our Music collection, we are ready to make all events quite entertaining and memorable.  In addition to music, Nirvana Entertainment offers a variety of options from uplighting, dance floor lighting, live dhol players, visuals and more. Email or contact Raju for more info.<span class="more-links"><a title="Read More about Nirvana Entertainment Bollywood And Punjabi DJ" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="double-link"><input type="hidden" id="hdn_show_contactnumber843024" value="+1 510-938-0677"><li><a href="javascript:void(0);" onclick="Before_openEnquiryModal('3' , '843024',&quot;Nirvana Entertainment Bollywood And Punjabi DJ&quot;);gaclicktrack('send','event', 'Response-show Number', 'Show number', '843024');" class="red-but"><b>Show Number</b></a></li>
+      <li><a title="Enquire Raju" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '843024',&quot;Nirvana Entertainment Bollywood And Punjabi DJ&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '843024');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2022-04-01-01-04-11-997_68.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="DJK Music/Entertainment Event Services in , "></figure><div class="content ">
+      <h3><a title="Indian DJ Services - DJK Music/Entertainment Event Services" href="/san-jose-ca/dj-service/djk-event-services-1566375">DJK Music/Entertainment Event Services</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>San Jose, CA, USA</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>5 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating"><a title="View All Reviews" href="/san-jose-ca/dj-service/djk-event-services-1566375#reviews">5<span class="material-icons-outlined">star</span></a><b>2
+                          Reviews
+                        </b></div>
+      </li>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">3.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Punjabi DJs in San Jose, CA" href="/san-jose-ca/punjabi-djs">Punjabi DJs</a>, 
+          &nbsp;<a title="Mariachi Band DJ in San Jose, CA" href="/san-jose-ca/mariachi-band-dj">Mariachi Band DJ</a>, 
+          &nbsp;<a title="Wedding Band DJ in San Jose, CA" href="/san-jose-ca/wedding-band-dj">Wedding Band DJ</a>, 
+          &nbsp;<a title="Party DJs in San Jose, CA" href="/san-jose-ca/party-djs">Party DJs</a>, 
+          &nbsp;<a title="Sweet 16 DJs in San Jose, CA" href="/san-jose-ca/sweet-16-djs">Sweet 16 DJs</a>, 
+          &nbsp;<a title="Asian DJs in San Jose, CA" href="/san-jose-ca/asian-djs">Asian DJs</a>, 
+          &nbsp;<a title="Event DJs in San Jose, CA" href="/san-jose-ca/event-djs">Event DJs</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by DJK Music/Entertainment Event Services" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>Music Lover, regularly playing in night clubs and besides that, I am mobile DJ and I bring the party to wherever you are, the services include DJ Services, Required Audio System, Lights &amp; beyond. 
+Price is reasonable as this is just my passion and I enjoy celebrating with people.
+Types of Music :  Bollywood, South Indian including Tollywood, Punjabi,  Electronic, Global 40 and Everything In Between.
+Specialized in Theme Parties and all kind of events.<span class="more-links"><a title="Read More about DJK Music/Entertainment Event Services" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="double-link"><input type="hidden" id="hdn_show_contactnumber1566375" value="+1 408-612-1299"><li><a href="javascript:void(0);" onclick="Before_openEnquiryModal('3' , '1566375',&quot;DJK Music/Entertainment Event Services&quot;);gaclicktrack('send','event', 'Response-show Number', 'Show number', '1566375');" class="red-but"><b>Show Number</b></a></li>
+      <li><a title="Enquire Kiran" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1566375',&quot;DJK Music/Entertainment Event Services&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1566375');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2022-03-18-01-01-01-608_96.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="SBS Production in , "></figure><div class="content ">
+      <h3><a title="Indian Photography/Video - SBS Production" href="/atlanta-ga/photography-video/shots-by-sayani-1161465">SBS Production</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>1800 Garbrooke Cove, Lawrenceville, Georgia, USA</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating"><a title="View All Reviews" href="/atlanta-ga/photography-video/shots-by-sayani-1161465#reviews">5<span class="material-icons-outlined">star</span></a><b>8
+                          Reviews
+                        </b></div>
+      </li>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">3.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="two-details">
+    <ul>
+      <li><label>Price Range:</label><b>$1k-$3k</b></li>
+    </ul>
+  </div>
+  <div class="prop-details">
+    <ul>
+      <li><span>Newborn Packages</span> <b> Avg - $549</b></li>
+      <li><span>Photography And Video Services</span> <b> Avg - $224</b></li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="photography-video">Photography/Video:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Cinematography in Atlanta, GA" href="/atlanta-ga/cinematography">Cinematography</a>, 
+          &nbsp;<a title="Engagement Photographers in Atlanta, GA" href="/atlanta-ga/engagement-photographers">Engagement Photographers</a>, 
+          &nbsp;<a title="Event Videography in Atlanta, GA" href="/atlanta-ga/event-videography">Event Videography</a>, 
+          &nbsp;<a title="Freelance Photographers in Atlanta, GA" href="/atlanta-ga/freelance-photographers">Freelance Photographers</a>, 
+          &nbsp;<a title="Pre Wedding Photography in Atlanta, GA" href="/atlanta-ga/pre-wedding-photography">Pre Wedding Photography</a>, 
+          &nbsp;<a title="Wedding Decorations in Atlanta, GA" href="/atlanta-ga/wedding-decorations">Wedding Decorations</a>, 
+          &nbsp;<a title="Wedding Photographers in Atlanta, GA" href="/atlanta-ga/wedding-photographers">Wedding Photographers</a>, 
+          &nbsp;<a title="Wedding Videographers in Atlanta, GA" href="/atlanta-ga/wedding-videographers">Wedding Videographers</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by SBS Production" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>We are an experienced service provider. We have been in business for over 10 years. Photography/Video in Atlanta, GA, however we have offices in all regions of the US to accomodate. SBS Productions is determined to provide an amazing experience, whether it’s for a wedding, anniversary, and family portraits, maternity or newborn shoot. We are driven to provide life long memories that you can look back on and appreciate over time.<span class="more-links"><a title="Read More about SBS Production" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class=""><input type="hidden" id="hdn_show_contactnumber1161465" value="+1 678-313-7648"><li><a href="javascript:void(0);" onclick="Before_openEnquiryModal('3' , '1161465',&quot;SBS Production&quot;);gaclicktrack('send','event', 'Response-show Number', 'Show number', '1161465');" class="red-but"><b>Show Number</b></a></li>
+      <li><a title="Enquire Farhaan Sayani" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1161465',&quot;SBS Production&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1161465');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://d3aew4oo17ml6.cloudfront.net/localservices/images/large/DJManish_390-2016-6-21-12-8-0.jpg?v=7986?v=8098?v=2422?v=2107?v=2323" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Music Masti Magic DJ Manish in , "></figure><div class="content ">
+      <h3><a title="Indian DJ Services - Music Masti Magic DJ Manish" href="/irving-tx/dj-service/music-masti-magic-dj-manish-698721">Music Masti Magic DJ Manish</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>1395 E Dove Rd, Southlake, TX 76092, USA</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating"><a title="View All Reviews" href="/irving-tx/dj-service/music-masti-magic-dj-manish-698721#reviews">5<span class="material-icons-outlined">star</span></a><b>5
+                          Reviews
+                        </b></div>
+      </li>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">3.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Punjabi DJs in Irving, TX" href="/irving-tx/punjabi-djs">Punjabi DJs</a>, 
+          &nbsp;<a title="Wedding Band DJ in Irving, TX" href="/irving-tx/wedding-band-dj">Wedding Band DJ</a>, 
+          &nbsp;<a title="Party DJs in Irving, TX" href="/irving-tx/party-djs">Party DJs</a>, 
+          &nbsp;<a title="Sweet 16 DJs in Irving, TX" href="/irving-tx/sweet-16-djs">Sweet 16 DJs</a>, 
+          &nbsp;<a title="Asian DJs in Irving, TX" href="/irving-tx/asian-djs">Asian DJs</a>, 
+          &nbsp;<a title="Event DJs in Irving, TX" href="/irving-tx/event-djs">Event DJs</a>, 
+          &nbsp;<a title="Bollywood Djs in Irving, TX" href="/irving-tx/bollywood-djs">Bollywood Djs</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by Music Masti Magic DJ Manish" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>Music Masti Magic offer services in Bollywood, Punjabi Bhangra, US Top 40, Hip-Hop, Progressive Remixes, Gujarati, Telugu, Arabic and any musical genre. As a full-service entertainment provider Music Masti Magic has been serving the Dallas-Fort Worth area for nearly a decade. Our events include - Wedding, Baraat, Reception, Engagement, Birthday, Graduation, Corporate Event, House Party, School Dance &amp; Sweet 16. We are experts at customizing everything from small family gatherings to large corporate events and everything in between.<span class="more-links"><a title="Read More about Music Masti Magic DJ Manish" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="double-link"><input type="hidden" id="hdn_show_contactnumber698721" value="+1 972-836-6972"><li><a href="javascript:void(0);" onclick="Before_openEnquiryModal('3' , '698721',&quot;Music Masti Magic DJ Manish&quot;);gaclicktrack('send','event', 'Response-show Number', 'Show number', '698721');" class="red-but"><b>Show Number</b></a></li>
+      <li><a title="Enquire DJ Manish" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '698721',&quot;Music Masti Magic DJ Manish&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '698721');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2017-01-06-06-00-47-047_8634172.jpg?v=1533?v=8147" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="DJ Kumar Entertainment in , "></figure><div class="content ">
+      <h3><a title="Indian DJ Services - DJ Kumar Entertainment" href="/peoria-az/dj-service/dj-kumar-entertainment-755272">DJ Kumar Entertainment</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>16301 N 73rd Dr, Peoria, AZ, USA</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>15 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating"><a title="View All Reviews" href="/peoria-az/dj-service/dj-kumar-entertainment-755272#reviews">5<span class="material-icons-outlined">star</span></a><b>4
+                          Reviews
+                        </b></div>
+      </li>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">3.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Asian DJs in Peoria, AZ" href="/peoria-az/asian-djs">Asian DJs</a>, 
+          &nbsp;<a title="Event DJs in Peoria, AZ" href="/peoria-az/event-djs">Event DJs</a>, 
+          &nbsp;<a title="Mariachi Band DJ in Peoria, AZ" href="/peoria-az/mariachi-band-dj">Mariachi Band DJ</a>, 
+          &nbsp;<a title="Party DJs in Peoria, AZ" href="/peoria-az/party-djs">Party DJs</a>, 
+          &nbsp;<a title="Punjabi DJs in Peoria, AZ" href="/peoria-az/punjabi-djs">Punjabi DJs</a>, 
+          &nbsp;<a title="Sweet 16 DJs in Peoria, AZ" href="/peoria-az/sweet-16-djs">Sweet 16 DJs</a>, 
+          &nbsp;<a title="Wedding Band DJ in Peoria, AZ" href="/peoria-az/wedding-band-dj">Wedding Band DJ</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by DJ Kumar Entertainment" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>Looking for Desi Dj who can rock your party.  Dj kumar is ready to host your event! why be ordinary? let your party be extraordinary! years of happy clients in the valley, Dj kumar has many years of experience playing music and providing led lighting's.  I play Bollywood, Punjabi, Telugu, Tamil, and as well as American top 40. 
+let Dj kumar offers a memorable and unique service to ensure your event is an unforgettable experience. we are dedicated to making your special occasion one to remember offering diverse packages to fit any event specification.
+Top 40, Hip Hop for Birthdays, Wedding Receptions, Celebrations &amp; More. Contact DJ Kumar for your next music occasion.<span class="more-links"><a title="Read More about DJ Kumar Entertainment" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class=""><input type="hidden" id="hdn_show_contactnumber755272" value="+1 480-329-0246"><li><a href="javascript:void(0);" onclick="Before_openEnquiryModal('3' , '755272',&quot;DJ Kumar Entertainment&quot;);gaclicktrack('send','event', 'Response-show Number', 'Show number', '755272');" class="red-but"><b>Show Number</b></a></li>
+      <li><a title="Enquire DJ Kumar" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '755272',&quot;DJ Kumar Entertainment&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '755272');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2019-03-12-07-47-37-001_44.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="Skyvision Events in , "></figure><div class="content ">
+      <h3><a title="Indian DJ Services - Skyvision Events" href="/new-york-ny/dj-service/skyvision-events-751875">Skyvision Events</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>1750 Hylan Boulevard, Staten Island, NY, United States</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>16 Years in Business
+                </div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating"><a title="View All Reviews" href="/new-york-ny/dj-service/skyvision-events-751875#reviews">5<span class="material-icons-outlined">star</span></a><b>3
+                          Reviews
+                        </b></div>
+      </li>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">3.9<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="dj-service">DJ Services:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Wedding Band DJ in New York, NY" href="/new-york-ny/wedding-band-dj">Wedding Band DJ</a>, 
+          &nbsp;<a title="Party DJs in New York, NY" href="/new-york-ny/party-djs">Party DJs</a>, 
+          &nbsp;<a title="Sweet 16 DJs in New York, NY" href="/new-york-ny/sweet-16-djs">Sweet 16 DJs</a>, 
+          &nbsp;<a title="Asian DJs in New York, NY" href="/new-york-ny/asian-djs">Asian DJs</a>, 
+          &nbsp;<a title="Event DJs in New York, NY" href="/new-york-ny/event-djs">Event DJs</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by Skyvision Events" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>Looking for DJ services at New York? DJ Alpesh is the exact answer for it. He is specialized in DJs Band Services, Bollywood, Music Duo DJ, DJ Party Music Consultants, Solo Musician DJ, Wedding Band DJ, South Indian Music DJ and Bhangra DJ. He is servicing both US and Canada. He is also expertise in performing the following services like Anniversaries, Dholis, Engagement, Fashion Show, Get Together Parties, Intelligent Lightings, Karaoke or Live Singing, LED Lightings, Live Sound, Monograms, New Year Parties, Night Club Events, Premiere Bollywood DJs, Private Party, Quinceanera, Sangeet or Garba, Sound Rentals and Wedding Events. Some of the other events he provides DJ services are Sangeet Ceremony, Wedding Receptions, Birthday Parties, Anniversaries, Baby Showers, Corporate Events, Mehndi Functions, Retirement Functions, Surprise Parties, Sweet Sixteen, Dandiya Night, Baraat, Holiday Events and Fashion Shows. There are available only on weekdays from 10:00 to 19:00. He is skilled in performing DJ services. Do you want to have a stress-free event and enjoy yourself? Are you concerned that you may forget a few details? Do you want to save money and have access to special resources and vendors? You can have the event you imagine. We’ve been building our reputation and ability for years, perfecting the art of creating amazing weddings. Working with only the best partners, our little black book means no time is wasted finding exactly the right baker for exactly the right cake. It’s not just our contacts that count. It’s our approach to your wedding: respectful, collaborative, creative and cool under pressure. You get surprise and delight in all the right places and calm, comforting professionalism just when you need it most. There’s no single secret formula to a perfect wedding. Every couple is unique and so is every wedding. We always combine passion with efficiency, strategy with originality, detail with dreams and perfection with fun.<span class="more-links"><a title="Read More about Skyvision Events" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class=""><input type="hidden" id="hdn_show_contactnumber751875" value="+1 718-737-8737"><li><a href="javascript:void(0);" onclick="Before_openEnquiryModal('3' , '751875',&quot;Skyvision Events&quot;);gaclicktrack('send','event', 'Response-show Number', 'Show number', '751875');" class="red-but"><b>Show Number</b></a></li>
+      <li><a title="Enquire Alpesh Kumar Patel" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '751875',&quot;Skyvision Events&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '751875');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="mobile-single-listing" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <div class="fig-title"><figure><img src="https://usimg.sulekha.io/cdn/localservices/images/large/localservices_2025-11-24-05-20-32-594_46.jpg" onerror="this.src='https://usimg.sulekha.io/cdn/others/promotions/others_2025-07-24-06-48-23-796.svg'" alt="AZ Desi Events in , "></figure><div class="content ">
+      <h3><a title="Indian Entertainment - AZ Desi Events" href="/woodland-ca/entertainment/az-desi-events-1985035">AZ Desi Events</a></h3>
+      <div class="main-det">
+        <ul>
+          <li>
+            <div class="experience"><span class="material-icons-outlined">location_on</span>Woodland, CA, United States</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="experience"><span class="material-icons-outlined">work_history</span>
+              Established Since 2015</div>
+  <div class="business-rate">
+    <ul>
+      <li>
+        <div class="mob-rating">
+          <div class="sul-rate">3.4<span><img src="https://usimg.sulekha.io/cdn/others/images/others_2022-04-05-03-16-38-732.png"></span></div><b>Sulekha score</b></div>
+      </li>
+    </ul>
+  </div>
+  <div class="busi-serv">
+    <div id="showFullView1" class="serv-list"><b><a href="entertainment">Entertainment:&nbsp;
+                      </a></b>
+          &nbsp;<a title="Dance Show in Woodland, CA" href="/woodland-ca/dance-show">Dance Show</a>, 
+          &nbsp;<a title="MC And Host in Woodland, CA" href="/woodland-ca/mc-and-host">MC And Host</a>, 
+          &nbsp;<a title="Music Shows in Woodland, CA" href="/woodland-ca/music-shows">Music Shows</a>, 
+          &nbsp;<a title="Singers in Woodland, CA" href="/woodland-ca/singers">Singers</a>, 
+          &nbsp;<a title="Wedding Singers in Woodland, CA" href="/woodland-ca/wedding-singers">Wedding Singers</a></div>
+    <div class="more-links" style="display: none;"><a title="View all services offered by AZ Desi Events" href="javascript:void()" onclick="javascript:openFullViewService(this)">View all</a></div>
+  </div>
+  <div class="description" id="showFullDesc">
+    <p>AZ Desi Events, LLC is a key event organizing and promoting company based in Arizona that specializes in catering to the South Asian (or "Desi") community. The company focuses on bringing high-profile cultural entertainment, including live concerts, musical performances, stand-up comedy shows, and celebrity meet-and-greets featuring artists primarily from India and the South Asian diaspora. By curating a calendar of vibrant and culturally relevant programs, AZ Desi Events serves as a major platform for connecting the local community to its heritage, ensuring that the diverse population in and around Arizona has access to large-scale, professional, and well-organized cultural experiences that resonate with their identity. The company's operations often involve ticketing, event logistics, and marketing to ensure high visibility and successful turnout for their numerous annual events.<span class="more-links"><a title="Read More about AZ Desi Events" href="javascript:void()" onclick="javascript:openFullDesc(this)">Read more</a></span></p>
+  </div>
+  <div class="btn-outer">
+    <ul class="single-link">
+      <li><a title="Enquire AZ Desi Events" href="javascript:void()" onclick="Before_openEnquiryModal('1' , '1985035',&quot;AZ Desi Events&quot;);gaclicktrack('send','event', 'Response-Enquire Now','Enquire Now', '1985035');"><b>Enquire Now</b></a></li>
+    </ul>
+  </div>
+</div></div>
