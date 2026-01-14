@@ -594,8 +594,19 @@ export default function Dashboard() {
               data-testid="mobile-stat-guests"
             >
               <Users className="w-4 h-4 mx-auto mb-1 text-pink-600" />
-              <p className="font-mono text-lg font-bold">{events.reduce((sum, e) => sum + (e.guestCount || 0), 0) || wedding.guestCountEstimate || 0}</p>
-              <p className="text-[10px] text-muted-foreground">Total Attendees</p>
+              <div className="flex items-baseline justify-center gap-1">
+                <p className="font-mono text-lg font-bold text-emerald-600">
+                  {guests.filter(g => g.rsvpStatus === 'confirmed').length}
+                </p>
+                <span className="text-muted-foreground text-xs">/</span>
+                <p className="font-mono text-sm text-muted-foreground">
+                  {guests.length}
+                </p>
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                RSVP'd / Invited
+                {wedding.guestCountEstimate ? ` (${wedding.guestCountEstimate} est.)` : ''}
+              </p>
             </Card>
             <Card 
               className="p-2 hover-elevate cursor-pointer text-center" 
