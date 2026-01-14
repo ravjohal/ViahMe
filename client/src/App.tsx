@@ -211,6 +211,11 @@ function Router() {
           <WeddingJourneyPage />
         </ProtectedRoute>
       </Route>
+      <Route path="/wedding-journey">
+        <ProtectedRoute requiredPermission="planning">
+          <WeddingJourneyPage />
+        </ProtectedRoute>
+      </Route>
       <Route path="/budget">
         <ProtectedRoute requiredPermission="budget">
           <Budget />
