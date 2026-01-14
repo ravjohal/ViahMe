@@ -935,6 +935,25 @@ export default function Budget() {
     },
   });
 
+  const confirmBudgetMutation = useMutation({
+    mutationFn: async (confirmed: boolean) => {
+      if (!wedding?.id) throw new Error("Wedding ID not found");
+      return await apiRequest("PATCH", `/api/weddings/${wedding.id}`, { budgetConfirmed: confirmed });
+    },
+    onSuccess: (_, confirmed) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings"] });
+      toast({ 
+        title: confirmed ? "Budget confirmed" : "Budget reopened", 
+        description: confirmed 
+          ? "Your budget allocations are now set" 
+          : "You can now make changes to your budget"
+      });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to update budget status", variant: "destructive" });
+    },
+  });
+
   const updateEventBudgetMutation = useMutation({
     mutationFn: async ({ eventId, budget }: { eventId: string; budget: number }) => {
       return await apiRequest("PATCH", `/api/events/${eventId}`, { allocatedBudget: budget.toString() });
@@ -1301,8 +1320,32 @@ export default function Budget() {
             <h1 className="text-2xl font-bold" data-testid="text-budget-title">Budget Planner</h1>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
+            {wedding.budgetConfirmed ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => confirmBudgetMutation.mutate(false)}
+                disabled={confirmBudgetMutation.isPending}
+                className="border-green-500 text-green-600"
+                data-testid="button-reopen-budget"
+              >
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+                Budget Confirmed
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                onClick={() => confirmBudgetMutation.mutate(true)}
+                disabled={confirmBudgetMutation.isPending}
+                data-testid="button-confirm-budget"
+              >
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+                Confirm Budget
+              </Button>
+            )}
             <Button
               size="sm"
+              variant="outline"
               onClick={() => {
                 setAddExpenseEventId(undefined);
                 setAddExpenseDialogOpen(true);
