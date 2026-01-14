@@ -21,11 +21,15 @@ import {
 
 interface CeremonyLineItem {
   id: string;
-  ceremonyTypeId: string;
-  name: string;
-  budgetBucketCategoryId: string;
-  lowEstimate: string;
-  highEstimate: string;
+  ceremonyTypeId?: string;
+  name?: string;
+  category?: string;
+  budgetBucketCategoryId?: string;
+  budgetBucketId?: string;
+  lowEstimate?: string;
+  highEstimate?: string;
+  lowCost?: number;
+  highCost?: number;
 }
 
 type EstimateMode = "low" | "high" | "custom";
@@ -242,6 +246,18 @@ export default function BudgetDistribution() {
     await confirmBudgetMutation.mutateAsync();
   };
 
+  const getItemLowCost = (item: CeremonyLineItem): number => {
+    if (item.lowCost !== undefined) return item.lowCost;
+    if (item.lowEstimate) return parseFloat(item.lowEstimate);
+    return 0;
+  };
+
+  const getItemHighCost = (item: CeremonyLineItem): number => {
+    if (item.highCost !== undefined) return item.highCost;
+    if (item.highEstimate) return parseFloat(item.highEstimate);
+    return 0;
+  };
+
   const applyEstimate = (stepId: string, mode: EstimateMode, ceremonyTypeId?: string | null) => {
     if (!ceremonyTypeId || !allLineItems[ceremonyTypeId]) return;
     
@@ -251,8 +267,8 @@ export default function BudgetDistribution() {
     
     lineItems.forEach(item => {
       const amount = mode === "low" 
-        ? parseFloat(item.lowEstimate || "0") 
-        : parseFloat(item.highEstimate || "0");
+        ? getItemLowCost(item)
+        : getItemHighCost(item);
       total += amount;
       lineItemBudgets[item.id] = amount.toString();
     });
@@ -485,10 +501,10 @@ export default function BudgetDistribution() {
                           <div key={item.id} className="flex items-center gap-3">
                             <div className="flex-1 min-w-0">
                               <Label htmlFor={`line-item-${item.id}`} className="text-sm truncate block">
-                                {item.name}
+                                {item.name || item.category || "Item"}
                               </Label>
                               <p className="text-xs text-muted-foreground">
-                                Est: ${parseFloat(item.lowEstimate || "0").toLocaleString()} - ${parseFloat(item.highEstimate || "0").toLocaleString()}
+                                Est: ${getItemLowCost(item).toLocaleString()} - ${getItemHighCost(item).toLocaleString()}
                               </p>
                             </div>
                             <div className="relative w-32">
