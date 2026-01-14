@@ -5203,13 +5203,20 @@ export class DBStorage implements IStorage {
   }
 
   async createBudgetAllocation(insertAllocation: InsertBudgetAllocation): Promise<BudgetAllocation> {
-    // Resolve bucket slug to UUID for the new FK column
+    // Resolve bucket slug to UUID for the new FK column - must use budgetBucketCategories table
     let bucketCategoryId = insertAllocation.bucketCategoryId;
     if (!bucketCategoryId && insertAllocation.bucket) {
-      const bucketCategory = await this.getBudgetCategoryBySlug(insertAllocation.bucket);
+      const [bucketCategory] = await this.db.select()
+        .from(schema.budgetBucketCategories)
+        .where(eq(schema.budgetBucketCategories.slug, insertAllocation.bucket))
+        .limit(1);
       if (bucketCategory) {
         bucketCategoryId = bucketCategory.id;
       }
+    }
+    
+    if (!bucketCategoryId) {
+      throw new Error(`Cannot find budget bucket category for slug: ${insertAllocation.bucket}`);
     }
     
     const result = await this.db.insert(budgetAllocations).values({
@@ -5223,7 +5230,10 @@ export class DBStorage implements IStorage {
     // Resolve bucket slug to UUID for the new FK column if bucket is being updated
     let bucketCategoryId = update.bucketCategoryId;
     if (!bucketCategoryId && update.bucket) {
-      const bucketCategory = await this.getBudgetCategoryBySlug(update.bucket);
+      const [bucketCategory] = await this.db.select()
+        .from(schema.budgetBucketCategories)
+        .where(eq(schema.budgetBucketCategories.slug, update.bucket))
+        .limit(1);
       if (bucketCategory) {
         bucketCategoryId = bucketCategory.id;
       }
