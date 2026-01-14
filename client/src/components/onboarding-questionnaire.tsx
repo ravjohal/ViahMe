@@ -35,7 +35,6 @@ const questionnaireSchema = z.object({
   ceremonyGuestCount: z.string().optional(),
   receptionGuestCount: z.string().optional(),
   customEvents: z.array(customEventSchema).optional(),
-  autoCreateCeremonies: z.boolean().optional(),
   totalBudget: z.string().optional(),
   budgetContribution: z.enum(['couple_only', 'both_families', 'mix']).optional(),
   partnerNewToTraditions: z.boolean().optional(),
@@ -224,7 +223,6 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
       ceremonyGuestCount: "",
       receptionGuestCount: "",
       customEvents: [],
-      autoCreateCeremonies: true,
       totalBudget: "",
       budgetContribution: "both_families",
       partnerNewToTraditions: false,
@@ -269,7 +267,6 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
 
   // Custom event management helpers
   const customEvents = form.watch("customEvents") || [];
-  const autoCreateCeremonies = form.watch("autoCreateCeremonies") ?? true;
 
   // Fetch ceremony types from database - the single source of truth (UUID-keyed)
   const { data: ceremonyTypes } = useCeremonyTypesByTradition(selectedMainTradition);
@@ -332,10 +329,10 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
     return eventDate.toISOString().split('T')[0];
   };
   
-  // Populate default ceremonies when ceremonyTypes loads or autoCreateCeremonies is enabled
+  // Populate default ceremonies when ceremonyTypes loads
   // Pre-populate only ceremonies marked as isDefaultPrepopulated, sorted by displayOrder
   useEffect(() => {
-    if (autoCreateCeremonies && availableCeremonies && availableCeremonies.length > 0) {
+    if (availableCeremonies && availableCeremonies.length > 0) {
       const currentEvents = form.getValues("customEvents") || [];
       if (currentEvents.length === 0) {
         // Filter to only ceremonies marked as default prepopulated, sorted by displayOrder
@@ -358,7 +355,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
         form.setValue("customEvents", defaultEvents);
       }
     }
-  }, [autoCreateCeremonies, availableCeremonies]);
+  }, [availableCeremonies]);
   
   // Watch for wedding date changes and update event dates accordingly
   const weddingDateValue = form.watch("weddingDate");
@@ -1037,26 +1034,6 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                         Add Another Event
                       </Button>
 
-                      {/* Auto-create ceremonies checkbox */}
-                      <div className="p-4 rounded-lg border bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 border-purple-200 dark:border-purple-800">
-                        <div className="flex items-start gap-3">
-                          <Checkbox
-                            id="autoCreateCeremonies"
-                            checked={autoCreateCeremonies}
-                            onCheckedChange={(checked) => form.setValue("autoCreateCeremonies", !!checked)}
-                            className="mt-1"
-                            data-testid="checkbox-auto-create-ceremonies"
-                          />
-                          <div className="space-y-1 flex-1">
-                            <label htmlFor="autoCreateCeremonies" className="font-semibold text-purple-900 dark:text-purple-100 cursor-pointer">
-                              Auto-create traditional ceremonies
-                            </label>
-                            <p className="text-sm text-purple-700 dark:text-purple-300">
-                              We'll automatically add typical ceremonies for your tradition (like Sangeet, Mehndi, etc.) while skipping any you've already added above.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
                     </div>
 
                     {selectedLocation === "Other" && (

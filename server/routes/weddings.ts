@@ -104,73 +104,99 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
       const { CEREMONY_CATALOG } = await import("../../shared/ceremonies");
 
       const customEvents = req.body.customEvents as Array<{
-        ceremonyId: string;
+        ceremonyTypeId: string;  // UUID from database
         customName?: string;
         guestCount?: string;
+        date?: string;
       }> | undefined;
 
       if (customEvents && customEvents.length > 0) {
         for (let i = 0; i < customEvents.length; i++) {
           const customEvent = customEvents[i];
-          const ceremony = CEREMONY_CATALOG.find(c => c.id === customEvent.ceremonyId);
           
           let eventName: string;
           let eventDescription: string;
           let eventType: string;
           let ceremonyTypeId: string | undefined;
+          let eventDate: Date | undefined;
           
-          if (customEvent.ceremonyId === "custom" && customEvent.customName) {
+          // Handle custom events
+          if (customEvent.ceremonyTypeId === "custom" && customEvent.customName) {
             eventName = customEvent.customName;
             eventDescription = "Custom event";
             eventType = "other";
             // For custom events, try to find a generic "other" ceremony type
             const otherCeremony = await storage.getCeremonyType(`${wedding.tradition}_other`);
             ceremonyTypeId = otherCeremony?.id;
-          } else if (ceremony) {
-            eventName = ceremony.name;
-            eventDescription = ceremony.description;
-            eventType = customEvent.ceremonyId.replace(/^(hindu_|sikh_|muslim_|gujarati_|south_indian_|christian_|jain_|parsi_|mixed_|other_)/, "");
-            // Look up the ceremony type directly using the full ceremonyId slug
-            const ceremonyType = await storage.getCeremonyType(customEvent.ceremonyId);
-            ceremonyTypeId = ceremonyType?.id;
+          } else if (customEvent.ceremonyTypeId) {
+            // Look up ceremony type by UUID (getCeremonyType accepts both slug and UUID)
+            const ceremonyType = await storage.getCeremonyType(customEvent.ceremonyTypeId);
+            if (!ceremonyType) {
+              console.warn(`Could not find ceremony type for UUID: ${customEvent.ceremonyTypeId}, skipping event creation`);
+              continue;
+            }
+            eventName = ceremonyType.name;
+            eventDescription = ceremonyType.description || "";
+            eventType = ceremonyType.ceremonyId.replace(/^(hindu_|sikh_|muslim_|gujarati_|south_indian_|christian_|jain_|parsi_|mixed_|other_)/, "");
+            ceremonyTypeId = ceremonyType.id;
+            
+            // Also look up in CEREMONY_CATALOG for default side
+            const catalogCeremony = CEREMONY_CATALOG.find(c => c.id === ceremonyType.ceremonyId);
+            const side = getDefaultSideForCeremony(catalogCeremony);
+            
+            // Use the date from the form if provided, otherwise calculate
+            if (customEvent.date) {
+              eventDate = new Date(customEvent.date);
+            } else if (wedding.weddingDate) {
+              eventDate = calculateEventDate(
+                new Date(wedding.weddingDate), 
+                ceremonyType.ceremonyId, 
+                eventType
+              );
+            }
+            
+            const guestCount = customEvent.guestCount && customEvent.guestCount !== "" 
+              ? parseInt(customEvent.guestCount) 
+              : (catalogCeremony?.defaultGuests || undefined);
+            
+            await storage.createEvent({
+              weddingId: wedding.id,
+              name: eventName,
+              type: eventType as any,
+              description: eventDescription,
+              order: i + 1,
+              guestCount: guestCount,
+              date: eventDate,
+              side: side,
+              ceremonyTypeId: ceremonyTypeId,
+            });
+            continue;
           } else {
             continue;
           }
           
-          // If we still don't have ceremonyTypeId, skip this event with a warning
-          if (!ceremonyTypeId) {
-            console.warn(`Could not find ceremony type for: ${customEvent.ceremonyId}, skipping event creation`);
-            continue;
+          // Handle custom event creation (from the custom block above)
+          if (customEvent.ceremonyTypeId === "custom") {
+            if (customEvent.date) {
+              eventDate = new Date(customEvent.date);
+            }
+            
+            const guestCount = customEvent.guestCount && customEvent.guestCount !== "" 
+              ? parseInt(customEvent.guestCount) 
+              : undefined;
+              
+            await storage.createEvent({
+              weddingId: wedding.id,
+              name: eventName,
+              type: eventType as any,
+              description: eventDescription,
+              order: i + 1,
+              guestCount: guestCount,
+              date: eventDate,
+              side: "mutual" as const,
+              ceremonyTypeId: ceremonyTypeId,
+            });
           }
-          
-          const guestCount = customEvent.guestCount && customEvent.guestCount !== "" 
-            ? parseInt(customEvent.guestCount) 
-            : (ceremony?.defaultGuests || undefined);
-          
-          // Calculate event date based on wedding date
-          let eventDate: Date | undefined = undefined;
-          if (wedding.weddingDate) {
-            eventDate = calculateEventDate(
-              new Date(wedding.weddingDate), 
-              customEvent.ceremonyId, 
-              eventType
-            );
-          }
-          
-          // Determine the side for this ceremony using the ceremony catalog
-          const side = getDefaultSideForCeremony(ceremony);
-          
-          await storage.createEvent({
-            weddingId: wedding.id,
-            name: eventName,
-            type: eventType as any,
-            description: eventDescription,
-            order: i + 1,
-            guestCount: guestCount,
-            date: eventDate,
-            side: side,
-            ceremonyTypeId: ceremonyTypeId,
-          });
         }
       } else if (wedding.tradition === "sikh") {
         // Full Sikh wedding ceremony lineup - 11 ceremonies, 15 events total
