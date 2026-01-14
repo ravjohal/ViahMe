@@ -4901,3 +4901,93 @@ export interface BudgetForecast {
     monthsUntilWedding: number;
   };
 }
+
+// ============================================================================
+// TRADITION RITUALS - Master list of all possible rituals per tradition
+// Educational content explaining the "why" behind each ritual
+// ============================================================================
+
+export const traditionRituals = pgTable("tradition_rituals", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  traditionId: varchar("tradition_id").notNull(), // FK to wedding_traditions
+  ceremonyTypeId: varchar("ceremony_type_id"), // Optional FK to ceremony_types if this ritual maps to a ceremony
+  slug: varchar("slug").notNull(),
+  name: text("name").notNull(),
+  nameInLanguage: text("name_in_language"), // e.g., "ਅਨੰਦ ਕਾਰਜ" for Anand Karaj
+  pronunciation: text("pronunciation"), // e.g., "uh-NUND kaa-RAJ"
+  shortDescription: text("short_description").notNull(),
+  fullDescription: text("full_description").notNull(),
+  culturalSignificance: text("cultural_significance").notNull(), // Why this ritual exists
+  spiritualMeaning: text("spiritual_meaning"), // Religious/spiritual significance
+  historicalOrigin: text("historical_origin"), // Where this tradition came from
+  typicalTiming: text("typical_timing"), // e.g., "2-3 days before wedding", "Morning of wedding day"
+  daysBeforeWedding: integer("days_before_wedding"), // Numeric for sorting: -30 = 30 days before
+  durationMinutes: integer("duration_minutes"), // Typical duration
+  isRequired: boolean("is_required").notNull().default(false), // Is this a must-have ritual?
+  isPopular: boolean("is_popular").notNull().default(true), // Do most couples include this?
+  whoParticipates: text("who_participates"), // e.g., "Bride's family", "Both families", "Bride only"
+  whatToExpect: text("what_to_expect"), // For couples: what happens during this ritual
+  itemsNeeded: jsonb("items_needed").$type<string[]>().default([]), // Shopping list items
+  musicSuggestions: text("music_suggestions"), // Traditional music/songs for this ritual
+  photoOpportunities: text("photo_opportunities"), // What to capture
+  modernVariations: text("modern_variations"), // How couples adapt this today
+  commonMisconceptions: text("common_misconceptions"), // Clear up confusion
+  couplesNote: text("couples_note"), // Special advice for couples
+  sortOrder: integer("sort_order").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  traditionIdx: index("tradition_rituals_tradition_idx").on(table.traditionId),
+  ceremonyTypeIdx: index("tradition_rituals_ceremony_type_idx").on(table.ceremonyTypeId),
+  slugIdx: uniqueIndex("tradition_rituals_slug_idx").on(table.slug),
+  timingIdx: index("tradition_rituals_timing_idx").on(table.daysBeforeWedding),
+}));
+
+export const insertTraditionRitualSchema = createInsertSchema(traditionRituals).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  daysBeforeWedding: z.number().int().optional(),
+  durationMinutes: z.number().int().min(1).optional(),
+  sortOrder: z.number().int().optional(),
+  itemsNeeded: z.array(z.string()).optional(),
+});
+export type InsertTraditionRitual = z.infer<typeof insertTraditionRitualSchema>;
+export type TraditionRitual = typeof traditionRituals.$inferSelect;
+
+// ============================================================================
+// WEDDING JOURNEY - Couple's specific journey tracking
+// Tracks which rituals they're including and their progress
+// ============================================================================
+
+export const weddingJourneyItems = pgTable("wedding_journey_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  ritualId: varchar("ritual_id").notNull(), // FK to tradition_rituals
+  eventId: varchar("event_id"), // FK to events if linked to an actual event
+  status: text("status").notNull().default("considering"), // considering, included, skipped, completed
+  plannedDate: timestamp("planned_date"),
+  actualDate: timestamp("actual_date"),
+  notes: text("notes"), // Couple's personal notes about this ritual
+  customizations: text("customizations"), // How they're adapting it
+  isHighlighted: boolean("is_highlighted").notNull().default(false), // Mark as important to them
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  weddingIdx: index("wedding_journey_items_wedding_idx").on(table.weddingId),
+  ritualIdx: index("wedding_journey_items_ritual_idx").on(table.ritualId),
+  statusIdx: index("wedding_journey_items_status_idx").on(table.status),
+}));
+
+export const insertWeddingJourneyItemSchema = createInsertSchema(weddingJourneyItems).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  status: z.enum(["considering", "included", "skipped", "completed"]).optional(),
+});
+export type InsertWeddingJourneyItem = z.infer<typeof insertWeddingJourneyItemSchema>;
+export type WeddingJourneyItem = typeof weddingJourneyItems.$inferSelect;

@@ -20,6 +20,7 @@ import { PERMISSION_CATEGORIES, type PermissionCategory } from "@shared/schema";
 import type { Wedding, Event, BudgetCategory, Contract, Booking, Guest, WeddingRole, Task, WeddingCollaborator, Vendor } from "@shared/schema";
 import { PartnerEventConfirmation } from "@/components/partner-event-confirmation";
 import { InvitePartnerModal } from "@/components/invite-partner-modal";
+import { WeddingJourneyWidget } from "@/components/wedding-journey-widget";
 
 const CATEGORY_LABELS: Record<string, string> = {
   catering: "Catering & Food",
@@ -831,6 +832,11 @@ export default function Dashboard() {
               )}
             </div>
           )}
+        </div>
+
+        {/* Wedding Journey Widget */}
+        <div className="mt-8">
+          <WeddingJourneyWidget wedding={wedding} />
         </div>
 
         {/* More to Explore */}

@@ -246,6 +246,12 @@ import {
   budgetScenarios,
   type BudgetScenario,
   type InsertBudgetScenario,
+  traditionRituals,
+  type TraditionRitual,
+  type InsertTraditionRitual,
+  weddingJourneyItems,
+  type WeddingJourneyItem,
+  type InsertWeddingJourneyItem,
   budgetAllocations,
   budgetAlerts,
   dashboardWidgets,
@@ -1324,6 +1330,21 @@ export interface IStorage {
   createBudgetScenario(scenario: InsertBudgetScenario): Promise<BudgetScenario>;
   updateBudgetScenario(id: string, scenario: Partial<InsertBudgetScenario>): Promise<BudgetScenario | undefined>;
   deleteBudgetScenario(id: string): Promise<boolean>;
+
+  // Tradition Rituals - Educational content about wedding rituals
+  getTraditionRitual(id: string): Promise<TraditionRitual | undefined>;
+  getTraditionRitualBySlug(slug: string): Promise<TraditionRitual | undefined>;
+  getTraditionRitualsByTradition(traditionId: string): Promise<TraditionRitual[]>;
+  getTraditionRitualsByTraditionSlug(traditionSlug: string): Promise<TraditionRitual[]>;
+  getAllTraditionRituals(): Promise<TraditionRitual[]>;
+
+  // Wedding Journey Items - Couple's specific journey tracking
+  getWeddingJourneyItem(id: string): Promise<WeddingJourneyItem | undefined>;
+  getWeddingJourneyItemsByWedding(weddingId: string): Promise<WeddingJourneyItem[]>;
+  createWeddingJourneyItem(item: InsertWeddingJourneyItem): Promise<WeddingJourneyItem>;
+  updateWeddingJourneyItem(id: string, item: Partial<InsertWeddingJourneyItem>): Promise<WeddingJourneyItem | undefined>;
+  deleteWeddingJourneyItem(id: string): Promise<boolean>;
+  initializeWeddingJourney(weddingId: string, traditionId: string): Promise<WeddingJourneyItem[]>;
 }
 
 // Guest Planning Snapshot - comprehensive view of all guests and per-event costs
@@ -12381,6 +12402,91 @@ export class DBStorage implements IStorage {
   async deleteBudgetScenario(id: string): Promise<boolean> {
     await this.db.delete(budgetScenarios).where(eq(budgetScenarios.id, id));
     return true;
+  }
+
+  // Tradition Rituals - Educational content about wedding rituals
+  async getTraditionRitual(id: string): Promise<TraditionRitual | undefined> {
+    const result = await this.db.select().from(traditionRituals).where(eq(traditionRituals.id, id));
+    return result[0];
+  }
+
+  async getTraditionRitualBySlug(slug: string): Promise<TraditionRitual | undefined> {
+    const result = await this.db.select().from(traditionRituals).where(eq(traditionRituals.slug, slug));
+    return result[0];
+  }
+
+  async getTraditionRitualsByTradition(traditionId: string): Promise<TraditionRitual[]> {
+    return await this.db.select()
+      .from(traditionRituals)
+      .where(and(
+        eq(traditionRituals.traditionId, traditionId),
+        eq(traditionRituals.isActive, true)
+      ))
+      .orderBy(traditionRituals.sortOrder);
+  }
+
+  async getTraditionRitualsByTraditionSlug(traditionSlug: string): Promise<TraditionRitual[]> {
+    const tradition = await this.db.select()
+      .from(weddingTraditions)
+      .where(eq(weddingTraditions.slug, traditionSlug));
+    if (!tradition[0]) return [];
+    return this.getTraditionRitualsByTradition(tradition[0].id);
+  }
+
+  async getAllTraditionRituals(): Promise<TraditionRitual[]> {
+    return await this.db.select()
+      .from(traditionRituals)
+      .where(eq(traditionRituals.isActive, true))
+      .orderBy(traditionRituals.sortOrder);
+  }
+
+  // Wedding Journey Items - Couple's specific journey tracking
+  async getWeddingJourneyItem(id: string): Promise<WeddingJourneyItem | undefined> {
+    const result = await this.db.select().from(weddingJourneyItems).where(eq(weddingJourneyItems.id, id));
+    return result[0];
+  }
+
+  async getWeddingJourneyItemsByWedding(weddingId: string): Promise<WeddingJourneyItem[]> {
+    return await this.db.select()
+      .from(weddingJourneyItems)
+      .where(eq(weddingJourneyItems.weddingId, weddingId));
+  }
+
+  async createWeddingJourneyItem(item: InsertWeddingJourneyItem): Promise<WeddingJourneyItem> {
+    const result = await this.db.insert(weddingJourneyItems)
+      .values(item)
+      .returning();
+    return result[0];
+  }
+
+  async updateWeddingJourneyItem(id: string, item: Partial<InsertWeddingJourneyItem>): Promise<WeddingJourneyItem | undefined> {
+    const result = await this.db.update(weddingJourneyItems)
+      .set({ ...item, updatedAt: new Date() })
+      .where(eq(weddingJourneyItems.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteWeddingJourneyItem(id: string): Promise<boolean> {
+    await this.db.delete(weddingJourneyItems).where(eq(weddingJourneyItems.id, id));
+    return true;
+  }
+
+  async initializeWeddingJourney(weddingId: string, traditionId: string): Promise<WeddingJourneyItem[]> {
+    // Get all rituals for this tradition
+    const rituals = await this.getTraditionRitualsByTradition(traditionId);
+    
+    // Create journey items for each ritual
+    const createdItems: WeddingJourneyItem[] = [];
+    for (const ritual of rituals) {
+      const item = await this.createWeddingJourneyItem({
+        weddingId,
+        ritualId: ritual.id,
+        status: ritual.isRequired ? 'included' : 'considering',
+      });
+      createdItems.push(item);
+    }
+    return createdItems;
   }
 }
 
