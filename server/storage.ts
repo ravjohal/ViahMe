@@ -5389,28 +5389,24 @@ export class DBStorage implements IStorage {
       const existing = await this.getBudgetAllocationByBucketCategoryId(weddingId, category.id, null, null);
 
       if (existing) {
-        // Update auto values, but only update allocatedAmount if NOT manual override
+        // Update auto estimate values only - don't change allocated amounts
+        // Couples decide their own budget allocations
         const updates: Partial<schema.InsertBudgetAllocation> = {
           autoLowAmount: aggregate.low.toString(),
           autoHighAmount: aggregate.high.toString(),
           autoItemCount: aggregate.itemCount,
         };
 
-        // If not a manual override, also update the allocated amount to the average
-        if (!existing.isManualOverride) {
-          updates.allocatedAmount = avgAmount.toString();
-        }
-
         await this.db.update(schema.budgetAllocations)
           .set(updates)
           .where(eq(schema.budgetAllocations.id, existing.id));
       } else if (aggregate.itemCount > 0) {
-        // Create new allocation with auto values (only if there are items)
+        // Create new allocation with auto estimates but $0 allocated (couples set their own)
         await this.db.insert(schema.budgetAllocations).values({
           weddingId,
           bucketCategoryId: category.id,
           bucket: category.slug,
-          allocatedAmount: avgAmount.toString(),
+          allocatedAmount: "0", // Start at $0 - couples decide
           autoLowAmount: aggregate.low.toString(),
           autoHighAmount: aggregate.high.toString(),
           autoItemCount: aggregate.itemCount,

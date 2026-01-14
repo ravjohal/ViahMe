@@ -371,28 +371,8 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
         }
       }
 
-      if (wedding.totalBudget && parseFloat(wedding.totalBudget) > 0) {
-        const totalBudget = parseFloat(wedding.totalBudget);
-        const bucketAllocations = [
-          { bucketSlug: "catering", percentage: 40 },
-          { bucketSlug: "venue", percentage: 15 },
-          { bucketSlug: "entertainment", percentage: 12 },
-          { bucketSlug: "photography", percentage: 10 },
-          { bucketSlug: "decor", percentage: 8 },
-          { bucketSlug: "attire", percentage: 8 },
-          { bucketSlug: "transportation", percentage: 4 },
-          { bucketSlug: "other", percentage: 3 },
-        ];
-
-        // Use UUID-based allocation method for proper FK relationships
-        for (const allocation of bucketAllocations) {
-          const allocatedAmount = ((totalBudget * allocation.percentage) / 100).toFixed(2);
-          const bucketCategory = await storage.getBudgetCategoryBySlug(allocation.bucketSlug);
-          if (bucketCategory) {
-            await storage.upsertBudgetAllocationByUUID(wedding.id, bucketCategory.id, allocatedAmount);
-          }
-        }
-      }
+      // Budget categories start at $0 - couples can choose to use ceremony estimates or set their own values
+      // The couple's total budget is stored but not auto-allocated to categories
 
       if (wedding.tradition) {
         // Use in-memory task templates with comprehensive Sikh wedding checklist

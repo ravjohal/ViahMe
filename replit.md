@@ -43,6 +43,7 @@ Key architectural decisions and features include:
     - Custom ceremonies use `ceremonyTypeId: "custom"` with `customName` field
 - **Vendor Specialization**: Support for 32 distinct vendor categories, including culturally-specific services.
 - **Budget Intelligence System**: Employs a Unified Single Ledger Model with a three-tier budget hierarchy, smart budget recommendations, dual-view aggregation, and a refined pricing engine using three-factor multipliers for precise estimates.
+  - **Zero-Start Budget Philosophy** (January 2026): Budget categories start at $0 after onboarding. System calculates and displays estimates (`autoLowAmount`, `autoHighAmount`) from ceremony line items, but couples manually set their own `allocatedAmount` for each category. No automatic percentage-based allocation.
   - **Three-Layer Budget Architecture**:
     - **Layer 1 - The Blueprint**: System-defined templates (`ceremony_types`, `budget_bucket_categories`, `ceremony_budget_categories` junction table)
     - **Layer 2 - The Plan**: Couple's wedding setup (`events` with `ceremonyTypeId`, `event_cost_items` with `ceremonyBudgetCategoryId` and `budgetBucketCategoryId`)
