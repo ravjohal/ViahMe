@@ -992,6 +992,8 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                                     title="Leave blank to use default guest count"
                                     value={event.guestCount || ""}
                                     onChange={(e) => handleEventChange(index, "guestCount", e.target.value)}
+                                    onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                                    min={1}
                                     data-testid={`input-event-guests-${index}`}
                                     className="h-9 flex-1 border-0 p-0 focus-visible:ring-0 text-sm bg-transparent"
                                   />
