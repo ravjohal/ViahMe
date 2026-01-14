@@ -406,17 +406,21 @@ export default function Dashboard() {
   const hasEvents = events.length > 0;
   const hasVendors = bookings.length > 0;
   const hasGuests = guests.length > 0;
+  
+  // Budget is only "set" when couple has allocated amounts to categories (not just auto-estimates)
+  const totalAllocated = budgetCategories.reduce((sum, cat) => sum + parseFloat(cat.allocatedAmount || "0"), 0);
+  const hasBudgetAllocations = totalAllocated > 0;
 
   // Step definitions - action-focused to differentiate from nav
   const steps = [
     {
       id: "budget",
       number: 1,
-      title: hasBudget && hasCategories ? "Budget Set" : "Set Budget",
-      description: hasBudget && hasCategories
-        ? `$${(totalBudget / 1000).toFixed(0)}k allocated across categories`
-        : "Set your wedding budget to start tracking",
-      completed: hasBudget && hasCategories,
+      title: hasBudget && hasBudgetAllocations ? "Budget Set" : "Set Budget",
+      description: hasBudget && hasBudgetAllocations
+        ? `$${(totalAllocated / 1000).toFixed(0)}k allocated across categories`
+        : "Allocate your budget to categories",
+      completed: hasBudget && hasBudgetAllocations,
       inProgress: false,
       path: "/budget",
       color: "emerald",
@@ -716,7 +720,7 @@ export default function Dashboard() {
         {/* Main Dashboard Content - Mobile First Single View */}
         <div className="space-y-6">
           {/* Budget Preview */}
-          {hasBudget && hasCategories && (
+          {hasBudget && hasBudgetAllocations && (
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg md:text-xl font-semibold">Budget Overview</h2>
