@@ -935,9 +935,9 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                                   value={event.ceremonyTypeId || ""}
                                   onValueChange={(value) => handleEventChange(index, "ceremonyTypeId", value)}
                                 >
-                                  <SelectTrigger className="h-10 flex-1 min-w-0 bg-white dark:bg-background" data-testid={`select-ceremony-${index}`}>
+                                  <SelectTrigger className="h-9 flex-1 min-w-0 bg-white dark:bg-background text-sm" data-testid={`select-ceremony-${index}`}>
                                     <SelectValue placeholder="Select ceremony">
-                                      {selectedCeremony ? selectedCeremony.name : (event.ceremonyTypeId === "custom" ? "Custom Event" : "Select ceremony")}
+                                      <span className="truncate">{selectedCeremony ? selectedCeremony.name : (event.ceremonyTypeId === "custom" ? "Custom Event" : "Select ceremony")}</span>
                                     </SelectValue>
                                   </SelectTrigger>
                                   <SelectContent>
@@ -974,47 +974,50 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                                 </Button>
                               </div>
                                   
-                              {/* Row 2: Date - full width */}
-                              <div className="flex w-full items-center gap-2 rounded-md border bg-white dark:bg-background px-3 h-10">
-                                <CalendarDays className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                                <Input
-                                  type="date"
-                                  value={event.date || ""}
-                                  onChange={(e) => handleEventChange(index, "date", e.target.value)}
-                                  data-testid={`input-event-date-${index}`}
-                                  className="h-10 w-full border-0 p-0 focus-visible:ring-0 text-sm"
-                                />
-                              </div>
-                              
-                              {/* Row 3: Guest count - full width */}
-                              <div className="flex w-full items-center gap-2 rounded-md border bg-white dark:bg-background px-3 h-10">
-                                <Users className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                                <Input
-                                  type="number"
-                                  placeholder="Guest count (optional)"
-                                  title="Leave blank to use default guest count"
-                                  value={event.guestCount || ""}
-                                  onChange={(e) => handleEventChange(index, "guestCount", e.target.value)}
-                                  data-testid={`input-event-guests-${index}`}
-                                  className="h-10 w-full border-0 p-0 focus-visible:ring-0 text-sm"
-                                />
+                              {/* Row 2 & 3: Date and Guest inputs - indented to match ceremony selector */}
+                              <div className="ml-9 space-y-2">
+                                <div className="flex items-center gap-2 rounded-md border bg-white dark:bg-background px-3 h-9">
+                                  <CalendarDays className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                                  <Input
+                                    type="date"
+                                    value={event.date || ""}
+                                    onChange={(e) => handleEventChange(index, "date", e.target.value)}
+                                    data-testid={`input-event-date-${index}`}
+                                    className="h-9 flex-1 border-0 p-0 focus-visible:ring-0 text-sm bg-transparent"
+                                  />
+                                </div>
+                                
+                                <div className="flex items-center gap-2 rounded-md border bg-white dark:bg-background px-3 h-9">
+                                  <Users className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                                  <Input
+                                    type="number"
+                                    placeholder="Guest count (optional)"
+                                    title="Leave blank to use default guest count"
+                                    value={event.guestCount || ""}
+                                    onChange={(e) => handleEventChange(index, "guestCount", e.target.value)}
+                                    data-testid={`input-event-guests-${index}`}
+                                    className="h-9 flex-1 border-0 p-0 focus-visible:ring-0 text-sm bg-transparent"
+                                  />
+                                </div>
                               </div>
                               
                               {/* Row 4: Custom event name (if custom) */}
                               {event.ceremonyTypeId === "custom" && (
-                                <Input
-                                  type="text"
-                                  placeholder="Enter custom event name"
-                                  value={event.customName || ""}
-                                  onChange={(e) => handleEventChange(index, "customName", e.target.value)}
-                                  data-testid={`input-custom-event-name-${index}`}
-                                  className="h-10 w-full bg-white dark:bg-background"
-                                />
+                                <div className="ml-9">
+                                  <Input
+                                    type="text"
+                                    placeholder="Enter custom event name"
+                                    value={event.customName || ""}
+                                    onChange={(e) => handleEventChange(index, "customName", e.target.value)}
+                                    data-testid={`input-custom-event-name-${index}`}
+                                    className="h-9 bg-white dark:bg-background text-sm"
+                                  />
+                                </div>
                               )}
                                   
                               {/* Row 5: Description */}
                               {selectedCeremony?.description && event.ceremonyTypeId !== "custom" && (
-                                <p className="text-xs text-muted-foreground italic leading-relaxed">
+                                <p className="ml-9 text-xs text-muted-foreground italic leading-relaxed">
                                   {selectedCeremony.description}
                                 </p>
                               )}
