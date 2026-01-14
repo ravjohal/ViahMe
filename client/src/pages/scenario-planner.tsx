@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -65,6 +66,7 @@ export default function ScenarioPlanner() {
   const [activeTab, setActiveTab] = useState("scenarios");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedScenarioId, setSelectedScenarioId] = useState<string | null>(null);
+  const [compareIds, setCompareIds] = useState<string[]>([]);
   
   const [formData, setFormData] = useState<ScenarioFormData>({
     name: "",
@@ -186,6 +188,30 @@ export default function ScenarioPlanner() {
   }, [totalBudget, baseGuestCount]);
 
   const liveImpact = calculateScenarioImpact(formData);
+
+  const loadScenarioIntoBuilder = (scenario: BudgetScenario) => {
+    setFormData({
+      name: scenario.name,
+      description: scenario.description || "",
+      guestCount: scenario.guestCount,
+      guestCountChange: scenario.guestCountChange || 0,
+      venueMultiplier: parseFloat(scenario.venueMultiplier || "1"),
+      cateringMultiplier: parseFloat(scenario.cateringMultiplier || "1"),
+      overallMultiplier: parseFloat(scenario.overallMultiplier || "1"),
+    });
+    setSelectedScenarioId(scenario.id);
+    toast({ title: `Loaded "${scenario.name}" into builder` });
+  };
+
+  const toggleCompare = (scenarioId: string) => {
+    setCompareIds(prev => 
+      prev.includes(scenarioId) 
+        ? prev.filter(id => id !== scenarioId)
+        : [...prev, scenarioId]
+    );
+  };
+
+  const scenariosToCompare = scenarios.filter(s => compareIds.includes(s.id));
 
   if (!wedding) {
     return (
@@ -468,8 +494,22 @@ export default function ScenarioPlanner() {
             {scenarios.length > 0 && (
               <Card data-testid="card-saved-scenarios">
                 <CardHeader>
-                  <CardTitle>Saved Scenarios</CardTitle>
-                  <CardDescription>Compare your saved what-if scenarios</CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Saved Scenarios</CardTitle>
+                      <CardDescription>Click to load into builder, check to compare</CardDescription>
+                    </div>
+                    {compareIds.length > 0 && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setCompareIds([])}
+                        data-testid="button-clear-compare"
+                      >
+                        Clear ({compareIds.length})
+                      </Button>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
@@ -483,22 +523,34 @@ export default function ScenarioPlanner() {
                         cateringMultiplier: parseFloat(scenario.cateringMultiplier || "1"),
                         overallMultiplier: parseFloat(scenario.overallMultiplier || "1"),
                       });
+                      const isSelected = selectedScenarioId === scenario.id;
+                      const isComparing = compareIds.includes(scenario.id);
 
                       return (
                         <div 
                           key={scenario.id}
-                          className="flex items-center justify-between p-4 border rounded-lg hover-elevate"
+                          className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${isSelected ? 'ring-2 ring-primary border-primary' : 'hover-elevate'}`}
+                          onClick={() => loadScenarioIntoBuilder(scenario)}
                           data-testid={`scenario-${scenario.id}`}
                         >
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
+                          <Checkbox
+                            checked={isComparing}
+                            onCheckedChange={() => toggleCompare(scenario.id)}
+                            onClick={(e) => e.stopPropagation()}
+                            data-testid={`checkbox-compare-${scenario.id}`}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <h4 className="font-medium">{scenario.name}</h4>
                               {scenario.isBaseline && (
                                 <Badge variant="secondary">Baseline</Badge>
                               )}
+                              {isSelected && (
+                                <Badge variant="outline">Loaded</Badge>
+                              )}
                             </div>
                             {scenario.description && (
-                              <p className="text-sm text-muted-foreground mt-1">{scenario.description}</p>
+                              <p className="text-sm text-muted-foreground mt-1 truncate">{scenario.description}</p>
                             )}
                             <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
                               <span>{scenario.guestCount} guests</span>
@@ -512,7 +564,10 @@ export default function ScenarioPlanner() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => deleteScenarioMutation.mutate(scenario.id)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteScenarioMutation.mutate(scenario.id);
+                              }}
                               data-testid={`button-delete-scenario-${scenario.id}`}
                             >
                               <Trash2 className="h-4 w-4" />
@@ -521,6 +576,150 @@ export default function ScenarioPlanner() {
                         </div>
                       );
                     })}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {scenariosToCompare.length >= 2 && (
+              <Card data-testid="card-compare-scenarios">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Copy className="h-5 w-5" />
+                    Scenario Comparison
+                  </CardTitle>
+                  <CardDescription>Side-by-side comparison of selected scenarios</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left p-2 font-medium">Metric</th>
+                          {scenariosToCompare.map(s => (
+                            <th key={s.id} className="text-right p-2 font-medium">{s.name}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr className="border-b">
+                          <td className="p-2">Guest Count</td>
+                          {scenariosToCompare.map(s => (
+                            <td key={s.id} className="text-right p-2">{s.guestCount}</td>
+                          ))}
+                        </tr>
+                        <tr className="border-b">
+                          <td className="p-2">Total Budget</td>
+                          {scenariosToCompare.map(s => {
+                            const impact = calculateScenarioImpact({
+                              name: s.name,
+                              description: s.description || "",
+                              guestCount: s.guestCount,
+                              guestCountChange: s.guestCountChange || 0,
+                              venueMultiplier: parseFloat(s.venueMultiplier || "1"),
+                              cateringMultiplier: parseFloat(s.cateringMultiplier || "1"),
+                              overallMultiplier: parseFloat(s.overallMultiplier || "1"),
+                            });
+                            return <td key={s.id} className="text-right p-2 font-medium">${Math.round(impact.newTotal).toLocaleString()}</td>;
+                          })}
+                        </tr>
+                        <tr className="border-b">
+                          <td className="p-2">% Change</td>
+                          {scenariosToCompare.map(s => {
+                            const impact = calculateScenarioImpact({
+                              name: s.name,
+                              description: s.description || "",
+                              guestCount: s.guestCount,
+                              guestCountChange: s.guestCountChange || 0,
+                              venueMultiplier: parseFloat(s.venueMultiplier || "1"),
+                              cateringMultiplier: parseFloat(s.cateringMultiplier || "1"),
+                              overallMultiplier: parseFloat(s.overallMultiplier || "1"),
+                            });
+                            return (
+                              <td key={s.id} className={`text-right p-2 ${impact.totalImpact > 0 ? 'text-red-600' : impact.totalImpact < 0 ? 'text-green-600' : ''}`}>
+                                {impact.totalImpact > 0 ? "+" : ""}{impact.percentChange.toFixed(1)}%
+                              </td>
+                            );
+                          })}
+                        </tr>
+                        <tr className="border-b">
+                          <td className="p-2">Guest Impact</td>
+                          {scenariosToCompare.map(s => {
+                            const impact = calculateScenarioImpact({
+                              name: s.name,
+                              description: s.description || "",
+                              guestCount: s.guestCount,
+                              guestCountChange: s.guestCountChange || 0,
+                              venueMultiplier: parseFloat(s.venueMultiplier || "1"),
+                              cateringMultiplier: parseFloat(s.cateringMultiplier || "1"),
+                              overallMultiplier: parseFloat(s.overallMultiplier || "1"),
+                            });
+                            return (
+                              <td key={s.id} className={`text-right p-2 ${impact.guestImpact > 0 ? 'text-red-600' : impact.guestImpact < 0 ? 'text-green-600' : ''}`}>
+                                {impact.guestImpact > 0 ? "+" : ""}${Math.round(impact.guestImpact).toLocaleString()}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                        <tr className="border-b">
+                          <td className="p-2">Venue Impact</td>
+                          {scenariosToCompare.map(s => {
+                            const impact = calculateScenarioImpact({
+                              name: s.name,
+                              description: s.description || "",
+                              guestCount: s.guestCount,
+                              guestCountChange: s.guestCountChange || 0,
+                              venueMultiplier: parseFloat(s.venueMultiplier || "1"),
+                              cateringMultiplier: parseFloat(s.cateringMultiplier || "1"),
+                              overallMultiplier: parseFloat(s.overallMultiplier || "1"),
+                            });
+                            return (
+                              <td key={s.id} className={`text-right p-2 ${impact.venueImpact > 0 ? 'text-red-600' : impact.venueImpact < 0 ? 'text-green-600' : ''}`}>
+                                {impact.venueImpact > 0 ? "+" : ""}${Math.round(impact.venueImpact).toLocaleString()}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                        <tr className="border-b">
+                          <td className="p-2">Catering Impact</td>
+                          {scenariosToCompare.map(s => {
+                            const impact = calculateScenarioImpact({
+                              name: s.name,
+                              description: s.description || "",
+                              guestCount: s.guestCount,
+                              guestCountChange: s.guestCountChange || 0,
+                              venueMultiplier: parseFloat(s.venueMultiplier || "1"),
+                              cateringMultiplier: parseFloat(s.cateringMultiplier || "1"),
+                              overallMultiplier: parseFloat(s.overallMultiplier || "1"),
+                            });
+                            return (
+                              <td key={s.id} className={`text-right p-2 ${impact.cateringImpact > 0 ? 'text-red-600' : impact.cateringImpact < 0 ? 'text-green-600' : ''}`}>
+                                {impact.cateringImpact > 0 ? "+" : ""}${Math.round(impact.cateringImpact).toLocaleString()}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                        <tr>
+                          <td className="p-2 font-medium">Total Impact</td>
+                          {scenariosToCompare.map(s => {
+                            const impact = calculateScenarioImpact({
+                              name: s.name,
+                              description: s.description || "",
+                              guestCount: s.guestCount,
+                              guestCountChange: s.guestCountChange || 0,
+                              venueMultiplier: parseFloat(s.venueMultiplier || "1"),
+                              cateringMultiplier: parseFloat(s.cateringMultiplier || "1"),
+                              overallMultiplier: parseFloat(s.overallMultiplier || "1"),
+                            });
+                            return (
+                              <td key={s.id} className={`text-right p-2 font-medium ${impact.totalImpact > 0 ? 'text-red-600' : impact.totalImpact < 0 ? 'text-green-600' : ''}`}>
+                                {impact.totalImpact > 0 ? "+" : ""}${Math.round(impact.totalImpact).toLocaleString()}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
                 </CardContent>
               </Card>
