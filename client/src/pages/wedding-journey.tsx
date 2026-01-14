@@ -34,9 +34,6 @@ import {
 } from "lucide-react";
 import type { TraditionRitual, WeddingJourneyItem, Wedding } from "@shared/schema";
 
-interface WeddingJourneyPageProps {
-  wedding: Wedding;
-}
 
 interface JourneyItemWithRitual extends WeddingJourneyItem {
   ritual?: TraditionRitual;
@@ -303,29 +300,35 @@ function RitualDetailDialog({
   );
 }
 
-export default function WeddingJourneyPage({ wedding }: WeddingJourneyPageProps) {
+export default function WeddingJourneyPage() {
   const { toast } = useToast();
   const [selectedRitual, setSelectedRitual] = useState<TraditionRitual | null>(null);
   const [selectedItem, setSelectedItem] = useState<JourneyItemWithRitual | null>(null);
   const [filter, setFilter] = useState<string>('all');
 
+  const { data: weddings, isLoading: weddingLoading } = useQuery<Wedding[]>({
+    queryKey: ["/api/weddings"],
+  });
+  const wedding = weddings?.[0];
+
   const { data, isLoading, error } = useQuery<JourneyResponse>({
-    queryKey: ["/api/wedding-journey/wedding", wedding.id, "with-rituals"],
+    queryKey: ["/api/wedding-journey/wedding", wedding?.id, "with-rituals"],
     queryFn: async () => {
-      const response = await fetch(`/api/wedding-journey/wedding/${wedding.id}/with-rituals`);
+      const response = await fetch(`/api/wedding-journey/wedding/${wedding!.id}/with-rituals`);
       if (!response.ok) throw new Error("Failed to fetch journey");
       return response.json();
     },
+    enabled: !!wedding?.id,
   });
 
   const initializeMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest(`/api/wedding-journey/wedding/${wedding.id}/initialize`, {
+      return await apiRequest(`/api/wedding-journey/wedding/${wedding!.id}/initialize`, {
         method: "POST",
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/wedding-journey/wedding", wedding.id, "with-rituals"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/wedding-journey/wedding", wedding?.id, "with-rituals"] });
       toast({ title: "Journey started!", description: "Your wedding journey has been set up." });
     },
   });
@@ -338,10 +341,32 @@ export default function WeddingJourneyPage({ wedding }: WeddingJourneyPageProps)
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/wedding-journey/wedding", wedding.id, "with-rituals"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/wedding-journey/wedding", wedding?.id, "with-rituals"] });
       toast({ title: "Updated", description: "Ritual status has been updated." });
     },
   });
+
+  // Loading or no wedding state
+  if (weddingLoading) {
+    return (
+      <div className="container mx-auto p-6 space-y-6">
+        <Skeleton className="h-10 w-60" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Skeleton key={i} className="h-48" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (!wedding) {
+    return (
+      <div className="p-6">
+        <p className="text-muted-foreground">Please create or select a wedding first.</p>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

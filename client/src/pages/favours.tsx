@@ -296,9 +296,10 @@ export default function FavoursPage() {
     },
   });
 
-  const { data: wedding } = useQuery<Wedding>({
-    queryKey: ["/api/weddings/current"],
+  const { data: weddings } = useQuery<Wedding[]>({
+    queryKey: ["/api/weddings"],
   });
+  const wedding = weddings?.[0];
 
   const { data: favours = [], isLoading: favoursLoading, isError: favoursError } = useQuery<Favour[]>({
     queryKey: ["/api/favours/wedding", wedding?.id],
