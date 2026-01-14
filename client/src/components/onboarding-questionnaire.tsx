@@ -967,7 +967,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                                       <Users className="w-4 h-4 text-muted-foreground" />
                                       <Input
                                         type="number"
-                                        placeholder="100"
+                                        placeholder="—"
                                         title="Leave blank to use default guest count"
                                         value={event.guestCount || ""}
                                         onChange={(e) => handleEventChange(index, "guestCount", e.target.value)}
