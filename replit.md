@@ -74,6 +74,7 @@ Key architectural decisions and features include:
 - **Partner Collaboration Flow**: Encourages collaborative planning through prominent in-app prompts.
 - **Ritual Role Assignee Manager**: Allows couples to assign ceremonial micro-roles to guests using pre-defined templates, with guest portal integration for acknowledgments.
 - **Vendor Access Pass & Collaboration Hub**: Enables sharing of filtered timeline views with booked vendors, managing access tokens, and tracking vendor engagement without requiring vendor accounts.
+- **Ceremony Shopping Lists**: Database-driven shopping templates per ceremony type (table: `ceremony_shopping_templates`) with couple-specific tracking (table: `wedding_shopping_items`). Pre-seeded with Sikh ceremony items (Maiyan, Jaggo, Mehndi, Chooda, Anand Karaj, Sangeet). Supports item status tracking (needed → ordered → received), estimated vs. actual costs, purchase sources, and due dates for analytics and reporting.
 
 ## External Dependencies
 - **PostgreSQL (Neon)**: Relational database.

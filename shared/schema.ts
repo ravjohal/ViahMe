@@ -4216,6 +4216,102 @@ export type InsertCeremonyBudgetCategory = z.infer<typeof insertCeremonyBudgetCa
 export type CeremonyBudgetCategory = typeof ceremonyBudgetCategories.$inferSelect;
 
 // ============================================================================
+// CEREMONY SHOPPING TEMPLATES - Database-driven shopping lists per ceremony type
+// Master list of items to buy for each ceremony (e.g., "Vatna paste" for Maiyan)
+// ============================================================================
+
+export const ceremonyShoppingTemplates = pgTable("ceremony_shopping_templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  ceremonyTypeId: varchar("ceremony_type_id").notNull().references(() => ceremonyTypes.id),
+  itemName: text("item_name").notNull(), // e.g., "Vatna paste ingredients", "Low wooden stool"
+  description: text("description"), // Details about the item
+  category: text("category").notNull(), // 'decor', 'attire', 'religious', 'food', 'gifts', 'other'
+  defaultQuantity: integer("default_quantity").notNull().default(1),
+  unit: text("unit"), // 'pieces', 'sets', 'kg', 'packets', etc.
+  estimatedCostLow: decimal("estimated_cost_low", { precision: 10, scale: 2 }),
+  estimatedCostHigh: decimal("estimated_cost_high", { precision: 10, scale: 2 }),
+  recommendedSource: text("recommended_source"), // 'India', 'Local Indian store', 'Amazon', 'Rental'
+  isEssential: boolean("is_essential").notNull().default(true), // Required vs. optional
+  displayOrder: integer("display_order").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  notes: text("notes"), // Tips like "Get from India - much cheaper"
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  ceremonyTypeIdx: index("ceremony_shopping_templates_type_idx").on(table.ceremonyTypeId),
+  categoryIdx: index("ceremony_shopping_templates_category_idx").on(table.category),
+}));
+
+export const insertCeremonyShoppingTemplateSchema = createInsertSchema(ceremonyShoppingTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  category: z.enum(['decor', 'attire', 'religious', 'food', 'gifts', 'other']),
+  estimatedCostLow: z.string().nullable().optional(),
+  estimatedCostHigh: z.string().nullable().optional(),
+});
+
+export type InsertCeremonyShoppingTemplate = z.infer<typeof insertCeremonyShoppingTemplateSchema>;
+export type CeremonyShoppingTemplate = typeof ceremonyShoppingTemplates.$inferSelect;
+
+// Shopping item status enum values
+export const SHOPPING_ITEM_STATUS = ['needed', 'shortlisted', 'ordered', 'received', 'fulfilled'] as const;
+export type ShoppingItemStatus = typeof SHOPPING_ITEM_STATUS[number];
+
+// ============================================================================
+// WEDDING SHOPPING ITEMS - Couple's actual shopping list per event
+// Tracks what they need to buy/have bought for their specific ceremonies
+// ============================================================================
+
+export const weddingShoppingItems = pgTable("wedding_shopping_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  eventId: varchar("event_id"), // References events.id - which ceremony this is for
+  ceremonyTypeId: varchar("ceremony_type_id").references(() => ceremonyTypes.id), // For reporting by ceremony type
+  templateId: varchar("template_id").references(() => ceremonyShoppingTemplates.id), // Source template if seeded
+  itemName: text("item_name").notNull(),
+  description: text("description"),
+  category: text("category").notNull(), // 'decor', 'attire', 'religious', 'food', 'gifts', 'other'
+  quantityNeeded: integer("quantity_needed").notNull().default(1),
+  quantityAcquired: integer("quantity_acquired").notNull().default(0),
+  unit: text("unit"),
+  status: text("status").notNull().default('needed'), // 'needed', 'shortlisted', 'ordered', 'received', 'fulfilled'
+  estimatedCost: decimal("estimated_cost", { precision: 10, scale: 2 }),
+  actualCost: decimal("actual_cost", { precision: 10, scale: 2 }),
+  purchaseSource: text("purchase_source"), // Where to buy / where bought
+  vendorId: varchar("vendor_id"), // References vendors.id if purchased from a vendor
+  dueDate: timestamp("due_date"), // When needed by
+  acquiredDate: timestamp("acquired_date"), // When received
+  assignedTo: text("assigned_to"), // Who is responsible (name or role)
+  notes: text("notes"),
+  isEssential: boolean("is_essential").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  weddingIdx: index("wedding_shopping_items_wedding_idx").on(table.weddingId),
+  eventIdx: index("wedding_shopping_items_event_idx").on(table.eventId),
+  ceremonyTypeIdx: index("wedding_shopping_items_ceremony_type_idx").on(table.ceremonyTypeId),
+  statusIdx: index("wedding_shopping_items_status_idx").on(table.status),
+}));
+
+export const insertWeddingShoppingItemSchema = createInsertSchema(weddingShoppingItems).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  category: z.enum(['decor', 'attire', 'religious', 'food', 'gifts', 'other']),
+  status: z.enum(SHOPPING_ITEM_STATUS).optional(),
+  estimatedCost: z.string().nullable().optional(),
+  actualCost: z.string().nullable().optional(),
+  dueDate: z.union([z.string(), z.date()]).nullable().optional(),
+  acquiredDate: z.union([z.string(), z.date()]).nullable().optional(),
+});
+
+export type InsertWeddingShoppingItem = z.infer<typeof insertWeddingShoppingItemSchema>;
+export type WeddingShoppingItem = typeof weddingShoppingItems.$inferSelect;
+
+// ============================================================================
 // WEDDING LINE ITEMS - Couple's customized budget line items
 // ============================================================================
 
