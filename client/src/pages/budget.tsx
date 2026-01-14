@@ -1382,7 +1382,7 @@ export default function Budget() {
               data-testid="button-financial-dashboard"
             >
               <BarChart3 className="w-4 h-4 mr-2" />
-              Dashboard
+              Financials
             </Button>
             <Button
               variant="outline"

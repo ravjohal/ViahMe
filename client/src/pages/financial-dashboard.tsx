@@ -31,7 +31,11 @@ import {
   Eye,
   EyeOff,
   X,
+  LineChart,
+  Target,
+  PiggyBank,
 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   DndContext,
   closestCenter,
@@ -461,6 +465,291 @@ const WIDGET_TITLES: Record<string, string> = {
   upcoming_payments: "Upcoming Payments",
 };
 
+interface ForecastTabProps {
+  wedding: Wedding | undefined;
+  expenses: Expense[];
+  contracts: Contract[];
+  totalBudget: number;
+  totalSpent: number;
+}
+
+function ForecastTab({ wedding, expenses, contracts, totalBudget, totalSpent }: ForecastTabProps) {
+  const forecastData = useMemo(() => {
+    const totalCommitted = expenses.reduce((sum, e) => sum + parseFloat(e.amount?.toString() || "0"), 0);
+    const totalPaid = expenses.reduce((sum, e) => sum + parseFloat(e.amountPaid?.toString() || "0"), 0);
+    const outstanding = totalCommitted - totalPaid;
+    
+    const weddingDate = wedding?.weddingDate ? new Date(wedding.weddingDate) : null;
+    const now = new Date();
+    const monthsUntilWedding = weddingDate 
+      ? Math.max(1, Math.ceil((weddingDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24 * 30)))
+      : 6;
+    
+    const firstExpenseDate = expenses.length > 0 
+      ? new Date(Math.min(...expenses.map(e => new Date(e.createdAt || now).getTime())))
+      : now;
+    const monthsElapsed = Math.max(1, Math.ceil((now.getTime() - firstExpenseDate.getTime()) / (1000 * 60 * 60 * 24 * 30)));
+    const avgMonthlySpend = totalPaid / monthsElapsed;
+    const projectedTotal = totalPaid + (avgMonthlySpend * monthsUntilWedding);
+    
+    const remaining = totalBudget - totalSpent;
+    const percentUsed = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
+    
+    return {
+      totalCommitted,
+      totalPaid,
+      outstanding,
+      projectedTotal,
+      avgMonthlySpend,
+      monthsUntilWedding,
+      remaining,
+      percentUsed,
+    };
+  }, [wedding, expenses, totalBudget, totalSpent]);
+
+  const projectionData = useMemo(() => {
+    const now = new Date();
+    const data = [];
+    let runningTotal = forecastData.totalPaid;
+    
+    for (let i = 0; i <= forecastData.monthsUntilWedding; i++) {
+      const month = new Date(now.getFullYear(), now.getMonth() + i, 1);
+      data.push({
+        month: month.toLocaleDateString("en-US", { month: "short", year: "2-digit" }),
+        projected: Math.round(runningTotal),
+        budget: totalBudget,
+      });
+      runningTotal += forecastData.avgMonthlySpend;
+    }
+    return data;
+  }, [forecastData, totalBudget]);
+
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card className="p-4">
+          <div className="flex items-center gap-2 text-muted-foreground mb-2">
+            <Target className="w-4 h-4" />
+            <span className="text-xs uppercase tracking-wide">Total Committed</span>
+          </div>
+          <p className="text-2xl font-bold">${forecastData.totalCommitted.toLocaleString()}</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {forecastData.percentUsed.toFixed(1)}% of budget
+          </p>
+        </Card>
+
+        <Card className="p-4">
+          <div className="flex items-center gap-2 text-muted-foreground mb-2">
+            <DollarSign className="w-4 h-4" />
+            <span className="text-xs uppercase tracking-wide">Total Paid</span>
+          </div>
+          <p className="text-2xl font-bold text-emerald-600">${forecastData.totalPaid.toLocaleString()}</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            ${forecastData.outstanding.toLocaleString()} outstanding
+          </p>
+        </Card>
+
+        <Card className="p-4">
+          <div className="flex items-center gap-2 text-muted-foreground mb-2">
+            <TrendingUp className="w-4 h-4" />
+            <span className="text-xs uppercase tracking-wide">Projected Total</span>
+          </div>
+          <p className={`text-2xl font-bold ${forecastData.projectedTotal > totalBudget ? "text-red-600" : "text-blue-600"}`}>
+            ${Math.round(forecastData.projectedTotal).toLocaleString()}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Based on ${Math.round(forecastData.avgMonthlySpend).toLocaleString()}/month avg
+          </p>
+        </Card>
+      </div>
+
+      <Card className="p-4">
+        <h3 className="font-semibold mb-4 flex items-center gap-2">
+          <LineChart className="w-4 h-4" />
+          Spending Projection
+        </h3>
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={projectionData}>
+              <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+              <YAxis tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 12 }} />
+              <Tooltip 
+                formatter={(value: number) => [`$${value.toLocaleString()}`, ""]}
+                labelFormatter={(label) => `Month: ${label}`}
+              />
+              <Area 
+                type="monotone" 
+                dataKey="budget" 
+                stroke="#94a3b8" 
+                fill="#e2e8f0" 
+                strokeDasharray="5 5"
+                name="Budget"
+              />
+              <Area 
+                type="monotone" 
+                dataKey="projected" 
+                stroke="#f97316" 
+                fill="#fed7aa" 
+                name="Projected"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="flex justify-center gap-6 mt-4 text-sm">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded bg-orange-500" />
+            <span>Projected Spending</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded bg-slate-300 border border-dashed border-slate-400" />
+            <span>Budget Limit</span>
+          </div>
+        </div>
+      </Card>
+
+      {forecastData.projectedTotal > totalBudget && (
+        <Card className="p-4 bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5" />
+            <div>
+              <p className="font-medium text-red-700 dark:text-red-400">Budget Warning</p>
+              <p className="text-sm text-red-600 dark:text-red-400/80 mt-1">
+                At your current spending rate, you're projected to exceed your budget by ${Math.round(forecastData.projectedTotal - totalBudget).toLocaleString()} by your wedding date.
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+interface CashFlowTabProps {
+  wedding: Wedding | undefined;
+  expenses: Expense[];
+  contracts: Contract[];
+}
+
+function CashFlowTab({ wedding, expenses, contracts }: CashFlowTabProps) {
+  const cashFlowData = useMemo(() => {
+    const now = new Date();
+    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+    const threeMonthsAhead = new Date(now.getFullYear(), now.getMonth() + 3, 1);
+    
+    const monthlyData: { [key: string]: { inflow: number; outflow: number; label: string; isFuture: boolean } } = {};
+    
+    for (let d = new Date(sixMonthsAgo); d <= threeMonthsAhead; d.setMonth(d.getMonth() + 1)) {
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const label = d.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
+      const isFuture = d > now;
+      monthlyData[key] = { inflow: 0, outflow: 0, label, isFuture };
+    }
+    
+    expenses.forEach((expense) => {
+      if (!expense.createdAt) return;
+      const date = new Date(expense.createdAt);
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+      if (monthlyData[key]) {
+        monthlyData[key].outflow += parseFloat(expense.amountPaid?.toString() || "0");
+      }
+    });
+    
+    contracts.forEach((contract) => {
+      if (!contract.nextPaymentDate) return;
+      const date = new Date(contract.nextPaymentDate);
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+      if (monthlyData[key] && date > now) {
+        const remaining = parseFloat(contract.totalAmount?.toString() || "0") - parseFloat(contract.depositAmount?.toString() || "0");
+        monthlyData[key].outflow += remaining;
+      }
+    });
+    
+    return Object.entries(monthlyData)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([_, data]) => data);
+  }, [expenses, contracts]);
+
+  const totalOutflow = cashFlowData.reduce((sum, d) => sum + d.outflow, 0);
+  const pastOutflow = cashFlowData.filter(d => !d.isFuture).reduce((sum, d) => sum + d.outflow, 0);
+  const futureOutflow = cashFlowData.filter(d => d.isFuture).reduce((sum, d) => sum + d.outflow, 0);
+
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card className="p-4">
+          <div className="flex items-center gap-2 text-muted-foreground mb-2">
+            <DollarSign className="w-4 h-4" />
+            <span className="text-xs uppercase tracking-wide">Total Cash Out</span>
+          </div>
+          <p className="text-2xl font-bold">${totalOutflow.toLocaleString()}</p>
+          <p className="text-xs text-muted-foreground mt-1">Past 6 months + Next 3 months</p>
+        </Card>
+
+        <Card className="p-4">
+          <div className="flex items-center gap-2 text-muted-foreground mb-2">
+            <Clock className="w-4 h-4" />
+            <span className="text-xs uppercase tracking-wide">Already Paid</span>
+          </div>
+          <p className="text-2xl font-bold text-emerald-600">${pastOutflow.toLocaleString()}</p>
+          <p className="text-xs text-muted-foreground mt-1">Past 6 months</p>
+        </Card>
+
+        <Card className="p-4">
+          <div className="flex items-center gap-2 text-muted-foreground mb-2">
+            <Calendar className="w-4 h-4" />
+            <span className="text-xs uppercase tracking-wide">Upcoming</span>
+          </div>
+          <p className="text-2xl font-bold text-orange-600">${futureOutflow.toLocaleString()}</p>
+          <p className="text-xs text-muted-foreground mt-1">Next 3 months</p>
+        </Card>
+      </div>
+
+      <Card className="p-4">
+        <h3 className="font-semibold mb-4 flex items-center gap-2">
+          <PiggyBank className="w-4 h-4" />
+          Monthly Cash Flow
+        </h3>
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={cashFlowData}>
+              <XAxis dataKey="label" tick={{ fontSize: 12 }} />
+              <YAxis tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 12 }} />
+              <Tooltip 
+                formatter={(value: number) => [`$${value.toLocaleString()}`, "Payments"]}
+                labelFormatter={(label) => `Month: ${label}`}
+              />
+              <Area 
+                type="monotone" 
+                dataKey="outflow" 
+                stroke="#f97316" 
+                fill="#fed7aa" 
+                name="Cash Out"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+        <p className="text-xs text-muted-foreground text-center mt-4">
+          Shows past payments and upcoming scheduled payments from contracts
+        </p>
+      </Card>
+
+      {futureOutflow > 0 && (
+        <Card className="p-4 bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-900">
+          <div className="flex items-start gap-3">
+            <Calendar className="w-5 h-5 text-blue-600 mt-0.5" />
+            <div>
+              <p className="font-medium text-blue-700 dark:text-blue-400">Upcoming Payments</p>
+              <p className="text-sm text-blue-600 dark:text-blue-400/80 mt-1">
+                You have ${futureOutflow.toLocaleString()} in scheduled payments over the next 3 months.
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+}
+
 export default function FinancialDashboard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -468,6 +757,7 @@ export default function FinancialDashboard() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [alertDialogOpen, setAlertDialogOpen] = useState(false);
   const [newAlertThreshold, setNewAlertThreshold] = useState("80");
+  const [activeTab, setActiveTab] = useState("widgets");
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -729,25 +1019,62 @@ export default function FinancialDashboard() {
       </header>
 
       <main className="max-w-6xl mx-auto p-4 md:p-6">
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext items={widgets} strategy={verticalListSortingStrategy}>
-            <div className="grid gap-4 md:grid-cols-2">
-              {widgets.map((widget) => (
-                <SortableWidget
-                  key={widget.id}
-                  widget={widget}
-                  onToggle={() => toggleWidgetVisibility(widget.id)}
-                >
-                  {renderWidgetContent(widget)}
-                </SortableWidget>
-              ))}
-            </div>
-          </SortableContext>
-        </DndContext>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="widgets" data-testid="tab-widgets">
+              <PieChart className="w-4 h-4 mr-2" />
+              Widgets
+            </TabsTrigger>
+            <TabsTrigger value="forecast" data-testid="tab-forecast">
+              <LineChart className="w-4 h-4 mr-2" />
+              Forecast
+            </TabsTrigger>
+            <TabsTrigger value="cashflow" data-testid="tab-cashflow">
+              <PiggyBank className="w-4 h-4 mr-2" />
+              Cash Flow
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="widgets">
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext items={widgets} strategy={verticalListSortingStrategy}>
+                <div className="grid gap-4 md:grid-cols-2">
+                  {widgets.map((widget) => (
+                    <SortableWidget
+                      key={widget.id}
+                      widget={widget}
+                      onToggle={() => toggleWidgetVisibility(widget.id)}
+                    >
+                      {renderWidgetContent(widget)}
+                    </SortableWidget>
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
+          </TabsContent>
+
+          <TabsContent value="forecast">
+            <ForecastTab 
+              wedding={wedding} 
+              expenses={expenses} 
+              contracts={contracts}
+              totalBudget={totalBudget}
+              totalSpent={totalSpent}
+            />
+          </TabsContent>
+
+          <TabsContent value="cashflow">
+            <CashFlowTab 
+              wedding={wedding} 
+              expenses={expenses} 
+              contracts={contracts}
+            />
+          </TabsContent>
+        </Tabs>
       </main>
 
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
