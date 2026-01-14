@@ -1306,6 +1306,47 @@ export default function Budget() {
   return (
     <div className="min-h-screen bg-background">
       <main className="container mx-auto px-4 py-6 max-w-4xl">
+        {/* Budget Setup Banner - shows until confirmed */}
+        {!wedding.budgetConfirmed && (
+          <div className="mb-6 p-4 rounded-lg border border-orange-300 dark:border-orange-700 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30" data-testid="banner-budget-setup">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <div className="p-2 rounded-full bg-orange-100 dark:bg-orange-900/50">
+                  <AlertTriangle className="w-5 h-5 text-orange-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-orange-900 dark:text-orange-100">Complete Your Budget Setup</h3>
+                  <p className="text-sm text-orange-700 dark:text-orange-300 mt-0.5">
+                    Use the wizard to distribute your budget across ceremonies, then confirm when you're ready.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <Button
+                  size="sm"
+                  onClick={() => setLocation("/budget-distribution")}
+                  className="flex-1 sm:flex-none"
+                  data-testid="banner-button-wizard"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Open Wizard
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => confirmBudgetMutation.mutate(true)}
+                  disabled={confirmBudgetMutation.isPending}
+                  className="flex-1 sm:flex-none"
+                  data-testid="banner-button-confirm"
+                >
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  Confirm Budget
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
