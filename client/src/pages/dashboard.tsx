@@ -422,7 +422,7 @@ export default function Dashboard() {
         : "Allocate your budget to categories",
       completed: isBudgetConfirmed,
       inProgress: false,
-      path: "/budget",
+      path: isBudgetConfirmed ? "/budget" : "/budget-distribution",
       color: "emerald",
     },
     {

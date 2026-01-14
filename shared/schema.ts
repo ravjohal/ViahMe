@@ -491,6 +491,7 @@ export const weddings = pgTable("weddings", {
   receptionGuestCount: integer("reception_guest_count"), // Event-specific: reception guests
   totalBudget: decimal("total_budget", { precision: 10, scale: 2 }),
   budgetConfirmed: boolean("budget_confirmed").default(false),
+  budgetDistributionStep: integer("budget_distribution_step"),
   eventsConfirmed: boolean("events_confirmed").default(false),
   budgetContribution: text("budget_contribution"), // 'couple_only' | 'both_families' | 'mix'
   partnerNewToTraditions: boolean("partner_new_to_traditions").default(false), // Culture Bridge feature

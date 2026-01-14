@@ -78,6 +78,7 @@ import FavoursPage from "@/pages/favours";
 import VendorAccessPasses from "@/pages/vendor-access-passes";
 import VendorTimeline from "@/pages/vendor-timeline";
 import BudgetEstimatorPage from "@/pages/budget-estimator";
+import BudgetDistribution from "@/pages/budget-distribution";
 import WeddingJourneyPage from "@/pages/wedding-journey";
 import { VendorRoute } from "@/components/VendorRoute";
 import { CoupleRoute } from "@/components/CoupleRoute";
@@ -218,6 +219,11 @@ function Router() {
       <Route path="/budget-estimator">
         <ProtectedRoute requiredPermission="budget">
           <BudgetEstimatorPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/budget-distribution">
+        <ProtectedRoute requiredPermission="budget">
+          <BudgetDistribution />
         </ProtectedRoute>
       </Route>
       <Route path="/budget-intelligence">

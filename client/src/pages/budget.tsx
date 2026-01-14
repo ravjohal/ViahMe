@@ -1333,15 +1333,26 @@ export default function Budget() {
                 Budget Confirmed
               </Button>
             ) : (
-              <Button
-                size="sm"
-                onClick={() => confirmBudgetMutation.mutate(true)}
-                disabled={confirmBudgetMutation.isPending}
-                data-testid="button-confirm-budget"
-              >
-                <CheckCircle2 className="w-4 h-4 mr-2" />
-                Confirm Budget
-              </Button>
+              <>
+                <Button
+                  size="sm"
+                  onClick={() => setLocation("/budget-distribution")}
+                  data-testid="button-distribute-wizard"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Distribute Budget
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => confirmBudgetMutation.mutate(true)}
+                  disabled={confirmBudgetMutation.isPending}
+                  data-testid="button-confirm-budget"
+                >
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  Confirm Budget
+                </Button>
+              </>
             )}
             <Button
               size="sm"
