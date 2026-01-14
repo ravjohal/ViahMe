@@ -631,9 +631,10 @@ function DayOfTimelineContent({ weddingId }: { weddingId: string }) {
 }
 
 export default function DayOfTimelinePage() {
-  const { data: wedding, isLoading: weddingLoading } = useQuery<Wedding>({
-    queryKey: ["/api/weddings/current"],
+  const { data: weddings, isLoading: weddingLoading } = useQuery<Wedding[]>({
+    queryKey: ["/api/weddings"],
   });
+  const wedding = weddings?.[0];
 
   if (weddingLoading) {
     return (

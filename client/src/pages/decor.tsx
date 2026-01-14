@@ -513,9 +513,10 @@ function DecorContent({ weddingId }: { weddingId: string }) {
 }
 
 export default function DecorPage() {
-  const { data: wedding, isLoading } = useQuery<Wedding>({
-    queryKey: ["/api/weddings/current"],
+  const { data: weddings, isLoading } = useQuery<Wedding[]>({
+    queryKey: ["/api/weddings"],
   });
+  const wedding = weddings?.[0];
 
   if (isLoading) {
     return (
