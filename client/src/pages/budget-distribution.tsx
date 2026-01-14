@@ -16,7 +16,7 @@ import { useBudgetCategories } from "@/hooks/use-budget-bucket-categories";
 import type { Wedding, Event, BudgetAllocation, BudgetBucket } from "@shared/schema";
 import { 
   ArrowLeft, Check, Save, ChevronLeft, ChevronRight,
-  DollarSign, Sparkles, Calendar, Layers, ChevronDown, ChevronUp
+  DollarSign, Sparkles, Calendar, Layers, ChevronDown, ChevronUp, Plus, X
 } from "lucide-react";
 
 interface CeremonyLineItem {
@@ -34,12 +34,21 @@ interface CeremonyLineItem {
 
 type EstimateMode = "low" | "high" | "custom";
 
+interface CustomLineItem {
+  id: string;
+  name: string;
+  amount: string;
+}
+
 export default function BudgetDistribution() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(0);
   const [direction, setDirection] = useState(0);
   const [showLineItems, setShowLineItems] = useState(false);
+  const [customItems, setCustomItems] = useState<Record<string, CustomLineItem[]>>({});
+  const [newItemName, setNewItemName] = useState("");
+  const [newItemAmount, setNewItemAmount] = useState("");
   
   const { data: weddings, isLoading: weddingsLoading } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
@@ -288,11 +297,62 @@ export default function BudgetDistribution() {
     if (ceremonyTypeId && allLineItems[ceremonyTypeId]) {
       const lineItems = allLineItems[ceremonyTypeId];
       const currentBudgets = { ...(ceremonyLineItemBudgets[stepId] || {}), [lineItemId]: value };
-      const total = lineItems.reduce((sum, item) => {
+      const templateTotal = lineItems.reduce((sum, item) => {
         return sum + parseFloat(currentBudgets[item.id] || "0");
       }, 0);
-      setCeremonyBudgets(prev => ({ ...prev, [stepId]: total.toString() }));
+      const customTotal = (customItems[stepId] || []).reduce((sum, item) => sum + parseFloat(item.amount || "0"), 0);
+      setCeremonyBudgets(prev => ({ ...prev, [stepId]: (templateTotal + customTotal).toString() }));
     }
+  };
+
+  const recalculateCeremonyTotal = (stepId: string, ceremonyTypeId?: string | null) => {
+    const lineItems = ceremonyTypeId && allLineItems[ceremonyTypeId] ? allLineItems[ceremonyTypeId] : [];
+    const currentBudgets = ceremonyLineItemBudgets[stepId] || {};
+    const templateTotal = lineItems.reduce((sum, item) => {
+      return sum + parseFloat(currentBudgets[item.id] || "0");
+    }, 0);
+    const customTotal = (customItems[stepId] || []).reduce((sum, item) => sum + parseFloat(item.amount || "0"), 0);
+    setCeremonyBudgets(prev => ({ ...prev, [stepId]: (templateTotal + customTotal).toString() }));
+  };
+
+  const addCustomItem = (stepId: string, ceremonyTypeId?: string | null) => {
+    if (!newItemName.trim()) {
+      toast({ title: "Please enter an item name", variant: "destructive" });
+      return;
+    }
+    const newItem: CustomLineItem = {
+      id: `custom-${Date.now()}`,
+      name: newItemName.trim(),
+      amount: newItemAmount || "0",
+    };
+    setCustomItems(prev => ({
+      ...prev,
+      [stepId]: [...(prev[stepId] || []), newItem],
+    }));
+    setNewItemName("");
+    setNewItemAmount("");
+    setEstimateModes(prev => ({ ...prev, [stepId]: "custom" }));
+    
+    setTimeout(() => recalculateCeremonyTotal(stepId, ceremonyTypeId), 0);
+  };
+
+  const removeCustomItem = (stepId: string, itemId: string, ceremonyTypeId?: string | null) => {
+    setCustomItems(prev => ({
+      ...prev,
+      [stepId]: (prev[stepId] || []).filter(item => item.id !== itemId),
+    }));
+    setTimeout(() => recalculateCeremonyTotal(stepId, ceremonyTypeId), 0);
+  };
+
+  const updateCustomItemAmount = (stepId: string, itemId: string, value: string, ceremonyTypeId?: string | null) => {
+    setCustomItems(prev => ({
+      ...prev,
+      [stepId]: (prev[stepId] || []).map(item => 
+        item.id === itemId ? { ...item, amount: value } : item
+      ),
+    }));
+    setEstimateModes(prev => ({ ...prev, [stepId]: "custom" }));
+    setTimeout(() => recalculateCeremonyTotal(stepId, ceremonyTypeId), 0);
   };
 
   const slideVariants = {
@@ -523,8 +583,148 @@ export default function BudgetDistribution() {
                             </div>
                           </div>
                         ))}
+
+                        {(customItems[currentStepData.id] || []).length > 0 && (
+                          <div className="border-t pt-3 mt-3">
+                            <p className="text-xs font-medium text-muted-foreground mb-2">Your Custom Items</p>
+                            {(customItems[currentStepData.id] || []).map(item => (
+                              <div key={item.id} className="flex items-center gap-3 mb-2">
+                                <div className="flex-1 min-w-0">
+                                  <Label className="text-sm truncate block">{item.name}</Label>
+                                  <p className="text-xs text-muted-foreground">Custom item</p>
+                                </div>
+                                <div className="relative w-32">
+                                  <DollarSign className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    value={item.amount}
+                                    onChange={(e) => updateCustomItemAmount(currentStepData.id, item.id, e.target.value, currentStepData.ceremonyTypeId)}
+                                    onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                                    className="pl-7 h-9"
+                                    placeholder="0"
+                                    data-testid={`input-custom-item-${item.id}`}
+                                  />
+                                </div>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-9 w-9 text-muted-foreground hover:text-destructive"
+                                  onClick={() => removeCustomItem(currentStepData.id, item.id, currentStepData.ceremonyTypeId)}
+                                  data-testid={`button-remove-custom-${item.id}`}
+                                >
+                                  <X className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        <div className="border-t pt-3 mt-3">
+                          <p className="text-xs font-medium text-muted-foreground mb-2">Add Custom Item</p>
+                          <div className="flex items-center gap-2">
+                            <Input
+                              placeholder="Item name"
+                              value={newItemName}
+                              onChange={(e) => setNewItemName(e.target.value)}
+                              className="flex-1 h-9"
+                              data-testid="input-new-item-name"
+                            />
+                            <div className="relative w-24">
+                              <DollarSign className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                              <Input
+                                type="number"
+                                min="0"
+                                placeholder="0"
+                                value={newItemAmount}
+                                onChange={(e) => setNewItemAmount(e.target.value)}
+                                onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                                className="pl-7 h-9"
+                                data-testid="input-new-item-amount"
+                              />
+                            </div>
+                            <Button 
+                              size="sm"
+                              onClick={() => addCustomItem(currentStepData.id, currentStepData.ceremonyTypeId)}
+                              data-testid="button-add-custom-item"
+                            >
+                              <Plus className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
                       </CollapsibleContent>
                     </Collapsible>
+                  )}
+
+                  {currentLineItems.length === 0 && (
+                    <div className="space-y-3 border-t pt-4">
+                      <p className="text-sm text-muted-foreground">
+                        No template items available for this ceremony. Add your own budget items below.
+                      </p>
+                      
+                      {(customItems[currentStepData.id] || []).length > 0 && (
+                        <div className="space-y-2">
+                          <p className="text-xs font-medium text-muted-foreground">Your Custom Items</p>
+                          {(customItems[currentStepData.id] || []).map(item => (
+                            <div key={item.id} className="flex items-center gap-3">
+                              <div className="flex-1 min-w-0">
+                                <Label className="text-sm truncate block">{item.name}</Label>
+                              </div>
+                              <div className="relative w-32">
+                                <DollarSign className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  value={item.amount}
+                                  onChange={(e) => updateCustomItemAmount(currentStepData.id, item.id, e.target.value, currentStepData.ceremonyTypeId)}
+                                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                                  className="pl-7 h-9"
+                                  placeholder="0"
+                                />
+                              </div>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-9 w-9 text-muted-foreground hover:text-destructive"
+                                onClick={() => removeCustomItem(currentStepData.id, item.id, currentStepData.ceremonyTypeId)}
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-2">
+                        <Input
+                          placeholder="Item name"
+                          value={newItemName}
+                          onChange={(e) => setNewItemName(e.target.value)}
+                          className="flex-1 h-9"
+                          data-testid="input-new-item-name-no-template"
+                        />
+                        <div className="relative w-24">
+                          <DollarSign className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input
+                            type="number"
+                            min="0"
+                            placeholder="0"
+                            value={newItemAmount}
+                            onChange={(e) => setNewItemAmount(e.target.value)}
+                            onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                            className="pl-7 h-9"
+                            data-testid="input-new-item-amount-no-template"
+                          />
+                        </div>
+                        <Button 
+                          size="sm"
+                          onClick={() => addCustomItem(currentStepData.id, currentStepData.ceremonyTypeId)}
+                          data-testid="button-add-custom-item-no-template"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
                   )}
                 </CardContent>
               </Card>
