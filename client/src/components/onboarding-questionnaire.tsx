@@ -967,12 +967,12 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                                       <Users className="w-4 h-4 text-muted-foreground" />
                                       <Input
                                         type="number"
-                                        placeholder="—"
+                                        placeholder="Guest count"
                                         title="Leave blank to use default guest count"
                                         value={event.guestCount || ""}
                                         onChange={(e) => handleEventChange(index, "guestCount", e.target.value)}
                                         data-testid={`input-event-guests-${index}`}
-                                        className="h-10 w-16 text-center border-0 p-0 focus-visible:ring-0"
+                                        className="h-10 w-24 text-center border-0 p-0 focus-visible:ring-0"
                                       />
                                     </div>
                                   </div>
