@@ -1068,9 +1068,10 @@ function HoneymoonPlannerContent({ weddingId }: { weddingId: string }) {
 }
 
 export default function HoneymoonPlannerPage() {
-  const { data: wedding, isLoading } = useQuery<Wedding>({
-    queryKey: ["/api/my-wedding"],
+  const { data: weddings, isLoading } = useQuery<Wedding[]>({
+    queryKey: ["/api/weddings"],
   });
+  const wedding = weddings?.[0];
 
   if (isLoading) {
     return (
