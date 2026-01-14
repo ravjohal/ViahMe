@@ -1348,65 +1348,66 @@ export default function Budget() {
         )}
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => setLocation("/")}
-              data-testid="button-back"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <h1 className="text-2xl font-bold" data-testid="text-budget-title">Budget Planner</h1>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            {wedding.budgetConfirmed ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => confirmBudgetMutation.mutate(false)}
-                disabled={confirmBudgetMutation.isPending}
-                className="border-green-500 text-green-600"
-                data-testid="button-reopen-budget"
-              >
-                <CheckCircle2 className="w-4 h-4 mr-2" />
-                Budget Confirmed
-              </Button>
-            ) : (
-              <>
-                <Button
-                  size="sm"
-                  onClick={() => setLocation("/budget-distribution")}
-                  data-testid="button-distribute-wizard"
-                >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Distribute Budget
-                </Button>
+        <div className="mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-serif italic text-primary" data-testid="text-budget-title">
+                Your Budget Planner
+              </h1>
+              <p className="text-muted-foreground mt-1">
+                Track spending across {expenseTotals?.bucketTotals?.length || 0} categories
+              </p>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              {wedding.budgetConfirmed ? (
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => confirmBudgetMutation.mutate(true)}
+                  onClick={() => confirmBudgetMutation.mutate(false)}
                   disabled={confirmBudgetMutation.isPending}
-                  data-testid="button-confirm-budget"
+                  className="border-green-500 text-green-600"
+                  data-testid="button-reopen-budget"
                 >
                   <CheckCircle2 className="w-4 h-4 mr-2" />
-                  Confirm Budget
+                  Budget Confirmed
                 </Button>
-              </>
-            )}
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                setAddExpenseEventId(undefined);
-                setAddExpenseDialogOpen(true);
-              }}
-              data-testid="button-add-expense-header"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Expense
-            </Button>
+              ) : (
+                <>
+                  <Button
+                    size="sm"
+                    onClick={() => setLocation("/budget-distribution")}
+                    data-testid="button-distribute-wizard"
+                  >
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Distribute Budget
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => confirmBudgetMutation.mutate(true)}
+                    disabled={confirmBudgetMutation.isPending}
+                    data-testid="button-confirm-budget"
+                  >
+                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                    Confirm Budget
+                  </Button>
+                </>
+              )}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setAddExpenseEventId(undefined);
+                  setAddExpenseDialogOpen(true);
+                }}
+                data-testid="button-add-expense-header"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Expense
+              </Button>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap mt-3">
             <Button
               variant="outline"
               size="sm"
