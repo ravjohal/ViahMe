@@ -603,9 +603,11 @@ export default function Dashboard() {
                   {guests.length}
                 </p>
               </div>
-              <p className="text-[10px] text-muted-foreground">
-                RSVP'd / Invited
-                {wedding.guestCountEstimate ? ` (${wedding.guestCountEstimate} est.)` : ''}
+              <p className="text-[10px] text-muted-foreground leading-tight">
+                <span className="block">RSVP'd / Invited</span>
+                <span className="block text-muted-foreground/70">
+                  {events.reduce((sum, e) => sum + (e.guestCount || 0), 0).toLocaleString()} across events
+                </span>
               </p>
             </Card>
             <Card 
