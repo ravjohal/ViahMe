@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
-import type { Wedding, Event, BudgetScenario, BudgetForecast } from "@shared/schema";
+import type { Wedding, Event, BudgetScenario, BudgetForecast, Guest } from "@shared/schema";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -104,6 +104,11 @@ export default function ScenarioPlanner() {
     enabled: !!wedding?.id,
   });
 
+  const { data: guests = [] } = useQuery<Guest[]>({
+    queryKey: ["/api/guests", wedding?.id],
+    enabled: !!wedding?.id,
+  });
+
   const createScenarioMutation = useMutation({
     mutationFn: async (data: ScenarioFormData) => {
       return apiRequest("POST", "/api/budget/scenarios", {
@@ -150,7 +155,9 @@ export default function ScenarioPlanner() {
   });
 
   const totalBudget = wedding?.totalBudget ? parseFloat(wedding.totalBudget) : 0;
-  const baseGuestCount = wedding?.guestCount || 200;
+  const totalAttendees = events.reduce((sum, e) => sum + (e.guestCount || 0), 0);
+  const rsvpCount = guests.filter(g => g.rsvpStatus === 'confirmed').length;
+  const baseGuestCount = totalAttendees > 0 ? totalAttendees : (wedding?.guestCount || 200);
 
   const calculateScenarioImpact = useMemo(() => {
     return (scenario: ScenarioFormData) => {
@@ -260,7 +267,12 @@ export default function ScenarioPlanner() {
                   <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{baseGuestCount}</div>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-2xl font-bold text-emerald-600">{rsvpCount}</span>
+                    <span className="text-muted-foreground">/</span>
+                    <span className="text-lg text-muted-foreground">{totalAttendees > 0 ? totalAttendees : (wedding?.guestCount || 0)}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">RSVP'd / Total Invited</p>
                 </CardContent>
               </Card>
 
