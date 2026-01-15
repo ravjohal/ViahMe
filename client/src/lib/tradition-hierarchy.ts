@@ -10,6 +10,14 @@ export interface MainTradition {
   subTraditions: SubTradition[];
 }
 
+export {
+  useTraditionHierarchy,
+  useMainTraditionByValue,
+  useSubTraditionsForMain,
+  useAllSubTraditions,
+  useMainTraditionOptions,
+} from "@/hooks/use-tradition-hierarchy";
+
 export const TRADITION_HIERARCHY: MainTradition[] = [
   {
     value: "hindu",
@@ -101,7 +109,7 @@ export const TRADITION_HIERARCHY: MainTradition[] = [
     value: "mixed",
     label: "Mixed / Fusion",
     description: "Blend of multiple cultural traditions",
-    subTraditions: [], // Mixed allows multi-select from all traditions
+    subTraditions: [],
   },
   {
     value: "other",
