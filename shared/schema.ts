@@ -5246,3 +5246,111 @@ export const insertDietaryOptionSchema = createInsertSchema(dietaryOptions).omit
 });
 export type InsertDietaryOption = z.infer<typeof insertDietaryOptionSchema>;
 export type DietaryOption = typeof dietaryOptions.$inferSelect;
+
+// ============================================================================
+// MILNI RELATION OPTIONS - Database-driven family relation types for Milni ceremony
+// ============================================================================
+
+export const milniRelationOptions = pgTable("milni_relation_options", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  slug: text("slug").notNull().unique(),
+  displayName: text("display_name").notNull(),
+  hindiName: text("hindi_name"), // e.g., "Dada Ji", "Nana Ji", "Taya/Chacha Ji"
+  description: text("description"),
+  side: text("side"), // 'paternal' | 'maternal' | null (for both)
+  gender: text("gender"), // 'male' | 'female' | null (for both)
+  traditionAffinity: text("tradition_affinity").array().notNull().default(sql`ARRAY[]::text[]`),
+  displayOrder: integer("display_order").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  isSystemOption: boolean("is_system_option").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertMilniRelationOptionSchema = createInsertSchema(milniRelationOptions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertMilniRelationOption = z.infer<typeof insertMilniRelationOptionSchema>;
+export type MilniRelationOption = typeof milniRelationOptions.$inferSelect;
+
+// ============================================================================
+// MILNI TEMPLATES - Default pairing sequence templates for Milni ceremony
+// ============================================================================
+
+export const milniPairTemplates = pgTable("milni_pair_templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sequence: integer("sequence").notNull().default(0),
+  relationSlug: text("relation_slug").notNull(), // Links to milni_relation_options.slug
+  relationLabel: text("relation_label").notNull(), // Display: "Paternal Grandfathers", "Fathers"
+  traditionAffinity: text("tradition_affinity").array().notNull().default(sql`ARRAY[]::text[]`),
+  isActive: boolean("is_active").notNull().default(true),
+  isSystemTemplate: boolean("is_system_template").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertMilniPairTemplateSchema = createInsertSchema(milniPairTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertMilniPairTemplate = z.infer<typeof insertMilniPairTemplateSchema>;
+export type MilniPairTemplate = typeof milniPairTemplates.$inferSelect;
+
+// ============================================================================
+// TIMELINE TEMPLATES - Tradition-specific day-of timeline item templates
+// ============================================================================
+
+export const timelineTemplates = pgTable("timeline_templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tradition: text("tradition").notNull(), // 'sikh', 'hindu', 'muslim', etc.
+  ceremonyType: text("ceremony_type"), // Optional: link to specific ceremony type slug
+  time: text("time").notNull(), // e.g., "5:00 AM", "10:30 AM"
+  activity: text("activity").notNull(),
+  assignee: text("assignee").notNull().default("bride"), // 'bride' | 'groom' | 'bridal_party' | 'vendor'
+  vendorCategory: text("vendor_category"), // Used when assignee is 'vendor'
+  sortOrder: integer("sort_order").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  isSystemTemplate: boolean("is_system_template").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  traditionIdx: index("timeline_templates_tradition_idx").on(table.tradition),
+  ceremonyIdx: index("timeline_templates_ceremony_idx").on(table.ceremonyType),
+}));
+
+export const insertTimelineTemplateSchema = createInsertSchema(timelineTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertTimelineTemplate = z.infer<typeof insertTimelineTemplateSchema>;
+export type TimelineTemplate = typeof timelineTemplates.$inferSelect;
+
+// ============================================================================
+// VENDOR TASK CATEGORIES - Database-driven vendor category types for timeline
+// ============================================================================
+
+export const vendorTaskCategories = pgTable("vendor_task_categories", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  slug: text("slug").notNull().unique(),
+  displayName: text("display_name").notNull(),
+  description: text("description"),
+  iconName: text("icon_name"),
+  traditionAffinity: text("tradition_affinity").array().notNull().default(sql`ARRAY[]::text[]`),
+  displayOrder: integer("display_order").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  isSystemCategory: boolean("is_system_category").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertVendorTaskCategorySchema = createInsertSchema(vendorTaskCategories).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertVendorTaskCategory = z.infer<typeof insertVendorTaskCategorySchema>;
+export type VendorTaskCategory = typeof vendorTaskCategories.$inferSelect;
