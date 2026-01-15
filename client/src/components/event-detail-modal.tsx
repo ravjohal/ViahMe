@@ -14,13 +14,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar, Clock, MapPin, Users, DollarSign, Tag, CheckCircle2, Plus, Save, Video, Heart } from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Calendar, Clock, MapPin, Users, DollarSign, Tag, CheckCircle2, Plus, Save, Video, Heart, Sparkles, BookOpen, ShoppingBag, Camera, Music } from "lucide-react";
 import { SideBadge, SIDE_COLORS } from "@/components/side-filter";
 import { format } from "date-fns";
-import type { Event, BudgetCategory, EventCostItem, Task, InsertTask } from "@shared/schema";
-import { useMutation } from "@tanstack/react-query";
+import type { Event, BudgetCategory, EventCostItem, Task, InsertTask, TraditionRitual, WeddingJourneyItem } from "@shared/schema";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+
+interface EventWithRitualResponse {
+  event: Event;
+  journeyItem: WeddingJourneyItem | null;
+  ritual: TraditionRitual | null;
+}
 
 const CATEGORY_LABELS: Record<string, string> = {
   catering: "Catering & Food",
@@ -102,6 +109,14 @@ export function EventDetailModal({
   onDelete,
 }: EventDetailModalProps) {
   const { toast } = useToast();
+  
+  // Fetch ritual details for this event
+  const { data: ritualData } = useQuery<EventWithRitualResponse>({
+    queryKey: [`/api/events/by-id/${event?.id}/with-ritual`],
+    enabled: !!event?.id && open,
+  });
+  
+  const ritual = ritualData?.ritual;
   
   // Event form state
   const [eventName, setEventName] = useState("");
@@ -422,6 +437,147 @@ export function EventDetailModal({
               Add a YouTube link for guests who can't attend in person
             </p>
           </div>
+
+          {/* Ritual Cultural Details */}
+          {ritual && (
+            <Collapsible defaultOpen className="border rounded-lg p-4 space-y-4 border-primary/30 bg-primary/5" data-testid="cultural-details-section">
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full flex items-center justify-between p-0 h-auto hover:bg-transparent" data-testid="button-cultural-details-toggle">
+                  <div className="flex items-center gap-2">
+                    <Heart className="w-5 h-5 text-primary" />
+                    <span className="font-medium">Cultural Significance</span>
+                    <Badge variant="outline" className="ml-2" data-testid="badge-linked-ritual">Linked Ritual</Badge>
+                  </div>
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-4 pt-4">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-lg" data-testid="text-ritual-name">{ritual.name}</span>
+                    {ritual.nameInLanguage && (
+                      <span className="text-muted-foreground" data-testid="text-ritual-name-native">({ritual.nameInLanguage})</span>
+                    )}
+                  </div>
+                  {ritual.pronunciation && (
+                    <p className="text-sm text-muted-foreground italic" data-testid="text-ritual-pronunciation">Pronounced: {ritual.pronunciation}</p>
+                  )}
+                  <p className="text-sm" data-testid="text-ritual-description">{ritual.shortDescription}</p>
+                </div>
+
+                <Accordion type="multiple" className="w-full" data-testid="accordion-ritual-details">
+                  {ritual.culturalSignificance && (
+                    <AccordionItem value="significance">
+                      <AccordionTrigger className="text-sm" data-testid="accordion-trigger-significance">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="w-4 h-4 text-primary" />
+                          Why is this important?
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="text-sm leading-relaxed">
+                        {ritual.culturalSignificance}
+                      </AccordionContent>
+                    </AccordionItem>
+                  )}
+
+                  {ritual.whoParticipates && (
+                    <AccordionItem value="participants">
+                      <AccordionTrigger className="text-sm" data-testid="accordion-trigger-participants">
+                        <div className="flex items-center gap-2">
+                          <Users className="w-4 h-4 text-primary" />
+                          Who Participates
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="text-sm leading-relaxed" data-testid="text-ritual-participants">
+                        {ritual.whoParticipates}
+                      </AccordionContent>
+                    </AccordionItem>
+                  )}
+
+                  {ritual.itemsNeeded && (ritual.itemsNeeded as string[]).length > 0 && (
+                    <AccordionItem value="items">
+                      <AccordionTrigger className="text-sm" data-testid="accordion-trigger-items">
+                        <div className="flex items-center gap-2">
+                          <ShoppingBag className="w-4 h-4 text-primary" />
+                          Items Needed ({(ritual.itemsNeeded as string[]).length})
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <div className="flex flex-wrap gap-2" data-testid="list-ritual-items">
+                          {(ritual.itemsNeeded as string[]).map((item, index) => (
+                            <Badge key={index} variant="secondary" className="text-xs" data-testid={`badge-item-${index}`}>
+                              {item}
+                            </Badge>
+                          ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  )}
+
+                  {ritual.whatToExpect && (
+                    <AccordionItem value="expect">
+                      <AccordionTrigger className="text-sm" data-testid="accordion-trigger-expect">
+                        <div className="flex items-center gap-2">
+                          <BookOpen className="w-4 h-4 text-primary" />
+                          What to Expect
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="text-sm leading-relaxed" data-testid="text-ritual-expect">
+                        {ritual.whatToExpect}
+                      </AccordionContent>
+                    </AccordionItem>
+                  )}
+
+                  {ritual.photoOpportunities && (
+                    <AccordionItem value="photos">
+                      <AccordionTrigger className="text-sm" data-testid="accordion-trigger-photos">
+                        <div className="flex items-center gap-2">
+                          <Camera className="w-4 h-4 text-primary" />
+                          Photo Opportunities
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="text-sm leading-relaxed" data-testid="text-ritual-photos">
+                        {ritual.photoOpportunities}
+                      </AccordionContent>
+                    </AccordionItem>
+                  )}
+
+                  {ritual.musicRecommendations && (
+                    <AccordionItem value="music">
+                      <AccordionTrigger className="text-sm" data-testid="accordion-trigger-music">
+                        <div className="flex items-center gap-2">
+                          <Music className="w-4 h-4 text-primary" />
+                          Music Recommendations
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="text-sm leading-relaxed" data-testid="text-ritual-music">
+                        {ritual.musicRecommendations}
+                      </AccordionContent>
+                    </AccordionItem>
+                  )}
+                </Accordion>
+
+                <div className="flex flex-wrap gap-2 pt-2 border-t" data-testid="ritual-metadata-badges">
+                  {ritual.isRequired && (
+                    <Badge variant="default" data-testid="badge-essential-ritual">Essential Ritual</Badge>
+                  )}
+                  {ritual.isPopular && (
+                    <Badge variant="outline" data-testid="badge-popular-choice">Popular Choice</Badge>
+                  )}
+                  {ritual.typicalTiming && (
+                    <Badge variant="secondary" data-testid="badge-timing">
+                      <Clock className="w-3 h-3 mr-1" />
+                      {ritual.typicalTiming}
+                    </Badge>
+                  )}
+                  {ritual.durationMinutes && (
+                    <Badge variant="secondary" data-testid="badge-duration">
+                      ~{ritual.durationMinutes > 60 ? `${Math.round(ritual.durationMinutes / 60)}h` : `${ritual.durationMinutes}min`}
+                    </Badge>
+                  )}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
 
           {/* Cost Breakdown */}
           {(costItems.length > 0 || costItemsLoading) && (

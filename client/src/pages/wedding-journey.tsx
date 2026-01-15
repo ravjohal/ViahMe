@@ -588,7 +588,7 @@ export default function WeddingJourneyPage() {
                     </p>
                     <div className="flex flex-wrap gap-2 mt-3">
                       {item.eventId && (
-                        <Badge variant="default" className="text-xs bg-orange-500">
+                        <Badge variant="default" className="text-xs" data-testid={`badge-linked-event-${item.id}`}>
                           <Calendar className="w-3 h-3 mr-1" />
                           On timeline
                         </Badge>
