@@ -331,13 +331,33 @@ export default function WeddingJourneyPage() {
     },
   });
 
+  const syncWithEventsMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("POST", `/api/wedding-journey/wedding/${wedding!.id}/sync-events`);
+    },
+    onSuccess: (data: { linked: number; created: number }) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/wedding-journey/wedding", wedding?.id, "with-rituals"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/events", wedding?.id] });
+      if (data.linked > 0) {
+        toast({ 
+          title: "Linked to events", 
+          description: `${data.linked} ritual${data.linked > 1 ? 's' : ''} connected to existing events.` 
+        });
+      }
+    },
+  });
+
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       return await apiRequest("PATCH", `/api/wedding-journey/items/${id}`, { status });
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/wedding-journey/wedding", wedding?.id, "with-rituals"] });
       toast({ title: "Updated", description: "Ritual status has been updated." });
+      
+      if (variables.status === 'included') {
+        syncWithEventsMutation.mutate();
+      }
     },
   });
 
@@ -567,6 +587,12 @@ export default function WeddingJourneyPage() {
                       {item.ritual?.shortDescription}
                     </p>
                     <div className="flex flex-wrap gap-2 mt-3">
+                      {item.eventId && (
+                        <Badge variant="default" className="text-xs bg-orange-500">
+                          <Calendar className="w-3 h-3 mr-1" />
+                          On timeline
+                        </Badge>
+                      )}
                       {item.ritual?.typicalTiming && (
                         <Badge variant="secondary" className="text-xs">
                           <Clock className="w-3 h-3 mr-1" />
