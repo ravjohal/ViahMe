@@ -77,6 +77,13 @@ Key architectural decisions and features include:
 - **Ritual Role Assignee Manager**: Allows couples to assign ceremonial micro-roles to guests using pre-defined templates, with guest portal integration for acknowledgments.
 - **Vendor Access Pass & Collaboration Hub**: Enables sharing of filtered timeline views with booked vendors, managing access tokens, and tracking vendor engagement without requiring vendor accounts.
 - **Ceremony Shopping Lists**: Database-driven shopping templates per ceremony type (table: `ceremony_shopping_templates`) with couple-specific tracking (table: `wedding_shopping_items`). Pre-seeded with Sikh ceremony items (Maiyan, Jaggo, Mehndi, Chooda, Anand Karaj, Sangeet). Supports item status tracking (needed → ordered → received), estimated vs. actual costs, purchase sources, and due dates for analytics and reporting.
+- **Database-Driven Reference Data** (January 2026): Migrated hardcoded constants to database tables for admin maintainability:
+  - **`milni_relation_options`**: 17 family relation types for Milni ceremony (grandfather, uncle, father, brother, etc.) with side (paternal/maternal), gender, Hindi names, and tradition affinity. API: `/api/milni-relation-options`
+  - **`milni_pair_templates`**: 10 default Milni pair sequence templates linking bride/groom family relations. API: `/api/milni-pair-templates`
+  - **`timeline_templates`**: 29 Sikh wedding day-of timeline items with tradition filtering, vendor categories, and assignees. API: `/api/timeline-templates?tradition=sikh`
+  - **`vendor_task_categories`**: 13 vendor task categories (MUA, Photography, Catering, etc.) for timeline coordination. API: `/api/vendor-task-categories`
+  - All tables support tradition affinity filtering, active/inactive status, display ordering, and system item protection (cannot delete seeded items)
+  - Admin-only mutations via isSiteAdmin check
 
 ## External Dependencies
 - **PostgreSQL (Neon)**: Relational database.
