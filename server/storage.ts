@@ -295,6 +295,18 @@ import {
   dietaryOptions,
   type DietaryOption,
   type InsertDietaryOption,
+  milniRelationOptions,
+  type MilniRelationOption,
+  type InsertMilniRelationOption,
+  milniPairTemplates,
+  type MilniPairTemplate,
+  type InsertMilniPairTemplate,
+  timelineTemplates,
+  type TimelineTemplate,
+  type InsertTimelineTemplate,
+  vendorTaskCategories,
+  type VendorTaskCategory,
+  type InsertVendorTaskCategory,
 } from "@shared/schema";
 import { randomUUID, randomBytes } from "crypto";
 import bcrypt from "bcrypt";
@@ -1279,6 +1291,44 @@ export interface IStorage {
   createDietaryOption(option: InsertDietaryOption): Promise<DietaryOption>;
   updateDietaryOption(id: string, option: Partial<InsertDietaryOption>): Promise<DietaryOption | undefined>;
   deleteDietaryOption(id: string): Promise<boolean>;
+
+  // Milni Relation Options (database-driven family relation types)
+  getMilniRelationOption(id: string): Promise<MilniRelationOption | undefined>;
+  getMilniRelationOptionBySlug(slug: string): Promise<MilniRelationOption | undefined>;
+  getAllMilniRelationOptions(): Promise<MilniRelationOption[]>;
+  getActiveMilniRelationOptions(): Promise<MilniRelationOption[]>;
+  getMilniRelationOptionsByTradition(tradition: string): Promise<MilniRelationOption[]>;
+  createMilniRelationOption(option: InsertMilniRelationOption): Promise<MilniRelationOption>;
+  updateMilniRelationOption(id: string, option: Partial<InsertMilniRelationOption>): Promise<MilniRelationOption | undefined>;
+  deleteMilniRelationOption(id: string): Promise<boolean>;
+
+  // Milni Pair Templates (database-driven default pairing sequence)
+  getMilniPairTemplate(id: string): Promise<MilniPairTemplate | undefined>;
+  getAllMilniPairTemplates(): Promise<MilniPairTemplate[]>;
+  getActiveMilniPairTemplates(): Promise<MilniPairTemplate[]>;
+  getMilniPairTemplatesByTradition(tradition: string): Promise<MilniPairTemplate[]>;
+  createMilniPairTemplate(template: InsertMilniPairTemplate): Promise<MilniPairTemplate>;
+  updateMilniPairTemplate(id: string, template: Partial<InsertMilniPairTemplate>): Promise<MilniPairTemplate | undefined>;
+  deleteMilniPairTemplate(id: string): Promise<boolean>;
+
+  // Timeline Templates (tradition-specific day-of timeline templates)
+  getTimelineTemplate(id: string): Promise<TimelineTemplate | undefined>;
+  getAllTimelineTemplates(): Promise<TimelineTemplate[]>;
+  getActiveTimelineTemplates(): Promise<TimelineTemplate[]>;
+  getTimelineTemplatesByTradition(tradition: string): Promise<TimelineTemplate[]>;
+  createTimelineTemplate(template: InsertTimelineTemplate): Promise<TimelineTemplate>;
+  updateTimelineTemplate(id: string, template: Partial<InsertTimelineTemplate>): Promise<TimelineTemplate | undefined>;
+  deleteTimelineTemplate(id: string): Promise<boolean>;
+
+  // Vendor Task Categories (database-driven vendor category types)
+  getVendorTaskCategory(id: string): Promise<VendorTaskCategory | undefined>;
+  getVendorTaskCategoryBySlug(slug: string): Promise<VendorTaskCategory | undefined>;
+  getAllVendorTaskCategories(): Promise<VendorTaskCategory[]>;
+  getActiveVendorTaskCategories(): Promise<VendorTaskCategory[]>;
+  getVendorTaskCategoriesByTradition(tradition: string): Promise<VendorTaskCategory[]>;
+  createVendorTaskCategory(category: InsertVendorTaskCategory): Promise<VendorTaskCategory>;
+  updateVendorTaskCategory(id: string, category: Partial<InsertVendorTaskCategory>): Promise<VendorTaskCategory | undefined>;
+  deleteVendorTaskCategory(id: string): Promise<boolean>;
 
   // Ritual Role Assignments
   getRitualRoleAssignment(id: string): Promise<RitualRoleAssignment | undefined>;
@@ -4748,6 +4798,44 @@ export class MemStorage implements IStorage {
   async createDietaryOption(option: InsertDietaryOption): Promise<DietaryOption> { throw new Error('MemStorage does not support Dietary Options. Use DBStorage.'); }
   async updateDietaryOption(id: string, option: Partial<InsertDietaryOption>): Promise<DietaryOption | undefined> { throw new Error('MemStorage does not support Dietary Options. Use DBStorage.'); }
   async deleteDietaryOption(id: string): Promise<boolean> { return false; }
+
+  // Milni Relation Options (database-driven) - stub methods for MemStorage
+  async getMilniRelationOption(id: string): Promise<MilniRelationOption | undefined> { return undefined; }
+  async getMilniRelationOptionBySlug(slug: string): Promise<MilniRelationOption | undefined> { return undefined; }
+  async getAllMilniRelationOptions(): Promise<MilniRelationOption[]> { return []; }
+  async getActiveMilniRelationOptions(): Promise<MilniRelationOption[]> { return []; }
+  async getMilniRelationOptionsByTradition(tradition: string): Promise<MilniRelationOption[]> { return []; }
+  async createMilniRelationOption(option: InsertMilniRelationOption): Promise<MilniRelationOption> { throw new Error('MemStorage does not support Milni Relation Options. Use DBStorage.'); }
+  async updateMilniRelationOption(id: string, option: Partial<InsertMilniRelationOption>): Promise<MilniRelationOption | undefined> { throw new Error('MemStorage does not support Milni Relation Options. Use DBStorage.'); }
+  async deleteMilniRelationOption(id: string): Promise<boolean> { return false; }
+
+  // Milni Pair Templates (database-driven) - stub methods for MemStorage
+  async getMilniPairTemplate(id: string): Promise<MilniPairTemplate | undefined> { return undefined; }
+  async getAllMilniPairTemplates(): Promise<MilniPairTemplate[]> { return []; }
+  async getActiveMilniPairTemplates(): Promise<MilniPairTemplate[]> { return []; }
+  async getMilniPairTemplatesByTradition(tradition: string): Promise<MilniPairTemplate[]> { return []; }
+  async createMilniPairTemplate(template: InsertMilniPairTemplate): Promise<MilniPairTemplate> { throw new Error('MemStorage does not support Milni Pair Templates. Use DBStorage.'); }
+  async updateMilniPairTemplate(id: string, template: Partial<InsertMilniPairTemplate>): Promise<MilniPairTemplate | undefined> { throw new Error('MemStorage does not support Milni Pair Templates. Use DBStorage.'); }
+  async deleteMilniPairTemplate(id: string): Promise<boolean> { return false; }
+
+  // Timeline Templates (database-driven) - stub methods for MemStorage
+  async getTimelineTemplate(id: string): Promise<TimelineTemplate | undefined> { return undefined; }
+  async getAllTimelineTemplates(): Promise<TimelineTemplate[]> { return []; }
+  async getActiveTimelineTemplates(): Promise<TimelineTemplate[]> { return []; }
+  async getTimelineTemplatesByTradition(tradition: string): Promise<TimelineTemplate[]> { return []; }
+  async createTimelineTemplate(template: InsertTimelineTemplate): Promise<TimelineTemplate> { throw new Error('MemStorage does not support Timeline Templates. Use DBStorage.'); }
+  async updateTimelineTemplate(id: string, template: Partial<InsertTimelineTemplate>): Promise<TimelineTemplate | undefined> { throw new Error('MemStorage does not support Timeline Templates. Use DBStorage.'); }
+  async deleteTimelineTemplate(id: string): Promise<boolean> { return false; }
+
+  // Vendor Task Categories (database-driven) - stub methods for MemStorage
+  async getVendorTaskCategory(id: string): Promise<VendorTaskCategory | undefined> { return undefined; }
+  async getVendorTaskCategoryBySlug(slug: string): Promise<VendorTaskCategory | undefined> { return undefined; }
+  async getAllVendorTaskCategories(): Promise<VendorTaskCategory[]> { return []; }
+  async getActiveVendorTaskCategories(): Promise<VendorTaskCategory[]> { return []; }
+  async getVendorTaskCategoriesByTradition(tradition: string): Promise<VendorTaskCategory[]> { return []; }
+  async createVendorTaskCategory(category: InsertVendorTaskCategory): Promise<VendorTaskCategory> { throw new Error('MemStorage does not support Vendor Task Categories. Use DBStorage.'); }
+  async updateVendorTaskCategory(id: string, category: Partial<InsertVendorTaskCategory>): Promise<VendorTaskCategory | undefined> { throw new Error('MemStorage does not support Vendor Task Categories. Use DBStorage.'); }
+  async deleteVendorTaskCategory(id: string): Promise<boolean> { return false; }
 }
 
 import { neon } from "@neondatabase/serverless";
@@ -12044,6 +12132,237 @@ export class DBStorage implements IStorage {
   async deleteDietaryOption(id: string): Promise<boolean> {
     await this.db.delete(dietaryOptions)
       .where(eq(dietaryOptions.id, id));
+    return true;
+  }
+
+  // Milni Relation Options (database-driven)
+  async getMilniRelationOption(id: string): Promise<MilniRelationOption | undefined> {
+    const result = await this.db.select()
+      .from(milniRelationOptions)
+      .where(eq(milniRelationOptions.id, id));
+    return result[0];
+  }
+
+  async getMilniRelationOptionBySlug(slug: string): Promise<MilniRelationOption | undefined> {
+    const result = await this.db.select()
+      .from(milniRelationOptions)
+      .where(eq(milniRelationOptions.slug, slug));
+    return result[0];
+  }
+
+  async getAllMilniRelationOptions(): Promise<MilniRelationOption[]> {
+    return await this.db.select()
+      .from(milniRelationOptions)
+      .orderBy(sql`${milniRelationOptions.displayOrder} ASC, ${milniRelationOptions.displayName} ASC`);
+  }
+
+  async getActiveMilniRelationOptions(): Promise<MilniRelationOption[]> {
+    return await this.db.select()
+      .from(milniRelationOptions)
+      .where(eq(milniRelationOptions.isActive, true))
+      .orderBy(sql`${milniRelationOptions.displayOrder} ASC, ${milniRelationOptions.displayName} ASC`);
+  }
+
+  async getMilniRelationOptionsByTradition(tradition: string): Promise<MilniRelationOption[]> {
+    return await this.db.select()
+      .from(milniRelationOptions)
+      .where(and(
+        eq(milniRelationOptions.isActive, true),
+        or(
+          sql`${milniRelationOptions.traditionAffinity} && ARRAY[${tradition}]::text[]`,
+          sql`array_length(${milniRelationOptions.traditionAffinity}, 1) IS NULL OR array_length(${milniRelationOptions.traditionAffinity}, 1) = 0`
+        )
+      ))
+      .orderBy(sql`${milniRelationOptions.displayOrder} ASC, ${milniRelationOptions.displayName} ASC`);
+  }
+
+  async createMilniRelationOption(option: InsertMilniRelationOption): Promise<MilniRelationOption> {
+    const result = await this.db.insert(milniRelationOptions)
+      .values(option)
+      .returning();
+    return result[0];
+  }
+
+  async updateMilniRelationOption(id: string, option: Partial<InsertMilniRelationOption>): Promise<MilniRelationOption | undefined> {
+    const result = await this.db.update(milniRelationOptions)
+      .set({ ...option, updatedAt: new Date() })
+      .where(eq(milniRelationOptions.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteMilniRelationOption(id: string): Promise<boolean> {
+    await this.db.delete(milniRelationOptions)
+      .where(eq(milniRelationOptions.id, id));
+    return true;
+  }
+
+  // Milni Pair Templates (database-driven)
+  async getMilniPairTemplate(id: string): Promise<MilniPairTemplate | undefined> {
+    const result = await this.db.select()
+      .from(milniPairTemplates)
+      .where(eq(milniPairTemplates.id, id));
+    return result[0];
+  }
+
+  async getAllMilniPairTemplates(): Promise<MilniPairTemplate[]> {
+    return await this.db.select()
+      .from(milniPairTemplates)
+      .orderBy(sql`${milniPairTemplates.sequence} ASC`);
+  }
+
+  async getActiveMilniPairTemplates(): Promise<MilniPairTemplate[]> {
+    return await this.db.select()
+      .from(milniPairTemplates)
+      .where(eq(milniPairTemplates.isActive, true))
+      .orderBy(sql`${milniPairTemplates.sequence} ASC`);
+  }
+
+  async getMilniPairTemplatesByTradition(tradition: string): Promise<MilniPairTemplate[]> {
+    return await this.db.select()
+      .from(milniPairTemplates)
+      .where(and(
+        eq(milniPairTemplates.isActive, true),
+        or(
+          sql`${milniPairTemplates.traditionAffinity} && ARRAY[${tradition}]::text[]`,
+          sql`array_length(${milniPairTemplates.traditionAffinity}, 1) IS NULL OR array_length(${milniPairTemplates.traditionAffinity}, 1) = 0`
+        )
+      ))
+      .orderBy(sql`${milniPairTemplates.sequence} ASC`);
+  }
+
+  async createMilniPairTemplate(template: InsertMilniPairTemplate): Promise<MilniPairTemplate> {
+    const result = await this.db.insert(milniPairTemplates)
+      .values(template)
+      .returning();
+    return result[0];
+  }
+
+  async updateMilniPairTemplate(id: string, template: Partial<InsertMilniPairTemplate>): Promise<MilniPairTemplate | undefined> {
+    const result = await this.db.update(milniPairTemplates)
+      .set({ ...template, updatedAt: new Date() })
+      .where(eq(milniPairTemplates.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteMilniPairTemplate(id: string): Promise<boolean> {
+    await this.db.delete(milniPairTemplates)
+      .where(eq(milniPairTemplates.id, id));
+    return true;
+  }
+
+  // Timeline Templates (database-driven)
+  async getTimelineTemplate(id: string): Promise<TimelineTemplate | undefined> {
+    const result = await this.db.select()
+      .from(timelineTemplates)
+      .where(eq(timelineTemplates.id, id));
+    return result[0];
+  }
+
+  async getAllTimelineTemplates(): Promise<TimelineTemplate[]> {
+    return await this.db.select()
+      .from(timelineTemplates)
+      .orderBy(sql`${timelineTemplates.sortOrder} ASC`);
+  }
+
+  async getActiveTimelineTemplates(): Promise<TimelineTemplate[]> {
+    return await this.db.select()
+      .from(timelineTemplates)
+      .where(eq(timelineTemplates.isActive, true))
+      .orderBy(sql`${timelineTemplates.sortOrder} ASC`);
+  }
+
+  async getTimelineTemplatesByTradition(tradition: string): Promise<TimelineTemplate[]> {
+    return await this.db.select()
+      .from(timelineTemplates)
+      .where(and(
+        eq(timelineTemplates.isActive, true),
+        eq(timelineTemplates.tradition, tradition)
+      ))
+      .orderBy(sql`${timelineTemplates.sortOrder} ASC`);
+  }
+
+  async createTimelineTemplate(template: InsertTimelineTemplate): Promise<TimelineTemplate> {
+    const result = await this.db.insert(timelineTemplates)
+      .values(template)
+      .returning();
+    return result[0];
+  }
+
+  async updateTimelineTemplate(id: string, template: Partial<InsertTimelineTemplate>): Promise<TimelineTemplate | undefined> {
+    const result = await this.db.update(timelineTemplates)
+      .set({ ...template, updatedAt: new Date() })
+      .where(eq(timelineTemplates.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteTimelineTemplate(id: string): Promise<boolean> {
+    await this.db.delete(timelineTemplates)
+      .where(eq(timelineTemplates.id, id));
+    return true;
+  }
+
+  // Vendor Task Categories (database-driven)
+  async getVendorTaskCategory(id: string): Promise<VendorTaskCategory | undefined> {
+    const result = await this.db.select()
+      .from(vendorTaskCategories)
+      .where(eq(vendorTaskCategories.id, id));
+    return result[0];
+  }
+
+  async getVendorTaskCategoryBySlug(slug: string): Promise<VendorTaskCategory | undefined> {
+    const result = await this.db.select()
+      .from(vendorTaskCategories)
+      .where(eq(vendorTaskCategories.slug, slug));
+    return result[0];
+  }
+
+  async getAllVendorTaskCategories(): Promise<VendorTaskCategory[]> {
+    return await this.db.select()
+      .from(vendorTaskCategories)
+      .orderBy(sql`${vendorTaskCategories.displayOrder} ASC, ${vendorTaskCategories.displayName} ASC`);
+  }
+
+  async getActiveVendorTaskCategories(): Promise<VendorTaskCategory[]> {
+    return await this.db.select()
+      .from(vendorTaskCategories)
+      .where(eq(vendorTaskCategories.isActive, true))
+      .orderBy(sql`${vendorTaskCategories.displayOrder} ASC, ${vendorTaskCategories.displayName} ASC`);
+  }
+
+  async getVendorTaskCategoriesByTradition(tradition: string): Promise<VendorTaskCategory[]> {
+    return await this.db.select()
+      .from(vendorTaskCategories)
+      .where(and(
+        eq(vendorTaskCategories.isActive, true),
+        or(
+          sql`${vendorTaskCategories.traditionAffinity} && ARRAY[${tradition}]::text[]`,
+          sql`array_length(${vendorTaskCategories.traditionAffinity}, 1) IS NULL OR array_length(${vendorTaskCategories.traditionAffinity}, 1) = 0`
+        )
+      ))
+      .orderBy(sql`${vendorTaskCategories.displayOrder} ASC, ${vendorTaskCategories.displayName} ASC`);
+  }
+
+  async createVendorTaskCategory(category: InsertVendorTaskCategory): Promise<VendorTaskCategory> {
+    const result = await this.db.insert(vendorTaskCategories)
+      .values(category)
+      .returning();
+    return result[0];
+  }
+
+  async updateVendorTaskCategory(id: string, category: Partial<InsertVendorTaskCategory>): Promise<VendorTaskCategory | undefined> {
+    const result = await this.db.update(vendorTaskCategories)
+      .set({ ...category, updatedAt: new Date() })
+      .where(eq(vendorTaskCategories.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteVendorTaskCategory(id: string): Promise<boolean> {
+    await this.db.delete(vendorTaskCategories)
+      .where(eq(vendorTaskCategories.id, id));
     return true;
   }
 

@@ -65,6 +65,10 @@ import { registerDecorItemTemplatesRoutes } from "./decor-item-templates";
 import { registerHoneymoonBudgetCategoriesRoutes } from "./honeymoon-budget-categories";
 import { registerDietaryOptionsRoutes } from "./dietary-options";
 import { registerWeddingTraditionsRoutes } from "./wedding-traditions";
+import { registerMilniRelationOptionsRoutes } from "./milni-relation-options";
+import { registerMilniPairTemplatesRoutes } from "./milni-pair-templates";
+import { registerTimelineTemplatesRoutes } from "./timeline-templates";
+import { registerVendorTaskCategoriesRoutes } from "./vendor-task-categories";
 import { createVendorAccessPassesRouter, createVendorCollaborationViewRouter } from "./vendor-access-passes";
 import { createCeremonyExplainersRouter, createPublicCeremonyExplainersRouter } from "./ceremony-explainers";
 import weddingJourneyRouter from "./wedding-journey";
@@ -295,6 +299,22 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   const weddingTraditionsRouter = Router();
   await registerWeddingTraditionsRoutes(weddingTraditionsRouter, storage);
   app.use("/api/wedding-traditions", weddingTraditionsRouter);
+
+  const milniRelationOptionsRouter = Router();
+  await registerMilniRelationOptionsRoutes(milniRelationOptionsRouter, storage);
+  app.use("/api/milni-relation-options", milniRelationOptionsRouter);
+
+  const milniPairTemplatesRouter = Router();
+  await registerMilniPairTemplatesRoutes(milniPairTemplatesRouter, storage);
+  app.use("/api/milni-pair-templates", milniPairTemplatesRouter);
+
+  const timelineTemplatesRouter = Router();
+  await registerTimelineTemplatesRoutes(timelineTemplatesRouter, storage);
+  app.use("/api/timeline-templates", timelineTemplatesRouter);
+
+  const vendorTaskCategoriesRouter = Router();
+  await registerVendorTaskCategoriesRoutes(vendorTaskCategoriesRouter, storage);
+  app.use("/api/vendor-task-categories", vendorTaskCategoriesRouter);
 
   const expenseRouter = Router();
   await registerExpenseRoutes(expenseRouter, storage);
