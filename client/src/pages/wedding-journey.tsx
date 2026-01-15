@@ -9,7 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Heart, 
@@ -70,7 +69,7 @@ function RitualDetailDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
+        <DialogHeader className="flex-shrink-0">
           <div className="flex items-center gap-2">
             <DialogTitle className="text-xl">{ritual.name}</DialogTitle>
             {ritual.nameInLanguage && (
@@ -83,7 +82,7 @@ function RitualDetailDialog({
           <DialogDescription>{ritual.shortDescription}</DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 -mx-6 px-6">
+        <div className="flex-1 min-h-0 -mx-6 px-6 overflow-y-auto overscroll-contain touch-pan-y">
           <div className="space-y-6 pb-4">
             <div className="flex flex-wrap gap-2">
               {ritual.isRequired && (
@@ -277,7 +276,7 @@ function RitualDetailDialog({
               </div>
             )}
           </div>
-        </ScrollArea>
+        </div>
 
         {item && (
           <div className="flex flex-wrap gap-2 pt-4 border-t">
