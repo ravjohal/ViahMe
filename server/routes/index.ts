@@ -59,10 +59,10 @@ import { createFavoursRouter } from "./favours";
 import { registerTraditionsRoutes } from "./traditions";
 import { registerVendorCategoriesRoutes } from "./vendor-categories";
 import { registerPricingRegionsRoutes } from "./pricing-regions";
-import favourCategoriesRouter from "./favour-categories";
-import decorCategoriesRouter from "./decor-categories";
-import decorItemTemplatesRouter from "./decor-item-templates";
-import honeymoonBudgetCategoriesRouter from "./honeymoon-budget-categories";
+import { registerFavourCategoriesRoutes } from "./favour-categories";
+import { registerDecorCategoriesRoutes } from "./decor-categories";
+import { registerDecorItemTemplatesRoutes } from "./decor-item-templates";
+import { registerHoneymoonBudgetCategoriesRoutes } from "./honeymoon-budget-categories";
 import { createVendorAccessPassesRouter, createVendorCollaborationViewRouter } from "./vendor-access-passes";
 import { createCeremonyExplainersRouter, createPublicCeremonyExplainersRouter } from "./ceremony-explainers";
 import weddingJourneyRouter from "./wedding-journey";
@@ -270,9 +270,20 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   await registerPricingRegionsRoutes(pricingRegionsRouter, storage);
   app.use("/api/pricing-regions", pricingRegionsRouter);
 
+  const favourCategoriesRouter = Router();
+  await registerFavourCategoriesRoutes(favourCategoriesRouter, storage);
   app.use("/api/favour-categories", favourCategoriesRouter);
+
+  const decorCategoriesRouter = Router();
+  await registerDecorCategoriesRoutes(decorCategoriesRouter, storage);
   app.use("/api/decor-categories", decorCategoriesRouter);
+
+  const decorItemTemplatesRouter = Router();
+  await registerDecorItemTemplatesRoutes(decorItemTemplatesRouter, storage);
   app.use("/api/decor-item-templates", decorItemTemplatesRouter);
+
+  const honeymoonBudgetCategoriesRouter = Router();
+  await registerHoneymoonBudgetCategoriesRoutes(honeymoonBudgetCategoriesRouter, storage);
   app.use("/api/honeymoon-budget-categories", honeymoonBudgetCategoriesRouter);
 
   const expenseRouter = Router();
