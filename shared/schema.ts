@@ -41,41 +41,17 @@ export function getDietaryLabel(value: string | null | undefined): string {
 }
 
 // ============================================================================
-// BUDGET BUCKETS - System-defined high-level spending categories
+// BUDGET BUCKETS - Now database-driven via budget_bucket_categories table
 // ============================================================================
 
-// The fixed list of budget buckets (system-defined, not user-editable)
-export const BUDGET_BUCKETS = [
-  "venue", "catering", "decoration", "photography", "attire", 
-  "jewelry", "religious", "entertainment", "stationery", 
-  "transportation", "planning", "other"
-] as const;
+// Type alias for budget bucket slugs (validated at runtime against database)
+export type BudgetBucket = string;
 
-export type BudgetBucket = typeof BUDGET_BUCKETS[number];
-
-// Human-readable labels for budget buckets
-export const BUDGET_BUCKET_LABELS: Record<BudgetBucket, string> = {
-  venue: "Venue",
-  catering: "Catering & Food",
-  decoration: "Decoration & Flowers",
-  photography: "Photography & Video",
-  attire: "Attire & Beauty",
-  jewelry: "Jewelry & Accessories",
-  religious: "Religious & Ceremonial",
-  entertainment: "Music & Entertainment",
-  stationery: "Invitations & Gifts",
-  transportation: "Transportation",
-  planning: "Wedding Planning Services",
-  other: "Other"
-};
-
-// Zod schema for budget bucket validation
-export const budgetBucketSchema = z.enum(BUDGET_BUCKETS);
-
-// Helper function to get bucket label
+// Helper function to get bucket label - now uses database lookup or falls back to slug
 export function getBucketLabel(bucket: string | null | undefined): string {
   if (!bucket) return 'Other';
-  return BUDGET_BUCKET_LABELS[bucket as BudgetBucket] || bucket;
+  // Capitalize first letter as fallback when label not available
+  return bucket.charAt(0).toUpperCase() + bucket.slice(1);
 }
 
 // ============================================================================
@@ -1125,7 +1101,7 @@ export const insertExpenseSchema = createInsertSchema(expenses).omit({
   createdAt: true,
 }).extend({
   // DEPRECATED: Legacy slug - still required for backward compatibility, used for auto-resolution
-  parentCategory: budgetBucketSchema,
+  parentCategory: z.string(), // Validated at runtime against budget_bucket_categories table
   eventId: z.string().nullable().optional(), // FK to events.id
   // PRIMARY: UUID FK - optional at validation, auto-resolved from parentCategory slug in storage layer
   bucketCategoryId: z.string().optional(),
@@ -1207,7 +1183,7 @@ export const insertBudgetAllocationSchema = createInsertSchema(budgetAllocations
   // PRIMARY: UUID FK - optional at validation, auto-resolved from bucket slug in storage layer
   bucketCategoryId: z.string().optional(),
   // DEPRECATED: Legacy slug - still required for backward compatibility, used for auto-resolution
-  bucket: budgetBucketSchema,
+  bucket: z.string(), // Validated at runtime against budget_bucket_categories table
   ceremonyId: z.string().nullable().optional(),
   lineItemLabel: z.string().nullable().optional(),
   allocatedAmount: z.string().regex(/^\d+(\.\d{1,2})?$/, "Amount must be a valid decimal"),
@@ -4194,7 +4170,7 @@ export const insertBudgetAlertSchema = createInsertSchema(budgetAlerts).omit({
   createdAt: true,
 }).extend({
   alertType: z.enum(['bucket_threshold', 'total_threshold', 'payment_due', 'overspend']),
-  bucket: budgetBucketSchema.optional(),
+  bucket: z.string().optional(), // Validated at runtime against budget_bucket_categories table
   thresholdPercent: z.number().min(1).max(200).optional(),
   thresholdAmount: z.string().optional(),
 });
@@ -4462,7 +4438,7 @@ export const insertWeddingLineItemSchema = createInsertSchema(weddingLineItems).
   createdAt: true,
   updatedAt: true,
 }).extend({
-  bucket: z.enum(BUDGET_BUCKETS),
+  bucket: z.string(), // Validated at runtime against budget_bucket_categories table
   targetAmount: z.string(),
 });
 

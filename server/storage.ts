@@ -258,7 +258,6 @@ import {
   // ceremonyTypes already imported above
   regionalPricing,
   ritualRoleAssignments,
-  BUDGET_BUCKETS,
   type BudgetBucket,
   getBucketLabel,
   weddingTraditions,

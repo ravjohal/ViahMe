@@ -1,22 +1,33 @@
 import { Router } from "express";
 import type { IStorage } from "../storage";
-import { insertBudgetAllocationSchema, BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket } from "@shared/schema";
+import { insertBudgetAllocationSchema, type BudgetBucket } from "@shared/schema";
+
+// Helper to get budget bucket labels from database
+async function getBudgetBucketLabels(storage: IStorage): Promise<Record<string, string>> {
+  const categories = await storage.getActiveBudgetCategories();
+  const labels: Record<string, string> = {};
+  for (const cat of categories) {
+    labels[cat.slug] = cat.displayName;
+  }
+  return labels;
+}
 
 export async function registerBudgetBucketCategoryRoutes(router: Router, storage: IStorage) {
   router.get("/:weddingId", async (req, res) => {
     try {
       const allocations = await storage.getBudgetAllocationsByWedding(req.params.weddingId);
       const expenses = await storage.getExpensesByWedding(req.params.weddingId);
+      const budgetCategories = await storage.getActiveBudgetCategories();
       
-      const categories = BUDGET_BUCKETS.map(bucket => {
-        const allocation = allocations.find(a => a.bucket === bucket);
-        const bucketExpenses = expenses.filter(e => e.parentCategory === bucket);
+      const categories = budgetCategories.map(cat => {
+        const allocation = allocations.find(a => a.bucket === cat.slug);
+        const bucketExpenses = expenses.filter(e => e.parentCategory === cat.slug);
         const spentAmount = bucketExpenses.reduce((sum, e) => sum + parseFloat(e.amount || '0'), 0);
         
         return {
-          id: allocation?.id || bucket,
-          name: BUDGET_BUCKET_LABELS[bucket],
-          bucket,
+          id: allocation?.id || cat.slug,
+          name: cat.displayName,
+          bucket: cat.slug,
           allocatedAmount: parseFloat(allocation?.allocatedAmount || '0'),
           spentAmount,
           weddingId: req.params.weddingId,
@@ -34,9 +45,10 @@ export async function registerBudgetBucketCategoryRoutes(router: Router, storage
     try {
       const { weddingId, bucket, allocatedAmount } = req.body;
       const allocation = await storage.upsertBudgetAllocation(weddingId, bucket as BudgetBucket, String(allocatedAmount));
+      const labels = await getBudgetBucketLabels(storage);
       res.json({
         id: allocation.id,
-        name: BUDGET_BUCKET_LABELS[bucket as BudgetBucket],
+        name: labels[bucket] || bucket,
         bucket,
         allocatedAmount: parseFloat(allocation.allocatedAmount),
         spentAmount: 0,
@@ -63,10 +75,11 @@ export async function registerBudgetBucketCategoryRoutes(router: Router, storage
       
       const expenses = await storage.getExpensesByBucket(allocation.weddingId, allocation.bucket as BudgetBucket);
       const spentAmount = expenses.reduce((sum, e) => sum + parseFloat(e.amount || '0'), 0);
+      const labels = await getBudgetBucketLabels(storage);
       
       res.json({
         id: allocation.id,
-        name: BUDGET_BUCKET_LABELS[allocation.bucket as BudgetBucket],
+        name: labels[allocation.bucket] || allocation.bucket,
         bucket: allocation.bucket,
         allocatedAmount: parseFloat(allocation.allocatedAmount),
         spentAmount,

@@ -1,16 +1,33 @@
 import { Router } from "express";
 import { requireAuth, type AuthRequest } from "../auth-middleware";
 import type { IStorage } from "../storage";
-import { insertExpenseSchema, insertBudgetAllocationSchema, BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket, insertBudgetCategorySchema, insertBudgetScenarioSchema, type BudgetForecast } from "@shared/schema";
+import { insertExpenseSchema, insertBudgetAllocationSchema, type BudgetBucket, insertBudgetCategorySchema, insertBudgetScenarioSchema, type BudgetForecast } from "@shared/schema";
 import { ensureCoupleAccess } from "./middleware";
 
+// Helper to get budget bucket slugs from database
+async function getBudgetBucketSlugs(storage: IStorage): Promise<string[]> {
+  const categories = await storage.getActiveBudgetCategories();
+  return categories.map(c => c.slug);
+}
+
+// Helper to get slug-to-label map from database
+async function getBudgetBucketLabels(storage: IStorage): Promise<Record<string, string>> {
+  const categories = await storage.getActiveBudgetCategories();
+  const labels: Record<string, string> = {};
+  for (const cat of categories) {
+    labels[cat.slug] = cat.displayName;
+  }
+  return labels;
+}
+
 export async function registerBudgetRoutes(router: Router, storage: IStorage) {
-  // Legacy endpoint - returns static buckets (kept for backwards compatibility)
+  // Legacy endpoint - returns buckets from database (backwards compatible)
   router.get("/buckets", async (_req, res) => {
     try {
-      const buckets = BUDGET_BUCKETS.map(bucket => ({
-        id: bucket,
-        label: BUDGET_BUCKET_LABELS[bucket],
+      const categories = await storage.getActiveBudgetCategories();
+      const buckets = categories.map(cat => ({
+        id: cat.slug,
+        label: cat.displayName,
       }));
       res.json(buckets);
     } catch (error) {
@@ -135,11 +152,12 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
       // Filter to only bucket-level allocations (no ceremonyId, no lineItemLabel)
       const bucketLevelAllocations = allocations.filter(a => !a.ceremonyId && !a.lineItemLabel);
       
-      const bucketsWithAllocations = BUDGET_BUCKETS.map(bucket => {
-        const allocation = bucketLevelAllocations.find(a => a.bucket === bucket);
+      const categories = await storage.getActiveBudgetCategories();
+      const bucketsWithAllocations = categories.map(cat => {
+        const allocation = bucketLevelAllocations.find(a => a.bucket === cat.slug);
         return {
-          bucket,
-          label: BUDGET_BUCKET_LABELS[bucket],
+          bucket: cat.slug,
+          label: cat.displayName,
           allocatedAmount: allocation?.allocatedAmount || "0",
           allocationId: allocation?.id || null,
         };
@@ -566,15 +584,16 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
       const totalAllocated = allocations.reduce((sum, a) => sum + parseFloat(a.allocatedAmount || '0'), 0);
       const totalSpent = expenses.reduce((sum, e) => sum + parseFloat(e.amount || '0'), 0);
 
-      const bucketBreakdown = BUDGET_BUCKETS.map(bucket => {
-        const allocation = allocations.find(a => a.bucket === bucket);
-        const bucketExpenses = expenses.filter(e => e.parentCategory === bucket);
+      const categories = await storage.getActiveBudgetCategories();
+      const bucketBreakdown = categories.map(cat => {
+        const allocation = allocations.find(a => a.bucket === cat.slug);
+        const bucketExpenses = expenses.filter(e => e.parentCategory === cat.slug);
         const allocated = parseFloat(allocation?.allocatedAmount || '0');
         const spent = bucketExpenses.reduce((sum, e) => sum + parseFloat(e.amount || '0'), 0);
         
         return {
-          bucket,
-          label: BUDGET_BUCKET_LABELS[bucket],
+          bucket: cat.slug,
+          label: cat.displayName,
           allocated,
           spent,
           remaining: allocated - spent,
@@ -819,8 +838,9 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
         return res.status(400).json({ error: "Missing required fields: weddingId, bucket, amount" });
       }
 
-      if (!BUDGET_BUCKETS.includes(bucket)) {
-        return res.status(400).json({ error: `Invalid bucket. Must be one of: ${BUDGET_BUCKETS.join(', ')}` });
+      const validBuckets = await getBudgetBucketSlugs(storage);
+      if (!validBuckets.includes(bucket)) {
+        return res.status(400).json({ error: `Invalid bucket. Must be one of: ${validBuckets.join(', ')}` });
       }
 
       const wedding = await storage.getWedding(weddingId);
@@ -884,7 +904,8 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
       for (const alloc of allocations) {
         const { bucket, amount, lineItemLabel } = alloc;
 
-        if (!BUDGET_BUCKETS.includes(bucket)) {
+        const validBuckets = await getBudgetBucketSlugs(storage);
+        if (!validBuckets.includes(bucket)) {
           results.push({ bucket, amount, success: false, error: "Invalid bucket" });
           continue;
         }
@@ -948,7 +969,8 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
         }
 
         // Validate bucket if provided, default to 'other'
-        const validBucket = bucket && BUDGET_BUCKETS.includes(bucket) ? bucket : "other";
+        const validBuckets = await getBudgetBucketSlugs(storage);
+        const validBucket = bucket && validBuckets.includes(bucket) ? bucket : "other";
 
         try {
           // Store line item budgets in the unified budget_allocations table
@@ -1022,8 +1044,13 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
       const allocationMap = new Map<string, Map<string, typeof allocations[0]>>();
       const bucketTotals = new Map<string, { allocated: number; global: number }>();
       
+      // Fetch budget categories from database
+      const categories = await storage.getActiveBudgetCategories();
+      const bucketSlugs = categories.map(c => c.slug);
+      const bucketLabels = await getBudgetBucketLabels(storage);
+      
       // Initialize bucket totals
-      for (const bucket of BUDGET_BUCKETS) {
+      for (const bucket of bucketSlugs) {
         bucketTotals.set(bucket, { allocated: 0, global: 0 });
       }
 
@@ -1034,12 +1061,16 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
             allocationMap.set(alloc.ceremonyId, new Map());
           }
           allocationMap.get(alloc.ceremonyId)!.set(alloc.bucket, alloc);
-          const current = bucketTotals.get(alloc.bucket)!;
-          current.allocated += parseFloat(alloc.allocatedAmount || '0');
+          const current = bucketTotals.get(alloc.bucket);
+          if (current) {
+            current.allocated += parseFloat(alloc.allocatedAmount || '0');
+          }
         } else if (!alloc.ceremonyId && !alloc.lineItemLabel) {
           // Bucket-level (global) allocation
-          const current = bucketTotals.get(alloc.bucket)!;
-          current.global = parseFloat(alloc.allocatedAmount || '0');
+          const current = bucketTotals.get(alloc.bucket);
+          if (current) {
+            current.global = parseFloat(alloc.allocatedAmount || '0');
+          }
         }
       }
 
@@ -1049,7 +1080,7 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
         const cells: Record<string, { amount: string; spent: number; allocationId: string | null }> = {};
         
         let ceremonyTotal = 0;
-        for (const bucket of BUDGET_BUCKETS) {
+        for (const bucket of bucketSlugs) {
           const alloc = ceremonyAllocations.get(bucket);
           const amount = alloc?.allocatedAmount || '0';
           const spentKey = `${event.id}:${bucket}`;
@@ -1076,11 +1107,11 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
       });
 
       // Build column summaries
-      const columns = BUDGET_BUCKETS.map(bucket => {
+      const columns = bucketSlugs.map(bucket => {
         const totals = bucketTotals.get(bucket)!;
         return {
           categoryKey: bucket,
-          categoryLabel: BUDGET_BUCKET_LABELS[bucket],
+          categoryLabel: bucketLabels[bucket] || bucket,
           globalBudget: totals.global,
           totalAllocated: totals.allocated,
           remaining: totals.global - totals.allocated,

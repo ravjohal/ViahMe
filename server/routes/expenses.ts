@@ -1,6 +1,6 @@
 import { Router } from "express";
 import type { IStorage } from "../storage";
-import { insertExpenseSchema, BUDGET_BUCKETS, BUDGET_BUCKET_LABELS, type BudgetBucket } from "@shared/schema";
+import { insertExpenseSchema, type BudgetBucket } from "@shared/schema";
 
 export async function registerExpenseRoutes(router: Router, storage: IStorage) {
   router.get("/:weddingId", async (req, res) => {
