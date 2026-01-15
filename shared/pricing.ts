@@ -65,6 +65,7 @@ export const CITY_MULTIPLIERS: Record<string, number> = {
   la: 1.3,
   chicago: 1.2,
   seattle: 1.1,
+  sacramento: 1.0,
   other: 1.0,
 };
 

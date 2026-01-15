@@ -140,6 +140,7 @@ interface OnboardingQuestionnaireProps {
 
 const METRO_AREAS = [
   { value: "San Francisco Bay Area", label: "San Francisco Bay Area", desiPop: "High" },
+  { value: "Sacramento Metro", label: "Sacramento Metro", desiPop: "Medium" },
   { value: "New York City", label: "New York City Metro", desiPop: "High" },
   { value: "Los Angeles", label: "Los Angeles Metro", desiPop: "High" },
   { value: "Chicago", label: "Chicago Metro", desiPop: "High" },
@@ -384,6 +385,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
     if (!regionalPricingData) return 1.0;
     const locationToCity: Record<string, string> = {
       "San Francisco Bay Area": "bay_area",
+      "Sacramento Metro": "sacramento",
       "New York City": "nyc",
       "Los Angeles": "la",
       "Chicago": "chicago",

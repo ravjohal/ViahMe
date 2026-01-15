@@ -758,6 +758,10 @@ export function normalizeToKnownCity(location: string): string {
   if (loc.includes('bay area') || loc.includes('san francisco') || loc.includes('san jose') || loc.includes('oakland') || loc.includes('fremont')) {
     return 'San Francisco Bay Area';
   }
+  // Sacramento Metro area includes Sacramento, Elk Grove, Roseville, Folsom, Rancho Cordova, etc.
+  if (loc.includes('sacramento') || loc.includes('elk grove') || loc.includes('roseville') || loc.includes('folsom') || loc.includes('rancho cordova') || loc.includes('davis') || loc.includes('woodland')) {
+    return 'Sacramento Metro';
+  }
   if (loc.includes('new york') || loc.includes('nyc') || loc.includes('manhattan') || loc.includes('brooklyn') || loc.includes('queens')) {
     return 'New York City';
   }
@@ -789,6 +793,7 @@ export function formatCostRange(cost: CityVendorCost): string {
 
 export const KNOWN_CITIES = [
   'San Francisco Bay Area',
+  'Sacramento Metro',
   'New York City', 
   'Los Angeles',
   'Chicago',

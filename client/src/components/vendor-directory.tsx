@@ -65,6 +65,10 @@ function normalizeCity(location: string | undefined): string {
   if (loc.includes('bay area') || loc.includes('san francisco') || loc.includes('san jose') || loc.includes('oakland') || loc === 'sf bay area') {
     return 'San Francisco Bay Area';
   }
+  // Sacramento Metro area includes Sacramento, Elk Grove, Roseville, Folsom, Rancho Cordova, etc.
+  if (loc.includes('sacramento') || loc.includes('elk grove') || loc.includes('roseville') || loc.includes('folsom') || loc.includes('rancho cordova') || loc.includes('davis') || loc.includes('woodland')) {
+    return 'Sacramento Metro';
+  }
   if (loc.includes('new york') || loc.includes('nyc') || loc.includes('manhattan')) {
     return 'New York City';
   }
