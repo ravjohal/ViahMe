@@ -292,6 +292,9 @@ import {
   honeymoonBudgetCategories,
   type HoneymoonBudgetCategory,
   type InsertHoneymoonBudgetCategory,
+  dietaryOptions,
+  type DietaryOption,
+  type InsertDietaryOption,
 } from "@shared/schema";
 import { randomUUID, randomBytes } from "crypto";
 import bcrypt from "bcrypt";
@@ -1266,6 +1269,16 @@ export interface IStorage {
   createHoneymoonBudgetCategory(category: InsertHoneymoonBudgetCategory): Promise<HoneymoonBudgetCategory>;
   updateHoneymoonBudgetCategory(id: string, category: Partial<InsertHoneymoonBudgetCategory>): Promise<HoneymoonBudgetCategory | undefined>;
   deleteHoneymoonBudgetCategory(id: string): Promise<boolean>;
+
+  // Dietary Options (database-driven guest dietary restrictions)
+  getDietaryOption(id: string): Promise<DietaryOption | undefined>;
+  getDietaryOptionBySlug(slug: string): Promise<DietaryOption | undefined>;
+  getAllDietaryOptions(): Promise<DietaryOption[]>;
+  getActiveDietaryOptions(): Promise<DietaryOption[]>;
+  getDietaryOptionsByTradition(tradition: string): Promise<DietaryOption[]>;
+  createDietaryOption(option: InsertDietaryOption): Promise<DietaryOption>;
+  updateDietaryOption(id: string, option: Partial<InsertDietaryOption>): Promise<DietaryOption | undefined>;
+  deleteDietaryOption(id: string): Promise<boolean>;
 
   // Ritual Role Assignments
   getRitualRoleAssignment(id: string): Promise<RitualRoleAssignment | undefined>;
@@ -4725,6 +4738,16 @@ export class MemStorage implements IStorage {
   async createHoneymoonBudgetCategory(category: InsertHoneymoonBudgetCategory): Promise<HoneymoonBudgetCategory> { throw new Error('MemStorage does not support Honeymoon Budget Categories. Use DBStorage.'); }
   async updateHoneymoonBudgetCategory(id: string, category: Partial<InsertHoneymoonBudgetCategory>): Promise<HoneymoonBudgetCategory | undefined> { throw new Error('MemStorage does not support Honeymoon Budget Categories. Use DBStorage.'); }
   async deleteHoneymoonBudgetCategory(id: string): Promise<boolean> { return false; }
+
+  // Dietary Options (database-driven) - stub methods for MemStorage
+  async getDietaryOption(id: string): Promise<DietaryOption | undefined> { return undefined; }
+  async getDietaryOptionBySlug(slug: string): Promise<DietaryOption | undefined> { return undefined; }
+  async getAllDietaryOptions(): Promise<DietaryOption[]> { return []; }
+  async getActiveDietaryOptions(): Promise<DietaryOption[]> { return []; }
+  async getDietaryOptionsByTradition(tradition: string): Promise<DietaryOption[]> { return []; }
+  async createDietaryOption(option: InsertDietaryOption): Promise<DietaryOption> { throw new Error('MemStorage does not support Dietary Options. Use DBStorage.'); }
+  async updateDietaryOption(id: string, option: Partial<InsertDietaryOption>): Promise<DietaryOption | undefined> { throw new Error('MemStorage does not support Dietary Options. Use DBStorage.'); }
+  async deleteDietaryOption(id: string): Promise<boolean> { return false; }
 }
 
 import { neon } from "@neondatabase/serverless";
@@ -11959,6 +11982,68 @@ export class DBStorage implements IStorage {
   async deleteHoneymoonBudgetCategory(id: string): Promise<boolean> {
     await this.db.delete(honeymoonBudgetCategories)
       .where(eq(honeymoonBudgetCategories.id, id));
+    return true;
+  }
+
+  // Dietary Options (database-driven)
+  async getDietaryOption(id: string): Promise<DietaryOption | undefined> {
+    const result = await this.db.select()
+      .from(dietaryOptions)
+      .where(eq(dietaryOptions.id, id));
+    return result[0];
+  }
+
+  async getDietaryOptionBySlug(slug: string): Promise<DietaryOption | undefined> {
+    const result = await this.db.select()
+      .from(dietaryOptions)
+      .where(eq(dietaryOptions.slug, slug));
+    return result[0];
+  }
+
+  async getAllDietaryOptions(): Promise<DietaryOption[]> {
+    return await this.db.select()
+      .from(dietaryOptions)
+      .orderBy(sql`${dietaryOptions.displayOrder} ASC, ${dietaryOptions.displayName} ASC`);
+  }
+
+  async getActiveDietaryOptions(): Promise<DietaryOption[]> {
+    return await this.db.select()
+      .from(dietaryOptions)
+      .where(eq(dietaryOptions.isActive, true))
+      .orderBy(sql`${dietaryOptions.displayOrder} ASC, ${dietaryOptions.displayName} ASC`);
+  }
+
+  async getDietaryOptionsByTradition(tradition: string): Promise<DietaryOption[]> {
+    return await this.db.select()
+      .from(dietaryOptions)
+      .where(and(
+        eq(dietaryOptions.isActive, true),
+        or(
+          sql`${dietaryOptions.traditionAffinity} && ARRAY[${tradition}]::text[]`,
+          sql`array_length(${dietaryOptions.traditionAffinity}, 1) IS NULL OR array_length(${dietaryOptions.traditionAffinity}, 1) = 0`
+        )
+      ))
+      .orderBy(sql`${dietaryOptions.displayOrder} ASC, ${dietaryOptions.displayName} ASC`);
+  }
+
+  async createDietaryOption(option: InsertDietaryOption): Promise<DietaryOption> {
+    const result = await this.db.insert(dietaryOptions)
+      .values(option)
+      .returning();
+    return result[0];
+  }
+
+  async updateDietaryOption(id: string, option: Partial<InsertDietaryOption>): Promise<DietaryOption | undefined> {
+    const result = await this.db.update(dietaryOptions)
+      .set({ ...option, updatedAt: new Date() })
+      .where(eq(dietaryOptions.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteDietaryOption(id: string): Promise<boolean> {
+    await this.db.delete(dietaryOptions)
+      .where(eq(dietaryOptions.id, id));
     return true;
   }
 

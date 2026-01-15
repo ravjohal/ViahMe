@@ -5220,3 +5220,29 @@ export const insertHoneymoonBudgetCategorySchema = createInsertSchema(honeymoonB
 });
 export type InsertHoneymoonBudgetCategory = z.infer<typeof insertHoneymoonBudgetCategorySchema>;
 export type HoneymoonBudgetCategory = typeof honeymoonBudgetCategories.$inferSelect;
+
+// ============================================================================
+// DIETARY OPTIONS - Database-driven dietary restriction types for guests
+// ============================================================================
+
+export const dietaryOptions = pgTable("dietary_options", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  slug: text("slug").notNull().unique(),
+  displayName: text("display_name").notNull(),
+  description: text("description"),
+  iconName: text("icon_name"),
+  traditionAffinity: text("tradition_affinity").array().notNull().default(sql`ARRAY[]::text[]`),
+  displayOrder: integer("display_order").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  isSystemOption: boolean("is_system_option").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertDietaryOptionSchema = createInsertSchema(dietaryOptions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertDietaryOption = z.infer<typeof insertDietaryOptionSchema>;
+export type DietaryOption = typeof dietaryOptions.$inferSelect;
