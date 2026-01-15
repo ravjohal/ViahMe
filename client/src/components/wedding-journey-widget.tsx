@@ -73,9 +73,7 @@ export function WeddingJourneyWidget({ wedding }: WeddingJourneyWidgetProps) {
 
   const initializeMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest(`/api/wedding-journey/wedding/${wedding.id}/initialize`, {
-        method: "POST",
-      });
+      return await apiRequest("POST", `/api/wedding-journey/wedding/${wedding.id}/initialize`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/wedding-journey/wedding", wedding.id, "with-rituals"] });

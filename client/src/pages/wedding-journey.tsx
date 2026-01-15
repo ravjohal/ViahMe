@@ -323,9 +323,7 @@ export default function WeddingJourneyPage() {
 
   const initializeMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest(`/api/wedding-journey/wedding/${wedding!.id}/initialize`, {
-        method: "POST",
-      });
+      return await apiRequest("POST", `/api/wedding-journey/wedding/${wedding!.id}/initialize`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/wedding-journey/wedding", wedding?.id, "with-rituals"] });
@@ -335,10 +333,7 @@ export default function WeddingJourneyPage() {
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      return await apiRequest(`/api/wedding-journey/items/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify({ status }),
-      });
+      return await apiRequest("PATCH", `/api/wedding-journey/items/${id}`, { status });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/wedding-journey/wedding", wedding?.id, "with-rituals"] });
