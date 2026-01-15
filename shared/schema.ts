@@ -5116,3 +5116,107 @@ export const insertWeddingJourneyItemSchema = createInsertSchema(weddingJourneyI
 });
 export type InsertWeddingJourneyItem = z.infer<typeof insertWeddingJourneyItemSchema>;
 export type WeddingJourneyItem = typeof weddingJourneyItems.$inferSelect;
+
+// ============================================================================
+// FAVOUR CATEGORIES - Database-driven favour/gift types
+// ============================================================================
+
+export const favourCategories = pgTable("favour_categories", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  slug: text("slug").notNull().unique(),
+  displayName: text("display_name").notNull(),
+  description: text("description"),
+  iconName: text("icon_name"),
+  traditionAffinity: text("tradition_affinity").array().notNull().default(sql`'{}'::text[]`),
+  displayOrder: integer("display_order").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  isSystemCategory: boolean("is_system_category").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertFavourCategorySchema = createInsertSchema(favourCategories).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertFavourCategory = z.infer<typeof insertFavourCategorySchema>;
+export type FavourCategory = typeof favourCategories.$inferSelect;
+
+// ============================================================================
+// DECOR CATEGORIES - Database-driven decor category types
+// ============================================================================
+
+export const decorCategories = pgTable("decor_categories", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  slug: text("slug").notNull().unique(),
+  displayName: text("display_name").notNull(),
+  description: text("description"),
+  iconName: text("icon_name"),
+  displayOrder: integer("display_order").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  isSystemCategory: boolean("is_system_category").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertDecorCategorySchema = createInsertSchema(decorCategories).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertDecorCategory = z.infer<typeof insertDecorCategorySchema>;
+export type DecorCategory = typeof decorCategories.$inferSelect;
+
+// ============================================================================
+// DECOR ITEM TEMPLATES - Default library of decor items for South Asian weddings
+// ============================================================================
+
+export const decorItemTemplates = pgTable("decor_item_templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  categoryId: varchar("category_id").notNull(), // FK to decor_categories
+  itemName: text("item_name").notNull(),
+  description: text("description"),
+  defaultSourcing: text("default_sourcing").default("hire"),
+  traditionAffinity: text("tradition_affinity").array().notNull().default(sql`'{}'::text[]`),
+  displayOrder: integer("display_order").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  isSystemItem: boolean("is_system_item").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  categoryIdx: index("decor_item_templates_category_idx").on(table.categoryId),
+}));
+
+export const insertDecorItemTemplateSchema = createInsertSchema(decorItemTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertDecorItemTemplate = z.infer<typeof insertDecorItemTemplateSchema>;
+export type DecorItemTemplate = typeof decorItemTemplates.$inferSelect;
+
+// ============================================================================
+// HONEYMOON BUDGET CATEGORIES - Database-driven honeymoon expense categories
+// ============================================================================
+
+export const honeymoonBudgetCategories = pgTable("honeymoon_budget_categories", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  slug: text("slug").notNull().unique(),
+  displayName: text("display_name").notNull(),
+  description: text("description"),
+  iconName: text("icon_name"),
+  displayOrder: integer("display_order").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  isSystemCategory: boolean("is_system_category").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertHoneymoonBudgetCategorySchema = createInsertSchema(honeymoonBudgetCategories).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertHoneymoonBudgetCategory = z.infer<typeof insertHoneymoonBudgetCategorySchema>;
+export type HoneymoonBudgetCategory = typeof honeymoonBudgetCategories.$inferSelect;
