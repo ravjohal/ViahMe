@@ -13335,6 +13335,10 @@ export class DBStorage implements IStorage {
   }
 
   // Tradition Rituals - Educational content about wedding rituals
+  // NOTE: tradition_rituals contains ONLY rituals (activities), NOT ceremonies.
+  // - Rituals WITH ceremonyTypeId are done AS PART OF that ceremony
+  // - Rituals WITHOUT ceremonyTypeId are done OUTSIDE any ceremony (standalone)
+  // ceremony_types is the source of truth for ceremonies (Anand Karaj, Sangeet, etc.)
   async getTraditionRitual(id: string): Promise<TraditionRitual | undefined> {
     const result = await this.db.select().from(traditionRituals).where(eq(traditionRituals.id, id));
     return result[0];
@@ -13346,13 +13350,23 @@ export class DBStorage implements IStorage {
   }
 
   async getTraditionRitualsByTradition(traditionId: string): Promise<TraditionRitual[]> {
-    return await this.db.select()
+    // Get ceremony slugs for this tradition to filter out duplicates
+    // This prevents any ceremonies that were accidentally added to tradition_rituals from showing
+    const ceremonies = await this.db.select({ ceremonyId: ceremonyTypes.ceremonyId })
+      .from(ceremonyTypes)
+      .where(eq(ceremonyTypes.traditionId, traditionId));
+    const ceremonySlugs = new Set(ceremonies.map(c => c.ceremonyId));
+    
+    const rituals = await this.db.select()
       .from(traditionRituals)
       .where(and(
         eq(traditionRituals.traditionId, traditionId),
         eq(traditionRituals.isActive, true)
       ))
       .orderBy(traditionRituals.sortOrder);
+    
+    // Filter out any rituals whose slug matches a ceremony (these are duplicates)
+    return rituals.filter(r => !ceremonySlugs.has(r.slug));
   }
 
   async getTraditionRitualsByTraditionSlug(traditionSlug: string): Promise<TraditionRitual[]> {
@@ -13364,10 +13378,18 @@ export class DBStorage implements IStorage {
   }
 
   async getAllTraditionRituals(): Promise<TraditionRitual[]> {
-    return await this.db.select()
+    // Get all ceremony slugs to filter out duplicates
+    const ceremonies = await this.db.select({ ceremonyId: ceremonyTypes.ceremonyId })
+      .from(ceremonyTypes);
+    const ceremonySlugs = new Set(ceremonies.map(c => c.ceremonyId));
+    
+    const rituals = await this.db.select()
       .from(traditionRituals)
       .where(eq(traditionRituals.isActive, true))
       .orderBy(traditionRituals.sortOrder);
+    
+    // Filter out any rituals whose slug matches a ceremony (these are duplicates)
+    return rituals.filter(r => !ceremonySlugs.has(r.slug));
   }
 
   // Wedding Journey Items - Couple's specific journey tracking

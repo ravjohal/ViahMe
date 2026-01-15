@@ -77,6 +77,15 @@ Key architectural decisions and features include:
 - **Ritual Role Assignee Manager**: Allows couples to assign ceremonial micro-roles to guests using pre-defined templates, with guest portal integration for acknowledgments.
 - **Vendor Access Pass & Collaboration Hub**: Enables sharing of filtered timeline views with booked vendors, managing access tokens, and tracking vendor engagement without requiring vendor accounts.
 - **Ceremony Shopping Lists**: Database-driven shopping templates per ceremony type (table: `ceremony_shopping_templates`) with couple-specific tracking (table: `wedding_shopping_items`). Pre-seeded with Sikh ceremony items (Maiyan, Jaggo, Mehndi, Chooda, Anand Karaj, Sangeet). Supports item status tracking (needed → ordered → received), estimated vs. actual costs, purchase sources, and due dates for analytics and reporting.
+- **Ceremony vs Ritual Data Model** (January 2026):
+  - **`ceremony_types`**: Source of truth for ceremonies (Anand Karaj, Sangeet, Reception, etc.) with cost data. Ceremonies are major events that appear on the timeline.
+  - **`tradition_rituals`**: Educational content about rituals (activities) that can be done AS PART of a ceremony or OUTSIDE any ceremony:
+    - **Rituals WITH `ceremonyTypeId`**: Done as part of that ceremony (e.g., Milni is done during Anand Karaj day)
+    - **Rituals WITHOUT `ceremonyTypeId`**: Standalone activities done outside ceremonies
+  - **IMPORTANT**: Ceremonies should NOT be duplicated into `tradition_rituals`. Storage layer filters out any duplicate entries by matching slugs.
+  - **Wedding Journey**: Shows rituals from `tradition_rituals` for couples to explore cultural significance and decide what to include
+  - **Events/Timeline**: Created from `ceremony_types`, linked to rituals via `tradition_rituals.ceremonyTypeId → events.ceremonyTypeId`
+  - **Sync Flow**: When a ritual with `ceremonyTypeId` is marked "included", it auto-links to matching event via `syncJourneyWithEvents()`
 - **Database-Driven Reference Data** (January 2026): Migrated hardcoded constants to database tables for admin maintainability:
   - **`budget_bucket_categories`**: 12 high-level budget buckets (venue, catering, photography, etc.) with rich metadata. API: `/api/budget/categories` (admin CRUD), `/api/budget/buckets` (simple slug/label list). **REMOVED** `BUDGET_BUCKETS` and `BUDGET_BUCKET_LABELS` constants from TypeScript - now fully database-driven with runtime validation.
   - **`milni_relation_options`**: 17 family relation types for Milni ceremony (grandfather, uncle, father, brother, etc.) with side (paternal/maternal), gender, Hindi names, and tradition affinity. API: `/api/milni-relation-options`
