@@ -24,19 +24,6 @@ export async function registerVendorCategoriesRoutes(router: Router, storage: IS
     }
   });
 
-  router.get("/:id", async (req, res) => {
-    try {
-      const category = await storage.getVendorCategory(req.params.id);
-      if (!category) {
-        return res.status(404).json({ error: "Vendor category not found" });
-      }
-      res.json(category);
-    } catch (error) {
-      console.error("Failed to fetch vendor category:", error);
-      res.status(500).json({ error: "Failed to fetch vendor category" });
-    }
-  });
-
   router.get("/slug/:slug", async (req, res) => {
     try {
       const category = await storage.getVendorCategoryBySlug(req.params.slug);
@@ -46,6 +33,19 @@ export async function registerVendorCategoriesRoutes(router: Router, storage: IS
       res.json(category);
     } catch (error) {
       console.error("Failed to fetch vendor category by slug:", error);
+      res.status(500).json({ error: "Failed to fetch vendor category" });
+    }
+  });
+
+  router.get("/:id", async (req, res) => {
+    try {
+      const category = await storage.getVendorCategory(req.params.id);
+      if (!category) {
+        return res.status(404).json({ error: "Vendor category not found" });
+      }
+      res.json(category);
+    } catch (error) {
+      console.error("Failed to fetch vendor category:", error);
       res.status(500).json({ error: "Failed to fetch vendor category" });
     }
   });

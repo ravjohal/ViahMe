@@ -17,19 +17,6 @@ export async function registerPricingRegionsRoutes(router: Router, storage: ISto
     }
   });
 
-  router.get("/:id", async (req, res) => {
-    try {
-      const region = await storage.getPricingRegion(req.params.id);
-      if (!region) {
-        return res.status(404).json({ error: "Pricing region not found" });
-      }
-      res.json(region);
-    } catch (error) {
-      console.error("Failed to fetch pricing region:", error);
-      res.status(500).json({ error: "Failed to fetch pricing region" });
-    }
-  });
-
   router.get("/slug/:slug", async (req, res) => {
     try {
       const region = await storage.getPricingRegionBySlug(req.params.slug);
@@ -39,6 +26,19 @@ export async function registerPricingRegionsRoutes(router: Router, storage: ISto
       res.json(region);
     } catch (error) {
       console.error("Failed to fetch pricing region by slug:", error);
+      res.status(500).json({ error: "Failed to fetch pricing region" });
+    }
+  });
+
+  router.get("/:id", async (req, res) => {
+    try {
+      const region = await storage.getPricingRegion(req.params.id);
+      if (!region) {
+        return res.status(404).json({ error: "Pricing region not found" });
+      }
+      res.json(region);
+    } catch (error) {
+      console.error("Failed to fetch pricing region:", error);
       res.status(500).json({ error: "Failed to fetch pricing region" });
     }
   });
