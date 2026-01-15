@@ -280,6 +280,18 @@ import {
   type PricingRegion,
   type InsertPricingRegion,
   DEFAULT_PRICING_REGIONS,
+  favourCategories,
+  type FavourCategory,
+  type InsertFavourCategory,
+  decorCategories,
+  type DecorCategory,
+  type InsertDecorCategory,
+  decorItemTemplates,
+  type DecorItemTemplate,
+  type InsertDecorItemTemplate,
+  honeymoonBudgetCategories,
+  type HoneymoonBudgetCategory,
+  type InsertHoneymoonBudgetCategory,
 } from "@shared/schema";
 import { randomUUID, randomBytes } from "crypto";
 import bcrypt from "bcrypt";
@@ -1216,6 +1228,44 @@ export interface IStorage {
   updatePricingRegion(id: string, region: Partial<InsertPricingRegion>): Promise<PricingRegion | undefined>;
   deletePricingRegion(id: string): Promise<boolean>;
   seedPricingRegions(): Promise<PricingRegion[]>;
+
+  // Favour Categories (database-driven favour/gift types)
+  getFavourCategory(id: string): Promise<FavourCategory | undefined>;
+  getFavourCategoryBySlug(slug: string): Promise<FavourCategory | undefined>;
+  getAllFavourCategories(): Promise<FavourCategory[]>;
+  getActiveFavourCategories(): Promise<FavourCategory[]>;
+  getFavourCategoriesByTradition(tradition: string): Promise<FavourCategory[]>;
+  createFavourCategory(category: InsertFavourCategory): Promise<FavourCategory>;
+  updateFavourCategory(id: string, category: Partial<InsertFavourCategory>): Promise<FavourCategory | undefined>;
+  deleteFavourCategory(id: string): Promise<boolean>;
+
+  // Decor Categories (database-driven decor category types)
+  getDecorCategory(id: string): Promise<DecorCategory | undefined>;
+  getDecorCategoryBySlug(slug: string): Promise<DecorCategory | undefined>;
+  getAllDecorCategories(): Promise<DecorCategory[]>;
+  getActiveDecorCategories(): Promise<DecorCategory[]>;
+  createDecorCategory(category: InsertDecorCategory): Promise<DecorCategory>;
+  updateDecorCategory(id: string, category: Partial<InsertDecorCategory>): Promise<DecorCategory | undefined>;
+  deleteDecorCategory(id: string): Promise<boolean>;
+
+  // Decor Item Templates (default library of decor items)
+  getDecorItemTemplate(id: string): Promise<DecorItemTemplate | undefined>;
+  getDecorItemTemplatesByCategory(categoryId: string): Promise<DecorItemTemplate[]>;
+  getDecorItemTemplatesByTradition(tradition: string): Promise<DecorItemTemplate[]>;
+  getAllDecorItemTemplates(): Promise<DecorItemTemplate[]>;
+  getActiveDecorItemTemplates(): Promise<DecorItemTemplate[]>;
+  createDecorItemTemplate(template: InsertDecorItemTemplate): Promise<DecorItemTemplate>;
+  updateDecorItemTemplate(id: string, template: Partial<InsertDecorItemTemplate>): Promise<DecorItemTemplate | undefined>;
+  deleteDecorItemTemplate(id: string): Promise<boolean>;
+
+  // Honeymoon Budget Categories (database-driven honeymoon expense categories)
+  getHoneymoonBudgetCategory(id: string): Promise<HoneymoonBudgetCategory | undefined>;
+  getHoneymoonBudgetCategoryBySlug(slug: string): Promise<HoneymoonBudgetCategory | undefined>;
+  getAllHoneymoonBudgetCategories(): Promise<HoneymoonBudgetCategory[]>;
+  getActiveHoneymoonBudgetCategories(): Promise<HoneymoonBudgetCategory[]>;
+  createHoneymoonBudgetCategory(category: InsertHoneymoonBudgetCategory): Promise<HoneymoonBudgetCategory>;
+  updateHoneymoonBudgetCategory(id: string, category: Partial<InsertHoneymoonBudgetCategory>): Promise<HoneymoonBudgetCategory | undefined>;
+  deleteHoneymoonBudgetCategory(id: string): Promise<boolean>;
 
   // Ritual Role Assignments
   getRitualRoleAssignment(id: string): Promise<RitualRoleAssignment | undefined>;
@@ -4637,6 +4687,44 @@ export class MemStorage implements IStorage {
   async updatePricingRegion(id: string, region: Partial<InsertPricingRegion>): Promise<PricingRegion | undefined> { throw new Error('MemStorage does not support Pricing Regions. Use DBStorage.'); }
   async deletePricingRegion(id: string): Promise<boolean> { return false; }
   async seedPricingRegions(): Promise<PricingRegion[]> { throw new Error('MemStorage does not support Pricing Regions. Use DBStorage.'); }
+
+  // Favour Categories (database-driven) - stub methods for MemStorage
+  async getFavourCategory(id: string): Promise<FavourCategory | undefined> { return undefined; }
+  async getFavourCategoryBySlug(slug: string): Promise<FavourCategory | undefined> { return undefined; }
+  async getAllFavourCategories(): Promise<FavourCategory[]> { return []; }
+  async getActiveFavourCategories(): Promise<FavourCategory[]> { return []; }
+  async getFavourCategoriesByTradition(tradition: string): Promise<FavourCategory[]> { return []; }
+  async createFavourCategory(category: InsertFavourCategory): Promise<FavourCategory> { throw new Error('MemStorage does not support Favour Categories. Use DBStorage.'); }
+  async updateFavourCategory(id: string, category: Partial<InsertFavourCategory>): Promise<FavourCategory | undefined> { throw new Error('MemStorage does not support Favour Categories. Use DBStorage.'); }
+  async deleteFavourCategory(id: string): Promise<boolean> { return false; }
+
+  // Decor Categories (database-driven) - stub methods for MemStorage
+  async getDecorCategory(id: string): Promise<DecorCategory | undefined> { return undefined; }
+  async getDecorCategoryBySlug(slug: string): Promise<DecorCategory | undefined> { return undefined; }
+  async getAllDecorCategories(): Promise<DecorCategory[]> { return []; }
+  async getActiveDecorCategories(): Promise<DecorCategory[]> { return []; }
+  async createDecorCategory(category: InsertDecorCategory): Promise<DecorCategory> { throw new Error('MemStorage does not support Decor Categories. Use DBStorage.'); }
+  async updateDecorCategory(id: string, category: Partial<InsertDecorCategory>): Promise<DecorCategory | undefined> { throw new Error('MemStorage does not support Decor Categories. Use DBStorage.'); }
+  async deleteDecorCategory(id: string): Promise<boolean> { return false; }
+
+  // Decor Item Templates (database-driven) - stub methods for MemStorage
+  async getDecorItemTemplate(id: string): Promise<DecorItemTemplate | undefined> { return undefined; }
+  async getDecorItemTemplatesByCategory(categoryId: string): Promise<DecorItemTemplate[]> { return []; }
+  async getDecorItemTemplatesByTradition(tradition: string): Promise<DecorItemTemplate[]> { return []; }
+  async getAllDecorItemTemplates(): Promise<DecorItemTemplate[]> { return []; }
+  async getActiveDecorItemTemplates(): Promise<DecorItemTemplate[]> { return []; }
+  async createDecorItemTemplate(template: InsertDecorItemTemplate): Promise<DecorItemTemplate> { throw new Error('MemStorage does not support Decor Item Templates. Use DBStorage.'); }
+  async updateDecorItemTemplate(id: string, template: Partial<InsertDecorItemTemplate>): Promise<DecorItemTemplate | undefined> { throw new Error('MemStorage does not support Decor Item Templates. Use DBStorage.'); }
+  async deleteDecorItemTemplate(id: string): Promise<boolean> { return false; }
+
+  // Honeymoon Budget Categories (database-driven) - stub methods for MemStorage
+  async getHoneymoonBudgetCategory(id: string): Promise<HoneymoonBudgetCategory | undefined> { return undefined; }
+  async getHoneymoonBudgetCategoryBySlug(slug: string): Promise<HoneymoonBudgetCategory | undefined> { return undefined; }
+  async getAllHoneymoonBudgetCategories(): Promise<HoneymoonBudgetCategory[]> { return []; }
+  async getActiveHoneymoonBudgetCategories(): Promise<HoneymoonBudgetCategory[]> { return []; }
+  async createHoneymoonBudgetCategory(category: InsertHoneymoonBudgetCategory): Promise<HoneymoonBudgetCategory> { throw new Error('MemStorage does not support Honeymoon Budget Categories. Use DBStorage.'); }
+  async updateHoneymoonBudgetCategory(id: string, category: Partial<InsertHoneymoonBudgetCategory>): Promise<HoneymoonBudgetCategory | undefined> { throw new Error('MemStorage does not support Honeymoon Budget Categories. Use DBStorage.'); }
+  async deleteHoneymoonBudgetCategory(id: string): Promise<boolean> { return false; }
 }
 
 import { neon } from "@neondatabase/serverless";
@@ -11647,6 +11735,231 @@ export class DBStorage implements IStorage {
       seeded.push(region);
     }
     return seeded;
+  }
+
+  // Favour Categories (database-driven)
+  async getFavourCategory(id: string): Promise<FavourCategory | undefined> {
+    const result = await this.db.select()
+      .from(favourCategories)
+      .where(eq(favourCategories.id, id));
+    return result[0];
+  }
+
+  async getFavourCategoryBySlug(slug: string): Promise<FavourCategory | undefined> {
+    const result = await this.db.select()
+      .from(favourCategories)
+      .where(eq(favourCategories.slug, slug));
+    return result[0];
+  }
+
+  async getAllFavourCategories(): Promise<FavourCategory[]> {
+    return await this.db.select()
+      .from(favourCategories)
+      .orderBy(sql`${favourCategories.displayOrder} ASC, ${favourCategories.displayName} ASC`);
+  }
+
+  async getActiveFavourCategories(): Promise<FavourCategory[]> {
+    return await this.db.select()
+      .from(favourCategories)
+      .where(eq(favourCategories.isActive, true))
+      .orderBy(sql`${favourCategories.displayOrder} ASC, ${favourCategories.displayName} ASC`);
+  }
+
+  async getFavourCategoriesByTradition(tradition: string): Promise<FavourCategory[]> {
+    return await this.db.select()
+      .from(favourCategories)
+      .where(and(
+        eq(favourCategories.isActive, true),
+        or(
+          sql`${favourCategories.traditionAffinity} && ARRAY[${tradition}]::text[]`,
+          sql`array_length(${favourCategories.traditionAffinity}, 1) IS NULL OR array_length(${favourCategories.traditionAffinity}, 1) = 0`
+        )
+      ))
+      .orderBy(sql`${favourCategories.displayOrder} ASC, ${favourCategories.displayName} ASC`);
+  }
+
+  async createFavourCategory(category: InsertFavourCategory): Promise<FavourCategory> {
+    const result = await this.db.insert(favourCategories)
+      .values(category)
+      .returning();
+    return result[0];
+  }
+
+  async updateFavourCategory(id: string, category: Partial<InsertFavourCategory>): Promise<FavourCategory | undefined> {
+    const result = await this.db.update(favourCategories)
+      .set({ ...category, updatedAt: new Date() })
+      .where(eq(favourCategories.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteFavourCategory(id: string): Promise<boolean> {
+    await this.db.delete(favourCategories)
+      .where(eq(favourCategories.id, id));
+    return true;
+  }
+
+  // Decor Categories (database-driven)
+  async getDecorCategory(id: string): Promise<DecorCategory | undefined> {
+    const result = await this.db.select()
+      .from(decorCategories)
+      .where(eq(decorCategories.id, id));
+    return result[0];
+  }
+
+  async getDecorCategoryBySlug(slug: string): Promise<DecorCategory | undefined> {
+    const result = await this.db.select()
+      .from(decorCategories)
+      .where(eq(decorCategories.slug, slug));
+    return result[0];
+  }
+
+  async getAllDecorCategories(): Promise<DecorCategory[]> {
+    return await this.db.select()
+      .from(decorCategories)
+      .orderBy(sql`${decorCategories.displayOrder} ASC, ${decorCategories.displayName} ASC`);
+  }
+
+  async getActiveDecorCategories(): Promise<DecorCategory[]> {
+    return await this.db.select()
+      .from(decorCategories)
+      .where(eq(decorCategories.isActive, true))
+      .orderBy(sql`${decorCategories.displayOrder} ASC, ${decorCategories.displayName} ASC`);
+  }
+
+  async createDecorCategory(category: InsertDecorCategory): Promise<DecorCategory> {
+    const result = await this.db.insert(decorCategories)
+      .values(category)
+      .returning();
+    return result[0];
+  }
+
+  async updateDecorCategory(id: string, category: Partial<InsertDecorCategory>): Promise<DecorCategory | undefined> {
+    const result = await this.db.update(decorCategories)
+      .set({ ...category, updatedAt: new Date() })
+      .where(eq(decorCategories.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteDecorCategory(id: string): Promise<boolean> {
+    await this.db.delete(decorCategories)
+      .where(eq(decorCategories.id, id));
+    return true;
+  }
+
+  // Decor Item Templates (database-driven)
+  async getDecorItemTemplate(id: string): Promise<DecorItemTemplate | undefined> {
+    const result = await this.db.select()
+      .from(decorItemTemplates)
+      .where(eq(decorItemTemplates.id, id));
+    return result[0];
+  }
+
+  async getDecorItemTemplatesByCategory(categoryId: string): Promise<DecorItemTemplate[]> {
+    return await this.db.select()
+      .from(decorItemTemplates)
+      .where(and(
+        eq(decorItemTemplates.categoryId, categoryId),
+        eq(decorItemTemplates.isActive, true)
+      ))
+      .orderBy(sql`${decorItemTemplates.displayOrder} ASC, ${decorItemTemplates.itemName} ASC`);
+  }
+
+  async getDecorItemTemplatesByTradition(tradition: string): Promise<DecorItemTemplate[]> {
+    return await this.db.select()
+      .from(decorItemTemplates)
+      .where(and(
+        eq(decorItemTemplates.isActive, true),
+        or(
+          sql`${decorItemTemplates.traditionAffinity} && ARRAY[${tradition}]::text[]`,
+          sql`array_length(${decorItemTemplates.traditionAffinity}, 1) IS NULL OR array_length(${decorItemTemplates.traditionAffinity}, 1) = 0`
+        )
+      ))
+      .orderBy(sql`${decorItemTemplates.displayOrder} ASC, ${decorItemTemplates.itemName} ASC`);
+  }
+
+  async getAllDecorItemTemplates(): Promise<DecorItemTemplate[]> {
+    return await this.db.select()
+      .from(decorItemTemplates)
+      .orderBy(sql`${decorItemTemplates.displayOrder} ASC, ${decorItemTemplates.itemName} ASC`);
+  }
+
+  async getActiveDecorItemTemplates(): Promise<DecorItemTemplate[]> {
+    return await this.db.select()
+      .from(decorItemTemplates)
+      .where(eq(decorItemTemplates.isActive, true))
+      .orderBy(sql`${decorItemTemplates.displayOrder} ASC, ${decorItemTemplates.itemName} ASC`);
+  }
+
+  async createDecorItemTemplate(template: InsertDecorItemTemplate): Promise<DecorItemTemplate> {
+    const result = await this.db.insert(decorItemTemplates)
+      .values(template)
+      .returning();
+    return result[0];
+  }
+
+  async updateDecorItemTemplate(id: string, template: Partial<InsertDecorItemTemplate>): Promise<DecorItemTemplate | undefined> {
+    const result = await this.db.update(decorItemTemplates)
+      .set({ ...template, updatedAt: new Date() })
+      .where(eq(decorItemTemplates.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteDecorItemTemplate(id: string): Promise<boolean> {
+    await this.db.delete(decorItemTemplates)
+      .where(eq(decorItemTemplates.id, id));
+    return true;
+  }
+
+  // Honeymoon Budget Categories (database-driven)
+  async getHoneymoonBudgetCategory(id: string): Promise<HoneymoonBudgetCategory | undefined> {
+    const result = await this.db.select()
+      .from(honeymoonBudgetCategories)
+      .where(eq(honeymoonBudgetCategories.id, id));
+    return result[0];
+  }
+
+  async getHoneymoonBudgetCategoryBySlug(slug: string): Promise<HoneymoonBudgetCategory | undefined> {
+    const result = await this.db.select()
+      .from(honeymoonBudgetCategories)
+      .where(eq(honeymoonBudgetCategories.slug, slug));
+    return result[0];
+  }
+
+  async getAllHoneymoonBudgetCategories(): Promise<HoneymoonBudgetCategory[]> {
+    return await this.db.select()
+      .from(honeymoonBudgetCategories)
+      .orderBy(sql`${honeymoonBudgetCategories.displayOrder} ASC, ${honeymoonBudgetCategories.displayName} ASC`);
+  }
+
+  async getActiveHoneymoonBudgetCategories(): Promise<HoneymoonBudgetCategory[]> {
+    return await this.db.select()
+      .from(honeymoonBudgetCategories)
+      .where(eq(honeymoonBudgetCategories.isActive, true))
+      .orderBy(sql`${honeymoonBudgetCategories.displayOrder} ASC, ${honeymoonBudgetCategories.displayName} ASC`);
+  }
+
+  async createHoneymoonBudgetCategory(category: InsertHoneymoonBudgetCategory): Promise<HoneymoonBudgetCategory> {
+    const result = await this.db.insert(honeymoonBudgetCategories)
+      .values(category)
+      .returning();
+    return result[0];
+  }
+
+  async updateHoneymoonBudgetCategory(id: string, category: Partial<InsertHoneymoonBudgetCategory>): Promise<HoneymoonBudgetCategory | undefined> {
+    const result = await this.db.update(honeymoonBudgetCategories)
+      .set({ ...category, updatedAt: new Date() })
+      .where(eq(honeymoonBudgetCategories.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteHoneymoonBudgetCategory(id: string): Promise<boolean> {
+    await this.db.delete(honeymoonBudgetCategories)
+      .where(eq(honeymoonBudgetCategories.id, id));
+    return true;
   }
 
   // Ritual Role Assignments
