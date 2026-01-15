@@ -272,6 +272,14 @@ import {
   type BudgetCategory,
   type InsertBudgetCategory,
   budgetCategories,
+  vendorCategories,
+  type VendorCategory,
+  type InsertVendorCategory,
+  DEFAULT_VENDOR_CATEGORIES,
+  pricingRegions,
+  type PricingRegion,
+  type InsertPricingRegion,
+  DEFAULT_PRICING_REGIONS,
 } from "@shared/schema";
 import { randomUUID, randomBytes } from "crypto";
 import bcrypt from "bcrypt";
@@ -1187,6 +1195,27 @@ export interface IStorage {
   updateWeddingSubTradition(id: string, subTradition: Partial<InsertWeddingSubTradition>): Promise<WeddingSubTradition | undefined>;
   deleteWeddingSubTradition(id: string): Promise<boolean>;
   seedWeddingSubTraditions(): Promise<WeddingSubTradition[]>;
+
+  // Vendor Categories (database-driven)
+  getVendorCategory(id: string): Promise<VendorCategory | undefined>;
+  getVendorCategoryBySlug(slug: string): Promise<VendorCategory | undefined>;
+  getAllVendorCategories(): Promise<VendorCategory[]>;
+  getActiveVendorCategories(): Promise<VendorCategory[]>;
+  getVendorCategoriesByTradition(tradition: string): Promise<VendorCategory[]>;
+  createVendorCategory(category: InsertVendorCategory): Promise<VendorCategory>;
+  updateVendorCategory(id: string, category: Partial<InsertVendorCategory>): Promise<VendorCategory | undefined>;
+  deleteVendorCategory(id: string): Promise<boolean>;
+  seedVendorCategories(): Promise<VendorCategory[]>;
+
+  // Pricing Regions (database-driven city pricing multipliers)
+  getPricingRegion(id: string): Promise<PricingRegion | undefined>;
+  getPricingRegionBySlug(slug: string): Promise<PricingRegion | undefined>;
+  getAllPricingRegions(): Promise<PricingRegion[]>;
+  getActivePricingRegions(): Promise<PricingRegion[]>;
+  createPricingRegion(region: InsertPricingRegion): Promise<PricingRegion>;
+  updatePricingRegion(id: string, region: Partial<InsertPricingRegion>): Promise<PricingRegion | undefined>;
+  deletePricingRegion(id: string): Promise<boolean>;
+  seedPricingRegions(): Promise<PricingRegion[]>;
 
   // Ritual Role Assignments
   getRitualRoleAssignment(id: string): Promise<RitualRoleAssignment | undefined>;
@@ -4587,6 +4616,27 @@ export class MemStorage implements IStorage {
   async updateWeddingSubTradition(id: string, subTradition: Partial<InsertWeddingSubTradition>): Promise<WeddingSubTradition | undefined> { throw new Error('MemStorage does not support Wedding Sub-Traditions. Use DBStorage.'); }
   async deleteWeddingSubTradition(id: string): Promise<boolean> { return false; }
   async seedWeddingSubTraditions(): Promise<WeddingSubTradition[]> { throw new Error('MemStorage does not support Wedding Sub-Traditions. Use DBStorage.'); }
+
+  // Vendor Categories (database-driven) - stub methods for MemStorage
+  async getVendorCategory(id: string): Promise<VendorCategory | undefined> { return undefined; }
+  async getVendorCategoryBySlug(slug: string): Promise<VendorCategory | undefined> { return undefined; }
+  async getAllVendorCategories(): Promise<VendorCategory[]> { return []; }
+  async getActiveVendorCategories(): Promise<VendorCategory[]> { return []; }
+  async getVendorCategoriesByTradition(tradition: string): Promise<VendorCategory[]> { return []; }
+  async createVendorCategory(category: InsertVendorCategory): Promise<VendorCategory> { throw new Error('MemStorage does not support Vendor Categories. Use DBStorage.'); }
+  async updateVendorCategory(id: string, category: Partial<InsertVendorCategory>): Promise<VendorCategory | undefined> { throw new Error('MemStorage does not support Vendor Categories. Use DBStorage.'); }
+  async deleteVendorCategory(id: string): Promise<boolean> { return false; }
+  async seedVendorCategories(): Promise<VendorCategory[]> { throw new Error('MemStorage does not support Vendor Categories. Use DBStorage.'); }
+
+  // Pricing Regions (database-driven) - stub methods for MemStorage
+  async getPricingRegion(id: string): Promise<PricingRegion | undefined> { return undefined; }
+  async getPricingRegionBySlug(slug: string): Promise<PricingRegion | undefined> { return undefined; }
+  async getAllPricingRegions(): Promise<PricingRegion[]> { return []; }
+  async getActivePricingRegions(): Promise<PricingRegion[]> { return []; }
+  async createPricingRegion(region: InsertPricingRegion): Promise<PricingRegion> { throw new Error('MemStorage does not support Pricing Regions. Use DBStorage.'); }
+  async updatePricingRegion(id: string, region: Partial<InsertPricingRegion>): Promise<PricingRegion | undefined> { throw new Error('MemStorage does not support Pricing Regions. Use DBStorage.'); }
+  async deletePricingRegion(id: string): Promise<boolean> { return false; }
+  async seedPricingRegions(): Promise<PricingRegion[]> { throw new Error('MemStorage does not support Pricing Regions. Use DBStorage.'); }
 }
 
 import { neon } from "@neondatabase/serverless";
@@ -11442,6 +11492,161 @@ export class DBStorage implements IStorage {
     }
     
     return seededSubTraditions;
+  }
+
+  // Vendor Categories (database-driven)
+  async getVendorCategory(id: string): Promise<VendorCategory | undefined> {
+    const result = await this.db.select()
+      .from(vendorCategories)
+      .where(eq(vendorCategories.id, id));
+    return result[0];
+  }
+
+  async getVendorCategoryBySlug(slug: string): Promise<VendorCategory | undefined> {
+    const result = await this.db.select()
+      .from(vendorCategories)
+      .where(eq(vendorCategories.slug, slug));
+    return result[0];
+  }
+
+  async getAllVendorCategories(): Promise<VendorCategory[]> {
+    return await this.db.select()
+      .from(vendorCategories)
+      .orderBy(sql`${vendorCategories.displayOrder} ASC, ${vendorCategories.displayName} ASC`);
+  }
+
+  async getActiveVendorCategories(): Promise<VendorCategory[]> {
+    return await this.db.select()
+      .from(vendorCategories)
+      .where(eq(vendorCategories.isActive, true))
+      .orderBy(sql`${vendorCategories.displayOrder} ASC, ${vendorCategories.displayName} ASC`);
+  }
+
+  async getVendorCategoriesByTradition(tradition: string): Promise<VendorCategory[]> {
+    return await this.db.select()
+      .from(vendorCategories)
+      .where(and(
+        eq(vendorCategories.isActive, true),
+        sql`${vendorCategories.traditionAffinity} && ARRAY[${tradition}]::text[]`
+      ))
+      .orderBy(sql`${vendorCategories.displayOrder} ASC, ${vendorCategories.displayName} ASC`);
+  }
+
+  async createVendorCategory(category: InsertVendorCategory): Promise<VendorCategory> {
+    const result = await this.db.insert(vendorCategories)
+      .values(category)
+      .returning();
+    return result[0];
+  }
+
+  async updateVendorCategory(id: string, category: Partial<InsertVendorCategory>): Promise<VendorCategory | undefined> {
+    const result = await this.db.update(vendorCategories)
+      .set({ ...category, updatedAt: new Date() })
+      .where(eq(vendorCategories.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteVendorCategory(id: string): Promise<boolean> {
+    await this.db.delete(vendorCategories)
+      .where(eq(vendorCategories.id, id));
+    return true;
+  }
+
+  async seedVendorCategories(): Promise<VendorCategory[]> {
+    const seeded: VendorCategory[] = [];
+    for (const categoryData of DEFAULT_VENDOR_CATEGORIES) {
+      const existing = await this.getVendorCategoryBySlug(categoryData.slug);
+      if (existing) {
+        seeded.push(existing);
+        continue;
+      }
+      const category = await this.createVendorCategory({
+        slug: categoryData.slug,
+        displayName: categoryData.displayName,
+        description: categoryData.description,
+        iconName: categoryData.iconName,
+        budgetBucketSlug: categoryData.budgetBucketSlug,
+        traditionAffinity: categoryData.traditionAffinity,
+        displayOrder: categoryData.displayOrder,
+        isActive: true,
+        isSystemCategory: true,
+      });
+      seeded.push(category);
+    }
+    return seeded;
+  }
+
+  // Pricing Regions (database-driven city pricing multipliers)
+  async getPricingRegion(id: string): Promise<PricingRegion | undefined> {
+    const result = await this.db.select()
+      .from(pricingRegions)
+      .where(eq(pricingRegions.id, id));
+    return result[0];
+  }
+
+  async getPricingRegionBySlug(slug: string): Promise<PricingRegion | undefined> {
+    const result = await this.db.select()
+      .from(pricingRegions)
+      .where(eq(pricingRegions.slug, slug));
+    return result[0];
+  }
+
+  async getAllPricingRegions(): Promise<PricingRegion[]> {
+    return await this.db.select()
+      .from(pricingRegions)
+      .orderBy(sql`${pricingRegions.displayOrder} ASC, ${pricingRegions.displayName} ASC`);
+  }
+
+  async getActivePricingRegions(): Promise<PricingRegion[]> {
+    return await this.db.select()
+      .from(pricingRegions)
+      .where(eq(pricingRegions.isActive, true))
+      .orderBy(sql`${pricingRegions.displayOrder} ASC, ${pricingRegions.displayName} ASC`);
+  }
+
+  async createPricingRegion(region: InsertPricingRegion): Promise<PricingRegion> {
+    const result = await this.db.insert(pricingRegions)
+      .values(region)
+      .returning();
+    return result[0];
+  }
+
+  async updatePricingRegion(id: string, region: Partial<InsertPricingRegion>): Promise<PricingRegion | undefined> {
+    const result = await this.db.update(pricingRegions)
+      .set({ ...region, updatedAt: new Date() })
+      .where(eq(pricingRegions.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deletePricingRegion(id: string): Promise<boolean> {
+    await this.db.delete(pricingRegions)
+      .where(eq(pricingRegions.id, id));
+    return true;
+  }
+
+  async seedPricingRegions(): Promise<PricingRegion[]> {
+    const seeded: PricingRegion[] = [];
+    for (const regionData of DEFAULT_PRICING_REGIONS) {
+      const existing = await this.getPricingRegionBySlug(regionData.slug);
+      if (existing) {
+        seeded.push(existing);
+        continue;
+      }
+      const region = await this.createPricingRegion({
+        slug: regionData.slug,
+        displayName: regionData.displayName,
+        description: regionData.description,
+        multiplier: regionData.multiplier,
+        state: regionData.state,
+        displayOrder: regionData.displayOrder,
+        isActive: true,
+        isSystemRegion: true,
+      });
+      seeded.push(region);
+    }
+    return seeded;
   }
 
   // Ritual Role Assignments

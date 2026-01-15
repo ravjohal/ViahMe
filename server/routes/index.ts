@@ -57,6 +57,8 @@ import { createDayOfTimelineRouter } from "./day-of-timeline";
 import { createHoneymoonRouter } from "./honeymoon";
 import { createFavoursRouter } from "./favours";
 import { registerTraditionsRoutes } from "./traditions";
+import { registerVendorCategoriesRoutes } from "./vendor-categories";
+import { registerPricingRegionsRoutes } from "./pricing-regions";
 import { createVendorAccessPassesRouter, createVendorCollaborationViewRouter } from "./vendor-access-passes";
 import { createCeremonyExplainersRouter, createPublicCeremonyExplainersRouter } from "./ceremony-explainers";
 import weddingJourneyRouter from "./wedding-journey";
@@ -255,6 +257,14 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   const traditionsRouter = Router();
   await registerTraditionsRoutes(traditionsRouter, storage);
   app.use("/api/traditions", traditionsRouter);
+
+  const vendorCategoriesRouter = Router();
+  await registerVendorCategoriesRoutes(vendorCategoriesRouter, storage);
+  app.use("/api/vendor-categories", vendorCategoriesRouter);
+
+  const pricingRegionsRouter = Router();
+  await registerPricingRegionsRoutes(pricingRegionsRouter, storage);
+  app.use("/api/pricing-regions", pricingRegionsRouter);
 
   const expenseRouter = Router();
   await registerExpenseRoutes(expenseRouter, storage);
