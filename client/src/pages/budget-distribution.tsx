@@ -164,10 +164,22 @@ export default function BudgetDistribution() {
 
   const updateCeremonyBudgetMutation = useMutation({
     mutationFn: async ({ eventId, budget }: { eventId: string; budget: string }) => {
-      return await apiRequest("PATCH", `/api/events/${eventId}`, { allocatedBudget: budget });
+      if (!wedding?.id) throw new Error("No wedding");
+      // Save to budget_allocations table via ceremony-budgets endpoint
+      // This syncs with the main budget page which reads from budget_allocations
+      return await apiRequest("POST", `/api/budget/ceremony-budgets`, {
+        weddingId: wedding.id,
+        ceremonyId: eventId,
+        allocatedAmount: budget,
+      });
     },
     onSuccess: () => {
+      // Invalidate all budget-related queries to ensure the budget page reflects changes
       queryClient.invalidateQueries({ queryKey: ["/api/events", wedding?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budget/allocations", wedding?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budget/ceremony-budgets", wedding?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budget/ceremony-analytics", wedding?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budget-bucket-categories", wedding?.id] });
     },
   });
 
