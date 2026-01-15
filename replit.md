@@ -56,6 +56,7 @@ Key architectural decisions and features include:
   - **React Hooks**: `useBudgetBucketCategories()`, `useBudgetBucketCategoryLookup()` for data fetching and label resolution
 - **Guest List Management**: Features frictionless bulk guest import, advanced invitation & RSVP system with household grouping, magic link authentication, per-event RSVP tracking, and a Household-First Architecture. Includes an integrated Guest Management Module for planning and collector links.
 - **Communication & Collaboration**: Offers a messaging system, review system, document storage, team collaboration with granular role-based access control, and AI-powered message suggestions using Gemini LLM.
+- **Multi-Language Translation** (January 2026): Supports Punjabi (Gurmukhi script) and other South Asian languages for wedding invitations and guest communications via Google Cloud Translation API. Features bilingual invitation preview, real-time translation in Communication Hub, and Mukta font for proper Gurmukhi script rendering. API: `/api/translation/languages`, `/api/translation/translate`, `/api/translation/translate-invitation`.
 - **Persistent AI Planner Chatbot**: A floating, mobile-first AI assistant with wedding context awareness and progressive summarization.
 - **Live Wedding Experience**: Real-Time Guest Concierge, Gap Concierge Designer, Ritual Control Panel, and public-facing Guest Live Feed.
 - **Real-Time Master Timeline**: Day-of coordination system with drag-and-drop functionality, vendor tagging, notifications, and WebSocket-based live updates.
@@ -104,3 +105,4 @@ Key architectural decisions and features include:
 - **Twilio**: SMS notifications.
 - **Stripe**: Payment processing.
 - **Replit Object Storage**: Cloud storage for documents and photos.
+- **Google Cloud Translation**: Multi-language support for Punjabi (Gurmukhi), Hindi, Urdu, Tamil, Telugu, Gujarati, Bengali, and Marathi.

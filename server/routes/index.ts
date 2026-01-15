@@ -72,6 +72,7 @@ import { registerVendorTaskCategoriesRoutes } from "./vendor-task-categories";
 import { createVendorAccessPassesRouter, createVendorCollaborationViewRouter } from "./vendor-access-passes";
 import { createCeremonyExplainersRouter, createPublicCeremonyExplainersRouter } from "./ceremony-explainers";
 import weddingJourneyRouter from "./wedding-journey";
+import { registerTranslationRoutes } from "./translation";
 import { seedVendors } from "../seed-data";
 
 let defaultStorageSeeded = false;
@@ -200,6 +201,11 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   const communicationRouter = Router();
   await registerCommunicationRoutes(communicationRouter, storage);
   app.use("/api", communicationRouter);
+
+  // Translation routes for Punjabi/Gurmukhi and other South Asian languages
+  const translationRouter = Router();
+  await registerTranslationRoutes(translationRouter, storage);
+  app.use("/api/translation", translationRouter);
 
   const ritualRoleRouter = Router();
   await registerRitualRoleRoutes(ritualRoleRouter, storage);

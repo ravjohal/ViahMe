@@ -36,6 +36,7 @@ import {
   Phone,
   Home,
 } from "lucide-react";
+import { TranslationPanel } from "@/components/translation-panel";
 import type { Wedding, Event, Household, Guest, GuestCommunication } from "@shared/schema";
 import { format } from "date-fns";
 
@@ -482,6 +483,11 @@ export default function CommunicationHub() {
                     This will be included along with your RSVP link
                   </p>
                 </div>
+
+                <TranslationPanel 
+                  text={message} 
+                  showBilingual={true}
+                />
 
                 <div className="bg-muted/50 rounded-lg p-4 space-y-2">
                   <p className="text-sm font-medium">Invitation will include:</p>
