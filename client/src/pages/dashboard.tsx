@@ -364,6 +364,18 @@ export default function Dashboard() {
     enabled: !!wedding?.id,
   });
 
+  const { data: journeyData } = useQuery<{
+    journeyItems: Array<{ status: string; eventId: string | null }>;
+    allRituals: Array<{ id: string }>;
+  }>({
+    queryKey: ["/api/wedding-journey/wedding", wedding?.id, "with-rituals"],
+    enabled: !!wedding?.id,
+    queryFn: async () => {
+      const response = await fetch(`/api/wedding-journey/wedding/${wedding?.id}/with-rituals`);
+      if (!response.ok) throw new Error("Failed to fetch journey");
+      return response.json();
+    },
+  });
 
   useEffect(() => {
     if (!weddingsLoading && !wedding) {
@@ -415,6 +427,13 @@ export default function Dashboard() {
   const hasVendors = bookings.length > 0;
   const hasGuests = guests.length > 0;
   
+  // Journey configuration status
+  const journeyItems = journeyData?.journeyItems || [];
+  const allRituals = journeyData?.allRituals || [];
+  const hasJourneyStarted = journeyItems.length > 0;
+  const includedRituals = journeyItems.filter(j => j.status === 'included' || j.status === 'completed').length;
+  const journeyConfigured = hasJourneyStarted && includedRituals > 0;
+  
   // Budget is only "set" when couple explicitly confirms their budget allocations
   const isBudgetConfirmed = wedding.budgetConfirmed === true;
   const totalAllocated = budgetCategories.reduce((sum, cat) => sum + parseFloat(cat.allocatedAmount || "0"), 0);
@@ -422,8 +441,20 @@ export default function Dashboard() {
   // Step definitions - action-focused to differentiate from nav
   const steps = [
     {
-      id: "budget",
+      id: "journey",
       number: 1,
+      title: journeyConfigured ? "Rituals Chosen" : "Choose Your Rituals",
+      description: journeyConfigured
+        ? `${includedRituals} ritual${includedRituals > 1 ? 's' : ''} selected for your celebration`
+        : "Select which ceremonies to include",
+      completed: journeyConfigured,
+      inProgress: hasJourneyStarted && !journeyConfigured,
+      path: "/wedding-journey",
+      color: "purple",
+    },
+    {
+      id: "budget",
+      number: 2,
       title: isBudgetConfirmed ? "Budget Set" : "Set Budget",
       description: isBudgetConfirmed
         ? `$${(totalAllocated / 1000).toFixed(0)}k allocated across categories`
@@ -435,7 +466,7 @@ export default function Dashboard() {
     },
     {
       id: "events",
-      number: 2,
+      number: 3,
       title: hasEvents ? "Events Planned" : "Plan Events",
       description: hasEvents
         ? `${events.length} ceremony${events.length > 1 ? ' days' : ''} scheduled`
@@ -447,7 +478,7 @@ export default function Dashboard() {
     },
     {
       id: "vendors",
-      number: 3,
+      number: 4,
       title: hasVendors ? "Vendors Booked" : "Book Vendors",
       description: hasVendors 
         ? `${bookings.length} vendor${bookings.length > 1 ? 's' : ''} secured`
@@ -459,7 +490,7 @@ export default function Dashboard() {
     },
     {
       id: "guests",
-      number: 4,
+      number: 5,
       title: hasGuests ? "Guests Added" : "Add Guests",
       description: hasGuests 
         ? `${guests.length} guest${guests.length > 1 ? 's' : ''} on the list`
@@ -471,7 +502,7 @@ export default function Dashboard() {
     },
     {
       id: "website",
-      number: 5,
+      number: 6,
       title: "Create Website",
       description: "Build your guest-facing wedding site",
       completed: false,
@@ -490,6 +521,11 @@ export default function Dashboard() {
   // Color classes for each step
   const getStepColors = (step: typeof steps[0], isActive: boolean) => {
     const colors: Record<string, { active: string; inactive: string; circle: string }> = {
+      purple: {
+        active: "bg-gradient-to-br from-purple-100 to-violet-100 dark:from-purple-900/40 dark:to-violet-900/40 border-purple-400 dark:border-purple-600",
+        inactive: "bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-950/30 dark:to-violet-950/30 border-purple-200 dark:border-purple-800",
+        circle: "bg-purple-600",
+      },
       emerald: {
         active: "bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/40 dark:to-teal-900/40 border-emerald-400 dark:border-emerald-600",
         inactive: "bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 border-emerald-200 dark:border-emerald-800",
