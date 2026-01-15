@@ -64,6 +64,7 @@ import { registerDecorCategoriesRoutes } from "./decor-categories";
 import { registerDecorItemTemplatesRoutes } from "./decor-item-templates";
 import { registerHoneymoonBudgetCategoriesRoutes } from "./honeymoon-budget-categories";
 import { registerDietaryOptionsRoutes } from "./dietary-options";
+import { registerWeddingTraditionsRoutes } from "./wedding-traditions";
 import { createVendorAccessPassesRouter, createVendorCollaborationViewRouter } from "./vendor-access-passes";
 import { createCeremonyExplainersRouter, createPublicCeremonyExplainersRouter } from "./ceremony-explainers";
 import weddingJourneyRouter from "./wedding-journey";
@@ -290,6 +291,10 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   const dietaryOptionsRouter = Router();
   await registerDietaryOptionsRoutes(dietaryOptionsRouter, storage);
   app.use("/api/dietary-options", dietaryOptionsRouter);
+
+  const weddingTraditionsRouter = Router();
+  await registerWeddingTraditionsRoutes(weddingTraditionsRouter, storage);
+  app.use("/api/wedding-traditions", weddingTraditionsRouter);
 
   const expenseRouter = Router();
   await registerExpenseRoutes(expenseRouter, storage);
