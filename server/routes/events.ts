@@ -28,6 +28,27 @@ export async function registerEventRoutes(router: Router, storage: IStorage) {
     }
   });
 
+  router.get("/by-id/:id/with-ritual", async (req, res) => {
+    try {
+      const event = await storage.getEvent(req.params.id);
+      if (!event) {
+        return res.status(404).json({ error: "Event not found" });
+      }
+      
+      const journeyItem = await storage.getWeddingJourneyItemByEventId(req.params.id);
+      let ritual = null;
+      
+      if (journeyItem) {
+        ritual = await storage.getTraditionRitual(journeyItem.ritualId);
+      }
+      
+      res.json({ event, journeyItem, ritual });
+    } catch (error) {
+      console.error("Error fetching event with ritual:", error);
+      res.status(500).json({ error: "Failed to fetch event with ritual" });
+    }
+  });
+
   router.post("/", async (req, res) => {
     try {
       const validatedData = insertEventSchema.parse(req.body);
