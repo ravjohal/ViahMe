@@ -5081,6 +5081,7 @@ export const weddingJourneyItems = pgTable("wedding_journey_items", {
   weddingIdx: index("wedding_journey_items_wedding_idx").on(table.weddingId),
   ritualIdx: index("wedding_journey_items_ritual_idx").on(table.ritualId),
   statusIdx: index("wedding_journey_items_status_idx").on(table.status),
+  eventIdx: index("wedding_journey_items_event_idx").on(table.eventId),
 }));
 
 export const insertWeddingJourneyItemSchema = createInsertSchema(weddingJourneyItems).omit({

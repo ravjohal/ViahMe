@@ -142,4 +142,30 @@ router.delete("/items/:id", async (req, res) => {
   }
 });
 
+router.post("/wedding/:weddingId/sync-events", async (req, res) => {
+  try {
+    const { weddingId } = req.params;
+    const result = await storage.syncJourneyWithEvents(weddingId);
+    res.json(result);
+  } catch (error) {
+    console.error("Error syncing journey with events:", error);
+    res.status(500).json({ message: "Failed to sync journey with events" });
+  }
+});
+
+router.get("/event/:eventId/ritual", async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const journeyItem = await storage.getWeddingJourneyItemByEventId(eventId);
+    if (!journeyItem) {
+      return res.status(404).json({ message: "No ritual linked to this event" });
+    }
+    const ritual = await storage.getTraditionRitual(journeyItem.ritualId);
+    res.json({ journeyItem, ritual });
+  } catch (error) {
+    console.error("Error fetching ritual for event:", error);
+    res.status(500).json({ message: "Failed to fetch ritual for event" });
+  }
+});
+
 export default router;
