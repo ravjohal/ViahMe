@@ -32,6 +32,13 @@ interface CeremonyLineItem {
   highCost?: number;
 }
 
+interface SavedLineItemBudget {
+  id: string;
+  eventId: string;
+  lineItemCategory: string;
+  budgetedAmount: string;
+}
+
 type EstimateMode = "low" | "high" | "custom";
 
 interface CustomLineItem {
@@ -65,10 +72,15 @@ export default function BudgetDistribution() {
     enabled: !!wedding?.id,
   });
 
-  const { categories: budgetBuckets = [] } = useBudgetCategories(wedding?.id);
+  const { data: budgetBuckets = [] } = useBudgetCategories();
 
   const { data: allLineItems = {} } = useQuery<Record<string, CeremonyLineItem[]>>({
     queryKey: ["/api/ceremony-types/all/line-items"],
+    enabled: !!wedding?.id,
+  });
+
+  const { data: savedLineItemBudgets = [] } = useQuery<SavedLineItemBudget[]>({
+    queryKey: ["/api/budget/line-items", wedding?.id],
     enabled: !!wedding?.id,
   });
 
@@ -113,6 +125,36 @@ export default function BudgetDistribution() {
       setCategoryBudgets(initial);
     }
   }, [budgetBuckets, allocations]);
+
+  useEffect(() => {
+    if (events.length > 0 && savedLineItemBudgets.length > 0) {
+      const lineItemsByEvent: Record<string, Record<string, string>> = {};
+      
+      events.forEach(event => {
+        const eventLineItems = savedLineItemBudgets.filter(li => li.eventId === event.id);
+        if (eventLineItems.length > 0) {
+          const lineItemMap: Record<string, string> = {};
+          
+          eventLineItems.forEach(saved => {
+            lineItemMap[saved.lineItemCategory] = saved.budgetedAmount;
+          });
+          
+          if (Object.keys(lineItemMap).length > 0) {
+            lineItemsByEvent[event.id] = lineItemMap;
+          }
+        }
+      });
+      
+      if (Object.keys(lineItemsByEvent).length > 0) {
+        setCeremonyLineItemBudgets(prev => {
+          if (Object.keys(prev).length === 0) {
+            return lineItemsByEvent;
+          }
+          return prev;
+        });
+      }
+    }
+  }, [events, savedLineItemBudgets]);
 
   const steps = useMemo(() => {
     if (isCeremonyMode) {
@@ -225,12 +267,66 @@ export default function BudgetDistribution() {
     },
   });
 
+  const saveLineItemsMutation = useMutation({
+    mutationFn: async ({ eventId, ceremonyTypeId, items }: { 
+      eventId: string; 
+      ceremonyTypeId: string; 
+      items: Array<{ lineItemCategory: string; budgetedAmount: string }>;
+    }) => {
+      if (!wedding?.id) throw new Error("No wedding");
+      return await apiRequest("POST", "/api/budget/line-items/bulk", {
+        weddingId: wedding.id,
+        eventId,
+        ceremonyTypeId,
+        items,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/budget/line-items", wedding?.id] });
+    },
+  });
+
   const saveCurrentStep = async () => {
     if (!currentStepData) return;
     
     if (isCeremonyMode) {
       const budget = ceremonyBudgets[currentStepData.id] || "0";
       await updateCeremonyBudgetMutation.mutateAsync({ eventId: currentStepData.id, budget });
+      
+      const stepData = currentStepData as { id: string; type: "ceremony"; ceremonyTypeId?: string | null };
+      if (stepData.ceremonyTypeId) {
+        const lineItemBudgetsForStep = ceremonyLineItemBudgets[currentStepData.id] || {};
+        const templateItems = allLineItems[stepData.ceremonyTypeId] || [];
+        const stepCustomItems = customItems[currentStepData.id] || [];
+        
+        const items: Array<{ lineItemCategory: string; budgetedAmount: string }> = [];
+        
+        templateItems.forEach(item => {
+          const category = getItemCategory(item);
+          const value = lineItemBudgetsForStep[category];
+          if (value !== undefined) {
+            items.push({
+              lineItemCategory: category,
+              budgetedAmount: value || "0",
+            });
+          }
+        });
+        
+        stepCustomItems.forEach(item => {
+          items.push({
+            lineItemCategory: item.name,
+            budgetedAmount: item.amount || "0",
+          });
+        });
+        
+        if (items.length > 0) {
+          await saveLineItemsMutation.mutateAsync({
+            eventId: currentStepData.id,
+            ceremonyTypeId: stepData.ceremonyTypeId,
+            items,
+          });
+        }
+      }
     } else {
       const budget = categoryBudgets[currentStepData.id] || "0";
       await updateCategoryBudgetMutation.mutateAsync({ bucketCategoryId: currentStepData.id, amount: budget });
@@ -283,6 +379,10 @@ export default function BudgetDistribution() {
     return 0;
   };
 
+  const getItemCategory = (item: CeremonyLineItem): string => {
+    return item.category || item.name || item.id;
+  };
+
   const applyEstimate = (stepId: string, mode: EstimateMode, ceremonyTypeId?: string | null) => {
     if (!ceremonyTypeId || !allLineItems[ceremonyTypeId]) return;
     
@@ -295,7 +395,7 @@ export default function BudgetDistribution() {
         ? getItemLowCost(item)
         : getItemHighCost(item);
       total += amount;
-      lineItemBudgets[item.id] = amount.toString();
+      lineItemBudgets[getItemCategory(item)] = amount.toString();
     });
     
     setEstimateModes(prev => ({ ...prev, [stepId]: mode }));
@@ -303,18 +403,18 @@ export default function BudgetDistribution() {
     setCeremonyLineItemBudgets(prev => ({ ...prev, [stepId]: lineItemBudgets }));
   };
 
-  const updateLineItemBudget = (stepId: string, lineItemId: string, value: string, ceremonyTypeId?: string | null) => {
+  const updateLineItemBudget = (stepId: string, category: string, value: string, ceremonyTypeId?: string | null) => {
     setCeremonyLineItemBudgets(prev => ({
       ...prev,
-      [stepId]: { ...(prev[stepId] || {}), [lineItemId]: value }
+      [stepId]: { ...(prev[stepId] || {}), [category]: value }
     }));
     setEstimateModes(prev => ({ ...prev, [stepId]: "custom" }));
     
     if (ceremonyTypeId && allLineItems[ceremonyTypeId]) {
       const lineItems = allLineItems[ceremonyTypeId];
-      const currentBudgets = { ...(ceremonyLineItemBudgets[stepId] || {}), [lineItemId]: value };
+      const currentBudgets = { ...(ceremonyLineItemBudgets[stepId] || {}), [category]: value };
       const templateTotal = lineItems.reduce((sum, item) => {
-        return sum + parseFloat(currentBudgets[item.id] || "0");
+        return sum + parseFloat(currentBudgets[getItemCategory(item)] || "0");
       }, 0);
       const customTotal = (customItems[stepId] || []).reduce((sum, item) => sum + parseFloat(item.amount || "0"), 0);
       setCeremonyBudgets(prev => ({ ...prev, [stepId]: (templateTotal + customTotal).toString() }));
@@ -325,7 +425,7 @@ export default function BudgetDistribution() {
     const lineItems = ceremonyTypeId && allLineItems[ceremonyTypeId] ? allLineItems[ceremonyTypeId] : [];
     const currentBudgets = ceremonyLineItemBudgets[stepId] || {};
     const templateTotal = lineItems.reduce((sum, item) => {
-      return sum + parseFloat(currentBudgets[item.id] || "0");
+      return sum + parseFloat(currentBudgets[getItemCategory(item)] || "0");
     }, 0);
     const customTotal = (customItems[stepId] || []).reduce((sum, item) => sum + parseFloat(item.amount || "0"), 0);
     setCeremonyBudgets(prev => ({ ...prev, [stepId]: (templateTotal + customTotal).toString() }));
@@ -573,7 +673,9 @@ export default function BudgetDistribution() {
                         <p className="text-xs text-muted-foreground italic">
                           Use these estimates to help calculate your total. The ceremony total above will be saved.
                         </p>
-                        {currentLineItems.map(item => (
+                        {currentLineItems.map(item => {
+                          const category = getItemCategory(item);
+                          return (
                           <div key={item.id} className="flex items-center gap-3">
                             <div className="flex-1 min-w-0">
                               <Label htmlFor={`line-item-${item.id}`} className="text-sm truncate block">
@@ -589,8 +691,8 @@ export default function BudgetDistribution() {
                                 id={`line-item-${item.id}`}
                                 type="number"
                                 min="0"
-                                value={ceremonyLineItemBudgets[currentStepData.id]?.[item.id] || ""}
-                                onChange={(e) => updateLineItemBudget(currentStepData.id, item.id, e.target.value, currentStepData.ceremonyTypeId)}
+                                value={ceremonyLineItemBudgets[currentStepData.id]?.[category] || ""}
+                                onChange={(e) => updateLineItemBudget(currentStepData.id, category, e.target.value, currentStepData.ceremonyTypeId)}
                                 onWheel={(e) => (e.target as HTMLInputElement).blur()}
                                 className="pl-7 h-9"
                                 placeholder="0"
@@ -598,7 +700,8 @@ export default function BudgetDistribution() {
                               />
                             </div>
                           </div>
-                        ))}
+                          );
+                        })}
 
                         {(customItems[currentStepData.id] || []).length > 0 && (
                           <div className="border-t pt-3 mt-3">
