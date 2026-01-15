@@ -353,6 +353,131 @@ export const DEFAULT_SUB_TRADITIONS: Array<{
   { slug: "hyderabadi_muslim", traditionSlug: "muslim", displayName: "Hyderabadi", description: "Hyderabadi Muslim traditions", displayOrder: 3 },
 ];
 
+// ============================================================================
+// VENDOR CATEGORIES TABLE - Database-driven vendor category management
+// ============================================================================
+
+export const vendorCategories = pgTable("vendor_categories", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  slug: varchar("slug").notNull().unique(),
+  displayName: text("display_name").notNull(),
+  description: text("description"),
+  iconName: text("icon_name"),
+  budgetBucketSlug: varchar("budget_bucket_slug"), // Maps to budget_bucket_categories.slug
+  traditionAffinity: text("tradition_affinity").array(), // Which traditions this category is most relevant for
+  displayOrder: integer("display_order").default(0),
+  isActive: boolean("is_active").default(true),
+  isSystemCategory: boolean("is_system_category").default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertVendorCategorySchema = createInsertSchema(vendorCategories).omit({
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertVendorCategory = z.infer<typeof insertVendorCategorySchema>;
+export type VendorCategory = typeof vendorCategories.$inferSelect;
+
+// Default vendor categories for seeding
+export const DEFAULT_VENDOR_CATEGORIES: Array<{
+  slug: string;
+  displayName: string;
+  description: string;
+  iconName: string;
+  budgetBucketSlug: string;
+  traditionAffinity: string[];
+  displayOrder: number;
+}> = [
+  { slug: "makeup_artist", displayName: "Makeup Artist", description: "Bridal and wedding party makeup services", iconName: "sparkles", budgetBucketSlug: "attire", traditionAffinity: [], displayOrder: 1 },
+  { slug: "dj", displayName: "DJ", description: "Music and sound for reception and events", iconName: "music", budgetBucketSlug: "entertainment", traditionAffinity: [], displayOrder: 2 },
+  { slug: "dhol_player", displayName: "Dhol Player", description: "Traditional dhol drumming for baraat and celebrations", iconName: "drum", budgetBucketSlug: "entertainment", traditionAffinity: ["sikh", "hindu", "punjabi"], displayOrder: 3 },
+  { slug: "turban_tier", displayName: "Turban Tier", description: "Professional turban tying for groom and family", iconName: "crown", budgetBucketSlug: "attire", traditionAffinity: ["sikh", "hindu", "punjabi"], displayOrder: 4 },
+  { slug: "mehndi_artist", displayName: "Mehndi Artist", description: "Henna application for bride and guests", iconName: "hand", budgetBucketSlug: "attire", traditionAffinity: ["sikh", "hindu", "muslim", "gujarati"], displayOrder: 5 },
+  { slug: "photographer", displayName: "Photographer", description: "Wedding photography and albums", iconName: "camera", budgetBucketSlug: "photography", traditionAffinity: [], displayOrder: 6 },
+  { slug: "videographer", displayName: "Videographer", description: "Wedding videography and cinematography", iconName: "video", budgetBucketSlug: "photography", traditionAffinity: [], displayOrder: 7 },
+  { slug: "caterer", displayName: "Caterer", description: "Full-service catering for all events", iconName: "utensils", budgetBucketSlug: "catering", traditionAffinity: [], displayOrder: 8 },
+  { slug: "banquet_hall", displayName: "Banquet Hall", description: "Wedding venue and reception hall", iconName: "building-2", budgetBucketSlug: "venue", traditionAffinity: [], displayOrder: 9 },
+  { slug: "gurdwara", displayName: "Gurdwara", description: "Sikh temple for Anand Karaj ceremony", iconName: "building", budgetBucketSlug: "venue", traditionAffinity: ["sikh"], displayOrder: 10 },
+  { slug: "temple", displayName: "Temple", description: "Hindu temple for wedding ceremony", iconName: "building", budgetBucketSlug: "venue", traditionAffinity: ["hindu", "gujarati", "south_indian"], displayOrder: 11 },
+  { slug: "decorator", displayName: "Decorator", description: "Event decoration and styling", iconName: "palette", budgetBucketSlug: "decoration", traditionAffinity: [], displayOrder: 12 },
+  { slug: "florist", displayName: "Florist", description: "Floral arrangements and bouquets", iconName: "flower-2", budgetBucketSlug: "decoration", traditionAffinity: [], displayOrder: 13 },
+  { slug: "horse_rental", displayName: "Horse Rental", description: "Baraat horse for groom's entrance", iconName: "horse", budgetBucketSlug: "transportation", traditionAffinity: ["hindu", "sikh", "punjabi"], displayOrder: 14 },
+  { slug: "sword_rental", displayName: "Sword Rental", description: "Ceremonial kirpan for Sikh weddings", iconName: "sword", budgetBucketSlug: "religious", traditionAffinity: ["sikh"], displayOrder: 15 },
+  { slug: "tent_service", displayName: "Tent Service", description: "Outdoor tent and canopy rentals", iconName: "tent", budgetBucketSlug: "venue", traditionAffinity: [], displayOrder: 16 },
+  { slug: "limo_service", displayName: "Limo Service", description: "Luxury transportation for wedding party", iconName: "car", budgetBucketSlug: "transportation", traditionAffinity: [], displayOrder: 17 },
+  { slug: "mobile_food", displayName: "Mobile Food", description: "Food trucks and mobile catering", iconName: "truck", budgetBucketSlug: "catering", traditionAffinity: [], displayOrder: 18 },
+  { slug: "baraat_band", displayName: "Baraat Band", description: "Traditional brass band for baraat procession", iconName: "music-2", budgetBucketSlug: "entertainment", traditionAffinity: ["hindu", "sikh", "punjabi"], displayOrder: 19 },
+  { slug: "pandit", displayName: "Pandit", description: "Hindu priest for wedding ceremonies", iconName: "book-open", budgetBucketSlug: "religious", traditionAffinity: ["hindu", "gujarati", "south_indian"], displayOrder: 20 },
+  { slug: "mandap_decorator", displayName: "Mandap Decorator", description: "Specialized wedding mandap design and setup", iconName: "layout", budgetBucketSlug: "decoration", traditionAffinity: ["hindu", "gujarati", "south_indian"], displayOrder: 21 },
+  { slug: "haldi_supplies", displayName: "Haldi Supplies", description: "Haldi ceremony supplies and decorations", iconName: "droplet", budgetBucketSlug: "religious", traditionAffinity: ["hindu", "gujarati"], displayOrder: 22 },
+  { slug: "pooja_items", displayName: "Pooja Items", description: "Religious items for Hindu ceremonies", iconName: "flame", budgetBucketSlug: "religious", traditionAffinity: ["hindu", "gujarati", "south_indian"], displayOrder: 23 },
+  { slug: "astrologer", displayName: "Astrologer", description: "Wedding muhurat and astrological services", iconName: "star", budgetBucketSlug: "religious", traditionAffinity: ["hindu", "gujarati", "south_indian"], displayOrder: 24 },
+  { slug: "garland_maker", displayName: "Garland Maker", description: "Fresh flower garlands for ceremonies", iconName: "circle", budgetBucketSlug: "decoration", traditionAffinity: ["hindu", "south_indian", "gujarati"], displayOrder: 25 },
+  { slug: "qazi", displayName: "Qazi", description: "Islamic marriage officiant", iconName: "book-open", budgetBucketSlug: "religious", traditionAffinity: ["muslim"], displayOrder: 26 },
+  { slug: "imam", displayName: "Imam", description: "Islamic religious leader for nikah ceremony", iconName: "book-open", budgetBucketSlug: "religious", traditionAffinity: ["muslim"], displayOrder: 27 },
+  { slug: "nikah_decorator", displayName: "Nikah Decorator", description: "Specialized nikah ceremony decoration", iconName: "palette", budgetBucketSlug: "decoration", traditionAffinity: ["muslim"], displayOrder: 28 },
+  { slug: "halal_caterer", displayName: "Halal Caterer", description: "Halal-certified catering services", iconName: "utensils", budgetBucketSlug: "catering", traditionAffinity: ["muslim"], displayOrder: 29 },
+  { slug: "quran_reciter", displayName: "Quran Reciter", description: "Professional Quran recitation for ceremonies", iconName: "book", budgetBucketSlug: "religious", traditionAffinity: ["muslim"], displayOrder: 30 },
+  { slug: "garba_instructor", displayName: "Garba Instructor", description: "Garba and dandiya dance choreography", iconName: "users", budgetBucketSlug: "entertainment", traditionAffinity: ["gujarati"], displayOrder: 31 },
+  { slug: "dandiya_equipment", displayName: "Dandiya Equipment", description: "Dandiya sticks and garba supplies", iconName: "zap", budgetBucketSlug: "entertainment", traditionAffinity: ["gujarati"], displayOrder: 32 },
+  { slug: "rangoli_artist", displayName: "Rangoli Artist", description: "Traditional rangoli floor art", iconName: "palette", budgetBucketSlug: "decoration", traditionAffinity: ["hindu", "gujarati"], displayOrder: 33 },
+  { slug: "nadaswaram_player", displayName: "Nadaswaram Player", description: "Traditional South Indian wind instrument", iconName: "music", budgetBucketSlug: "entertainment", traditionAffinity: ["south_indian"], displayOrder: 34 },
+  { slug: "silk_saree_rental", displayName: "Silk Saree Rental", description: "Kanjivaram and silk saree rentals", iconName: "shirt", budgetBucketSlug: "attire", traditionAffinity: ["south_indian"], displayOrder: 35 },
+  { slug: "kolam_artist", displayName: "Kolam Artist", description: "Traditional South Indian kolam floor art", iconName: "grid-3x3", budgetBucketSlug: "decoration", traditionAffinity: ["south_indian"], displayOrder: 36 },
+];
+
+// ============================================================================
+// PRICING REGIONS TABLE - Database-driven city/region pricing multipliers
+// ============================================================================
+
+export const pricingRegions = pgTable("pricing_regions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  slug: varchar("slug").notNull().unique(),
+  displayName: text("display_name").notNull(),
+  description: text("description"),
+  multiplier: decimal("multiplier", { precision: 4, scale: 2 }).notNull().default("1.00"),
+  state: varchar("state"), // US state abbreviation
+  country: varchar("country").default("US"),
+  displayOrder: integer("display_order").default(0),
+  isActive: boolean("is_active").default(true),
+  isSystemRegion: boolean("is_system_region").default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertPricingRegionSchema = createInsertSchema(pricingRegions).omit({
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertPricingRegion = z.infer<typeof insertPricingRegionSchema>;
+export type PricingRegion = typeof pricingRegions.$inferSelect;
+
+// Default pricing regions for seeding
+export const DEFAULT_PRICING_REGIONS: Array<{
+  slug: string;
+  displayName: string;
+  description: string;
+  multiplier: string;
+  state: string;
+  displayOrder: number;
+}> = [
+  { slug: "bay_area", displayName: "Bay Area", description: "San Francisco Bay Area including San Jose, Oakland, Fremont", multiplier: "1.50", state: "CA", displayOrder: 1 },
+  { slug: "nyc", displayName: "New York City", description: "NYC metro area including Long Island, Jersey City", multiplier: "1.40", state: "NY", displayOrder: 2 },
+  { slug: "la", displayName: "Los Angeles", description: "Greater LA area including Artesia, Cerritos, Orange County", multiplier: "1.30", state: "CA", displayOrder: 3 },
+  { slug: "chicago", displayName: "Chicago", description: "Chicago metro area including Schaumburg, Naperville", multiplier: "1.20", state: "IL", displayOrder: 4 },
+  { slug: "seattle", displayName: "Seattle", description: "Seattle metro area including Bellevue, Redmond", multiplier: "1.10", state: "WA", displayOrder: 5 },
+  { slug: "sacramento", displayName: "Sacramento", description: "Sacramento and Central Valley area", multiplier: "1.00", state: "CA", displayOrder: 6 },
+  { slug: "houston", displayName: "Houston", description: "Houston metro area with large South Asian community", multiplier: "1.05", state: "TX", displayOrder: 7 },
+  { slug: "dallas", displayName: "Dallas", description: "Dallas-Fort Worth metro area", multiplier: "1.05", state: "TX", displayOrder: 8 },
+  { slug: "atlanta", displayName: "Atlanta", description: "Atlanta metro area", multiplier: "1.00", state: "GA", displayOrder: 9 },
+  { slug: "dc", displayName: "Washington DC", description: "DC metro area including Northern Virginia, Maryland", multiplier: "1.25", state: "DC", displayOrder: 10 },
+  { slug: "boston", displayName: "Boston", description: "Boston metro area", multiplier: "1.20", state: "MA", displayOrder: 11 },
+  { slug: "other", displayName: "Other", description: "Other US regions", multiplier: "1.00", state: "", displayOrder: 99 },
+];
+
 // Mapping from vendor categories to budget buckets
 export const VENDOR_CATEGORY_TO_BUCKET: Record<string, BudgetBucket> = {
   // Venue-related
