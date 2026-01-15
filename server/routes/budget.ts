@@ -728,18 +728,16 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
         }
       }
       
-      // For each ceremony, use line items sum if available, else use ceremony total from allocations, else use event.allocatedBudget
+      // For each ceremony, use line items sum if available, else use ceremony total from allocations
+      // Note: event.allocatedBudget is deprecated and no longer used as a fallback
       for (const event of events) {
         const lineItemsTotal = ceremonyLineItemsMap.get(event.id) || 0;
         const ceremonyTotal = ceremonyCeremonyTotalsMap.get(event.id) || 0;
-        const eventAllocatedBudget = parseFloat(event.allocatedBudget || '0');
-        // Priority: line items > ceremony allocations > event.allocatedBudget
+        // Priority: line items > ceremony allocations > 0
         if (lineItemsTotal > 0) {
           ceremonyAllocationsMap.set(event.id, lineItemsTotal);
-        } else if (ceremonyTotal > 0) {
-          ceremonyAllocationsMap.set(event.id, ceremonyTotal);
         } else {
-          ceremonyAllocationsMap.set(event.id, eventAllocatedBudget);
+          ceremonyAllocationsMap.set(event.id, ceremonyTotal);
         }
       }
 

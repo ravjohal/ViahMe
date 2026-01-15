@@ -18,6 +18,7 @@ Key architectural decisions and features include:
 - **Cultural Templates**: Pre-populated event timelines, task templates, and normalized ceremony cost estimates for 9 wedding traditions, supporting regional pricing variations.
 - **Ceremony Types System**: Database-driven ceremony definitions (table: `ceremony_types`) with cost breakdowns via `ceremony_budget_categories` junction table. TypeScript layer uses canonical naming: `ceremonyTypes` table export, `CeremonyType` type, `ceremonyBudgetCategories` table export, `CeremonyBudgetCategory` type. Single API endpoint `/api/ceremony-types`.
   - **REMOVED** (January 2026): The `costBreakdown` JSON column in `ceremony_types` table has been removed. All cost line items now live in `ceremony_budget_categories` table.
+  - **REMOVED** (January 2026): The `allocatedBudget` column in `events` table has been removed. Ceremony budgets are now stored exclusively in `budget_allocations` table via `POST /api/budget/ceremony-budgets`. Data was migrated from events.allocatedBudget to budget_allocations with ceremonyId.
 - **UUID-Based Foreign Key Architecture**: UUID-first approach with consistent `xxx_id` naming convention. **Full migration complete** (January 2026):
   - Core tables (`wedding_traditions`, `wedding_sub_traditions`, `budget_bucket_categories`, `ceremony_types`) have both UUID `id` and `slug` fields
   - **All UUID FK columns are now NOT NULL** with standard `xxx_id` naming:

@@ -560,7 +560,7 @@ export const events = pgTable("events", {
   visibility: text("visibility").notNull().default("shared"), // 'private' | 'shared' - can the other side see this event
   // Budget & capacity planning fields
   costPerHead: decimal("cost_per_head", { precision: 8, scale: 2 }), // Cost per guest for this event
-  allocatedBudget: decimal("allocated_budget", { precision: 10, scale: 2 }), // User-set budget allocation for this ceremony
+  // Note: allocatedBudget was removed - ceremony budgets are now stored in budget_allocations table
   venueCapacity: integer("venue_capacity"), // Maximum venue capacity for this event
   // Public-facing guest website fields
   dressCode: text("dress_code"), // e.g., "Formal Indian attire", "Business casual"
@@ -599,7 +599,6 @@ export const insertEventSchema = createInsertSchema(events).omit({
   ]),
   date: z.string().optional().transform(val => val ? new Date(val) : undefined),
   costPerHead: z.string().nullable().optional(),
-  allocatedBudget: z.string().nullable().optional(),
   venueCapacity: z.number().nullable().optional(),
   side: z.enum(['bride', 'groom', 'mutual']).optional(),
   visibility: z.enum(['private', 'shared']).optional(),

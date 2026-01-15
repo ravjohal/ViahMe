@@ -90,14 +90,18 @@ export default function BudgetDistribution() {
   }, [wedding?.budgetDistributionStep]);
 
   useEffect(() => {
-    if (events.length > 0 && Object.keys(ceremonyBudgets).length === 0) {
+    if (events.length > 0 && allocations.length >= 0 && Object.keys(ceremonyBudgets).length === 0) {
       const initial: Record<string, string> = {};
+      // Get ceremony-level allocations (ceremonyId set, no lineItemLabel)
+      const ceremonyAllocations = allocations.filter(a => a.ceremonyId && !a.lineItemLabel);
       events.forEach(e => {
-        initial[e.id] = e.allocatedBudget || "0";
+        // Find allocation for this ceremony
+        const allocation = ceremonyAllocations.find(a => a.ceremonyId === e.id);
+        initial[e.id] = allocation?.allocatedAmount || "0";
       });
       setCeremonyBudgets(initial);
     }
-  }, [events]);
+  }, [events, allocations]);
 
   useEffect(() => {
     if (budgetBuckets.length > 0 && Object.keys(categoryBudgets).length === 0) {

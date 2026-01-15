@@ -956,10 +956,20 @@ export default function Budget() {
 
   const updateEventBudgetMutation = useMutation({
     mutationFn: async ({ eventId, budget }: { eventId: string; budget: number }) => {
-      return await apiRequest("PATCH", `/api/events/${eventId}`, { allocatedBudget: budget.toString() });
+      if (!wedding?.id) throw new Error("No wedding");
+      // Save to budget_allocations table via ceremony-budgets endpoint
+      return await apiRequest("POST", `/api/budget/ceremony-budgets`, {
+        weddingId: wedding.id,
+        ceremonyId: eventId,
+        allocatedAmount: budget.toString(),
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/events", wedding?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budget/allocations", wedding?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budget/ceremony-budgets", wedding?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budget/ceremony-analytics", wedding?.id] });
+      queryClient.invalidateQueries({ queryKey: [`/api/budget/ceremony-analytics/${wedding?.id}`] });
       toast({ title: "Ceremony budget set", description: "Budget allocation has been saved for this ceremony" });
     },
     onError: () => {

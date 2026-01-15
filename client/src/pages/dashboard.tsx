@@ -304,10 +304,18 @@ export default function Dashboard() {
       totalCeremonyAllocated: number;
       totalSpent: number;
     };
+    ceremonyBreakdown: Array<{
+      eventId: string;
+      eventName: string;
+      allocatedAmount: string;
+      spent: number;
+    }>;
   }>({
     queryKey: [`/api/budget/ceremony-analytics/${wedding?.id}`],
     enabled: !!wedding?.id,
   });
+  
+  const ceremonyBreakdown = ceremonyAnalytics?.ceremonyBreakdown || [];
 
   const { data: expenseTotals } = useQuery<{
     bucketTotals: Array<{ 
@@ -776,7 +784,9 @@ export default function Dashboard() {
                     const eventVendorNames = eventBookings
                       .map(b => vendors.find(v => v.id === b.vendorId)?.name)
                       .filter(Boolean);
-                    const budget = event.allocatedBudget ? parseFloat(event.allocatedBudget.toString()) : 0;
+                    // Get ceremony budget from ceremonyBreakdown analytics data
+                    const ceremonyData = ceremonyBreakdown.find(c => c.eventId === event.id);
+                    const budget = ceremonyData ? parseFloat(ceremonyData.allocatedAmount || "0") : 0;
                     
                     return (
                       <button
