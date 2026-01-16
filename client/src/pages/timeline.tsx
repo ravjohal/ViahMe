@@ -49,6 +49,7 @@ import { useToast } from "@/hooks/use-toast";
 import { CEREMONY_MAPPINGS, CEREMONY_CATALOG } from "@shared/ceremonies";
 import { useCeremonyTypes, useAllCeremonyLineItems, calculateCeremonyTotalFromBreakdown } from "@/hooks/use-ceremony-types";
 import { SideFilter, SideBadge, VisibilityBadge, SIDE_COLORS, type SideViewMode } from "@/components/side-filter";
+import { RitualInfoTooltip } from "@/components/ritual-info-tooltip";
 
 const COST_PRESETS = [
   { name: "Catering", type: "per_head" as const, defaultCategory: "catering" },
@@ -240,6 +241,9 @@ function DraggableEventNode({ event, isLast, onView, onEdit, onDelete, getEventS
                 <h3 className="font-display text-xl font-bold text-foreground">
                   {event.name}
                 </h3>
+                {event.ceremonyTypeId && (
+                  <RitualInfoTooltip ceremonyTypeId={event.ceremonyTypeId} />
+                )}
                 <Badge className={`${todConfig.color} gap-1`}>
                   <TimeIcon className="w-3 h-3" />
                   {todConfig.label}
