@@ -26,7 +26,10 @@ import {
   Send,
   ChevronDown,
   ChevronUp,
+  Users,
+  ExternalLink,
 } from "lucide-react";
+import { useLocation } from "wouter";
 import { PERMISSION_CATEGORIES, type PermissionCategory } from "@shared/schema";
 import type { WeddingRole, RolePermission } from "@shared/schema";
 
@@ -64,6 +67,7 @@ export function InvitePartnerModal({
   partnerName,
 }: InvitePartnerModalProps) {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [email, setEmail] = useState("");
   const [showPermissions, setShowPermissions] = useState(false);
   const [permissions, setPermissions] = useState<Record<PermissionCategory, PermissionLevel>>(defaultFullAccess());
@@ -302,6 +306,16 @@ export function InvitePartnerModal({
             
             <Separator />
             
+            <div className="rounded-lg border bg-blue-50 dark:bg-blue-950/30 p-3 space-y-1">
+              <p className="text-sm font-medium text-blue-700 dark:text-blue-300 flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                Track invitation status
+              </p>
+              <p className="text-xs text-blue-600 dark:text-blue-400">
+                You can view and manage all pending invitations on the Teams page under "Invited People".
+              </p>
+            </div>
+            
             <div className="space-y-2">
               <Label className="text-xs uppercase tracking-wide text-muted-foreground">
                 Or share this link directly
@@ -325,7 +339,20 @@ export function InvitePartnerModal({
             </div>
           </div>
           
-          <DialogFooter className="px-6 py-4 border-t bg-muted/30">
+          <DialogFooter className="px-6 py-4 border-t bg-muted/30 flex-col gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                handleClose();
+                setLocation("/team#invited");
+              }}
+              className="w-full"
+              data-testid="button-view-on-teams"
+            >
+              <Users className="w-4 h-4 mr-2" />
+              View on Teams Page
+              <ExternalLink className="w-3 h-3 ml-2" />
+            </Button>
             <Button onClick={handleClose} className="w-full" data-testid="button-done">
               Done
             </Button>
