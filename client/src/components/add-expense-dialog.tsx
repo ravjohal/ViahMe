@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, ArrowRight, Check, Calendar, DollarSign, User, FileText, Upload, Tag, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Calendar, DollarSign, User, FileText, Upload, Tag, Loader2, Store, Plus, Search } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { type BudgetBucket, type Event, type Expense, type ExpenseSplit } from "@shared/schema";
 import { CEREMONY_MAPPINGS, getCeremonyIdFromEvent } from "@shared/ceremonies";
 import { useBudgetCategories, useBudgetCategoryLookup } from "@/hooks/use-budget-bucket-categories";
@@ -79,6 +80,12 @@ export function AddExpenseDialog({
   // Get budget categories from database
   const { data: budgetCategories = [] } = useBudgetCategories();
   const { getCategoryLabel, allCategoryIds } = useBudgetCategoryLookup();
+  
+  // Fetch vendors for selection dropdown
+  const { data: vendorsData } = useQuery<{ id: string; name: string; categories: string[] }[]>({
+    queryKey: ["/api/vendors"],
+    enabled: open,
+  });
 
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedCeremonyId, setSelectedCeremonyId] = useState<string | null>(null);
@@ -94,6 +101,10 @@ export function AddExpenseDialog({
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [existingReceiptUrl, setExistingReceiptUrl] = useState<string | null>(null);
+  
+  // Vendor selection state
+  const [selectedVendorId, setSelectedVendorId] = useState<string | null>(null);
+  const [customVendorName, setCustomVendorName] = useState("");
 
   // Track the original bucket category ID from edit mode (to preserve on save)
   const [editOriginalBucketId, setEditOriginalBucketId] = useState<string | null>(null);
@@ -158,6 +169,15 @@ export function AddExpenseDialog({
         if (category) {
           setSelectedLineItem(category.displayName);
         }
+      }
+      
+      // Set vendor info from expense
+      if (expense.vendorId) {
+        setSelectedVendorId(expense.vendorId);
+        setCustomVendorName("");
+      } else if ((expense as any).vendorName) {
+        setSelectedVendorId(null);
+        setCustomVendorName((expense as any).vendorName);
       }
     } else if (open && defaultEventId) {
       setSelectedCeremonyId(defaultEventId);
@@ -271,6 +291,9 @@ export function AddExpenseDialog({
     setPhotoPreview(null);
     setExistingReceiptUrl(null);
     setEditOriginalBucketId(null);
+    setSelectedVendorId(null);
+    setCustomVendorName("");
+    setVendorSearchQuery("");
   };
 
   const createExpenseMutation = useMutation({
@@ -363,6 +386,9 @@ export function AddExpenseDialog({
       expenseDate,
       paymentDueDate: paymentDueDate || null,
       splits,
+      // Vendor info - either linked vendor or custom name
+      vendorId: selectedVendorId || null,
+      vendorName: selectedVendorId ? null : (customVendorName.trim() || null),
     };
 
     if (isEditMode && onUpdate) {
@@ -712,6 +738,63 @@ export function AddExpenseDialog({
                   data-testid="input-expense-name"
                 />
               </div>
+              
+              {/* Vendor Selection */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium flex items-center gap-2">
+                  <Store className="w-4 h-4" />
+                  Vendor (optional)
+                </Label>
+                <Select 
+                  value={selectedVendorId || "custom"} 
+                  onValueChange={(value) => {
+                    if (value === "custom") {
+                      setSelectedVendorId(null);
+                    } else {
+                      setSelectedVendorId(value);
+                      setCustomVendorName("");
+                    }
+                  }}
+                >
+                  <SelectTrigger data-testid="select-vendor">
+                    <SelectValue placeholder="Select a vendor or enter custom name" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="custom">
+                      <div className="flex items-center gap-2">
+                        <Plus className="w-4 h-4 text-primary" />
+                        <span>Enter vendor name manually</span>
+                      </div>
+                    </SelectItem>
+                    {(vendorsData || [])
+                      .slice(0, 30)
+                      .map((vendor) => (
+                        <SelectItem key={vendor.id} value={vendor.id}>
+                          {vendor.name}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+                
+                {/* Custom vendor name input */}
+                {!selectedVendorId && (
+                  <Input
+                    value={customVendorName}
+                    onChange={(e) => setCustomVendorName(e.target.value)}
+                    placeholder="Enter vendor or business name"
+                    className="mt-2"
+                    data-testid="input-custom-vendor"
+                  />
+                )}
+                
+                {/* Show selected vendor */}
+                {selectedVendorId && vendorsData && (
+                  <p className="text-xs text-muted-foreground">
+                    Selected: {vendorsData.find(v => v.id === selectedVendorId)?.name}
+                  </p>
+                )}
+              </div>
+              
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Notes (optional)</Label>
                 <Textarea

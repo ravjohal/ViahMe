@@ -1092,7 +1092,8 @@ export const expenses = pgTable("expenses", {
   paidByName: text("paid_by_name").notNull(),
   
   // Optional vendor link
-  vendorId: varchar("vendor_id"),
+  vendorId: varchar("vendor_id"), // FK to vendors.id (if vendor exists in system)
+  vendorName: text("vendor_name"), // Manual vendor name (for quick entry or when vendor not in system)
   
   // Optional fields
   notes: text("notes"),
@@ -1132,6 +1133,9 @@ export const insertExpenseSchema = createInsertSchema(expenses).omit({
   status: z.enum(['estimated', 'booked', 'paid']).optional(),
   expenseDate: z.string().optional().transform(val => val ? new Date(val) : new Date()),
   paymentDueDate: z.string().nullable().optional().transform(val => val ? new Date(val) : undefined),
+  // Vendor fields
+  vendorId: z.string().nullable().optional(),
+  vendorName: z.string().nullable().optional(),
 });
 
 export type InsertExpense = z.infer<typeof insertExpenseSchema>;

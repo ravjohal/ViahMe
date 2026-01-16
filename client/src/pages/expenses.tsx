@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Trash2, Pencil, DollarSign, ArrowRightLeft, Check, Receipt, Share2, Copy, ChevronDown, ChevronRight, List, LayoutGrid, Calendar, Eye, Users } from "lucide-react";
+import { Plus, Trash2, Pencil, DollarSign, ArrowRightLeft, Check, Receipt, Share2, Copy, ChevronDown, ChevronRight, List, LayoutGrid, Calendar, Eye, Users, Store } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import type { Expense, ExpenseSplit, Event, Wedding, BudgetCategory } from "@shared/schema";
@@ -114,7 +114,22 @@ export default function Expenses() {
   const totalPaid = expenses.reduce((sum, e) => sum + parseFloat(e.amountPaid || "0"), 0);
   const totalBalance = totalExpenses - totalPaid;
 
-  // Calculate balance due by payer
+  // Fetch vendors for vendor name lookup
+  const { data: vendorsData } = useQuery<{ id: string; name: string }[]>({
+    queryKey: ["/api/vendors"],
+    enabled: !!weddingId,
+  });
+
+  // Create vendor lookup map
+  const vendorLookup = useMemo(() => {
+    const lookup: Record<string, string> = {};
+    (vendorsData || []).forEach(v => {
+      lookup[v.id] = v.name;
+    });
+    return lookup;
+  }, [vendorsData]);
+
+  // Calculate balance due by payer (summary totals)
   const balancesByPayer = useMemo(() => {
     const balances: Record<string, number> = {};
     
@@ -129,6 +144,47 @@ export default function Expenses() {
     
     return balances;
   }, [expenses]);
+
+  // Calculate detailed breakdown: who owes what to which vendor
+  type PaymentObligation = {
+    payerName: string;
+    vendorName: string;
+    expenseName: string;
+    amount: number;
+    expenseId: string;
+    vendorId: string | null;
+  };
+
+  const paymentObligations = useMemo(() => {
+    const obligations: PaymentObligation[] = [];
+    
+    expenses.forEach(expense => {
+      const unpaid = parseFloat(expense.amount) - parseFloat(expense.amountPaid || "0");
+      if (unpaid > 0) {
+        const payerName = expense.paidByName === "Couple" ? "Me/Partner" : expense.paidByName;
+        // Get vendor name: from vendorId lookup, or vendorName field, or expense name
+        let vendorName = (expense as any).vendorName;
+        if (expense.vendorId && vendorLookup[expense.vendorId]) {
+          vendorName = vendorLookup[expense.vendorId];
+        }
+        if (!vendorName) {
+          vendorName = expense.expenseName;
+        }
+        
+        obligations.push({
+          payerName,
+          vendorName,
+          expenseName: expense.expenseName,
+          amount: unpaid,
+          expenseId: expense.id,
+          vendorId: expense.vendorId || null,
+        });
+      }
+    });
+    
+    // Sort by amount descending
+    return obligations.sort((a, b) => b.amount - a.amount);
+  }, [expenses, vendorLookup]);
 
   if (!weddingId) {
     return (
@@ -274,11 +330,44 @@ export default function Expenses() {
               </div>
             )}
 
+            {/* Detailed Breakdown - Who owes what to which vendor */}
+            {paymentObligations.length > 0 && (
+              <div className="space-y-3 pt-4 border-t">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+                  <ArrowRightLeft className="h-4 w-4" />
+                  Payment Details
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  Who owes what to which vendor
+                </p>
+                <div className="space-y-2">
+                  {paymentObligations.map((obligation) => (
+                    <div 
+                      key={obligation.expenseId} 
+                      className="p-3 rounded-lg border bg-background"
+                    >
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{obligation.vendorName}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {obligation.payerName} owes
+                          </p>
+                        </div>
+                        <span className="text-base font-bold text-orange-600 whitespace-nowrap">
+                          ${obligation.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Settlement Summary if available */}
             {settlement && Object.keys(settlement).length > 0 && (
               <div className="space-y-3 pt-4 border-t">
                 <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-                  <ArrowRightLeft className="h-4 w-4" />
+                  <Users className="h-4 w-4" />
                   Settlement Summary
                 </h3>
                 <p className="text-xs text-muted-foreground">
@@ -517,6 +606,11 @@ export default function Expenses() {
 
               const renderExpenseCard = (expense: ExpenseWithSplits, showCeremonyBadge = true) => {
                 const event = expense.ceremonyId ? events.find((e) => e.id === expense.ceremonyId) : null;
+                // Get vendor display name
+                let vendorDisplayName = (expense as any).vendorName;
+                if (expense.vendorId && vendorLookup[expense.vendorId]) {
+                  vendorDisplayName = vendorLookup[expense.vendorId];
+                }
                 return (
                   <div
                     key={expense.id}
@@ -542,6 +636,12 @@ export default function Expenses() {
                              (expense.status === "pending" ? "Pending" : "Estimated")}
                           </Badge>
                         </div>
+                        {vendorDisplayName && (
+                          <p className="text-sm font-medium text-primary mt-1 flex items-center gap-1">
+                            <Store className="h-3 w-3" />
+                            {vendorDisplayName}
+                          </p>
+                        )}
                         <p className="text-sm text-muted-foreground mt-1">
                           Paid by {expense.paidByName === "Couple" ? "Me/Partner" : expense.paidByName} on {format(new Date(expense.expenseDate), "MMM d, yyyy")}
                         </p>
