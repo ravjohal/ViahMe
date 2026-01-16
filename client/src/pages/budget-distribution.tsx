@@ -421,15 +421,30 @@ export default function BudgetDistribution() {
     }
   };
 
-  const recalculateCeremonyTotal = (stepId: string, ceremonyTypeId?: string | null) => {
-    const lineItems = ceremonyTypeId && allLineItems[ceremonyTypeId] ? allLineItems[ceremonyTypeId] : [];
-    const currentBudgets = ceremonyLineItemBudgets[stepId] || {};
-    const templateTotal = lineItems.reduce((sum, item) => {
-      return sum + parseFloat(currentBudgets[getItemCategory(item)] || "0");
-    }, 0);
-    const customTotal = (customItems[stepId] || []).reduce((sum, item) => sum + parseFloat(item.amount || "0"), 0);
-    setCeremonyBudgets(prev => ({ ...prev, [stepId]: (templateTotal + customTotal).toString() }));
-  };
+  // Recalculate ceremony totals whenever customItems or line item budgets change
+  useEffect(() => {
+    // Recalculate totals for all ceremonies with custom items
+    Object.keys(customItems).forEach(stepId => {
+      const step = steps.find(s => s.id === stepId);
+      if (step && step.type === "ceremony") {
+        const ceremonyTypeId = (step as any).ceremonyTypeId;
+        const lineItems = ceremonyTypeId && allLineItems[ceremonyTypeId] ? allLineItems[ceremonyTypeId] : [];
+        const currentBudgets = ceremonyLineItemBudgets[stepId] || {};
+        const templateTotal = lineItems.reduce((sum, item) => {
+          return sum + parseFloat(currentBudgets[getItemCategory(item)] || "0");
+        }, 0);
+        const customTotal = (customItems[stepId] || []).reduce((sum, item) => sum + parseFloat(item.amount || "0"), 0);
+        const newTotal = (templateTotal + customTotal).toString();
+        
+        setCeremonyBudgets(prev => {
+          if (prev[stepId] !== newTotal) {
+            return { ...prev, [stepId]: newTotal };
+          }
+          return prev;
+        });
+      }
+    });
+  }, [customItems, ceremonyLineItemBudgets, allLineItems, steps]);
 
   const addCustomItem = (stepId: string, ceremonyTypeId?: string | null) => {
     if (!newItemName.trim()) {
@@ -448,8 +463,6 @@ export default function BudgetDistribution() {
     setNewItemName("");
     setNewItemAmount("");
     setEstimateModes(prev => ({ ...prev, [stepId]: "custom" }));
-    
-    setTimeout(() => recalculateCeremonyTotal(stepId, ceremonyTypeId), 0);
   };
 
   const removeCustomItem = (stepId: string, itemId: string, ceremonyTypeId?: string | null) => {
@@ -457,7 +470,6 @@ export default function BudgetDistribution() {
       ...prev,
       [stepId]: (prev[stepId] || []).filter(item => item.id !== itemId),
     }));
-    setTimeout(() => recalculateCeremonyTotal(stepId, ceremonyTypeId), 0);
   };
 
   const updateCustomItemAmount = (stepId: string, itemId: string, value: string, ceremonyTypeId?: string | null) => {
@@ -468,7 +480,6 @@ export default function BudgetDistribution() {
       ),
     }));
     setEstimateModes(prev => ({ ...prev, [stepId]: "custom" }));
-    setTimeout(() => recalculateCeremonyTotal(stepId, ceremonyTypeId), 0);
   };
 
   const slideVariants = {
