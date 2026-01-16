@@ -1584,11 +1584,19 @@ export default function Budget() {
                 </Badge>
               )}
               <div className="text-right">
-                <p className="text-sm text-muted-foreground">Remaining</p>
+                <p className="text-sm text-muted-foreground">Remaining vs Target</p>
                 <p className={`text-2xl font-bold font-mono ${remainingBudget < 0 ? "text-destructive" : "text-emerald-600"}`} data-testid="text-remaining">
                   {remainingBudget < 0 ? "-" : ""}${Math.abs(remainingBudget).toLocaleString()}
                 </p>
               </div>
+              {wedding?.showCeremonyBudgets !== false && totalByCeremonies > 0 && (
+                <div className="text-right">
+                  <p className="text-sm text-muted-foreground">Remaining vs Planned</p>
+                  <p className={`text-2xl font-bold font-mono ${(totalByCeremonies - totalSpent) < 0 ? "text-destructive" : "text-blue-600"}`} data-testid="text-remaining-planned">
+                    {(totalByCeremonies - totalSpent) < 0 ? "-" : ""}${Math.abs(totalByCeremonies - totalSpent).toLocaleString()}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
           <Progress value={Math.min(spentPercentage, 100)} className="h-3" />
