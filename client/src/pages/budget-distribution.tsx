@@ -340,6 +340,8 @@ export default function BudgetDistribution() {
       setDirection(1);
       setCurrentStep(nextStep);
       setShowLineItems(false);
+      setNewItemName("");
+      setNewItemAmount("");
       await saveWizardProgressMutation.mutateAsync(nextStep);
     }
   };
@@ -351,6 +353,8 @@ export default function BudgetDistribution() {
       setDirection(-1);
       setCurrentStep(prevStep);
       setShowLineItems(false);
+      setNewItemName("");
+      setNewItemAmount("");
       await saveWizardProgressMutation.mutateAsync(prevStep);
     }
   };
@@ -423,8 +427,17 @@ export default function BudgetDistribution() {
 
   // Recalculate ceremony totals whenever customItems or line item budgets change
   useEffect(() => {
-    // Recalculate totals for all ceremonies with custom items
-    Object.keys(customItems).forEach(stepId => {
+    // Find all ceremony step IDs that need recalculation
+    const ceremonyStepIds = new Set<string>();
+    
+    // Add all ceremonies with custom items
+    Object.keys(customItems).forEach(stepId => ceremonyStepIds.add(stepId));
+    
+    // Add all ceremonies with line item budgets
+    Object.keys(ceremonyLineItemBudgets).forEach(stepId => ceremonyStepIds.add(stepId));
+    
+    // Recalculate totals for all identified ceremonies
+    ceremonyStepIds.forEach(stepId => {
       const step = steps.find(s => s.id === stepId);
       if (step && step.type === "ceremony") {
         const ceremonyTypeId = (step as any).ceremonyTypeId;
