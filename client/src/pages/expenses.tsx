@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Trash2, Pencil, DollarSign, ArrowRightLeft, Check, Receipt, Share2, Copy, ChevronDown, ChevronRight, ChevronLeft, List, LayoutGrid, Calendar, Eye, Users, Store } from "lucide-react";
+import { Plus, Trash2, Pencil, DollarSign, ArrowRightLeft, Check, CheckCircle2, Receipt, Share2, Copy, ChevronDown, ChevronRight, ChevronLeft, List, LayoutGrid, Calendar, Eye, Users, Store } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import type { Expense, ExpenseSplit, Event, Wedding, BudgetCategory } from "@shared/schema";
@@ -105,6 +105,23 @@ export default function Expenses() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/expenses", weddingId] });
       toast({ title: "Split status updated" });
+    },
+  });
+
+  const markFullyPaidMutation = useMutation({
+    mutationFn: async (expense: ExpenseWithSplits) => {
+      return apiRequest("PATCH", `/api/expenses/${expense.id}`, {
+        amountPaid: expense.amount,
+        status: "paid",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/expenses", weddingId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budget-bucket-categories", weddingId] });
+      toast({ title: "Expense marked as fully paid" });
+    },
+    onError: () => {
+      toast({ title: "Failed to update expense", variant: "destructive" });
     },
   });
 
@@ -719,6 +736,20 @@ export default function Expenses() {
                             <div className="text-xs text-orange-600">Unpaid</div>
                           )}
                         </div>
+                        {/* Fully Paid quick action - only show if not fully paid */}
+                        {expense.status !== "paid" && parseFloat(expense.amountPaid || "0") < parseFloat(expense.amount) && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-green-600 border-green-600 hover:bg-green-50 dark:hover:bg-green-950"
+                            onClick={() => markFullyPaidMutation.mutate(expense)}
+                            disabled={markFullyPaidMutation.isPending}
+                            data-testid={`button-fully-paid-${expense.id}`}
+                          >
+                            <CheckCircle2 className="h-4 w-4 mr-1" />
+                            Fully Paid
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="icon"
