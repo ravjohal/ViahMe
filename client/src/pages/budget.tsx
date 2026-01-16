@@ -608,6 +608,55 @@ export default function Budget() {
   // Calculate ceremony-level total (from ceremony analytics)
   const totalByCeremonies = ceremonyAnalytics?.overview?.totalCeremonyAllocated || 0;
 
+  // Detailed breakdown of line items per bucket, including ceremony/event info
+  // This powers the expandable breakdown view in budget categories
+  // Now uses actual budgeted amounts from lineItemBudgets instead of template estimates
+  // NOTE: Defined early because totalByCategories depends on it
+  interface LineItemBreakdown {
+    eventId: string;
+    eventName: string;
+    ceremonyName: string;
+    itemName: string;
+    budgetedAmount: number;
+  }
+  const lineItemBreakdownByBucket = useMemo(() => {
+    const breakdown: Record<string, LineItemBreakdown[]> = {};
+    
+    const eventsWithCeremony = events.filter(e => e.ceremonyTypeId);
+    
+    for (const event of eventsWithCeremony) {
+      const lineItems = ceremonyBreakdownMap[event.ceremonyTypeId!];
+      if (!lineItems) continue;
+      
+      for (const item of lineItems) {
+        const bucketId = item.budgetBucketId || 'other';
+        
+        // Find the actual budgeted amount for this line item
+        const savedBudget = lineItemBudgets.find(
+          b => b.eventId === event.id && b.lineItemCategory === item.category
+        );
+        const budgetedAmount = parseFloat(savedBudget?.budgetedAmount || "0") || 0;
+        
+        // Only include items that have an actual budget set
+        if (budgetedAmount > 0) {
+          if (!breakdown[bucketId]) {
+            breakdown[bucketId] = [];
+          }
+          
+          breakdown[bucketId].push({
+            eventId: event.id,
+            eventName: event.name,
+            ceremonyName: item.category || event.name,
+            itemName: item.category,
+            budgetedAmount,
+          });
+        }
+      }
+    }
+    
+    return breakdown;
+  }, [events, ceremonyBreakdownMap, lineItemBudgets]);
+
   // Calculate category-level total using effective allocations
   // Uses ceremony line item totals when no manual override
   const totalByCategories = useMemo(() => {
@@ -667,54 +716,6 @@ export default function Budget() {
     
     return bucketEstimates;
   }, [events, ceremonyBreakdownMap]);
-
-  // Detailed breakdown of line items per bucket, including ceremony/event info
-  // This powers the expandable breakdown view in budget categories
-  // Now uses actual budgeted amounts from lineItemBudgets instead of template estimates
-  interface LineItemBreakdown {
-    eventId: string;
-    eventName: string;
-    ceremonyName: string;
-    itemName: string;
-    budgetedAmount: number;
-  }
-  const lineItemBreakdownByBucket = useMemo(() => {
-    const breakdown: Record<string, LineItemBreakdown[]> = {};
-    
-    const eventsWithCeremony = events.filter(e => e.ceremonyTypeId);
-    
-    for (const event of eventsWithCeremony) {
-      const lineItems = ceremonyBreakdownMap[event.ceremonyTypeId!];
-      if (!lineItems) continue;
-      
-      for (const item of lineItems) {
-        const bucketId = item.budgetBucketId || 'other';
-        
-        // Find the actual budgeted amount for this line item
-        const savedBudget = lineItemBudgets.find(
-          b => b.eventId === event.id && b.lineItemCategory === item.category
-        );
-        const budgetedAmount = parseFloat(savedBudget?.budgetedAmount || "0") || 0;
-        
-        // Only include items that have an actual budget set
-        if (budgetedAmount > 0) {
-          if (!breakdown[bucketId]) {
-            breakdown[bucketId] = [];
-          }
-          
-          breakdown[bucketId].push({
-            eventId: event.id,
-            eventName: event.name,
-            ceremonyName: item.category || event.name,
-            itemName: item.category,
-            budgetedAmount,
-          });
-        }
-      }
-    }
-    
-    return breakdown;
-  }, [events, ceremonyBreakdownMap, lineItemBudgets]);
 
   // Toggle budget category expansion
   const toggleBudgetCategoryExpansion = (bucketId: string) => {
