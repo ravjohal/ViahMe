@@ -589,6 +589,7 @@ export default function Dashboard() {
               className="p-2 hover-elevate cursor-pointer text-center" 
               onClick={() => setLocation("/timeline")}
               data-testid="mobile-stat-events"
+              data-tour="events-card"
             >
               <Calendar className="w-4 h-4 mx-auto mb-1 text-orange-600" />
               <p className="font-mono text-lg font-bold">{events.length}</p>
@@ -598,6 +599,7 @@ export default function Dashboard() {
               className="p-2 hover-elevate cursor-pointer text-center" 
               onClick={() => setLocation("/budget")}
               data-testid="mobile-stat-budget"
+              data-tour="budget-card"
             >
               <DollarSign className="w-4 h-4 mx-auto mb-1 text-emerald-600" />
               <p className="font-mono text-lg font-bold">${totalBudget > 0 ? (totalBudget / 1000).toFixed(0) + 'k' : '0'}</p>
@@ -607,6 +609,7 @@ export default function Dashboard() {
               className="p-2 hover-elevate cursor-pointer text-center" 
               onClick={() => setLocation("/guests")}
               data-testid="mobile-stat-guests"
+              data-tour="guests-card"
             >
               <Users className="w-4 h-4 mx-auto mb-1 text-pink-600" />
               <div className="flex items-baseline justify-center gap-1">
@@ -629,6 +632,7 @@ export default function Dashboard() {
               className="p-2 hover-elevate cursor-pointer text-center" 
               onClick={() => setLocation("/vendors?view=booked")}
               data-testid="mobile-stat-vendors"
+              data-tour="vendors-card"
             >
               <Briefcase className="w-4 h-4 mx-auto mb-1 text-blue-600" />
               <p className="font-mono text-lg font-bold">{bookings.length}</p>
