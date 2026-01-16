@@ -263,8 +263,9 @@ export default function BudgetDistribution() {
       queryClient.invalidateQueries({ queryKey: ["/api/events", wedding?.id] });
       queryClient.invalidateQueries({ queryKey: ["/api/budget/allocations", wedding?.id] });
       queryClient.invalidateQueries({ queryKey: ["/api/budget/ceremony-budgets", wedding?.id] });
-      queryClient.invalidateQueries({ queryKey: ["/api/budget/ceremony-analytics", wedding?.id] });
+      queryClient.invalidateQueries({ queryKey: [`/api/budget/ceremony-analytics/${wedding?.id}`] });
       queryClient.invalidateQueries({ queryKey: ["/api/budget-bucket-categories", wedding?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budget/line-items", wedding?.id] });
     },
   });
 
@@ -324,6 +325,7 @@ export default function BudgetDistribution() {
       queryClient.invalidateQueries({ queryKey: ["/api/budget/line-items", wedding?.id] });
       queryClient.invalidateQueries({ queryKey: ["/api/budget/allocations", wedding?.id] });
       queryClient.invalidateQueries({ queryKey: ["/api/budget/expense-totals", wedding?.id] });
+      queryClient.invalidateQueries({ queryKey: [`/api/budget/ceremony-analytics/${wedding?.id}`] });
     },
   });
 
