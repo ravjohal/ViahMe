@@ -511,6 +511,8 @@ export default function TimelinePage() {
   });
   const wedding = weddings[weddings.length - 1];
 
+  const { data: ceremonyTypes = [] } = useCeremonyTypes();
+
   const { data: events = [], isLoading: eventsLoading } = useQuery<Event[]>({
     queryKey: ["/api/events", wedding?.id],
     enabled: !!wedding?.id,
@@ -660,6 +662,7 @@ export default function TimelinePage() {
       weddingId: wedding?.id || "",
       name: "",
       type: "custom",
+      ceremonyTypeId: undefined,
       order: events.length + 1,
       side: "mutual",
     },
@@ -698,6 +701,7 @@ export default function TimelinePage() {
       weddingId: event.weddingId,
       name: event.name,
       type: event.type as InsertEvent['type'],
+      ceremonyTypeId: event.ceremonyTypeId || undefined,
       date: (toDateKey(event.date) || "") as any,
       time: event.time || "",
       location: event.location || "",
@@ -1445,6 +1449,7 @@ export default function TimelinePage() {
               weddingId: wedding?.id || "",
               name: "",
               type: "custom",
+              ceremonyTypeId: undefined,
               order: events.length + 1,
               side: "mutual",
             });
@@ -1477,13 +1482,20 @@ export default function TimelinePage() {
 
                 <FormField
                   control={form.control}
-                  name="type"
+                  name="ceremonyTypeId"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Event Type</FormLabel>
                       <Select
-                        value={field.value}
-                        onValueChange={field.onChange}
+                        value={field.value || ""}
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          const selectedCeremony = ceremonyTypes.find(ct => ct.id === value);
+                          if (selectedCeremony) {
+                            const legacyType = selectedCeremony.ceremonyId.replace(/^(hindu_|sikh_|muslim_|gujarati_|south_indian_|christian_|jain_|parsi_|mixed_|other_|engagement_)/, "");
+                            form.setValue("type", legacyType as any);
+                          }
+                        }}
                       >
                         <FormControl>
                           <SelectTrigger data-testid="select-event-type">
@@ -1491,11 +1503,14 @@ export default function TimelinePage() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {EVENT_TYPES.map((type) => (
-                            <SelectItem key={type.value} value={type.value}>
-                              {type.icon} {type.label}
-                            </SelectItem>
-                          ))}
+                          {ceremonyTypes.map((ct) => {
+                            const icon = EVENT_TYPES.find(t => ct.ceremonyId.includes(t.value))?.icon || "📅";
+                            return (
+                              <SelectItem key={ct.id} value={ct.id}>
+                                {icon} {ct.name}
+                              </SelectItem>
+                            );
+                          })}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -1849,6 +1864,7 @@ export default function TimelinePage() {
                         weddingId: wedding?.id || "",
                         name: "",
                         type: "custom",
+                        ceremonyTypeId: undefined,
                         order: events.length + 1,
                         side: "mutual",
                       });
