@@ -674,6 +674,10 @@ export const events = pgTable("events", {
 }, (table) => ({
   weddingIdIdx: index("events_wedding_id_idx").on(table.weddingId),
   ceremonyTypeIdIdx: index("events_ceremony_type_id_idx").on(table.ceremonyTypeId),
+  // Optimized indexes for timeline and filtering queries
+  weddingDateIdx: index("events_wedding_date_idx").on(table.weddingId, table.date),
+  weddingSideIdx: index("events_wedding_side_idx").on(table.weddingId, table.side),
+  dateIdx: index("events_date_idx").on(table.date),
 }));
 
 export const insertEventSchema = createInsertSchema(events).omit({
@@ -806,6 +810,13 @@ export const vendors = pgTable("vendors", {
   nameIdx: index("vendors_name_idx").on(table.name),
   userIdIdx: index("vendors_user_id_idx").on(table.userId),
   cityIdx: index("vendors_city_idx").on(table.city),
+  // Optimized indexes for vendor search and filtering
+  isPublishedIdx: index("vendors_is_published_idx").on(table.isPublished),
+  approvalStatusIdx: index("vendors_approval_status_idx").on(table.approvalStatus),
+  claimedIdx: index("vendors_claimed_idx").on(table.claimed),
+  cityPublishedIdx: index("vendors_city_published_idx").on(table.city, table.isPublished),
+  // Note: GIN index on categories array should be added via raw SQL migration
+  // CREATE INDEX vendors_categories_gin_idx ON vendors USING GIN (categories);
 }));
 
 export const VENDOR_CATEGORIES = [
@@ -1031,7 +1042,11 @@ export const vendorFavorites = pgTable("vendor_favorites", {
   vendorId: varchar("vendor_id").notNull(),
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (table) => ({
+  weddingIdIdx: index("vendor_favorites_wedding_id_idx").on(table.weddingId),
+  vendorIdIdx: index("vendor_favorites_vendor_id_idx").on(table.vendorId),
+  weddingVendorIdx: uniqueIndex("vendor_favorites_wedding_vendor_idx").on(table.weddingId, table.vendorId),
+}));
 
 export const insertVendorFavoriteSchema = createInsertSchema(vendorFavorites).omit({
   id: true,
@@ -1094,6 +1109,12 @@ export const expenses = pgTable("expenses", {
   eventIdIdx: index("expenses_event_id_idx").on(table.eventId),
   bucketCategoryIdIdx: index("expenses_bucket_category_id_idx").on(table.bucketCategoryId),
   eventCostItemIdIdx: index("expenses_event_cost_item_id_idx").on(table.eventCostItemId),
+  // Optimized composite indexes for budget reporting and aggregation
+  weddingEventIdx: index("expenses_wedding_event_idx").on(table.weddingId, table.eventId),
+  weddingBucketIdx: index("expenses_wedding_bucket_idx").on(table.weddingId, table.bucketCategoryId),
+  statusIdx: index("expenses_status_idx").on(table.status),
+  paymentDueDateIdx: index("expenses_payment_due_date_idx").on(table.paymentDueDate),
+  weddingStatusIdx: index("expenses_wedding_status_idx").on(table.weddingId, table.status),
 }));
 
 export const insertExpenseSchema = createInsertSchema(expenses).omit({
@@ -1129,7 +1150,11 @@ export const expenseSplits = pgTable("expense_splits", {
   sharePercentage: integer("share_percentage"),
   isPaid: boolean("is_paid").notNull().default(false),
   paidAt: timestamp("paid_at"),
-});
+}, (table) => ({
+  expenseIdIdx: index("expense_splits_expense_id_idx").on(table.expenseId),
+  userIdIdx: index("expense_splits_user_id_idx").on(table.userId),
+  isPaidIdx: index("expense_splits_is_paid_idx").on(table.isPaid),
+}));
 
 export const insertExpenseSplitSchema = createInsertSchema(expenseSplits).omit({
   id: true,
