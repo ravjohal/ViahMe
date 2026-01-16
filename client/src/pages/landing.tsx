@@ -26,6 +26,7 @@ import {
   CreditCard
 } from "lucide-react";
 import logoUrl from "@assets/viah-logo_1763669612969.png";
+import { CookieConsentBanner } from "@/components/cookie-consent-banner";
 
 const FEATURES = [
   {
@@ -616,36 +617,66 @@ export default function Landing() {
       {/* Footer */}
       <footer className="border-t bg-muted/30 py-8 sm:py-12">
         <div className="container mx-auto px-4 sm:px-6">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4 sm:gap-6">
-            <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
-              <img 
-                src={logoUrl} 
-                alt="Viah.me" 
-                className="h-10 sm:h-12 object-contain" 
-              />
-              <p className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
-                © 2024 Viah.me. All rights reserved.
-              </p>
+          <div className="flex flex-col gap-6">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4 sm:gap-6">
+              <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
+                <img 
+                  src={logoUrl} 
+                  alt="Viah.me" 
+                  className="h-10 sm:h-12 object-contain" 
+                />
+                <p className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
+                  © 2024 Viah.me. All rights reserved.
+                </p>
+              </div>
+              <div className="flex gap-4 sm:gap-6 text-xs sm:text-sm">
+                <button 
+                  className="text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
+                  onClick={() => setLocation("/login")}
+                  data-testid="link-footer-signin"
+                >
+                  Sign In
+                </button>
+                <button 
+                  className="text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
+                  onClick={() => setLocation("/vendor-login")}
+                  data-testid="link-footer-vendor-login"
+                >
+                  Vendor Login
+                </button>
+              </div>
             </div>
-            <div className="flex gap-4 sm:gap-6 text-xs sm:text-sm">
-              <button 
-                className="text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
-                onClick={() => setLocation("/login")}
-                data-testid="link-footer-signin"
-              >
-                Sign In
-              </button>
-              <button 
-                className="text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
-                onClick={() => setLocation("/vendor-login")}
-                data-testid="link-footer-vendor-login"
-              >
-                Vendor Login
-              </button>
+            
+            <div className="border-t pt-4">
+              <div className="flex flex-wrap justify-center gap-4 sm:gap-6 text-xs sm:text-sm">
+                <button 
+                  className="text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
+                  onClick={() => setLocation("/terms-of-service")}
+                  data-testid="link-footer-terms"
+                >
+                  Terms of Service
+                </button>
+                <button 
+                  className="text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
+                  onClick={() => setLocation("/privacy-policy")}
+                  data-testid="link-footer-privacy"
+                >
+                  Privacy Policy
+                </button>
+                <button 
+                  className="text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
+                  onClick={() => setLocation("/acceptable-use")}
+                  data-testid="link-footer-acceptable-use"
+                >
+                  Acceptable Use
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </footer>
+
+      <CookieConsentBanner />
     </div>
   );
 }

@@ -73,6 +73,9 @@ import RitualRoles from "@/pages/ritual-roles";
 import MilniPage from "@/pages/milni";
 import DecorPage from "@/pages/decor";
 import DayOfTimelinePage from "@/pages/day-of-timeline";
+import TermsOfService from "@/pages/terms-of-service";
+import PrivacyPolicy from "@/pages/privacy-policy";
+import AcceptableUse from "@/pages/acceptable-use";
 import HoneymoonPlannerPage from "@/pages/honeymoon-planner";
 import FavoursPage from "@/pages/favours";
 import VendorAccessPasses from "@/pages/vendor-access-passes";
@@ -101,6 +104,9 @@ function Router() {
       <Route path="/reset-password" component={ResetPassword} />
       <Route path="/wedding/:slug" component={GuestWebsite} />
       <Route path="/cultural-info" component={CulturalInfo} />
+      <Route path="/terms-of-service" component={TermsOfService} />
+      <Route path="/privacy-policy" component={PrivacyPolicy} />
+      <Route path="/acceptable-use" component={AcceptableUse} />
       <Route path="/checkout" component={Checkout} />
       <Route path="/order-confirmation" component={OrderConfirmation} />
       <Route path="/pay-deposit/:bookingId" component={VendorDeposit} />
