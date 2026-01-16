@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation, Link } from "wouter";
-import type { Event, InsertEvent, EventCostItem, Task } from "@shared/schema";
+import type { Event, InsertEvent, Task } from "@shared/schema";
 import { formatTimeToAMPM } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Calendar, MapPin, Users, Clock, Pencil, Trash2, DollarSign, X, Tag, HelpCircle, ChevronDown, ChevronRight, Sun, Sunset, Moon, Sunrise, CheckCircle2, CircleDot, GripVertical, CalendarPlus } from "lucide-react";
+import { Plus, Calendar, MapPin, Users, Clock, Pencil, Trash2, DollarSign, X, HelpCircle, ChevronDown, ChevronRight, Sun, Sunset, Moon, Sunrise, CheckCircle2, CircleDot, GripVertical, CalendarPlus } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { format, isAfter, isBefore, isToday, startOfDay, parseISO, addDays } from "date-fns";
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, useDraggable, useDroppable, PointerSensor, useSensor, useSensors, closestCenter } from "@dnd-kit/core";
@@ -51,30 +51,6 @@ import { useCeremonyTypes, useAllCeremonyLineItems, calculateCeremonyTotalFromBr
 import { SideFilter, SideBadge, VisibilityBadge, SIDE_COLORS, type SideViewMode } from "@/components/side-filter";
 import { RitualInfoTooltip } from "@/components/ritual-info-tooltip";
 import { CEREMONY_COLORS, getCeremonyColor } from "@/lib/ceremony-colors";
-
-const COST_PRESETS = [
-  { name: "Catering", type: "per_head" as const, defaultCategory: "catering" },
-  { name: "Venue Rental", type: "fixed" as const, defaultCategory: "venue" },
-  { name: "Decorations", type: "fixed" as const, defaultCategory: "decoration" },
-  { name: "DJ/Entertainment", type: "fixed" as const, defaultCategory: "entertainment" },
-  { name: "Photography", type: "fixed" as const, defaultCategory: "photography" },
-  { name: "Videography", type: "fixed" as const, defaultCategory: "photography" },
-  { name: "Flowers", type: "fixed" as const, defaultCategory: "decoration" },
-  { name: "Lighting", type: "fixed" as const, defaultCategory: "venue" },
-  { name: "Valet", type: "fixed" as const, defaultCategory: "transportation" },
-  { name: "Bartender", type: "fixed" as const, defaultCategory: "catering" },
-];
-
-const CATEGORY_LABELS: Record<string, string> = {
-  catering: "Catering & Food",
-  venue: "Venue & Rentals",
-  entertainment: "Entertainment",
-  photography: "Photography & Video",
-  decoration: "Decoration & Flowers",
-  attire: "Attire & Beauty",
-  transportation: "Transportation",
-  other: "Other Expenses",
-};
 
 const EVENT_TYPES = [
   { value: "reception", label: "Reception", icon: "🎉" },
@@ -475,8 +451,6 @@ export default function TimelinePage() {
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
-  const [costItemsOpen, setCostItemsOpen] = useState(false);
-  const [newCostItem, setNewCostItem] = useState({ name: "", costType: "fixed" as "per_head" | "fixed", amount: "", categoryId: "" });
   const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set());
   const [activeEventId, setActiveEventId] = useState<string | null>(null);
   const [addDayDialogOpen, setAddDayDialogOpen] = useState(false);
@@ -518,16 +492,6 @@ export default function TimelinePage() {
     enabled: !!wedding?.id,
   });
 
-  const { data: budgetCategories = [] } = useQuery<{ id: string; name: string; category: string }[]>({
-    queryKey: ["/api/budget-bucket-categories", wedding?.id],
-    enabled: !!wedding?.id,
-  });
-
-  const { data: costItems = [], isLoading: costItemsLoading } = useQuery<EventCostItem[]>({
-    queryKey: ["/api/events", editingEvent?.id, "cost-items"],
-    enabled: !!editingEvent?.id,
-  });
-
   const { data: viewingEventTasks = [], isLoading: viewingEventTasksLoading } = useQuery<Task[]>({
     queryKey: ["/api/tasks", wedding?.id],
     enabled: !!wedding?.id,
@@ -542,35 +506,6 @@ export default function TimelinePage() {
   }>({
     queryKey: ["/api/expenses", wedding?.id, "totals"],
     enabled: !!wedding?.id,
-  });
-
-  const createCostItemMutation = useMutation({
-    mutationFn: async (data: { name: string; costType: string; amount: string; categoryId?: string }) => {
-      return await apiRequest("POST", `/api/events/${editingEvent?.id}/cost-items`, {
-        ...data,
-        categoryId: data.categoryId || null,
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/events", editingEvent?.id, "cost-items"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "cost-summary"] });
-      setNewCostItem({ name: "", costType: "fixed", amount: "", categoryId: "" });
-      toast({ title: "Cost item added", description: "The cost has been added to this event." });
-    },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to add cost item.", variant: "destructive" });
-    },
-  });
-
-  const deleteCostItemMutation = useMutation({
-    mutationFn: async (id: string) => {
-      return await apiRequest("DELETE", `/api/event-cost-items/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/events", editingEvent?.id, "cost-items"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/weddings", wedding?.id, "cost-summary"] });
-      toast({ title: "Cost item removed", description: "The cost has been removed." });
-    },
   });
 
   const createMutation = useMutation({
@@ -1721,137 +1656,6 @@ export default function TimelinePage() {
                   )}
                 />
 
-                {editingEvent && (
-                  <Collapsible open={costItemsOpen} onOpenChange={setCostItemsOpen}>
-                    <CollapsibleTrigger asChild>
-                      <Button type="button" variant="outline" className="w-full justify-between">
-                        <span className="flex items-center gap-2">
-                          <DollarSign className="w-4 h-4" />
-                          Event Cost Items
-                          {costItems.length > 0 && (
-                            <Badge variant="secondary">{costItems.length}</Badge>
-                          )}
-                        </span>
-                        {costItemsOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                      </Button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="pt-4 space-y-4">
-                      {costItemsLoading ? (
-                        <Skeleton className="h-20 w-full" />
-                      ) : (
-                        <>
-                          {costItems.length > 0 && (
-                            <div className="space-y-2">
-                              {costItems.map((item) => (
-                                <div key={item.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                                  <div className="flex items-center gap-3">
-                                    <span className="font-medium">{item.name}</span>
-                                    <Badge variant="outline" className="text-xs">
-                                      {item.costType === "per_head" ? "Per Head" : "Fixed"}
-                                    </Badge>
-                                    {item.categoryId && budgetCategories.find(c => c.id === item.categoryId) && (
-                                      <Badge variant="secondary" className="text-xs">
-                                        <Tag className="w-3 h-3 mr-1" />
-                                        {CATEGORY_LABELS[budgetCategories.find(c => c.id === item.categoryId)?.category || ""] || budgetCategories.find(c => c.id === item.categoryId)?.category}
-                                      </Badge>
-                                    )}
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-semibold">${parseFloat(item.amount).toLocaleString()}</span>
-                                    <Button
-                                      type="button"
-                                      size="icon"
-                                      variant="ghost"
-                                      onClick={() => deleteCostItemMutation.mutate(item.id)}
-                                    >
-                                      <X className="w-4 h-4" />
-                                    </Button>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-
-                          <div className="p-4 rounded-lg border border-dashed space-y-3">
-                            <p className="text-sm text-muted-foreground font-medium">Add New Cost Item</p>
-                            <div className="flex flex-wrap gap-2 mb-3">
-                              {COST_PRESETS.map((preset) => (
-                                <Button
-                                  key={preset.name}
-                                  type="button"
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => {
-                                    const category = budgetCategories.find(c => c.category === preset.defaultCategory);
-                                    setNewCostItem(prev => ({ 
-                                      ...prev, 
-                                      name: preset.name, 
-                                      costType: preset.type,
-                                      categoryId: category?.id || ""
-                                    }));
-                                  }}
-                                >
-                                  {preset.name}
-                                </Button>
-                              ))}
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                              <Input
-                                placeholder="Cost name"
-                                value={newCostItem.name}
-                                onChange={(e) => setNewCostItem(prev => ({ ...prev, name: e.target.value }))}
-                              />
-                              <Input
-                                type="number"
-                                placeholder="Amount"
-                                value={newCostItem.amount}
-                                onChange={(e) => setNewCostItem(prev => ({ ...prev, amount: e.target.value }))}
-                              />
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                              <Select
-                                value={newCostItem.costType}
-                                onValueChange={(v) => setNewCostItem(prev => ({ ...prev, costType: v as "per_head" | "fixed" }))}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Cost type" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="fixed">Fixed Cost</SelectItem>
-                                  <SelectItem value="per_head">Per Head</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <Select
-                                value={newCostItem.categoryId}
-                                onValueChange={(v) => setNewCostItem(prev => ({ ...prev, categoryId: v }))}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Budget category (optional)" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {budgetCategories.map((cat) => (
-                                    <SelectItem key={cat.id} value={cat.id}>
-                                      {CATEGORY_LABELS[cat.category] || cat.category}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <Button
-                              type="button"
-                              className="w-full"
-                              variant="secondary"
-                              disabled={!newCostItem.name || !newCostItem.amount || createCostItemMutation.isPending}
-                              onClick={() => createCostItemMutation.mutate(newCostItem)}
-                            >
-                              {createCostItemMutation.isPending ? "Adding..." : "Add Cost Item"}
-                            </Button>
-                          </div>
-                        </>
-                      )}
-                    </CollapsibleContent>
-                  </Collapsible>
-                )}
 
                 <div className="flex justify-end gap-3 pt-4">
                   <Button
