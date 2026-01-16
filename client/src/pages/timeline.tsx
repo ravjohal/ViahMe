@@ -800,11 +800,6 @@ export default function TimelinePage() {
     return format(addDays(lastDate, 1), "yyyy-MM-dd");
   };
 
-  useEffect(() => {
-    if (editingEvent) {
-      setCostItemsOpen(true);
-    }
-  }, [editingEvent]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
