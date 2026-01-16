@@ -11,7 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Trash2, Pencil, DollarSign, ArrowRightLeft, Check, Receipt, Share2, Copy, ChevronDown, ChevronRight, List, LayoutGrid, Calendar } from "lucide-react";
+import { Plus, Trash2, Pencil, DollarSign, ArrowRightLeft, Check, Receipt, Share2, Copy, ChevronDown, ChevronRight, List, LayoutGrid, Calendar, Eye, Users } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import type { Expense, ExpenseSplit, Event, Wedding, BudgetCategory } from "@shared/schema";
 import { AddExpenseDialog, type ExpenseWithSplits as ExpenseWithSplitsDialog } from "@/components/add-expense-dialog";
@@ -31,6 +32,7 @@ export default function Expenses() {
   const [payerFilter, setPayerFilter] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"list" | "byCeremony">("list");
   const [collapsedCeremonies, setCollapsedCeremonies] = useState<Set<string>>(new Set());
+  const [whoOwesSheetOpen, setWhoOwesSheetOpen] = useState(false);
 
   const { data: weddings = [] } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
@@ -180,9 +182,16 @@ export default function Expenses() {
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card 
+          className="cursor-pointer hover-elevate transition-all" 
+          onClick={() => setWhoOwesSheetOpen(true)}
+          data-testid="card-balance-due"
+        >
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Balance Due</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center justify-between">
+              <span>Balance Due</span>
+              <Eye className="h-4 w-4 text-primary" />
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className={`text-2xl font-bold flex items-center gap-2 ${totalBalance > 0 ? "text-orange-600" : "text-green-600"}`} data-testid="text-balance-due">
@@ -190,13 +199,11 @@ export default function Expenses() {
               ${totalBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
             </div>
             {Object.keys(balancesByPayer).length > 0 ? (
-              <div className="mt-2 pt-2 border-t space-y-1" data-testid="text-balances-by-payer">
-                {Object.entries(balancesByPayer).map(([payer, amount]) => (
-                  <div key={payer} className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">{payer}</span>
-                    <span className="font-medium text-orange-600">${amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
-                  </div>
-                ))}
+              <div className="mt-2 pt-2 border-t">
+                <div className="flex items-center gap-1 text-xs text-primary font-medium">
+                  <Users className="h-3 w-3" />
+                  <span>Tap to see who owes what</span>
+                </div>
               </div>
             ) : (
               <p className="text-xs text-muted-foreground mt-1">All paid up!</p>
@@ -204,6 +211,137 @@ export default function Expenses() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Who Owes What Sheet - Mobile-friendly bottom sheet */}
+      <Sheet open={whoOwesSheetOpen} onOpenChange={setWhoOwesSheetOpen}>
+        <SheetContent side="bottom" className="h-[85vh] sm:h-auto sm:max-h-[80vh] rounded-t-xl">
+          <SheetHeader className="text-left pb-4">
+            <SheetTitle className="flex items-center gap-2 text-xl">
+              <Users className="h-5 w-5 text-primary" />
+              Who Owes What
+            </SheetTitle>
+            <SheetDescription>
+              Breakdown of remaining balances by payer
+            </SheetDescription>
+          </SheetHeader>
+          
+          <div className="space-y-6 overflow-y-auto pb-6">
+            {/* Total Balance Summary */}
+            <div className="p-4 rounded-lg bg-muted/50 border">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Total Balance Due</span>
+                <span className={`text-2xl font-bold ${totalBalance > 0 ? "text-orange-600" : "text-green-600"}`}>
+                  ${totalBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+            </div>
+
+            {/* Breakdown by Payer */}
+            {Object.keys(balancesByPayer).length > 0 ? (
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                  Remaining by Payer
+                </h3>
+                {Object.entries(balancesByPayer)
+                  .sort(([, a], [, b]) => b - a)
+                  .map(([payer, amount]) => (
+                    <div 
+                      key={payer} 
+                      className="flex items-center justify-between p-4 rounded-lg border bg-background hover-elevate"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+                          <DollarSign className="h-5 w-5 text-orange-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium">{payer}</p>
+                          <p className="text-xs text-muted-foreground">Still owes</p>
+                        </div>
+                      </div>
+                      <span className="text-xl font-bold text-orange-600">
+                        ${amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <div className="h-16 w-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
+                  <Check className="h-8 w-8 text-green-600" />
+                </div>
+                <p className="text-lg font-medium text-green-600">All Paid Up!</p>
+                <p className="text-sm text-muted-foreground mt-1">No outstanding balances</p>
+              </div>
+            )}
+
+            {/* Settlement Summary if available */}
+            {settlement && Object.keys(settlement).length > 0 && (
+              <div className="space-y-3 pt-4 border-t">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+                  <ArrowRightLeft className="h-4 w-4" />
+                  Settlement Summary
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  Who should pay whom based on expense splits
+                </p>
+                {Object.entries(settlement).map(([userId, data]) => (
+                  <div 
+                    key={userId} 
+                    className="flex items-center justify-between p-4 rounded-lg border bg-background"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                        data.balance >= 0 
+                          ? "bg-green-100 dark:bg-green-900/30" 
+                          : "bg-red-100 dark:bg-red-900/30"
+                      }`}>
+                        <span className="text-sm font-bold">
+                          {data.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="font-medium">{data.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Paid ${data.paid.toFixed(2)} | Share ${data.owes.toFixed(2)}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge 
+                      variant={data.balance >= 0 ? "default" : "destructive"}
+                      className="text-sm px-3 py-1"
+                    >
+                      {data.balance >= 0 ? "Gets back" : "Owes"} ${Math.abs(data.balance).toFixed(2)}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-4">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  setWhoOwesSheetOpen(false);
+                  setIsShareDialogOpen(true);
+                }}
+                data-testid="button-share-from-sheet"
+              >
+                <Share2 className="h-4 w-4 mr-2" />
+                Share Summary
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={() => setWhoOwesSheetOpen(false)}
+                data-testid="button-close-sheet"
+              >
+                Done
+              </Button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {settlement && Object.keys(settlement).length > 0 && (
         <Card>
