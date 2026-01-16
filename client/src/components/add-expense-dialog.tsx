@@ -15,10 +15,10 @@ import { type BudgetBucket, type Event } from "@shared/schema";
 import { CEREMONY_MAPPINGS, getCeremonyIdFromEvent } from "@shared/ceremonies";
 import { useBudgetCategories, useBudgetCategoryLookup } from "@/hooks/use-budget-bucket-categories";
 
-// Type for line items fetched from API
+// Type for line items fetched from API - uses UUID for budget bucket
 interface LineItem {
   name: string;
-  budgetBucket: BudgetBucket;
+  budgetBucketId: string; // UUID reference to budget_bucket_categories.id
   lowCost: number;
   highCost: number;
   unit: 'fixed' | 'per_person' | 'per_hour';
@@ -116,19 +116,26 @@ export function AddExpenseDialog({
 
   const ceremonyLineItems = lineItemsData?.lineItems || [];
 
-  // Get the budget bucket from the selected line item (from API data)
-  const derivedBucket = useMemo((): BudgetBucket | null => {
+  // Get the budget bucket UUID from the selected line item (from API data)
+  const derivedBucketId = useMemo((): string | null => {
     if (!selectedLineItem) return null;
     
-    // Find the line item in the fetched data to get its budget bucket
+    // Find the line item in the fetched data to get its budget bucket UUID
     const lineItem = ceremonyLineItems.find(item => item.name === selectedLineItem);
     if (lineItem) {
-      return lineItem.budgetBucket;
+      return lineItem.budgetBucketId;
     }
     
-    // Fallback to 'other' for custom/unknown line items
-    return "other";
+    // Return null for custom/unknown line items - will use 'other' bucket UUID on server
+    return null;
   }, [selectedLineItem, ceremonyLineItems]);
+
+  // Get the display label for the derived bucket
+  const derivedBucketLabel = useMemo(() => {
+    if (!derivedBucketId) return null;
+    const category = budgetCategories.find(c => c.id === derivedBucketId);
+    return category?.displayName || 'Other';
+  }, [derivedBucketId, budgetCategories]);
 
   const resetForm = () => {
     setCurrentStep(1);
@@ -179,8 +186,6 @@ export function AddExpenseDialog({
       return;
     }
 
-    const bucket = derivedBucket || "other";
-
     const payerIdMap: Record<PayerType, string> = {
       me: "me",
       partner: "partner",
@@ -225,7 +230,7 @@ export function AddExpenseDialog({
 
     createExpenseMutation.mutate({
       weddingId,
-      parentCategory: bucket,
+      bucketCategoryId: derivedBucketId || undefined, // UUID for budget bucket - server will resolve to 'other' if null
       lineItem: selectedLineItem,
       expenseName: expenseName.trim(),
       amount: parsedAmount.toFixed(2),
@@ -352,24 +357,29 @@ export function AddExpenseDialog({
               </div>
             ) : ceremonyLineItems.length > 0 ? (
               <div className="grid grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-2">
-                {ceremonyLineItems.map((item, index) => (
-                  <button
-                    key={index}
-                    type="button"
-                    onClick={() => setSelectedLineItem(item.name)}
-                    className={`p-3 rounded-lg text-left transition-all border-2 ${
-                      selectedLineItem === item.name
-                        ? "border-primary bg-primary/10"
-                        : "border-muted hover-elevate"
-                    }`}
-                    data-testid={`button-lineitem-${index}`}
-                  >
-                    <div className="text-sm font-medium">{item.name}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">
-                      {getCategoryLabel(item.budgetBucket)}
-                    </div>
-                  </button>
-                ))}
+                {ceremonyLineItems.map((item, index) => {
+                  // Look up the display name for this bucket UUID
+                  const bucketCategory = budgetCategories.find(c => c.id === item.budgetBucketId);
+                  const bucketLabel = bucketCategory?.displayName || 'Other';
+                  return (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => setSelectedLineItem(item.name)}
+                      className={`p-3 rounded-lg text-left transition-all border-2 ${
+                        selectedLineItem === item.name
+                          ? "border-primary bg-primary/10"
+                          : "border-muted hover-elevate"
+                      }`}
+                      data-testid={`button-lineitem-${index}`}
+                    >
+                      <div className="text-sm font-medium">{item.name}</div>
+                      <div className="text-xs text-muted-foreground mt-0.5">
+                        {bucketLabel}
+                      </div>
+                    </button>
+                  );
+                })}
                 <button
                   type="button"
                   onClick={() => setSelectedLineItem("Other")}
@@ -672,7 +682,7 @@ export function AddExpenseDialog({
             <div className="flex flex-wrap gap-x-4 gap-y-1">
               {currentStep > 1 && selectedEvent && <span>Ceremony: <strong>{selectedEvent.name}</strong></span>}
               {currentStep > 2 && selectedLineItem && (
-                <span>Category: <strong>{selectedLineItem}</strong> → {derivedBucket && getCategoryLabel(derivedBucket)}</span>
+                <span>Category: <strong>{selectedLineItem}</strong> → {derivedBucketLabel || 'Other'}</span>
               )}
               {currentStep > 3 && <span>Payer: <strong>{PAYER_OPTIONS.find(p => p.id === payer)?.label}</strong></span>}
               {currentStep > 4 && amount && <span>Amount: <strong>${parseFloat(amount.replace(/,/g, "")).toLocaleString()}</strong></span>}

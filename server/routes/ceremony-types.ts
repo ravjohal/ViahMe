@@ -295,19 +295,34 @@ export function createCeremonyTypesRouter(storage: IStorage): Router {
         validatedWeddingId
       );
       
-      const lineItems = budgetCategories.map(item => ({
-        id: item.id,
-        name: item.itemName,
-        budgetBucketId: item.budgetBucketId || 'other',
-        lowCost: parseFloat(item.lowCost),
-        highCost: parseFloat(item.highCost),
-        unit: item.unit,
-        hoursLow: item.hoursLow ? parseFloat(item.hoursLow) : undefined,
-        hoursHigh: item.hoursHigh ? parseFloat(item.hoursHigh) : undefined,
-        notes: item.notes,
-        weddingId: item.weddingId, // Include to identify custom vs system items
-        isCustom: !!item.weddingId, // Convenience flag for frontend
-      }));
+      // Build a map of bucket UUID -> slug for efficient lookup
+      const bucketSlugMap = new Map<string, string>();
+      for (const item of budgetCategories) {
+        if (item.budgetBucketId && !bucketSlugMap.has(item.budgetBucketId)) {
+          const bucket = await storage.getBudgetBucketCategory(item.budgetBucketId);
+          bucketSlugMap.set(item.budgetBucketId, bucket?.slug || 'other');
+        }
+      }
+      
+      const lineItems = budgetCategories.map(item => {
+        const bucketSlug = item.budgetBucketId 
+          ? bucketSlugMap.get(item.budgetBucketId) || 'other'
+          : 'other';
+        return {
+          id: item.id,
+          name: item.itemName,
+          budgetBucket: bucketSlug, // Slug for frontend BudgetBucket type
+          budgetBucketId: item.budgetBucketId || 'other',
+          lowCost: parseFloat(item.lowCost),
+          highCost: parseFloat(item.highCost),
+          unit: item.unit,
+          hoursLow: item.hoursLow ? parseFloat(item.hoursLow) : undefined,
+          hoursHigh: item.hoursHigh ? parseFloat(item.hoursHigh) : undefined,
+          notes: item.notes,
+          weddingId: item.weddingId, // Include to identify custom vs system items
+          isCustom: !!item.weddingId, // Convenience flag for frontend
+        };
+      });
       
       res.json({
         ceremonyId: type.ceremonyId,

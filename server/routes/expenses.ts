@@ -121,8 +121,33 @@ export async function registerExpenseRoutes(router: Router, storage: IStorage) {
 
   router.post("/", async (req, res) => {
     try {
-      const { splits, ...expenseData } = req.body;
-      const validatedData = insertExpenseSchema.parse(expenseData);
+      const { splits, bucketCategoryId, ...expenseData } = req.body;
+      
+      // Resolve bucketCategoryId (UUID) to parentCategory (slug) for backward compatibility
+      let parentCategory = expenseData.parentCategory || 'other';
+      let resolvedBucketCategoryId = bucketCategoryId;
+      
+      if (bucketCategoryId) {
+        // Look up the bucket category to get its slug
+        const bucketCategory = await storage.getBudgetBucketCategory(bucketCategoryId);
+        if (bucketCategory) {
+          parentCategory = bucketCategory.slug;
+          resolvedBucketCategoryId = bucketCategory.id;
+        }
+      } else if (!expenseData.parentCategory) {
+        // If no bucketCategoryId and no parentCategory, find the 'other' bucket UUID
+        const allCategories = await storage.getAllBudgetBucketCategories();
+        const otherBucket = allCategories.find(c => c.slug === 'other');
+        if (otherBucket) {
+          resolvedBucketCategoryId = otherBucket.id;
+        }
+      }
+      
+      const validatedData = insertExpenseSchema.parse({
+        ...expenseData,
+        parentCategory,
+        bucketCategoryId: resolvedBucketCategoryId,
+      });
       const expense = await storage.createExpense(validatedData);
       
       if (splits && Array.isArray(splits)) {

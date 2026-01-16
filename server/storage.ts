@@ -442,6 +442,7 @@ export interface IStorage {
   getBucketTotalAllocated(weddingId: string, bucket: BudgetBucket): Promise<number>; // @deprecated - use getBucketTotalAllocatedByUUID
   getBucketTotalAllocatedByUUID(weddingId: string, bucketCategoryId: string): Promise<number>;
   getBudgetBucketCategory(id: string): Promise<BudgetBucketCategory | undefined>;
+  getAllBudgetBucketCategories(): Promise<BudgetBucketCategory[]>;
   recalculateBucketAllocationsFromCeremonies(weddingId: string): Promise<void>; // Sync auto amounts from ceremony budget categories
 
   // Expenses (Single Ledger Model)
@@ -2140,6 +2141,10 @@ export class MemStorage implements IStorage {
 
   async getBudgetBucketCategory(id: string): Promise<BudgetBucketCategory | undefined> {
     return this.budgetBucketCategories.find(c => c.id === id);
+  }
+
+  async getAllBudgetBucketCategories(): Promise<BudgetBucketCategory[]> {
+    return this.budgetBucketCategories;
   }
 
   async upsertBudgetAllocationByUUID(
@@ -5527,6 +5532,10 @@ export class DBStorage implements IStorage {
       .where(eq(schema.budgetBucketCategories.id, id))
       .limit(1);
     return result;
+  }
+
+  async getAllBudgetBucketCategories(): Promise<BudgetBucketCategory[]> {
+    return this.db.select().from(schema.budgetBucketCategories);
   }
 
   async upsertBudgetAllocationByUUID(
