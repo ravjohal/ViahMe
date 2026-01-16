@@ -92,9 +92,14 @@ export function AddExpenseDialog({
     return events.find(e => e.id === selectedCeremonyId) || null;
   }, [selectedCeremonyId, events]);
 
-  // Get the ceremony template ID from the selected event
+  // Get the ceremony template ID from the selected event - use the actual UUID from ceremonyTypeId
   const ceremonyTemplateId = useMemo(() => {
     if (!selectedEvent) return null;
+    // Prefer the actual ceremony_type_id UUID if available
+    if (selectedEvent.ceremonyTypeId) {
+      return selectedEvent.ceremonyTypeId;
+    }
+    // Fallback to slug-based lookup for older events without ceremonyTypeId
     return getCeremonyIdFromEvent(selectedEvent.name, selectedEvent.type);
   }, [selectedEvent]);
 
@@ -289,7 +294,8 @@ export function AddExpenseDialog({
             </div>
             <div className="grid grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-2">
               {events.map((event) => {
-                const eventCeremonyId = getCeremonyIdFromEvent(event.name, event.type);
+                // Prefer actual ceremonyTypeId UUID over slug-based lookup
+                const eventCeremonyId = event.ceremonyTypeId || getCeremonyIdFromEvent(event.name, event.type);
                 const hasCategories = !!eventCeremonyId;
                 return (
                   <button
