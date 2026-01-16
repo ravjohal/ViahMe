@@ -310,7 +310,7 @@ export default function BudgetDistribution() {
     mutationFn: async ({ eventId, ceremonyTypeId, items }: { 
       eventId: string; 
       ceremonyTypeId: string; 
-      items: Array<{ lineItemCategory: string; budgetedAmount: string }>;
+      items: Array<{ lineItemCategory: string; budgetedAmount: string; bucket?: string }>;
     }) => {
       if (!wedding?.id) throw new Error("No wedding");
       return await apiRequest("POST", "/api/budget/line-items/bulk", {
@@ -322,6 +322,8 @@ export default function BudgetDistribution() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/budget/line-items", wedding?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budget/allocations", wedding?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budget/expense-totals", wedding?.id] });
     },
   });
 
@@ -338,15 +340,19 @@ export default function BudgetDistribution() {
         const templateItems = allLineItems[stepData.ceremonyTypeId] || [];
         const stepCustomItems = customItems[currentStepData.id] || [];
         
-        const items: Array<{ lineItemCategory: string; budgetedAmount: string }> = [];
+        const items: Array<{ lineItemCategory: string; budgetedAmount: string; bucket?: string }> = [];
         
         templateItems.forEach(item => {
           const category = getItemCategory(item);
           const value = lineItemBudgetsForStep[category];
           if (value !== undefined) {
+            // Find the bucket slug for this line item
+            const bucketId = item.budgetBucketId || item.budgetBucketCategoryId;
+            const bucket = budgetBuckets.find(b => b.id === bucketId);
             items.push({
               lineItemCategory: category,
               budgetedAmount: value || "0",
+              bucket: bucket?.slug || "other",
             });
           }
         });
@@ -355,6 +361,7 @@ export default function BudgetDistribution() {
           items.push({
             lineItemCategory: item.name,
             budgetedAmount: item.amount || "0",
+            bucket: "other", // Custom items default to other
           });
         });
         
