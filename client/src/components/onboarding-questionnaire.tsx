@@ -1215,9 +1215,18 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                             <div className="relative">
                               <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                               <Input
-                                type="number"
+                                type="text"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
                                 placeholder="e.g., 50000"
-                                {...field}
+                                value={field.value || ""}
+                                onChange={(e) => {
+                                  const value = e.target.value.replace(/[^0-9]/g, "");
+                                  field.onChange(value);
+                                }}
+                                onBlur={field.onBlur}
+                                name={field.name}
+                                ref={field.ref}
                                 data-testid="input-budget"
                                 className="h-12 pl-10"
                               />
