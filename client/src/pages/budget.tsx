@@ -1371,29 +1371,27 @@ export default function Budget() {
               </p>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
+              <Button
+                size="sm"
+                onClick={() => setLocation("/budget-distribution")}
+                className="rounded-full shadow-sm"
+                data-testid="button-distribute-wizard"
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                {wedding.budgetTrackingMode === "ceremony" ? "Setup by Ceremony" : "Setup by Category"}
+              </Button>
               {!wedding.budgetConfirmed && (
-                <>
-                  <Button
-                    size="sm"
-                    onClick={() => setLocation("/budget-distribution")}
-                    className="rounded-full shadow-sm"
-                    data-testid="button-distribute-wizard"
-                  >
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Distribute Budget
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => confirmBudgetMutation.mutate(true)}
-                    disabled={confirmBudgetMutation.isPending}
-                    className="rounded-full"
-                    data-testid="button-confirm-budget"
-                  >
-                    <CheckCircle2 className="w-4 h-4 mr-2" />
-                    Confirm Budget
-                  </Button>
-                </>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => confirmBudgetMutation.mutate(true)}
+                  disabled={confirmBudgetMutation.isPending}
+                  className="rounded-full"
+                  data-testid="button-confirm-budget"
+                >
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  Confirm Budget
+                </Button>
               )}
               <Button
                 size="sm"
