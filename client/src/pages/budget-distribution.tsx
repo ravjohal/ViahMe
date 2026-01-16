@@ -689,7 +689,7 @@ export default function BudgetDistribution() {
                     <Collapsible open={showLineItems} onOpenChange={setShowLineItems}>
                       <CollapsibleTrigger asChild>
                         <Button variant="ghost" className="w-full justify-between" data-testid="button-toggle-line-items">
-                          <span>Calculate by Category ({currentLineItems.length} items)</span>
+                          <span>Calculate by Category ({currentLineItems.length + (customItems[currentStepData.id]?.length || 0)} items)</span>
                           {showLineItems ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                         </Button>
                       </CollapsibleTrigger>
