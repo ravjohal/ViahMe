@@ -1777,7 +1777,7 @@ export default function Budget() {
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
                               <p className="font-medium">{bucketTotal.label}</p>
-                              {bucketTotal.isManualOverride && hasAutoEstimate && (
+                              {bucketTotal.isManualOverride && (
                                 <Badge variant="outline" className="text-xs h-5 px-1.5">
                                   Manual
                                 </Badge>
