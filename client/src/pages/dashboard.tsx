@@ -875,18 +875,6 @@ export default function Dashboard() {
             <Button
               variant="outline"
               className="justify-start h-auto py-3 px-4"
-              data-testid="button-explore-collaborators"
-              onClick={() => setLocation("/collaborators")}
-            >
-              <UserPlus className="w-5 h-5 mr-3 text-blue-600" />
-              <div className="text-left">
-                <p className="font-medium">Add Teammates</p>
-                <p className="text-xs text-muted-foreground">Collaborate on planning</p>
-              </div>
-            </Button>
-            <Button
-              variant="outline"
-              className="justify-start h-auto py-3 px-4"
               data-testid="button-explore-cultural"
               onClick={() => setLocation("/cultural-info")}
             >
@@ -899,13 +887,13 @@ export default function Dashboard() {
             <Button
               variant="outline"
               className="justify-start h-auto py-3 px-4"
-              data-testid="button-explore-playlist"
-              onClick={() => setLocation("/playlist")}
+              data-testid="button-explore-tasks"
+              onClick={() => setLocation("/tasks")}
             >
-              <Music className="w-5 h-5 mr-3 text-pink-600" />
+              <CheckSquare className="w-5 h-5 mr-3 text-blue-600" />
               <div className="text-left">
-                <p className="font-medium">Playlist</p>
-                <p className="text-xs text-muted-foreground">Manage your music</p>
+                <p className="font-medium">Manage Tasks</p>
+                <p className="text-xs text-muted-foreground">Your planning checklist</p>
               </div>
             </Button>
             <Button
@@ -916,8 +904,20 @@ export default function Dashboard() {
             >
               <Receipt className="w-5 h-5 mr-3 text-green-600" />
               <div className="text-left">
-                <p className="font-medium">Split Expenses</p>
-                <p className="text-xs text-muted-foreground">Track who paid what</p>
+                <p className="font-medium">Track Expenses</p>
+                <p className="text-xs text-muted-foreground">Manage your spending</p>
+              </div>
+            </Button>
+            <Button
+              variant="outline"
+              className="justify-start h-auto py-3 px-4"
+              data-testid="button-explore-website"
+              onClick={() => setLocation("/wedding-website")}
+            >
+              <Globe className="w-5 h-5 mr-3 text-cyan-600" />
+              <div className="text-left">
+                <p className="font-medium">Create Wedding Website</p>
+                <p className="text-xs text-muted-foreground">Share with guests</p>
               </div>
             </Button>
           </div>
