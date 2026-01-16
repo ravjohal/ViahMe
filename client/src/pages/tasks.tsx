@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Calendar, CheckCircle2, Circle, AlertCircle, Trash2, Filter, Bell, BellOff, Mail, MessageSquare, User, Send, Sparkles, Lightbulb, X, ChevronDown, ChevronUp, Wand2, MessageCircle, List, Clock, ExternalLink } from "lucide-react";
+import { Plus, Calendar, CheckCircle2, Circle, AlertCircle, Trash2, Filter, Bell, BellOff, Mail, MessageSquare, User, Send, Sparkles, Lightbulb, X, ChevronDown, ChevronUp, Wand2, MessageCircle, List, Clock, ExternalLink, Layers, FolderOpen } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/use-auth";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -61,6 +61,62 @@ const PRIORITY_LABELS = {
   medium: "Medium Priority",
   low: "Low Priority",
 };
+
+// Task categories for organizing tasks
+const TASK_CATEGORIES = [
+  { key: "all", label: "All Categories", icon: "Layers" },
+  { key: "Venue", label: "Venue", color: "bg-purple-500/10 text-purple-700 dark:text-purple-400" },
+  { key: "Attire", label: "Attire", color: "bg-pink-500/10 text-pink-700 dark:text-pink-400" },
+  { key: "Food", label: "Food & Catering", color: "bg-orange-500/10 text-orange-700 dark:text-orange-400" },
+  { key: "Rituals", label: "Rituals", color: "bg-amber-500/10 text-amber-700 dark:text-amber-400" },
+  { key: "Pre-Wedding", label: "Pre-Wedding", color: "bg-rose-500/10 text-rose-700 dark:text-rose-400" },
+  { key: "Decor", label: "Decor", color: "bg-green-500/10 text-green-700 dark:text-green-400" },
+  { key: "Photography", label: "Photography", color: "bg-blue-500/10 text-blue-700 dark:text-blue-400" },
+  { key: "Music", label: "Music", color: "bg-indigo-500/10 text-indigo-700 dark:text-indigo-400" },
+  { key: "Entertainment", label: "Entertainment", color: "bg-violet-500/10 text-violet-700 dark:text-violet-400" },
+  { key: "Officiant", label: "Officiant", color: "bg-teal-500/10 text-teal-700 dark:text-teal-400" },
+  { key: "Logistics", label: "Logistics", color: "bg-cyan-500/10 text-cyan-700 dark:text-cyan-400" },
+  { key: "Jewelry", label: "Jewelry", color: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400" },
+  { key: "Stationery", label: "Stationery", color: "bg-slate-500/10 text-slate-700 dark:text-slate-400" },
+  { key: "Legal", label: "Legal", color: "bg-gray-500/10 text-gray-700 dark:text-gray-400" },
+  { key: "Experience", label: "Guest Experience", color: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" },
+  { key: "Planning", label: "Planning", color: "bg-sky-500/10 text-sky-700 dark:text-sky-400" },
+  { key: "Other", label: "Other", color: "bg-neutral-500/10 text-neutral-700 dark:text-neutral-400" },
+];
+
+// Get category color for a task
+function getCategoryStyle(category: string | null | undefined): string {
+  if (!category) return "bg-neutral-500/10 text-neutral-700 dark:text-neutral-400";
+  const found = TASK_CATEGORIES.find(c => 
+    c.key.toLowerCase() === category.toLowerCase() || 
+    category.toLowerCase().includes(c.key.toLowerCase())
+  );
+  return found?.color || "bg-neutral-500/10 text-neutral-700 dark:text-neutral-400";
+}
+
+// Normalize category for grouping (handles similar categories)
+function normalizeCategory(category: string | null | undefined): string {
+  if (!category) return "Other";
+  const lowerCat = category.toLowerCase();
+  
+  // Map similar categories together
+  if (lowerCat.includes("attire") || lowerCat.includes("jewelry")) return "Attire/Jewelry";
+  if (lowerCat.includes("food") || lowerCat.includes("catering")) return "Food";
+  if (lowerCat.includes("pre-wedding") || lowerCat.includes("pre wedding")) return "Pre-Wedding";
+  if (lowerCat.includes("ritual")) return "Rituals";
+  if (lowerCat.includes("photo") || lowerCat.includes("video")) return "Photography";
+  if (lowerCat.includes("music") || lowerCat.includes("entertainment")) return "Entertainment";
+  if (lowerCat.includes("floral") || lowerCat.includes("decor")) return "Decor";
+  if (lowerCat.includes("venue")) return "Venue";
+  if (lowerCat.includes("officiant") || lowerCat.includes("priest") || lowerCat.includes("imam")) return "Officiant";
+  if (lowerCat.includes("logistic") || lowerCat.includes("transport")) return "Logistics";
+  if (lowerCat.includes("station") || lowerCat.includes("invitation")) return "Stationery";
+  if (lowerCat.includes("legal") || lowerCat.includes("contract")) return "Legal";
+  if (lowerCat.includes("experience") || lowerCat.includes("guest")) return "Experience";
+  if (lowerCat.includes("planning")) return "Planning";
+  
+  return category;
+}
 
 // Timeline periods for grouping tasks by days before the wedding date
 // daysMin/daysMax represent how many days BEFORE the wedding the task should be due
@@ -149,6 +205,8 @@ export default function TasksPage() {
   const [filterCompleted, setFilterCompleted] = useState<string>("all");
   const [filterEvent, setFilterEvent] = useState<string>("all");
   const [filterAssignee, setFilterAssignee] = useState<string>("all");
+  const [filterCategory, setFilterCategory] = useState<string>("all");
+  const [groupByCategory, setGroupByCategory] = useState<boolean>(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [aiRecommendationsOpen, setAiRecommendationsOpen] = useState(false);
@@ -466,8 +524,22 @@ export default function TasksPage() {
       (filterAssignee === "unassigned" && !task.assignedToId) ||
       (filterAssignee === "assigned" && !!task.assignedToId) ||
       task.assignedToId === filterAssignee;
-    return matchesPriority && matchesCompleted && matchesEvent && matchesAssignee;
+    const matchesCategory =
+      filterCategory === "all" ||
+      normalizeCategory(task.category) === filterCategory;
+    return matchesPriority && matchesCompleted && matchesEvent && matchesAssignee && matchesCategory;
   });
+
+  // Count tasks by category (for category tabs)
+  const categoryCounts = useMemo(() => {
+    const counts: { [key: string]: number } = { all: tasks.filter(t => !t.completed).length };
+    tasks.forEach(task => {
+      if (task.completed) return;
+      const normalized = normalizeCategory(task.category);
+      counts[normalized] = (counts[normalized] || 0) + 1;
+    });
+    return counts;
+  }, [tasks]);
 
   const stats = {
     total: tasks.length,
@@ -602,6 +674,41 @@ export default function TasksPage() {
         </Card>
       </div>
 
+      {/* Category Quick Filter Tabs */}
+      <div className="mb-6">
+        <div className="flex items-center gap-2 mb-2">
+          <FolderOpen className="w-4 h-4 text-muted-foreground" />
+          <span className="text-sm font-medium text-muted-foreground">Filter by Category</span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant={filterCategory === "all" ? "secondary" : "outline"}
+            size="sm"
+            onClick={() => setFilterCategory("all")}
+            className="h-8"
+            data-testid="category-filter-all"
+          >
+            <Layers className="w-3 h-3 mr-1" />
+            All ({categoryCounts.all || 0})
+          </Button>
+          {Object.entries(categoryCounts)
+            .filter(([key]) => key !== "all")
+            .sort((a, b) => b[1] - a[1])
+            .map(([category, count]) => (
+              <Button
+                key={category}
+                variant={filterCategory === category ? "secondary" : "outline"}
+                size="sm"
+                onClick={() => setFilterCategory(filterCategory === category ? "all" : category)}
+                className={`h-8 ${filterCategory === category ? "" : ""}`}
+                data-testid={`category-filter-${category.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}
+              >
+                {category} ({count})
+              </Button>
+            ))}
+        </div>
+      </div>
+
       <div className="flex items-center gap-4 mb-6 flex-wrap">
         <div className="flex items-center gap-2">
           <Filter className="w-4 h-4 text-muted-foreground" />
@@ -682,6 +789,20 @@ export default function TasksPage() {
             List
           </Button>
         </div>
+
+        {viewMode === "timeline" && (
+          <div className="flex items-center gap-2 border rounded-md p-1">
+            <Button
+              variant={groupByCategory ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => setGroupByCategory(!groupByCategory)}
+              data-testid="button-group-by-category"
+            >
+              <FolderOpen className="w-4 h-4 mr-1" />
+              {groupByCategory ? "Grouped" : "Flat"}
+            </Button>
+          </div>
+        )}
 
         <div className="ml-auto">
           <Dialog open={dialogOpen} onOpenChange={(open) => {
@@ -969,103 +1090,234 @@ export default function TasksPage() {
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     <div className="space-y-2 pl-8 mt-2">
-                      {periodTasks.map((task) => {
-                        const isOverdue = task.dueDate && !task.completed && new Date(task.dueDate) < new Date();
-                        const relatedEvent = task.eventId ? events.find((e) => e.id === task.eventId) : null;
-
-                        return (
-                          <div
-                            key={task.id}
-                            className={`p-3 rounded-lg border transition-all hover-elevate ${
-                              task.completed ? "bg-muted/30 opacity-60" : "bg-card"
-                            }`}
-                            data-testid={`task-item-${task.id}`}
-                          >
-                            <div className="flex items-start gap-3">
-                              <Checkbox
-                                checked={task.completed || false}
-                                onCheckedChange={() => toggleComplete(task)}
-                                className="mt-0.5"
-                                data-testid={`checkbox-task-${task.id}`}
-                              />
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-start justify-between gap-2">
-                                  <h4
-                                    className={`font-medium ${
-                                      task.completed ? "line-through text-muted-foreground" : "text-foreground"
-                                    }`}
-                                    data-testid={`text-task-title-${task.id}`}
-                                  >
-                                    {task.title}
-                                  </h4>
-                                  <div className="flex items-center gap-1 shrink-0">
-                                    {(task as any).linkTo && !task.completed && (
-                                      <Button
-                                        size="sm"
-                                        variant="default"
-                                        className="h-7 text-xs gap-1"
-                                        onClick={() => setLocation((task as any).linkTo)}
-                                        data-testid={`button-go-task-${task.id}`}
-                                      >
-                                        <ExternalLink className="w-3 h-3" />
-                                        Go
-                                      </Button>
-                                    )}
-                                    <Button
-                                      size="icon"
-                                      variant="ghost"
-                                      className="h-7 w-7"
-                                      onClick={() => handleEdit(task)}
-                                      data-testid={`button-edit-task-${task.id}`}
-                                    >
-                                      <Calendar className="w-3 h-3" />
-                                    </Button>
-                                    <Button
-                                      size="icon"
-                                      variant="ghost"
-                                      className="h-7 w-7"
-                                      onClick={() => handleDelete(task.id)}
-                                      data-testid={`button-delete-task-${task.id}`}
-                                    >
-                                      <Trash2 className="w-3 h-3" />
-                                    </Button>
-                                  </div>
-                                </div>
-                                {task.description && (
-                                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
-                                    {task.description}
-                                  </p>
-                                )}
-                                <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                                  <Badge
-                                    variant="outline"
-                                    className={`text-xs ${PRIORITY_COLORS[task.priority as keyof typeof PRIORITY_COLORS] || PRIORITY_COLORS.medium}`}
-                                  >
-                                    {task.priority}
+                      {groupByCategory ? (
+                        // Group tasks by category within this time period
+                        (() => {
+                          const categoryGroups: { [key: string]: Task[] } = {};
+                          periodTasks.forEach(task => {
+                            const cat = normalizeCategory(task.category);
+                            if (!categoryGroups[cat]) categoryGroups[cat] = [];
+                            categoryGroups[cat].push(task);
+                          });
+                          
+                          return Object.entries(categoryGroups)
+                            .sort((a, b) => b[1].length - a[1].length)
+                            .map(([category, categoryTasks]) => (
+                              <div key={category} className="mb-3">
+                                <div className="flex items-center gap-2 mb-2 py-1 px-2 rounded-md bg-muted/50">
+                                  <FolderOpen className="w-3.5 h-3.5 text-muted-foreground" />
+                                  <span className="text-sm font-medium">{category}</span>
+                                  <Badge variant="secondary" className="text-xs h-5">
+                                    {categoryTasks.length}
                                   </Badge>
-                                  {task.dueDate && (
-                                    <Badge variant="outline" className={`text-xs ${isOverdue ? "bg-red-500/10 text-red-700 dark:text-red-400" : ""}`}>
-                                      <Calendar className="w-3 h-3 mr-1" />
-                                      {format(new Date(task.dueDate), "MMM d")}
-                                    </Badge>
+                                </div>
+                                <div className="space-y-2 pl-4">
+                                  {categoryTasks.map((task) => {
+                                    const isOverdue = task.dueDate && !task.completed && new Date(task.dueDate) < new Date();
+                                    const relatedEvent = task.eventId ? events.find((e) => e.id === task.eventId) : null;
+                                    return (
+                                      <div
+                                        key={task.id}
+                                        className={`p-3 rounded-lg border transition-all hover-elevate ${
+                                          task.completed ? "bg-muted/30 opacity-60" : "bg-card"
+                                        }`}
+                                        data-testid={`task-item-${task.id}`}
+                                      >
+                                        <div className="flex items-start gap-3">
+                                          <Checkbox
+                                            checked={task.completed || false}
+                                            onCheckedChange={() => toggleComplete(task)}
+                                            className="mt-0.5"
+                                            data-testid={`checkbox-task-${task.id}`}
+                                          />
+                                          <div className="flex-1 min-w-0">
+                                            <div className="flex items-start justify-between gap-2">
+                                              <h4
+                                                className={`font-medium ${
+                                                  task.completed ? "line-through text-muted-foreground" : "text-foreground"
+                                                }`}
+                                                data-testid={`text-task-title-${task.id}`}
+                                              >
+                                                {task.title}
+                                              </h4>
+                                              <div className="flex items-center gap-1 shrink-0">
+                                                {(task as any).linkTo && !task.completed && (
+                                                  <Button
+                                                    size="sm"
+                                                    variant="default"
+                                                    className="h-7 text-xs gap-1"
+                                                    onClick={() => setLocation((task as any).linkTo)}
+                                                    data-testid={`button-go-task-${task.id}`}
+                                                  >
+                                                    <ExternalLink className="w-3 h-3" />
+                                                    Go
+                                                  </Button>
+                                                )}
+                                                <Button
+                                                  size="icon"
+                                                  variant="ghost"
+                                                  className="h-7 w-7"
+                                                  onClick={() => handleEdit(task)}
+                                                  data-testid={`button-edit-task-${task.id}`}
+                                                >
+                                                  <Calendar className="w-3 h-3" />
+                                                </Button>
+                                                <Button
+                                                  size="icon"
+                                                  variant="ghost"
+                                                  className="h-7 w-7"
+                                                  onClick={() => handleDelete(task.id)}
+                                                  data-testid={`button-delete-task-${task.id}`}
+                                                >
+                                                  <Trash2 className="w-3 h-3" />
+                                                </Button>
+                                              </div>
+                                            </div>
+                                            {task.description && (
+                                              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                                                {task.description}
+                                              </p>
+                                            )}
+                                            <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                                              <Badge
+                                                variant="outline"
+                                                className={`text-xs ${PRIORITY_COLORS[task.priority as keyof typeof PRIORITY_COLORS] || PRIORITY_COLORS.medium}`}
+                                              >
+                                                {task.priority}
+                                              </Badge>
+                                              {task.dueDate && (
+                                                <Badge variant="outline" className={`text-xs ${isOverdue ? "bg-red-500/10 text-red-700 dark:text-red-400" : ""}`}>
+                                                  <Calendar className="w-3 h-3 mr-1" />
+                                                  {format(new Date(task.dueDate), "MMM d")}
+                                                </Badge>
+                                              )}
+                                              {relatedEvent && (
+                                                <Badge variant="outline" className="text-xs">
+                                                  {relatedEvent.name}
+                                                </Badge>
+                                              )}
+                                              {task.assignedToName && (
+                                                <Badge variant="outline" className="text-xs bg-chart-2/10 text-chart-2">
+                                                  <User className="w-3 h-3 mr-1" />
+                                                  {task.assignedToName}
+                                                </Badge>
+                                              )}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            ));
+                        })()
+                      ) : (
+                        // Flat list (no category grouping)
+                        periodTasks.map((task) => {
+                          const isOverdue = task.dueDate && !task.completed && new Date(task.dueDate) < new Date();
+                          const relatedEvent = task.eventId ? events.find((e) => e.id === task.eventId) : null;
+
+                          return (
+                            <div
+                              key={task.id}
+                              className={`p-3 rounded-lg border transition-all hover-elevate ${
+                                task.completed ? "bg-muted/30 opacity-60" : "bg-card"
+                              }`}
+                              data-testid={`task-item-${task.id}`}
+                            >
+                              <div className="flex items-start gap-3">
+                                <Checkbox
+                                  checked={task.completed || false}
+                                  onCheckedChange={() => toggleComplete(task)}
+                                  className="mt-0.5"
+                                  data-testid={`checkbox-task-${task.id}`}
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-start justify-between gap-2">
+                                    <h4
+                                      className={`font-medium ${
+                                        task.completed ? "line-through text-muted-foreground" : "text-foreground"
+                                      }`}
+                                      data-testid={`text-task-title-${task.id}`}
+                                    >
+                                      {task.title}
+                                    </h4>
+                                    <div className="flex items-center gap-1 shrink-0">
+                                      {(task as any).linkTo && !task.completed && (
+                                        <Button
+                                          size="sm"
+                                          variant="default"
+                                          className="h-7 text-xs gap-1"
+                                          onClick={() => setLocation((task as any).linkTo)}
+                                          data-testid={`button-go-task-${task.id}`}
+                                        >
+                                          <ExternalLink className="w-3 h-3" />
+                                          Go
+                                        </Button>
+                                      )}
+                                      <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        className="h-7 w-7"
+                                        onClick={() => handleEdit(task)}
+                                        data-testid={`button-edit-task-${task.id}`}
+                                      >
+                                        <Calendar className="w-3 h-3" />
+                                      </Button>
+                                      <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        className="h-7 w-7"
+                                        onClick={() => handleDelete(task.id)}
+                                        data-testid={`button-delete-task-${task.id}`}
+                                      >
+                                        <Trash2 className="w-3 h-3" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                  {task.description && (
+                                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                                      {task.description}
+                                    </p>
                                   )}
-                                  {relatedEvent && (
-                                    <Badge variant="outline" className="text-xs">
-                                      {relatedEvent.name}
+                                  <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                                    <Badge
+                                      variant="outline"
+                                      className={`text-xs ${getCategoryStyle(task.category)}`}
+                                    >
+                                      {task.category || "Other"}
                                     </Badge>
-                                  )}
-                                  {task.assignedToName && (
-                                    <Badge variant="outline" className="text-xs bg-chart-2/10 text-chart-2">
-                                      <User className="w-3 h-3 mr-1" />
-                                      {task.assignedToName}
+                                    <Badge
+                                      variant="outline"
+                                      className={`text-xs ${PRIORITY_COLORS[task.priority as keyof typeof PRIORITY_COLORS] || PRIORITY_COLORS.medium}`}
+                                    >
+                                      {task.priority}
                                     </Badge>
-                                  )}
+                                    {task.dueDate && (
+                                      <Badge variant="outline" className={`text-xs ${isOverdue ? "bg-red-500/10 text-red-700 dark:text-red-400" : ""}`}>
+                                        <Calendar className="w-3 h-3 mr-1" />
+                                        {format(new Date(task.dueDate), "MMM d")}
+                                      </Badge>
+                                    )}
+                                    {relatedEvent && (
+                                      <Badge variant="outline" className="text-xs">
+                                        {relatedEvent.name}
+                                      </Badge>
+                                    )}
+                                    {task.assignedToName && (
+                                      <Badge variant="outline" className="text-xs bg-chart-2/10 text-chart-2">
+                                        <User className="w-3 h-3 mr-1" />
+                                        {task.assignedToName}
+                                      </Badge>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })
+                      )}
                     </div>
                   </CollapsibleContent>
                 </Collapsible>
