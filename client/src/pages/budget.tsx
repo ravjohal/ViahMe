@@ -1367,7 +1367,7 @@ export default function Budget() {
                 Your Budget Planner
               </h1>
               <p className="text-muted-foreground mt-1">
-                Track spending across {expenseTotals?.bucketTotals?.length || 0} categories
+                Manage your wedding finances with ease
               </p>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
@@ -1376,6 +1376,7 @@ export default function Budget() {
                   <Button
                     size="sm"
                     onClick={() => setLocation("/budget-distribution")}
+                    className="rounded-full shadow-sm"
                     data-testid="button-distribute-wizard"
                   >
                     <Sparkles className="w-4 h-4 mr-2" />
@@ -1386,6 +1387,7 @@ export default function Budget() {
                     size="sm"
                     onClick={() => confirmBudgetMutation.mutate(true)}
                     disabled={confirmBudgetMutation.isPending}
+                    className="rounded-full"
                     data-testid="button-confirm-budget"
                   >
                     <CheckCircle2 className="w-4 h-4 mr-2" />
@@ -1400,6 +1402,7 @@ export default function Budget() {
                   setAddExpenseEventId(undefined);
                   setAddExpenseDialogOpen(true);
                 }}
+                className="rounded-full"
                 data-testid="button-add-expense-header"
               >
                 <Plus className="w-4 h-4 mr-2" />
@@ -1409,27 +1412,30 @@ export default function Budget() {
           </div>
           <div className="flex items-center gap-2 flex-wrap mt-3">
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
               onClick={() => setLocation("/budget-estimator")}
+              className="rounded-full bg-muted/50 hover:bg-muted"
               data-testid="button-budget-estimator"
             >
               <Calculator className="w-4 h-4 mr-2" />
               Estimator
             </Button>
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
               onClick={() => setLocation("/financial-dashboard")}
+              className="rounded-full bg-muted/50 hover:bg-muted"
               data-testid="button-financial-dashboard"
             >
               <BarChart3 className="w-4 h-4 mr-2" />
               Financials
             </Button>
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
               onClick={() => setLocation("/scenario-planner")}
+              className="rounded-full bg-muted/50 hover:bg-muted"
               data-testid="button-scenario-planner"
             >
               <Sparkles className="w-4 h-4 mr-2" />
@@ -1437,7 +1443,7 @@ export default function Budget() {
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" data-testid="button-share-budget">
+                <Button variant="ghost" size="sm" className="rounded-full bg-muted/50 hover:bg-muted" data-testid="button-share-budget">
                   <Share2 className="w-4 h-4 mr-2" />
                   Share
                 </Button>
