@@ -14,6 +14,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useBudgetCategories } from "@/hooks/use-budget-bucket-categories";
 import { useCreateCustomCeremonyItem } from "@/hooks/use-ceremony-types";
+import { getCeremonyColor } from "@/lib/ceremony-colors";
 import type { Wedding, Event, BudgetAllocation, BudgetBucket } from "@shared/schema";
 import { 
   ArrowLeft, Check, Save, ChevronLeft, ChevronRight,
@@ -242,20 +243,8 @@ export default function BudgetDistribution() {
   const progressPercent = totalBudget > 0 ? Math.min((totalPlanned / totalBudget) * 100, 100) : 0;
 
   const getCeremonyAccentColor = (ceremonyTypeId: string | null | undefined, name: string): string => {
-    const lowerName = name.toLowerCase();
-    if (lowerName.includes("mehndi") || lowerName.includes("mehendi")) {
-      return "bg-green-50 border-green-200 dark:bg-green-950/30 dark:border-green-800";
-    }
-    if (lowerName.includes("anand karaj") || lowerName.includes("ceremony") || lowerName.includes("wedding")) {
-      return "bg-amber-50 border-amber-200 dark:bg-amber-950/30 dark:border-amber-800";
-    }
-    if (lowerName.includes("sangeet") || lowerName.includes("music")) {
-      return "bg-purple-50 border-purple-200 dark:bg-purple-950/30 dark:border-purple-800";
-    }
-    if (lowerName.includes("maiyan") || lowerName.includes("haldi")) {
-      return "bg-yellow-50 border-yellow-200 dark:bg-yellow-950/30 dark:border-yellow-800";
-    }
-    return "bg-card border";
+    const colors = getCeremonyColor(null, name);
+    return `${colors.bg} ${colors.border}`;
   };
 
   const updateCeremonyBudgetMutation = useMutation({
