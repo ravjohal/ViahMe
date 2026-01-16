@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Trash2, Pencil, DollarSign, Users, ArrowRightLeft, Check, Receipt, Share2, Copy, Calendar, ChevronDown, ChevronRight, List, LayoutGrid } from "lucide-react";
+import { Plus, Trash2, Pencil, DollarSign, ArrowRightLeft, Check, Receipt, Share2, Copy, Calendar, ChevronDown, ChevronRight, List, LayoutGrid } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import type { Expense, ExpenseSplit, Event, Wedding, BudgetCategory, ExpenseEventAllocation } from "@shared/schema";
 import { EditExpenseDialog, type ExpenseWithDetails } from "@/components/edit-expense-dialog";
@@ -609,20 +609,6 @@ export default function Expenses() {
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               {totalBalance > 0 ? "Still owed to vendors" : "All paid up!"}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Team Members</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold flex items-center gap-2" data-testid="text-team-count">
-              <Users className="h-5 w-5 text-primary" />
-              {teamMembers.length}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              <a href="/collaborators" className="text-primary hover:underline">Manage team</a>
             </p>
           </CardContent>
         </Card>
