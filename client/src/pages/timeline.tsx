@@ -1030,8 +1030,8 @@ export default function TimelinePage() {
               </div>
               <div className="flex items-center gap-3">
                 <div className="text-right">
-                  <p className={`font-bold font-mono ${(expenseTotals?.totalRemaining || 0) < 0 ? 'text-destructive' : 'text-emerald-600'}`}>
-                    ${(expenseTotals?.totalRemaining ?? parseFloat(wedding.totalBudget || "0")).toLocaleString()}
+                  <p className={`font-bold font-mono ${(parseFloat(wedding.totalBudget || "0") - (expenseTotals?.totalSpent || 0)) < 0 ? 'text-destructive' : 'text-emerald-600'}`}>
+                    ${(parseFloat(wedding.totalBudget || "0") - (expenseTotals?.totalSpent || 0)).toLocaleString()}
                   </p>
                   <p className="text-xs text-muted-foreground">remaining</p>
                 </div>
