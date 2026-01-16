@@ -14,12 +14,14 @@ interface RitualInfoTooltipProps {
   ceremonyTypeId: string;
   children?: ReactNode;
   side?: "top" | "right" | "bottom" | "left";
+  "data-testid"?: string;
 }
 
 export function RitualInfoTooltip({ 
   ceremonyTypeId, 
   children,
   side = "right",
+  "data-testid": testId,
 }: RitualInfoTooltipProps) {
   const { data: rituals = [], isLoading } = useQuery<TraditionRitual[]>({
     queryKey: ["/api/tradition-rituals/ceremony-type", ceremonyTypeId],
@@ -39,7 +41,7 @@ export function RitualInfoTooltip({
             size="icon"
             variant="ghost"
             className="h-6 w-6"
-            data-testid="ritual-info-trigger"
+            data-testid={testId || "ritual-info-trigger"}
           >
             <Info className="w-4 h-4" />
           </Button>

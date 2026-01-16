@@ -13,6 +13,7 @@ import { Calendar, MapPin, Users, DollarSign, Crown, Gift, Lightbulb, TrendingUp
 import { motion, AnimatePresence } from "framer-motion";
 import { TRADITION_HIERARCHY, getSubTraditionsForMain, getAllSubTraditions, getMainTraditionByValue } from "@/lib/tradition-hierarchy";
 import { useCeremonyTypesByTradition, useRegionalPricing, useAllCeremonyLineItems, calculateCeremonyTotalFromBreakdown, type CeremonyType } from "@/hooks/use-ceremony-types";
+import { RitualInfoTooltip } from "@/components/ritual-info-tooltip";
 import { preWeddingOffsets, mainCeremonies } from "@shared/ceremony-dates";
 
 const customEventSchema = z.object({
@@ -925,7 +926,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                               key={index} 
                               className="rounded-xl border-2 border-orange-200 dark:border-orange-800 bg-gradient-to-r from-orange-50/50 to-amber-50/50 dark:from-orange-950/20 dark:to-amber-950/20 p-3 space-y-2"
                             >
-                              {/* Row 1: Badge + Ceremony selector + Delete */}
+                              {/* Row 1: Badge + Ceremony selector + Info + Delete */}
                               <div className="flex items-center gap-2">
                                 <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center text-white font-bold text-xs shadow-md">
                                   {index + 1}
@@ -960,6 +961,12 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                                     </SelectItem>
                                   </SelectContent>
                                 </Select>
+                                {event.ceremonyTypeId && event.ceremonyTypeId !== "custom" && (
+                                  <RitualInfoTooltip 
+                                    ceremonyTypeId={event.ceremonyTypeId}
+                                    data-testid={`ritual-info-trigger-${index}`}
+                                  />
+                                )}
                                 <Button
                                   type="button"
                                   variant="ghost"
