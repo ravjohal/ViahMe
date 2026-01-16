@@ -186,6 +186,28 @@ export default function Expenses() {
     return obligations.sort((a, b) => b.amount - a.amount);
   }, [expenses, vendorLookup]);
 
+  // Group payment obligations by payer for expandable accordion
+  const obligationsByPayer = useMemo(() => {
+    const grouped: Record<string, PaymentObligation[]> = {};
+    paymentObligations.forEach(obligation => {
+      if (!grouped[obligation.payerName]) {
+        grouped[obligation.payerName] = [];
+      }
+      grouped[obligation.payerName].push(obligation);
+    });
+    return grouped;
+  }, [paymentObligations]);
+
+  // Track which payers are expanded in the "Who Owes What" accordion
+  const [expandedPayers, setExpandedPayers] = useState<Record<string, boolean>>({});
+
+  const togglePayerExpanded = (payer: string) => {
+    setExpandedPayers(prev => ({
+      ...prev,
+      [payer]: !prev[payer]
+    }));
+  };
+
   if (!weddingId) {
     return (
       <div className="p-6">
@@ -292,33 +314,75 @@ export default function Expenses() {
               </div>
             </div>
 
-            {/* Breakdown by Payer */}
+            {/* Expandable Payer Accordion - Mobile-friendly */}
             {Object.keys(balancesByPayer).length > 0 ? (
-              <div className="space-y-3">
-                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                  Remaining by Payer
-                </h3>
+              <div className="space-y-2">
                 {Object.entries(balancesByPayer)
                   .sort(([, a], [, b]) => b - a)
-                  .map(([payer, amount]) => (
-                    <div 
-                      key={payer} 
-                      className="flex items-center justify-between p-4 rounded-lg border bg-background hover-elevate"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
-                          <DollarSign className="h-5 w-5 text-orange-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium">{payer}</p>
-                          <p className="text-xs text-muted-foreground">Still owes</p>
-                        </div>
+                  .map(([payer, amount]) => {
+                    const isExpanded = expandedPayers[payer] || false;
+                    const payerObligations = obligationsByPayer[payer] || [];
+                    
+                    return (
+                      <div key={payer} className="rounded-lg border bg-background overflow-hidden">
+                        {/* Payer Header - Clickable to expand */}
+                        <button
+                          onClick={() => togglePayerExpanded(payer)}
+                          className="w-full flex items-center justify-between gap-3 p-4 hover-elevate transition-colors text-left"
+                          data-testid={`button-expand-payer-${payer.replace(/[^a-zA-Z0-9]/g, '-')}`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0">
+                              <DollarSign className="h-5 w-5 text-orange-600" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-medium truncate">{payer}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {payerObligations.length} expense{payerObligations.length !== 1 ? 's' : ''} • Tap to see details
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <span className="text-lg font-bold text-orange-600">
+                              ${amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                            </span>
+                            {isExpanded ? (
+                              <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                            ) : (
+                              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                            )}
+                          </div>
+                        </button>
+                        
+                        {/* Expanded Content - Vendor/Expense Details */}
+                        {isExpanded && payerObligations.length > 0 && (
+                          <div className="border-t bg-muted/30">
+                            <div className="p-3 space-y-2">
+                              {payerObligations.map((obligation) => (
+                                <div 
+                                  key={obligation.expenseId} 
+                                  className="flex items-center justify-between gap-2 p-3 rounded-md bg-background border"
+                                >
+                                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                                    <Store className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                    <div className="min-w-0">
+                                      <p className="text-sm font-medium truncate">{obligation.vendorName}</p>
+                                      {obligation.vendorName !== obligation.expenseName && (
+                                        <p className="text-xs text-muted-foreground truncate">{obligation.expenseName}</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <span className="text-sm font-bold text-orange-600 whitespace-nowrap flex-shrink-0">
+                                    ${obligation.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <span className="text-xl font-bold text-orange-600">
-                        ${amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                      </span>
-                    </div>
-                  ))}
+                    );
+                  })}
               </div>
             ) : (
               <div className="text-center py-8">
@@ -327,39 +391,6 @@ export default function Expenses() {
                 </div>
                 <p className="text-lg font-medium text-green-600">All Paid Up!</p>
                 <p className="text-sm text-muted-foreground mt-1">No outstanding balances</p>
-              </div>
-            )}
-
-            {/* Detailed Breakdown - Who owes what to which vendor */}
-            {paymentObligations.length > 0 && (
-              <div className="space-y-3 pt-4 border-t">
-                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-                  <ArrowRightLeft className="h-4 w-4" />
-                  Payment Details
-                </h3>
-                <p className="text-xs text-muted-foreground">
-                  Who owes what to which vendor
-                </p>
-                <div className="space-y-2">
-                  {paymentObligations.map((obligation) => (
-                    <div 
-                      key={obligation.expenseId} 
-                      className="p-3 rounded-lg border bg-background"
-                    >
-                      <div className="flex items-center justify-between gap-2 flex-wrap">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{obligation.vendorName}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {obligation.payerName} owes
-                          </p>
-                        </div>
-                        <span className="text-base font-bold text-orange-600 whitespace-nowrap">
-                          ${obligation.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
               </div>
             )}
 
