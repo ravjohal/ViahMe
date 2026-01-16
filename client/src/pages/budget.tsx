@@ -1803,13 +1803,17 @@ export default function Budget() {
                             <p className="text-sm text-muted-foreground">
                               ${bucketTotal.spent.toLocaleString()} of ${effectiveAllocated.toLocaleString()} spent
                             </p>
-                            {hasLineItems && !bucketTotal.isManualOverride && (
+                            {hasLineItems && (
                               <button
                                 onClick={() => toggleBudgetCategoryExpansion(bucketTotal.bucket)}
                                 className="text-xs text-muted-foreground mt-1 hover:text-foreground flex items-center gap-1"
                                 data-testid={`toggle-breakdown-${bucketTotal.bucket}`}
                               >
-                                From {lineItems.length} ceremony items
+                                {bucketTotal.isManualOverride ? (
+                                  <span>Ceremony items: ${lineItemsTotal.toLocaleString()} ({lineItems.length} items)</span>
+                                ) : (
+                                  <span>From {lineItems.length} ceremony items</span>
+                                )}
                                 {isExpanded ? (
                                   <ChevronDown className="w-3 h-3 ml-1" />
                                 ) : (
