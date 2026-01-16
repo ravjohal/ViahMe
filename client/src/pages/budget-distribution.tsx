@@ -13,6 +13,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useBudgetCategories } from "@/hooks/use-budget-bucket-categories";
+import { useCreateCustomCeremonyItem } from "@/hooks/use-ceremony-types";
 import type { Wedding, Event, BudgetAllocation, BudgetBucket } from "@shared/schema";
 import { 
   ArrowLeft, Check, Save, ChevronLeft, ChevronRight,
@@ -74,10 +75,22 @@ export default function BudgetDistribution() {
 
   const { data: budgetBuckets = [] } = useBudgetCategories();
 
+  // Fetch line items including wedding-specific custom items
   const { data: allLineItems = {} } = useQuery<Record<string, CeremonyLineItem[]>>({
-    queryKey: ["/api/ceremony-types/all/line-items"],
+    queryKey: ["/api/ceremony-types/all/line-items", wedding?.id],
+    queryFn: async () => {
+      const url = wedding?.id 
+        ? `/api/ceremony-types/all/line-items?weddingId=${wedding.id}`
+        : `/api/ceremony-types/all/line-items`;
+      const response = await fetch(url, { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to fetch ceremony line items');
+      return response.json();
+    },
     enabled: !!wedding?.id,
   });
+  
+  // Hook for creating custom items in ceremony_budget_categories
+  const createCustomItemMutation = useCreateCustomCeremonyItem();
 
   const { data: savedLineItemBudgets = [] } = useQuery<SavedLineItemBudget[]>({
     queryKey: ["/api/budget/line-items", wedding?.id],
@@ -126,44 +139,49 @@ export default function BudgetDistribution() {
     }
   }, [budgetBuckets, allocations]);
 
+  // Load line item budgets and custom items from ceremony_budget_categories
   useEffect(() => {
-    if (events.length > 0 && savedLineItemBudgets.length > 0 && Object.keys(allLineItems).length > 0) {
+    if (events.length > 0 && Object.keys(allLineItems).length > 0) {
       const lineItemsByEvent: Record<string, Record<string, string>> = {};
       const customItemsByEvent: Record<string, CustomLineItem[]> = {};
       
       events.forEach(event => {
-        const eventLineItems = savedLineItemBudgets.filter(li => li.eventId === event.id);
-        if (eventLineItems.length > 0) {
-          const lineItemMap: Record<string, string> = {};
-          const customItemsList: CustomLineItem[] = [];
+        if (!event.ceremonyTypeId) return;
+        
+        const ceremonyLineItems = allLineItems[event.ceremonyTypeId] || [];
+        const eventSavedBudgets = savedLineItemBudgets.filter(li => li.eventId === event.id);
+        
+        const lineItemMap: Record<string, string> = {};
+        const customItemsList: CustomLineItem[] = [];
+        
+        // Process all ceremony line items (both template and custom from ceremony_budget_categories)
+        ceremonyLineItems.forEach((item: CeremonyLineItem & { isCustom?: boolean }) => {
+          const category = item.category || item.name || item.id;
           
-          // Get known template categories for this event's ceremony type
-          const templateItems = event.ceremonyTypeId && allLineItems[event.ceremonyTypeId] 
-            ? allLineItems[event.ceremonyTypeId] 
-            : [];
-          const templateCategories = new Set(templateItems.map(item => item.category || item.name || item.id));
+          // Find saved budget for this item
+          const savedBudget = eventSavedBudgets.find(b => b.lineItemCategory === category);
           
-          eventLineItems.forEach(saved => {
-            // Check if this is a template item or a custom item
-            if (templateCategories.has(saved.lineItemCategory)) {
-              lineItemMap[saved.lineItemCategory] = saved.budgetedAmount;
-            } else {
-              // This is a custom item - add to custom items list
-              customItemsList.push({
-                id: `custom-${saved.id}`,
-                name: saved.lineItemCategory,
-                amount: saved.budgetedAmount,
-              });
+          if (item.isCustom) {
+            // Custom items from ceremony_budget_categories
+            customItemsList.push({
+              id: item.id,
+              name: category,
+              amount: savedBudget?.budgetedAmount || (item.lowCost?.toString() || "0"),
+            });
+          } else {
+            // Template items - load saved budget if exists
+            if (savedBudget) {
+              lineItemMap[category] = savedBudget.budgetedAmount;
             }
-          });
-          
-          if (Object.keys(lineItemMap).length > 0) {
-            lineItemsByEvent[event.id] = lineItemMap;
           }
-          
-          if (customItemsList.length > 0) {
-            customItemsByEvent[event.id] = customItemsList;
-          }
+        });
+        
+        if (Object.keys(lineItemMap).length > 0) {
+          lineItemsByEvent[event.id] = lineItemMap;
+        }
+        
+        if (customItemsList.length > 0) {
+          customItemsByEvent[event.id] = customItemsList;
         }
       });
       
@@ -491,23 +509,49 @@ export default function BudgetDistribution() {
     });
   }, [customItems, ceremonyLineItemBudgets, allLineItems, steps]);
 
-  const addCustomItem = (stepId: string, ceremonyTypeId?: string | null) => {
+  const addCustomItem = async (stepId: string, ceremonyTypeId?: string | null) => {
     if (!newItemName.trim()) {
       toast({ title: "Please enter an item name", variant: "destructive" });
       return;
     }
-    const newItem: CustomLineItem = {
-      id: `custom-${Date.now()}`,
-      name: newItemName.trim(),
-      amount: newItemAmount || "0",
-    };
-    setCustomItems(prev => ({
-      ...prev,
-      [stepId]: [...(prev[stepId] || []), newItem],
-    }));
-    setNewItemName("");
-    setNewItemAmount("");
-    setEstimateModes(prev => ({ ...prev, [stepId]: "custom" }));
+    if (!wedding?.id || !ceremonyTypeId) {
+      toast({ title: "Cannot add item without wedding/ceremony context", variant: "destructive" });
+      return;
+    }
+    
+    const itemName = newItemName.trim();
+    const amount = newItemAmount || "0";
+    
+    try {
+      // Create the custom item in ceremony_budget_categories table
+      const createdItem = await createCustomItemMutation.mutateAsync({
+        weddingId: wedding.id,
+        ceremonyTypeId: ceremonyTypeId,
+        itemName: itemName,
+        budgetBucketId: 'e321d270-09dc-4e49-9504-0edeae98a2b0', // "Other" bucket for custom items
+        amount: amount,
+      });
+      
+      // Add to local state with the real ID from the created item
+      const newItem: CustomLineItem = {
+        id: createdItem?.id || `custom-${Date.now()}`,
+        name: itemName,
+        amount: amount,
+      };
+      setCustomItems(prev => ({
+        ...prev,
+        [stepId]: [...(prev[stepId] || []), newItem],
+      }));
+      
+      // Refresh line items to get the new item from database with all its properties
+      queryClient.invalidateQueries({ queryKey: ["/api/ceremony-types/all/line-items", wedding.id] });
+      
+      setNewItemName("");
+      setNewItemAmount("");
+      setEstimateModes(prev => ({ ...prev, [stepId]: "custom" }));
+    } catch (error) {
+      toast({ title: "Failed to add custom item", variant: "destructive" });
+    }
   };
 
   const removeCustomItem = (stepId: string, itemId: string, ceremonyTypeId?: string | null) => {
