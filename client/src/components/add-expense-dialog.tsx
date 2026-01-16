@@ -12,9 +12,11 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, ArrowRight, Check, Calendar, DollarSign, User, FileText, Upload, Tag, Loader2, Store, Plus, Search } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { type BudgetBucket, type Event, type Expense, type ExpenseSplit } from "@shared/schema";
+import { type BudgetBucket, type Event, type Expense, type ExpenseSplit, VENDOR_CATEGORY_TO_BUCKET } from "@shared/schema";
 import { CEREMONY_MAPPINGS, getCeremonyIdFromEvent } from "@shared/ceremonies";
 import { useBudgetCategories, useBudgetCategoryLookup } from "@/hooks/use-budget-bucket-categories";
+import { Command, CommandInput, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 // Type for line items fetched from API - uses UUID for budget bucket
 interface LineItem {
@@ -105,6 +107,8 @@ export function AddExpenseDialog({
   // Vendor selection state
   const [selectedVendorId, setSelectedVendorId] = useState<string | null>(null);
   const [customVendorName, setCustomVendorName] = useState("");
+  const [vendorSearchQuery, setVendorSearchQuery] = useState("");
+  const [vendorComboboxOpen, setVendorComboboxOpen] = useState(false);
 
   // Track the original bucket category ID from edit mode (to preserve on save)
   const [editOriginalBucketId, setEditOriginalBucketId] = useState<string | null>(null);
@@ -274,6 +278,52 @@ export function AddExpenseDialog({
     const category = budgetCategories.find(c => c.id === derivedBucketId);
     return category?.displayName || 'Other';
   }, [derivedBucketId, budgetCategories]);
+
+  // Get the budget bucket slug for filtering vendors
+  const derivedBucketSlug = useMemo(() => {
+    if (!derivedBucketId) return null;
+    const category = budgetCategories.find(c => c.id === derivedBucketId);
+    return category?.slug || null;
+  }, [derivedBucketId, budgetCategories]);
+
+  // Filter vendors based on selected budget category and search query
+  const filteredVendors = useMemo(() => {
+    if (!vendorsData) return [];
+    
+    let vendors = vendorsData;
+    
+    // Filter by category if a budget bucket is selected
+    if (derivedBucketSlug) {
+      const categoryFilteredVendors = vendors.filter(vendor => {
+        if (!vendor.categories || vendor.categories.length === 0) return false;
+        // Check if any of the vendor's categories map to this budget bucket
+        return vendor.categories.some(cat => 
+          VENDOR_CATEGORY_TO_BUCKET[cat] === derivedBucketSlug
+        );
+      });
+      // Only apply category filter if it yields results, otherwise show all vendors
+      if (categoryFilteredVendors.length > 0) {
+        vendors = categoryFilteredVendors;
+      }
+    }
+    
+    // Filter by search query
+    if (vendorSearchQuery.trim()) {
+      const query = vendorSearchQuery.toLowerCase().trim();
+      vendors = vendors.filter(vendor => 
+        vendor.name.toLowerCase().includes(query)
+      );
+    }
+    
+    return vendors;
+  }, [vendorsData, derivedBucketSlug, vendorSearchQuery]);
+
+  // Get selected vendor name for display
+  const selectedVendorName = useMemo(() => {
+    if (!selectedVendorId || !vendorsData) return null;
+    const vendor = vendorsData.find(v => v.id === selectedVendorId);
+    return vendor?.name || null;
+  }, [selectedVendorId, vendorsData]);
 
   const resetForm = () => {
     setCurrentStep(1);
@@ -739,44 +789,125 @@ export function AddExpenseDialog({
                 />
               </div>
               
-              {/* Vendor Selection */}
+              {/* Vendor Selection - Smart searchable combobox */}
               <div className="space-y-2">
                 <Label className="text-sm font-medium flex items-center gap-2">
                   <Store className="w-4 h-4" />
                   Vendor (optional)
+                  {derivedBucketLabel && filteredVendors.length > 0 && (
+                    <span className="text-xs text-muted-foreground font-normal">
+                      • Showing {derivedBucketLabel} vendors
+                    </span>
+                  )}
                 </Label>
-                <Select 
-                  value={selectedVendorId || "custom"} 
-                  onValueChange={(value) => {
-                    if (value === "custom") {
-                      setSelectedVendorId(null);
-                    } else {
-                      setSelectedVendorId(value);
-                      setCustomVendorName("");
-                    }
-                  }}
-                >
-                  <SelectTrigger data-testid="select-vendor">
-                    <SelectValue placeholder="Select a vendor or enter custom name" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="custom">
-                      <div className="flex items-center gap-2">
-                        <Plus className="w-4 h-4 text-primary" />
-                        <span>Enter vendor name manually</span>
-                      </div>
-                    </SelectItem>
-                    {(vendorsData || [])
-                      .slice(0, 30)
-                      .map((vendor) => (
-                        <SelectItem key={vendor.id} value={vendor.id}>
-                          {vendor.name}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
                 
-                {/* Custom vendor name input */}
+                <Popover open={vendorComboboxOpen} onOpenChange={setVendorComboboxOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={vendorComboboxOpen}
+                      className="w-full justify-between font-normal"
+                      data-testid="button-vendor-combobox"
+                    >
+                      {selectedVendorName ? (
+                        <span className="truncate">{selectedVendorName}</span>
+                      ) : customVendorName ? (
+                        <span className="truncate text-muted-foreground">{customVendorName} (custom)</span>
+                      ) : (
+                        <span className="text-muted-foreground">Search vendors or enter name...</span>
+                      )}
+                      <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 max-h-[300px]" align="start">
+                    <Command shouldFilter={false} className="max-h-[300px]">
+                      <CommandInput 
+                        placeholder="Search vendors..." 
+                        value={vendorSearchQuery}
+                        onValueChange={setVendorSearchQuery}
+                        data-testid="input-vendor-search"
+                      />
+                      <CommandList>
+                        <CommandEmpty>
+                          <div className="p-2 text-center">
+                            <p className="text-sm text-muted-foreground">No vendors found</p>
+                            {vendorSearchQuery && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="mt-2"
+                                onClick={() => {
+                                  setCustomVendorName(vendorSearchQuery);
+                                  setSelectedVendorId(null);
+                                  setVendorComboboxOpen(false);
+                                }}
+                                data-testid="button-use-custom-vendor"
+                              >
+                                <Plus className="w-4 h-4 mr-2" />
+                                Use "{vendorSearchQuery}" as vendor name
+                              </Button>
+                            )}
+                          </div>
+                        </CommandEmpty>
+                        <CommandGroup>
+                          {/* Option to enter custom name */}
+                          <CommandItem
+                            onSelect={() => {
+                              // Auto-fill custom vendor name with search query if present
+                              if (vendorSearchQuery.trim()) {
+                                setCustomVendorName(vendorSearchQuery.trim());
+                              }
+                              setSelectedVendorId(null);
+                              setVendorSearchQuery("");
+                              setVendorComboboxOpen(false);
+                            }}
+                            data-testid="option-enter-manually"
+                          >
+                            <Plus className="mr-2 h-4 w-4 text-primary" />
+                            <span>
+                              {vendorSearchQuery.trim() 
+                                ? `Use "${vendorSearchQuery.trim()}" as vendor name`
+                                : "Enter vendor name manually"
+                              }
+                            </span>
+                          </CommandItem>
+                          
+                          {/* Filtered vendor results */}
+                          {filteredVendors.slice(0, 15).map((vendor) => (
+                            <CommandItem
+                              key={vendor.id}
+                              value={vendor.id}
+                              onSelect={() => {
+                                setSelectedVendorId(vendor.id);
+                                setCustomVendorName("");
+                                setVendorSearchQuery("");
+                                setVendorComboboxOpen(false);
+                              }}
+                              data-testid={`option-vendor-${vendor.id}`}
+                            >
+                              <Check
+                                className={`mr-2 h-4 w-4 ${
+                                  selectedVendorId === vendor.id ? "opacity-100" : "opacity-0"
+                                }`}
+                              />
+                              <span className="truncate">{vendor.name}</span>
+                            </CommandItem>
+                          ))}
+                          
+                          {/* Show more indicator */}
+                          {filteredVendors.length > 15 && (
+                            <div className="p-2 text-center text-xs text-muted-foreground">
+                              +{filteredVendors.length - 15} more vendors (type to search)
+                            </div>
+                          )}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                
+                {/* Custom vendor name input - only shown when no vendor selected */}
                 {!selectedVendorId && (
                   <Input
                     value={customVendorName}
@@ -787,11 +918,20 @@ export function AddExpenseDialog({
                   />
                 )}
                 
-                {/* Show selected vendor */}
-                {selectedVendorId && vendorsData && (
-                  <p className="text-xs text-muted-foreground">
-                    Selected: {vendorsData.find(v => v.id === selectedVendorId)?.name}
-                  </p>
+                {/* Clear selection button when vendor is selected */}
+                {selectedVendorId && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs"
+                    onClick={() => {
+                      setSelectedVendorId(null);
+                      setVendorSearchQuery("");
+                    }}
+                    data-testid="button-clear-vendor"
+                  >
+                    Clear selection
+                  </Button>
                 )}
               </div>
               
