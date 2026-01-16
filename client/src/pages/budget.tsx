@@ -174,9 +174,44 @@ export default function Budget() {
 
   // Get line items for an event using its ceremonyTypeId (UUID)
   // The API returns data keyed by ceremonyTypeId (UUID) for direct lookup
-  const getLineItemsForEvent = (ceremonyTypeId: string | null | undefined): CeremonyBudgetCategoryItem[] | null => {
+  // If eventId is provided, also includes custom items from lineItemBudgets that don't match template categories
+  const getLineItemsForEvent = (ceremonyTypeId: string | null | undefined, eventId?: string): CeremonyBudgetCategoryItem[] | null => {
     if (!ceremonyTypeId) return null;
-    return ceremonyBreakdownMap[ceremonyTypeId] || null;
+    const templateItems = ceremonyBreakdownMap[ceremonyTypeId] || [];
+    
+    // If no eventId provided, return only template items
+    if (!eventId) {
+      return templateItems.length > 0 ? templateItems : null;
+    }
+    
+    // Get all saved line item budgets for this event
+    const eventLineItemBudgets = lineItemBudgets.filter(b => b.eventId === eventId);
+    
+    // Get template category names for comparison
+    const templateCategories = new Set(templateItems.map(item => item.category));
+    
+    // Find custom items (line items not matching any template category)
+    const customItems: CeremonyBudgetCategoryItem[] = eventLineItemBudgets
+      .filter(saved => !templateCategories.has(saved.lineItemCategory))
+      .map(saved => ({
+        id: saved.id,
+        ceremonyTypeId: ceremonyTypeId,
+        budgetBucketId: 'e321d270-09dc-4e49-9504-0edeae98a2b0', // "Other" bucket for custom items
+        category: saved.lineItemCategory,
+        lowCost: parseFloat(saved.budgetedAmount) || 0,
+        highCost: parseFloat(saved.budgetedAmount) || 0,
+        unit: 'fixed' as const,
+        hoursLow: null,
+        hoursHigh: null,
+        notes: null,
+        displayOrder: 999,
+        isActive: true,
+        isCustom: true,
+      }));
+    
+    // Combine template items with custom items
+    const allItems = [...templateItems, ...customItems];
+    return allItems.length > 0 ? allItems : null;
   };
 
   // Toggle ceremony expansion
@@ -1929,7 +1964,7 @@ export default function Budget() {
               })
               .map((ceremony) => {
                 const percentSpent = ceremony.allocated > 0 ? ceremony.percentUsed : 0;
-                const lineItems = getLineItemsForEvent(ceremony.ceremonyTypeId);
+                const lineItems = getLineItemsForEvent(ceremony.ceremonyTypeId, ceremony.eventId);
                 const isExpanded = expandedCeremonies.has(ceremony.eventId);
                 const lineItemTotal = lineItems ? getEventLineItemTotal(ceremony.eventId, lineItems) : 0;
                 const eventExpenses = expensesByEvent[ceremony.eventId]?.expenses || [];
