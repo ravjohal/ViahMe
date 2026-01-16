@@ -687,7 +687,7 @@ export const insertEventSchema = createInsertSchema(events).omit({
   ceremonyTypeId: z.string().optional(),
   type: z.enum([
     // Sikh events
-    'engagement', 'paath', 'mehndi', 'maiyan', 'sangeet', 'anand_karaj', 'reception', 'day_after',
+    'engagement', 'kurmai', 'paath', 'mehndi', 'maiyan', 'sangeet', 'anand_karaj', 'reception', 'day_after',
     'chunni_chadana', 'jaggo', 'chooda', 'bakra_party', 'baraat', 'milni',
     // Hindu events
     'haldi', 'mehendi', 'sangeet_hindu', 'pheras', 'vidaai', 'tilak', 'chunni_ceremony',
