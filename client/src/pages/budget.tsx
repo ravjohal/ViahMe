@@ -658,9 +658,25 @@ export default function Budget() {
   }, [events, ceremonyBreakdownMap, lineItemBudgets]);
 
   // Calculate category-level total using effective allocations
-  // Uses ceremony line item totals when no manual override
+  // Should match ceremony analytics total when no manual overrides
+  // Sum directly from lineItemBudgets to ensure consistency with ceremony analytics
   const totalByCategories = useMemo(() => {
     if (!expenseTotals?.bucketTotals) return 0;
+    
+    // Calculate sum of all line item budgets (matches ceremony analytics calculation)
+    const allLineItemsTotal = lineItemBudgets.reduce((sum, item) => {
+      return sum + (parseFloat(item.budgetedAmount || "0") || 0);
+    }, 0);
+    
+    // Check if any bucket has manual override
+    const hasAnyManualOverride = expenseTotals.bucketTotals.some(b => b.isManualOverride);
+    
+    if (!hasAnyManualOverride) {
+      // No manual overrides - use total from line item budgets (matches ceremony analytics)
+      return allLineItemsTotal;
+    }
+    
+    // With manual overrides, calculate per-bucket
     return expenseTotals.bucketTotals.reduce((sum, bucket) => {
       // Get line items for this bucket
       const lineItems = lineItemBreakdownByBucket[bucket.bucket] || [];
@@ -669,7 +685,7 @@ export default function Budget() {
       const effectiveAllocated = bucket.isManualOverride ? bucket.allocated : (lineItemsTotal || bucket.allocated);
       return sum + effectiveAllocated;
     }, 0);
-  }, [expenseTotals?.bucketTotals, lineItemBreakdownByBucket]);
+  }, [expenseTotals?.bucketTotals, lineItemBreakdownByBucket, lineItemBudgets]);
 
   // Aggregate ceremony line items by bucket UUID to calculate estimated budget per bucket
   // This uses the ceremony line items from all events to provide suggested bucket allocations
