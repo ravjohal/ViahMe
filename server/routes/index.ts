@@ -71,7 +71,7 @@ import { registerTimelineTemplatesRoutes } from "./timeline-templates";
 import { registerVendorTaskCategoriesRoutes } from "./vendor-task-categories";
 import { createVendorAccessPassesRouter, createVendorCollaborationViewRouter } from "./vendor-access-passes";
 import { createCeremonyExplainersRouter, createPublicCeremonyExplainersRouter } from "./ceremony-explainers";
-import weddingJourneyRouter from "./wedding-journey";
+import traditionRitualsRouter from "./tradition-rituals";
 import { registerTranslationRoutes } from "./translation";
 import { seedVendors } from "../seed-data";
 
@@ -234,8 +234,8 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   app.use("/api/ceremony-explainers", await createCeremonyExplainersRouter(storage));
   app.use("/api/public/ceremony-explainers", createPublicCeremonyExplainersRouter(storage));
 
-  // Wedding Journey - Ritual education and journey tracking
-  app.use("/api/wedding-journey", weddingJourneyRouter);
+  // Tradition Rituals - Educational content about wedding rituals (read-only)
+  app.use("/api/tradition-rituals", traditionRitualsRouter);
 
   const collectorRouter = Router();
   await registerCollectorRoutes(collectorRouter, storage);

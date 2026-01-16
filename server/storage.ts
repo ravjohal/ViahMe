@@ -249,9 +249,6 @@ import {
   traditionRituals,
   type TraditionRitual,
   type InsertTraditionRitual,
-  weddingJourneyItems,
-  type WeddingJourneyItem,
-  type InsertWeddingJourneyItem,
   budgetAllocations,
   budgetAlerts,
   dashboardWidgets,
@@ -1477,18 +1474,8 @@ export interface IStorage {
   getTraditionRitualBySlug(slug: string): Promise<TraditionRitual | undefined>;
   getTraditionRitualsByTradition(traditionId: string): Promise<TraditionRitual[]>;
   getTraditionRitualsByTraditionSlug(traditionSlug: string): Promise<TraditionRitual[]>;
+  getTraditionRitualsByCeremonyTypeId(ceremonyTypeId: string): Promise<TraditionRitual[]>;
   getAllTraditionRituals(): Promise<TraditionRitual[]>;
-
-  // Wedding Journey Items - Couple's specific journey tracking
-  getWeddingJourneyItem(id: string): Promise<WeddingJourneyItem | undefined>;
-  getWeddingJourneyItemsByWedding(weddingId: string): Promise<WeddingJourneyItem[]>;
-  getWeddingJourneyItemByEventId(eventId: string): Promise<WeddingJourneyItem | undefined>;
-  getWeddingJourneyItemsWithRituals(weddingId: string): Promise<Array<WeddingJourneyItem & { ritual: TraditionRitual }>>;
-  createWeddingJourneyItem(item: InsertWeddingJourneyItem): Promise<WeddingJourneyItem>;
-  updateWeddingJourneyItem(id: string, item: Partial<InsertWeddingJourneyItem>): Promise<WeddingJourneyItem | undefined>;
-  deleteWeddingJourneyItem(id: string): Promise<boolean>;
-  initializeWeddingJourney(weddingId: string, traditionId: string): Promise<WeddingJourneyItem[]>;
-  syncJourneyWithEvents(weddingId: string): Promise<{ linked: number; created: number }>;
 }
 
 // Guest Planning Snapshot - comprehensive view of all guests and per-event costs
@@ -13392,108 +13379,14 @@ export class DBStorage implements IStorage {
     return rituals.filter(r => !ceremonySlugs.has(r.slug));
   }
 
-  // Wedding Journey Items - Couple's specific journey tracking
-  async getWeddingJourneyItem(id: string): Promise<WeddingJourneyItem | undefined> {
-    const result = await this.db.select().from(weddingJourneyItems).where(eq(weddingJourneyItems.id, id));
-    return result[0];
-  }
-
-  async getWeddingJourneyItemsByWedding(weddingId: string): Promise<WeddingJourneyItem[]> {
+  async getTraditionRitualsByCeremonyTypeId(ceremonyTypeId: string): Promise<TraditionRitual[]> {
     return await this.db.select()
-      .from(weddingJourneyItems)
-      .where(eq(weddingJourneyItems.weddingId, weddingId));
-  }
-
-  async createWeddingJourneyItem(item: InsertWeddingJourneyItem): Promise<WeddingJourneyItem> {
-    const result = await this.db.insert(weddingJourneyItems)
-      .values(item)
-      .returning();
-    return result[0];
-  }
-
-  async updateWeddingJourneyItem(id: string, item: Partial<InsertWeddingJourneyItem>): Promise<WeddingJourneyItem | undefined> {
-    const result = await this.db.update(weddingJourneyItems)
-      .set({ ...item, updatedAt: new Date() })
-      .where(eq(weddingJourneyItems.id, id))
-      .returning();
-    return result[0];
-  }
-
-  async deleteWeddingJourneyItem(id: string): Promise<boolean> {
-    await this.db.delete(weddingJourneyItems).where(eq(weddingJourneyItems.id, id));
-    return true;
-  }
-
-  async initializeWeddingJourney(weddingId: string, traditionId: string): Promise<WeddingJourneyItem[]> {
-    // Get all rituals for this tradition
-    const rituals = await this.getTraditionRitualsByTradition(traditionId);
-    
-    // Create journey items for each ritual
-    const createdItems: WeddingJourneyItem[] = [];
-    for (const ritual of rituals) {
-      const item = await this.createWeddingJourneyItem({
-        weddingId,
-        ritualId: ritual.id,
-        status: ritual.isRequired ? 'included' : 'considering',
-      });
-      createdItems.push(item);
-    }
-    return createdItems;
-  }
-
-  async getWeddingJourneyItemByEventId(eventId: string): Promise<WeddingJourneyItem | undefined> {
-    const result = await this.db.select()
-      .from(weddingJourneyItems)
-      .where(eq(weddingJourneyItems.eventId, eventId));
-    return result[0];
-  }
-
-  async getWeddingJourneyItemsWithRituals(weddingId: string): Promise<Array<WeddingJourneyItem & { ritual: TraditionRitual }>> {
-    const result = await this.db.select({
-      journeyItem: weddingJourneyItems,
-      ritual: traditionRituals,
-    })
-      .from(weddingJourneyItems)
-      .innerJoin(traditionRituals, eq(weddingJourneyItems.ritualId, traditionRituals.id))
-      .where(eq(weddingJourneyItems.weddingId, weddingId))
+      .from(traditionRituals)
+      .where(and(
+        eq(traditionRituals.ceremonyTypeId, ceremonyTypeId),
+        eq(traditionRituals.isActive, true)
+      ))
       .orderBy(traditionRituals.sortOrder);
-    
-    return result.map(r => ({
-      ...r.journeyItem,
-      ritual: r.ritual,
-    }));
-  }
-
-  async syncJourneyWithEvents(weddingId: string): Promise<{ linked: number; created: number }> {
-    // Get all events for this wedding
-    const weddingEvents = await this.getEventsByWedding(weddingId);
-    
-    // Get all journey items for this wedding with their rituals
-    const journeyItems = await this.getWeddingJourneyItemsWithRituals(weddingId);
-    
-    let linked = 0;
-    let created = 0;
-    
-    for (const event of weddingEvents) {
-      if (!event.ceremonyTypeId) continue;
-      
-      // Find journey item whose ritual matches this event's ceremonyType
-      const matchingJourneyItem = journeyItems.find(
-        ji => ji.ritual.ceremonyTypeId === event.ceremonyTypeId && !ji.eventId
-      );
-      
-      if (matchingJourneyItem) {
-        // Link the journey item to this event and mark as included
-        await this.updateWeddingJourneyItem(matchingJourneyItem.id, {
-          eventId: event.id,
-          status: 'included',
-          plannedDate: event.date || undefined,
-        });
-        linked++;
-      }
-    }
-    
-    return { linked, created };
   }
 }
 

@@ -3,7 +3,7 @@ import {
   MessageSquare, Music, Image, UserCircle, ShoppingBag, 
   Package, BookOpen, Radio, UsersRound, Globe, Bot, 
   Calendar, Wallet, BarChart3, Briefcase, Star, Send, Gamepad2,
-  Mic, Shield, Sparkles, Flower2, AlarmClock, Palmtree, Gift, Compass,
+  Mic, Shield, Sparkles, Flower2, AlarmClock, Palmtree, Gift,
   type LucideIcon
 } from "lucide-react";
 import type { PermissionCategory } from "@shared/schema";
@@ -77,7 +77,6 @@ export const COUPLE_NAV_SECTIONS: NavSection[] = [
       { path: "/decor", label: "Decor Tracker", icon: Flower2, permission: "shopping", description: "Track decor sourcing" },
       { path: "/shopping", label: "Shopping List", icon: Package, permission: "shopping", description: "Shopping list" },
       { path: "/cultural-info", label: "Cultural Info", icon: BookOpen, description: "Learn traditions" },
-      { path: "/wedding-journey", label: "Your Journey", icon: Compass, permission: "planning", description: "Explore your rituals" },
     ],
   },
 ];

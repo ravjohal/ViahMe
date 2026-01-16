@@ -18,15 +18,14 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Calendar, Clock, MapPin, Users, DollarSign, Tag, CheckCircle2, Plus, Save, Video, Heart, Sparkles, BookOpen, ShoppingBag, Camera, Music } from "lucide-react";
 import { SideBadge, SIDE_COLORS } from "@/components/side-filter";
 import { format } from "date-fns";
-import type { Event, BudgetCategory, EventCostItem, Task, InsertTask, TraditionRitual, WeddingJourneyItem } from "@shared/schema";
+import type { Event, BudgetCategory, EventCostItem, Task, InsertTask, TraditionRitual } from "@shared/schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
-interface EventWithRitualResponse {
+interface EventWithRitualsResponse {
   event: Event;
-  journeyItem: WeddingJourneyItem | null;
-  ritual: TraditionRitual | null;
+  rituals: TraditionRitual[];
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -110,13 +109,14 @@ export function EventDetailModal({
 }: EventDetailModalProps) {
   const { toast } = useToast();
   
-  // Fetch ritual details for this event
-  const { data: ritualData } = useQuery<EventWithRitualResponse>({
-    queryKey: [`/api/events/by-id/${event?.id}/with-ritual`],
+  // Fetch rituals linked to this event's ceremony type
+  const { data: ritualData } = useQuery<EventWithRitualsResponse>({
+    queryKey: [`/api/events/by-id/${event?.id}/with-rituals`],
     enabled: !!event?.id && open,
   });
   
-  const ritual = ritualData?.ritual;
+  const rituals = ritualData?.rituals || [];
+  const ritual = rituals[0]; // Primary ritual for display (if any)
   
   // Event form state
   const [eventName, setEventName] = useState("");

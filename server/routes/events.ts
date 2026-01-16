@@ -1,6 +1,6 @@
 import { Router } from "express";
 import type { IStorage } from "../storage";
-import { insertEventSchema, insertEventCostItemSchema } from "@shared/schema";
+import { insertEventSchema, insertEventCostItemSchema, type TraditionRitual } from "@shared/schema";
 
 export async function registerEventRoutes(router: Router, storage: IStorage) {
   // ============================================================================
@@ -28,24 +28,23 @@ export async function registerEventRoutes(router: Router, storage: IStorage) {
     }
   });
 
-  router.get("/by-id/:id/with-ritual", async (req, res) => {
+  router.get("/by-id/:id/with-rituals", async (req, res) => {
     try {
       const event = await storage.getEvent(req.params.id);
       if (!event) {
         return res.status(404).json({ error: "Event not found" });
       }
       
-      const journeyItem = await storage.getWeddingJourneyItemByEventId(req.params.id);
-      let ritual = null;
-      
-      if (journeyItem) {
-        ritual = await storage.getTraditionRitual(journeyItem.ritualId);
+      // Get rituals linked to this event's ceremony type
+      let rituals: TraditionRitual[] = [];
+      if (event.ceremonyTypeId) {
+        rituals = await storage.getTraditionRitualsByCeremonyTypeId(event.ceremonyTypeId);
       }
       
-      res.json({ event, journeyItem, ritual });
+      res.json({ event, rituals });
     } catch (error) {
-      console.error("Error fetching event with ritual:", error);
-      res.status(500).json({ error: "Failed to fetch event with ritual" });
+      console.error("Error fetching event with rituals:", error);
+      res.status(500).json({ error: "Failed to fetch event with rituals" });
     }
   });
 

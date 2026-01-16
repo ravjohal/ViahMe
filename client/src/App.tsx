@@ -79,7 +79,6 @@ import VendorAccessPasses from "@/pages/vendor-access-passes";
 import VendorTimeline from "@/pages/vendor-timeline";
 import BudgetEstimatorPage from "@/pages/budget-estimator";
 import BudgetDistribution from "@/pages/budget-distribution";
-import WeddingJourneyPage from "@/pages/wedding-journey";
 import { VendorRoute } from "@/components/VendorRoute";
 import { CoupleRoute } from "@/components/CoupleRoute";
 import { CouplePlannerChatbot } from "@/components/CouplePlannerChatbot";
@@ -204,16 +203,6 @@ function Router() {
       <Route path="/favours">
         <ProtectedRoute requiredPermission="planning">
           <FavoursPage />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/journey">
-        <ProtectedRoute requiredPermission="planning">
-          <WeddingJourneyPage />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/wedding-journey">
-        <ProtectedRoute requiredPermission="planning">
-          <WeddingJourneyPage />
         </ProtectedRoute>
       </Route>
       <Route path="/budget">
