@@ -214,6 +214,20 @@ export default function TasksPage() {
   const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set());
   const [newComment, setNewComment] = useState<{ [taskId: string]: string }>({});
   const [expandedPeriods, setExpandedPeriods] = useState<Set<string>>(new Set(TIMELINE_PERIODS.map(p => p.key)));
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  
+  const toggleCategoryExpanded = (periodKey: string, category: string) => {
+    const key = `${periodKey}:${category}`;
+    setExpandedCategories(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  };
   
   // Load dismissed recommendations from localStorage for persistence across sessions
   const [dismissedRecommendations, setDismissedRecommendations] = useState<Set<string>>(() => {
@@ -1102,16 +1116,41 @@ export default function TasksPage() {
                           
                           return Object.entries(categoryGroups)
                             .sort((a, b) => b[1].length - a[1].length)
-                            .map(([category, categoryTasks]) => (
-                              <div key={category} className="mb-3">
-                                <div className="flex items-center gap-2 mb-2 py-1 px-2 rounded-md bg-muted/50">
-                                  <FolderOpen className="w-3.5 h-3.5 text-muted-foreground" />
-                                  <span className="text-sm font-medium">{category}</span>
-                                  <Badge variant="secondary" className="text-xs h-5">
-                                    {categoryTasks.length}
-                                  </Badge>
-                                </div>
-                                <div className="space-y-2 pl-4">
+                            .map(([category, categoryTasks]) => {
+                              const categoryKey = `${period.key}:${category}`;
+                              const isCategoryExpanded = expandedCategories.has(categoryKey);
+                              const categoryCompletedCount = categoryTasks.filter(t => t.completed).length;
+                              
+                              return (
+                              <Collapsible 
+                                key={category} 
+                                open={isCategoryExpanded} 
+                                onOpenChange={() => toggleCategoryExpanded(period.key, category)}
+                                className="mb-3"
+                              >
+                                <CollapsibleTrigger asChild>
+                                  <div className="flex items-center justify-between gap-2 py-1.5 px-2 rounded-md bg-muted/50 cursor-pointer hover-elevate">
+                                    <div className="flex items-center gap-2">
+                                      {isCategoryExpanded ? (
+                                        <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" />
+                                      ) : (
+                                        <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                                      )}
+                                      <FolderOpen className="w-3.5 h-3.5 text-muted-foreground" />
+                                      <span className="text-sm font-medium">{category}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs text-muted-foreground">
+                                        {categoryCompletedCount}/{categoryTasks.length}
+                                      </span>
+                                      <Badge variant="secondary" className="text-xs h-5">
+                                        {categoryTasks.length}
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                </CollapsibleTrigger>
+                                <CollapsibleContent>
+                                <div className="space-y-2 pl-4 mt-2">
                                   {categoryTasks.map((task) => {
                                     const isOverdue = task.dueDate && !task.completed && new Date(task.dueDate) < new Date();
                                     const relatedEvent = task.eventId ? events.find((e) => e.id === task.eventId) : null;
@@ -1209,8 +1248,10 @@ export default function TasksPage() {
                                     );
                                   })}
                                 </div>
-                              </div>
-                            ));
+                                </CollapsibleContent>
+                              </Collapsible>
+                            );
+                            });
                         })()
                       ) : (
                         // Flat list (no category grouping)
