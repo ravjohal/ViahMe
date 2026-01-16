@@ -909,12 +909,30 @@ export default function Expenses() {
               if (viewMode === "byCeremony") {
                 const expensesByCeremony = new Map<string, ExpenseWithSplits[]>();
                 const unassignedExpenses: ExpenseWithSplits[] = [];
+                const eventIds = new Set(events.map((e) => e.id));
                 
                 filteredExpenses.forEach((expense) => {
-                  if (expense.ceremonyId) {
-                    const existing = expensesByCeremony.get(expense.ceremonyId) || [];
-                    expensesByCeremony.set(expense.ceremonyId, [...existing, expense]);
-                  } else {
+                  let assigned = false;
+                  
+                  if (expense.eventAllocations && expense.eventAllocations.length > 0) {
+                    expense.eventAllocations.forEach((alloc) => {
+                      if (eventIds.has(alloc.eventId)) {
+                        const existing = expensesByCeremony.get(alloc.eventId) || [];
+                        if (!existing.some((e) => e.id === expense.id)) {
+                          expensesByCeremony.set(alloc.eventId, [...existing, expense]);
+                        }
+                        assigned = true;
+                      }
+                    });
+                  } else if (expense.ceremonyId) {
+                    if (eventIds.has(expense.ceremonyId)) {
+                      const existing = expensesByCeremony.get(expense.ceremonyId) || [];
+                      expensesByCeremony.set(expense.ceremonyId, [...existing, expense]);
+                      assigned = true;
+                    }
+                  }
+                  
+                  if (!assigned) {
                     unassignedExpenses.push(expense);
                   }
                 });
