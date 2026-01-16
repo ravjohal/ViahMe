@@ -1903,33 +1903,42 @@ export default function Budget() {
 
         {/* Ceremony Planning Cards - Main Section - conditionally rendered based on showCeremonyBudgets preference */}
         {wedding?.showCeremonyBudgets !== false && (
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 shrink-0 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center">
-                <Calendar className="w-5 h-5 text-orange-600" />
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold">Your Ceremonies</h2>
-                <p className="text-sm text-muted-foreground">
-                  Plan your budget ceremony by ceremony
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              {sideFilter !== 'all' && (
-                <Badge variant="outline" className="text-xs">
-                  Showing: {sideFilter === 'bride' ? (wedding?.partner1Name || 'Bride') : sideFilter === 'groom' ? (wedding?.partner2Name || 'Groom') : 'Shared'}
-                </Badge>
-              )}
-              <div className="text-right">
-                <p className="font-semibold text-lg">
-                  ${(ceremonyAnalytics?.overview?.totalCeremonyAllocated || 0).toLocaleString()}
-                </p>
-                <p className="text-xs text-muted-foreground">Total ceremony budget</p>
-              </div>
-            </div>
-          </div>
+        <Card className="p-4 mb-6">
+          <Collapsible open={showCeremonyBudgets} onOpenChange={setShowCeremonyBudgets}>
+            <CollapsibleTrigger asChild>
+              <button className="flex items-center justify-between w-full" data-testid="toggle-ceremonies">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 shrink-0 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center">
+                    <Calendar className="w-5 h-5 text-orange-600" />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="font-semibold">Budget by Ceremony</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {ceremonyAnalytics?.ceremonyBreakdown?.length || 0} ceremonies • Plan your budget ceremony by ceremony
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  {sideFilter !== 'all' && (
+                    <Badge variant="outline" className="text-xs">
+                      Showing: {sideFilter === 'bride' ? (wedding?.partner1Name || 'Bride') : sideFilter === 'groom' ? (wedding?.partner2Name || 'Groom') : 'Shared'}
+                    </Badge>
+                  )}
+                  <div className="text-right mr-2">
+                    <p className="font-semibold text-lg">
+                      ${(ceremonyAnalytics?.overview?.totalCeremonyAllocated || 0).toLocaleString()}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Total ceremony budget</p>
+                  </div>
+                  {showCeremonyBudgets ? (
+                    <ChevronDown className="w-5 h-5 text-muted-foreground shrink-0" />
+                  ) : (
+                    <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+                  )}
+                </div>
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-4">
           {/* Ceremony Planning Cards */}
           <div className="space-y-4">
             {(ceremonyAnalytics?.ceremonyBreakdown || [])
@@ -2348,7 +2357,9 @@ export default function Budget() {
               </Card>
             )}
           </div>
-        </div>
+            </CollapsibleContent>
+          </Collapsible>
+        </Card>
         )}
 
         {/* Unassigned Expenses Card - also conditionally rendered based on showCeremonyBudgets preference */}
