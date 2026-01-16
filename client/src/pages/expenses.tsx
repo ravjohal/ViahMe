@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Trash2, Pencil, DollarSign, ArrowRightLeft, Check, Receipt, Share2, Copy, ChevronDown, ChevronRight, List, LayoutGrid } from "lucide-react";
+import { Plus, Trash2, Pencil, DollarSign, ArrowRightLeft, Check, Receipt, Share2, Copy, ChevronDown, ChevronRight, List, LayoutGrid, Calendar } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import type { Expense, ExpenseSplit, Event, Wedding, BudgetCategory, ExpenseEventAllocation } from "@shared/schema";
 import { EditExpenseDialog, type ExpenseWithDetails } from "@/components/edit-expense-dialog";
