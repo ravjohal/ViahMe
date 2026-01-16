@@ -46,8 +46,8 @@ const FEATURES = [
   },
   {
     icon: DollarSign,
-    title: "Smart Budget Intelligence",
-    description: "Get culturally-aware budget recommendations based on real spending data and your chosen tradition.",
+    title: "Budget by Ceremony",
+    description: "Track expenses for each ceremony separately—Sangeet, Mehndi, Anand Karaj, Reception—with intelligent cost breakdowns. No spreadsheets needed.",
   },
   {
     icon: MessageSquare,
@@ -73,8 +73,8 @@ const BENEFITS = [
     icon: Star,
   },
   {
-    title: "All-in-One Platform",
-    description: "Guest management, budget tracking, vendor contracts, playlists, and website builder—everything you need.",
+    title: "Ditch the Spreadsheets",
+    description: "Guest lists, budgets, expenses, vendor contracts, and RSVPs—all managed in one beautiful platform. No more juggling Google Sheets.",
     icon: CheckCircle,
   },
 ];
