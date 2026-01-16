@@ -626,7 +626,7 @@ export default function Landing() {
                   className="h-10 sm:h-12 object-contain" 
                 />
                 <p className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
-                  © 2024 Viah.me. All rights reserved.
+                  © 2026 Viah.me is a brand operated by SSJ 8-11 LLC. All rights reserved.
                 </p>
               </div>
               <div className="flex gap-4 sm:gap-6 text-xs sm:text-sm">

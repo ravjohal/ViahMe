@@ -186,7 +186,7 @@ export default function PrivacyPolicy() {
       <footer className="border-t bg-muted/30 py-8">
         <div className="container mx-auto px-4 sm:px-6 text-center">
           <p className="text-sm text-muted-foreground">
-            © 2024 Viah.me. All rights reserved.
+            © 2026 Viah.me is a brand operated by SSJ 8-11 LLC. All rights reserved.
           </p>
         </div>
       </footer>
