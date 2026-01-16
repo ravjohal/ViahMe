@@ -33,8 +33,10 @@ export const COUPLE_NAV_SECTIONS: NavSection[] = [
       { path: "/timeline", label: "Timeline", icon: Clock, permission: "timeline", priority: 3, description: "Your schedule" },
       { path: "/vendors", label: "Vendors", icon: UserCircle, permission: "vendors", priority: 4, description: "Find services" },
       { path: "/guests", label: "Guests", icon: Users, permission: "guests", priority: 5, description: "Manage guest list" },
-      { path: "/website-builder", label: "Wedding Website", icon: Globe, permission: "website", priority: 6, description: "Your wedding site" },
-      { path: "/tasks", label: "Tasks", icon: CheckSquare, permission: "tasks", priority: 7, description: "Things to do" },
+      { path: "/tasks", label: "Tasks", icon: CheckSquare, permission: "tasks", priority: 6, description: "Things to do" },
+      { path: "/website-builder", label: "Wedding Website", icon: Globe, permission: "website", priority: 7, description: "Your wedding site" },
+      { path: "/expenses", label: "Expenses", icon: Wallet, permission: "budget", description: "Split costs" },
+      { path: "/messages", label: "Messages", icon: MessageSquare, description: "Chat with vendors" },
     ],
   },
   {
@@ -43,7 +45,6 @@ export const COUPLE_NAV_SECTIONS: NavSection[] = [
     items: [
       { path: "/ai-planner", label: "AI Planner", icon: Bot, permission: "ai_planner", description: "Smart planning assistant" },
       { path: "/speech-generator", label: "Speech Writer", icon: Mic, permission: "ai_planner", description: "AI-powered speeches" },
-      { path: "/expenses", label: "Expenses", icon: Wallet, permission: "budget", description: "Split costs" },
       { path: "/contracts", label: "Contracts", icon: FileText, permission: "contracts", description: "Vendor agreements" },
       { path: "/collaborators", label: "Team", icon: UsersRound, permission: "collaborators", description: "Family helpers" },
     ],
@@ -58,9 +59,8 @@ export const COUPLE_NAV_SECTIONS: NavSection[] = [
   },
   {
     id: "communication",
-    label: "Messages & Invites",
+    label: "Invitations",
     items: [
-      { path: "/messages", label: "Messages", icon: MessageSquare, description: "Chat with vendors" },
       { path: "/communication-hub", label: "Send Invites", icon: Send, permission: "guests", description: "Send invitations & track RSVPs" },
     ],
   },
