@@ -300,8 +300,16 @@ export default function BudgetDistribution() {
         budgetDistributionStep: null 
       });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/weddings"] });
+    onSuccess: async () => {
+      // Invalidate and refetch all budget-related queries before navigating
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["/api/weddings"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/budget/ceremony-analytics", wedding?.id] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/budget/line-items", wedding?.id] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/budget/allocations", wedding?.id] }),
+      ]);
+      // Pre-fetch ceremony analytics so it's ready when budget page loads
+      await queryClient.refetchQueries({ queryKey: ["/api/budget/ceremony-analytics", wedding?.id] });
       toast({ title: "Budget confirmed!", description: "Your budget allocations have been saved." });
       setLocation("/budget");
     },
