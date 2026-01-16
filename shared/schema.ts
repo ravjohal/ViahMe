@@ -1131,7 +1131,7 @@ export const insertExpenseSchema = createInsertSchema(expenses).omit({
   amountPaid: z.string().regex(/^\d+(\.\d{1,2})?$/, "Amount paid must be a valid decimal").optional(),
   status: z.enum(['estimated', 'booked', 'paid']).optional(),
   expenseDate: z.string().optional().transform(val => val ? new Date(val) : new Date()),
-  paymentDueDate: z.string().optional().transform(val => val ? new Date(val) : undefined),
+  paymentDueDate: z.string().nullable().optional().transform(val => val ? new Date(val) : undefined),
 });
 
 export type InsertExpense = z.infer<typeof insertExpenseSchema>;
