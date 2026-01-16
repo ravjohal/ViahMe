@@ -3,10 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import type { TraditionRitual } from "@shared/schema";
 
@@ -33,25 +33,26 @@ export function RitualInfoTooltip({
   }
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
+    <Popover>
+      <PopoverTrigger asChild>
         {children || (
           <Button 
             type="button" 
             size="icon"
             variant="ghost"
-            className="h-6 w-6"
+            className="h-8 w-8 shrink-0"
             data-testid={testId || "ritual-info-trigger"}
             onClick={(e) => e.stopPropagation()}
           >
             <Info className="w-4 h-4" />
           </Button>
         )}
-      </TooltipTrigger>
-      <TooltipContent 
+      </PopoverTrigger>
+      <PopoverContent 
         side={side} 
         className="max-w-sm p-4 space-y-3"
         data-testid="ritual-info-content"
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="text-sm font-medium text-foreground mb-2">
           Associated Rituals
@@ -61,26 +62,26 @@ export function RitualInfoTooltip({
             <div key={ritual.id} className="space-y-1">
               <div className="flex items-center gap-2">
                 <span className="font-medium text-sm">{ritual.name}</span>
-                {ritual.hindiName && (
+                {ritual.nameInLanguage && (
                   <span className="text-xs text-muted-foreground">
-                    ({ritual.hindiName})
+                    ({ritual.nameInLanguage})
                   </span>
                 )}
               </div>
-              {ritual.description && (
+              {ritual.shortDescription && (
                 <p className="text-xs text-muted-foreground line-clamp-2">
-                  {ritual.description}
+                  {ritual.shortDescription}
                 </p>
               )}
               <div className="flex gap-1 flex-wrap">
-                {ritual.duration && (
+                {ritual.estimatedDuration && (
                   <Badge variant="outline" className="text-xs">
-                    {ritual.duration}
+                    {ritual.estimatedDuration}
                   </Badge>
                 )}
-                {ritual.significance && (
+                {ritual.isEssential && (
                   <Badge variant="secondary" className="text-xs">
-                    {ritual.significance}
+                    Essential
                   </Badge>
                 )}
               </div>
@@ -92,8 +93,8 @@ export function RitualInfoTooltip({
             </p>
           )}
         </div>
-      </TooltipContent>
-    </Tooltip>
+      </PopoverContent>
+    </Popover>
   );
 }
 
