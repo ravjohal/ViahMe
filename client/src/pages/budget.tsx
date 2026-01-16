@@ -608,11 +608,19 @@ export default function Budget() {
   // Calculate ceremony-level total (from ceremony analytics)
   const totalByCeremonies = ceremonyAnalytics?.overview?.totalCeremonyAllocated || 0;
 
-  // Calculate category-level total from bucket allocations (expenseTotals.bucketTotals)
+  // Calculate category-level total using effective allocations
+  // Uses ceremony line item totals when no manual override
   const totalByCategories = useMemo(() => {
     if (!expenseTotals?.bucketTotals) return 0;
-    return expenseTotals.bucketTotals.reduce((sum, bucket) => sum + bucket.allocated, 0);
-  }, [expenseTotals?.bucketTotals]);
+    return expenseTotals.bucketTotals.reduce((sum, bucket) => {
+      // Get line items for this bucket
+      const lineItems = lineItemBreakdownByBucket[bucket.bucket] || [];
+      const lineItemsTotal = lineItems.reduce((s, item) => s + item.budgetedAmount, 0);
+      // Use manual override if set, otherwise use ceremony line items total
+      const effectiveAllocated = bucket.isManualOverride ? bucket.allocated : (lineItemsTotal || bucket.allocated);
+      return sum + effectiveAllocated;
+    }, 0);
+  }, [expenseTotals?.bucketTotals, lineItemBreakdownByBucket]);
 
   // Aggregate ceremony line items by bucket UUID to calculate estimated budget per bucket
   // This uses the ceremony line items from all events to provide suggested bucket allocations
@@ -1747,7 +1755,7 @@ export default function Budget() {
                 </div>
                 <div className="text-right mr-2">
                   <p className="font-semibold text-lg">
-                    ${(expenseTotals?.bucketTotals || []).reduce((sum, b) => sum + b.allocated, 0).toLocaleString()}
+                    ${totalByCategories.toLocaleString()}
                   </p>
                   <p className="text-xs text-muted-foreground">Total allocated</p>
                 </div>
@@ -1764,12 +1772,16 @@ export default function Budget() {
               </p>
               <div className="space-y-3">
                 {(expenseTotals?.bucketTotals || []).map((bucketTotal) => {
-                  const percentSpent = bucketTotal.allocated > 0 ? (bucketTotal.spent / bucketTotal.allocated) * 100 : 0;
                   const lineItems = lineItemBreakdownByBucket[bucketTotal.bucket] || [];
                   // Calculate actual budget total from line items for this bucket
                   const lineItemsTotal = lineItems.reduce((sum, item) => sum + item.budgetedAmount, 0);
                   const hasLineItems = lineItems.length > 0;
                   const isExpanded = expandedBudgetCategories.has(bucketTotal.bucket);
+                  
+                  // Use ceremony line items total as effective budget when no manual override
+                  const effectiveAllocated = bucketTotal.isManualOverride ? bucketTotal.allocated : (lineItemsTotal || bucketTotal.allocated);
+                  const effectiveRemaining = effectiveAllocated - bucketTotal.spent;
+                  const percentSpent = effectiveAllocated > 0 ? (bucketTotal.spent / effectiveAllocated) * 100 : 0;
 
                   return (
                     <div 
@@ -1789,16 +1801,15 @@ export default function Budget() {
                               )}
                             </div>
                             <p className="text-sm text-muted-foreground">
-                              ${bucketTotal.spent.toLocaleString()} of ${bucketTotal.allocated.toLocaleString()} spent
+                              ${bucketTotal.spent.toLocaleString()} of ${effectiveAllocated.toLocaleString()} spent
                             </p>
-                            {hasLineItems && (
+                            {hasLineItems && !bucketTotal.isManualOverride && (
                               <button
                                 onClick={() => toggleBudgetCategoryExpansion(bucketTotal.bucket)}
                                 className="text-xs text-muted-foreground mt-1 hover:text-foreground flex items-center gap-1"
                                 data-testid={`toggle-breakdown-${bucketTotal.bucket}`}
                               >
-                                From ceremonies: ${lineItemsTotal.toLocaleString()}
-                                <span className="ml-1">({lineItems.length} items)</span>
+                                From {lineItems.length} ceremony items
                                 {isExpanded ? (
                                   <ChevronDown className="w-3 h-3 ml-1" />
                                 ) : (
@@ -1808,20 +1819,6 @@ export default function Budget() {
                             )}
                           </div>
                           <div className="flex items-center gap-1">
-                            {hasLineItems && lineItemsTotal > 0 && bucketTotal.allocated === 0 && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-8 text-xs"
-                                onClick={() => {
-                                  setEditingBucket(bucketTotal.bucket as BudgetBucket);
-                                  setEditingBucketAmount(lineItemsTotal.toString());
-                                }}
-                                data-testid={`button-use-budget-${bucketTotal.bucket}`}
-                              >
-                                Use Ceremony Budget
-                              </Button>
-                            )}
                             <Button
                               variant="ghost"
                               size="icon"
@@ -1835,8 +1832,8 @@ export default function Budget() {
                         <Progress value={Math.min(percentSpent, 100)} className="h-2" />
                         <div className="flex justify-between mt-1 text-xs text-muted-foreground">
                           <span>{percentSpent.toFixed(0)}% spent</span>
-                          <span className={bucketTotal.remaining < 0 ? "text-destructive" : "text-emerald-600"}>
-                            ${bucketTotal.remaining.toLocaleString()} remaining
+                          <span className={effectiveRemaining < 0 ? "text-destructive" : "text-emerald-600"}>
+                            ${effectiveRemaining.toLocaleString()} remaining
                           </span>
                         </div>
                       </div>
