@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, ArrowRight, Check, Calendar, DollarSign, User, FileText, Upload, Tag, Loader2 } from "lucide-react";
-import { type BudgetBucket, type Event } from "@shared/schema";
+import { type BudgetBucket, type Event, type Expense, type ExpenseSplit } from "@shared/schema";
 import { CEREMONY_MAPPINGS, getCeremonyIdFromEvent } from "@shared/ceremonies";
 import { useBudgetCategories, useBudgetCategoryLookup } from "@/hooks/use-budget-bucket-categories";
 
@@ -25,6 +25,10 @@ interface LineItem {
   notes?: string;
 }
 
+export interface ExpenseWithSplits extends Expense {
+  splits?: ExpenseSplit[];
+}
+
 interface AddExpenseDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -32,6 +36,10 @@ interface AddExpenseDialogProps {
   events: Event[];
   defaultEventId?: string;
   weddingTradition?: string;
+  // Edit mode props
+  expense?: ExpenseWithSplits | null;
+  onUpdate?: (data: any) => void;
+  isPendingUpdate?: boolean;
 }
 
 type PayerType = "me" | "partner" | "me_partner" | "bride_family" | "groom_family";
@@ -58,10 +66,15 @@ export function AddExpenseDialog({
   weddingId, 
   events,
   defaultEventId,
-  weddingTradition = "sikh"
+  weddingTradition = "sikh",
+  expense,
+  onUpdate,
+  isPendingUpdate = false,
 }: AddExpenseDialogProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  
+  const isEditMode = !!expense;
   
   // Get budget categories from database
   const { data: budgetCategories = [] } = useBudgetCategories();
@@ -80,12 +93,76 @@ export function AddExpenseDialog({
   const [notes, setNotes] = useState("");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [existingReceiptUrl, setExistingReceiptUrl] = useState<string | null>(null);
 
+  // Track the original bucket category ID from edit mode (to preserve on save)
+  const [editOriginalBucketId, setEditOriginalBucketId] = useState<string | null>(null);
+
+  // Initialize state from expense when in edit mode
   useEffect(() => {
-    if (open && defaultEventId) {
+    if (open && expense) {
+      setSelectedCeremonyId(expense.ceremonyId || null);
+      setExpenseName(expense.expenseName || "");
+      setAmount(expense.amount?.toString() || "");
+      setNotes(expense.notes || "");
+      setExistingReceiptUrl(expense.receiptUrl || null);
+      
+      const dateValue = expense.expenseDate 
+        ? new Date(expense.expenseDate).toISOString().split('T')[0]
+        : new Date().toISOString().split('T')[0];
+      setExpenseDate(dateValue);
+      
+      // Set payment due date from expense if available
+      if (expense.paymentDueDate) {
+        const dueDateValue = new Date(expense.paymentDueDate).toISOString().split('T')[0];
+        setPaymentDueDate(dueDateValue);
+      } else {
+        setPaymentDueDate("");
+      }
+      
+      // Set payment status based on amountPaid vs amount
+      const expenseAmount = parseFloat(expense.amount || "0");
+      const amountPaidValue = parseFloat(expense.amountPaid || "0");
+      if (amountPaidValue >= expenseAmount && expenseAmount > 0) {
+        setPaymentStatus("paid");
+        setDepositAmount("");
+      } else if (amountPaidValue > 0) {
+        setPaymentStatus("deposit_paid");
+        setDepositAmount(amountPaidValue.toString());
+      } else {
+        setPaymentStatus("estimated");
+        setDepositAmount("");
+      }
+      
+      // Set payer from expense
+      if (expense.paidById === "me") {
+        setPayer("me");
+      } else if (expense.paidById === "partner") {
+        setPayer("partner");
+      } else if (expense.paidById === "me-partner" || expense.paidById === "bride") {
+        setPayer("me_partner");
+      } else if (expense.paidById === "bride-parents") {
+        setPayer("bride_family");
+      } else if (expense.paidById === "groom-parents") {
+        setPayer("groom_family");
+      } else {
+        setPayer("me_partner");
+      }
+      
+      // Preserve original bucket category ID for edit mode
+      setEditOriginalBucketId(expense.bucketCategoryId || null);
+      
+      // Set line item from bucket category display name
+      if (expense.bucketCategoryId) {
+        const category = budgetCategories.find(c => c.id === expense.bucketCategoryId);
+        if (category) {
+          setSelectedLineItem(category.displayName);
+        }
+      }
+    } else if (open && defaultEventId) {
       setSelectedCeremonyId(defaultEventId);
     }
-  }, [open, defaultEventId]);
+  }, [open, expense, defaultEventId, budgetCategories]);
 
   const selectedEvent = useMemo(() => {
     if (!selectedCeremonyId) return null;
@@ -126,9 +203,20 @@ export function AddExpenseDialog({
       return lineItem.budgetBucketId;
     }
     
+    // In edit mode, check if the selectedLineItem matches a budget category display name
+    const matchingCategory = budgetCategories.find(c => c.displayName === selectedLineItem);
+    if (matchingCategory) {
+      return matchingCategory.id;
+    }
+    
+    // In edit mode, fall back to original bucket ID if line item hasn't changed
+    if (isEditMode && editOriginalBucketId) {
+      return editOriginalBucketId;
+    }
+    
     // Return null for custom/unknown line items - will use 'other' bucket UUID on server
     return null;
-  }, [selectedLineItem, ceremonyLineItems]);
+  }, [selectedLineItem, ceremonyLineItems, budgetCategories, isEditMode, editOriginalBucketId]);
 
   // Get the display label for the derived bucket
   const derivedBucketLabel = useMemo(() => {
@@ -151,6 +239,8 @@ export function AddExpenseDialog({
     setNotes("");
     setPhotoFile(null);
     setPhotoPreview(null);
+    setExistingReceiptUrl(null);
+    setEditOriginalBucketId(null);
   };
 
   const createExpenseMutation = useMutation({
@@ -228,7 +318,7 @@ export function AddExpenseDialog({
       amountPaidValue = parsedDeposit.toFixed(2);
     }
 
-    createExpenseMutation.mutate({
+    const expenseData = {
       weddingId,
       bucketCategoryId: derivedBucketId || undefined, // UUID for budget bucket - server will resolve to 'other' if null
       lineItem: selectedLineItem,
@@ -243,7 +333,13 @@ export function AddExpenseDialog({
       expenseDate,
       paymentDueDate: paymentDueDate || null,
       splits,
-    });
+    };
+
+    if (isEditMode && onUpdate) {
+      onUpdate(expenseData);
+    } else {
+      createExpenseMutation.mutate(expenseData);
+    }
   };
 
   const canProceed = () => {
@@ -647,7 +743,7 @@ export function AddExpenseDialog({
       <DialogContent className="max-w-md p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-6 py-4 border-b bg-muted/30">
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-lg font-semibold">Add Expense</DialogTitle>
+            <DialogTitle className="text-lg font-semibold">{isEditMode ? "Edit Expense" : "Add Expense"}</DialogTitle>
             <span className="text-sm text-muted-foreground">Step {currentStep} of 5</span>
           </div>
           <Progress value={progressPercent} className="h-1 mt-3" />
@@ -711,16 +807,16 @@ export function AddExpenseDialog({
           )}
           <Button
             onClick={handleNext}
-            disabled={!canProceed() || createExpenseMutation.isPending}
+            disabled={!canProceed() || createExpenseMutation.isPending || isPendingUpdate}
             className="flex-1"
             data-testid="button-next"
           >
-            {createExpenseMutation.isPending ? (
+            {(createExpenseMutation.isPending || isPendingUpdate) ? (
               "Saving..."
             ) : currentStep === 5 ? (
               <>
                 <Check className="w-4 h-4 mr-2" />
-                Save Expense
+                {isEditMode ? "Save Changes" : "Save Expense"}
               </>
             ) : (
               <>

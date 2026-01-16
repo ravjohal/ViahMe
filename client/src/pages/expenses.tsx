@@ -13,12 +13,11 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Trash2, Pencil, DollarSign, ArrowRightLeft, Check, Receipt, Share2, Copy, ChevronDown, ChevronRight, List, LayoutGrid, Calendar } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import type { Expense, ExpenseSplit, Event, Wedding, BudgetCategory, ExpenseEventAllocation } from "@shared/schema";
-import { EditExpenseDialog, type ExpenseWithDetails } from "@/components/edit-expense-dialog";
-import { AddExpenseDialog } from "@/components/add-expense-dialog";
+import type { Expense, ExpenseSplit, Event, Wedding, BudgetCategory } from "@shared/schema";
+import { AddExpenseDialog, type ExpenseWithSplits as ExpenseWithSplitsDialog } from "@/components/add-expense-dialog";
 import { useBudgetCategoryLookup } from "@/hooks/use-budget-bucket-categories";
 
-type ExpenseWithSplits = Expense & { splits: ExpenseSplit[]; eventAllocations?: ExpenseEventAllocation[] };
+type ExpenseWithSplits = Expense & { splits: ExpenseSplit[]; eventAllocations?: any[] };
 type SettlementBalance = Record<string, { name: string; paid: number; owes: number; balance: number }>;
 
 export default function Expenses() {
@@ -603,30 +602,27 @@ export default function Expenses() {
         </CardContent>
       </Card>
 
-      {/* Edit Expense Dialog (shared component) */}
-      <EditExpenseDialog
-        expense={editingExpense as ExpenseWithDetails | null}
-        open={!!editingExpense}
-        onOpenChange={(open) => !open && setEditingExpense(null)}
-        categories={budgetCategories}
-        events={events}
-        onSave={(data) => {
-          if (editingExpense) {
-            updateExpenseMutation.mutate({ id: editingExpense.id, data });
-          }
-        }}
-        isPending={updateExpenseMutation.isPending}
-      />
-
-      {/* Add Expense Dialog (same as Budget page) */}
+      {/* Add/Edit Expense Dialog (unified wizard) */}
       {weddingId && (
         <AddExpenseDialog
-          open={addExpenseDialogOpen}
-          onOpenChange={setAddExpenseDialogOpen}
+          open={addExpenseDialogOpen || !!editingExpense}
+          onOpenChange={(open) => {
+            if (!open) {
+              setAddExpenseDialogOpen(false);
+              setEditingExpense(null);
+            }
+          }}
           weddingId={weddingId}
           events={events}
           defaultEventId={addExpenseEventId}
           weddingTradition={wedding?.tradition}
+          expense={editingExpense}
+          onUpdate={(data) => {
+            if (editingExpense) {
+              updateExpenseMutation.mutate({ id: editingExpense.id, data });
+            }
+          }}
+          isPendingUpdate={updateExpenseMutation.isPending}
         />
       )}
     </div>
