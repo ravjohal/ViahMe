@@ -1421,12 +1421,11 @@ export default function Budget() {
               )}
               <Button
                 size="sm"
-                variant="outline"
                 onClick={() => {
                   setAddExpenseEventId(undefined);
                   setAddExpenseDialogOpen(true);
                 }}
-                className="rounded-full"
+                className="rounded-full bg-orange-500 hover:bg-orange-600 text-white border-orange-600"
                 data-testid="button-add-expense-header"
               >
                 <Plus className="w-4 h-4 mr-2" />
