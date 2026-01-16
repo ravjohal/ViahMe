@@ -379,9 +379,9 @@ export function EditExpenseDialog({
                 ))}
               </div>
             )}
-            {derivedBucket && selectedLineItem && (
+            {derivedBucketId && selectedLineItem && (
               <p className="text-xs text-muted-foreground">
-                Budget category: {getCategoryLabel(derivedBucket)}
+                Budget category: {getCategoryLabel(derivedBucketId)}
               </p>
             )}
           </div>
@@ -598,7 +598,7 @@ export function EditExpenseDialog({
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={isPending || !expenseName.trim() || !derivedBucket}
+              disabled={isPending || !expenseName.trim() || !derivedBucketId}
               data-testid="button-save-edit-expense"
             >
               {isPending ? "Saving..." : "Save Changes"}
