@@ -208,7 +208,7 @@ export function AddExpenseDialog({
       userId: payerId,
       userName: payerName,
       shareAmount: parsedAmount.toFixed(2),
-      isPaid: true,
+      isPaid: paymentStatus === "paid", // Only mark as paid if fully paid
     }];
 
     // Calculate amount paid based on payment status
