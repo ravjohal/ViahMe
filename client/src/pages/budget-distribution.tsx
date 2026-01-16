@@ -16,7 +16,7 @@ import { useBudgetCategories } from "@/hooks/use-budget-bucket-categories";
 import type { Wedding, Event, BudgetAllocation, BudgetBucket } from "@shared/schema";
 import { 
   ArrowLeft, Check, Save, ChevronLeft, ChevronRight,
-  DollarSign, Sparkles, Calendar, Layers, ChevronDown, ChevronUp, Plus, X
+  DollarSign, Sparkles, Calendar, Layers, ChevronDown, ChevronUp, Plus, X, Users
 } from "lucide-react";
 
 interface CeremonyLineItem {
@@ -195,6 +195,7 @@ export default function BudgetDistribution() {
         name: e.name,
         ceremonyTypeId: e.ceremonyTypeId,
         date: e.date,
+        guestCount: e.guestCount,
       }));
     } else {
       return budgetBuckets.map(b => ({
@@ -653,16 +654,24 @@ export default function BudgetDistribution() {
                   <CardTitle className="font-display text-2xl md:text-3xl mt-2">
                     {currentStepData.name}
                   </CardTitle>
-                  {currentStepData.date && (
-                    <CardDescription>
-                      {new Date(currentStepData.date).toLocaleDateString("en-US", {
-                        weekday: "long",
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
-                    </CardDescription>
-                  )}
+                  <div className="flex flex-col gap-1">
+                    {currentStepData.date && (
+                      <CardDescription>
+                        {new Date(currentStepData.date).toLocaleDateString("en-US", {
+                          weekday: "long",
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })}
+                      </CardDescription>
+                    )}
+                    {currentStepData.guestCount && (
+                      <div className="flex items-center gap-1.5 text-sm text-muted-foreground" data-testid="text-guest-count">
+                        <Users className="w-4 h-4" />
+                        <span>{currentStepData.guestCount} guests</span>
+                      </div>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div>
