@@ -15,7 +15,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Trash2, Pencil, DollarSign, Users, ArrowRightLeft, Check, Receipt, Share2, Copy, Calendar } from "lucide-react";
+import { Plus, Trash2, Pencil, DollarSign, Users, ArrowRightLeft, Check, Receipt, Share2, Copy, Calendar, ChevronDown, ChevronRight, List, LayoutGrid } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import type { Expense, ExpenseSplit, Event, Wedding, BudgetCategory, ExpenseEventAllocation } from "@shared/schema";
 import { EditExpenseDialog, type ExpenseWithDetails } from "@/components/edit-expense-dialog";
 import { useBudgetCategoryLookup } from "@/hooks/use-budget-bucket-categories";
@@ -47,6 +48,8 @@ export default function Expenses() {
   const [eventAllocations, setEventAllocations] = useState<Record<string, { amount: string; percent: string }>>({});
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [payerFilter, setPayerFilter] = useState<string>("all");
+  const [viewMode, setViewMode] = useState<"list" | "byCeremony">("list");
+  const [collapsedCeremonies, setCollapsedCeremonies] = useState<Set<string>>(new Set());
 
   const { data: weddings = [] } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
@@ -710,9 +713,31 @@ export default function Expenses() {
       <Card>
         <CardHeader>
           <div className="flex flex-col gap-4">
-            <div>
-              <CardTitle>All Expenses</CardTitle>
-              <CardDescription>View and manage all shared expenses</CardDescription>
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <CardTitle>All Expenses</CardTitle>
+                <CardDescription>View and manage all shared expenses</CardDescription>
+              </div>
+              <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+                <Button
+                  variant={viewMode === "list" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("list")}
+                  data-testid="button-view-list"
+                >
+                  <List className="h-4 w-4 mr-1" />
+                  List
+                </Button>
+                <Button
+                  variant={viewMode === "byCeremony" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("byCeremony")}
+                  data-testid="button-view-ceremony"
+                >
+                  <LayoutGrid className="h-4 w-4 mr-1" />
+                  By Ceremony
+                </Button>
+              </div>
             </div>
             <div className="flex flex-wrap gap-2">
               <span className="text-sm font-medium text-muted-foreground mr-2">Filter by payer:</span>
@@ -755,7 +780,6 @@ export default function Expenses() {
           ) : (() => {
               const filteredExpenses = expenses.filter((expense) => {
                 if (payerFilter === "all") return true;
-                // Handle legacy "bride"/"groom" paidById (old couple/individual data)
                 if (payerFilter === "me-partner") {
                   return expense.paidById === "me-partner" || expense.paidById === "bride" || expense.paidById === "couple";
                 }
@@ -775,10 +799,8 @@ export default function Expenses() {
                   </div>
                 );
               }
-              
-              return (
-                <div className="space-y-4">
-                  {filteredExpenses.map((expense) => {
+
+              const renderExpenseCard = (expense: ExpenseWithSplits, showCeremonyBadge = true) => {
                 const event = expense.ceremonyId ? events.find((e) => e.id === expense.ceremonyId) : null;
                 return (
                   <div
@@ -791,7 +813,7 @@ export default function Expenses() {
                         <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="font-medium">{expense.expenseName}</h3>
                           {expense.parentCategory && <Badge variant="default" data-testid={`badge-category-${expense.id}`}>{getCategoryLabel(expense.parentCategory)}</Badge>}
-                          {event && <Badge variant="outline">{event.name}</Badge>}
+                          {showCeremonyBadge && event && <Badge variant="outline">{event.name}</Badge>}
                           <Badge 
                             variant={
                               expense.status === "paid" ? "default" : 
@@ -882,7 +904,103 @@ export default function Expenses() {
                     </div>
                   </div>
                 );
-              })}
+              };
+
+              if (viewMode === "byCeremony") {
+                const expensesByCeremony = new Map<string, ExpenseWithSplits[]>();
+                const unassignedExpenses: ExpenseWithSplits[] = [];
+                
+                filteredExpenses.forEach((expense) => {
+                  if (expense.ceremonyId) {
+                    const existing = expensesByCeremony.get(expense.ceremonyId) || [];
+                    expensesByCeremony.set(expense.ceremonyId, [...existing, expense]);
+                  } else {
+                    unassignedExpenses.push(expense);
+                  }
+                });
+
+                const ceremonyGroups = events
+                  .filter((e) => expensesByCeremony.has(e.id))
+                  .map((event) => ({
+                    event,
+                    expenses: expensesByCeremony.get(event.id) || [],
+                    total: (expensesByCeremony.get(event.id) || []).reduce(
+                      (sum, exp) => sum + parseFloat(exp.amount), 0
+                    ),
+                  }));
+
+                return (
+                  <div className="space-y-4">
+                    {ceremonyGroups.map(({ event, expenses: ceremonyExpenses, total }) => {
+                      const isCollapsed = collapsedCeremonies.has(event.id);
+                      return (
+                        <Collapsible
+                          key={event.id}
+                          open={!isCollapsed}
+                          onOpenChange={(open) => {
+                            const newCollapsed = new Set(collapsedCeremonies);
+                            if (open) {
+                              newCollapsed.delete(event.id);
+                            } else {
+                              newCollapsed.add(event.id);
+                            }
+                            setCollapsedCeremonies(newCollapsed);
+                          }}
+                        >
+                          <CollapsibleTrigger asChild>
+                            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg cursor-pointer hover-elevate" data-testid={`trigger-ceremony-${event.id}`}>
+                              <div className="flex items-center gap-3">
+                                {isCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                                <span className="font-semibold">{event.name}</span>
+                                <Badge variant="secondary">{ceremonyExpenses.length} expenses</Badge>
+                              </div>
+                              <span className="font-bold text-lg">${total.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+                            </div>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent className="pt-2 pl-4 space-y-2">
+                            {ceremonyExpenses.map((expense) => renderExpenseCard(expense, false))}
+                          </CollapsibleContent>
+                        </Collapsible>
+                      );
+                    })}
+                    
+                    {unassignedExpenses.length > 0 && (
+                      <Collapsible
+                        open={!collapsedCeremonies.has("unassigned")}
+                        onOpenChange={(open) => {
+                          const newCollapsed = new Set(collapsedCeremonies);
+                          if (open) {
+                            newCollapsed.delete("unassigned");
+                          } else {
+                            newCollapsed.add("unassigned");
+                          }
+                          setCollapsedCeremonies(newCollapsed);
+                        }}
+                      >
+                        <CollapsibleTrigger asChild>
+                          <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg cursor-pointer hover-elevate" data-testid="trigger-ceremony-unassigned">
+                            <div className="flex items-center gap-3">
+                              {collapsedCeremonies.has("unassigned") ? <ChevronRight className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                              <span className="font-semibold text-muted-foreground">General / Unassigned</span>
+                              <Badge variant="outline">{unassignedExpenses.length} expenses</Badge>
+                            </div>
+                            <span className="font-bold text-lg">
+                              ${unassignedExpenses.reduce((sum, exp) => sum + parseFloat(exp.amount), 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                            </span>
+                          </div>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="pt-2 pl-4 space-y-2">
+                          {unassignedExpenses.map((expense) => renderExpenseCard(expense, false))}
+                        </CollapsibleContent>
+                      </Collapsible>
+                    )}
+                  </div>
+                );
+              }
+              
+              return (
+                <div className="space-y-4">
+                  {filteredExpenses.map((expense) => renderExpenseCard(expense))}
                 </div>
               );
             })()}
