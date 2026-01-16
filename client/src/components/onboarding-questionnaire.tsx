@@ -27,7 +27,7 @@ const questionnaireSchema = z.object({
   tradition: z.enum(['sikh', 'hindu', 'muslim', 'gujarati', 'south_indian', 'christian', 'jain', 'parsi', 'mixed', 'other']),
   subTradition: z.string().nullable().optional(),
   subTraditions: z.array(z.string()).nullable().optional(),
-  role: z.enum(['bride', 'groom', 'planner']),
+  role: z.enum(['bride', 'groom']),
   weddingDate: z.string().optional(),
   flexibleDate: z.boolean().optional(),
   location: z.string().min(1, "Location is required"),
@@ -808,7 +808,6 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                             <SelectContent>
                               <SelectItem value="bride" data-testid="option-bride">Bride</SelectItem>
                               <SelectItem value="groom" data-testid="option-groom">Groom</SelectItem>
-                              <SelectItem value="planner" data-testid="option-planner">Wedding Planner</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -1130,10 +1129,9 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                         }, 0);
                       }
 
-                      // Determine partner term based on user's role (handle planner role with neutral language)
-                      const isPlanner = userRole === "planner";
-                      const partnerTerm = isPlanner ? "them" : (userRole === "bride" ? "him" : "her");
-                      const partnerSide = isPlanner ? "other" : (userRole === "bride" ? "groom" : "bride");
+                      // Determine partner term based on user's role
+                      const partnerTerm = userRole === "bride" ? "him" : "her";
+                      const partnerSide = userRole === "bride" ? "groom" : "bride";
 
                       return (
                         <div className="p-4 rounded-lg bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 border border-emerald-200 dark:border-emerald-800">
@@ -1155,7 +1153,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                               <div className="p-4 bg-white/80 dark:bg-white/10 rounded-lg border border-emerald-200 dark:border-emerald-700">
                                 <div className="text-center">
                                   <span className="text-sm text-emerald-600 dark:text-emerald-400 block mb-1">
-                                    {isPlanner ? "Estimated Total for Selected Ceremonies" : "Estimated Total for Your Side"}
+                                    Estimated Total for Your Side
                                   </span>
                                   <span className="text-2xl font-bold text-emerald-800 dark:text-emerald-200" data-testid="text-budget-estimate">
                                     ${totalLow.toLocaleString()} - ${totalHigh.toLocaleString()}
@@ -1166,20 +1164,18 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                                 </div>
                               </div>
 
-                              {/* Partner Invitation Note - Show different message for planners */}
-                              {!isPlanner && (
-                                <div className="p-3 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-700">
-                                  <div className="flex items-start gap-2">
-                                    <Info className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
-                                    <div className="text-sm text-amber-800 dark:text-amber-200">
-                                      <p className="font-medium mb-1">This estimate is for your side only</p>
-                                      <p className="text-xs text-amber-700 dark:text-amber-300">
-                                        If you want to include your partner's estimates for {partnerSide}-side ceremonies, invite {partnerTerm} after creating your account. The invite link will be generated once you complete this onboarding.
-                                      </p>
-                                    </div>
+                              {/* Partner Invitation Note */}
+                              <div className="p-3 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-700">
+                                <div className="flex items-start gap-2">
+                                  <Info className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                                  <div className="text-sm text-amber-800 dark:text-amber-200">
+                                    <p className="font-medium mb-1">This estimate is for your side only</p>
+                                    <p className="text-xs text-amber-700 dark:text-amber-300">
+                                      If you want to include your partner's estimates for {partnerSide}-side ceremonies, invite {partnerTerm} after creating your account. The invite link will be generated once you complete this onboarding.
+                                    </p>
                                   </div>
                                 </div>
-                              )}
+                              </div>
 
                               {/* Post-Registration Note */}
                               <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-700">
