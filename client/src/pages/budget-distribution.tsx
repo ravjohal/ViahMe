@@ -127,20 +127,42 @@ export default function BudgetDistribution() {
   }, [budgetBuckets, allocations]);
 
   useEffect(() => {
-    if (events.length > 0 && savedLineItemBudgets.length > 0) {
+    if (events.length > 0 && savedLineItemBudgets.length > 0 && Object.keys(allLineItems).length > 0) {
       const lineItemsByEvent: Record<string, Record<string, string>> = {};
+      const customItemsByEvent: Record<string, CustomLineItem[]> = {};
       
       events.forEach(event => {
         const eventLineItems = savedLineItemBudgets.filter(li => li.eventId === event.id);
         if (eventLineItems.length > 0) {
           const lineItemMap: Record<string, string> = {};
+          const customItemsList: CustomLineItem[] = [];
+          
+          // Get known template categories for this event's ceremony type
+          const templateItems = event.ceremonyTypeId && allLineItems[event.ceremonyTypeId] 
+            ? allLineItems[event.ceremonyTypeId] 
+            : [];
+          const templateCategories = new Set(templateItems.map(item => item.category || item.name || item.id));
           
           eventLineItems.forEach(saved => {
-            lineItemMap[saved.lineItemCategory] = saved.budgetedAmount;
+            // Check if this is a template item or a custom item
+            if (templateCategories.has(saved.lineItemCategory)) {
+              lineItemMap[saved.lineItemCategory] = saved.budgetedAmount;
+            } else {
+              // This is a custom item - add to custom items list
+              customItemsList.push({
+                id: `custom-${saved.id}`,
+                name: saved.lineItemCategory,
+                amount: saved.budgetedAmount,
+              });
+            }
           });
           
           if (Object.keys(lineItemMap).length > 0) {
             lineItemsByEvent[event.id] = lineItemMap;
+          }
+          
+          if (customItemsList.length > 0) {
+            customItemsByEvent[event.id] = customItemsList;
           }
         }
       });
@@ -153,8 +175,17 @@ export default function BudgetDistribution() {
           return prev;
         });
       }
+      
+      if (Object.keys(customItemsByEvent).length > 0) {
+        setCustomItems(prev => {
+          if (Object.keys(prev).length === 0) {
+            return customItemsByEvent;
+          }
+          return prev;
+        });
+      }
     }
-  }, [events, savedLineItemBudgets]);
+  }, [events, savedLineItemBudgets, allLineItems]);
 
   const steps = useMemo(() => {
     if (isCeremonyMode) {
