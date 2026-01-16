@@ -344,7 +344,7 @@ export function InvitePartnerModal({
               variant="outline"
               onClick={() => {
                 handleClose();
-                setLocation("/team#invited");
+                setLocation("/collaborators");
               }}
               className="w-full"
               data-testid="button-view-on-teams"
