@@ -259,6 +259,13 @@ export function AddExpenseDialog({
 
   const handleNext = () => {
     if (currentStep < 5 && canProceed()) {
+      // When moving to step 5 (details), pre-fill the expense name with a smart default
+      if (currentStep === 4 && !expenseName.trim()) {
+        const defaultName = selectedLineItem 
+          ? `${selectedLineItem} for ${selectedEvent?.name || 'ceremony'}`
+          : "Expense";
+        setExpenseName(defaultName);
+      }
       setCurrentStep(currentStep + 1);
     } else if (currentStep === 5 && canProceed()) {
       handleSubmit();
