@@ -154,7 +154,7 @@ export default function Expenses() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Contracted</CardTitle>
@@ -190,30 +190,17 @@ export default function Expenses() {
               <Calendar className="h-5 w-5" />
               ${totalBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {totalBalance > 0 ? "Still owed to vendors" : "All paid up!"}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Who Still Owes</CardTitle>
-          </CardHeader>
-          <CardContent>
             {Object.keys(balancesByPayer).length > 0 ? (
-              <div className="space-y-2" data-testid="text-balances-by-payer">
+              <div className="mt-2 pt-2 border-t space-y-1" data-testid="text-balances-by-payer">
                 {Object.entries(balancesByPayer).map(([payer, amount]) => (
-                  <div key={payer} className="flex items-center justify-between text-sm">
+                  <div key={payer} className="flex items-center justify-between text-xs">
                     <span className="text-muted-foreground">{payer}</span>
                     <span className="font-medium text-orange-600">${amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-sm text-green-600 flex items-center gap-2">
-                <Check className="h-4 w-4" />
-                All paid up!
-              </div>
+              <p className="text-xs text-muted-foreground mt-1">All paid up!</p>
             )}
           </CardContent>
         </Card>
