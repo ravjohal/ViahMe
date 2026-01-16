@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
@@ -113,6 +113,22 @@ export default function Expenses() {
   const totalPaid = expenses.reduce((sum, e) => sum + parseFloat(e.amountPaid || "0"), 0);
   const totalBalance = totalExpenses - totalPaid;
 
+  // Calculate balance due by payer
+  const balancesByPayer = useMemo(() => {
+    const balances: Record<string, number> = {};
+    
+    expenses.forEach(expense => {
+      const unpaid = parseFloat(expense.amount) - parseFloat(expense.amountPaid || "0");
+      if (unpaid > 0) {
+        // Use paidByName as the payer identifier
+        const payerName = expense.paidByName === "Couple" ? "Me/Partner" : expense.paidByName;
+        balances[payerName] = (balances[payerName] || 0) + unpaid;
+      }
+    });
+    
+    return balances;
+  }, [expenses]);
+
   if (!weddingId) {
     return (
       <div className="p-6">
@@ -177,6 +193,28 @@ export default function Expenses() {
             <p className="text-xs text-muted-foreground mt-1">
               {totalBalance > 0 ? "Still owed to vendors" : "All paid up!"}
             </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Who Still Owes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {Object.keys(balancesByPayer).length > 0 ? (
+              <div className="space-y-2" data-testid="text-balances-by-payer">
+                {Object.entries(balancesByPayer).map(([payer, amount]) => (
+                  <div key={payer} className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">{payer}</span>
+                    <span className="font-medium text-orange-600">${amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-sm text-green-600 flex items-center gap-2">
+                <Check className="h-4 w-4" />
+                All paid up!
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
