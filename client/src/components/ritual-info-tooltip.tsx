@@ -243,8 +243,8 @@ export function RitualInfoTooltip({
         <DrawerTrigger asChild>
           {triggerButton}
         </DrawerTrigger>
-        <DrawerContent onClick={(e) => e.stopPropagation()}>
-          <DrawerHeader className="flex items-center justify-between border-b pb-3">
+        <DrawerContent onClick={(e) => e.stopPropagation()} className="max-h-[85vh]">
+          <DrawerHeader className="flex items-center justify-between border-b pb-3 shrink-0">
             <DrawerTitle>Associated Rituals</DrawerTitle>
             <DrawerClose asChild>
               <Button variant="ghost" size="icon">
@@ -252,13 +252,13 @@ export function RitualInfoTooltip({
               </Button>
             </DrawerClose>
           </DrawerHeader>
-          <ScrollArea className="px-4 py-4 max-h-[70vh]">
+          <div className="px-4 py-4 overflow-y-auto flex-1">
             <div className="space-y-6">
               {rituals.map((ritual) => (
                 <RitualDetailCard key={ritual.id} ritual={ritual} />
               ))}
             </div>
-          </ScrollArea>
+          </div>
         </DrawerContent>
       </Drawer>
     );
