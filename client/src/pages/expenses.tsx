@@ -6,46 +6,28 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Trash2, Pencil, DollarSign, ArrowRightLeft, Check, Receipt, Share2, Copy, Calendar, ChevronDown, ChevronRight, List, LayoutGrid } from "lucide-react";
+import { Plus, Trash2, Pencil, DollarSign, ArrowRightLeft, Check, Receipt, Share2, Copy, ChevronDown, ChevronRight, List, LayoutGrid } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import type { Expense, ExpenseSplit, Event, Wedding, BudgetCategory, ExpenseEventAllocation } from "@shared/schema";
 import { EditExpenseDialog, type ExpenseWithDetails } from "@/components/edit-expense-dialog";
+import { AddExpenseDialog } from "@/components/add-expense-dialog";
 import { useBudgetCategoryLookup } from "@/hooks/use-budget-bucket-categories";
 
 type ExpenseWithSplits = Expense & { splits: ExpenseSplit[]; eventAllocations?: ExpenseEventAllocation[] };
 type SettlementBalance = Record<string, { name: string; paid: number; owes: number; balance: number }>;
-type AllocationStrategy = "single" | "equal" | "percentage" | "custom";
 
 export default function Expenses() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { getCategoryLabel } = useBudgetCategoryLookup();
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [addExpenseDialogOpen, setAddExpenseDialogOpen] = useState(false);
+  const [addExpenseEventId, setAddExpenseEventId] = useState<string | undefined>(undefined);
   const [editingExpense, setEditingExpense] = useState<ExpenseWithSplits | null>(null);
-  const [formData, setFormData] = useState({
-    description: "",
-    amount: "",
-    eventId: "",
-    categoryId: "",
-    splitType: "equal" as "equal" | "percentage" | "custom" | "full",
-    paidById: "",
-    notes: "",
-    expenseDate: new Date().toISOString().split("T")[0],
-    allocationStrategy: "single" as AllocationStrategy,
-    paymentStatus: "pending" as "pending" | "deposit_paid" | "paid",
-  });
-  const [splitAmounts, setSplitAmounts] = useState<Record<string, string>>({});
-  const [selectedEventIds, setSelectedEventIds] = useState<string[]>([]);
-  const [eventAllocations, setEventAllocations] = useState<Record<string, { amount: string; percent: string }>>({});
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [payerFilter, setPayerFilter] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"list" | "byCeremony">("list");
@@ -84,31 +66,6 @@ export default function Expenses() {
     enabled: !!weddingId,
   });
 
-  // Build team members list: Bride, Groom, and Parents by default, plus any collaborators
-  const teamMembers = [
-    { id: "bride", name: "Bride" },
-    { id: "groom", name: "Groom" },
-    { id: "bride-parents", name: "Bride's Parents" },
-    { id: "groom-parents", name: "Groom's Parents" },
-    ...collaborators.map((c: any) => ({ id: c.userId, name: c.user?.name || c.user?.email || "Team Member" })),
-  ];
-
-  const createExpenseMutation = useMutation({
-    mutationFn: async (data: any) => {
-      return apiRequest("POST", "/api/expenses", data);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/expenses", weddingId] });
-      queryClient.invalidateQueries({ queryKey: ["/api/budget-bucket-categories", weddingId] });
-      setIsAddDialogOpen(false);
-      resetForm();
-      toast({ title: "Expense added successfully" });
-    },
-    onError: () => {
-      toast({ title: "Failed to add expense", variant: "destructive" });
-    },
-  });
-
   const updateExpenseMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
       return apiRequest("PATCH", `/api/expenses/${id}`, data);
@@ -117,7 +74,6 @@ export default function Expenses() {
       queryClient.invalidateQueries({ queryKey: ["/api/expenses", weddingId] });
       queryClient.invalidateQueries({ queryKey: ["/api/budget-bucket-categories", weddingId] });
       setEditingExpense(null);
-      resetForm();
       toast({ title: "Expense updated successfully" });
     },
     onError: () => {
@@ -149,98 +105,6 @@ export default function Expenses() {
     },
   });
 
-  const resetForm = () => {
-    setFormData({
-      description: "",
-      amount: "",
-      eventId: "",
-      categoryId: "",
-      splitType: "equal",
-      paidById: user?.id || "",
-      notes: "",
-      expenseDate: new Date().toISOString().split("T")[0],
-      allocationStrategy: "single",
-      paymentStatus: "pending",
-    });
-    setSplitAmounts({});
-    setSelectedEventIds([]);
-    setEventAllocations({});
-  };
-
-  const handleSubmit = () => {
-    if (!user || !weddingId) return;
-
-    const amount = parseFloat(formData.amount);
-    if (isNaN(amount) || amount <= 0) {
-      toast({ title: "Please enter a valid amount", variant: "destructive" });
-      return;
-    }
-
-    const payerId = formData.paidById || user.id;
-    const splits = teamMembers.map((member) => {
-      let shareAmount: number;
-      if (formData.splitType === "equal") {
-        shareAmount = amount / teamMembers.length;
-      } else if (formData.splitType === "full") {
-        shareAmount = member.id === payerId ? amount : 0;
-      } else {
-        shareAmount = parseFloat(splitAmounts[member.id] || "0");
-      }
-      return {
-        userId: member.id,
-        userName: member.name,
-        shareAmount: shareAmount.toFixed(2),
-        sharePercentage: formData.splitType === "equal" ? Math.round(100 / teamMembers.length) : null,
-        isPaid: member.id === payerId,
-      };
-    }).filter((s) => parseFloat(s.shareAmount) > 0);
-
-    // Build event allocations based on strategy
-    let allocationsToSend: { eventId: string; allocatedAmount: string; allocatedPercent: string | null }[] = [];
-    
-    if (formData.allocationStrategy === "single" && formData.eventId) {
-      // Legacy single-event: no allocations needed, eventId is on the expense itself
-    } else if (formData.allocationStrategy === "equal" && selectedEventIds.length > 0) {
-      const perEvent = (amount / selectedEventIds.length).toFixed(2);
-      const percent = (100 / selectedEventIds.length).toFixed(2);
-      allocationsToSend = selectedEventIds.map(eventId => ({
-        eventId,
-        allocatedAmount: perEvent,
-        allocatedPercent: percent,
-      }));
-    } else if ((formData.allocationStrategy === "percentage" || formData.allocationStrategy === "custom") && selectedEventIds.length > 0) {
-      allocationsToSend = selectedEventIds.map(eventId => {
-        const alloc = eventAllocations[eventId] || { amount: "0", percent: "0" };
-        return {
-          eventId,
-          allocatedAmount: formData.allocationStrategy === "percentage" 
-            ? ((parseFloat(alloc.percent || "0") / 100) * amount).toFixed(2)
-            : alloc.amount,
-          allocatedPercent: alloc.percent || null,
-        };
-      });
-    }
-
-    const expenseData = {
-      weddingId,
-      expenseName: formData.description,
-      parentCategory: formData.categoryId || "other",
-      ceremonyId: formData.allocationStrategy === "single" ? (formData.eventId || null) : null,
-      amount: formData.amount,
-      paidById: payerId,
-      paidByName: teamMembers.find(m => m.id === payerId)?.name || user?.email || "Unknown",
-      splitType: formData.splitType,
-      status: formData.paymentStatus === "paid" ? "paid" : (formData.paymentStatus === "deposit_paid" ? "booked" : "estimated"),
-      eventId: formData.allocationStrategy === "single" ? (formData.eventId || null) : null,
-      notes: formData.notes || null,
-      expenseDate: formData.expenseDate,
-      splits,
-      eventAllocations: allocationsToSend.length > 0 ? allocationsToSend : undefined,
-    };
-
-    createExpenseMutation.mutate(expenseData);
-  };
-
   const openEditDialog = (expense: ExpenseWithSplits) => {
     setEditingExpense(expense);
   };
@@ -268,307 +132,10 @@ export default function Expenses() {
           <h1 className="text-2xl font-bold" data-testid="text-page-title">Expense Splitting</h1>
           <p className="text-muted-foreground">Track and split shared wedding costs</p>
         </div>
-        <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
-          if (!open) {
-            setIsAddDialogOpen(false);
-            resetForm();
-          }
-        }}>
-          <DialogTrigger asChild>
-            <Button onClick={() => setIsAddDialogOpen(true)} data-testid="button-add-expense">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Expense
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Add New Expense</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Input
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="e.g., Venue deposit"
-                  data-testid="input-expense-description"
-                />
-              </div>
-              <div>
-                <Label htmlFor="amount">Amount ($)</Label>
-                <Input
-                  id="amount"
-                  type="number"
-                  step="0.01"
-                  value={formData.amount}
-                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                  placeholder="0.00"
-                  data-testid="input-expense-amount"
-                />
-              </div>
-              <div>
-                <Label htmlFor="allocationStrategy">Event Allocation</Label>
-                <Select 
-                  value={formData.allocationStrategy} 
-                  onValueChange={(v: AllocationStrategy) => {
-                    setFormData({ ...formData, allocationStrategy: v, eventId: "" });
-                    if (v === "single") {
-                      setSelectedEventIds([]);
-                      setEventAllocations({});
-                    }
-                  }}
-                >
-                  <SelectTrigger data-testid="select-allocation-strategy">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="single">Single Event</SelectItem>
-                    <SelectItem value="equal">Split Equally Across Events</SelectItem>
-                    <SelectItem value="percentage">Split by Percentage</SelectItem>
-                    <SelectItem value="custom">Custom Amounts per Event</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {formData.allocationStrategy === "single" && "Assign this expense to one event (or no event)"}
-                  {formData.allocationStrategy === "equal" && "Split cost equally across selected events"}
-                  {formData.allocationStrategy === "percentage" && "Specify % of cost for each event"}
-                  {formData.allocationStrategy === "custom" && "Enter exact amounts for each event"}
-                </p>
-              </div>
-              
-              {formData.allocationStrategy === "single" && (
-                <div>
-                  <Label htmlFor="event">Event (Optional)</Label>
-                  <Select 
-                    value={formData.eventId || "none"} 
-                    onValueChange={(v) => {
-                      setFormData({ 
-                        ...formData, 
-                        eventId: v === "none" ? "" : v,
-                      });
-                    }}
-                  >
-                    <SelectTrigger data-testid="select-expense-event">
-                      <SelectValue placeholder="Select event" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">No specific event</SelectItem>
-                      {events.map((event) => (
-                        <SelectItem key={event.id} value={event.id}>{event.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-              
-              {formData.allocationStrategy !== "single" && (
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    Select Events
-                  </Label>
-                  <div className="border rounded-md p-3 space-y-2 max-h-40 overflow-y-auto">
-                    {events.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">No events found. Create events first.</p>
-                    ) : (
-                      events.map((event) => (
-                        <div key={event.id} className="flex items-center gap-3">
-                          <Checkbox
-                            id={`event-${event.id}`}
-                            checked={selectedEventIds.includes(event.id)}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                setSelectedEventIds([...selectedEventIds, event.id]);
-                                setEventAllocations({
-                                  ...eventAllocations,
-                                  [event.id]: { amount: "0", percent: "0" },
-                                });
-                              } else {
-                                setSelectedEventIds(selectedEventIds.filter(id => id !== event.id));
-                                const newAllocs = { ...eventAllocations };
-                                delete newAllocs[event.id];
-                                setEventAllocations(newAllocs);
-                              }
-                            }}
-                            data-testid={`checkbox-event-${event.id}`}
-                          />
-                          <label htmlFor={`event-${event.id}`} className="text-sm flex-1 cursor-pointer">
-                            {event.name}
-                          </label>
-                          {formData.allocationStrategy === "percentage" && selectedEventIds.includes(event.id) && (
-                            <div className="flex items-center gap-1">
-                              <Input
-                                type="number"
-                                step="1"
-                                min="0"
-                                max="100"
-                                className="w-16 h-8 text-sm"
-                                value={eventAllocations[event.id]?.percent || ""}
-                                onChange={(e) => setEventAllocations({
-                                  ...eventAllocations,
-                                  [event.id]: { ...eventAllocations[event.id], percent: e.target.value },
-                                })}
-                                placeholder="0"
-                                data-testid={`input-percent-${event.id}`}
-                              />
-                              <span className="text-sm text-muted-foreground">%</span>
-                            </div>
-                          )}
-                          {formData.allocationStrategy === "custom" && selectedEventIds.includes(event.id) && (
-                            <div className="flex items-center gap-1">
-                              <span className="text-sm text-muted-foreground">$</span>
-                              <Input
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                className="w-20 h-8 text-sm"
-                                value={eventAllocations[event.id]?.amount || ""}
-                                onChange={(e) => setEventAllocations({
-                                  ...eventAllocations,
-                                  [event.id]: { ...eventAllocations[event.id], amount: e.target.value },
-                                })}
-                                placeholder="0.00"
-                                data-testid={`input-amount-${event.id}`}
-                              />
-                            </div>
-                          )}
-                        </div>
-                      ))
-                    )}
-                  </div>
-                  {formData.allocationStrategy === "equal" && selectedEventIds.length > 0 && formData.amount && (
-                    <p className="text-xs text-muted-foreground">
-                      ${(parseFloat(formData.amount) / selectedEventIds.length).toFixed(2)} per event
-                    </p>
-                  )}
-                  {formData.allocationStrategy === "percentage" && selectedEventIds.length > 0 && (
-                    <p className="text-xs text-muted-foreground">
-                      Total: {selectedEventIds.reduce((sum, id) => sum + parseFloat(eventAllocations[id]?.percent || "0"), 0)}%
-                      {selectedEventIds.reduce((sum, id) => sum + parseFloat(eventAllocations[id]?.percent || "0"), 0) !== 100 && 
-                        <span className="text-destructive ml-1">(should equal 100%)</span>
-                      }
-                    </p>
-                  )}
-                  {formData.allocationStrategy === "custom" && selectedEventIds.length > 0 && formData.amount && (
-                    <p className="text-xs text-muted-foreground">
-                      Allocated: ${selectedEventIds.reduce((sum, id) => sum + parseFloat(eventAllocations[id]?.amount || "0"), 0).toFixed(2)}
-                      {Math.abs(selectedEventIds.reduce((sum, id) => sum + parseFloat(eventAllocations[id]?.amount || "0"), 0) - parseFloat(formData.amount)) > 0.01 && 
-                        <span className="text-destructive ml-1">(should equal ${parseFloat(formData.amount).toFixed(2)})</span>
-                      }
-                    </p>
-                  )}
-                </div>
-              )}
-              <div>
-                <Label htmlFor="category">Budget Category (Optional)</Label>
-                <Select value={formData.categoryId || "none"} onValueChange={(v) => setFormData({ ...formData, categoryId: v === "none" ? "" : v })}>
-                  <SelectTrigger data-testid="select-expense-category">
-                    <SelectValue placeholder="Link to budget category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Don't link to budget</SelectItem>
-                    {budgetCategories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.id}>{cat.category}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Linked expenses automatically update budget spending
-                </p>
-              </div>
-              <div>
-                <Label htmlFor="paidBy">Who Paid?</Label>
-                <Select value={formData.paidById} onValueChange={(v) => setFormData({ ...formData, paidById: v })}>
-                  <SelectTrigger data-testid="select-paid-by">
-                    <SelectValue placeholder="Select who paid" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {teamMembers.map((member) => (
-                      <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="splitType">Split Type</Label>
-                <Select value={formData.splitType} onValueChange={(v: any) => setFormData({ ...formData, splitType: v })}>
-                  <SelectTrigger data-testid="select-split-type">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="equal">Split Equally</SelectItem>
-                    <SelectItem value="custom">Custom Amounts</SelectItem>
-                    <SelectItem value="full">Full Amount (No Split)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              {formData.splitType === "custom" && (
-                <div className="space-y-2">
-                  <Label>Custom Split Amounts</Label>
-                  {teamMembers.map((member) => (
-                    <div key={member.id} className="flex items-center gap-2">
-                      <span className="text-sm flex-1">{member.name}</span>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        className="w-24"
-                        value={splitAmounts[member.id] || ""}
-                        onChange={(e) => setSplitAmounts({ ...splitAmounts, [member.id]: e.target.value })}
-                        placeholder="0.00"
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
-              <div>
-                <Label htmlFor="expenseDate">Date</Label>
-                <Input
-                  id="expenseDate"
-                  type="date"
-                  value={formData.expenseDate}
-                  onChange={(e) => setFormData({ ...formData, expenseDate: e.target.value })}
-                  data-testid="input-expense-date"
-                />
-              </div>
-              <div>
-                <Label htmlFor="paymentStatus">Payment Status</Label>
-                <Select 
-                  value={formData.paymentStatus} 
-                  onValueChange={(v: "pending" | "deposit_paid" | "paid") => setFormData({ ...formData, paymentStatus: v })}
-                >
-                  <SelectTrigger data-testid="select-payment-status">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="deposit_paid">Deposit Paid</SelectItem>
-                    <SelectItem value="paid">Paid in Full</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="notes">Notes (Optional)</Label>
-                <Textarea
-                  id="notes"
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  placeholder="Additional notes..."
-                  data-testid="input-expense-notes"
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                onClick={handleSubmit}
-                disabled={createExpenseMutation.isPending || updateExpenseMutation.isPending}
-                data-testid="button-save-expense"
-              >
-                Add Expense
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <Button onClick={() => { setAddExpenseEventId(undefined); setAddExpenseDialogOpen(true); }} data-testid="button-add-expense">
+          <Plus className="h-4 w-4 mr-2" />
+          Add Expense
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -1025,6 +592,18 @@ export default function Expenses() {
         }}
         isPending={updateExpenseMutation.isPending}
       />
+
+      {/* Add Expense Dialog (same as Budget page) */}
+      {weddingId && (
+        <AddExpenseDialog
+          open={addExpenseDialogOpen}
+          onOpenChange={setAddExpenseDialogOpen}
+          weddingId={weddingId}
+          events={events}
+          defaultEventId={addExpenseEventId}
+          weddingTradition={wedding?.tradition}
+        />
+      )}
     </div>
   );
 }
