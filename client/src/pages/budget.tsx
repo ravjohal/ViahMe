@@ -42,6 +42,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { AddExpenseDialog } from "@/components/add-expense-dialog";
 import { EditExpenseDialog, type ExpenseWithDetails } from "@/components/edit-expense-dialog";
 import { CeremonyPlanningCard } from "@/components/ceremony-planning-card";
+import { getCeremonyColor } from "@/lib/ceremony-colors";
 
 // Use shared expense type from the edit dialog component
 type ExpenseWithAllocations = ExpenseWithDetails;
@@ -1928,11 +1929,7 @@ export default function Budget() {
                 const lineItemTotal = lineItems ? getEventLineItemTotal(ceremony.eventId, lineItems) : 0;
                 const eventExpenses = expensesByEvent[ceremony.eventId]?.expenses || [];
 
-                const sideColors = {
-                  bride: 'border-l-pink-500',
-                  groom: 'border-l-blue-500',
-                  mutual: 'border-l-amber-500',
-                };
+                const ceremonyColor = getCeremonyColor(ceremony.eventType, ceremony.eventName);
                 const sideBadgeColors = {
                   bride: 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300',
                   groom: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
@@ -1947,7 +1944,7 @@ export default function Budget() {
                 return (
                   <Card 
                     key={ceremony.eventId}
-                    className={`border-l-4 ${sideColors[ceremony.side]} overflow-hidden ${ceremony.isOverBudget ? 'border-destructive/50' : ''}`}
+                    className={`border-l-4 ${ceremonyColor.border} ${ceremonyColor.bg} overflow-hidden ${ceremony.isOverBudget ? 'border-destructive/50' : ''}`}
                     data-testid={`ceremony-card-${ceremony.eventId}`}
                   >
                     <Collapsible open={isExpanded} onOpenChange={() => toggleCeremonyExpansion(ceremony.eventId)}>
