@@ -1371,19 +1371,7 @@ export default function Budget() {
               </p>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-              {wedding.budgetConfirmed ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => confirmBudgetMutation.mutate(false)}
-                  disabled={confirmBudgetMutation.isPending}
-                  className="border-green-500 text-green-600"
-                  data-testid="button-reopen-budget"
-                >
-                  <CheckCircle2 className="w-4 h-4 mr-2" />
-                  Budget Confirmed
-                </Button>
-              ) : (
+              {!wedding.budgetConfirmed && (
                 <>
                   <Button
                     size="sm"
