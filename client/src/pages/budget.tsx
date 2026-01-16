@@ -1753,156 +1753,7 @@ export default function Budget() {
           </div>
         )}
 
-        {/* Budget by Category */}
-        {wedding?.showBucketBudgets !== false && (
-        <Card className="p-4 mb-6">
-          <Collapsible open={showCategories} onOpenChange={setShowCategories}>
-            <CollapsibleTrigger asChild>
-              <button className="flex items-center justify-between w-full" data-testid="toggle-categories">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 shrink-0 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
-                    <DollarSign className="w-5 h-5 text-emerald-600" />
-                  </div>
-                  <div className="text-left">
-                    <h3 className="font-semibold">Budget by Category</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {budgetCategories.length} categories • Track spending by type
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right mr-2">
-                  <p className="font-semibold text-lg">
-                    ${totalByCategories.toLocaleString()}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Total allocated</p>
-                </div>
-                {showCategories ? (
-                  <ChevronDown className="w-5 h-5 text-muted-foreground shrink-0" />
-                ) : (
-                  <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
-                )}
-              </button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="mt-4">
-              <p className="text-xs text-muted-foreground mb-3 px-1">
-                Set how much you want to spend on each type of expense across all your ceremonies.
-              </p>
-              <div className="space-y-3">
-                {(expenseTotals?.bucketTotals || []).map((bucketTotal) => {
-                  const lineItems = lineItemBreakdownByBucket[bucketTotal.bucket] || [];
-                  // Calculate actual budget total from line items for this bucket
-                  const lineItemsTotal = lineItems.reduce((sum, item) => sum + item.budgetedAmount, 0);
-                  const hasLineItems = lineItems.length > 0;
-                  const isExpanded = expandedBudgetCategories.has(bucketTotal.bucket);
-                  
-                  // Use ceremony line items total as effective budget when no manual override
-                  const effectiveAllocated = bucketTotal.isManualOverride ? bucketTotal.allocated : (lineItemsTotal || bucketTotal.allocated);
-                  const effectiveRemaining = effectiveAllocated - bucketTotal.spent;
-                  const percentSpent = effectiveAllocated > 0 ? (bucketTotal.spent / effectiveAllocated) * 100 : 0;
-
-                  return (
-                    <div 
-                      key={bucketTotal.bucket} 
-                      className="rounded-lg border bg-card overflow-hidden"
-                      data-testid={`category-${bucketTotal.bucket}`}
-                    >
-                      <div className="p-4">
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <p className="font-medium">{bucketTotal.label}</p>
-                              {bucketTotal.isManualOverride && (
-                                <Badge variant="outline" className="text-xs h-5 px-1.5">
-                                  Manual
-                                </Badge>
-                              )}
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                              ${bucketTotal.spent.toLocaleString()} of ${effectiveAllocated.toLocaleString()} spent
-                            </p>
-                            {hasLineItems && (
-                              <button
-                                onClick={() => toggleBudgetCategoryExpansion(bucketTotal.bucket)}
-                                className="text-xs text-muted-foreground mt-1 hover:text-foreground flex items-center gap-1"
-                                data-testid={`toggle-breakdown-${bucketTotal.bucket}`}
-                              >
-                                {bucketTotal.isManualOverride ? (
-                                  <span>Ceremony items: ${lineItemsTotal.toLocaleString()} ({lineItems.length} items)</span>
-                                ) : (
-                                  <span>From {lineItems.length} ceremony items</span>
-                                )}
-                                {isExpanded ? (
-                                  <ChevronDown className="w-3 h-3 ml-1" />
-                                ) : (
-                                  <ChevronRight className="w-3 h-3 ml-1" />
-                                )}
-                              </button>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setEditingBucket(bucketTotal.bucket as BudgetBucket)}
-                              data-testid={`button-edit-category-${bucketTotal.bucket}`}
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                        <Progress value={Math.min(percentSpent, 100)} className="h-2" />
-                        <div className="flex justify-between mt-1 text-xs text-muted-foreground">
-                          <span>{percentSpent.toFixed(0)}% spent</span>
-                          <span className={effectiveRemaining < 0 ? "text-destructive" : "text-emerald-600"}>
-                            ${effectiveRemaining.toLocaleString()} remaining
-                          </span>
-                        </div>
-                      </div>
-                      
-                      {isExpanded && lineItems.length > 0 && (
-                        <div className="border-t bg-muted/30 p-3">
-                          <p className="text-xs font-medium text-muted-foreground mb-2">
-                            Ceremony Line Items
-                          </p>
-                          <div className="space-y-2">
-                            {lineItems.map((item, idx) => (
-                              <div 
-                                key={`${item.eventId}-${item.itemName}-${idx}`}
-                                className="flex items-center justify-between text-sm py-1.5 px-2 rounded bg-background"
-                              >
-                                <div className="min-w-0 flex-1">
-                                  <p className="font-medium truncate">{item.eventName}</p>
-                                  <p className="text-xs text-muted-foreground truncate">
-                                    {item.itemName}
-                                  </p>
-                                </div>
-                                <div className="text-right shrink-0 ml-3">
-                                  <p className="font-mono text-sm">
-                                    ${item.budgetedAmount.toLocaleString()}
-                                  </p>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                          <div className="flex justify-between mt-3 pt-2 border-t text-sm font-medium">
-                            <span>Total Budget</span>
-                            <span className="font-mono">
-                              ${lineItems.reduce((sum, item) => sum + item.budgetedAmount, 0).toLocaleString()}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-        </Card>
-        )}
-
-        {/* Ceremony Planning Cards - Main Section - conditionally rendered based on showCeremonyBudgets preference */}
-        {wedding?.showCeremonyBudgets !== false && (
+        {/* Budget by Ceremony - Always shown first */}
         <Card className="p-4 mb-6">
           <Collapsible open={showCeremonyBudgets} onOpenChange={setShowCeremonyBudgets}>
             <CollapsibleTrigger asChild>
@@ -2357,6 +2208,153 @@ export default function Budget() {
               </Card>
             )}
           </div>
+            </CollapsibleContent>
+          </Collapsible>
+        </Card>
+
+        {/* Budget by Category */}
+        {wedding?.showBucketBudgets !== false && (
+        <Card className="p-4 mb-6">
+          <Collapsible open={showCategories} onOpenChange={setShowCategories}>
+            <CollapsibleTrigger asChild>
+              <button className="flex items-center justify-between w-full" data-testid="toggle-categories">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 shrink-0 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
+                    <DollarSign className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="font-semibold">Budget by Category</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {budgetCategories.length} categories • Track spending by type
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right mr-2">
+                  <p className="font-semibold text-lg">
+                    ${totalByCategories.toLocaleString()}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Total allocated</p>
+                </div>
+                {showCategories ? (
+                  <ChevronDown className="w-5 h-5 text-muted-foreground shrink-0" />
+                ) : (
+                  <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+                )}
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-4">
+              <p className="text-xs text-muted-foreground mb-3 px-1">
+                Set how much you want to spend on each type of expense across all your ceremonies.
+              </p>
+              <div className="space-y-3">
+                {(expenseTotals?.bucketTotals || []).map((bucketTotal) => {
+                  const lineItems = lineItemBreakdownByBucket[bucketTotal.bucket] || [];
+                  // Calculate actual budget total from line items for this bucket
+                  const lineItemsTotal = lineItems.reduce((sum, item) => sum + item.budgetedAmount, 0);
+                  const hasLineItems = lineItems.length > 0;
+                  const isExpanded = expandedBudgetCategories.has(bucketTotal.bucket);
+                  
+                  // Use ceremony line items total as effective budget when no manual override
+                  const effectiveAllocated = bucketTotal.isManualOverride ? bucketTotal.allocated : (lineItemsTotal || bucketTotal.allocated);
+                  const effectiveRemaining = effectiveAllocated - bucketTotal.spent;
+                  const percentSpent = effectiveAllocated > 0 ? (bucketTotal.spent / effectiveAllocated) * 100 : 0;
+
+                  return (
+                    <div 
+                      key={bucketTotal.bucket} 
+                      className="rounded-lg border bg-card overflow-hidden"
+                      data-testid={`category-${bucketTotal.bucket}`}
+                    >
+                      <div className="p-4">
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium">{bucketTotal.label}</p>
+                              {bucketTotal.isManualOverride && (
+                                <Badge variant="outline" className="text-xs h-5 px-1.5">
+                                  Manual
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              ${bucketTotal.spent.toLocaleString()} of ${effectiveAllocated.toLocaleString()} spent
+                            </p>
+                            {hasLineItems && (
+                              <button
+                                onClick={() => toggleBudgetCategoryExpansion(bucketTotal.bucket)}
+                                className="text-xs text-muted-foreground mt-1 hover:text-foreground flex items-center gap-1"
+                                data-testid={`toggle-breakdown-${bucketTotal.bucket}`}
+                              >
+                                {bucketTotal.isManualOverride ? (
+                                  <span>Ceremony items: ${lineItemsTotal.toLocaleString()} ({lineItems.length} items)</span>
+                                ) : (
+                                  <span>From {lineItems.length} ceremony items</span>
+                                )}
+                                {isExpanded ? (
+                                  <ChevronDown className="w-3 h-3 ml-1" />
+                                ) : (
+                                  <ChevronRight className="w-3 h-3 ml-1" />
+                                )}
+                              </button>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setEditingBucket(bucketTotal.bucket as BudgetBucket)}
+                              data-testid={`button-edit-category-${bucketTotal.bucket}`}
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        <Progress value={Math.min(percentSpent, 100)} className="h-2" />
+                        <div className="flex justify-between mt-1 text-xs text-muted-foreground">
+                          <span>{percentSpent.toFixed(0)}% spent</span>
+                          <span className={effectiveRemaining < 0 ? "text-destructive" : "text-emerald-600"}>
+                            ${effectiveRemaining.toLocaleString()} remaining
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {isExpanded && lineItems.length > 0 && (
+                        <div className="border-t bg-muted/30 p-3">
+                          <p className="text-xs font-medium text-muted-foreground mb-2">
+                            Ceremony Line Items
+                          </p>
+                          <div className="space-y-2">
+                            {lineItems.map((item, idx) => (
+                              <div 
+                                key={`${item.eventId}-${item.itemName}-${idx}`}
+                                className="flex items-center justify-between text-sm py-1.5 px-2 rounded bg-background"
+                              >
+                                <div className="min-w-0 flex-1">
+                                  <p className="font-medium truncate">{item.eventName}</p>
+                                  <p className="text-xs text-muted-foreground truncate">
+                                    {item.itemName}
+                                  </p>
+                                </div>
+                                <div className="text-right shrink-0 ml-3">
+                                  <p className="font-mono text-sm">
+                                    ${item.budgetedAmount.toLocaleString()}
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="flex justify-between mt-3 pt-2 border-t text-sm font-medium">
+                            <span>Total Budget</span>
+                            <span className="font-mono">
+                              ${lineItems.reduce((sum, item) => sum + item.budgetedAmount, 0).toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </CollapsibleContent>
           </Collapsible>
         </Card>
