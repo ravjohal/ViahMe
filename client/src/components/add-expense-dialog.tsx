@@ -193,6 +193,36 @@ export function AddExpenseDialog({
 
   const ceremonyLineItems = lineItemsData?.lineItems || [];
 
+  // When ceremony line items load in edit mode, try to match the line item by bucket category ID
+  useEffect(() => {
+    if (isEditMode && editOriginalBucketId && ceremonyLineItems.length > 0 && !selectedLineItem) {
+      // Find the line item that has the same bucket category ID as the original expense
+      const matchingLineItem = ceremonyLineItems.find(
+        item => item.budgetBucketId === editOriginalBucketId
+      );
+      if (matchingLineItem) {
+        setSelectedLineItem(matchingLineItem.name);
+      }
+    }
+  }, [isEditMode, editOriginalBucketId, ceremonyLineItems, selectedLineItem]);
+
+  // Also try to match when selectedLineItem is a category display name but ceremony line items are available
+  useEffect(() => {
+    if (isEditMode && ceremonyLineItems.length > 0 && selectedLineItem && editOriginalBucketId) {
+      // Check if selectedLineItem is a category display name (not a ceremony line item name)
+      const isLineItemName = ceremonyLineItems.some(item => item.name === selectedLineItem);
+      if (!isLineItemName) {
+        // selectedLineItem is a category display name, try to find matching ceremony line item
+        const matchingLineItem = ceremonyLineItems.find(
+          item => item.budgetBucketId === editOriginalBucketId
+        );
+        if (matchingLineItem) {
+          setSelectedLineItem(matchingLineItem.name);
+        }
+      }
+    }
+  }, [isEditMode, ceremonyLineItems, selectedLineItem, editOriginalBucketId]);
+
   // Get the budget bucket UUID from the selected line item (from API data)
   const derivedBucketId = useMemo((): string | null => {
     if (!selectedLineItem) return null;
