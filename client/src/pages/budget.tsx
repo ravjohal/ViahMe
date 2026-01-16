@@ -207,7 +207,7 @@ export default function Budget() {
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/budget/line-items", wedding?.id] });
-      queryClient.invalidateQueries({ queryKey: [`/api/budget/ceremony-analytics/${wedding?.id}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budget/ceremony-analytics", wedding?.id] });
       queryClient.invalidateQueries({ queryKey: ["/api/budget/matrix", wedding?.id] });
       // Clear editing state for this event after successful save
       setEditingLineItems(prev => {
@@ -453,8 +453,11 @@ export default function Budget() {
   }
 
   const { data: ceremonyAnalytics } = useQuery<CeremonyAnalyticsResponse>({
-    queryKey: [`/api/budget/ceremony-analytics/${wedding?.id}`],
+    queryKey: ["/api/budget/ceremony-analytics", wedding?.id],
+    queryFn: () => fetch(`/api/budget/ceremony-analytics/${wedding?.id}`, { credentials: 'include' }).then(r => r.json()),
     enabled: !!wedding?.id,
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   // Get vendor name by ID
@@ -997,7 +1000,6 @@ export default function Budget() {
       queryClient.invalidateQueries({ queryKey: ["/api/budget/allocations", wedding?.id] });
       queryClient.invalidateQueries({ queryKey: ["/api/budget/ceremony-budgets", wedding?.id] });
       queryClient.invalidateQueries({ queryKey: ["/api/budget/ceremony-analytics", wedding?.id] });
-      queryClient.invalidateQueries({ queryKey: [`/api/budget/ceremony-analytics/${wedding?.id}`] });
       toast({ title: "Ceremony budget set", description: "Budget allocation has been saved for this ceremony" });
     },
     onError: () => {
@@ -1013,7 +1015,7 @@ export default function Budget() {
       queryClient.invalidateQueries({ queryKey: ["/api/expenses", wedding?.id] });
       queryClient.invalidateQueries({ queryKey: ["/api/expenses", wedding?.id, "totals"] });
       queryClient.invalidateQueries({ queryKey: ["/api/budget/matrix", wedding?.id] });
-      queryClient.invalidateQueries({ queryKey: [`/api/budget/ceremony-analytics/${wedding?.id}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budget/ceremony-analytics", wedding?.id] });
       setDeletingExpenseId(null);
       toast({ title: "Expense deleted", description: "The expense has been removed" });
     },
@@ -1030,7 +1032,7 @@ export default function Budget() {
       queryClient.invalidateQueries({ queryKey: ["/api/expenses", wedding?.id] });
       queryClient.invalidateQueries({ queryKey: ["/api/expenses", wedding?.id, "totals"] });
       queryClient.invalidateQueries({ queryKey: ["/api/budget/matrix", wedding?.id] });
-      queryClient.invalidateQueries({ queryKey: [`/api/budget/ceremony-analytics/${wedding?.id}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budget/ceremony-analytics", wedding?.id] });
       setEditingExpense(null);
       toast({ title: "Expense updated", description: "The expense has been saved" });
     },
@@ -1071,7 +1073,7 @@ export default function Budget() {
       });
     },
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: [`/api/budget/ceremony-analytics/${wedding?.id}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budget/ceremony-analytics", wedding?.id] });
       queryClient.invalidateQueries({ queryKey: ["/api/budget/matrix", wedding?.id] });
       // Clear inline editing state for this ceremony
       setEditingCeremonyTotals(prev => {

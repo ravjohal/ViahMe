@@ -310,8 +310,10 @@ export default function Dashboard() {
       spent: number;
     }>;
   }>({
-    queryKey: [`/api/budget/ceremony-analytics/${wedding?.id}`],
+    queryKey: ["/api/budget/ceremony-analytics", wedding?.id],
+    queryFn: () => fetch(`/api/budget/ceremony-analytics/${wedding?.id}`, { credentials: 'include' }).then(r => r.json()),
     enabled: !!wedding?.id,
+    staleTime: 0,
   });
   
   const ceremonyBreakdown = ceremonyAnalytics?.ceremonyBreakdown || [];
