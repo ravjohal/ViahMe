@@ -42,6 +42,7 @@ export function RitualInfoTooltip({
             variant="ghost"
             className="h-6 w-6"
             data-testid={testId || "ritual-info-trigger"}
+            onClick={(e) => e.stopPropagation()}
           >
             <Info className="w-4 h-4" />
           </Button>
