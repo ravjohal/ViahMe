@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Trash2, Pencil, DollarSign, ArrowRightLeft, Check, Receipt, Share2, Copy, ChevronDown, ChevronRight, List, LayoutGrid, Calendar, Eye, Users, Store } from "lucide-react";
+import { Plus, Trash2, Pencil, DollarSign, ArrowRightLeft, Check, Receipt, Share2, Copy, ChevronDown, ChevronRight, ChevronLeft, List, LayoutGrid, Calendar, Eye, Users, Store } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import type { Expense, ExpenseSplit, Event, Wedding, BudgetCategory } from "@shared/schema";
@@ -33,6 +33,8 @@ export default function Expenses() {
   const [viewMode, setViewMode] = useState<"list" | "byCeremony">("list");
   const [collapsedCeremonies, setCollapsedCeremonies] = useState<Set<string>>(new Set());
   const [whoOwesSheetOpen, setWhoOwesSheetOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const { data: weddings = [] } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
@@ -587,7 +589,10 @@ export default function Expenses() {
                 <button
                   key={option.value}
                   type="button"
-                  onClick={() => setPayerFilter(option.value)}
+                  onClick={() => {
+                    setPayerFilter(option.value);
+                    setCurrentPage(1);
+                  }}
                   className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
                     payerFilter === option.value
                       ? "bg-primary text-primary-foreground"
@@ -862,9 +867,67 @@ export default function Expenses() {
                 );
               }
               
+              // Paginate the filtered expenses
+              const totalPages = Math.ceil(filteredExpenses.length / pageSize);
+              const startIndex = (currentPage - 1) * pageSize;
+              const paginatedExpenses = filteredExpenses.slice(startIndex, startIndex + pageSize);
+              
               return (
                 <div className="space-y-4">
-                  {filteredExpenses.map((expense) => renderExpenseCard(expense))}
+                  {paginatedExpenses.map((expense) => renderExpenseCard(expense))}
+                  
+                  {/* Pagination Controls */}
+                  {filteredExpenses.length > 10 && (
+                    <div className="flex items-center justify-between pt-4 border-t">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">Show:</span>
+                        <Select
+                          value={pageSize.toString()}
+                          onValueChange={(value) => {
+                            setPageSize(Number(value));
+                            setCurrentPage(1);
+                          }}
+                        >
+                          <SelectTrigger className="w-[70px] h-8" data-testid="select-page-size">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="10">10</SelectItem>
+                            <SelectItem value="25">25</SelectItem>
+                            <SelectItem value="50">50</SelectItem>
+                            <SelectItem value="100">100</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <span className="text-sm text-muted-foreground">
+                          of {filteredExpenses.length} expenses
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                          disabled={currentPage === 1}
+                          data-testid="button-prev-page"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <span className="text-sm min-w-[80px] text-center">
+                          Page {currentPage} of {totalPages}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                          disabled={currentPage === totalPages}
+                          data-testid="button-next-page"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })()}
