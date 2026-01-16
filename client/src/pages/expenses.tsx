@@ -365,7 +365,7 @@ export default function Expenses() {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="font-medium">{expense.expenseName}</h3>
-                          {expense.parentCategory && <Badge variant="default" data-testid={`badge-category-${expense.id}`}>{getCategoryLabel(expense.parentCategory)}</Badge>}
+                          {expense.bucketCategoryId && <Badge variant="default" data-testid={`badge-category-${expense.id}`}>{getCategoryLabel(expense.bucketCategoryId)}</Badge>}
                           {showCeremonyBadge && event && <Badge variant="outline">{event.name}</Badge>}
                           <Badge 
                             variant={

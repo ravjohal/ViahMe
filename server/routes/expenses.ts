@@ -74,14 +74,9 @@ export async function registerExpenseRoutes(router: Router, storage: IStorage) {
       const categories = await storage.getActiveBudgetCategories();
       
       const bucketTotals = categories.map(category => {
-        // Match allocations by UUID (bucketCategoryId) with fallback to legacy slug
-        const allocation = allocations.find(a => 
-          a.bucketCategoryId === category.id || a.bucket === category.slug
-        );
-        // Match expenses by UUID (bucketCategoryId) with fallback to legacy slug
-        const bucketExpenses = expenses.filter(e => 
-          e.bucketCategoryId === category.id || e.parentCategory === category.slug
-        );
+        // Match allocations and expenses by UUID only
+        const allocation = allocations.find(a => a.bucketCategoryId === category.id);
+        const bucketExpenses = expenses.filter(e => e.bucketCategoryId === category.id);
         const spent = bucketExpenses.reduce((sum, e) => sum + parseFloat(e.amount || '0'), 0);
         const allocated = parseFloat(allocation?.allocatedAmount || '0');
         // Auto-calculated values from ceremony budget categories
@@ -91,7 +86,6 @@ export async function registerExpenseRoutes(router: Router, storage: IStorage) {
         const isManualOverride = allocation?.isManualOverride || false;
         return {
           bucket: category.id, // UUID as primary key
-          slug: category.slug, // For backward compatibility during transition
           label: category.displayName,
           allocated,
           spent,
@@ -121,21 +115,13 @@ export async function registerExpenseRoutes(router: Router, storage: IStorage) {
 
   router.post("/", async (req, res) => {
     try {
-      const { splits, bucketCategoryId, ...expenseData } = req.body;
+      const { splits, bucketCategoryId, parentCategory, ...expenseData } = req.body;
       
-      // Resolve bucketCategoryId (UUID) to parentCategory (slug) for backward compatibility
-      let parentCategory = expenseData.parentCategory || 'other';
+      // Use bucketCategoryId (UUID) only - find 'other' bucket if not provided
       let resolvedBucketCategoryId = bucketCategoryId;
       
-      if (bucketCategoryId) {
-        // Look up the bucket category to get its slug
-        const bucketCategory = await storage.getBudgetBucketCategory(bucketCategoryId);
-        if (bucketCategory) {
-          parentCategory = bucketCategory.slug;
-          resolvedBucketCategoryId = bucketCategory.id;
-        }
-      } else if (!expenseData.parentCategory) {
-        // If no bucketCategoryId and no parentCategory, find the 'other' bucket UUID
+      if (!bucketCategoryId) {
+        // Find the 'other' bucket UUID as default
         const allCategories = await storage.getAllBudgetBucketCategories();
         const otherBucket = allCategories.find(c => c.slug === 'other');
         if (otherBucket) {
@@ -145,7 +131,7 @@ export async function registerExpenseRoutes(router: Router, storage: IStorage) {
       
       const validatedData = insertExpenseSchema.parse({
         ...expenseData,
-        parentCategory,
+        parentCategory: 'other', // Legacy field - just set to 'other' for schema validation
         bucketCategoryId: resolvedBucketCategoryId,
       });
       const expense = await storage.createExpense(validatedData);

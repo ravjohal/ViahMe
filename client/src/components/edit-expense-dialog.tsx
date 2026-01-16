@@ -16,7 +16,7 @@ type ExpenseStatus = "estimated" | "booked" | "paid";
 
 interface LineItem {
   name: string;
-  budgetBucket: BudgetBucket;
+  budgetBucketId: string; // UUID reference to budget_bucket_categories.id
   lowCost: number;
   highCost: number;
   unit: 'fixed' | 'per_person' | 'per_hour';
@@ -88,22 +88,22 @@ export function EditExpenseDialog({
 
   const ceremonyLineItems = lineItemsData?.lineItems || [];
 
-  // Derive the budget bucket from the selected line item
-  const derivedBucket = useMemo((): BudgetBucket | null => {
+  // Derive the budget bucket UUID from the selected line item
+  const derivedBucketId = useMemo((): string | null => {
     if (!selectedLineItem) return null;
     
     const lineItem = ceremonyLineItems.find(item => item.name === selectedLineItem);
     if (lineItem) {
-      return lineItem.budgetBucket;
+      return lineItem.budgetBucketId;
     }
     
     // Check if it's a bucket label (from fallback)
     const matchingCategory = budgetCategories.find(c => c.displayName === selectedLineItem);
     if (matchingCategory) {
-      return matchingCategory.id as BudgetBucket;
+      return matchingCategory.id;
     }
     
-    return "other";
+    return null;
   }, [selectedLineItem, ceremonyLineItems, budgetCategories]);
 
   useEffect(() => {
@@ -122,13 +122,17 @@ export function EditExpenseDialog({
       setPhotoFile(null);
       setPhotoPreview(null);
       
-      // Set the line item based on the bucket
+      // Set the line item based on the bucket UUID
       // For ceremony-specific expenses, the line items will be checked after they load
       // For general expenses, use the bucket label for category matching
-      const bucket = expense.parentCategory as BudgetBucket;
-      if (bucket) {
-        // Use the bucket label for the fallback category selector to work correctly
-        setSelectedLineItem(getCategoryLabel(bucket));
+      if (expense.bucketCategoryId) {
+        // Look up the category display name from the UUID
+        const category = budgetCategories.find(c => c.id === expense.bucketCategoryId);
+        if (category) {
+          setSelectedLineItem(category.displayName);
+        } else {
+          setSelectedLineItem(null);
+        }
       } else {
         setSelectedLineItem(null);
       }
@@ -183,7 +187,6 @@ export function EditExpenseDialog({
   const handleSubmit = () => {
     const parsedAmount = parseFloat(amount.replace(/,/g, ""));
     if (isNaN(parsedAmount) || parsedAmount <= 0) return;
-    if (!derivedBucket) return;
     
     const finalAmountPaid = status === "paid" 
       ? parsedAmount 
@@ -208,7 +211,7 @@ export function EditExpenseDialog({
     const payerName = payerNameMap[payer];
 
     onSave({
-      parentCategory: derivedBucket,
+      bucketCategoryId: derivedBucketId || undefined, // UUID for budget bucket
       expenseName: expenseName.trim(),
       amount: parsedAmount.toFixed(2),
       amountPaid: finalAmountPaid.toFixed(2),

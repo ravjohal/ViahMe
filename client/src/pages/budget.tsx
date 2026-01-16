@@ -2401,7 +2401,7 @@ export default function Budget() {
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-sm">{expense.expenseName}</span>
                             <Badge variant={status.variant} className="text-xs">{status.label}</Badge>
-                            {expense.parentCategory && <Badge variant="outline" className="text-xs">{getBucketLabel(expense.parentCategory)}</Badge>}
+                            {expense.bucketCategoryId && <Badge variant="outline" className="text-xs">{getBucketLabel(expense.bucketCategoryId)}</Badge>}
                           </div>
                           <div className="flex items-center gap-2">
                             <div className="invisible group-hover:visible flex items-center gap-1">
