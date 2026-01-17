@@ -82,6 +82,8 @@ import VendorAccessPasses from "@/pages/vendor-access-passes";
 import VendorTimeline from "@/pages/vendor-timeline";
 import BudgetEstimatorPage from "@/pages/budget-estimator";
 import BudgetDistribution from "@/pages/budget-distribution";
+import Blog from "@/pages/blog";
+import BlogPost from "@/pages/blog-post";
 import { VendorRoute } from "@/components/VendorRoute";
 import { CoupleRoute } from "@/components/CoupleRoute";
 import { CouplePlannerChatbot } from "@/components/CouplePlannerChatbot";
@@ -113,6 +115,8 @@ function Router() {
       <Route path="/collect/:token" component={GuestCollector} />
       <Route path="/games/:token" component={GamePortal} />
       <Route path="/vendor-timeline/:token" component={VendorTimeline} />
+      <Route path="/blog" component={Blog} />
+      <Route path="/blog/:slug" component={BlogPost} />
       
       {/* Dashboard - no specific permission, just authentication */}
       <Route path="/dashboard" component={Dashboard} />

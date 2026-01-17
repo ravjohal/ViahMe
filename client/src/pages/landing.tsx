@@ -632,6 +632,13 @@ export default function Landing() {
               <div className="flex gap-4 sm:gap-6 text-xs sm:text-sm">
                 <button 
                   className="text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
+                  onClick={() => setLocation("/blog")}
+                  data-testid="link-footer-blog"
+                >
+                  Blog
+                </button>
+                <button 
+                  className="text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
                   onClick={() => setLocation("/login")}
                   data-testid="link-footer-signin"
                 >

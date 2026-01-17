@@ -1,0 +1,19 @@
+# Robots.txt for Viah.me
+User-agent: *
+Allow: /
+Allow: /blog
+Allow: /blog/*
+Allow: /cultural-info
+Allow: /terms-of-service
+Allow: /privacy-policy
+
+# Disallow private/authenticated areas
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /messages
+Disallow: /admin/*
+Disallow: /vendor-dashboard
+Disallow: /api/
+
+# Sitemap
+Sitemap: https://viah.me/sitemap.xml
