@@ -45,7 +45,7 @@ export default function BlogPost() {
             <Link href="/blog">
               <Button variant="ghost" data-testid="link-blog">Blog</Button>
             </Link>
-            <Link href="/auth">
+            <Link href="/onboarding">
               <Button data-testid="button-get-started">Get Started</Button>
             </Link>
           </nav>
@@ -90,7 +90,7 @@ export default function BlogPost() {
             <p className="text-muted-foreground mb-4">
               Viah.me helps you budget, plan, and coordinate your multi-day South Asian celebration.
             </p>
-            <Link href="/auth">
+            <Link href="/onboarding">
               <Button size="lg" className="gap-2" data-testid="button-start-planning-cta">
                 Start Planning Today
                 <ArrowRight className="w-4 h-4" />

@@ -315,7 +315,7 @@ export default function Blog() {
             <Link href="/">
               <Button variant="ghost" data-testid="link-home">Home</Button>
             </Link>
-            <Link href="/auth">
+            <Link href="/onboarding">
               <Button data-testid="button-get-started">Get Started</Button>
             </Link>
           </nav>
@@ -369,7 +369,7 @@ export default function Blog() {
           </div>
 
           <div className="mt-12 text-center">
-            <Link href="/auth">
+            <Link href="/onboarding">
               <Button size="lg" className="gap-2" data-testid="button-start-planning">
                 Start Planning Your Wedding
                 <ArrowRight className="w-4 h-4" />
