@@ -108,6 +108,7 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
         customName?: string;
         guestCount?: string;
         date?: string;
+        side?: 'bride' | 'groom' | 'shared';  // Which family's event
       }> | undefined;
 
       if (customEvents && customEvents.length > 0) {
@@ -140,9 +141,9 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
             eventType = ceremonyType.ceremonyId.replace(/^(hindu_|sikh_|muslim_|gujarati_|south_indian_|christian_|jain_|parsi_|mixed_|other_)/, "");
             ceremonyTypeId = ceremonyType.id;
             
-            // Also look up in CEREMONY_CATALOG for default side
+            // Use side from frontend if provided, otherwise look up default
             const catalogCeremony = CEREMONY_CATALOG.find(c => c.id === ceremonyType.ceremonyId);
-            const side = getDefaultSideForCeremony(catalogCeremony);
+            const side = customEvent.side || getDefaultSideForCeremony(catalogCeremony);
             
             // Use the date from the form if provided, otherwise calculate
             if (customEvent.date) {
@@ -193,7 +194,7 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
               order: i + 1,
               guestCount: guestCount,
               date: eventDate,
-              side: "mutual" as const,
+              side: customEvent.side || "mutual",
               ceremonyTypeId: ceremonyTypeId,
             });
           }

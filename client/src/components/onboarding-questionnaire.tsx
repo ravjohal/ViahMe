@@ -21,6 +21,7 @@ const customEventSchema = z.object({
   customName: z.string().optional(),
   guestCount: z.string().optional(),
   date: z.string().optional(), // Event date in YYYY-MM-DD format
+  side: z.enum(['bride', 'groom', 'shared']).optional(), // Which family's event
 });
 
 const questionnaireSchema = z.object({
@@ -348,11 +349,13 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
           : [...availableCeremonies].sort((a, b) => a.displayOrder - b.displayOrder);
         
         const weddingDateStr = form.getValues("weddingDate");
+        const userRole = form.getValues("role"); // Default side to user's role
         const defaultEvents = ceremoniesToUse.map((ct) => ({
           ceremonyTypeId: ct.id,
           customName: "",
           guestCount: "",
           date: calculateEventDateStr(ct.id, weddingDateStr),
+          side: userRole, // Default to the user's role (bride or groom)
         }));
         form.setValue("customEvents", defaultEvents);
       }
@@ -409,7 +412,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
     const defaultCeremonyTypeId = unselected?.id || "";
     const weddingDateStr = form.getValues("weddingDate");
     const suggestedDate = calculateEventDateStr(defaultCeremonyTypeId, weddingDateStr);
-    form.setValue("customEvents", [...current, { ceremonyTypeId: defaultCeremonyTypeId, customName: "", guestCount: "", date: suggestedDate }]);
+    form.setValue("customEvents", [...current, { ceremonyTypeId: defaultCeremonyTypeId, customName: "", guestCount: "", date: suggestedDate, side: userRole }]);
   };
 
   const handleRemoveEvent = (index: number) => {
@@ -419,7 +422,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
     }
   };
 
-  const handleEventChange = (index: number, field: "ceremonyTypeId" | "customName" | "guestCount" | "date", value: string) => {
+  const handleEventChange = (index: number, field: "ceremonyTypeId" | "customName" | "guestCount" | "date" | "side", value: string) => {
     const current = form.getValues("customEvents") || [];
     const weddingDateStr = form.getValues("weddingDate");
     const updated = current.map((event, i) => {
@@ -910,7 +913,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                         <div className="mt-2 p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800">
                           <p className="text-sm text-blue-700 dark:text-blue-300 flex items-center gap-2">
                             <Info className="w-4 h-4 shrink-0" />
-                            These events are for your side of the family. You can add your partner's events too, or they can add their own after you invite them.
+                            Events default to your side. Use the dropdown to mark events as Bride's, Groom's, or Shared.
                           </p>
                         </div>
                       </div>
@@ -977,17 +980,38 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                                 </Button>
                               </div>
                                   
-                              {/* Row 2 & 3: Date and Guest inputs - indented to match ceremony selector */}
+                              {/* Row 2 & 3: Date, Side, and Guest inputs - indented to match ceremony selector */}
                               <div className="ml-9 space-y-2">
-                                <div className="flex items-center gap-2 rounded-md border bg-white dark:bg-background px-3 h-9">
-                                  <CalendarDays className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                                  <Input
-                                    type="date"
-                                    value={event.date || ""}
-                                    onChange={(e) => handleEventChange(index, "date", e.target.value)}
-                                    data-testid={`input-event-date-${index}`}
-                                    className="h-9 flex-1 border-0 p-0 focus-visible:ring-0 text-sm bg-transparent"
-                                  />
+                                <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-2 rounded-md border bg-white dark:bg-background px-3 h-9 flex-1">
+                                    <CalendarDays className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                                    <Input
+                                      type="date"
+                                      value={event.date || ""}
+                                      onChange={(e) => handleEventChange(index, "date", e.target.value)}
+                                      data-testid={`input-event-date-${index}`}
+                                      className="h-9 flex-1 border-0 p-0 focus-visible:ring-0 text-sm bg-transparent"
+                                    />
+                                  </div>
+                                  <Select
+                                    value={event.side || userRole}
+                                    onValueChange={(value) => handleEventChange(index, "side", value)}
+                                  >
+                                    <SelectTrigger className="h-9 w-28 bg-white dark:bg-background text-sm" data-testid={`select-side-${index}`}>
+                                      <SelectValue placeholder="Side" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="bride" data-testid={`option-side-bride-${index}`}>
+                                        Bride's
+                                      </SelectItem>
+                                      <SelectItem value="groom" data-testid={`option-side-groom-${index}`}>
+                                        Groom's
+                                      </SelectItem>
+                                      <SelectItem value="shared" data-testid={`option-side-shared-${index}`}>
+                                        Shared
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
                                 </div>
                                 
                                 <div className="flex items-center gap-2 rounded-md border bg-white dark:bg-background px-3 h-9">
