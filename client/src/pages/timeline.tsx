@@ -194,9 +194,9 @@ function DraggableEventNode({ event, isLast, onView, onEdit, onDelete, getEventS
                 {event.ceremonyTypeId && (
                   <RitualInfoTooltip ceremonyTypeId={event.ceremonyTypeId} />
                 )}
-                <Badge className={`${todConfig.color} gap-1`}>
+                <Badge className={`${todConfig.color} gap-1`} title={todConfig.label}>
                   <TimeIcon className="w-3 h-3" />
-                  {todConfig.label}
+                  <span className="hidden sm:inline">{todConfig.label}</span>
                 </Badge>
                 {(event.side === "bride" || event.side === "groom") && (
                   <SideBadge side={event.side} />
