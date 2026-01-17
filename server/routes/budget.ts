@@ -789,14 +789,20 @@ export async function registerBudgetRoutes(router: Router, storage: IStorage) {
       const eventsWithBudget = ceremonyBreakdown.filter(c => c.allocated > 0);
       const eventsOverBudget = ceremonyBreakdown.filter(c => c.isOverBudget);
 
-      const sideAnalytics = {
+      const sideAnalytics: Record<string, { allocated: number; spent: number; eventCount: number }> = {
         bride: { allocated: 0, spent: 0, eventCount: 0 },
         groom: { allocated: 0, spent: 0, eventCount: 0 },
+        shared: { allocated: 0, spent: 0, eventCount: 0 },
         mutual: { allocated: 0, spent: 0, eventCount: 0 },
       };
 
       ceremonyBreakdown.forEach(ceremony => {
-        const side = ceremony.side as 'bride' | 'groom' | 'mutual';
+        // Normalize side value - treat 'mutual' as 'shared' for consistency
+        let side = ceremony.side || 'shared';
+        if (side === 'mutual') side = 'shared';
+        if (!sideAnalytics[side]) {
+          sideAnalytics[side] = { allocated: 0, spent: 0, eventCount: 0 };
+        }
         sideAnalytics[side].allocated += ceremony.allocated;
         sideAnalytics[side].spent += ceremony.spent;
         sideAnalytics[side].eventCount += 1;
