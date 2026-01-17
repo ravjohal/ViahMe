@@ -366,14 +366,12 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
     const currentEvents = form.getValues("customEvents") || [];
     if (currentEvents.length === 0) return;
     
-    // Update dates for all events that don't have a manually-set date different from the calculated one
+    // Recalculate dates for all ceremony-based events when wedding date changes
     const updatedEvents = currentEvents.map((event) => {
       if (event.ceremonyTypeId && event.ceremonyTypeId !== "custom") {
         const calculatedDate = calculateEventDateStr(event.ceremonyTypeId, weddingDateValue);
-        // Only auto-fill if date is empty or matches previous calculation
-        if (!event.date || event.date === "") {
-          return { ...event, date: calculatedDate };
-        }
+        // Always update the date based on the new wedding date for non-custom ceremonies
+        return { ...event, date: calculatedDate };
       }
       return event;
     });
