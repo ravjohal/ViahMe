@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
+import path from "path";
 import { registerRoutes } from "./routes/index";
 import { setupVite, serveStatic, log } from "./vite";
 import { TaskReminderScheduler } from "./services/task-reminder-scheduler";
@@ -73,6 +74,9 @@ app.use((req, res, next) => {
 
   next();
 });
+
+// Serve static files from public folder (sitemap.xml, robots.txt, etc.)
+app.use(express.static(path.join(process.cwd(), "public")));
 
 (async () => {
   const server = await registerRoutes(app);
