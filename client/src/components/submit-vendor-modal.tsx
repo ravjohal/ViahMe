@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import type { MetroArea } from "@shared/schema";
 import {
   Dialog,
   DialogContent,
@@ -34,14 +35,6 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Store, CheckCircle2, Loader2 } from "lucide-react";
 import { VENDOR_CATEGORIES } from "@shared/schema";
-
-const CITIES = [
-  { value: "San Francisco Bay Area", label: "San Francisco Bay Area" },
-  { value: "New York City", label: "New York City" },
-  { value: "Los Angeles", label: "Los Angeles" },
-  { value: "Chicago", label: "Chicago" },
-  { value: "Seattle", label: "Seattle" },
-];
 
 const PRICE_RANGES = [
   { value: "$", label: "$ (Budget-friendly)" },
@@ -124,6 +117,12 @@ interface SubmitVendorModalProps {
 export function SubmitVendorModal({ open, onOpenChange }: SubmitVendorModalProps) {
   const { toast } = useToast();
   const [submitted, setSubmitted] = useState(false);
+
+  // Fetch metro areas from API
+  const { data: metroAreas = [] } = useQuery<MetroArea[]>({
+    queryKey: ["/api/metro-areas"],
+    enabled: open,
+  });
 
   const form = useForm<SubmitVendorFormData>({
     resolver: zodResolver(submitVendorSchema),
@@ -279,9 +278,9 @@ export function SubmitVendorModal({ open, onOpenChange }: SubmitVendorModalProps
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {CITIES.map((city) => (
-                          <SelectItem key={city.value} value={city.value}>
-                            {city.label}
+                        {metroAreas.map((area) => (
+                          <SelectItem key={area.id} value={area.value}>
+                            {area.label}
                           </SelectItem>
                         ))}
                       </SelectContent>

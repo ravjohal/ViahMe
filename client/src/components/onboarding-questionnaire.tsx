@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -15,6 +16,7 @@ import { TRADITION_HIERARCHY, getSubTraditionsForMain, getAllSubTraditions, getM
 import { useCeremonyTypesByTradition, useRegionalPricing, useAllCeremonyLineItems, calculateCeremonyTotalFromBreakdown, type CeremonyType } from "@/hooks/use-ceremony-types";
 import { RitualInfoTooltip } from "@/components/ritual-info-tooltip";
 import { preWeddingOffsets, mainCeremonies } from "@shared/ceremony-dates";
+import type { MetroArea } from "@shared/schema";
 
 const customEventSchema = z.object({
   ceremonyTypeId: z.string().optional(), // UUID from ceremony_types table
@@ -140,25 +142,6 @@ interface OnboardingQuestionnaireProps {
   onComplete: (data: QuestionnaireData) => void;
 }
 
-const METRO_AREAS = [
-  { value: "San Francisco Bay Area", label: "San Francisco Bay Area", desiPop: "High" },
-  { value: "Sacramento Metro", label: "Sacramento Metro", desiPop: "Medium" },
-  { value: "New York City", label: "New York City Metro", desiPop: "High" },
-  { value: "Los Angeles", label: "Los Angeles Metro", desiPop: "High" },
-  { value: "Chicago", label: "Chicago Metro", desiPop: "High" },
-  { value: "Houston", label: "Houston Metro", desiPop: "High" },
-  { value: "Dallas-Fort Worth", label: "Dallas-Fort Worth Metro", desiPop: "High" },
-  { value: "Washington DC", label: "Washington DC Metro", desiPop: "High" },
-  { value: "Seattle", label: "Seattle Metro", desiPop: "Medium" },
-  { value: "Atlanta", label: "Atlanta Metro", desiPop: "Medium" },
-  { value: "Philadelphia", label: "Philadelphia Metro", desiPop: "Medium" },
-  { value: "Boston", label: "Boston Metro", desiPop: "Medium" },
-  { value: "Detroit", label: "Detroit Metro", desiPop: "Medium" },
-  { value: "Toronto", label: "Toronto (Canada)", desiPop: "High" },
-  { value: "Vancouver", label: "Vancouver (Canada)", desiPop: "High" },
-  { value: "Fresno", label: "Fresno / Central Valley", desiPop: "Medium" },
-  { value: "Other", label: "Other (Enter ZIP Code)", desiPop: null },
-];
 
 const STEPS = [
   {
@@ -276,6 +259,11 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
   const { data: regionalPricingData } = useRegionalPricing();
   const { data: lineItemsMap = {} } = useAllCeremonyLineItems();
   
+  // Fetch metro areas from centralized database
+  const { data: metroAreas = [] } = useQuery<MetroArea[]>({
+    queryKey: ["/api/metro-areas"],
+  });
+  
   // Available ceremonies for the selected tradition - deduplicated by normalized name
   // This handles database duplicates like "Chunni Chadana" appearing twice or "Maiyan" vs "Mayian"
   const availableCeremonies = useMemo(() => {
@@ -382,24 +370,40 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
     form.setValue("customEvents", updatedEvents);
   }, [weddingDateValue, ceremonyTypeById]);
   
-  // Get regional multiplier based on selected location
+  // Get regional multiplier based on selected location using metro_areas database
   const regionalMultiplier = useMemo((): number => {
-    if (!regionalPricingData) return 1.0;
-    const locationToCity: Record<string, string> = {
-      "San Francisco Bay Area": "bay_area",
-      "Sacramento Metro": "sacramento",
-      "New York City": "nyc",
-      "Los Angeles": "la",
-      "Chicago": "chicago",
-      "Seattle": "seattle",
+    if (!regionalPricingData || !metroAreas.length) return 1.0;
+    
+    // Find the selected metro area using the value field
+    const selectedMetro = metroAreas.find(m => m.value === selectedLocation);
+    if (!selectedMetro?.slug) return 1.0;
+    
+    // Map metro area slugs to pricing region city keys
+    // The regional_pricing table uses abbreviated keys like "bay_area", "nyc"
+    const slugToPricingKey: Record<string, string> = {
+      "sf_bay_area": "bay_area",
+      "nyc": "nyc",
+      "los_angeles": "la",
+      "chicago": "chicago",
+      "seattle": "seattle",
+      "sacramento": "sacramento",
+      "fresno": "fresno",
+      "houston": "houston",
+      "dallas": "dallas",
+      "dc": "dc",
+      "atlanta": "atlanta",
+      "philadelphia": "philadelphia",
+      "boston": "boston",
+      "detroit": "detroit",
+      "toronto": "toronto",
+      "vancouver": "vancouver",
     };
-    const cityKey = locationToCity[selectedLocation];
-    // Default to 1.0 (no multiplier) for locations not in our pricing database
-    if (!cityKey) return 1.0;
-    const pricing = regionalPricingData.find(p => p.city === cityKey);
+    
+    const pricingKey = slugToPricingKey[selectedMetro.slug] || selectedMetro.slug;
+    const pricing = regionalPricingData.find(p => p.city === pricingKey);
     // Ensure multiplier is a number (may be string from database)
     return pricing?.multiplier ? Number(pricing.multiplier) : 1.0;
-  }, [regionalPricingData, selectedLocation]);
+  }, [regionalPricingData, selectedLocation, metroAreas]);
   
   // Get user's role (bride or groom) for messaging
   const userRole = form.watch("role");
@@ -890,8 +894,8 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {METRO_AREAS.map((area) => (
-                                <SelectItem key={area.value} value={area.value} data-testid={`option-location-${area.value.toLowerCase().replace(/\s+/g, '-')}`}>
+                              {metroAreas.map((area) => (
+                                <SelectItem key={area.id} value={area.value} data-testid={`option-location-${area.slug}`}>
                                   {area.label}
                                 </SelectItem>
                               ))}
