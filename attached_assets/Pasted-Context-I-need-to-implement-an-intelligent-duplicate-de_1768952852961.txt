@@ -1,0 +1,45 @@
+Context: I need to implement an intelligent duplicate detection system for the vendor creation flow. Currently, couples can add vendors via a modal on the /vendors page. We need to ensure we aren't creating multiple entries for the same business, while still giving the user flexibility.
+
+Technical Reference:
+
+Frontend UI: client/src/components/submit-vendor-modal.tsx
+
+Backend API: server/routes/vendors.ts
+
+Logic Layer: server/services/duplicate-detector.ts (use and extend existing logic).
+
+Requirements:
+
+Duplicate Criteria: A duplicate is defined by a combination of Business Name, Vendor Category, and Contact Email.
+
+The Submission Flow:
+
+When a couple clicks "Submit" on the SubmitVendorModal, the system should first check the database for matches based on those three criteria.
+
+Case A: Exact Match (Hard Stop): If a vendor already exists with the exact same name, category, and email, prevent the creation of a new vendor. Show a clear message: "This vendor is already in our system. Would you like to add them to your wedding list instead?" with a button to "Select Existing Vendor."
+
+Case B: Potential Match (Soft Stop): If there is a close match (e.g., same name and category, but different email, or same email but slightly different name), do not create the vendor immediately. Instead, transition the modal to a "Potential Matches Found" view.
+
+The "Choose" UI: Show the user the existing vendor(s) found in the system (Name, Category, and City if available).
+
+Option 1: "Yes, this is them" — Links the existing vendor ID to the user's wedding.
+
+Option 2: "No, create as new" — Proceeds with creating the new entry (unless it was a Case A exact match).
+
+Backend Implementation:
+
+Update POST /api/vendors to perform this check before inserting.
+
+Return a 409 Conflict status with a payload of potentialDuplicates if matches are found.
+
+Ensure the check is case-insensitive for strings.
+
+UI/UX Guidelines:
+
+Keep the transition within the SubmitVendorModal smooth (no page refreshes).
+
+Use a "Selection" card style for the potential duplicates so the couple can easily distinguish between them.
+
+Provide a "Go Back" option to edit the original form if they realized they made a typo.
+
+Goal: Prevent "Data Bloat" by forcing exact matches to use existing records, while using a "Human-in-the-loop" confirmation for potential matches to ensure we don't accidentally merge two different businesses with similar names.

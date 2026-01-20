@@ -1,4 +1,4 @@
-import type { Guest } from "@shared/schema";
+import type { Guest, Vendor } from "@shared/schema";
 
 export interface DuplicateMatch {
   importIndex: number;
@@ -175,4 +175,155 @@ export function detectImportDuplicates(
   duplicatesInBatch.sort((a, b) => b.confidence - a.confidence);
 
   return { duplicatesWithExisting, duplicatesInBatch };
+}
+
+// ========================
+// Vendor Duplicate Detection
+// ========================
+
+export interface VendorDuplicateCandidate {
+  id: string;
+  name: string;
+  category: string | null;
+  categories: string[] | null;
+  city: string | null;
+  location: string;
+  email: string | null;
+}
+
+export interface VendorDuplicateMatch {
+  vendor: VendorDuplicateCandidate;
+  matchType: 'exact' | 'potential';
+  matchReasons: string[];
+  confidence: number;
+}
+
+export interface VendorDuplicateCheckResult {
+  hasExactMatch: boolean;
+  exactMatch: VendorDuplicateMatch | null;
+  potentialMatches: VendorDuplicateMatch[];
+}
+
+interface VendorSubmission {
+  name: string;
+  categories: string[];
+  email?: string | null;
+}
+
+function hasSharedCategory(categories1: string[] | null, categories2: string[] | null): boolean {
+  if (!categories1 || !categories2) return false;
+  return categories1.some(c => categories2.includes(c));
+}
+
+function compareVendors(
+  submission: VendorSubmission,
+  existing: Vendor
+): VendorDuplicateMatch | null {
+  const reasons: string[] = [];
+  let confidence = 0;
+  
+  const nameNorm = normalizeString(submission.name);
+  const existingNameNorm = normalizeString(existing.name);
+  const exactNameMatch = nameNorm === existingNameNorm;
+  const nameSimilarity = calculateStringSimilarity(submission.name, existing.name);
+  
+  const emailMatch = submission.email && existing.email
+    ? normalizeEmail(submission.email) === normalizeEmail(existing.email)
+    : false;
+  
+  const categoryMatch = hasSharedCategory(submission.categories, existing.categories);
+  
+  // Case A: Exact Match (same name, category, and email)
+  if (exactNameMatch && categoryMatch && emailMatch) {
+    return {
+      vendor: {
+        id: existing.id,
+        name: existing.name,
+        category: existing.category,
+        categories: existing.categories,
+        city: existing.city,
+        location: existing.location,
+        email: existing.email,
+      },
+      matchType: 'exact',
+      matchReasons: ['Same business name', 'Same category', 'Same email'],
+      confidence: 1.0,
+    };
+  }
+  
+  // Case B: Potential Match - same name and category, different/no email
+  if (exactNameMatch && categoryMatch) {
+    reasons.push('Same business name');
+    reasons.push('Same category');
+    confidence = 0.8;
+    if (emailMatch) {
+      reasons.push('Same email');
+      confidence = 0.95;
+    } else if (submission.email && existing.email) {
+      reasons.push('Different email');
+    }
+  }
+  // Same email but different name
+  else if (emailMatch) {
+    reasons.push('Same email');
+    confidence = 0.7;
+    if (nameSimilarity >= 0.7) {
+      reasons.push(`Similar names (${Math.round(nameSimilarity * 100)}%)`);
+      confidence += 0.15;
+    }
+  }
+  // Similar name (not exact) with same category
+  else if (nameSimilarity >= 0.85 && categoryMatch) {
+    reasons.push(`Very similar names (${Math.round(nameSimilarity * 100)}%)`);
+    reasons.push('Same category');
+    confidence = 0.7;
+  }
+  
+  if (confidence >= 0.6 && reasons.length > 0) {
+    return {
+      vendor: {
+        id: existing.id,
+        name: existing.name,
+        category: existing.category,
+        categories: existing.categories,
+        city: existing.city,
+        location: existing.location,
+        email: existing.email,
+      },
+      matchType: 'potential',
+      matchReasons: reasons,
+      confidence,
+    };
+  }
+  
+  return null;
+}
+
+export function detectVendorDuplicates(
+  submission: VendorSubmission,
+  existingVendors: Vendor[]
+): VendorDuplicateCheckResult {
+  const potentialMatches: VendorDuplicateMatch[] = [];
+  let exactMatch: VendorDuplicateMatch | null = null;
+  
+  for (const existing of existingVendors) {
+    const match = compareVendors(submission, existing);
+    if (match) {
+      if (match.matchType === 'exact') {
+        exactMatch = match;
+        break; // Stop on first exact match
+      } else {
+        potentialMatches.push(match);
+      }
+    }
+  }
+  
+  // Sort potential matches by confidence
+  potentialMatches.sort((a, b) => b.confidence - a.confidence);
+  
+  return {
+    hasExactMatch: exactMatch !== null,
+    exactMatch,
+    potentialMatches: potentialMatches.slice(0, 5), // Limit to top 5 matches
+  };
 }

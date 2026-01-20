@@ -31,10 +31,24 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Store, CheckCircle2, Loader2 } from "lucide-react";
+import { 
+  Store, 
+  CheckCircle2, 
+  Loader2, 
+  AlertTriangle, 
+  ArrowLeft,
+  MapPin,
+  Building2,
+  Mail,
+  UserPlus,
+  Plus
+} from "lucide-react";
 import { VENDOR_CATEGORIES } from "@shared/schema";
+import { useLocation } from "wouter";
 
 const PRICE_RANGES = [
   { value: "$", label: "$ (Budget-friendly)" },
@@ -109,14 +123,44 @@ const submitVendorSchema = z.object({
 
 type SubmitVendorFormData = z.infer<typeof submitVendorSchema>;
 
+interface VendorDuplicateCandidate {
+  id: string;
+  name: string;
+  category: string | null;
+  categories: string[] | null;
+  city: string | null;
+  location: string;
+  email: string | null;
+}
+
+interface VendorDuplicateMatch {
+  vendor: VendorDuplicateCandidate;
+  matchType: 'exact' | 'potential';
+  matchReasons: string[];
+  confidence: number;
+}
+
+interface DuplicateResponse {
+  error: string;
+  duplicateType: 'exact' | 'potential';
+  exactMatch: VendorDuplicateMatch | null;
+  potentialMatches: VendorDuplicateMatch[];
+}
+
+type ModalView = 'form' | 'duplicates' | 'success';
+
 interface SubmitVendorModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSelectExistingVendor?: (vendorId: string) => void;
 }
 
-export function SubmitVendorModal({ open, onOpenChange }: SubmitVendorModalProps) {
+export function SubmitVendorModal({ open, onOpenChange, onSelectExistingVendor }: SubmitVendorModalProps) {
   const { toast } = useToast();
-  const [submitted, setSubmitted] = useState(false);
+  const [, navigate] = useLocation();
+  const [view, setView] = useState<ModalView>('form');
+  const [duplicateData, setDuplicateData] = useState<DuplicateResponse | null>(null);
+  const [pendingFormData, setPendingFormData] = useState<SubmitVendorFormData | null>(null);
 
   // Fetch metro areas from API
   const { data: metroAreas = [] } = useQuery<MetroArea[]>({
@@ -142,20 +186,37 @@ export function SubmitVendorModal({ open, onOpenChange }: SubmitVendorModalProps
   });
 
   const submitMutation = useMutation({
-    mutationFn: async (data: SubmitVendorFormData) => {
+    mutationFn: async (data: SubmitVendorFormData & { forceCreate?: boolean }) => {
       const response = await apiRequest("POST", "/api/vendors/submit", data);
+      
+      if (response.status === 409) {
+        const duplicateResponse = await response.json() as DuplicateResponse;
+        throw { isDuplicate: true, data: duplicateResponse };
+      }
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to submit vendor");
+      }
+      
       return await response.json();
     },
     onSuccess: () => {
-      setSubmitted(true);
+      setView('success');
       queryClient.invalidateQueries({ queryKey: ["/api/vendors"] });
     },
-    onError: (error: Error) => {
-      toast({
-        variant: "destructive",
-        title: "Submission Failed",
-        description: error.message || "Failed to submit vendor. Please try again.",
-      });
+    onError: (error: any) => {
+      if (error?.isDuplicate) {
+        setDuplicateData(error.data);
+        setPendingFormData(form.getValues());
+        setView('duplicates');
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Submission Failed",
+          description: error.message || "Failed to submit vendor. Please try again.",
+        });
+      }
     },
   });
 
@@ -163,13 +224,44 @@ export function SubmitVendorModal({ open, onOpenChange }: SubmitVendorModalProps
     submitMutation.mutate(data);
   };
 
+  const handleForceCreate = () => {
+    if (pendingFormData) {
+      submitMutation.mutate({ ...pendingFormData, forceCreate: true });
+    }
+  };
+
+  const handleSelectExisting = (vendorId: string) => {
+    if (onSelectExistingVendor) {
+      onSelectExistingVendor(vendorId);
+      toast({
+        title: "Vendor Selected",
+        description: "The existing vendor has been added to your list.",
+      });
+    } else {
+      toast({
+        title: "Vendor Found",
+        description: "Redirecting you to view this vendor's profile.",
+      });
+      navigate(`/vendor/${vendorId}`);
+    }
+    handleClose();
+  };
+
+  const handleGoBack = () => {
+    setView('form');
+    setDuplicateData(null);
+  };
+
   const handleClose = () => {
-    setSubmitted(false);
+    setView('form');
+    setDuplicateData(null);
+    setPendingFormData(null);
     form.reset();
     onOpenChange(false);
   };
 
-  if (submitted) {
+  // Success View
+  if (view === 'success') {
     return (
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-md">
@@ -191,6 +283,134 @@ export function SubmitVendorModal({ open, onOpenChange }: SubmitVendorModalProps
     );
   }
 
+  // Duplicate Detection View
+  if (view === 'duplicates' && duplicateData) {
+    const isExactMatch = duplicateData.duplicateType === 'exact';
+    const matchesToShow = isExactMatch && duplicateData.exactMatch 
+      ? [duplicateData.exactMatch] 
+      : duplicateData.potentialMatches;
+
+    return (
+      <Dialog open={open} onOpenChange={handleClose}>
+        <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-500" />
+              {isExactMatch ? "Vendor Already Exists" : "Potential Matches Found"}
+            </DialogTitle>
+            <DialogDescription>
+              {isExactMatch 
+                ? "This vendor is already in our system. Would you like to add them to your wedding list instead?"
+                : "We found vendors that might match the one you're adding. Please review them below."
+              }
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 mt-4">
+            {matchesToShow.map((match, index) => (
+              <Card 
+                key={match.vendor.id} 
+                className="hover-elevate cursor-pointer transition-all"
+                data-testid={`card-duplicate-vendor-${index}`}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Building2 className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                        <h3 className="font-semibold truncate">{match.vendor.name}</h3>
+                      </div>
+                      
+                      <div className="space-y-1 text-sm text-muted-foreground">
+                        {match.vendor.categories && match.vendor.categories.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {match.vendor.categories.slice(0, 3).map((cat) => (
+                              <Badge key={cat} variant="secondary" className="text-xs">
+                                {CATEGORY_LABELS[cat] || cat}
+                              </Badge>
+                            ))}
+                            {match.vendor.categories.length > 3 && (
+                              <Badge variant="outline" className="text-xs">
+                                +{match.vendor.categories.length - 3}
+                              </Badge>
+                            )}
+                          </div>
+                        )}
+                        
+                        {match.vendor.city && (
+                          <div className="flex items-center gap-1">
+                            <MapPin className="w-3 h-3" />
+                            <span>{match.vendor.city}</span>
+                          </div>
+                        )}
+                        
+                        {match.vendor.email && (
+                          <div className="flex items-center gap-1">
+                            <Mail className="w-3 h-3" />
+                            <span className="truncate">{match.vendor.email}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {match.matchReasons.map((reason, i) => (
+                          <Badge key={i} variant="outline" className="text-xs bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800">
+                            {reason}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+
+                    <Button
+                      onClick={() => handleSelectExisting(match.vendor.id)}
+                      data-testid={`button-select-vendor-${index}`}
+                    >
+                      <UserPlus className="w-4 h-4 mr-2" />
+                      Select
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="flex flex-col gap-3 mt-6 pt-4 border-t">
+            {!isExactMatch && (
+              <Button
+                onClick={handleForceCreate}
+                variant="outline"
+                disabled={submitMutation.isPending}
+                data-testid="button-create-new-vendor"
+              >
+                {submitMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-4 h-4 mr-2" />
+                    No, create as new vendor
+                  </>
+                )}
+              </Button>
+            )}
+            
+            <Button
+              onClick={handleGoBack}
+              variant="ghost"
+              data-testid="button-go-back-edit"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Go back and edit
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  // Form View
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -488,7 +708,7 @@ export function SubmitVendorModal({ open, onOpenChange }: SubmitVendorModalProps
                 {submitMutation.isPending ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Submitting...
+                    Checking...
                   </>
                 ) : (
                   "Submit Vendor"

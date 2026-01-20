@@ -6,6 +6,7 @@ import type { IStorage } from "../storage";
 import { insertVendorSchema, insertBookingSchema, insertServicePackageSchema, insertReviewSchema, coupleSubmitVendorSchema, type Vendor, type InsertVendor } from "@shared/schema";
 import { ensureVendorAccess } from "./middleware";
 import { sendBookingConfirmationEmail, sendVendorNotificationEmail } from "../email";
+import { detectVendorDuplicates } from "../services/duplicate-detector";
 
 export async function registerVendorRoutes(router: Router, storage: IStorage) {
   router.get("/", async (req, res) => {
@@ -496,6 +497,43 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
       }
       
       const validatedData = coupleSubmitVendorSchema.parse(req.body);
+      
+      // Check for forced creation (user chose to create despite potential matches)
+      const forceCreate = req.body.forceCreate === true;
+      
+      if (!forceCreate) {
+        // Check for duplicates against approved vendors only
+        const allVendors = await storage.getAllVendors();
+        const existingVendors = allVendors.filter(v => v.approvalStatus === 'approved');
+        const duplicateCheck = detectVendorDuplicates(
+          {
+            name: validatedData.name,
+            categories: validatedData.categories,
+            email: validatedData.email || null,
+          },
+          existingVendors
+        );
+        
+        // Case A: Exact match - hard stop
+        if (duplicateCheck.hasExactMatch && duplicateCheck.exactMatch) {
+          return res.status(409).json({
+            error: "This vendor is already in our system",
+            duplicateType: "exact",
+            exactMatch: duplicateCheck.exactMatch,
+            potentialMatches: [],
+          });
+        }
+        
+        // Case B: Potential matches - soft stop
+        if (duplicateCheck.potentialMatches.length > 0) {
+          return res.status(409).json({
+            error: "Potential duplicate vendors found",
+            duplicateType: "potential",
+            exactMatch: null,
+            potentialMatches: duplicateCheck.potentialMatches,
+          });
+        }
+      }
       
       const vendorData: InsertVendor = {
         name: validatedData.name,
