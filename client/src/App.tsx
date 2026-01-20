@@ -53,6 +53,7 @@ import VendorTemplates from "@/pages/vendor-templates";
 import VendorReminders from "@/pages/vendor-reminders";
 import ClaimProfile from "@/pages/claim-profile";
 import ClaimYourBusiness from "@/pages/claim-your-business";
+import Admin from "@/pages/admin";
 import AdminVendorClaims from "@/pages/admin-vendor-claims";
 import AdminCeremonyTemplates from "@/pages/admin-ceremony-templates";
 import AdminBudgetBucketCategories from "@/pages/admin-budget-bucket-categories";
@@ -86,6 +87,7 @@ import Blog from "@/pages/blog";
 import BlogPost from "@/pages/blog-post";
 import { VendorRoute } from "@/components/VendorRoute";
 import { CoupleRoute } from "@/components/CoupleRoute";
+import { AdminRoute } from "@/components/AdminRoute";
 import { CouplePlannerChatbot } from "@/components/CouplePlannerChatbot";
 
 function Router() {
@@ -291,13 +293,26 @@ function Router() {
           <SpeechGenerator />
         </CoupleRoute>
       </Route>
-      <Route path="/admin/vendor-claims">
-        <CoupleRoute>
-          <AdminVendorClaims />
-        </CoupleRoute>
+      <Route path="/admin">
+        <AdminRoute>
+          <Admin />
+        </AdminRoute>
       </Route>
-      <Route path="/admin/ceremony-templates" component={AdminCeremonyTemplates} />
-      <Route path="/admin/budget-bucket-categories" component={AdminBudgetBucketCategories} />
+      <Route path="/admin/vendor-claims">
+        <AdminRoute>
+          <AdminVendorClaims />
+        </AdminRoute>
+      </Route>
+      <Route path="/admin/ceremony-templates">
+        <AdminRoute>
+          <AdminCeremonyTemplates />
+        </AdminRoute>
+      </Route>
+      <Route path="/admin/budget-bucket-categories">
+        <AdminRoute>
+          <AdminBudgetBucketCategories />
+        </AdminRoute>
+      </Route>
       <Route path="/settings" component={Settings} />
       
       {/* Vendor pages */}
