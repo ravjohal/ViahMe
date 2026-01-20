@@ -74,15 +74,10 @@ export default function Settings() {
     }
   };
 
-  const METRO_AREAS = [
-    { value: "San Francisco Bay Area", label: "San Francisco Bay Area" },
-    { value: "New York City", label: "New York City Metro" },
-    { value: "Los Angeles", label: "Los Angeles Metro" },
-    { value: "Chicago", label: "Chicago Metro" },
-    { value: "Seattle", label: "Seattle Metro" },
-    { value: "Fresno", label: "Fresno Metro" },
-    { value: "Sacramento", label: "Sacramento Metro" },
-  ];
+  // Fetch metro areas from centralized API
+  const { data: metroAreas = [] } = useQuery<Array<{ id: string; slug: string; value: string; label: string }>>({
+    queryKey: ["/api/metro-areas"],
+  });
 
   const { data: weddings } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
@@ -374,8 +369,8 @@ export default function Settings() {
                       <SelectValue placeholder="Select your metro area" />
                     </SelectTrigger>
                     <SelectContent>
-                      {METRO_AREAS.map((area) => (
-                        <SelectItem key={area.value} value={area.value}>
+                      {metroAreas.map((area) => (
+                        <SelectItem key={area.id} value={area.value} data-testid={`option-location-${area.slug}`}>
                           {area.label}
                         </SelectItem>
                       ))}
