@@ -542,9 +542,6 @@ export const users = pgTable("users", {
   lastLoginAt: timestamp("last_login_at"),
   isSiteAdmin: boolean("is_site_admin").notNull().default(false), // Platform-wide admin access
   createdAt: timestamp("created_at").notNull().defaultNow(),
-  // Deprecated fields - keeping for backward compatibility
-  username: text("username"),
-  password: text("password"),
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({
@@ -555,8 +552,6 @@ export const insertUserSchema = createInsertSchema(users).omit({
   resetTokenExpires: true,
   lastLoginAt: true,
   createdAt: true,
-  username: true,
-  password: true,
 }).extend({
   email: z.string().email(),
   passwordHash: z.string().min(8),
