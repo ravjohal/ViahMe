@@ -207,6 +207,73 @@ export const DEFAULT_CATEGORY_METADATA: Record<BudgetBucket, {
 };
 
 // ============================================================================
+// METRO AREAS TABLE - Centralized location/city management
+// ============================================================================
+
+export const metroAreas = pgTable("metro_areas", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Slug for code compatibility (e.g., 'sf_bay_area', 'nyc')
+  slug: varchar("slug").notNull().unique(),
+  
+  // Display values
+  value: varchar("value").notNull().unique(), // Stored value (e.g., "San Francisco Bay Area")
+  label: text("label").notNull(), // Display label (e.g., "San Francisco Bay Area")
+  
+  // Metadata for filtering and display
+  state: varchar("state"), // US state abbreviation (e.g., "CA", "NY")
+  country: varchar("country").notNull().default('US'), // Country code
+  desiPopulation: varchar("desi_population"), // 'high', 'medium', 'low' - South Asian population density
+  hasVendorCoverage: boolean("has_vendor_coverage").default(true), // Do we have vendors in this area?
+  
+  // Admin controls
+  displayOrder: integer("display_order").default(0),
+  isActive: boolean("is_active").default(true),
+  
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertMetroAreaSchema = createInsertSchema(metroAreas).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertMetroArea = z.infer<typeof insertMetroAreaSchema>;
+export type MetroArea = typeof metroAreas.$inferSelect;
+
+// Default metro areas for seeding
+export const DEFAULT_METRO_AREAS: Array<{
+  slug: string;
+  value: string;
+  label: string;
+  state: string | null;
+  country: string;
+  desiPopulation: string;
+  hasVendorCoverage: boolean;
+  displayOrder: number;
+}> = [
+  { slug: "sf_bay_area", value: "San Francisco Bay Area", label: "San Francisco Bay Area", state: "CA", country: "US", desiPopulation: "high", hasVendorCoverage: true, displayOrder: 1 },
+  { slug: "sacramento", value: "Sacramento Metro", label: "Sacramento Metro Area", state: "CA", country: "US", desiPopulation: "medium", hasVendorCoverage: true, displayOrder: 2 },
+  { slug: "fresno", value: "Fresno Metro", label: "Fresno / Central Valley", state: "CA", country: "US", desiPopulation: "medium", hasVendorCoverage: true, displayOrder: 3 },
+  { slug: "los_angeles", value: "Los Angeles", label: "Los Angeles Metro", state: "CA", country: "US", desiPopulation: "high", hasVendorCoverage: true, displayOrder: 4 },
+  { slug: "nyc", value: "New York City", label: "New York City Metro", state: "NY", country: "US", desiPopulation: "high", hasVendorCoverage: true, displayOrder: 5 },
+  { slug: "chicago", value: "Chicago", label: "Chicago Metro", state: "IL", country: "US", desiPopulation: "high", hasVendorCoverage: true, displayOrder: 6 },
+  { slug: "houston", value: "Houston", label: "Houston Metro", state: "TX", country: "US", desiPopulation: "high", hasVendorCoverage: true, displayOrder: 7 },
+  { slug: "dallas", value: "Dallas-Fort Worth", label: "Dallas-Fort Worth Metro", state: "TX", country: "US", desiPopulation: "high", hasVendorCoverage: true, displayOrder: 8 },
+  { slug: "dc", value: "Washington DC", label: "Washington DC Metro", state: "DC", country: "US", desiPopulation: "high", hasVendorCoverage: true, displayOrder: 9 },
+  { slug: "seattle", value: "Seattle", label: "Seattle Metro", state: "WA", country: "US", desiPopulation: "medium", hasVendorCoverage: true, displayOrder: 10 },
+  { slug: "atlanta", value: "Atlanta", label: "Atlanta Metro", state: "GA", country: "US", desiPopulation: "medium", hasVendorCoverage: true, displayOrder: 11 },
+  { slug: "philadelphia", value: "Philadelphia", label: "Philadelphia Metro", state: "PA", country: "US", desiPopulation: "medium", hasVendorCoverage: true, displayOrder: 12 },
+  { slug: "boston", value: "Boston", label: "Boston Metro", state: "MA", country: "US", desiPopulation: "medium", hasVendorCoverage: true, displayOrder: 13 },
+  { slug: "detroit", value: "Detroit", label: "Detroit Metro", state: "MI", country: "US", desiPopulation: "medium", hasVendorCoverage: true, displayOrder: 14 },
+  { slug: "toronto", value: "Toronto", label: "Toronto (Canada)", state: null, country: "CA", desiPopulation: "high", hasVendorCoverage: true, displayOrder: 15 },
+  { slug: "vancouver", value: "Vancouver", label: "Vancouver (Canada)", state: null, country: "CA", desiPopulation: "high", hasVendorCoverage: true, displayOrder: 16 },
+  { slug: "other", value: "Other", label: "Other (Enter ZIP Code)", state: null, country: "US", desiPopulation: null as any, hasVendorCoverage: false, displayOrder: 99 },
+];
+
+// ============================================================================
 // WEDDING TRADITIONS TABLE - Database-driven tradition management
 // ============================================================================
 

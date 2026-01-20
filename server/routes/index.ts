@@ -73,6 +73,7 @@ import { createVendorAccessPassesRouter, createVendorCollaborationViewRouter } f
 import { createCeremonyExplainersRouter, createPublicCeremonyExplainersRouter } from "./ceremony-explainers";
 import traditionRitualsRouter from "./tradition-rituals";
 import { registerTranslationRoutes } from "./translation";
+import { registerMetroAreasRoutes } from "./metro-areas";
 import { seedVendors } from "../seed-data";
 
 let defaultStorageSeeded = false;
@@ -321,6 +322,9 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   const vendorTaskCategoriesRouter = Router();
   await registerVendorTaskCategoriesRoutes(vendorTaskCategoriesRouter, storage);
   app.use("/api/vendor-task-categories", vendorTaskCategoriesRouter);
+
+  // Metro Areas (centralized city/location management)
+  registerMetroAreasRoutes(app, storage);
 
   const expenseRouter = Router();
   await registerExpenseRoutes(expenseRouter, storage);

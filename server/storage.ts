@@ -303,6 +303,8 @@ import {
   vendorTaskCategories,
   type VendorTaskCategory,
   type InsertVendorTaskCategory,
+  type MetroArea,
+  type InsertMetroArea,
 } from "@shared/schema";
 import { randomUUID, randomBytes } from "crypto";
 import bcrypt from "bcrypt";
@@ -1240,6 +1242,16 @@ export interface IStorage {
   updatePricingRegion(id: string, region: Partial<InsertPricingRegion>): Promise<PricingRegion | undefined>;
   deletePricingRegion(id: string): Promise<boolean>;
   seedPricingRegions(): Promise<PricingRegion[]>;
+
+  // Metro Areas (centralized location/city management)
+  getMetroArea(id: string): Promise<MetroArea | undefined>;
+  getMetroAreaBySlug(slug: string): Promise<MetroArea | undefined>;
+  getMetroAreaByValue(value: string): Promise<MetroArea | undefined>;
+  getAllMetroAreas(): Promise<MetroArea[]>;
+  getActiveMetroAreas(): Promise<MetroArea[]>;
+  createMetroArea(area: InsertMetroArea): Promise<MetroArea>;
+  updateMetroArea(id: string, area: Partial<InsertMetroArea>): Promise<MetroArea | undefined>;
+  deleteMetroArea(id: string): Promise<boolean>;
 
   // Favour Categories (database-driven favour/gift types)
   getFavourCategory(id: string): Promise<FavourCategory | undefined>;
@@ -4745,6 +4757,16 @@ export class MemStorage implements IStorage {
   async deletePricingRegion(id: string): Promise<boolean> { return false; }
   async seedPricingRegions(): Promise<PricingRegion[]> { throw new Error('MemStorage does not support Pricing Regions. Use DBStorage.'); }
 
+  // Metro Areas (database-driven) - stub methods for MemStorage
+  async getMetroArea(id: string): Promise<MetroArea | undefined> { return undefined; }
+  async getMetroAreaBySlug(slug: string): Promise<MetroArea | undefined> { return undefined; }
+  async getMetroAreaByValue(value: string): Promise<MetroArea | undefined> { return undefined; }
+  async getAllMetroAreas(): Promise<MetroArea[]> { return []; }
+  async getActiveMetroAreas(): Promise<MetroArea[]> { return []; }
+  async createMetroArea(area: InsertMetroArea): Promise<MetroArea> { throw new Error('MemStorage does not support Metro Areas. Use DBStorage.'); }
+  async updateMetroArea(id: string, area: Partial<InsertMetroArea>): Promise<MetroArea | undefined> { throw new Error('MemStorage does not support Metro Areas. Use DBStorage.'); }
+  async deleteMetroArea(id: string): Promise<boolean> { return false; }
+
   // Favour Categories (database-driven) - stub methods for MemStorage
   async getFavourCategory(id: string): Promise<FavourCategory | undefined> { return undefined; }
   async getFavourCategoryBySlug(slug: string): Promise<FavourCategory | undefined> { return undefined; }
@@ -4852,8 +4874,8 @@ export class DBStorage implements IStorage {
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const result = await this.db.select().from(schema.users).where(eq(schema.users.username, username));
-    return result[0];
+    // Username field was removed - return undefined for backward compatibility
+    return undefined;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
@@ -11844,6 +11866,62 @@ export class DBStorage implements IStorage {
       seeded.push(region);
     }
     return seeded;
+  }
+
+  // Metro Areas (database-driven)
+  async getMetroArea(id: string): Promise<MetroArea | undefined> {
+    const result = await this.db.select()
+      .from(schema.metroAreas)
+      .where(eq(schema.metroAreas.id, id));
+    return result[0];
+  }
+
+  async getMetroAreaBySlug(slug: string): Promise<MetroArea | undefined> {
+    const result = await this.db.select()
+      .from(schema.metroAreas)
+      .where(eq(schema.metroAreas.slug, slug));
+    return result[0];
+  }
+
+  async getMetroAreaByValue(value: string): Promise<MetroArea | undefined> {
+    const result = await this.db.select()
+      .from(schema.metroAreas)
+      .where(eq(schema.metroAreas.value, value));
+    return result[0];
+  }
+
+  async getAllMetroAreas(): Promise<MetroArea[]> {
+    return await this.db.select()
+      .from(schema.metroAreas)
+      .orderBy(sql`${schema.metroAreas.displayOrder} ASC, ${schema.metroAreas.label} ASC`);
+  }
+
+  async getActiveMetroAreas(): Promise<MetroArea[]> {
+    return await this.db.select()
+      .from(schema.metroAreas)
+      .where(eq(schema.metroAreas.isActive, true))
+      .orderBy(sql`${schema.metroAreas.displayOrder} ASC, ${schema.metroAreas.label} ASC`);
+  }
+
+  async createMetroArea(area: InsertMetroArea): Promise<MetroArea> {
+    const result = await this.db.insert(schema.metroAreas)
+      .values(area)
+      .returning();
+    return result[0];
+  }
+
+  async updateMetroArea(id: string, area: Partial<InsertMetroArea>): Promise<MetroArea | undefined> {
+    const result = await this.db.update(schema.metroAreas)
+      .set({ ...area, updatedAt: new Date() })
+      .where(eq(schema.metroAreas.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteMetroArea(id: string): Promise<boolean> {
+    await this.db.delete(schema.metroAreas)
+      .where(eq(schema.metroAreas.id, id));
+    return true;
   }
 
   // Favour Categories (database-driven)
