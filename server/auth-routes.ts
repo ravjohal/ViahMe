@@ -88,6 +88,26 @@ export function registerAuthRoutes(app: Express, storage: IStorage) {
         emailVerified: true, // Auto-verify on registration
       });
 
+      // If vendor registration, create a vendor profile
+      if (data.role === 'vendor') {
+        const businessName = (req.body as any).businessName || data.email.split('@')[0];
+        await storage.createVendor({
+          name: businessName,
+          email: data.email,
+          userId: user.id,
+          claimed: true,
+          isPublished: false, // Vendor needs to complete profile before publishing
+          source: 'vendor_registered',
+          city: 'San Francisco Bay Area', // Default, can be updated later
+          priceRange: '$$', // Default, can be updated later
+          categories: [],
+          culturalSpecialties: [],
+          calendarShared: false,
+          calendarSource: 'local',
+          featured: false,
+        });
+      }
+
       // Set session and auto-login
       req.session.userId = user.id;
       req.session.userRole = user.role;

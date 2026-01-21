@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -12,13 +11,12 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
-import { Briefcase, Mail } from "lucide-react";
+import { Briefcase } from "lucide-react";
 import logoUrl from "@assets/viah-logo_1763669612969.png";
 
 const registerSchema = z
@@ -38,8 +36,6 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 export default function VendorRegister() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const [registrationComplete, setRegistrationComplete] = useState(false);
-  const [registeredEmail, setRegisteredEmail] = useState("");
 
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -61,13 +57,13 @@ export default function VendorRegister() {
       });
       return await response.json();
     },
-    onSuccess: (data: any) => {
-      setRegisteredEmail(data.user.email);
-      setRegistrationComplete(true);
+    onSuccess: () => {
       toast({
         title: "Registration successful!",
-        description: "Please check your email to verify your account.",
+        description: "Welcome to Viah.me! Let's set up your vendor profile.",
       });
+      // Redirect to vendor onboarding wizard to complete profile
+      setLocation("/vendor-onboarding");
     },
     onError: (error: any) => {
       const errorMessage = error.message || "Registration failed";
@@ -82,44 +78,6 @@ export default function VendorRegister() {
   const onSubmit = (data: RegisterFormData) => {
     registerMutation.mutate(data);
   };
-
-  if (registrationComplete) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-indigo-50 to-blue-50 flex items-center justify-center p-4">
-        <div className="w-full max-w-md">
-          <div className="text-center mb-8">
-            <Link href="/" data-testid="link-logo-home">
-              <img
-                src={logoUrl}
-                alt="Viah.me"
-                className="h-20 mx-auto object-contain mb-4 cursor-pointer hover:opacity-80 transition-opacity"
-              />
-            </Link>
-          </div>
-
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-purple-100 p-8 text-center">
-            <Mail className="h-16 w-16 text-purple-600 mx-auto mb-4" />
-            <h1 className="font-display text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mb-2">
-              Check Your Email
-            </h1>
-            <p className="text-muted-foreground mb-6">
-              We've sent a verification link to{" "}
-              <strong className="text-foreground">{registeredEmail}</strong>.
-              Please verify your email to complete your vendor registration.
-            </p>
-            <Link href="/vendor-login">
-              <Button
-                className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-full"
-                data-testid="button-go-to-vendor-login"
-              >
-                Go to Vendor Login
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-indigo-50 to-blue-50 flex items-center justify-center p-4">
