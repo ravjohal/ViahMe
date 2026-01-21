@@ -105,7 +105,11 @@ function Router() {
       <Route path="/login" component={Login} />
       <Route path="/vendor-login" component={VendorLogin} />
       <Route path="/vendor-register" component={VendorRegister} />
-      <Route path="/vendor-onboarding" component={VendorOnboarding} />
+      <Route path="/vendor-onboarding">
+        <VendorRoute>
+          <VendorOnboarding />
+        </VendorRoute>
+      </Route>
       <Route path="/verify-email" component={VerifyEmail} />
       <Route path="/claim-profile/:token" component={ClaimProfile} />
       <Route path="/claim-your-business" component={ClaimYourBusiness} />

@@ -224,9 +224,9 @@ export default function VendorOnboarding() {
 
   if (vendorLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-indigo-50 to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading your profile...</p>
         </div>
       </div>
@@ -235,7 +235,7 @@ export default function VendorOnboarding() {
 
   if (!vendor) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-indigo-50 to-blue-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card className="max-w-md">
           <CardHeader>
             <CardTitle>Vendor Profile Not Found</CardTitle>
@@ -254,7 +254,7 @@ export default function VendorOnboarding() {
   const progress = (currentStep / 5) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-indigo-50 to-blue-50 py-8 px-4">
+    <div className="min-h-screen bg-background py-8 px-4">
       <div className="max-w-2xl mx-auto">
         {/* Logo */}
         <div className="text-center mb-6">
@@ -272,15 +272,15 @@ export default function VendorOnboarding() {
                 <div
                   key={step.id}
                   className={`flex flex-col items-center ${
-                    isActive ? "text-purple-600" : isCompleted ? "text-green-600" : "text-muted-foreground"
+                    isActive ? "text-primary" : isCompleted ? "text-green-600 dark:text-green-500" : "text-muted-foreground"
                   }`}
                 >
                   <div
                     className={`w-10 h-10 rounded-full flex items-center justify-center mb-1 ${
                       isActive
-                        ? "bg-purple-600 text-white"
+                        ? "bg-primary text-primary-foreground"
                         : isCompleted
-                        ? "bg-green-600 text-white"
+                        ? "bg-green-600 text-white dark:bg-green-500"
                         : "bg-muted"
                     }`}
                   >
@@ -322,8 +322,8 @@ export default function VendorOnboarding() {
                     onClick={() => handleCategoryToggle(cat.value)}
                     className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
                       categories.includes(cat.value)
-                        ? "border-purple-600 bg-purple-50"
-                        : "border-muted hover:border-purple-300"
+                        ? "border-primary bg-primary/10"
+                        : "border-muted hover:border-primary/50"
                     }`}
                     data-testid={`category-${cat.value}`}
                   >
@@ -345,8 +345,8 @@ export default function VendorOnboarding() {
                     onClick={() => handleAreaToggle(area.value)}
                     className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
                       areasServed.includes(area.value)
-                        ? "border-purple-600 bg-purple-50"
-                        : "border-muted hover:border-purple-300"
+                        ? "border-primary bg-primary/10"
+                        : "border-muted hover:border-primary/50"
                     }`}
                     data-testid={`area-${area.value}`}
                   >
@@ -390,8 +390,8 @@ export default function VendorOnboarding() {
                         onClick={() => handleSpecialtyToggle(specialty)}
                         className={`px-3 py-1.5 rounded-full border cursor-pointer transition-all text-sm ${
                           culturalSpecialties.includes(specialty)
-                            ? "border-purple-600 bg-purple-100 text-purple-700"
-                            : "border-muted hover:border-purple-300"
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-muted hover:border-primary/50"
                         }`}
                         data-testid={`specialty-${specialty}`}
                       >
@@ -473,7 +473,7 @@ export default function VendorOnboarding() {
               <Button
                 onClick={handleNext}
                 disabled={updateMutation.isPending}
-                className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+                className="bg-primary"
                 data-testid="button-next"
               >
                 {updateMutation.isPending ? (
