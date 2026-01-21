@@ -55,7 +55,7 @@ export async function sendBrevoEmail(params: BrevoEmailParams) {
   }
 }
 
-export async function getUncachableResendClient() {
+export async function getEmailClient() {
   return getBrevoClient();
 }
 

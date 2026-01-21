@@ -5269,18 +5269,16 @@ export class DBStorage implements IStorage {
       })
       .where(eq(schema.vendors.id, vendorId));
     
-    // In production, this would send an email/SMS via Resend
+    // In production, this would send an email/SMS via Brevo
     console.log(`[ClaimNotification] Would notify vendor ${vendor.name} at ${vendor.phone || vendor.email}`);
   }
 
   async sendClaimEmail(vendorId: string, email: string, vendorName: string, claimLink: string): Promise<void> {
-    // Use Resend to send the claim email
+    // Use Brevo to send the claim email
     try {
-      const { Resend } = await import('resend');
-      const resend = new Resend(process.env.RESEND_API_KEY);
+      const { sendBrevoEmail } = await import('./email');
       
-      await resend.emails.send({
-        from: 'Viah.me <noreply@viah.me>',
+      await sendBrevoEmail({
         to: email,
         subject: `Claim Your Business Profile on Viah.me - ${vendorName}`,
         html: `

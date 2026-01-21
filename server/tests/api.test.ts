@@ -5,12 +5,14 @@ import session from 'express-session';
 import { registerRoutes } from '../routes';
 import { MemStorage } from '../storage';
 
-vi.mock('../services/resend', () => ({
+vi.mock('../email', () => ({
+  sendBrevoEmail: vi.fn().mockResolvedValue({ success: true }),
   sendBookingConfirmationEmail: vi.fn().mockResolvedValue({ success: true }),
-  sendVendorBookingNotificationEmail: vi.fn().mockResolvedValue({ success: true }),
+  sendVendorNotificationEmail: vi.fn().mockResolvedValue({ success: true }),
   sendInvitationEmail: vi.fn().mockResolvedValue({ success: true }),
   sendRsvpConfirmationEmail: vi.fn().mockResolvedValue({ success: true }),
-  sendTaskReminderEmail: vi.fn().mockResolvedValue({ success: true }),
+  getBrevoClient: vi.fn().mockResolvedValue({ client: {}, fromEmail: 'test@viah.me', fromName: 'Viah.me' }),
+  getEmailClient: vi.fn().mockResolvedValue({ client: {}, fromEmail: 'test@viah.me', fromName: 'Viah.me' }),
 }));
 
 vi.mock('twilio', () => ({

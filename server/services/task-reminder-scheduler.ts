@@ -1,46 +1,9 @@
-import { Resend } from 'resend';
 import twilio from 'twilio';
 import type { IStorage } from '../storage';
 import type { Task, Wedding, User } from '@shared/schema';
+import { sendBrevoEmail } from '../email';
 
-let resendConnectionSettings: any;
 let twilioConnectionSettings: any;
-
-async function getResendCredentials() {
-  const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
-  const xReplitToken = process.env.REPL_IDENTITY 
-    ? 'repl ' + process.env.REPL_IDENTITY 
-    : process.env.WEB_REPL_RENEWAL 
-    ? 'depl ' + process.env.WEB_REPL_RENEWAL 
-    : null;
-
-  if (!xReplitToken || !hostname) {
-    return null;
-  }
-
-  try {
-    resendConnectionSettings = await fetch(
-      'https://' + hostname + '/api/v2/connection?include_secrets=true&connector_names=resend',
-      {
-        headers: {
-          'Accept': 'application/json',
-          'X_REPLIT_TOKEN': xReplitToken
-        }
-      }
-    ).then(res => res.json()).then(data => data.items?.[0]);
-
-    if (!resendConnectionSettings || !resendConnectionSettings.settings?.api_key) {
-      return null;
-    }
-    return {
-      apiKey: resendConnectionSettings.settings.api_key,
-      fromEmail: resendConnectionSettings.settings.from_email || 'noreply@viah.me'
-    };
-  } catch (error) {
-    console.error('Failed to get Resend credentials:', error);
-    return null;
-  }
-}
 
 async function getTwilioCredentials() {
   const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
@@ -151,18 +114,10 @@ export class TaskReminderScheduler {
   }
 
   private async sendEmailReminder(task: Task, wedding: Wedding, user: User) {
-    const credentials = await getResendCredentials();
-    if (!credentials) {
-      console.warn('Resend not configured - skipping email reminder');
-      return;
-    }
-
     try {
-      const resend = new Resend(credentials.apiKey);
       const dueDate = task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'soon';
 
-      await resend.emails.send({
-        from: credentials.fromEmail,
+      await sendBrevoEmail({
         to: user.email,
         subject: `Reminder: ${task.title} - Due ${dueDate}`,
         html: `
@@ -255,12 +210,9 @@ export class TaskReminderScheduler {
 
     const results = { email: false, sms: false };
 
-    const resendCreds = await getResendCredentials();
-    if (resendCreds && user.email) {
+    if (user.email) {
       try {
-        const resend = new Resend(resendCreds.apiKey);
-        await resend.emails.send({
-          from: resendCreds.fromEmail,
+        await sendBrevoEmail({
           to: user.email,
           subject: 'Viah.me - Test Reminder',
           html: `
@@ -326,12 +278,9 @@ export class TaskReminderScheduler {
     const dueDate = task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'soon';
 
     // Send email reminder
-    const resendCreds = await getResendCredentials();
-    if (resendCreds && assignedUser.email) {
+    if (assignedUser.email) {
       try {
-        const resend = new Resend(resendCreds.apiKey);
-        await resend.emails.send({
-          from: resendCreds.fromEmail,
+        await sendBrevoEmail({
           to: assignedUser.email,
           subject: `Task Reminder from ${senderName}: ${task.title}`,
           html: `
