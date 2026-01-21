@@ -251,11 +251,15 @@ function compareVendors(
     };
   }
   
-  // Case B: Potential Match - same name and category, different/no email
-  if (exactNameMatch && categoryMatch) {
+  // Case B: Potential Match - same name (exact match), with or without category match
+  if (exactNameMatch) {
     reasons.push('Same business name');
-    reasons.push('Same category');
-    confidence = 0.8;
+    if (categoryMatch) {
+      reasons.push('Same category');
+      confidence = 0.85;
+    } else {
+      confidence = 0.75; // Still high confidence for exact name match
+    }
     if (emailMatch) {
       reasons.push('Same email');
       confidence = 0.95;
@@ -266,17 +270,21 @@ function compareVendors(
   // Same email but different name
   else if (emailMatch) {
     reasons.push('Same email');
-    confidence = 0.7;
+    confidence = 0.8; // Higher confidence for email match
     if (nameSimilarity >= 0.7) {
       reasons.push(`Similar names (${Math.round(nameSimilarity * 100)}%)`);
-      confidence += 0.15;
+      confidence += 0.1;
     }
   }
-  // Similar name (not exact) with same category
-  else if (nameSimilarity >= 0.85 && categoryMatch) {
+  // Similar name (not exact) - show as potential match
+  else if (nameSimilarity >= 0.85) {
     reasons.push(`Very similar names (${Math.round(nameSimilarity * 100)}%)`);
-    reasons.push('Same category');
-    confidence = 0.7;
+    if (categoryMatch) {
+      reasons.push('Same category');
+      confidence = 0.75;
+    } else {
+      confidence = 0.65;
+    }
   }
   
   if (confidence >= 0.6 && reasons.length > 0) {

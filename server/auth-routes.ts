@@ -15,6 +15,7 @@ import {
   sanitizeUser,
 } from "./auth-utils";
 import { sendEmail, EmailTemplate } from "./email";
+import { detectVendorDuplicates } from "./services/duplicate-detector";
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -88,7 +89,7 @@ export function registerAuthRoutes(app: Express, storage: IStorage) {
         emailVerified: true, // Auto-verify on registration
       });
 
-      // If vendor registration, create a vendor profile
+      // If vendor registration, create a vendor profile (always pending approval)
       if (data.role === 'vendor') {
         const businessName = (req.body as any).businessName || data.email.split('@')[0];
         await storage.createVendor({
@@ -96,7 +97,8 @@ export function registerAuthRoutes(app: Express, storage: IStorage) {
           email: data.email,
           userId: user.id,
           claimed: true,
-          isPublished: false, // Vendor needs to complete profile before publishing
+          isPublished: false, // Vendor needs approval before publishing
+          approvalStatus: 'pending', // All new vendors need admin approval
           source: 'vendor_registered',
           city: 'San Francisco Bay Area', // Default, can be updated later
           priceRange: '$$', // Default, can be updated later
@@ -385,6 +387,128 @@ export function registerAuthRoutes(app: Express, storage: IStorage) {
         return res.status(400).json({ error: "Validation failed", details: error.errors });
       }
       res.status(500).json({ error: "Password change failed" });
+    }
+  });
+
+  // POST /api/auth/check-vendor-duplicates - Check for duplicate vendors before registration
+  app.post("/api/auth/check-vendor-duplicates", async (req, res) => {
+    try {
+      const { businessName, email, categories } = req.body;
+
+      if (!businessName) {
+        return res.status(400).json({ error: "Business name is required" });
+      }
+
+      // Get all vendors to check against
+      const allVendors = await storage.getAllVendors();
+      
+      // Check for duplicates
+      const duplicateCheck = detectVendorDuplicates(
+        {
+          name: businessName,
+          categories: categories || [],
+          email: email || null,
+        },
+        allVendors
+      );
+
+      res.json({
+        hasExactMatch: duplicateCheck.hasExactMatch,
+        exactMatch: duplicateCheck.exactMatch,
+        potentialMatches: duplicateCheck.potentialMatches,
+      });
+    } catch (error) {
+      console.error("Check vendor duplicates error:", error);
+      res.status(500).json({ error: "Failed to check for duplicates" });
+    }
+  });
+
+  // POST /api/auth/claim-vendor - Claim an existing vendor profile during registration
+  app.post("/api/auth/claim-vendor", authLimiter, async (req, res) => {
+    try {
+      const { email, password, vendorId } = req.body;
+
+      if (!email || !password || !vendorId) {
+        return res.status(400).json({ error: "Email, password, and vendor ID are required" });
+      }
+
+      // Validate email
+      if (!validateEmail(email)) {
+        return res.status(400).json({ error: "Invalid email format" });
+      }
+
+      // Validate password
+      const passwordValidation = validatePassword(password);
+      if (!passwordValidation.valid) {
+        return res.status(400).json({ 
+          error: "Password does not meet requirements",
+          details: passwordValidation.errors 
+        });
+      }
+
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ error: "User with this email already exists" });
+      }
+
+      // Get the vendor to claim
+      const vendor = await storage.getVendor(vendorId);
+      if (!vendor) {
+        return res.status(404).json({ error: "Vendor not found" });
+      }
+
+      if (vendor.claimed && vendor.userId) {
+        return res.status(400).json({ error: "This vendor profile has already been claimed" });
+      }
+
+      // Security check: If vendor has an email on file, registrant's email must match
+      // This prevents arbitrary users from claiming any vendor profile
+      const emailMatches = vendor.email && email.toLowerCase() === vendor.email.toLowerCase();
+      const vendorHasNoEmail = !vendor.email;
+      
+      if (!emailMatches && !vendorHasNoEmail) {
+        return res.status(403).json({ 
+          error: "Email mismatch. To claim this profile, please register with the email associated with this business.",
+          hint: "If you no longer have access to that email, please contact support."
+        });
+      }
+
+      // Hash password and create user
+      const passwordHash = await hashPassword(password);
+      const user = await storage.createUser({
+        email,
+        passwordHash,
+        role: 'vendor',
+        emailVerified: true,
+      });
+
+      // Update vendor to link to user and mark as claimed
+      await storage.updateVendor(vendorId, {
+        userId: user.id,
+        claimed: true,
+        email: email,
+        approvalStatus: 'pending', // Needs admin approval
+      });
+
+      // Set session and auto-login
+      req.session.userId = user.id;
+      req.session.userRole = user.role;
+      req.session.save((err) => {
+        if (err) {
+          console.error("Session save error:", err);
+          return res.status(500).json({ error: "Failed to create session" });
+        }
+
+        res.status(201).json({
+          message: "Vendor profile claimed successfully. Your account is pending approval.",
+          user: sanitizeUser(user),
+          vendorId: vendorId,
+        });
+      });
+    } catch (error) {
+      console.error("Claim vendor error:", error);
+      res.status(500).json({ error: "Failed to claim vendor profile" });
     }
   });
 }
