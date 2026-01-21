@@ -538,8 +538,9 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
       const vendorData: InsertVendor = {
         name: validatedData.name,
         categories: validatedData.categories,
-        city: validatedData.city,
-        location: validatedData.location,
+        city: validatedData.areasServed[0] || 'San Francisco Bay Area', // Use first area for legacy field
+        areasServed: validatedData.areasServed,
+        location: validatedData.location || null,
         priceRange: validatedData.priceRange,
         culturalSpecialties: validatedData.culturalSpecialties || [],
         description: validatedData.description || null,

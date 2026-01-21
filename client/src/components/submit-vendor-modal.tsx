@@ -110,7 +110,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 const submitVendorSchema = z.object({
   name: z.string().min(2, "Business name must be at least 2 characters"),
   categories: z.array(z.string()).min(1, "Select at least one category"),
-  city: z.string().min(1, "City is required"),
+  areasServed: z.array(z.string()).min(1, "Select at least one area you serve"),
   location: z.string().optional(),
   priceRange: z.string().min(1, "Price range is required"),
   culturalSpecialties: z.array(z.string()).optional(),
@@ -173,7 +173,7 @@ export function SubmitVendorModal({ open, onOpenChange, onSelectExistingVendor }
     defaultValues: {
       name: "",
       categories: [],
-      city: "",
+      areasServed: [],
       location: "",
       priceRange: "",
       culturalSpecialties: [],
@@ -490,31 +490,47 @@ export function SubmitVendorModal({ open, onOpenChange, onSelectExistingVendor }
               )}
             />
 
+            <FormField
+              control={form.control}
+              name="areasServed"
+              render={() => (
+                <FormItem>
+                  <FormLabel>Areas You Serve *</FormLabel>
+                  <FormDescription>Select all metro areas where you provide services</FormDescription>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
+                    {metroAreas.map((area) => (
+                      <FormField
+                        key={area.id}
+                        control={form.control}
+                        name="areasServed"
+                        render={({ field }) => (
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value?.includes(area.value)}
+                                onCheckedChange={(checked) => {
+                                  const updated = checked
+                                    ? [...(field.value || []), area.value]
+                                    : field.value?.filter((v) => v !== area.value) || [];
+                                  field.onChange(updated);
+                                }}
+                                data-testid={`checkbox-area-${area.value}`}
+                              />
+                            </FormControl>
+                            <FormLabel className="text-sm font-normal cursor-pointer">
+                              {area.label}
+                            </FormLabel>
+                          </FormItem>
+                        )}
+                      />
+                    ))}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="city"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>City *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger data-testid="select-submit-vendor-city">
-                          <SelectValue placeholder="Select city" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {metroAreas.map((area) => (
-                          <SelectItem key={area.id} value={area.value}>
-                            {area.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
               <FormField
                 control={form.control}

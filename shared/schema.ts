@@ -823,7 +823,8 @@ export const vendors = pgTable("vendors", {
   categories: text("categories").array().notNull(), // Multiple service categories vendor provides
   preferredWeddingTraditions: text("preferred_wedding_traditions").array(), // ['sikh', 'hindu', 'muslim', 'gujarati', 'south_indian', 'mixed', 'general']
   location: text("location"), // Address/location (optional)
-  city: text("city").notNull().default('San Francisco Bay Area'), // 'San Francisco Bay Area' | 'New York City' | 'Los Angeles' | 'Chicago' | 'Seattle'
+  city: text("city").notNull().default('San Francisco Bay Area'), // DEPRECATED: Use areasServed instead
+  areasServed: text("areas_served").array(), // Array of metro areas this vendor serves
   priceRange: text("price_range").notNull(), // '$' | '$$' | '$$$' | '$$$$'
   culturalSpecialties: text("cultural_specialties").array(), // ['sikh', 'hindu', 'punjabi', etc]
   description: text("description"),
@@ -956,8 +957,8 @@ export const insertVendorSchema = createInsertSchema(vendors).omit({
 export const coupleSubmitVendorSchema = z.object({
   name: z.string().min(2, "Business name must be at least 2 characters"),
   categories: z.array(z.enum(VENDOR_CATEGORIES)).min(1, "Select at least one category"),
-  city: z.string().min(1, "City is required"),
-  location: z.string().min(1, "Address/Location is required"),
+  areasServed: z.array(z.string()).min(1, "Select at least one area you serve"),
+  location: z.string().optional(),
   priceRange: z.enum(['$', '$$', '$$$', '$$$$']),
   culturalSpecialties: z.array(z.string()).optional(),
   description: z.string().optional(),
