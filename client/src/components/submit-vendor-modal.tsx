@@ -187,7 +187,13 @@ export function SubmitVendorModal({ open, onOpenChange, onSelectExistingVendor }
 
   const submitMutation = useMutation({
     mutationFn: async (data: SubmitVendorFormData & { forceCreate?: boolean }) => {
-      const response = await apiRequest("POST", "/api/vendors/submit", data);
+      // Use fetch directly instead of apiRequest to handle 409 specially
+      const response = await fetch("/api/vendors/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+        credentials: "include",
+      });
       
       if (response.status === 409) {
         const duplicateResponse = await response.json() as DuplicateResponse;
