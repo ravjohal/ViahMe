@@ -956,7 +956,7 @@ export const insertVendorSchema = createInsertSchema(vendors).omit({
 export const coupleSubmitVendorSchema = z.object({
   name: z.string().min(2, "Business name must be at least 2 characters"),
   categories: z.array(z.enum(VENDOR_CATEGORIES)).min(1, "Select at least one category"),
-  city: z.enum(['San Francisco Bay Area', 'New York City', 'Los Angeles', 'Chicago', 'Seattle']),
+  city: z.string().min(1, "City is required"),
   location: z.string().min(1, "Address/Location is required"),
   priceRange: z.enum(['$', '$$', '$$$', '$$$$']),
   culturalSpecialties: z.array(z.string()).optional(),
