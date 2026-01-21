@@ -822,7 +822,7 @@ export const vendors = pgTable("vendors", {
   name: text("name").notNull(),
   categories: text("categories").array().notNull(), // Multiple service categories vendor provides
   preferredWeddingTraditions: text("preferred_wedding_traditions").array(), // ['sikh', 'hindu', 'muslim', 'gujarati', 'south_indian', 'mixed', 'general']
-  location: text("location").notNull(),
+  location: text("location"), // Address/location (optional)
   city: text("city").notNull().default('San Francisco Bay Area'), // 'San Francisco Bay Area' | 'New York City' | 'Los Angeles' | 'Chicago' | 'Seattle'
   priceRange: text("price_range").notNull(), // '$' | '$$' | '$$$' | '$$$$'
   culturalSpecialties: text("cultural_specialties").array(), // ['sikh', 'hindu', 'punjabi', etc]

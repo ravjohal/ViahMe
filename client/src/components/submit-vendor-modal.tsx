@@ -111,7 +111,7 @@ const submitVendorSchema = z.object({
   name: z.string().min(2, "Business name must be at least 2 characters"),
   categories: z.array(z.string()).min(1, "Select at least one category"),
   city: z.string().min(1, "City is required"),
-  location: z.string().min(1, "Address/Location is required"),
+  location: z.string().optional(),
   priceRange: z.string().min(1, "Price range is required"),
   culturalSpecialties: z.array(z.string()).optional(),
   description: z.string().optional(),
@@ -547,7 +547,7 @@ export function SubmitVendorModal({ open, onOpenChange, onSelectExistingVendor }
               name="location"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Address / Location *</FormLabel>
+                  <FormLabel>Address / Location</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
