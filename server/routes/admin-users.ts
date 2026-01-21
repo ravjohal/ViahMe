@@ -1,6 +1,12 @@
 import { Router, Response } from "express";
 import { IStorage } from "../storage";
 import { requireAuth, type AuthRequest } from "../auth-middleware";
+import type { User } from "@shared/schema";
+
+function sanitizeUser(user: User) {
+  const { passwordHash, resetToken, resetTokenExpires, verificationToken, verificationTokenExpires, ...safeUser } = user;
+  return safeUser;
+}
 
 export async function registerAdminUsersRoutes(router: Router, storage: IStorage) {
   // Get all users with their weddings (site admin only)
@@ -11,8 +17,12 @@ export async function registerAdminUsersRoutes(router: Router, storage: IStorage
         return res.status(403).json({ error: "Site admin access required" });
       }
 
-      const users = await storage.getAllUsersWithWeddings();
-      res.json(users);
+      const usersWithWeddings = await storage.getAllUsersWithWeddings();
+      const sanitized = usersWithWeddings.map(({ user, wedding }) => ({
+        user: sanitizeUser(user),
+        wedding,
+      }));
+      res.json(sanitized);
     } catch (error) {
       console.error("Error fetching users:", error);
       res.status(500).json({ error: "Failed to fetch users" });
@@ -34,7 +44,10 @@ export async function registerAdminUsersRoutes(router: Router, storage: IStorage
         return res.status(404).json({ error: "User not found" });
       }
       
-      res.json(userWithWedding);
+      res.json({
+        user: sanitizeUser(userWithWedding.user),
+        wedding: userWithWedding.wedding,
+      });
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ error: "Failed to fetch user" });
