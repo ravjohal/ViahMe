@@ -9,7 +9,8 @@ import {
   FileText,
   Settings,
   ChevronRight,
-  LayoutDashboard
+  LayoutDashboard,
+  MessageSquareWarning
 } from "lucide-react";
 
 interface AdminAction {
@@ -40,6 +41,13 @@ const adminActions: AdminAction[] = [
     description: "Configure budget bucket categories and manage expense categorization rules",
     href: "/admin/budget-bucket-categories",
     icon: Wallet,
+    category: "settings",
+  },
+  {
+    title: "User Feedback",
+    description: "Review bug reports, feature requests, and user feedback submissions",
+    href: "/admin/feedback",
+    icon: MessageSquareWarning,
     category: "settings",
   },
 ];
