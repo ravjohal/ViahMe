@@ -22,6 +22,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
 import { Briefcase, AlertTriangle, Building2, MapPin, Check, ChevronLeft } from "lucide-react";
 import logoUrl from "@assets/viah-logo_1763669612969.png";
+import { VendorSetupWizard, type VendorSetupData } from "@/components/vendor-setup-wizard";
 
 interface VendorDuplicateMatch {
   vendor: {
@@ -44,7 +45,7 @@ interface DuplicateCheckResponse {
   potentialMatches: VendorDuplicateMatch[];
 }
 
-type ViewState = 'form' | 'duplicates';
+type ViewState = 'form' | 'duplicates' | 'wizard';
 
 const registerSchema = z
   .object({
@@ -89,21 +90,31 @@ export default function VendorRegister() {
   });
 
   const registerMutation = useMutation({
-    mutationFn: async (data: RegisterFormData) => {
+    mutationFn: async (data: RegisterFormData & Partial<VendorSetupData>) => {
       const response = await apiRequest("POST", "/api/auth/register", {
         email: data.email,
         password: data.password,
         role: "vendor",
         businessName: data.businessName,
+        // Include wizard data
+        categories: data.categories,
+        preferredWeddingTraditions: data.preferredWeddingTraditions,
+        areasServed: data.areasServed,
+        location: data.location,
+        phone: data.phone,
+        priceRange: data.priceRange,
+        description: data.description,
+        logoUrl: data.logoUrl,
+        coverImageUrl: data.coverImageUrl,
       });
       return await response.json();
     },
     onSuccess: () => {
       toast({
         title: "Registration successful!",
-        description: "Your account is pending approval. Let's set up your profile.",
+        description: "Your account is pending approval. You'll receive an email once approved.",
       });
-      setLocation("/vendor-profile");
+      setLocation("/vendor-login");
     },
     onError: (error: any) => {
       const errorMessage = error.message || "Registration failed";
@@ -154,10 +165,14 @@ export default function VendorRegister() {
         setPendingFormData(data);
         setView('duplicates');
       } else {
-        registerMutation.mutate(data);
+        // No duplicates - go directly to wizard
+        setPendingFormData(data);
+        setView('wizard');
       }
     } catch (error) {
-      registerMutation.mutate(data);
+      // Error checking duplicates - still show wizard
+      setPendingFormData(data);
+      setView('wizard');
     }
   };
 
@@ -172,13 +187,74 @@ export default function VendorRegister() {
 
   const handleProceedWithNewProfile = () => {
     if (!pendingFormData) return;
-    registerMutation.mutate(pendingFormData);
+    // Show the wizard instead of registering immediately
+    setView('wizard');
+  };
+
+  const handleWizardComplete = (wizardData: VendorSetupData) => {
+    if (!pendingFormData) return;
+    // Combine registration data with wizard data and register
+    registerMutation.mutate({
+      ...pendingFormData,
+      ...wizardData,
+    });
+  };
+
+  const handleWizardCancel = () => {
+    // Go back to duplicates view if there were duplicates, otherwise back to form
+    if (duplicateData && (duplicateData.hasExactMatch || duplicateData.potentialMatches.length > 0)) {
+      setView('duplicates');
+    } else {
+      setView('form');
+      setPendingFormData(null);
+    }
   };
 
   const handleBack = () => {
     setView('form');
     setDuplicateData(null);
   };
+
+  // Wizard view - shown after user chooses to create new profile
+  if (view === 'wizard' && pendingFormData) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center mb-6">
+            <Link href="/" data-testid="link-logo-home">
+              <img
+                src={logoUrl}
+                alt="Viah.me"
+                className="h-16 mx-auto object-contain cursor-pointer hover:opacity-80 transition-opacity"
+              />
+            </Link>
+            <h2 className="text-2xl font-bold mt-4">Complete Your Business Profile</h2>
+            <p className="text-muted-foreground mt-2">
+              Tell us about your business to help couples find you
+            </p>
+          </div>
+          
+          <VendorSetupWizard
+            initialData={{
+              name: pendingFormData.businessName,
+              email: pendingFormData.email,
+            }}
+            onComplete={handleWizardComplete}
+            onCancel={handleWizardCancel}
+          />
+          
+          {registerMutation.isPending && (
+            <div className="fixed inset-0 bg-background/80 flex items-center justify-center z-50">
+              <div className="text-center">
+                <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+                <p className="text-lg font-medium">Creating your account...</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   if (view === 'duplicates' && duplicateData && pendingFormData) {
     const isExactMatch = duplicateData.hasExactMatch && duplicateData.exactMatch;

@@ -91,7 +91,10 @@ export function registerAuthRoutes(app: Express, storage: IStorage) {
 
       // If vendor registration, create a vendor profile (always pending approval)
       if (data.role === 'vendor') {
-        const businessName = (req.body as any).businessName || data.email.split('@')[0];
+        const body = req.body as any;
+        const businessName = body.businessName || data.email.split('@')[0];
+        
+        // Accept full profile data from wizard if provided
         await storage.createVendor({
           name: businessName,
           email: data.email,
@@ -100,9 +103,18 @@ export function registerAuthRoutes(app: Express, storage: IStorage) {
           isPublished: false, // Vendor needs approval before publishing
           approvalStatus: 'pending', // All new vendors need admin approval
           source: 'vendor_registered',
-          city: 'San Francisco Bay Area', // Default, can be updated later
-          priceRange: '$$', // Default, can be updated later
-          categories: [],
+          // Use wizard data if provided, otherwise use defaults
+          city: body.areasServed?.[0] || 'San Francisco Bay Area',
+          location: body.location || '',
+          phone: body.phone || null,
+          priceRange: body.priceRange || '$$',
+          categories: body.categories || [],
+          category: body.categories?.[0] || null,
+          preferredWeddingTraditions: body.preferredWeddingTraditions || [],
+          areasServed: body.areasServed || [],
+          description: body.description || '',
+          logoUrl: body.logoUrl || null,
+          coverImageUrl: body.coverImageUrl || null,
           culturalSpecialties: [],
           calendarShared: false,
           calendarSource: 'local',
