@@ -9935,6 +9935,7 @@ export class DBStorage implements IStorage {
         approvalNotes: notes || null,
         approvedBy: adminId,
         approvedAt: new Date(),
+        isPublished: true, // Auto-publish when approved
       })
       .where(eq(schema.vendors.id, id))
       .returning();
