@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { useMessageSocket } from "@/hooks/use-message-socket";
+import { VendorHeader } from "@/components/vendor-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1143,6 +1144,7 @@ export default function MessagesPage() {
   if (isVendor) {
     return (
       <div className="min-h-screen bg-background">
+        <VendorHeader />
         <main>{content}</main>
       </div>
     );

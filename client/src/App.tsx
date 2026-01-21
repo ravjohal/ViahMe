@@ -420,7 +420,8 @@ function AppLayout() {
     "/vendor-team",
     "/vendor-reminders"
   ];
-  const isVendorPage = vendorPortalPages.some(page => location.startsWith(page));
+  const isVendorPage = vendorPortalPages.some(page => location.startsWith(page)) || 
+                       (user?.role === "vendor" && location === "/messages");
   // Hide header on /vendors page for non-logged-in users (they see logo-only header from vendors.tsx)
   const isPublicVendorsPage = location === "/vendors" && !user;
   // Hide header on collector pages (guest contributors shouldn't see app navigation)
