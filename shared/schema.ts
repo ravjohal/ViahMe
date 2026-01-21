@@ -5422,3 +5422,34 @@ export const insertVendorTaskCategorySchema = createInsertSchema(vendorTaskCateg
 });
 export type InsertVendorTaskCategory = z.infer<typeof insertVendorTaskCategorySchema>;
 export type VendorTaskCategory = typeof vendorTaskCategories.$inferSelect;
+
+// ============================================================================
+// USER FEEDBACK - Bug reports and feedback from floating feedback button
+// ============================================================================
+
+export const userFeedback = pgTable("user_feedback", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id"), // Optional - can be submitted anonymously
+  userEmail: text("user_email"), // Optional contact email
+  feedbackType: text("feedback_type").notNull().default('bug'), // 'bug' | 'feature' | 'general'
+  description: text("description").notNull(),
+  pageUrl: text("page_url").notNull(),
+  screenshotUrl: text("screenshot_url"), // URL to captured screenshot
+  deviceInfo: jsonb("device_info"), // Browser, OS, screen size, etc.
+  status: text("status").notNull().default('new'), // 'new' | 'reviewed' | 'resolved' | 'wont_fix'
+  adminNotes: text("admin_notes"),
+  reviewedBy: varchar("reviewed_by"),
+  reviewedAt: timestamp("reviewed_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertUserFeedbackSchema = createInsertSchema(userFeedback).omit({
+  id: true,
+  status: true,
+  adminNotes: true,
+  reviewedBy: true,
+  reviewedAt: true,
+  createdAt: true,
+});
+export type InsertUserFeedback = z.infer<typeof insertUserFeedbackSchema>;
+export type UserFeedback = typeof userFeedback.$inferSelect;

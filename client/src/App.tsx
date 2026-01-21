@@ -57,7 +57,9 @@ import Admin from "@/pages/admin";
 import AdminVendorClaims from "@/pages/admin-vendor-claims";
 import AdminCeremonyTemplates from "@/pages/admin-ceremony-templates";
 import AdminBudgetBucketCategories from "@/pages/admin-budget-bucket-categories";
+import AdminFeedback from "@/pages/admin-feedback";
 import AiPlanner from "@/pages/ai-planner";
+import { FeedbackButton } from "@/components/feedback-button";
 import SpeechGenerator from "@/pages/speech-generator";
 import LiveTimeline from "@/pages/live-timeline";
 import VendorTeam from "@/pages/vendor-team";
@@ -313,6 +315,11 @@ function Router() {
           <AdminBudgetBucketCategories />
         </AdminRoute>
       </Route>
+      <Route path="/admin/feedback">
+        <AdminRoute>
+          <AdminFeedback />
+        </AdminRoute>
+      </Route>
       <Route path="/settings" component={Settings} />
       
       {/* Vendor pages */}
@@ -418,6 +425,7 @@ function AppLayout() {
       {!hideHeader && <AppHeader />}
       <Router />
       {showAiChatbot && <CouplePlannerChatbot />}
+      <FeedbackButton />
     </div>
   );
 }

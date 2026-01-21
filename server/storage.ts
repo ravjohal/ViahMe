@@ -302,6 +302,9 @@ import {
   type InsertTimelineTemplate,
   vendorTaskCategories,
   type VendorTaskCategory,
+  type UserFeedback,
+  type InsertUserFeedback,
+  userFeedback,
   type InsertVendorTaskCategory,
   type MetroArea,
   type InsertMetroArea,
@@ -1489,6 +1492,13 @@ export interface IStorage {
   getTraditionRitualsByTraditionSlug(traditionSlug: string): Promise<TraditionRitual[]>;
   getTraditionRitualsByCeremonyTypeId(ceremonyTypeId: string): Promise<TraditionRitual[]>;
   getAllTraditionRituals(): Promise<TraditionRitual[]>;
+
+  // User Feedback - Bug reports and feedback
+  getUserFeedback(id: string): Promise<UserFeedback | undefined>;
+  getAllUserFeedback(): Promise<UserFeedback[]>;
+  getUserFeedbackByStatus(status: string): Promise<UserFeedback[]>;
+  createUserFeedback(feedback: InsertUserFeedback): Promise<UserFeedback>;
+  updateUserFeedback(id: string, updates: Partial<UserFeedback>): Promise<UserFeedback | undefined>;
 }
 
 // Guest Planning Snapshot - comprehensive view of all guests and per-event costs
@@ -4852,6 +4862,13 @@ export class MemStorage implements IStorage {
   async createVendorTaskCategory(category: InsertVendorTaskCategory): Promise<VendorTaskCategory> { throw new Error('MemStorage does not support Vendor Task Categories. Use DBStorage.'); }
   async updateVendorTaskCategory(id: string, category: Partial<InsertVendorTaskCategory>): Promise<VendorTaskCategory | undefined> { throw new Error('MemStorage does not support Vendor Task Categories. Use DBStorage.'); }
   async deleteVendorTaskCategory(id: string): Promise<boolean> { return false; }
+
+  // User Feedback (stub methods for MemStorage)
+  async getUserFeedback(id: string): Promise<UserFeedback | undefined> { return undefined; }
+  async getAllUserFeedback(): Promise<UserFeedback[]> { return []; }
+  async getUserFeedbackByStatus(status: string): Promise<UserFeedback[]> { return []; }
+  async createUserFeedback(feedback: InsertUserFeedback): Promise<UserFeedback> { throw new Error('MemStorage does not support User Feedback. Use DBStorage.'); }
+  async updateUserFeedback(id: string, updates: Partial<UserFeedback>): Promise<UserFeedback | undefined> { throw new Error('MemStorage does not support User Feedback. Use DBStorage.'); }
 }
 
 import { neon } from "@neondatabase/serverless";
@@ -13474,6 +13491,35 @@ export class DBStorage implements IStorage {
         eq(traditionRituals.isActive, true)
       ))
       .orderBy(traditionRituals.sortOrder);
+  }
+
+  // User Feedback methods
+  async getUserFeedback(id: string): Promise<UserFeedback | undefined> {
+    const result = await this.db.select().from(userFeedback).where(eq(userFeedback.id, id));
+    return result[0];
+  }
+
+  async getAllUserFeedback(): Promise<UserFeedback[]> {
+    return await this.db.select().from(userFeedback).orderBy(desc(userFeedback.createdAt));
+  }
+
+  async getUserFeedbackByStatus(status: string): Promise<UserFeedback[]> {
+    return await this.db.select().from(userFeedback)
+      .where(eq(userFeedback.status, status))
+      .orderBy(desc(userFeedback.createdAt));
+  }
+
+  async createUserFeedback(feedback: InsertUserFeedback): Promise<UserFeedback> {
+    const result = await this.db.insert(userFeedback).values(feedback).returning();
+    return result[0];
+  }
+
+  async updateUserFeedback(id: string, updates: Partial<UserFeedback>): Promise<UserFeedback | undefined> {
+    const result = await this.db.update(userFeedback)
+      .set(updates)
+      .where(eq(userFeedback.id, id))
+      .returning();
+    return result[0];
   }
 }
 
