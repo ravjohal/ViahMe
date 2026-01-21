@@ -71,13 +71,13 @@ export default function AdminVendorClaims() {
 
   const { data: pendingClaims = [], isLoading: isLoadingClaims } = useQuery<VendorClaimStaging[]>({
     queryKey: ["/api/admin/vendor-claims"],
-    enabled: !!user && user.role === 'admin',
+    enabled: !!user && user.isSiteAdmin,
   });
 
   // Vendors pending registration approval
   const { data: pendingApprovalVendors = [], isLoading: isLoadingApproval } = useQuery<Vendor[]>({
     queryKey: ["/api/admin/vendors/pending-approval"],
-    enabled: !!user && user.role === 'admin',
+    enabled: !!user && user.isSiteAdmin,
   });
 
   const approveMutation = useMutation({

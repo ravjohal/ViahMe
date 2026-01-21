@@ -14,7 +14,7 @@ async function requireAdminAuth(req: Request, storage: IStorage): Promise<{ user
   if (!user) {
     return null;
   }
-  return { userId: user.id, isAdmin: user.role === 'admin' };
+  return { userId: user.id, isAdmin: user.isSiteAdmin === true };
 }
 
 export async function registerAdminVendorRoutes(router: Router, storage: IStorage) {
