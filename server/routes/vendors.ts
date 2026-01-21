@@ -498,6 +498,11 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
       
       const validatedData = coupleSubmitVendorSchema.parse(req.body);
       
+      // Fetch the couple's wedding to get their tradition
+      const weddings = await storage.getWeddingsByUserId(authReq.user.id);
+      const coupleWedding = weddings[0]; // Get first wedding
+      const coupleTradition = coupleWedding?.tradition || null;
+      
       // Check for forced creation (user chose to create despite potential matches)
       const forceCreate = req.body.forceCreate === true;
       
@@ -542,7 +547,9 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
         areasServed: validatedData.areasServed,
         location: validatedData.location || null,
         priceRange: validatedData.priceRange,
-        culturalSpecialties: validatedData.culturalSpecialties || [],
+        culturalSpecialties: validatedData.culturalSpecialties && validatedData.culturalSpecialties.length > 0 
+          ? validatedData.culturalSpecialties 
+          : (coupleTradition ? [coupleTradition] : []),
         description: validatedData.description || null,
         email: validatedData.email || null,
         phone: validatedData.phone,
