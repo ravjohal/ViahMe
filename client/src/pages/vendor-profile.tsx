@@ -77,6 +77,7 @@ export default function VendorProfilePage() {
     name: string;
     categories: string[];
     preferredWeddingTraditions: string[];
+    areasServed: string[];
     location: string;
     email: string;
     phone: string;
@@ -90,6 +91,8 @@ export default function VendorProfilePage() {
       categories: data.categories,
       category: data.categories[0] || "other",
       preferredWeddingTraditions: data.preferredWeddingTraditions,
+      areasServed: data.areasServed,
+      city: data.areasServed[0] || null,
       location: data.location,
       email: data.email,
       phone: data.phone,
@@ -139,6 +142,7 @@ export default function VendorProfilePage() {
               name: vendor.name,
               categories: vendor.categories || [],
               preferredWeddingTraditions: vendor.preferredWeddingTraditions || [],
+              areasServed: vendor.areasServed || [],
               location: vendor.location,
               email: vendor.email || "",
               phone: vendor.phone || "",

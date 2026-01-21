@@ -13,7 +13,6 @@ import Onboarding from "@/pages/onboarding";
 import Login from "@/pages/login";
 import VendorLogin from "@/pages/vendor-login";
 import VendorRegister from "@/pages/vendor-register";
-import VendorOnboarding from "@/pages/vendor-onboarding";
 import VerifyEmail from "@/pages/verify-email";
 import ForgotPassword from "@/pages/forgot-password";
 import ResetPassword from "@/pages/reset-password";
@@ -105,11 +104,6 @@ function Router() {
       <Route path="/login" component={Login} />
       <Route path="/vendor-login" component={VendorLogin} />
       <Route path="/vendor-register" component={VendorRegister} />
-      <Route path="/vendor-onboarding">
-        <VendorRoute>
-          <VendorOnboarding />
-        </VendorRoute>
-      </Route>
       <Route path="/verify-email" component={VerifyEmail} />
       <Route path="/claim-profile/:token" component={ClaimProfile} />
       <Route path="/claim-your-business" component={ClaimYourBusiness} />
@@ -408,7 +402,7 @@ function AppLayout() {
   
   // Hide header on auth pages, guest websites, and vendor pages (vendors have their own header)
   // Note: /vendor-collaboration and /vendor-timeline are couple pages, not vendor pages
-  const vendorPortalPages = ["/vendor-dashboard", "/vendor-leads", "/vendor-messages", "/vendor-calendar", "/vendor-analytics", "/vendor-profile", "/vendor-portfolio", "/vendor-login", "/vendor-register", "/vendor-onboarding", "/vendor-invite"];
+  const vendorPortalPages = ["/vendor-dashboard", "/vendor-leads", "/vendor-messages", "/vendor-calendar", "/vendor-analytics", "/vendor-profile", "/vendor-portfolio", "/vendor-login", "/vendor-register", "/vendor-invite"];
   const isVendorPage = vendorPortalPages.some(page => location.startsWith(page));
   // Hide header on /vendors page for non-logged-in users (they see logo-only header from vendors.tsx)
   const isPublicVendorsPage = location === "/vendors" && !user;

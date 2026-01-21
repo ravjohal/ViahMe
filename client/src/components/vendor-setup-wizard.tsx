@@ -14,15 +14,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { VENDOR_CATEGORIES } from "@shared/schema";
+import type { MetroArea } from "@shared/schema";
 import { ChevronLeft, ChevronRight, Upload, X, Image } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useTraditions } from "@/hooks/use-traditions";
+import { useQuery } from "@tanstack/react-query";
 
 export interface VendorSetupData {
   name: string;
   categories: string[];
   preferredWeddingTraditions: string[];
+  areasServed: string[];
   location: string;
   email: string;
   phone: string;
@@ -42,21 +45,35 @@ const STEPS = [
   { id: 1, title: "Business Info", label: "Name & Services" },
   { id: 2, title: "Services", label: "Service Categories" },
   { id: 3, title: "Traditions", label: "Wedding Types" },
-  { id: 4, title: "Location", label: "Address" },
-  { id: 5, title: "Contact", label: "Email & Phone" },
-  { id: 6, title: "Pricing", label: "Price Range" },
-  { id: 7, title: "Branding", label: "Logo & Cover Image" },
-  { id: 8, title: "Details", label: "Description" },
+  { id: 4, title: "Areas Served", label: "Service Areas" },
+  { id: 5, title: "Location", label: "Address" },
+  { id: 6, title: "Contact", label: "Email & Phone" },
+  { id: 7, title: "Pricing", label: "Price Range" },
+  { id: 8, title: "Branding", label: "Logo & Cover Image" },
+  { id: 9, title: "Details", label: "Description" },
 ];
 
 export function VendorSetupWizard({ initialData, onComplete, onCancel }: VendorSetupWizardProps) {
   const { toast } = useToast();
   const { data: traditions = [], isLoading: traditionsLoading } = useTraditions();
   const [currentStep, setCurrentStep] = useState(1);
+  const fallbackMetroAreas: MetroArea[] = [
+    { id: 1, value: "bay-area", label: "San Francisco Bay Area" },
+    { id: 2, value: "nyc", label: "New York City" },
+    { id: 3, value: "la", label: "Los Angeles" },
+    { id: 4, value: "chicago", label: "Chicago" },
+    { id: 5, value: "seattle", label: "Seattle" },
+  ];
+  const { data: fetchedMetroAreas = [], isLoading: metroAreasLoading } = useQuery<MetroArea[]>({
+    queryKey: ["/api/metro-areas"],
+  });
+  const metroAreas = fetchedMetroAreas.length > 0 ? fetchedMetroAreas : fallbackMetroAreas;
+
   const [formData, setFormData] = useState<VendorSetupData>({
     name: initialData?.name || "",
     categories: initialData?.categories || [],
     preferredWeddingTraditions: initialData?.preferredWeddingTraditions || [],
+    areasServed: initialData?.areasServed || [],
     location: initialData?.location || "",
     email: initialData?.email || "",
     phone: initialData?.phone || "",
@@ -122,9 +139,14 @@ export function VendorSetupWizard({ initialData, onComplete, onCancel }: VendorS
         }
         break;
       case 4:
-        if (!formData.location.trim()) newErrors.location = "Address is required";
+        if (formData.areasServed.length === 0) {
+          newErrors.areasServed = "Select at least one service area";
+        }
         break;
       case 5:
+        if (!formData.location.trim()) newErrors.location = "Address is required";
+        break;
+      case 6:
         if (!formData.email.trim()) newErrors.email = "Email is required";
         if (formData.email && !formData.email.includes("@")) newErrors.email = "Valid email required";
         if (!formData.phone.trim()) newErrors.phone = "Phone is required";
@@ -303,6 +325,51 @@ export function VendorSetupWizard({ initialData, onComplete, onCancel }: VendorS
       case 4:
         return (
           <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">Select all metro areas where you provide services</p>
+            {metroAreasLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent" />
+              </div>
+            ) : (
+            <div className="grid grid-cols-2 gap-2">
+              {metroAreas.map((area) => (
+                <label
+                  key={area.id}
+                  className={`flex items-center gap-2 p-3 rounded-md border cursor-pointer transition-all hover-elevate ${
+                    formData.areasServed.includes(area.value)
+                      ? "border-primary bg-primary/10"
+                      : ""
+                  }`}
+                  data-testid={`area-${area.value}`}
+                >
+                  <Checkbox
+                    checked={formData.areasServed.includes(area.value)}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setFormData({
+                          ...formData,
+                          areasServed: [...formData.areasServed, area.value],
+                        });
+                      } else {
+                        setFormData({
+                          ...formData,
+                          areasServed: formData.areasServed.filter((a) => a !== area.value),
+                        });
+                      }
+                    }}
+                  />
+                  <span className="text-sm">{area.label}</span>
+                </label>
+              ))}
+            </div>
+            )}
+            {errors.areasServed && <p className="text-sm text-destructive">{errors.areasServed}</p>}
+          </div>
+        );
+
+      case 5:
+        return (
+          <div className="space-y-4">
             <div>
               <Label htmlFor="location">Business Address</Label>
               <AddressAutocomplete
@@ -316,7 +383,7 @@ export function VendorSetupWizard({ initialData, onComplete, onCancel }: VendorS
           </div>
         );
 
-      case 5:
+      case 6:
         return (
           <div className="space-y-4">
             <div>
@@ -346,7 +413,7 @@ export function VendorSetupWizard({ initialData, onComplete, onCancel }: VendorS
           </div>
         );
 
-      case 6:
+      case 7:
         return (
           <div className="space-y-4">
             <div>
@@ -369,7 +436,7 @@ export function VendorSetupWizard({ initialData, onComplete, onCancel }: VendorS
           </div>
         );
 
-      case 7:
+      case 8:
         return (
           <div className="space-y-6">
             <div>
@@ -482,7 +549,7 @@ export function VendorSetupWizard({ initialData, onComplete, onCancel }: VendorS
           </div>
         );
 
-      case 8:
+      case 9:
         return (
           <div className="space-y-4">
             <div>

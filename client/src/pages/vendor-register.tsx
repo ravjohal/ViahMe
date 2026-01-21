@@ -103,7 +103,7 @@ export default function VendorRegister() {
         title: "Registration successful!",
         description: "Your account is pending approval. Let's set up your profile.",
       });
-      setLocation("/vendor-onboarding");
+      setLocation("/vendor-profile");
     },
     onError: (error: any) => {
       const errorMessage = error.message || "Registration failed";
@@ -133,7 +133,7 @@ export default function VendorRegister() {
         title: "Profile claimed successfully!",
         description: "Your claim is pending approval. You can now complete your profile.",
       });
-      setLocation("/vendor-onboarding");
+      setLocation("/vendor-profile");
     },
     onError: (error: any) => {
       const errorMessage = error.message || "Failed to claim profile";
