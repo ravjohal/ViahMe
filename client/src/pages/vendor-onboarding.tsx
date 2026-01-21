@@ -167,9 +167,9 @@ export default function VendorOnboarding() {
         break;
       case 5:
         updateData = { 
-          phone: phone || null, 
-          website: website || null, 
-          instagram: instagram || null 
+          phone: phone || undefined, 
+          website: website || undefined, 
+          instagram: instagram || undefined 
         };
         break;
     }
@@ -295,7 +295,7 @@ export default function VendorOnboarding() {
         </div>
 
         {/* Step Content */}
-        <Card className="shadow-xl border-purple-100">
+        <Card>
           <CardHeader>
             <CardTitle className="text-2xl">
               {currentStep === 1 && "What services do you offer?"}
@@ -320,10 +320,10 @@ export default function VendorOnboarding() {
                   <div
                     key={cat.value}
                     onClick={() => handleCategoryToggle(cat.value)}
-                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all hover-elevate ${
                       categories.includes(cat.value)
                         ? "border-primary bg-primary/10"
-                        : "border-muted hover:border-primary/50"
+                        : "border-muted"
                     }`}
                     data-testid={`category-${cat.value}`}
                   >
@@ -343,10 +343,10 @@ export default function VendorOnboarding() {
                   <div
                     key={area.id}
                     onClick={() => handleAreaToggle(area.value)}
-                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all hover-elevate ${
                       areasServed.includes(area.value)
                         ? "border-primary bg-primary/10"
-                        : "border-muted hover:border-primary/50"
+                        : "border-muted"
                     }`}
                     data-testid={`area-${area.value}`}
                   >
@@ -388,10 +388,10 @@ export default function VendorOnboarding() {
                       <div
                         key={specialty}
                         onClick={() => handleSpecialtyToggle(specialty)}
-                        className={`px-3 py-1.5 rounded-full border cursor-pointer transition-all text-sm ${
+                        className={`px-3 py-1.5 rounded-full border cursor-pointer transition-all text-sm hover-elevate ${
                           culturalSpecialties.includes(specialty)
                             ? "border-primary bg-primary/10 text-primary"
-                            : "border-muted hover:border-primary/50"
+                            : "border-muted"
                         }`}
                         data-testid={`specialty-${specialty}`}
                       >
