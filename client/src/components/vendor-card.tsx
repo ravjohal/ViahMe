@@ -187,13 +187,19 @@ export function VendorCard({
           </div>
         </div>
 
-        {/* Location and Price - always visible */}
+        {/* Areas Served and Price - always visible */}
         <div className="flex items-center gap-3 mb-3 text-xs">
-          <div className="flex items-center gap-1 text-muted-foreground">
-            <MapPin className="w-3 h-3" />
-            <span className="truncate">{vendor.location}</span>
+          <div className="flex items-center gap-1 text-muted-foreground min-w-0 flex-1">
+            <MapPin className="w-3 h-3 flex-shrink-0" />
+            <span className="truncate" data-testid={`text-areas-${vendor.id}`}>
+              {vendor.areasServed && vendor.areasServed.length > 0 
+                ? vendor.areasServed.length === 1 
+                  ? vendor.areasServed[0]
+                  : `${vendor.areasServed[0]} +${vendor.areasServed.length - 1}`
+                : vendor.location || vendor.city || 'Location not specified'}
+            </span>
           </div>
-          <div className="flex items-center gap-1 text-muted-foreground">
+          <div className="flex items-center gap-1 text-muted-foreground flex-shrink-0">
             <DollarSign className="w-3 h-3" />
             <span className="font-mono font-medium">{vendor.priceRange}</span>
           </div>
