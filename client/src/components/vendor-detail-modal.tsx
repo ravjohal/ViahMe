@@ -388,8 +388,12 @@ export function VendorDetailModal({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex items-center gap-2 text-sm">
-              <MapPin className="w-4 h-4 text-muted-foreground" />
-              <span className="font-medium">{vendor.location}</span>
+              <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+              <span className="font-medium" data-testid="text-vendor-areas">
+                {vendor.areasServed && vendor.areasServed.length > 0 
+                  ? vendor.areasServed.join(', ')
+                  : vendor.location || vendor.city || 'Location not specified'}
+              </span>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <DollarSign className="w-4 h-4 text-muted-foreground" />
