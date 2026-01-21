@@ -111,10 +111,10 @@ export default function VendorRegister() {
     },
     onSuccess: () => {
       toast({
-        title: "Registration successful!",
-        description: "Your account is pending approval. You'll receive an email once approved.",
+        title: "Welcome to Viah.me!",
+        description: "Your profile is live but unpublished until approved by our team.",
       });
-      setLocation("/vendor-login");
+      setLocation("/vendor-dashboard");
     },
     onError: (error: any) => {
       const errorMessage = error.message || "Registration failed";
