@@ -1,6 +1,4 @@
-import { Resend } from 'resend';
-
-let connectionSettings: any;
+import * as brevo from '@getbrevo/brevo';
 
 export enum EmailTemplate {
   VERIFICATION = 'verification',
@@ -9,43 +7,56 @@ export enum EmailTemplate {
   WELCOME_VENDOR = 'welcome_vendor',
 }
 
-async function getCredentials() {
-  const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
-  const xReplitToken = process.env.REPL_IDENTITY 
-    ? 'repl ' + process.env.REPL_IDENTITY 
-    : process.env.WEB_REPL_RENEWAL 
-    ? 'depl ' + process.env.WEB_REPL_RENEWAL 
-    : null;
+const DEFAULT_FROM_EMAIL = 'noreply@viah.me';
+const DEFAULT_FROM_NAME = 'Viah.me';
 
-  if (!xReplitToken) {
-    throw new Error('X_REPLIT_TOKEN not found for repl/depl');
+interface BrevoEmailParams {
+  to: string;
+  subject: string;
+  html: string;
+  text?: string;
+}
+
+export async function getBrevoClient() {
+  const apiKey = process.env.BREVO_API_KEY;
+  if (!apiKey) {
+    throw new Error('BREVO_API_KEY environment variable is not set');
   }
 
-  connectionSettings = await fetch(
-    'https://' + hostname + '/api/v2/connection?include_secrets=true&connector_names=resend',
-    {
-      headers: {
-        'Accept': 'application/json',
-        'X_REPLIT_TOKEN': xReplitToken
-      }
-    }
-  ).then(res => res.json()).then(data => data.items?.[0]);
-
-  if (!connectionSettings || (!connectionSettings.settings.api_key)) {
-    throw new Error('Resend not connected');
-  }
+  const apiInstance = new brevo.TransactionalEmailsApi();
+  apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, apiKey);
+  
   return {
-    apiKey: connectionSettings.settings.api_key, 
-    fromEmail: connectionSettings.settings.from_email
+    client: apiInstance,
+    fromEmail: process.env.BREVO_FROM_EMAIL || DEFAULT_FROM_EMAIL,
+    fromName: process.env.BREVO_FROM_NAME || DEFAULT_FROM_NAME,
   };
 }
 
+export async function sendBrevoEmail(params: BrevoEmailParams) {
+  const { client, fromEmail, fromName } = await getBrevoClient();
+  
+  const sendSmtpEmail = new brevo.SendSmtpEmail();
+  sendSmtpEmail.sender = { email: fromEmail, name: fromName };
+  sendSmtpEmail.to = [{ email: params.to }];
+  sendSmtpEmail.subject = params.subject;
+  sendSmtpEmail.htmlContent = params.html;
+  if (params.text) {
+    sendSmtpEmail.textContent = params.text;
+  }
+
+  try {
+    const result = await client.sendTransacEmail(sendSmtpEmail);
+    console.log('[Brevo] Email sent successfully:', result.body);
+    return result;
+  } catch (error: any) {
+    console.error('[Brevo] Failed to send email:', error?.body || error);
+    throw error;
+  }
+}
+
 export async function getUncachableResendClient() {
-  const { apiKey, fromEmail } = await getCredentials();
-  return {
-    client: new Resend(apiKey),
-    fromEmail: fromEmail
-  };
+  return getBrevoClient();
 }
 
 export async function sendBookingConfirmationEmail(params: {
@@ -58,8 +69,6 @@ export async function sendBookingConfirmationEmail(params: {
   timeSlot: string;
   bookingId: string;
 }) {
-  const { client, fromEmail } = await getUncachableResendClient();
-  
   const { to, coupleName, vendorName, vendorCategory, eventName, eventDate, timeSlot } = params;
   
   const html = `
@@ -185,8 +194,7 @@ export async function sendBookingConfirmationEmail(params: {
   `;
 
   try {
-    const result = await client.emails.send({
-      from: fromEmail,
+    const result = await sendBrevoEmail({
       to,
       subject: `Booking Confirmed: ${vendorName} for ${eventName}`,
       html,
@@ -209,8 +217,6 @@ export async function sendVendorNotificationEmail(params: {
   coupleEmail?: string;
   couplePhone?: string;
 }) {
-  const { client, fromEmail } = await getUncachableResendClient();
-  
   const { to, vendorName, coupleName, eventName, eventDate, timeSlot, coupleEmail, couplePhone } = params;
   
   const html = `
@@ -344,8 +350,7 @@ export async function sendVendorNotificationEmail(params: {
   `;
 
   try {
-    const result = await client.emails.send({
-      from: fromEmail,
+    const result = await sendBrevoEmail({
       to,
       subject: `New Booking: ${coupleName} for ${eventName} on ${eventDate}`,
       html,
@@ -366,8 +371,6 @@ export async function sendRsvpConfirmationEmail(params: {
   rsvpStatus: 'attending' | 'not_attending' | 'maybe';
   coupleName: string;
 }) {
-  const { client, fromEmail } = await getUncachableResendClient();
-  
   const { to, guestName, eventName, eventDate, eventVenue, rsvpStatus, coupleName } = params;
   
   const statusText = rsvpStatus === 'attending' ? 'will be attending' : 
@@ -500,8 +503,7 @@ export async function sendRsvpConfirmationEmail(params: {
   `;
 
   try {
-    const result = await client.emails.send({
-      from: fromEmail,
+    const result = await sendBrevoEmail({
       to,
       subject: `RSVP Confirmed for ${eventName}`,
       html,
@@ -522,8 +524,6 @@ export async function sendInvitationEmail(params: {
   weddingDate?: string;
   personalMessage?: string;
 }) {
-  const { client, fromEmail } = await getUncachableResendClient();
-  
   const { to, householdName, coupleName, magicLink, eventNames, weddingDate, personalMessage } = params;
   
   const eventsList = eventNames.map(name => `<li>${name}</li>`).join('');
@@ -691,8 +691,7 @@ Your South Asian Wedding Planning Platform
   `.trim();
 
   try {
-    const result = await client.emails.send({
-      from: fromEmail,
+    const result = await sendBrevoEmail({
       to,
       subject: `Wedding Invitation from ${coupleName}`,
       html,
@@ -712,8 +711,6 @@ export async function sendCollaboratorInviteEmail(params: {
   roleName: string;
   inviteUrl: string;
 }) {
-  const { client, fromEmail } = await getUncachableResendClient();
-  
   const { to, inviterName, weddingTitle, roleName, inviteUrl } = params;
   
   const html = `
@@ -833,8 +830,7 @@ Viah.me - Your South Asian Wedding Planning Platform
   `.trim();
 
   try {
-    const result = await client.emails.send({
-      from: fromEmail,
+    const result = await sendBrevoEmail({
       to,
       subject: `${inviterName} invited you to plan their wedding on Viah.me`,
       html,
@@ -853,7 +849,6 @@ export async function sendEmail(params: {
   template: EmailTemplate;
   data: Record<string, any>;
 }) {
-  const { client, fromEmail } = await getUncachableResendClient();
   const { to, subject, template, data } = params;
 
   let html = '';
@@ -1113,8 +1108,7 @@ export async function sendEmail(params: {
   }
 
   try {
-    const result = await client.emails.send({
-      from: fromEmail,
+    const result = await sendBrevoEmail({
       to,
       subject,
       html,
@@ -1138,8 +1132,6 @@ export async function sendTimelineChangeEmail(params: {
   note?: string;
   acknowledgeUrl: string;
 }) {
-  const { client, fromEmail } = await getUncachableResendClient();
-  
   const { to, vendorName, eventName, eventDate, oldTime, newTime, weddingTitle, coupleName, note, acknowledgeUrl } = params;
   
   const html = `
@@ -1316,8 +1308,7 @@ Your South Asian Wedding Planning Platform
   `.trim();
 
   try {
-    const result = await client.emails.send({
-      from: fromEmail,
+    const result = await sendBrevoEmail({
       to,
       subject: `Timeline Change: ${eventName} - ${weddingTitle}`,
       html,
@@ -1343,8 +1334,6 @@ export async function sendQuoteRequestEmail(params: {
   additionalNotes?: string;
   weddingTitle?: string;
 }) {
-  const { client, fromEmail } = await getUncachableResendClient();
-  
   const {
     to,
     vendorName,
@@ -1533,10 +1522,8 @@ Your South Asian Wedding Planning Platform
   `.trim();
 
   try {
-    const result = await client.emails.send({
-      from: fromEmail,
+    const result = await sendBrevoEmail({
       to,
-      replyTo: senderEmail,
       subject: `Quote Request: ${eventName}${weddingTitle ? ` - ${weddingTitle}` : ''}`,
       html,
       text: plaintext,
@@ -1554,8 +1541,6 @@ export async function sendInquiryClosedEmail(params: {
   coupleName: string;
   reason?: string;
 }) {
-  const { client, fromEmail } = await getUncachableResendClient();
-  
   const { to, vendorName, coupleName, reason } = params;
   
   const html = `
@@ -1660,8 +1645,7 @@ Connecting South Asian couples with culturally-specialized vendors
   `.trim();
 
   try {
-    const result = await client.emails.send({
-      from: fromEmail,
+    const result = await sendBrevoEmail({
       to,
       subject: `Inquiry Closed by ${coupleName}`,
       html,
@@ -1681,7 +1665,6 @@ export async function sendUpdateEmail(params: {
   message: string;
   weddingName: string;
 }) {
-  const { client, fromEmail } = await getUncachableResendClient();
   const { to, householdName, subject, message, weddingName } = params;
 
   const html = `
@@ -1752,8 +1735,7 @@ Your South Asian Wedding Planning Platform
   `.trim();
 
   try {
-    const result = await client.emails.send({
-      from: fromEmail,
+    const result = await sendBrevoEmail({
       to,
       subject: `Wedding Update: ${subject}`,
       html,
@@ -1773,7 +1755,6 @@ export async function sendRsvpReminderEmail(params: {
   magicLink: string;
   weddingDate?: string;
 }) {
-  const { client, fromEmail } = await getUncachableResendClient();
   const { to, householdName, coupleName, magicLink, weddingDate } = params;
 
   const html = `
@@ -1865,8 +1846,7 @@ Your South Asian Wedding Planning Platform
   `.trim();
 
   try {
-    const result = await client.emails.send({
-      from: fromEmail,
+    const result = await sendBrevoEmail({
       to,
       subject: `RSVP Reminder from ${coupleName}`,
       html,

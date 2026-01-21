@@ -133,27 +133,27 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
         return res.status(400).json({ error: "Email address and subject are required" });
       }
       
-      const { getUncachableResendClient } = await import("../email");
-      const { client, fromEmail } = await getUncachableResendClient();
+      const { sendBrevoEmail } = await import("../email");
       
-      const result = await client.emails.send({
-        from: fromEmail || "Viah.me <noreply@viah.me>",
-        to: [to],
-        subject: subject || "Test Email from Viah.me",
-        html: `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="background: linear-gradient(135deg, #f97316 0%, #fb923c 100%); color: white; padding: 30px; border-radius: 8px 8px 0 0; text-align: center;">
-              <h1 style="margin: 0; font-size: 24px;">Viah.me Email Test</h1>
-            </div>
-            <div style="background: white; padding: 30px; border: 1px solid #e5e7eb; border-top: none;">
-              <p style="color: #333; line-height: 1.6;">${message || "This is a test email to verify that email sending is working correctly."}</p>
-              <p style="color: #6b7280; font-size: 14px; margin-top: 20px;">If you received this email, your Resend integration is working!</p>
-            </div>
-            <div style="text-align: center; padding: 20px; color: #6b7280; font-size: 12px;">
-              Sent from Viah.me - South Asian Wedding Planning
-            </div>
+      const html = `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #f97316 0%, #fb923c 100%); color: white; padding: 30px; border-radius: 8px 8px 0 0; text-align: center;">
+            <h1 style="margin: 0; font-size: 24px;">Viah.me Email Test</h1>
           </div>
-        `,
+          <div style="background: white; padding: 30px; border: 1px solid #e5e7eb; border-top: none;">
+            <p style="color: #333; line-height: 1.6;">${message || "This is a test email to verify that email sending is working correctly."}</p>
+            <p style="color: #6b7280; font-size: 14px; margin-top: 20px;">If you received this email, your Brevo integration is working!</p>
+          </div>
+          <div style="text-align: center; padding: 20px; color: #6b7280; font-size: 12px;">
+            Sent from Viah.me - South Asian Wedding Planning
+          </div>
+        </div>
+      `;
+      
+      const result = await sendBrevoEmail({
+        to,
+        subject: subject || "Test Email from Viah.me",
+        html,
         text: message || "This is a test email to verify that email sending is working correctly.",
       });
       
