@@ -4881,7 +4881,7 @@ export class MemStorage implements IStorage {
 
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
-import { eq, and, or, sql, inArray, isNull } from "drizzle-orm";
+import { eq, and, or, sql, inArray, isNull, desc } from "drizzle-orm";
 import * as schema from "@shared/schema";
 
 export class DBStorage implements IStorage {
