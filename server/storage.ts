@@ -13532,8 +13532,8 @@ export class DBStorage implements IStorage {
 
   // Admin - User Management methods
   async getAllUsersWithWeddings(): Promise<Array<{ user: User; wedding: Wedding | null }>> {
-    const allUsers = await this.db.select().from(users).orderBy(desc(users.createdAt));
-    const allWeddings = await this.db.select().from(weddings);
+    const allUsers = await this.db.select().from(schema.users).orderBy(desc(schema.users.createdAt));
+    const allWeddings = await this.db.select().from(schema.weddings);
     
     const weddingsByUserId = new Map<string, Wedding>();
     for (const wedding of allWeddings) {
@@ -13547,10 +13547,10 @@ export class DBStorage implements IStorage {
   }
 
   async getUserWithWedding(userId: string): Promise<{ user: User; wedding: Wedding | null } | null> {
-    const [user] = await this.db.select().from(users).where(eq(users.id, userId));
+    const [user] = await this.db.select().from(schema.users).where(eq(schema.users.id, userId));
     if (!user) return null;
     
-    const [wedding] = await this.db.select().from(weddings).where(eq(weddings.userId, userId));
+    const [wedding] = await this.db.select().from(schema.weddings).where(eq(schema.weddings.userId, userId));
     return { user, wedding: wedding || null };
   }
 }
