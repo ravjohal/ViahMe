@@ -36,10 +36,11 @@ import type { Vendor } from "@shared/schema";
 
 const navItems = [
   { href: "/vendor-dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/vendor-leads", label: "Leads", icon: Zap },
   { href: "/vendor-bookings", label: "Bookings", icon: Calendar },
   { href: "/messages", label: "Messages", icon: MessageSquare },
   { href: "/vendor-portfolio", label: "Portfolio", icon: Image },
-  { href: "/vendor-templates", label: "Templates", icon: Zap },
+  { href: "/vendor-templates", label: "Templates", icon: FileText },
   { href: "/vendor-contracts", label: "Contracts", icon: FileText },
   { href: "/vendor-packages", label: "Packages", icon: Package },
   { href: "/vendor-calendar", label: "Availability", icon: Clock },
