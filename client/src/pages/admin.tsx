@@ -10,7 +10,8 @@ import {
   Settings,
   ChevronRight,
   LayoutDashboard,
-  MessageSquareWarning
+  MessageSquareWarning,
+  Users
 } from "lucide-react";
 
 interface AdminAction {
@@ -49,6 +50,13 @@ const adminActions: AdminAction[] = [
     href: "/admin/feedback",
     icon: MessageSquareWarning,
     category: "settings",
+  },
+  {
+    title: "User Management",
+    description: "View all registered users and their associated wedding details",
+    href: "/admin/users",
+    icon: Users,
+    category: "vendors",
   },
 ];
 

@@ -32,6 +32,7 @@ import { registerBookingRoutes } from "./bookings";
 import { registerAiAssistantRoutes } from "./ai-assistant";
 import { registerMessageRoutes, registerConversationRoutes } from "./messages";
 import { registerAdminVendorRoutes } from "./admin-vendors";
+import { registerAdminUsersRoutes } from "./admin-users";
 import { registerFeedbackRoutes } from "./feedback";
 import { registerVendorToolsRoutes } from "./vendor-tools";
 import { createReviewsRouter } from "./reviews";
@@ -403,6 +404,11 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   const feedbackRouter = Router();
   await registerFeedbackRoutes(feedbackRouter, storage);
   app.use("/api/feedback", feedbackRouter);
+
+  // Admin users management
+  const adminUsersRouter = Router();
+  await registerAdminUsersRoutes(adminUsersRouter, storage);
+  app.use("/api/admin/users", adminUsersRouter);
 
   // Vendor tools (lead inbox, quick reply templates, follow-up reminders)
   const vendorToolsRouter = Router();

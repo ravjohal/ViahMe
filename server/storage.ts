@@ -1499,6 +1499,10 @@ export interface IStorage {
   getUserFeedbackByStatus(status: string): Promise<UserFeedback[]>;
   createUserFeedback(feedback: InsertUserFeedback): Promise<UserFeedback>;
   updateUserFeedback(id: string, updates: Partial<UserFeedback>): Promise<UserFeedback | undefined>;
+
+  // Admin - User Management
+  getAllUsersWithWeddings(): Promise<Array<{ user: User; wedding: Wedding | null }>>;
+  getUserWithWedding(userId: string): Promise<{ user: User; wedding: Wedding | null } | null>;
 }
 
 // Guest Planning Snapshot - comprehensive view of all guests and per-event costs
@@ -4869,6 +4873,10 @@ export class MemStorage implements IStorage {
   async getUserFeedbackByStatus(status: string): Promise<UserFeedback[]> { return []; }
   async createUserFeedback(feedback: InsertUserFeedback): Promise<UserFeedback> { throw new Error('MemStorage does not support User Feedback. Use DBStorage.'); }
   async updateUserFeedback(id: string, updates: Partial<UserFeedback>): Promise<UserFeedback | undefined> { throw new Error('MemStorage does not support User Feedback. Use DBStorage.'); }
+
+  // Admin - User Management (stub methods for MemStorage)
+  async getAllUsersWithWeddings(): Promise<Array<{ user: User; wedding: Wedding | null }>> { return []; }
+  async getUserWithWedding(userId: string): Promise<{ user: User; wedding: Wedding | null } | null> { return null; }
 }
 
 import { neon } from "@neondatabase/serverless";
@@ -13520,6 +13528,30 @@ export class DBStorage implements IStorage {
       .where(eq(userFeedback.id, id))
       .returning();
     return result[0];
+  }
+
+  // Admin - User Management methods
+  async getAllUsersWithWeddings(): Promise<Array<{ user: User; wedding: Wedding | null }>> {
+    const allUsers = await this.db.select().from(users).orderBy(desc(users.createdAt));
+    const allWeddings = await this.db.select().from(weddings);
+    
+    const weddingsByUserId = new Map<string, Wedding>();
+    for (const wedding of allWeddings) {
+      weddingsByUserId.set(wedding.userId, wedding);
+    }
+    
+    return allUsers.map(user => ({
+      user,
+      wedding: weddingsByUserId.get(user.id) || null,
+    }));
+  }
+
+  async getUserWithWedding(userId: string): Promise<{ user: User; wedding: Wedding | null } | null> {
+    const [user] = await this.db.select().from(users).where(eq(users.id, userId));
+    if (!user) return null;
+    
+    const [wedding] = await this.db.select().from(weddings).where(eq(weddings.userId, userId));
+    return { user, wedding: wedding || null };
   }
 }
 
