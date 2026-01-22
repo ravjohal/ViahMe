@@ -740,6 +740,8 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
         description: description || vendor.description,
         website: website || vendor.website,
         priceRange: priceRange || vendor.priceRange,
+        approvalStatus: 'approved', // Keep vendor approved after claiming - no re-approval needed
+        isPublished: true, // Ensure vendor remains published
       } as any);
       
       res.json({
