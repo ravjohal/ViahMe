@@ -42,6 +42,7 @@ interface VendorSetupWizardProps {
   onCancel: () => void;
   persistToStorage?: boolean;
   storageKey?: string;
+  isEditing?: boolean; // When true, shows "Save" button at any step
 }
 
 const STEPS = [
@@ -55,7 +56,7 @@ const STEPS = [
   { id: 8, title: "Details", label: "Description" },
 ];
 
-export function VendorSetupWizard({ initialData, onComplete, onCancel, persistToStorage = false, storageKey = "pending_vendor_data" }: VendorSetupWizardProps) {
+export function VendorSetupWizard({ initialData, onComplete, onCancel, persistToStorage = false, storageKey = "pending_vendor_data", isEditing = false }: VendorSetupWizardProps) {
   const { toast } = useToast();
   const { data: traditions = [], isLoading: traditionsLoading } = useTraditions();
   const [currentStep, setCurrentStep] = useState(1);
@@ -666,6 +667,16 @@ export function VendorSetupWizard({ initialData, onComplete, onCancel, persistTo
         </Button>
 
         <div className="flex gap-3">
+          {isEditing && (
+            <Button
+              variant="default"
+              onClick={() => onComplete(formData)}
+              data-testid="button-wizard-save"
+            >
+              Save Changes
+            </Button>
+          )}
+          
           <Button
             variant="outline"
             onClick={handlePrev}
@@ -677,12 +688,13 @@ export function VendorSetupWizard({ initialData, onComplete, onCancel, persistTo
           </Button>
 
           <Button
+            variant={isEditing ? "outline" : "default"}
             onClick={handleNext}
             data-testid={`button-wizard-${isLastStep ? "complete" : "next"}`}
           >
             {isLastStep ? (
               <>
-                Complete Setup
+                {isEditing ? "Save & Finish" : "Complete Setup"}
                 <ChevronRight className="w-4 h-4 ml-2" />
               </>
             ) : (

@@ -174,6 +174,7 @@ export default function VendorProfilePage() {
             }}
             onComplete={handleWizardComplete}
             onCancel={() => setIsEditing(false)}
+            isEditing={true}
           />
         </div>
       </div>
