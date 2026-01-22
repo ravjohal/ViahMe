@@ -291,6 +291,166 @@ Culturally-specialized vendors may cost more than generalists, but they bring:
 
 Your wedding is a celebration of your culture and your love story. Surround yourself with vendors who understand and honor both.
     `
+  },
+  {
+    slug: "guest-list-management-multi-event-south-asian-wedding",
+    title: "Guest List Management for Multi-Event South Asian Weddings",
+    excerpt: "Managing different guest lists for Mehndi, Sangeet, Wedding, and Reception can be overwhelming. Learn how to organize your guests across multiple events without losing your mind.",
+    category: "Guest Management",
+    author: "Viah.me Team",
+    date: "January 20, 2026",
+    readTime: "7 min read",
+    content: `
+## The Multi-Event Guest List Challenge
+
+When your cousin asks "Am I invited to everything?"—you realize the complexity of South Asian wedding guest management. Unlike single-day Western weddings where everyone gets the same invitation, your celebration might span 5 events across 4 days, each with different guest expectations, venue capacities, and cultural protocols.
+
+## Understanding Event-Specific Guest Lists
+
+### The Intimate Events
+**Haldi/Maiyan/Ubtan**: Typically family-only affairs. These ceremonies involve applying turmeric paste to the bride and groom, and the intimate setting means guest lists of 20-50 people—usually immediate family and the closest friends who are practically family.
+
+**Mehndi**: A step larger, often 50-150 guests. Close friends join the family for this celebration. The bride's side often hosts their own, meaning you're managing two parallel guest lists.
+
+### The Big Celebrations
+**Sangeet**: This is where guest lists start expanding—150-400 guests typically. Friends, extended family, and sometimes colleagues are invited to dance the night away.
+
+**Main Ceremony**: The religious ceremony might have different capacity constraints. A Gurdwara may hold 500 guests comfortably, while an intimate mandap setup might be designed for 200. Religious significance often means the closest family and friends attend.
+
+**Reception**: Often your largest event with 300-800+ guests. This is where you invite everyone—colleagues, neighbors, parents' friends, and extended community.
+
+## The Three-Tier Guest Strategy
+
+### Tier 1: Inner Circle (Every Event)
+- Immediate family
+- Wedding party members
+- Best friends who've been with you since childhood
+- These guests get invited to everything and often have roles to play
+
+### Tier 2: Close Network (Major Events)
+- Extended family (aunts, uncles, cousins)
+- Close friends
+- Invited to: Sangeet, Main Ceremony, Reception
+- Sometimes Mehndi for closer connections
+
+### Tier 3: Extended Network (Select Events)
+- Parents' friends and colleagues
+- Your professional network
+- Distant relatives
+- Neighbors and community members
+- Invited to: Reception only, or Reception + Main Ceremony
+
+## Practical Guest List Management Tips
+
+### Create a Master Spreadsheet (or Use a Tool)
+Your master list should include:
+- Guest name
+- Household grouping (couples, families)
+- Relationship to bride/groom
+- Side (bride's or groom's)
+- Events invited to (checkboxes for each)
+- RSVP status per event
+- Dietary restrictions
+- Contact information
+
+### Set Venue Capacity Limits First
+Before you invite anyone, know your numbers:
+- Mehndi venue: Max 100 guests
+- Sangeet hall: Max 350 guests
+- Ceremony venue: Max 400 guests
+- Reception venue: Max 600 guests
+
+This prevents the awkward situation of inviting 500 people to a venue that holds 300.
+
+### Handle the "Plus One" Question Early
+Decide your policy:
+- Married/engaged couples: Always invited together
+- Serious relationships: Define your threshold (6 months? Living together?)
+- Single friends: Plus one or not?
+
+Be consistent to avoid hurt feelings.
+
+### Communicate Clearly on Invitations
+Your invitations should make clear which events each guest is invited to. Options include:
+- Separate invitation cards for each event
+- One invitation with checkboxes or highlighted events
+- Digital invitations with personalized event lists
+
+### The Family Politics Navigation
+
+**The "Why Wasn't I Invited to Mehndi?" Question**
+Prepare your response: "Mehndi was an intimate ceremony limited to immediate family. We're so excited to celebrate with you at the Sangeet and Reception!"
+
+**Balancing Bride and Groom Sides**
+If parents are contributing equally, guest list splits often follow. A common approach:
+- 40% bride's side
+- 40% groom's side
+- 20% mutual friends and couple's professional network
+
+**The Last-Minute Add Requests**
+Parents will ask to add guests. Build in a 5-10% buffer for these inevitable additions rather than fighting each request.
+
+## RSVP Tracking Across Events
+
+### The Challenge
+Guest A might attend Sangeet and Reception but skip the ceremony. Guest B is coming to everything. Guest C hasn't responded to anything. Multiply this by 400 guests across 5 events.
+
+### The Solution
+Track RSVPs per event, not per invitation. You need to know:
+- Sangeet: 280 confirmed, 45 pending, 25 declined
+- Ceremony: 350 confirmed, 60 pending, 40 declined
+- Reception: 520 confirmed, 80 pending, 0 declined
+
+This gives you accurate headcounts for catering, seating, and vendor planning.
+
+### Set Different RSVP Deadlines
+Earlier events need earlier deadlines:
+- Mehndi/Haldi: 3 weeks before
+- Sangeet: 2 weeks before
+- Wedding/Reception: 10 days before
+
+This gives you time to finalize numbers with vendors.
+
+## Special Considerations
+
+### Out-of-Town Guests
+These guests need extra planning:
+- Hotel room blocks
+- Transportation between venues
+- Clear schedules so they know where to be
+- Perhaps a welcome bag with event details
+
+### Children Policy
+Decide early:
+- All events kid-friendly?
+- Ceremony only for families with children?
+- Reception adults-only with babysitting option?
+
+### Elderly and Mobility Needs
+Track which guests need:
+- Accessible seating
+- Early meal service
+- Transportation assistance
+- Quiet rest areas
+
+## Technology to the Rescue
+
+Modern wedding planning tools can:
+- Track guest lists across multiple events
+- Send event-specific digital invitations
+- Collect RSVPs per event automatically
+- Generate headcounts for each celebration
+- Manage dietary restrictions and special needs
+- Handle household groupings so families RSVP together
+
+Stop juggling spreadsheets with 47 tabs. Purpose-built tools understand that your Sangeet guest list is different from your Reception list—and that Auntie needs vegetarian meals at all events.
+
+## The Bottom Line
+
+Guest list management for multi-event weddings requires thinking in events, not just names. By categorizing guests into tiers, setting clear capacity limits, and tracking RSVPs per celebration, you'll avoid the chaos that comes from treating a 5-day wedding like a single-day event.
+
+Your guests will appreciate the clarity, your vendors will appreciate accurate counts, and you'll appreciate not having a spreadsheet nightmare the week before your wedding.
+    `
   }
 ];
 
