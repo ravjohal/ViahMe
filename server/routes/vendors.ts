@@ -592,35 +592,11 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
         return res.status(400).json({ error: "This profile has already been claimed" });
       }
       
-      if (vendor.email) {
-        const claimToken = randomUUID();
-        const claimTokenExpires = new Date(Date.now() + 48 * 60 * 60 * 1000);
-        
-        await storage.updateVendor(req.params.id, {
-          claimToken,
-          claimTokenExpires,
-        } as any);
-        
-        const claimLink = `${req.protocol}://${req.get('host')}/claim-profile?token=${claimToken}`;
-        
-        try {
-          await storage.sendClaimEmail(vendor.id, vendor.email, vendor.name, claimLink);
-        } catch (err) {
-          console.error("Failed to send claim email:", err);
-        }
-        
-        return res.json({
-          message: "Claim request sent. Check your email for verification instructions.",
-          requiresEmail: false,
-          ...(process.env.NODE_ENV === 'development' && { claimLink }),
-        });
-      }
-      
       const { claimantEmail, claimantName, claimantPhone, notes } = req.body;
       
       if (!claimantEmail) {
         return res.status(400).json({ 
-          error: "This vendor has no email on file. Please provide your business email for verification.",
+          error: "Please provide your business email for verification.",
           requiresEmail: true
         });
       }
@@ -638,6 +614,20 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
         });
       }
       
+      // Check if provided email matches the email on file
+      const emailOnFile = vendor.email?.toLowerCase().trim();
+      const providedEmail = claimantEmail.toLowerCase().trim();
+      const emailMismatch = emailOnFile && emailOnFile !== providedEmail;
+      
+      // Build notes with email mismatch info if applicable
+      let claimNotes = notes || "";
+      if (emailMismatch) {
+        const mismatchNote = `[EMAIL MISMATCH] Email on file: ${vendor.email} | Claimant provided: ${claimantEmail}`;
+        claimNotes = claimNotes ? `${mismatchNote}\n\n${claimNotes}` : mismatchNote;
+      } else if (emailOnFile && emailOnFile === providedEmail) {
+        claimNotes = claimNotes ? `[EMAIL MATCH] Email matches file\n\n${claimNotes}` : "[EMAIL MATCH] Email matches file";
+      }
+      
       await storage.createVendorClaimStaging({
         vendorId: req.params.id,
         vendorName: vendor.name,
@@ -647,13 +637,14 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
         claimantEmail,
         claimantName: claimantName || null,
         claimantPhone: claimantPhone || null,
-        notes: notes || null,
+        notes: claimNotes || null,
       });
       
       res.json({
-        message: "Claim request submitted for admin review. We'll contact you at the provided email once verified.",
+        message: "Claim request submitted for admin review. We'll contact you at the provided email once approved.",
         requiresEmail: false,
         pendingAdminReview: true,
+        emailMismatch,
       });
     } catch (error) {
       console.error("Error requesting claim:", error);

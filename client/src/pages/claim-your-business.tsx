@@ -91,20 +91,12 @@ export default function ClaimYourBusiness() {
       const response = await apiRequest("POST", `/api/vendors/${vendorId}/request-claim`, claimantData || {});
       return response.json();
     },
-    onSuccess: (data) => {
-      if (data.pendingAdminReview) {
-        setPendingAdminReview(true);
-        toast({
-          title: "Claim submitted for review!",
-          description: "An admin will review your request and contact you via email.",
-        });
-      } else {
-        setClaimSuccess(true);
-        toast({
-          title: "Claim request sent!",
-          description: "Check your email for instructions to complete the claim.",
-        });
-      }
+    onSuccess: () => {
+      setPendingAdminReview(true);
+      toast({
+        title: "Claim submitted for review!",
+        description: "An admin will review your request and send a verification link once approved.",
+      });
     },
     onError: (error: Error) => {
       toast({
@@ -137,29 +129,24 @@ export default function ClaimYourBusiness() {
 
   const handleConfirmClaim = () => {
     if (selectedVendor) {
-      // If vendor has email, just send claim request
-      if (selectedVendor.email) {
-        claimMutation.mutate({ vendorId: selectedVendor.id });
-      } else {
-        // Vendor has no email, require claimant's email for admin review
-        if (!claimantEmail.trim()) {
-          toast({
-            title: "Email required",
-            description: "Please provide your business email address.",
-            variant: "destructive",
-          });
-          return;
-        }
-        claimMutation.mutate({
-          vendorId: selectedVendor.id,
-          claimantData: {
-            claimantEmail: claimantEmail.trim(),
-            claimantName: claimantName.trim() || undefined,
-            claimantPhone: claimantPhone.trim() || undefined,
-            notes: notes.trim() || undefined,
-          },
+      // Always require claimant's email for admin review
+      if (!claimantEmail.trim()) {
+        toast({
+          title: "Email required",
+          description: "Please provide your business email address.",
+          variant: "destructive",
         });
+        return;
       }
+      claimMutation.mutate({
+        vendorId: selectedVendor.id,
+        claimantData: {
+          claimantEmail: claimantEmail.trim(),
+          claimantName: claimantName.trim() || undefined,
+          claimantPhone: claimantPhone.trim() || undefined,
+          notes: notes.trim() || undefined,
+        },
+      });
     }
   };
   
@@ -378,11 +365,7 @@ export default function ClaimYourBusiness() {
             </DialogTitle>
             <DialogDescription>
               {(claimSuccess || pendingAdminReview) ? (
-                pendingAdminReview 
-                  ? "Your claim has been submitted for admin review."
-                  : "Your claim request has been sent successfully!"
-              ) : vendorHasEmail ? (
-                "We'll send verification instructions to the email on file for this business."
+                "Your claim has been submitted for admin review."
               ) : (
                 "Please provide your business email so we can verify your ownership."
               )}
@@ -409,94 +392,73 @@ export default function ClaimYourBusiness() {
                 </div>
               </div>
               
-              {vendorHasEmail ? (
-                <Alert>
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    A verification link will be sent to the email address above. 
-                    If you don't have access, please contact support.
+              <div className="space-y-4">
+                <Alert className="bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800">
+                  <Clock className="h-4 w-4 text-amber-600" />
+                  <AlertDescription className="text-amber-800 dark:text-amber-200">
+                    Please provide your business email address so our team can verify your ownership. 
+                    This may take 1-2 business days.
                   </AlertDescription>
                 </Alert>
-              ) : (
-                <div className="space-y-4">
-                  <Alert className="bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800">
-                    <Clock className="h-4 w-4 text-amber-600" />
-                    <AlertDescription className="text-amber-800 dark:text-amber-200">
-                      No email is on file for this business. Please provide your business email address 
-                      so our team can verify your ownership. This may take 1-2 business days.
-                    </AlertDescription>
-                  </Alert>
-                  
-                  <div className="space-y-3">
-                    <div className="space-y-2">
-                      <Label htmlFor="claimant-email">Business Email *</Label>
-                      <Input
-                        id="claimant-email"
-                        type="email"
-                        placeholder="your@business.com"
-                        value={claimantEmail}
-                        onChange={(e) => setClaimantEmail(e.target.value)}
-                        required
-                        data-testid="input-claimant-email"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="claimant-name">Your Name</Label>
-                      <Input
-                        id="claimant-name"
-                        placeholder="John Smith"
-                        value={claimantName}
-                        onChange={(e) => setClaimantName(e.target.value)}
-                        data-testid="input-claimant-name"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="claimant-phone">Phone Number</Label>
-                      <Input
-                        id="claimant-phone"
-                        type="tel"
-                        placeholder="(555) 123-4567"
-                        value={claimantPhone}
-                        onChange={(e) => setClaimantPhone(e.target.value)}
-                        data-testid="input-claimant-phone"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="notes">Additional Notes</Label>
-                      <Textarea
-                        id="notes"
-                        placeholder="Any additional information to help verify your ownership..."
-                        value={notes}
-                        onChange={(e) => setNotes(e.target.value)}
-                        className="resize-none"
-                        rows={2}
-                        data-testid="input-notes"
-                      />
-                    </div>
+                
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="claimant-email">Business Email *</Label>
+                    <Input
+                      id="claimant-email"
+                      type="email"
+                      placeholder="your@business.com"
+                      value={claimantEmail}
+                      onChange={(e) => setClaimantEmail(e.target.value)}
+                      required
+                      data-testid="input-claimant-email"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="claimant-name">Your Name</Label>
+                    <Input
+                      id="claimant-name"
+                      placeholder="John Smith"
+                      value={claimantName}
+                      onChange={(e) => setClaimantName(e.target.value)}
+                      data-testid="input-claimant-name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="claimant-phone">Phone Number</Label>
+                    <Input
+                      id="claimant-phone"
+                      type="tel"
+                      placeholder="(555) 123-4567"
+                      value={claimantPhone}
+                      onChange={(e) => setClaimantPhone(e.target.value)}
+                      data-testid="input-claimant-phone"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="notes">Additional Notes</Label>
+                    <Textarea
+                      id="notes"
+                      placeholder="Any additional information to help verify your ownership..."
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      className="resize-none"
+                      rows={2}
+                      data-testid="input-notes"
+                    />
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           )}
 
-          {claimSuccess && (
-            <div className="py-4">
-              <Alert className="bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800">
-                <CheckCircle2 className="h-4 w-4 text-green-600" />
-                <AlertDescription className="text-green-800 dark:text-green-200">
-                  Check your email for a verification link. The link will expire in 48 hours.
-                </AlertDescription>
-              </Alert>
-            </div>
-          )}
-          
-          {pendingAdminReview && (
+          {(claimSuccess || pendingAdminReview) && (
             <div className="py-4">
               <Alert className="bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
                 <Clock className="h-4 w-4 text-blue-600" />
                 <AlertDescription className="text-blue-800 dark:text-blue-200">
-                  Your claim has been submitted for review. We'll contact you at <span className="font-medium">{claimantEmail}</span> once 
-                  your ownership is verified (usually within 1-2 business days).
+                  Your claim has been submitted for review. Once approved, we'll send a verification 
+                  link to <span className="font-medium">{claimantEmail}</span> (usually within 1-2 business days).
                 </AlertDescription>
               </Alert>
             </div>
@@ -514,18 +476,13 @@ export default function ClaimYourBusiness() {
                 </Button>
                 <Button 
                   onClick={handleConfirmClaim} 
-                  disabled={claimMutation.isPending || (!vendorHasEmail && !claimantEmail.trim())}
+                  disabled={claimMutation.isPending || !claimantEmail.trim()}
                   data-testid="button-confirm-claim"
                 >
                   {claimMutation.isPending ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      {vendorHasEmail ? "Sending..." : "Submitting..."}
-                    </>
-                  ) : vendorHasEmail ? (
-                    <>
-                      <Mail className="h-4 w-4 mr-2" />
-                      Send Verification
+                      Submitting...
                     </>
                   ) : (
                     <>
