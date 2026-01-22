@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -62,6 +63,8 @@ export default function AdminVendorClaims() {
   const [selectedApprovalVendor, setSelectedApprovalVendor] = useState<Vendor | null>(null);
   const [adminNotes, setAdminNotes] = useState("");
   const [approvalNotes, setApprovalNotes] = useState("");
+  const [denialReason, setDenialReason] = useState("");
+  const [sendDenialEmail, setSendDenialEmail] = useState(true);
   const [activeTab, setActiveTab] = useState("approval");
 
   const { data: vendors = [], isLoading } = useQuery<Vendor[]>({
@@ -103,16 +106,21 @@ export default function AdminVendorClaims() {
   });
 
   const denyMutation = useMutation({
-    mutationFn: async ({ claimId, notes }: { claimId: string; notes?: string }) => {
-      const response = await apiRequest("POST", `/api/admin/vendor-claims/${claimId}/deny`, { adminNotes: notes });
+    mutationFn: async ({ claimId, reason, sendEmail }: { claimId: string; reason?: string; sendEmail?: boolean }) => {
+      const response = await apiRequest("POST", `/api/admin/vendor-claims/${claimId}/deny`, { 
+        reason,
+        sendEmail,
+      });
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/vendor-claims'] });
       setReviewDialogOpen(false);
+      setDenialReason("");
+      setSendDenialEmail(true);
       toast({
         title: "Claim denied",
-        description: "The claim has been rejected.",
+        description: data.emailSent ? "The claim has been rejected and the claimant has been notified by email." : "The claim has been rejected.",
       });
     },
     onError: (error: Error) => {
@@ -217,7 +225,11 @@ export default function AdminVendorClaims() {
 
   const handleDenyClaim = () => {
     if (selectedClaim) {
-      denyMutation.mutate({ claimId: selectedClaim.id, notes: adminNotes });
+      denyMutation.mutate({ 
+        claimId: selectedClaim.id, 
+        reason: denialReason,
+        sendEmail: sendDenialEmail,
+      });
     }
   };
 
@@ -877,6 +889,33 @@ export default function AdminVendorClaims() {
                   rows={2}
                   data-testid="input-admin-notes"
                 />
+              </div>
+
+              <div className="border-t pt-4 mt-4 space-y-4">
+                <div className="text-sm font-medium text-muted-foreground">If Denying:</div>
+                <div className="space-y-2">
+                  <Label htmlFor="denial-reason">Reason for Denial (sent to claimant)</Label>
+                  <Textarea
+                    id="denial-reason"
+                    placeholder="Explain why this claim is being denied..."
+                    value={denialReason}
+                    onChange={(e) => setDenialReason(e.target.value)}
+                    className="resize-none"
+                    rows={3}
+                    data-testid="input-denial-reason"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="send-denial-email"
+                    checked={sendDenialEmail}
+                    onCheckedChange={(checked) => setSendDenialEmail(checked === true)}
+                    data-testid="checkbox-send-denial-email"
+                  />
+                  <Label htmlFor="send-denial-email" className="text-sm cursor-pointer">
+                    Send denial notification email to claimant
+                  </Label>
+                </div>
               </div>
             </div>
           )}

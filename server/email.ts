@@ -5,6 +5,7 @@ export enum EmailTemplate {
   PASSWORD_RESET = 'password_reset',
   WELCOME_COUPLE = 'welcome_couple',
   WELCOME_VENDOR = 'welcome_vendor',
+  CLAIM_DENIED = 'claim_denied',
 }
 
 const DEFAULT_FROM_EMAIL = 'noreply@viah.me';
@@ -1118,6 +1119,75 @@ export async function sendEmail(params: {
         </body>
       </html>
     `;
+  } else if (template === EmailTemplate.CLAIM_DENIED) {
+    const { vendorName, reason } = data;
+    html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+              line-height: 1.6;
+              color: #333;
+              max-width: 600px;
+              margin: 0 auto;
+              padding: 20px;
+            }
+            .header {
+              background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+              color: white;
+              padding: 30px 20px;
+              border-radius: 8px 8px 0 0;
+              text-align: center;
+            }
+            .content {
+              background: white;
+              padding: 30px;
+              border: 1px solid #e5e7eb;
+              border-top: none;
+              border-radius: 0 0 8px 8px;
+            }
+            .reason-box {
+              background: #fef3c7;
+              border: 1px solid #f59e0b;
+              border-radius: 6px;
+              padding: 15px;
+              margin: 20px 0;
+            }
+            .footer {
+              text-align: center;
+              padding: 20px;
+              color: #6b7280;
+              font-size: 14px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Claim Request Update</h1>
+          </div>
+          <div class="content">
+            <p>Hello,</p>
+            <p>Thank you for your interest in claiming the business profile for <strong>${vendorName}</strong> on Viah.me.</p>
+            <p>After reviewing your claim request, we were unable to approve it at this time.</p>
+            ${reason ? `
+            <div class="reason-box">
+              <strong>Reason:</strong>
+              <p style="margin: 10px 0 0 0;">${reason}</p>
+            </div>
+            ` : ''}
+            <p>If you believe this was a mistake or have additional information to verify your ownership, you're welcome to submit a new claim request with supporting documentation.</p>
+            <p>If you have questions, please contact our support team.</p>
+            <p style="margin-top: 30px;">Best regards,<br><strong>The Viah.me Team</strong></p>
+          </div>
+          <div class="footer">
+            <p>Your South Asian Wedding Vendor Platform</p>
+          </div>
+        </body>
+      </html>
+    `;
   }
 
   try {
@@ -1131,6 +1201,21 @@ export async function sendEmail(params: {
     console.error('Failed to send email:', error);
     throw error;
   }
+}
+
+export async function sendClaimDenialEmail(params: {
+  to: string;
+  vendorName: string;
+  reason?: string;
+}) {
+  const { to, vendorName, reason } = params;
+  
+  return sendEmail({
+    to,
+    subject: `Claim Request Update - ${vendorName}`,
+    template: EmailTemplate.CLAIM_DENIED,
+    data: { vendorName, reason },
+  });
 }
 
 export async function sendTimelineChangeEmail(params: {

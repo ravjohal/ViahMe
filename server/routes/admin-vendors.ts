@@ -385,7 +385,7 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
         return res.status(403).json({ error: "Admin access required" });
       }
       
-      const { adminNotes } = req.body;
+      const { adminNotes, reason, sendEmail: shouldSendEmail } = req.body;
       
       const claim = await storage.getVendorClaimStaging(req.params.id);
       if (!claim) {
@@ -398,12 +398,32 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
       
       await storage.updateVendorClaimStaging(req.params.id, {
         status: 'denied',
-        adminNotes: adminNotes || null,
+        adminNotes: adminNotes || reason || null,
         reviewedBy: auth.userId,
         reviewedAt: new Date(),
       });
       
-      res.json({ message: "Claim denied." });
+      // Send denial email if requested
+      let emailSent = false;
+      if (shouldSendEmail && claim.claimantEmail) {
+        try {
+          const { sendClaimDenialEmail } = await import('../email');
+          await sendClaimDenialEmail({
+            to: claim.claimantEmail,
+            vendorName: claim.vendorName || 'your business',
+            reason: reason || undefined,
+          });
+          emailSent = true;
+          console.log(`[ClaimDeny] Denial email sent to ${claim.claimantEmail} for ${claim.vendorName}`);
+        } catch (emailError) {
+          console.error(`[ClaimDeny] Failed to send denial email:`, emailError);
+        }
+      }
+      
+      res.json({ 
+        message: emailSent ? "Claim denied and notification email sent." : "Claim denied.",
+        emailSent,
+      });
     } catch (error) {
       console.error("Error denying claim:", error);
       res.status(500).json({ error: "Failed to deny claim" });
