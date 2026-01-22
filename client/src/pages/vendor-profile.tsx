@@ -75,11 +75,12 @@ export default function VendorProfilePage() {
     },
   });
 
-  const handleWizardComplete = (data: {
+  const handleWizardComplete = async (data: {
     name: string;
     categories: string[];
     preferredWeddingTraditions: string[];
     areasServed: string[];
+    customCity?: string;
     location: string;
     email: string;
     phone: string;
@@ -88,13 +89,31 @@ export default function VendorProfilePage() {
     logoUrl?: string;
     coverImageUrl?: string;
   }) => {
+    // Process areasServed - replace "Other" with customCity if provided
+    let processedAreasServed = [...data.areasServed];
+    if (processedAreasServed.includes('Other') && data.customCity?.trim()) {
+      const customCityName = data.customCity.trim();
+      
+      // Call API to ensure city exists in metro_areas
+      try {
+        await apiRequest("POST", "/api/metro-areas/ensure", { cityName: customCityName });
+      } catch (e) {
+        console.error("Failed to ensure metro area:", e);
+      }
+      
+      // Replace "Other" with the actual city name
+      processedAreasServed = processedAreasServed.map(area => 
+        area === 'Other' ? customCityName : area
+      );
+    }
+    
     updateVendorMutation.mutate({
       name: data.name,
       categories: data.categories,
       category: data.categories[0] || "other",
       preferredWeddingTraditions: data.preferredWeddingTraditions,
-      areasServed: data.areasServed,
-      city: data.areasServed[0] || null,
+      areasServed: processedAreasServed,
+      city: processedAreasServed[0] || null,
       location: data.location,
       email: data.email,
       phone: data.phone,
