@@ -55,6 +55,7 @@ import ClaimProfile from "@/pages/claim-profile";
 import ClaimYourBusiness from "@/pages/claim-your-business";
 import Admin from "@/pages/admin";
 import AdminVendorClaims from "@/pages/admin-vendor-claims";
+import AdminBulkInvitations from "@/pages/admin-bulk-invitations";
 import AdminCeremonyTemplates from "@/pages/admin-ceremony-templates";
 import AdminBudgetBucketCategories from "@/pages/admin-budget-bucket-categories";
 import AdminFeedback from "@/pages/admin-feedback";
@@ -306,6 +307,11 @@ function Router() {
       <Route path="/admin/vendor-claims">
         <AdminRoute>
           <AdminVendorClaims />
+        </AdminRoute>
+      </Route>
+      <Route path="/admin/bulk-invitations">
+        <AdminRoute>
+          <AdminBulkInvitations />
         </AdminRoute>
       </Route>
       <Route path="/admin/ceremony-templates">

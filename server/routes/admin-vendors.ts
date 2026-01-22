@@ -524,4 +524,112 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
       res.status(500).json({ error: "Failed to reject vendor" });
     }
   });
+
+  // Bulk send claim invitations to multiple vendors
+  router.post("/vendors/bulk-claim-invitations", async (req: Request, res: Response) => {
+    try {
+      const auth = await requireAdminAuth(req, storage);
+      if (!auth) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      if (!auth.isAdmin) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      
+      const bulkInviteSchema = z.object({
+        vendorIds: z.array(z.string().uuid()).min(1, "At least one vendor ID is required"),
+      });
+      
+      const parseResult = bulkInviteSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "vendorIds array of valid UUIDs is required" });
+      }
+      
+      const { vendorIds } = parseResult.data;
+      
+      const results: { vendorId: string; success: boolean; message: string }[] = [];
+      
+      for (const vendorId of vendorIds) {
+        try {
+          const vendor = await storage.getVendor(vendorId);
+          
+          if (!vendor) {
+            results.push({ vendorId, success: false, message: "Vendor not found" });
+            continue;
+          }
+          
+          if (vendor.claimed) {
+            results.push({ vendorId, success: false, message: "Already claimed" });
+            continue;
+          }
+          
+          if (!vendor.email) {
+            results.push({ vendorId, success: false, message: "No email address" });
+            continue;
+          }
+          
+          // Check cooldown
+          if (vendor.claimTokenExpires && new Date(vendor.claimTokenExpires) > new Date()) {
+            results.push({ vendorId, success: false, message: "Recent invitation pending" });
+            continue;
+          }
+          
+          // Generate token and send invitation (48h expiration, matching single invite)
+          const claimToken = randomUUID();
+          const claimTokenExpires = new Date(Date.now() + 48 * 60 * 60 * 1000);
+          
+          await storage.updateVendor(vendorId, {
+            claimToken,
+            claimTokenExpires,
+          });
+          
+          const claimLink = `${req.protocol}://${req.get('host')}/claim-profile/${claimToken}`;
+          
+          await storage.sendClaimEmail(vendor.id, vendor.email, vendor.name, claimLink);
+          results.push({ vendorId, success: true, message: `Sent to ${vendor.email}` });
+        } catch (err) {
+          console.error(`Failed to send claim invitation to vendor ${vendorId}:`, err);
+          results.push({ vendorId, success: false, message: "Failed to send" });
+        }
+      }
+      
+      const successCount = results.filter(r => r.success).length;
+      const failCount = results.filter(r => !r.success).length;
+      
+      res.json({
+        message: `Sent ${successCount} invitations, ${failCount} failed`,
+        results,
+        successCount,
+        failCount,
+      });
+    } catch (error) {
+      console.error("Error sending bulk claim invitations:", error);
+      res.status(500).json({ error: "Failed to send bulk claim invitations" });
+    }
+  });
+
+  // Get unclaimed vendors with email for bulk invitation
+  router.get("/vendors/unclaimed-with-email", async (req: Request, res: Response) => {
+    try {
+      const auth = await requireAdminAuth(req, storage);
+      if (!auth) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      if (!auth.isAdmin) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      
+      const allVendors = await storage.getAllVendors();
+      const unclaimedWithEmail = allVendors.filter(v => 
+        !v.claimed && 
+        v.email && 
+        v.approvalStatus === 'approved'
+      );
+      
+      res.json(unclaimedWithEmail);
+    } catch (error) {
+      console.error("Error fetching unclaimed vendors:", error);
+      res.status(500).json({ error: "Failed to fetch unclaimed vendors" });
+    }
+  });
 }

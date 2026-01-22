@@ -11,7 +11,8 @@ import {
   ChevronRight,
   LayoutDashboard,
   MessageSquareWarning,
-  Users
+  Users,
+  Mail
 } from "lucide-react";
 
 interface AdminAction {
@@ -28,6 +29,13 @@ const adminActions: AdminAction[] = [
     description: "Review and approve vendor claim requests, manage vendor invitations, and handle vendor account approvals",
     href: "/admin/vendor-claims",
     icon: ShieldCheck,
+    category: "vendors",
+  },
+  {
+    title: "Bulk Claim Invitations",
+    description: "Send claim invitations to multiple unclaimed vendors at once",
+    href: "/admin/bulk-invitations",
+    icon: Mail,
     category: "vendors",
   },
   {
