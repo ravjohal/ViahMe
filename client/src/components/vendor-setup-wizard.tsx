@@ -39,6 +39,8 @@ interface VendorSetupWizardProps {
   initialData?: Partial<VendorSetupData>;
   onComplete: (data: VendorSetupData) => void;
   onCancel: () => void;
+  persistToStorage?: boolean;
+  storageKey?: string;
 }
 
 const STEPS = [
@@ -53,7 +55,7 @@ const STEPS = [
   { id: 9, title: "Details", label: "Description" },
 ];
 
-export function VendorSetupWizard({ initialData, onComplete, onCancel }: VendorSetupWizardProps) {
+export function VendorSetupWizard({ initialData, onComplete, onCancel, persistToStorage = false, storageKey = "pending_vendor_data" }: VendorSetupWizardProps) {
   const { toast } = useToast();
   const { data: traditions = [], isLoading: traditionsLoading } = useTraditions();
   const [currentStep, setCurrentStep] = useState(1);
@@ -157,8 +159,15 @@ export function VendorSetupWizard({ initialData, onComplete, onCancel }: VendorS
     return Object.keys(newErrors).length === 0;
   };
 
+  const saveToStorage = () => {
+    if (persistToStorage && storageKey) {
+      localStorage.setItem(storageKey, JSON.stringify(formData));
+    }
+  };
+
   const handleNext = () => {
     if (validateStep(currentStep)) {
+      saveToStorage();
       if (currentStep < STEPS.length) {
         setCurrentStep(currentStep + 1);
       } else {
@@ -169,6 +178,7 @@ export function VendorSetupWizard({ initialData, onComplete, onCancel }: VendorS
 
   const handlePrev = () => {
     if (currentStep > 1) {
+      saveToStorage();
       setCurrentStep(currentStep - 1);
     }
   };

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -20,9 +20,11 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
-import { Briefcase, AlertTriangle, Building2, MapPin, Check, ChevronLeft } from "lucide-react";
+import { Briefcase, AlertTriangle, Building2, MapPin, Check, ChevronLeft, Tag } from "lucide-react";
 import logoUrl from "@assets/viah-logo_1763669612969.png";
-import { VendorSetupWizard, type VendorSetupData } from "@/components/vendor-setup-wizard";
+import type { VendorSetupData } from "@/components/vendor-setup-wizard";
+
+const STORAGE_KEY = "pending_vendor_data";
 
 interface VendorDuplicateMatch {
   vendor: {
@@ -45,58 +47,75 @@ interface DuplicateCheckResponse {
   potentialMatches: VendorDuplicateMatch[];
 }
 
-type ViewState = 'form' | 'duplicates' | 'wizard';
+type ViewState = 'loading' | 'no-profile' | 'credentials' | 'duplicates';
 
-const registerSchema = z
+const credentialsSchema = z
   .object({
     email: z.string().email("Please enter a valid email address"),
     password: z.string().min(8, "Password must be at least 8 characters"),
     confirmPassword: z.string(),
-    businessName: z.string().min(2, "Business name is required"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
     path: ["confirmPassword"],
   });
 
-type RegisterFormData = z.infer<typeof registerSchema>;
+type CredentialsFormData = z.infer<typeof credentialsSchema>;
+
+function formatCategory(category: string): string {
+  return category.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+}
 
 export default function VendorRegister() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const [view, setView] = useState<ViewState>('form');
+  const [view, setView] = useState<ViewState>('loading');
+  const [profileData, setProfileData] = useState<VendorSetupData | null>(null);
   const [duplicateData, setDuplicateData] = useState<DuplicateCheckResponse | null>(null);
-  const [pendingFormData, setPendingFormData] = useState<RegisterFormData | null>(null);
+  const [pendingCredentials, setPendingCredentials] = useState<CredentialsFormData | null>(null);
 
-  const form = useForm<RegisterFormData>({
-    resolver: zodResolver(registerSchema),
+  const form = useForm<CredentialsFormData>({
+    resolver: zodResolver(credentialsSchema),
     defaultValues: {
       email: "",
       password: "",
       confirmPassword: "",
-      businessName: "",
     },
   });
 
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const data = JSON.parse(saved) as VendorSetupData;
+        setProfileData(data);
+        if (data.email) {
+          form.setValue("email", data.email);
+        }
+        setView('credentials');
+      } catch (e) {
+        console.error("Failed to parse saved vendor data:", e);
+        setView('no-profile');
+      }
+    } else {
+      setView('no-profile');
+    }
+  }, [form]);
+
   const checkDuplicatesMutation = useMutation({
-    mutationFn: async (data: RegisterFormData) => {
-      const response = await apiRequest("POST", "/api/auth/check-vendor-duplicates", {
-        businessName: data.businessName,
-        email: data.email,
-        categories: [],
-      });
+    mutationFn: async (data: { businessName: string; email: string; categories: string[] }) => {
+      const response = await apiRequest("POST", "/api/auth/check-vendor-duplicates", data);
       return await response.json() as DuplicateCheckResponse;
     },
   });
 
   const registerMutation = useMutation({
-    mutationFn: async (data: RegisterFormData & Partial<VendorSetupData>) => {
+    mutationFn: async (data: CredentialsFormData & Partial<VendorSetupData>) => {
       const response = await apiRequest("POST", "/api/auth/register", {
         email: data.email,
         password: data.password,
         role: "vendor",
-        businessName: data.businessName,
-        // Include wizard data
+        businessName: data.name,
         categories: data.categories,
         preferredWeddingTraditions: data.preferredWeddingTraditions,
         areasServed: data.areasServed,
@@ -110,6 +129,7 @@ export default function VendorRegister() {
       return await response.json();
     },
     onSuccess: () => {
+      localStorage.removeItem(STORAGE_KEY);
       toast({
         title: "Welcome to Viah.me!",
         description: "Your profile is live but unpublished until approved by our team.",
@@ -140,11 +160,12 @@ export default function VendorRegister() {
       return await response.json();
     },
     onSuccess: () => {
+      localStorage.removeItem(STORAGE_KEY);
       toast({
         title: "Profile claimed successfully!",
         description: "Your claim is pending approval. You can now complete your profile.",
       });
-      setLocation("/vendor-profile");
+      setLocation("/vendor-dashboard");
     },
     onError: (error: any) => {
       const errorMessage = error.message || "Failed to claim profile";
@@ -156,110 +177,100 @@ export default function VendorRegister() {
     },
   });
 
-  const onSubmit = async (data: RegisterFormData) => {
+  const onSubmit = async (credentials: CredentialsFormData) => {
+    if (!profileData) return;
+
     try {
-      const duplicates = await checkDuplicatesMutation.mutateAsync(data);
-      
+      const duplicates = await checkDuplicatesMutation.mutateAsync({
+        businessName: profileData.name,
+        email: credentials.email,
+        categories: profileData.categories || [],
+      });
+
       if (duplicates.hasExactMatch || duplicates.potentialMatches.length > 0) {
         setDuplicateData(duplicates);
-        setPendingFormData(data);
+        setPendingCredentials(credentials);
         setView('duplicates');
       } else {
-        // No duplicates - go directly to wizard
-        setPendingFormData(data);
-        setView('wizard');
+        registerMutation.mutate({
+          ...credentials,
+          ...profileData,
+        });
       }
     } catch (error) {
-      // Error checking duplicates - still show wizard
-      setPendingFormData(data);
-      setView('wizard');
+      registerMutation.mutate({
+        ...credentials,
+        ...profileData,
+      });
     }
   };
 
   const handleClaimVendor = (vendorId: string) => {
-    if (!pendingFormData) return;
+    if (!pendingCredentials) return;
     claimVendorMutation.mutate({
       vendorId,
-      email: pendingFormData.email,
-      password: pendingFormData.password,
+      email: pendingCredentials.email,
+      password: pendingCredentials.password,
     });
   };
 
   const handleProceedWithNewProfile = () => {
-    if (!pendingFormData) return;
-    // Show the wizard instead of registering immediately
-    setView('wizard');
-  };
-
-  const handleWizardComplete = (wizardData: VendorSetupData) => {
-    if (!pendingFormData) return;
-    // Combine registration data with wizard data and register
+    if (!pendingCredentials || !profileData) return;
     registerMutation.mutate({
-      ...pendingFormData,
-      ...wizardData,
+      ...pendingCredentials,
+      ...profileData,
     });
   };
 
-  const handleWizardCancel = () => {
-    // Go back to duplicates view if there were duplicates, otherwise back to form
-    if (duplicateData && (duplicateData.hasExactMatch || duplicateData.potentialMatches.length > 0)) {
-      setView('duplicates');
-    } else {
-      setView('form');
-      setPendingFormData(null);
-    }
-  };
-
-  const handleBack = () => {
-    setView('form');
+  const handleBackToCredentials = () => {
+    setView('credentials');
     setDuplicateData(null);
   };
 
-  // Wizard view - shown after user chooses to create new profile
-  if (view === 'wizard' && pendingFormData) {
+  if (view === 'loading') {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center mb-6">
-            <Link href="/" data-testid="link-logo-home">
-              <img
-                src={logoUrl}
-                alt="Viah.me"
-                className="h-16 mx-auto object-contain cursor-pointer hover:opacity-80 transition-opacity"
-              />
-            </Link>
-            <h2 className="text-2xl font-bold mt-4">Complete Your Business Profile</h2>
-            <p className="text-muted-foreground mt-2">
-              Tell us about your business to help couples find you
-            </p>
-          </div>
-          
-          <VendorSetupWizard
-            initialData={{
-              name: pendingFormData.businessName,
-              email: pendingFormData.email,
-            }}
-            onComplete={handleWizardComplete}
-            onCancel={handleWizardCancel}
-          />
-          
-          {registerMutation.isPending && (
-            <div className="fixed inset-0 bg-background/80 flex items-center justify-center z-50">
-              <div className="text-center">
-                <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
-                <p className="text-lg font-medium">Creating your account...</p>
-              </div>
-            </div>
-          )}
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (view === 'no-profile') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="w-full max-w-md text-center">
+          <Link href="/" data-testid="link-logo-home">
+            <img
+              src={logoUrl}
+              alt="Viah.me"
+              className="h-20 mx-auto object-contain mb-4 cursor-pointer hover:opacity-80 transition-opacity"
+            />
+          </Link>
+          <Card>
+            <CardContent className="p-8">
+              <AlertTriangle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
+              <h2 className="text-xl font-semibold mb-2">Profile Setup Required</h2>
+              <p className="text-muted-foreground mb-6">
+                Please complete your business profile before creating an account.
+              </p>
+              <Button
+                onClick={() => setLocation("/vendor-onboarding")}
+                className="w-full"
+                data-testid="button-go-to-onboarding"
+              >
+                Set Up Your Profile
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
   }
 
-  if (view === 'duplicates' && duplicateData && pendingFormData) {
+  if (view === 'duplicates' && duplicateData && pendingCredentials && profileData) {
     const isExactMatch = duplicateData.hasExactMatch && duplicateData.exactMatch;
-    const matchesToShow = isExactMatch 
-      ? [duplicateData.exactMatch!] 
+    const matchesToShow = isExactMatch
+      ? [duplicateData.exactMatch!]
       : duplicateData.potentialMatches;
 
     return (
@@ -283,18 +294,18 @@ export default function VendorRegister() {
                   {isExactMatch ? "Profile Already Exists" : "Potential Matches Found"}
                 </h2>
               </div>
-              
+
               <p className="text-muted-foreground mb-6">
-                {isExactMatch 
+                {isExactMatch
                   ? "We found an existing vendor profile that matches your business. Would you like to claim it?"
-                  : `We found ${matchesToShow.length} potential match${matchesToShow.length > 1 ? 'es' : ''} for "${pendingFormData.businessName}". Is one of these your business?`
+                  : `We found ${matchesToShow.length} potential match${matchesToShow.length > 1 ? 'es' : ''} for "${profileData.name}". Is one of these your business?`
                 }
               </p>
 
               <div className="space-y-3 mb-6">
                 {matchesToShow.map((match, index) => (
-                  <Card 
-                    key={match.vendor.id} 
+                  <Card
+                    key={match.vendor.id}
                     className="hover-elevate cursor-pointer"
                     data-testid={`card-duplicate-vendor-${index}`}
                     onClick={() => handleClaimVendor(match.vendor.id)}
@@ -309,21 +320,31 @@ export default function VendorRegister() {
                               {Math.round(match.confidence * 100)}% match
                             </Badge>
                           </div>
-                          
-                          {match.vendor.city && (
+
+                          {(match.vendor.city || match.vendor.location) && (
                             <div className="flex items-center gap-1 text-sm text-muted-foreground mb-2">
-                              <MapPin className="h-3 w-3" />
-                              <span>{match.vendor.city}</span>
+                              <MapPin className="h-3 w-3 flex-shrink-0" />
+                              <span className="truncate">
+                                {match.vendor.city || match.vendor.location}
+                              </span>
                             </div>
                           )}
 
                           {match.vendor.categories && match.vendor.categories.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mb-2">
-                              {match.vendor.categories.slice(0, 3).map((cat) => (
-                                <Badge key={cat} variant="secondary" className="text-xs">
-                                  {cat.replace(/_/g, ' ')}
-                                </Badge>
-                              ))}
+                            <div className="flex items-start gap-1 mb-2">
+                              <Tag className="h-3 w-3 text-muted-foreground flex-shrink-0 mt-0.5" />
+                              <div className="flex flex-wrap gap-1">
+                                {match.vendor.categories.slice(0, 3).map((cat) => (
+                                  <Badge key={cat} variant="secondary" className="text-xs">
+                                    {formatCategory(cat)}
+                                  </Badge>
+                                ))}
+                                {match.vendor.categories.length > 3 && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    +{match.vendor.categories.length - 3} more
+                                  </Badge>
+                                )}
+                              </div>
                             </div>
                           )}
 
@@ -338,7 +359,7 @@ export default function VendorRegister() {
                           </div>
                         </div>
 
-                        <Button 
+                        <Button
                           size="sm"
                           disabled={claimVendorMutation.isPending}
                           onClick={(e) => {
@@ -368,16 +389,16 @@ export default function VendorRegister() {
                     {registerMutation.isPending ? "Creating..." : "None of these - Create new profile"}
                   </Button>
                 )}
-                
+
                 <Button
                   variant="ghost"
-                  onClick={handleBack}
+                  onClick={handleBackToCredentials}
                   disabled={registerMutation.isPending || claimVendorMutation.isPending}
                   className="w-full"
-                  data-testid="button-back-to-form"
+                  data-testid="button-back-to-credentials"
                 >
                   <ChevronLeft className="h-4 w-4 mr-1" />
-                  Back to registration
+                  Back
                 </Button>
               </div>
             </CardContent>
@@ -400,40 +421,27 @@ export default function VendorRegister() {
           </Link>
           <div className="flex items-center justify-center gap-2 mb-2">
             <Briefcase className="h-8 w-8 text-primary" />
-            <h1 className="font-display text-4xl font-bold text-foreground">
-              Vendor Registration
+            <h1 className="font-display text-3xl font-bold text-foreground">
+              Almost Done!
             </h1>
           </div>
-          <p className="text-muted-foreground mt-2">
-            Join Viah.me and connect with couples
-          </p>
+          {profileData && (
+            <div className="mt-4 p-3 bg-muted rounded-lg">
+              <p className="text-sm text-muted-foreground mb-1">Creating account for:</p>
+              <p className="font-semibold">{profileData.name}</p>
+              {profileData.areasServed && profileData.areasServed.length > 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Serving: {profileData.areasServed.join(", ")}
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         <Card>
           <CardContent className="p-8">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="businessName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-foreground font-medium">
-                        Business Name
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="Your Business Name"
-                          disabled={registerMutation.isPending || checkDuplicatesMutation.isPending}
-                          data-testid="input-business-name"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
                 <FormField
                   control={form.control}
                   name="email"
@@ -509,11 +517,11 @@ export default function VendorRegister() {
                   className="w-full"
                   data-testid="button-vendor-register"
                 >
-                  {checkDuplicatesMutation.isPending 
-                    ? "Checking..." 
-                    : registerMutation.isPending 
-                    ? "Creating Account..." 
-                    : "Create Vendor Account"}
+                  {checkDuplicatesMutation.isPending
+                    ? "Checking..."
+                    : registerMutation.isPending
+                    ? "Creating Account..."
+                    : "Create Account"}
                 </Button>
 
                 <p className="text-xs text-center text-muted-foreground">
@@ -522,7 +530,19 @@ export default function VendorRegister() {
               </form>
             </Form>
 
-            <div className="mt-6 pt-6 border-t text-center">
+            <div className="mt-6 pt-6 border-t">
+              <Button
+                variant="ghost"
+                onClick={() => setLocation("/vendor-onboarding")}
+                className="w-full"
+                data-testid="button-edit-profile"
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Edit Profile Details
+              </Button>
+            </div>
+
+            <div className="mt-4 text-center">
               <p className="text-sm text-muted-foreground">
                 Already have an account?{" "}
                 <Link

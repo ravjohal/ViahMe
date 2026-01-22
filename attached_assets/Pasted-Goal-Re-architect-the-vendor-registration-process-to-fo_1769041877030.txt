@@ -1,0 +1,57 @@
+Goal: Re-architect the vendor registration process to follow a "Profile-First" flow. The user should complete the setup wizard before providing account credentials (email/password), ensuring the data is persisted in the browser until the account is finalized.
+
+Current Workflow: /vendor-register (Credentials) → /vendor-setup-wizard (Profile). New Workflow: /vendor-onboarding (Wizard) → /vendor-register (Credentials + Duplicate Check) → Dashboard.
+
+Technical Requirements:
+
+Route & Navigation Updates:
+
+Create or update /vendor-onboarding to host the VendorSetupWizard component.
+
+Update the "Register as Vendor" buttons across the app to point to /vendor-onboarding.
+
+State Persistence (The "No-DB-Yet" Rule):
+
+Modify client/src/components/vendor-setup-wizard.tsx to save form data to localStorage (e.g., pending_vendor_data) as the user moves through steps.
+
+Ensure that if the user refreshes or navigates away and returns to /vendor-onboarding, the wizard populates from localStorage.
+
+Crucial: Do NOT call any "Create Vendor" API during this wizard phase.
+
+Handoff to Registration:
+
+Once the wizard is complete, navigate the user to /vendor-register.
+
+Modify client/src/pages/vendor-register.tsx to:
+
+Retrieve the data from localStorage.
+
+Allow the user to enter their Email and Password.
+
+Keep the existing Duplicate Check logic: When the email is entered, check for existing vendors.
+
+If a duplicate is found, show the "Is this you?" UI. If they select an existing vendor, link the account.
+
+If they select "None of these - create new profile," proceed to the final step.
+
+The Final Commit:
+
+Only upon the final submission of /vendor-register (after credentials and duplicate check), send the entire payload (Wizard data + Credentials) to the backend POST /api/auth/register-vendor.
+
+On successful creation, clear the localStorage.
+
+UX/UI Details:
+
+Add a progress bar to the wizard so vendors know how close they are to finishing.
+
+Ensure the transition from the Wizard to the Registration page feels like a single continuous flow (use consistent styling).
+
+Reference Files:
+
+client/src/pages/onboarding.tsx (Reference for the Couple's flow)
+
+client/src/components/vendor-setup-wizard.tsx (To be modified)
+
+client/src/pages/vendor-register.tsx (To be modified)
+
+server/routes/auth.ts (To handle the final combined payload)

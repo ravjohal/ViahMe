@@ -66,6 +66,7 @@ import LiveTimeline from "@/pages/live-timeline";
 import VendorTeam from "@/pages/vendor-team";
 import VendorInviteAccept from "@/pages/vendor-invite-accept";
 import VendorProfile from "@/pages/vendor-profile";
+import VendorOnboarding from "@/pages/vendor-onboarding";
 import VendorPortfolio from "@/pages/vendor-portfolio";
 import VendorLeads from "@/pages/vendor-leads";
 import Expenses from "@/pages/expenses";
@@ -104,6 +105,7 @@ function Router() {
       <Route path="/login" component={Login} />
       <Route path="/vendor-login" component={VendorLogin} />
       <Route path="/vendor-register" component={VendorRegister} />
+      <Route path="/vendor-onboarding" component={VendorOnboarding} />
       <Route path="/verify-email" component={VerifyEmail} />
       <Route path="/claim-profile/:token" component={ClaimProfile} />
       <Route path="/claim-your-business" component={ClaimYourBusiness} />
