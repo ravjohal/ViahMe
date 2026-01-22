@@ -351,7 +351,7 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
         claimTokenExpires,
       } as any);
       
-      const claimLink = `${req.protocol}://${req.get('host')}/claim-profile?token=${claimToken}`;
+      const claimLink = `${req.protocol}://${req.get('host')}/claim-profile/${claimToken}`;
       try {
         await storage.sendClaimEmail(vendor.id, claim.claimantEmail, vendor.name, claimLink);
       } catch (err) {
@@ -446,7 +446,54 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
       }
       
       const updatedVendor = await storage.approveVendor(req.params.id, auth.userId, notes);
-      res.json({ message: "Vendor approved!", vendor: updatedVendor });
+      
+      // Auto-send claim invitation for unclaimed vendors with email
+      // Use updatedVendor for most current state after approval
+      let claimInvitationSent = false;
+      let claimLink: string | undefined;
+      let claimSkipReason: string | undefined;
+      
+      if (updatedVendor && !updatedVendor.claimed && updatedVendor.email) {
+        // Check cooldown - skip if a recent invitation was already sent
+        const hasRecentInvite = updatedVendor.claimTokenExpires && new Date(updatedVendor.claimTokenExpires) > new Date();
+        
+        if (hasRecentInvite) {
+          claimSkipReason = "A claim invitation was already sent recently";
+        } else {
+          try {
+            const claimToken = randomUUID();
+            const claimTokenExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days for approval flow
+            
+            await storage.updateVendor(req.params.id, {
+              claimToken,
+              claimTokenExpires,
+            });
+            
+            claimLink = `${req.protocol}://${req.get('host')}/claim-profile/${claimToken}`;
+            
+            await storage.sendClaimEmail(updatedVendor.id, updatedVendor.email, updatedVendor.name, claimLink);
+            claimInvitationSent = true;
+          } catch (err) {
+            console.error("Failed to send claim invitation after approval:", err);
+          }
+        }
+      } else if (updatedVendor && !updatedVendor.claimed && !updatedVendor.email) {
+        claimSkipReason = "Vendor has no email address for claim invitation";
+      }
+      
+      let message = "Vendor approved!";
+      if (claimInvitationSent && updatedVendor) {
+        message = `Vendor approved and claim invitation sent to ${updatedVendor.email}!`;
+      } else if (claimSkipReason) {
+        message = `Vendor approved! Note: ${claimSkipReason}`;
+      }
+      
+      res.json({ 
+        message, 
+        vendor: updatedVendor,
+        claimInvitationSent,
+        claimLink: process.env.NODE_ENV === 'development' ? claimLink : undefined,
+      });
     } catch (error) {
       console.error("Error approving vendor:", error);
       res.status(500).json({ error: "Failed to approve vendor" });
