@@ -402,6 +402,23 @@ export function registerAuthRoutes(app: Express, storage: IStorage) {
     }
   });
 
+  // POST /api/auth/check-email-exists - Check if email already exists before registration
+  app.post("/api/auth/check-email-exists", async (req, res) => {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(400).json({ error: "Email is required" });
+      }
+
+      const existingUser = await storage.getUserByEmail(email);
+      res.json({ exists: !!existingUser });
+    } catch (error) {
+      console.error("Check email exists error:", error);
+      res.status(500).json({ error: "Failed to check email" });
+    }
+  });
+
   // POST /api/auth/check-vendor-duplicates - Check for duplicate vendors before registration
   app.post("/api/auth/check-vendor-duplicates", async (req, res) => {
     try {

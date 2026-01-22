@@ -102,6 +102,13 @@ export default function VendorRegister() {
     }
   }, [form]);
 
+  const checkEmailExistsMutation = useMutation({
+    mutationFn: async (email: string) => {
+      const response = await apiRequest("POST", "/api/auth/check-email-exists", { email });
+      return await response.json() as { exists: boolean };
+    },
+  });
+
   const checkDuplicatesMutation = useMutation({
     mutationFn: async (data: { businessName: string; email: string; categories: string[] }) => {
       const response = await apiRequest("POST", "/api/auth/check-vendor-duplicates", data);
@@ -193,6 +200,18 @@ export default function VendorRegister() {
     if (!profileData) return;
 
     try {
+      // First check if email already exists
+      const emailCheck = await checkEmailExistsMutation.mutateAsync(credentials.email);
+      if (emailCheck.exists) {
+        toast({
+          variant: "destructive",
+          title: "Email already registered",
+          description: "An account with this email already exists. Please use a different email or log in.",
+        });
+        return;
+      }
+
+      // Then check for duplicate vendors
       const duplicates = await checkDuplicatesMutation.mutateAsync({
         businessName: profileData.name,
         email: credentials.email,
@@ -467,7 +486,7 @@ export default function VendorRegister() {
                           {...field}
                           type="email"
                           placeholder="you@yourbusiness.com"
-                          disabled={registerMutation.isPending || checkDuplicatesMutation.isPending}
+                          disabled={registerMutation.isPending || checkEmailExistsMutation.isPending || checkDuplicatesMutation.isPending}
                           data-testid="input-vendor-email"
                         />
                       </FormControl>
@@ -492,7 +511,7 @@ export default function VendorRegister() {
                           {...field}
                           type="password"
                           placeholder="Create a password (min 8 characters)"
-                          disabled={registerMutation.isPending || checkDuplicatesMutation.isPending}
+                          disabled={registerMutation.isPending || checkEmailExistsMutation.isPending || checkDuplicatesMutation.isPending}
                           data-testid="input-vendor-password"
                         />
                       </FormControl>
@@ -514,7 +533,7 @@ export default function VendorRegister() {
                           {...field}
                           type="password"
                           placeholder="Confirm your password"
-                          disabled={registerMutation.isPending || checkDuplicatesMutation.isPending}
+                          disabled={registerMutation.isPending || checkEmailExistsMutation.isPending || checkDuplicatesMutation.isPending}
                           data-testid="input-vendor-confirm-password"
                         />
                       </FormControl>
@@ -525,7 +544,7 @@ export default function VendorRegister() {
 
                 <Button
                   type="submit"
-                  disabled={registerMutation.isPending || checkDuplicatesMutation.isPending}
+                  disabled={registerMutation.isPending || checkEmailExistsMutation.isPending || checkDuplicatesMutation.isPending}
                   className="w-full"
                   data-testid="button-vendor-register"
                 >
