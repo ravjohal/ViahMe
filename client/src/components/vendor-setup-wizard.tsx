@@ -49,11 +49,10 @@ const STEPS = [
   { id: 2, title: "Services", label: "Service Categories" },
   { id: 3, title: "Traditions", label: "Wedding Types" },
   { id: 4, title: "Areas Served", label: "Service Areas" },
-  { id: 5, title: "Location", label: "Address" },
-  { id: 6, title: "Contact", label: "Email & Phone" },
-  { id: 7, title: "Pricing", label: "Price Range" },
-  { id: 8, title: "Branding", label: "Logo & Cover Image" },
-  { id: 9, title: "Details", label: "Description" },
+  { id: 5, title: "Contact", label: "Contact & Address" },
+  { id: 6, title: "Pricing", label: "Price Range" },
+  { id: 7, title: "Branding", label: "Logo & Cover Image" },
+  { id: 8, title: "Details", label: "Description" },
 ];
 
 export function VendorSetupWizard({ initialData, onComplete, onCancel, persistToStorage = false, storageKey = "pending_vendor_data" }: VendorSetupWizardProps) {
@@ -158,9 +157,7 @@ export function VendorSetupWizard({ initialData, onComplete, onCancel, persistTo
         }
         break;
       case 5:
-        if (!formData.location.trim()) newErrors.location = "Address is required";
-        break;
-      case 6:
+        // Email and phone required, address is optional
         if (!formData.email.trim()) newErrors.email = "Email is required";
         if (formData.email && !formData.email.includes("@")) newErrors.email = "Valid email required";
         if (!formData.phone.trim()) newErrors.phone = "Phone is required";
@@ -408,22 +405,6 @@ export function VendorSetupWizard({ initialData, onComplete, onCancel, persistTo
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="location">Business Address</Label>
-              <AddressAutocomplete
-                value={formData.location}
-                onChange={(value) => setFormData({ ...formData, location: value })}
-                placeholder="Enter your business address"
-                data-testid="input-wizard-location"
-              />
-              {errors.location && <p className="text-sm text-destructive mt-1">{errors.location}</p>}
-            </div>
-          </div>
-        );
-
-      case 6:
-        return (
-          <div className="space-y-4">
-            <div>
               <Label htmlFor="email">Business Email</Label>
               <Input
                 id="email"
@@ -447,10 +428,19 @@ export function VendorSetupWizard({ initialData, onComplete, onCancel, persistTo
               />
               {errors.phone && <p className="text-sm text-destructive mt-1">{errors.phone}</p>}
             </div>
+            <div>
+              <Label htmlFor="location">Business Address <span className="text-muted-foreground font-normal">(optional)</span></Label>
+              <AddressAutocomplete
+                value={formData.location}
+                onChange={(value) => setFormData({ ...formData, location: value })}
+                placeholder="Enter your business address"
+                data-testid="input-wizard-location"
+              />
+            </div>
           </div>
         );
 
-      case 7:
+      case 6:
         return (
           <div className="space-y-4">
             <div>
@@ -473,7 +463,7 @@ export function VendorSetupWizard({ initialData, onComplete, onCancel, persistTo
           </div>
         );
 
-      case 8:
+      case 7:
         return (
           <div className="space-y-6">
             <div>
@@ -586,7 +576,7 @@ export function VendorSetupWizard({ initialData, onComplete, onCancel, persistTo
           </div>
         );
 
-      case 9:
+      case 8:
         return (
           <div className="space-y-4">
             <div>
