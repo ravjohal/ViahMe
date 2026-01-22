@@ -294,7 +294,7 @@ export default function VendorProfilePage() {
                         <div className="flex flex-wrap gap-2 mt-1">
                           {vendor.areasServed.map((area) => (
                             <Badge key={area} variant="outline">
-                              {area === "Other" && vendor.customCity ? vendor.customCity : area}
+                              {area}
                             </Badge>
                           ))}
                         </div>

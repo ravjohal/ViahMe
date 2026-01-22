@@ -126,6 +126,7 @@ export default function VendorRegister() {
         categories: data.categories,
         preferredWeddingTraditions: data.preferredWeddingTraditions,
         areasServed: data.areasServed,
+        customCity: data.customCity, // Pass custom city for "Other" option
         location: data.location,
         phone: data.phone,
         priceRange: data.priceRange,

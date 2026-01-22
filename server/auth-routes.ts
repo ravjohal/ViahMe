@@ -94,6 +94,39 @@ export function registerAuthRoutes(app: Express, storage: IStorage) {
         const body = req.body as any;
         const businessName = body.businessName || data.email.split('@')[0];
         
+        // Process areasServed - replace "Other" with customCity if provided
+        let processedAreasServed = body.areasServed || [];
+        if (processedAreasServed.includes('Other') && body.customCity?.trim()) {
+          const customCityName = body.customCity.trim();
+          
+          // Check if city exists in metro_areas, create if not
+          const allAreas = await storage.getAllMetroAreas();
+          const existingArea = allAreas.find(
+            (area: any) => area.value.toLowerCase() === customCityName.toLowerCase() ||
+                    area.label.toLowerCase() === customCityName.toLowerCase()
+          );
+          
+          if (!existingArea) {
+            // Create new metro area
+            const slug = customCityName
+              .toLowerCase()
+              .replace(/[^a-z0-9\s-]/g, '')
+              .replace(/\s+/g, '_');
+            await storage.createMetroArea({
+              slug,
+              value: customCityName,
+              label: customCityName,
+              isActive: true,
+              displayOrder: 999,
+            });
+          }
+          
+          // Replace "Other" with the actual city name
+          processedAreasServed = processedAreasServed.map((area: string) => 
+            area === 'Other' ? customCityName : area
+          );
+        }
+        
         // Accept full profile data from wizard if provided
         await storage.createVendor({
           name: businessName,
@@ -104,14 +137,14 @@ export function registerAuthRoutes(app: Express, storage: IStorage) {
           approvalStatus: 'pending', // All new vendors need admin approval
           source: 'vendor_registered',
           // Use wizard data if provided, otherwise use defaults
-          city: body.areasServed?.[0] || 'San Francisco Bay Area',
+          city: processedAreasServed[0] || 'San Francisco Bay Area',
           location: body.location || '',
           phone: body.phone || null,
           priceRange: body.priceRange || '$$',
           categories: body.categories || [],
           category: body.categories?.[0] || null,
           preferredWeddingTraditions: body.preferredWeddingTraditions || [],
-          areasServed: body.areasServed || [],
+          areasServed: processedAreasServed,
           description: body.description || '',
           logoUrl: body.logoUrl || null,
           coverImageUrl: body.coverImageUrl || null,
