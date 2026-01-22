@@ -18,7 +18,8 @@ import {
   Eye,
   EyeOff,
   CheckCircle2,
-  Clock
+  Clock,
+  Globe
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -280,6 +281,27 @@ export default function VendorProfilePage() {
                     </div>
                   </div>
                 </div>
+                
+                {vendor.areasServed && vendor.areasServed.length > 0 && (
+                  <>
+                    <Separator />
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded-lg bg-muted">
+                        <Globe className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <Label className="text-sm text-muted-foreground">Areas Served</Label>
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          {vendor.areasServed.map((area) => (
+                            <Badge key={area} variant="outline">
+                              {area === "Other" && vendor.customCity ? vendor.customCity : area}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>
