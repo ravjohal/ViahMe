@@ -462,7 +462,11 @@ export default function VendorRegister() {
               <p className="font-semibold">{profileData.name}</p>
               {profileData.areasServed && profileData.areasServed.length > 0 && (
                 <p className="text-sm text-muted-foreground">
-                  Serving: {profileData.areasServed.join(", ")}
+                  Serving: {profileData.areasServed.map(area => 
+                    area === "Other" && profileData.customCity 
+                      ? profileData.customCity 
+                      : area
+                  ).join(", ")}
                 </p>
               )}
             </div>
