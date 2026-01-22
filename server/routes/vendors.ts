@@ -687,6 +687,7 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
           description: vendor.description,
           priceRange: vendor.priceRange,
           email: vendor.email, // The business email on file (may differ from claimant email)
+          areasServed: vendor.areasServed || [], // Areas this vendor serves
         },
       });
     } catch (error) {
@@ -697,7 +698,7 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
 
   router.post("/claim/complete", async (req, res) => {
     try {
-      const { token, usernameEmail, businessEmail, password, phone, description, website, priceRange } = req.body;
+      const { token, usernameEmail, businessEmail, password, phone, description, website, priceRange, areasServed } = req.body;
       
       // Support both old 'email' field and new 'usernameEmail' field for backward compatibility
       const loginEmail = usernameEmail || req.body.email;
@@ -740,6 +741,7 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
         description: description || vendor.description,
         website: website || vendor.website,
         priceRange: priceRange || vendor.priceRange,
+        areasServed: areasServed || vendor.areasServed, // Areas this vendor serves
         approvalStatus: 'approved', // Keep vendor approved after claiming - no re-approval needed
         isPublished: true, // Ensure vendor remains published
       } as any);

@@ -27,7 +27,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ShieldCheck, Building2, CheckCircle2, AlertCircle, MapPin, Phone, Mail, Globe, Loader2 } from "lucide-react";
+import { ShieldCheck, Building2, CheckCircle2, AlertCircle, MapPin, Phone, Mail, Globe, Loader2, Map } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+
+interface MetroArea {
+  id: string;
+  slug: string;
+  value: string;
+  label: string;
+}
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Vendor } from "@shared/schema";
@@ -38,9 +46,10 @@ const claimFormSchema = z.object({
   phone: z.string().min(10, "Please enter a valid phone number"),
   password: z.string().min(8, "Password must be at least 8 characters"),
   confirmPassword: z.string(),
-  businessDescription: z.string().min(50, "Please provide at least 50 characters describing your business"),
-  website: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
+  businessDescription: z.string().optional().or(z.literal("")),
+  website: z.string().optional().or(z.literal("")),
   priceRange: z.enum(["$", "$$", "$$$", "$$$$"]),
+  areasServed: z.array(z.string()).min(1, "Please select at least one area you serve"),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -57,7 +66,7 @@ export default function ClaimProfile() {
 
   const token = params?.token;
 
-  const { data: vendorData, isLoading, error } = useQuery<{ vendor: Vendor & { email?: string }; valid: boolean; expired?: boolean; claimantEmail?: string }>({
+  const { data: vendorData, isLoading, error } = useQuery<{ vendor: Vendor & { email?: string; areasServed?: string[] }; valid: boolean; expired?: boolean; claimantEmail?: string }>({
     queryKey: ["/api/vendors/claim/verify", token],
     queryFn: async () => {
       if (!token) throw new Error("No claim token provided");
@@ -72,6 +81,10 @@ export default function ClaimProfile() {
     retry: false,
   });
 
+  const { data: metroAreas = [] } = useQuery<MetroArea[]>({
+    queryKey: ["/api/metro-areas"],
+  });
+
   const form = useForm<ClaimFormValues>({
     resolver: zodResolver(claimFormSchema),
     defaultValues: {
@@ -83,6 +96,7 @@ export default function ClaimProfile() {
       businessDescription: vendorData?.vendor?.description || "",
       website: vendorData?.vendor?.website || "",
       priceRange: (vendorData?.vendor?.priceRange as any) || "$$",
+      areasServed: [],
     },
   });
 
@@ -96,11 +110,18 @@ export default function ClaimProfile() {
       form.setValue("businessDescription", vendorData.vendor.description || "");
       form.setValue("website", vendorData.vendor.website || "");
       form.setValue("priceRange", (vendorData.vendor.priceRange as any) || "$$");
+      form.setValue("areasServed", vendorData.vendor.areasServed || []);
     }
   }, [vendorData, form]);
 
   const claimMutation = useMutation({
     mutationFn: async (data: ClaimFormValues) => {
+      // Process website URL - add https:// if not present
+      let processedWebsite = data.website || null;
+      if (processedWebsite && !processedWebsite.startsWith('http://') && !processedWebsite.startsWith('https://')) {
+        processedWebsite = 'https://' + processedWebsite;
+      }
+      
       const response = await apiRequest("POST", `/api/vendors/claim/complete`, {
         token,
         usernameEmail: data.usernameEmail, // Login email
@@ -108,8 +129,9 @@ export default function ClaimProfile() {
         phone: data.phone,
         password: data.password,
         description: data.businessDescription,
-        website: data.website || null,
+        website: processedWebsite,
         priceRange: data.priceRange,
+        areasServed: data.areasServed,
       });
       return response.json();
     },
@@ -444,18 +466,59 @@ export default function ClaimProfile() {
                   name="businessDescription"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Business Description *</FormLabel>
+                      <FormLabel>Business Description</FormLabel>
                       <FormControl>
                         <Textarea 
                           placeholder="Describe your services, experience, and what makes your business special for South Asian weddings..."
                           rows={4}
                           {...field} 
+                          value={field.value || ""}
                           data-testid="textarea-claim-description"
                         />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="areasServed"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <Map className="h-4 w-4" />
+                        Areas Served *
+                      </FormLabel>
                       <FormDescription>
-                        {field.value.length}/50 characters minimum
+                        Select all metro areas where you provide services
                       </FormDescription>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
+                        {metroAreas.map((area) => (
+                          <label
+                            key={area.id}
+                            className={`flex items-center gap-2 p-3 rounded-md border cursor-pointer transition-all hover-elevate ${
+                              field.value?.includes(area.value)
+                                ? "border-primary bg-primary/10"
+                                : ""
+                            }`}
+                            data-testid={`area-${area.value}`}
+                          >
+                            <Checkbox
+                              checked={field.value?.includes(area.value)}
+                              onCheckedChange={(checked) => {
+                                const currentAreas = field.value || [];
+                                if (checked) {
+                                  field.onChange([...currentAreas, area.value]);
+                                } else {
+                                  field.onChange(currentAreas.filter((a: string) => a !== area.value));
+                                }
+                              }}
+                            />
+                            <span className="text-sm">{area.label}</span>
+                          </label>
+                        ))}
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
