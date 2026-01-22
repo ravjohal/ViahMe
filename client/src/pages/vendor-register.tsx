@@ -137,7 +137,19 @@ export default function VendorRegister() {
       setLocation("/vendor-dashboard");
     },
     onError: (error: any) => {
-      const errorMessage = error.message || "Registration failed";
+      let errorMessage = "Registration failed";
+      try {
+        // Parse error message format: "400: {"error":"message"}"
+        const match = error.message?.match(/^\d+:\s*(.+)$/);
+        if (match) {
+          const parsed = JSON.parse(match[1]);
+          errorMessage = parsed.error || parsed.message || errorMessage;
+        } else {
+          errorMessage = error.message || errorMessage;
+        }
+      } catch {
+        errorMessage = error.message || errorMessage;
+      }
       toast({
         variant: "destructive",
         title: "Registration failed",
