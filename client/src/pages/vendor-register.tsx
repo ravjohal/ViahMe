@@ -223,15 +223,16 @@ export default function VendorRegister() {
         setPendingCredentials(credentials);
         setView('duplicates');
       } else {
+        // Important: Spread profileData first, then credentials to ensure credentials.email takes priority
         registerMutation.mutate({
-          ...credentials,
           ...profileData,
+          ...credentials,
         });
       }
     } catch (error) {
       registerMutation.mutate({
-        ...credentials,
         ...profileData,
+        ...credentials,
       });
     }
   };
@@ -247,9 +248,10 @@ export default function VendorRegister() {
 
   const handleProceedWithNewProfile = () => {
     if (!pendingCredentials || !profileData) return;
+    // Spread profileData first, then credentials to ensure credentials.email takes priority
     registerMutation.mutate({
-      ...pendingCredentials,
       ...profileData,
+      ...pendingCredentials,
     });
   };
 
