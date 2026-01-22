@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Link } from "wouter";
 import { Briefcase, AlertTriangle, Building2, MapPin, Check, ChevronLeft, Tag } from "lucide-react";
 import logoUrl from "@assets/viah-logo_1763669612969.png";
@@ -137,6 +137,8 @@ export default function VendorRegister() {
     },
     onSuccess: () => {
       localStorage.removeItem(STORAGE_KEY);
+      // Invalidate auth cache to pick up the new session
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
       toast({
         title: "Welcome to Viah.me!",
         description: "Your profile is live but unpublished until approved by our team.",
@@ -180,6 +182,8 @@ export default function VendorRegister() {
     },
     onSuccess: () => {
       localStorage.removeItem(STORAGE_KEY);
+      // Invalidate auth cache to pick up the new session
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
       toast({
         title: "Profile claimed successfully!",
         description: "Your claim is pending approval. You can now complete your profile.",
