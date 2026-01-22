@@ -26,6 +26,7 @@ export interface VendorSetupData {
   categories: string[];
   preferredWeddingTraditions: string[];
   areasServed: string[];
+  customCity?: string;
   location: string;
   email: string;
   phone: string;
@@ -76,6 +77,7 @@ export function VendorSetupWizard({ initialData, onComplete, onCancel, persistTo
     categories: initialData?.categories || [],
     preferredWeddingTraditions: initialData?.preferredWeddingTraditions || [],
     areasServed: initialData?.areasServed || [],
+    customCity: initialData?.customCity || "",
     location: initialData?.location || "",
     email: initialData?.email || "",
     phone: initialData?.phone || "",
@@ -150,6 +152,9 @@ export function VendorSetupWizard({ initialData, onComplete, onCancel, persistTo
       case 4:
         if (formData.areasServed.length === 0) {
           newErrors.areasServed = "Select at least one service area";
+        }
+        if (formData.areasServed.includes("Other") && !formData.customCity?.trim()) {
+          newErrors.customCity = "Please enter your city name";
         }
         break;
       case 5:
@@ -371,6 +376,7 @@ export function VendorSetupWizard({ initialData, onComplete, onCancel, persistTo
                         setFormData({
                           ...formData,
                           areasServed: formData.areasServed.filter((a) => a !== area.value),
+                          customCity: area.value === "Other" ? "" : formData.customCity,
                         });
                       }
                     }}
@@ -379,6 +385,20 @@ export function VendorSetupWizard({ initialData, onComplete, onCancel, persistTo
                 </label>
               ))}
             </div>
+            )}
+            {formData.areasServed.includes("Other") && (
+              <div className="mt-4">
+                <Label htmlFor="customCity">Enter your city</Label>
+                <Input
+                  id="customCity"
+                  value={formData.customCity || ""}
+                  onChange={(e) => setFormData({ ...formData, customCity: e.target.value })}
+                  placeholder="e.g., Miami, Denver, Phoenix"
+                  data-testid="input-custom-city"
+                  className="mt-1"
+                />
+                {errors.customCity && <p className="text-sm text-destructive mt-1">{errors.customCity}</p>}
+              </div>
             )}
             {errors.areasServed && <p className="text-sm text-destructive">{errors.areasServed}</p>}
           </div>
