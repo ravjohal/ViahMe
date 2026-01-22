@@ -5275,6 +5275,13 @@ export class DBStorage implements IStorage {
 
   async sendClaimEmail(vendorId: string, email: string, vendorName: string, claimLink: string): Promise<void> {
     // Use Brevo to send the claim email
+    console.log(`[ClaimEmail] Preparing to send claim invitation:`, {
+      vendorId,
+      vendorName,
+      recipientEmail: email,
+      claimLink,
+    });
+    
     try {
       const { sendBrevoEmail } = await import('./email');
       
@@ -5285,7 +5292,7 @@ export class DBStorage implements IStorage {
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h1 style="color: #C2410C;">Claim Your Profile on Viah.me</h1>
             <p>Hello,</p>
-            <p>A couple is viewing your business profile <strong>${vendorName}</strong> on Viah.me, the premier South Asian wedding planning platform.</p>
+            <p>You're invited to claim your business profile <strong>${vendorName}</strong> on Viah.me, the premier South Asian wedding planning platform.</p>
             <p>Claim your free profile to:</p>
             <ul>
               <li>Update your photos and portfolio</li>
@@ -5299,14 +5306,15 @@ export class DBStorage implements IStorage {
             </p>
             <p style="color: #666; font-size: 14px;">This link expires in 48 hours.</p>
             <p style="color: #666; font-size: 12px;">
-              If you don't want to receive these emails, <a href="${claimLink.replace('/claim-profile', '/opt-out')}">click here to opt out</a>.
+              If you don't want to receive these emails, you can ignore this message.
             </p>
           </div>
         `,
       });
-      console.log(`[ClaimEmail] Sent to ${email}`);
+      console.log(`[ClaimEmail] Successfully sent to ${email} for vendor ${vendorName} (${vendorId})`);
     } catch (err) {
-      console.error(`[ClaimEmail] Failed to send to ${email}:`, err);
+      console.error(`[ClaimEmail] Failed to send to ${email} for vendor ${vendorName} (${vendorId}):`, err);
+      throw err; // Re-throw so caller knows it failed
     }
   }
 

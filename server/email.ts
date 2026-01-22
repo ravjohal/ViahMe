@@ -45,12 +45,25 @@ export async function sendBrevoEmail(params: BrevoEmailParams) {
     sendSmtpEmail.textContent = params.text;
   }
 
+  console.log('[Brevo] Attempting to send email:', {
+    from: `${fromName} <${fromEmail}>`,
+    to: params.to,
+    subject: params.subject,
+    htmlLength: params.html?.length || 0,
+  });
+
   try {
     const result = await client.sendTransacEmail(sendSmtpEmail);
-    console.log('[Brevo] Email sent successfully:', result.body);
+    console.log('[Brevo] Email sent successfully:', JSON.stringify(result.body, null, 2));
+    console.log('[Brevo] Message ID:', (result.body as any)?.messageId || 'N/A');
     return result;
   } catch (error: any) {
-    console.error('[Brevo] Failed to send email:', error?.body || error);
+    console.error('[Brevo] Failed to send email:', {
+      error: error?.body || error?.message || error,
+      statusCode: error?.statusCode,
+      to: params.to,
+      subject: params.subject,
+    });
     throw error;
   }
 }
