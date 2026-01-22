@@ -17,7 +17,8 @@ import {
   Pencil,
   Eye,
   EyeOff,
-  CheckCircle2
+  CheckCircle2,
+  Clock
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -292,33 +293,72 @@ export default function VendorProfilePage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    {vendor.isPublished ? (
-                      <>
-                        <Eye className="w-4 h-4 text-green-600" />
-                        <span className="font-medium text-green-600">Published</span>
-                      </>
-                    ) : (
-                      <>
+                {vendor.approvalStatus === 'pending' ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-amber-500" />
+                      <span className="font-medium text-amber-600">Pending Approval</span>
+                    </div>
+                    <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+                      <p className="text-sm text-amber-800 dark:text-amber-200">
+                        Your profile is currently under review. Once approved, it will be automatically published and visible to couples searching for vendors.
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-between opacity-50">
+                      <div className="flex items-center gap-2">
                         <EyeOff className="w-4 h-4 text-muted-foreground" />
                         <span className="font-medium text-muted-foreground">Hidden</span>
-                      </>
-                    )}
+                      </div>
+                      <Switch
+                        checked={false}
+                        disabled={true}
+                        data-testid="switch-publish-profile"
+                      />
+                    </div>
                   </div>
-                  <Switch
-                    checked={vendor.isPublished}
-                    onCheckedChange={(checked) => togglePublishMutation.mutate(checked)}
-                    disabled={togglePublishMutation.isPending}
-                    data-testid="switch-publish-profile"
-                  />
-                </div>
-                <p className="text-sm text-muted-foreground mt-3">
-                  {vendor.isPublished 
-                    ? "Your profile is visible to couples searching for vendors."
-                    : "Your profile is hidden from search results. Toggle on to start receiving booking requests."
-                  }
-                </p>
+                ) : vendor.approvalStatus === 'rejected' ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <EyeOff className="w-4 h-4 text-destructive" />
+                      <span className="font-medium text-destructive">Not Approved</span>
+                    </div>
+                    <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+                      <p className="text-sm text-destructive">
+                        Your profile was not approved. Please contact support for more information.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {vendor.isPublished ? (
+                          <>
+                            <Eye className="w-4 h-4 text-green-600" />
+                            <span className="font-medium text-green-600">Published</span>
+                          </>
+                        ) : (
+                          <>
+                            <EyeOff className="w-4 h-4 text-muted-foreground" />
+                            <span className="font-medium text-muted-foreground">Hidden</span>
+                          </>
+                        )}
+                      </div>
+                      <Switch
+                        checked={vendor.isPublished}
+                        onCheckedChange={(checked) => togglePublishMutation.mutate(checked)}
+                        disabled={togglePublishMutation.isPending}
+                        data-testid="switch-publish-profile"
+                      />
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-3">
+                      {vendor.isPublished 
+                        ? "Your profile is visible to couples searching for vendors."
+                        : "Your profile is hidden from search results. Toggle on to start receiving booking requests."
+                      }
+                    </p>
+                  </>
+                )}
               </CardContent>
             </Card>
 

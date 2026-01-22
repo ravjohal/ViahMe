@@ -865,7 +865,7 @@ export const vendors = pgTable("vendors", {
   zipCodesServing: text("zip_codes_serving").array(), // Array of ZIP codes served
   createdAt: timestamp("created_at").notNull().defaultNow(),
   // Admin approval fields
-  approvalStatus: text("approval_status").notNull().default('approved'), // 'pending' | 'approved' | 'rejected' - admin approval for new vendors
+  approvalStatus: text("approval_status").notNull().default('pending'), // 'pending' | 'approved' | 'rejected' - admin approval for new vendors
   approvalNotes: text("approval_notes"), // Admin notes for approval/rejection
   approvedBy: varchar("approved_by"), // Admin user ID who approved/rejected
   approvedAt: timestamp("approved_at"), // When the vendor was approved/rejected
