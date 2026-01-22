@@ -322,7 +322,8 @@ export default function ClaimProfile() {
                           <Input 
                             type="email" 
                             placeholder="you@email.com" 
-                            {...field} 
+                            {...field}
+                            value={field.value || ""}
                             data-testid="input-claim-username-email"
                           />
                         </FormControl>
@@ -344,7 +345,8 @@ export default function ClaimProfile() {
                           <Input 
                             type="email" 
                             placeholder="you@business.com" 
-                            {...field} 
+                            {...field}
+                            value={field.value || ""}
                             data-testid="input-claim-business-email"
                           />
                         </FormControl>
@@ -367,7 +369,8 @@ export default function ClaimProfile() {
                         <Input 
                           type="tel" 
                           placeholder="(555) 123-4567" 
-                          {...field} 
+                          {...field}
+                          value={field.value || ""}
                           data-testid="input-claim-phone"
                         />
                       </FormControl>
@@ -425,12 +428,16 @@ export default function ClaimProfile() {
                         <FormLabel>Website</FormLabel>
                         <FormControl>
                           <Input 
-                            type="url" 
-                            placeholder="https://yourbusiness.com" 
-                            {...field} 
+                            type="text" 
+                            placeholder="yourbusiness.com" 
+                            {...field}
+                            value={field.value || ""}
                             data-testid="input-claim-website"
                           />
                         </FormControl>
+                        <FormDescription>
+                          Enter your website URL (https:// will be added automatically)
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
