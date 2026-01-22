@@ -215,7 +215,7 @@ export default function Landing() {
             <div className="pt-4">
               <Button
                 variant="ghost"
-                onClick={() => setLocation("/vendor-register")}
+                onClick={() => setLocation("/vendor-onboarding")}
                 data-testid="button-vendor-signup"
                 className="text-muted-foreground"
               >
@@ -713,7 +713,7 @@ export default function Landing() {
                 size="lg"
                 variant="outline"
                 className="text-base sm:text-lg px-8 sm:px-10 h-12 sm:h-14 border-2 w-full sm:w-auto"
-                onClick={() => setLocation("/vendor-register")}
+                onClick={() => setLocation("/vendor-onboarding")}
                 data-testid="button-vendor-signup-final"
               >
                 Join as a Vendor

@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -87,6 +87,13 @@ export function VendorSetupWizard({ initialData, onComplete, onCancel, persistTo
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [uploadingLogo, setUploadingLogo] = useState(false);
+
+  // Persist form data to localStorage on changes when enabled
+  useEffect(() => {
+    if (persistToStorage && storageKey) {
+      localStorage.setItem(storageKey, JSON.stringify(formData));
+    }
+  }, [formData, persistToStorage, storageKey]);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [dragOverLogo, setDragOverLogo] = useState(false);
   const [dragOverCover, setDragOverCover] = useState(false);

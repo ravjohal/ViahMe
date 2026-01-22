@@ -183,7 +183,7 @@ export default function VendorLogin() {
             <p className="text-sm text-muted-foreground">
               Don't have a vendor account?{" "}
               <Link
-                href="/vendor-register"
+                href="/vendor-onboarding"
                 className="text-purple-600 font-semibold hover:text-purple-700 hover:underline"
                 data-testid="link-vendor-register"
               >

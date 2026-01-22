@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useLocation } from "wouter";
 import { VendorHeader } from "@/components/vendor-header";
 import { VendorSetupWizard } from "@/components/vendor-setup-wizard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,31 +27,11 @@ import type { Vendor } from "@shared/schema";
 export default function VendorProfilePage() {
   const { toast } = useToast();
   const { getTraditionLabel } = useTraditionLookup();
-  const [, setLocation] = useLocation();
   const [isEditing, setIsEditing] = useState(false);
-  const [hasInitialized, setHasInitialized] = useState(false);
-  const [isInitialSetup, setIsInitialSetup] = useState(false);
 
   const { data: vendor, isLoading } = useQuery<Vendor>({
     queryKey: ["/api/vendors/me"],
   });
-
-  // Check if profile is incomplete and automatically show wizard for new vendors
-  const isProfileIncomplete = vendor && (
-    !vendor.categories || vendor.categories.length === 0 ||
-    !vendor.location || vendor.location.trim() === "" ||
-    !vendor.description || vendor.description.trim() === "" ||
-    !vendor.areasServed || vendor.areasServed.length === 0
-  );
-
-  // Auto-show wizard for incomplete profiles (only on first load)
-  if (vendor && !hasInitialized && isProfileIncomplete && !isEditing) {
-    setIsEditing(true);
-    setIsInitialSetup(true);
-    setHasInitialized(true);
-  } else if (vendor && !hasInitialized) {
-    setHasInitialized(true);
-  }
 
   const updateVendorMutation = useMutation({
     mutationFn: async (data: Partial<Vendor>) => {
@@ -63,19 +42,10 @@ export default function VendorProfilePage() {
       queryClient.invalidateQueries({ queryKey: ["/api/vendors/me"] });
       queryClient.invalidateQueries({ queryKey: ["/api/vendors"] });
       setIsEditing(false);
-      
-      if (isInitialSetup) {
-        toast({
-          title: "Profile Setup Complete!",
-          description: "Welcome to your vendor dashboard.",
-        });
-        setLocation("/vendor-dashboard");
-      } else {
-        toast({
-          title: "Profile Updated",
-          description: "Your business profile has been updated successfully.",
-        });
-      }
+      toast({
+        title: "Profile Updated",
+        description: "Your business profile has been updated successfully.",
+      });
     },
     onError: (error: Error) => {
       toast({

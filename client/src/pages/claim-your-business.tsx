@@ -185,7 +185,7 @@ export default function ClaimYourBusiness() {
                 Vendor Login
               </Button>
             </Link>
-            <Link href="/vendor-register">
+            <Link href="/vendor-onboarding">
               <Button data-testid="button-vendor-register">
                 Register New Business
               </Button>
@@ -253,7 +253,7 @@ export default function ClaimYourBusiness() {
                   <AlertDescription>
                     No unclaimed businesses found matching "{debouncedQuery}". 
                     Your business might already be claimed, or you can{" "}
-                    <Link href="/vendor-register" className="text-primary font-medium hover:underline">
+                    <Link href="/vendor-onboarding" className="text-primary font-medium hover:underline">
                       register as a new vendor
                     </Link>.
                   </AlertDescription>
@@ -358,7 +358,7 @@ export default function ClaimYourBusiness() {
                 If your business isn't listed yet, you can register as a new vendor 
                 and create your profile from scratch.
               </p>
-              <Link href="/vendor-register">
+              <Link href="/vendor-onboarding">
                 <Button size="lg" data-testid="button-register-new">
                   Register New Business
                   <ArrowRight className="h-4 w-4 ml-2" />
