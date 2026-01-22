@@ -33,7 +33,8 @@ import { useToast } from "@/hooks/use-toast";
 import type { Vendor } from "@shared/schema";
 
 const claimFormSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
+  usernameEmail: z.string().email("Please enter a valid email address"),
+  businessEmail: z.string().email("Please enter a valid email address"),
   phone: z.string().min(10, "Please enter a valid phone number"),
   password: z.string().min(8, "Password must be at least 8 characters"),
   confirmPassword: z.string(),
@@ -56,7 +57,7 @@ export default function ClaimProfile() {
 
   const token = params?.token;
 
-  const { data: vendorData, isLoading, error } = useQuery<{ vendor: Vendor; valid: boolean; expired?: boolean }>({
+  const { data: vendorData, isLoading, error } = useQuery<{ vendor: Vendor & { email?: string }; valid: boolean; expired?: boolean; claimantEmail?: string }>({
     queryKey: ["/api/vendors/claim/verify", token],
     queryFn: async () => {
       if (!token) throw new Error("No claim token provided");
@@ -74,7 +75,8 @@ export default function ClaimProfile() {
   const form = useForm<ClaimFormValues>({
     resolver: zodResolver(claimFormSchema),
     defaultValues: {
-      email: "",
+      usernameEmail: "",
+      businessEmail: "",
       phone: vendorData?.vendor?.phone || "",
       password: "",
       confirmPassword: "",
@@ -86,6 +88,10 @@ export default function ClaimProfile() {
 
   useEffect(() => {
     if (vendorData?.vendor) {
+      // Pre-populate both email fields with the claimant email (the email they submitted when claiming)
+      const claimantEmail = vendorData.claimantEmail || vendorData.vendor.email || "";
+      form.setValue("usernameEmail", claimantEmail);
+      form.setValue("businessEmail", claimantEmail);
       form.setValue("phone", vendorData.vendor.phone || "");
       form.setValue("businessDescription", vendorData.vendor.description || "");
       form.setValue("website", vendorData.vendor.website || "");
@@ -97,7 +103,8 @@ export default function ClaimProfile() {
     mutationFn: async (data: ClaimFormValues) => {
       const response = await apiRequest("POST", `/api/vendors/claim/complete`, {
         token,
-        email: data.email,
+        usernameEmail: data.usernameEmail, // Login email
+        businessEmail: data.businessEmail, // Business contact email
         phone: data.phone,
         password: data.password,
         description: data.businessDescription,
@@ -285,20 +292,20 @@ export default function ClaimProfile() {
                 <div className="grid gap-4 md:grid-cols-2">
                   <FormField
                     control={form.control}
-                    name="email"
+                    name="usernameEmail"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Business Email *</FormLabel>
+                        <FormLabel>Username Email *</FormLabel>
                         <FormControl>
                           <Input 
                             type="email" 
-                            placeholder="you@business.com" 
+                            placeholder="you@email.com" 
                             {...field} 
-                            data-testid="input-claim-email"
+                            data-testid="input-claim-username-email"
                           />
                         </FormControl>
                         <FormDescription>
-                          This will be your login email
+                          This will be your login email for Viah.me
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -307,23 +314,45 @@ export default function ClaimProfile() {
 
                   <FormField
                     control={form.control}
-                    name="phone"
+                    name="businessEmail"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Business Phone *</FormLabel>
+                        <FormLabel>Business Email *</FormLabel>
                         <FormControl>
                           <Input 
-                            type="tel" 
-                            placeholder="(555) 123-4567" 
+                            type="email" 
+                            placeholder="you@business.com" 
                             {...field} 
-                            data-testid="input-claim-phone"
+                            data-testid="input-claim-business-email"
                           />
                         </FormControl>
+                        <FormDescription>
+                          Displayed on your public profile for inquiries
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
+
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Business Phone *</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="tel" 
+                          placeholder="(555) 123-4567" 
+                          {...field} 
+                          data-testid="input-claim-phone"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 <div className="grid gap-4 md:grid-cols-2">
                   <FormField

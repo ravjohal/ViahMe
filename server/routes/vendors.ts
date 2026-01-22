@@ -669,8 +669,14 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
         return res.status(400).json({ error: "Claim token has expired", valid: false, expired: true });
       }
       
+      // Get the approved claim staging record to retrieve the claimant email
+      const claimStagingRecords = await storage.getVendorClaimStagingByVendor(vendor.id);
+      const approvedClaim = claimStagingRecords.find(c => c.status === 'approved');
+      const claimantEmail = approvedClaim?.claimantEmail || vendor.email || '';
+      
       res.json({
         valid: true,
+        claimantEmail, // The email the claimant submitted when requesting the claim
         vendor: {
           id: vendor.id,
           name: vendor.name,
@@ -680,6 +686,7 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
           website: vendor.website,
           description: vendor.description,
           priceRange: vendor.priceRange,
+          email: vendor.email, // The business email on file (may differ from claimant email)
         },
       });
     } catch (error) {
@@ -690,9 +697,13 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
 
   router.post("/claim/complete", async (req, res) => {
     try {
-      const { token, email, password, phone, description, website, priceRange } = req.body;
+      const { token, usernameEmail, businessEmail, password, phone, description, website, priceRange } = req.body;
       
-      if (!token || !email || !password) {
+      // Support both old 'email' field and new 'usernameEmail' field for backward compatibility
+      const loginEmail = usernameEmail || req.body.email;
+      const vendorBusinessEmail = businessEmail || loginEmail;
+      
+      if (!token || !loginEmail || !password) {
         return res.status(400).json({ error: "Token, email, and password are required" });
       }
       
@@ -705,7 +716,7 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
         return res.status(400).json({ error: "Claim token has expired. Please request a new one." });
       }
       
-      const existingUser = await storage.getUserByEmail(email);
+      const existingUser = await storage.getUserByEmail(loginEmail);
       if (existingUser) {
         return res.status(400).json({ error: "Email already in use. Please login instead." });
       }
@@ -713,7 +724,7 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
       const bcrypt = await import('bcrypt');
       const passwordHash = await bcrypt.hash(password, 10);
       const newUser = await storage.createUser({
-        email,
+        email: loginEmail,
         passwordHash,
         role: 'vendor',
         emailVerified: true,
@@ -724,7 +735,7 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
         userId: newUser.id,
         claimToken: null,
         claimTokenExpires: null,
-        email: email,
+        email: vendorBusinessEmail, // Business email for vendor profile
         phone: phone || vendor.phone,
         description: description || vendor.description,
         website: website || vendor.website,
