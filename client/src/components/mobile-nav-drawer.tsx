@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { X, ChevronRight } from "lucide-react";
+import { X, ChevronRight, Heart, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -16,7 +17,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { usePermissions } from "@/hooks/use-permissions";
 import { useQuery } from "@tanstack/react-query";
 import { COUPLE_NAV_SECTIONS, VENDOR_NAV_SECTIONS, ADMIN_NAV_SECTION, type NavSection, type NavItem } from "@/config/navigation";
-import type { Wedding } from "@shared/schema";
+import { InvitePartnerModal } from "@/components/invite-partner-modal";
+import type { Wedding, WeddingCollaborator } from "@shared/schema";
 import { differenceInDays } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -29,6 +31,7 @@ export function MobileNavDrawer({ open, onOpenChange }: MobileNavDrawerProps) {
   const [location] = useLocation();
   const { user, logout } = useAuth();
   const { canView, isOwner } = usePermissions();
+  const [invitePartnerOpen, setInvitePartnerOpen] = useState(false);
   
   const { data: weddings } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
@@ -41,6 +44,13 @@ export function MobileNavDrawer({ open, onOpenChange }: MobileNavDrawerProps) {
   });
   
   const wedding = user?.role !== "vendor" ? weddings?.[0] : undefined;
+  
+  const { data: collaborators = [] } = useQuery<WeddingCollaborator[]>({
+    queryKey: ["/api/weddings", wedding?.id, "collaborators"],
+    enabled: !!wedding?.id && user?.role !== "vendor",
+  });
+  
+  const showPartnerInvite = user?.role !== "vendor" && isOwner && collaborators.length === 0;
   
   const daysUntilWedding = wedding?.weddingDate
     ? differenceInDays(new Date(wedding.weddingDate), new Date())
@@ -108,6 +118,31 @@ export function MobileNavDrawer({ open, onOpenChange }: MobileNavDrawerProps) {
                 <span className="text-sm text-muted-foreground">
                   {daysUntilWedding === 1 ? "day until your wedding!" : "days until your wedding!"}
                 </span>
+              </div>
+            </div>
+          )}
+          
+          {showPartnerInvite && (
+            <div className="mt-3 p-3 rounded-lg bg-gradient-to-r from-rose-100 to-pink-100 dark:from-rose-900/30 dark:to-pink-900/30 border border-pink-300 dark:border-pink-700">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center flex-shrink-0">
+                  <Heart className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm">Invite Your Partner</p>
+                  <p className="text-xs text-muted-foreground truncate">Plan together</p>
+                </div>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setInvitePartnerOpen(true);
+                    onOpenChange(false);
+                  }}
+                  className="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white"
+                  data-testid="mobile-nav-invite-partner"
+                >
+                  <Send className="w-4 h-4" />
+                </Button>
               </div>
             </div>
           )}
@@ -185,6 +220,14 @@ export function MobileNavDrawer({ open, onOpenChange }: MobileNavDrawerProps) {
           </Button>
         </div>
       </SheetContent>
+      
+      {wedding && (
+        <InvitePartnerModal
+          open={invitePartnerOpen}
+          onOpenChange={setInvitePartnerOpen}
+          wedding={wedding}
+        />
+      )}
     </Sheet>
   );
 }

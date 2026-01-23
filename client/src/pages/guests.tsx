@@ -23,7 +23,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useLocation, Link } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertGuestSchema, insertHouseholdSchema, type Wedding, type Guest, type Event, type Household, type EventCostItem, type GuestCollectorSubmission } from "@shared/schema";
+import { insertGuestSchema, insertHouseholdSchema, type Wedding, type Guest, type Event, type Household, type EventCostItem, type GuestCollectorSubmission, type WeddingCollaborator } from "@shared/schema";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -69,10 +69,13 @@ import {
   HelpCircle,
   Pencil,
   Share2,
+  Heart,
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { SideFilterToggle, EventFilterPills, SummaryHeader } from "@/components/household-card";
 import { SiWhatsapp } from "react-icons/si";
+import { InvitePartnerModal } from "@/components/invite-partner-modal";
+import { usePermissions } from "@/hooks/use-permissions";
 import QRCode from "qrcode";
 
 // Helper function to safely parse members which may be array or JSON string
@@ -319,11 +322,21 @@ export default function Guests() {
   const [whatsappTemplate, setWhatsappTemplate] = useState("Hi {name}! This is a friendly reminder about our wedding. We're still waiting for your RSVP. Please let us know if you can make it!");
   const [whatsappTargetEvent, setWhatsappTargetEvent] = useState<string>("");
 
+  const [invitePartnerOpen, setInvitePartnerOpen] = useState(false);
+  const { isOwner } = usePermissions();
+
   const { data: weddings, isLoading: weddingsLoading } = useQuery<Wedding[]>({
     queryKey: ["/api/weddings"],
   });
 
   const wedding = weddings?.[0];
+
+  const { data: collaborators = [] } = useQuery<WeddingCollaborator[]>({
+    queryKey: ["/api/weddings", wedding?.id, "collaborators"],
+    enabled: !!wedding?.id,
+  });
+
+  const showPartnerInvite = isOwner && collaborators.length === 0;
 
   const { data: guests = [], isLoading: guestsLoading } = useQuery<Guest[]>({
     queryKey: ["/api/guests", wedding?.id],
@@ -1369,6 +1382,35 @@ export default function Guests() {
   return (
     <div className="min-h-screen bg-background">
       <main className="container mx-auto px-6 py-8">
+        {/* Partner Invite Banner */}
+        {showPartnerInvite && wedding && (
+          <Card className="mb-6 bg-gradient-to-r from-rose-50 via-pink-50 to-orange-50 dark:from-rose-950/30 dark:via-pink-950/30 dark:to-orange-950/30 border-2 border-pink-300 dark:border-pink-700" data-testid="guests-partner-invite-card">
+            <CardContent className="p-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <div className="flex items-center gap-3 flex-1">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center flex-shrink-0">
+                    <Heart className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-foreground">Plan Together with Your Partner</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Invite your partner so they can add their own guests and help manage the guest list from their side.
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => setInvitePartnerOpen(true)}
+                  className="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white whitespace-nowrap"
+                  data-testid="button-guests-invite-partner"
+                >
+                  <Send className="w-4 h-4 mr-2" />
+                  Invite Partner
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Top-level tabs: Guest List and Guest Planning */}
         <Tabs value={mainTab || "guest-planning"} onValueChange={setMainTab} className="space-y-6">
           <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -3319,6 +3361,15 @@ export default function Guests() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Partner Invite Modal */}
+      {wedding && (
+        <InvitePartnerModal
+          open={invitePartnerOpen}
+          onOpenChange={setInvitePartnerOpen}
+          wedding={wedding}
+        />
+      )}
     </div>
   );
 }
