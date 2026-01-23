@@ -22,6 +22,49 @@ import {
   type SpeechGeneratorRequest,
 } from "../ai/gemini";
 
+// In-memory cache for AI chat responses (per wedding)
+// Key: weddingId:normalizedMessage, Value: { response, timestamp }
+interface CacheEntry {
+  response: string;
+  timestamp: number;
+}
+const aiResponseCache = new Map<string, CacheEntry>();
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours cache TTL
+const MAX_CACHE_SIZE = 1000; // Maximum cache entries
+
+// Normalize message for cache key matching
+function normalizeMessage(message: string): string {
+  return message
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s]/g, '') // Remove punctuation
+    .replace(/\s+/g, ' '); // Normalize whitespace
+}
+
+// Generate cache key from wedding ID and message
+function getCacheKey(weddingId: string, message: string): string {
+  return `${weddingId}:${normalizeMessage(message)}`;
+}
+
+// Clean expired entries and enforce size limit
+function cleanCache() {
+  const now = Date.now();
+  for (const [key, entry] of aiResponseCache.entries()) {
+    if (now - entry.timestamp > CACHE_TTL_MS) {
+      aiResponseCache.delete(key);
+    }
+  }
+  // If still over size limit, remove oldest entries
+  if (aiResponseCache.size > MAX_CACHE_SIZE) {
+    const entries = Array.from(aiResponseCache.entries())
+      .sort((a, b) => a[1].timestamp - b[1].timestamp);
+    const toRemove = entries.slice(0, entries.length - MAX_CACHE_SIZE);
+    for (const [key] of toRemove) {
+      aiResponseCache.delete(key);
+    }
+  }
+}
+
 export async function registerAiRoutes(router: Router, storage: IStorage) {
   router.post("/contract/draft", await requireAuth(storage, false), async (req, res) => {
     try {
@@ -161,10 +204,37 @@ export async function registerAiRoutes(router: Router, storage: IStorage) {
       const history: ChatMessage[] = Array.isArray(conversationHistory) ? conversationHistory : [];
       const context: WeddingContext | undefined = weddingContext;
 
-      const response = await chatWithPlanner(message, history, context);
+      let response: string;
+      let fromCache = false;
+
+      // Check cache first if weddingId is provided and this is a standalone question (no conversation history)
+      if (weddingId && history.length === 0) {
+        const cacheKey = getCacheKey(weddingId, message);
+        const cachedEntry = aiResponseCache.get(cacheKey);
+        
+        if (cachedEntry && (Date.now() - cachedEntry.timestamp) < CACHE_TTL_MS) {
+          response = cachedEntry.response;
+          fromCache = true;
+          console.log(`AI chat cache hit for wedding ${weddingId}`);
+        } else {
+          // Call LLM and cache the response
+          response = await chatWithPlanner(message, history, context);
+          
+          // Clean cache periodically and add new entry
+          cleanCache();
+          aiResponseCache.set(cacheKey, {
+            response,
+            timestamp: Date.now()
+          });
+        }
+      } else {
+        // For conversations with history, always call LLM (context-dependent)
+        response = await chatWithPlanner(message, history, context);
+      }
 
       // If persistHistory is true and weddingId is provided, save both user message and AI response
-      if (persistHistory && weddingId) {
+      // Only persist if not from cache (to avoid duplicate entries)
+      if (persistHistory && weddingId && !fromCache) {
         try {
           await storage.createAiChatMessage({
             weddingId,
@@ -184,7 +254,7 @@ export async function registerAiRoutes(router: Router, storage: IStorage) {
         }
       }
 
-      res.json({ response });
+      res.json({ response, cached: fromCache });
     } catch (error) {
       console.error("Error in chat:", error);
       res.status(500).json({ 
