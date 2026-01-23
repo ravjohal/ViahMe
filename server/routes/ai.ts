@@ -299,22 +299,23 @@ export async function registerAiRoutes(router: Router, storage: IStorage) {
         console.error("Error checking FAQ cache:", faqError);
       }
 
-      // Check database chat history for cached response
+      // Check database chat history for cached response (always check regardless of current history length)
       let cachedResponse: string | null = null;
-      if (!faqResponse && weddingId && history.length === 0) {
+      if (!faqResponse && weddingId) {
         try {
           const chatHistory = await storage.getAiChatMessages(weddingId, authReq.session.userId);
           
-          for (let i = 0; i < chatHistory.length - 1; i++) {
-            const userMsg = chatHistory[i];
-            const assistantMsg = chatHistory[i + 1];
+          // Search from newest to oldest for the most recent answer to this question
+          for (let i = chatHistory.length - 1; i >= 1; i--) {
+            const assistantMsg = chatHistory[i];
+            const userMsg = chatHistory[i - 1];
             
             if (userMsg.role === 'user' && assistantMsg.role === 'assistant') {
               const normalizedHistoryQuestion = normalizeMessage(userMsg.content);
               
               if (normalizedHistoryQuestion === normalizedQuery) {
                 cachedResponse = assistantMsg.content;
-                console.log(`AI chat DB cache hit for wedding ${weddingId}`);
+                console.log(`AI chat DB cache hit for wedding ${weddingId}: "${message.substring(0, 30)}..."`);
                 break;
               }
             }
