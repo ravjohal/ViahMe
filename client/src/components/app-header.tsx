@@ -160,13 +160,13 @@ export function AppHeader() {
 
             {user?.role !== "vendor" ? (
               <>
-                {/* Planning Group - combines main planning items + planning section */}
+                {/* Planning Group - combines main planning items + planning section (excluding team) */}
                 {(() => {
                   const planningItems = [
                     ...COUPLE_NAV_SECTIONS.find(s => s.id === 'main')?.items.filter(i => 
                       ['/budget', '/timeline', '/tasks', '/expenses'].includes(i.path)
                     ) || [],
-                    ...COUPLE_NAV_SECTIONS.find(s => s.id === 'planning')?.items || [],
+                    ...COUPLE_NAV_SECTIONS.find(s => s.id === 'planning')?.items.filter(i => i.path !== '/collaborators') || [],
                   ].filter(hasAccess);
                   
                   const isActive = planningItems.some(item => location === item.path);
