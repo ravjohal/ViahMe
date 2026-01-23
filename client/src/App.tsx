@@ -61,7 +61,8 @@ import AdminBudgetBucketCategories from "@/pages/admin-budget-bucket-categories"
 import AdminFeedback from "@/pages/admin-feedback";
 import AdminUsers from "@/pages/admin-users";
 import AiPlanner from "@/pages/ai-planner";
-import { FeedbackButton } from "@/components/feedback-button";
+// Feedback button hidden - using Replit's feedback gathering instead
+// import { FeedbackButton } from "@/components/feedback-button";
 import SpeechGenerator from "@/pages/speech-generator";
 import LiveTimeline from "@/pages/live-timeline";
 import VendorTeam from "@/pages/vendor-team";
@@ -457,7 +458,6 @@ function AppLayout() {
       {!hideHeader && <AppHeader />}
       <Router />
       {showAiChatbot && <CouplePlannerChatbot />}
-      <FeedbackButton />
     </div>
   );
 }
