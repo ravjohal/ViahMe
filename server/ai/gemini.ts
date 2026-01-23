@@ -1,7 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 
 // Single source of truth for the AI model - change this to switch models globally
-const GEMINI_MODEL = "gemini-2.5-flash";
+const GEMINI_MODEL = "gemini-3.0-flash";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
