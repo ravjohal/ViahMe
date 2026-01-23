@@ -285,7 +285,7 @@ export async function registerAiRoutes(router: Router, storage: IStorage) {
       
       if (weddingId) {
         try {
-          const guests = await storage.getGuestsByWeddingId(weddingId);
+          const guests = await storage.getGuestsByWedding(weddingId);
           actualGuestCount = guests.length;
           hasNoGuests = guests.length === 0;
         } catch (guestError) {
