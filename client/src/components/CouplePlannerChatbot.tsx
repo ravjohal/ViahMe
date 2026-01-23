@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sparkles, Send, X, Loader2, Calendar, Users, DollarSign, Utensils, Music, Camera, Trash2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import type { Wedding } from "@shared/schema";
 
 interface ChatMessage {
@@ -56,41 +57,97 @@ export function CouplePlannerChatbot() {
     }
   }, [chatHistoryData, historyLoaded, wedding?.id]);
 
-  const chatMutation = useMutation({
-    mutationFn: async ({ message, currentHistory }: { message: string; currentHistory: ChatMessage[] }) => {
-      const response = await apiRequest("POST", "/api/ai/chat", {
-        message,
-        conversationHistory: currentHistory.map(m => ({
-          role: m.role,
-          content: m.content,
-        })),
-        weddingContext: wedding ? {
-          tradition: wedding.tradition,
-          city: wedding.location,
-          partner1Name: wedding.partner1Name,
-          partner2Name: wedding.partner2Name,
-          weddingDate: wedding.weddingDate ? new Date(wedding.weddingDate).toLocaleDateString() : undefined,
-          budget: wedding.totalBudget ? parseFloat(wedding.totalBudget) : undefined,
-          guestCount: wedding.guestCountEstimate,
-        } : undefined,
-        weddingId: wedding?.id,
-        persistHistory: true,
+  const [isStreaming, setIsStreaming] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  const streamChat = useCallback(async (message: string, currentHistory: ChatMessage[]) => {
+    setIsStreaming(true);
+    abortControllerRef.current = new AbortController();
+    
+    // Add empty assistant message that we'll update with streamed content
+    setMessages(prev => [...prev, { role: "assistant", content: "" }]);
+    
+    try {
+      const response = await fetch("/api/ai/chat/stream", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        signal: abortControllerRef.current.signal,
+        body: JSON.stringify({
+          message,
+          conversationHistory: currentHistory.map(m => ({
+            role: m.role,
+            content: m.content,
+          })),
+          weddingContext: wedding ? {
+            tradition: wedding.tradition,
+            city: wedding.location,
+            partner1Name: wedding.partner1Name,
+            partner2Name: wedding.partner2Name,
+            weddingDate: wedding.weddingDate ? new Date(wedding.weddingDate).toLocaleDateString() : undefined,
+            budget: wedding.totalBudget ? parseFloat(wedding.totalBudget) : undefined,
+            guestCount: wedding.guestCountEstimate,
+          } : undefined,
+          weddingId: wedding?.id,
+          persistHistory: true,
+        }),
       });
-      return response.json();
-    },
-    onSuccess: (data) => {
-      setMessages(prev => [...prev, {
-        role: "assistant",
-        content: data.response,
-      }]);
-    },
-    onError: () => {
-      setMessages(prev => [...prev, {
-        role: "assistant",
-        content: "I'm sorry, I couldn't process your question. Please try again.",
-      }]);
-    },
-  });
+
+      if (!response.ok) {
+        throw new Error("Stream request failed");
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("No reader available");
+
+      const decoder = new TextDecoder();
+      let fullContent = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split("\n");
+
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const data = line.slice(6);
+            if (data === "[DONE]") continue;
+            
+            try {
+              const parsed = JSON.parse(data);
+              if (parsed.text) {
+                fullContent += parsed.text;
+                setMessages(prev => {
+                  const updated = [...prev];
+                  updated[updated.length - 1] = { role: "assistant", content: fullContent };
+                  return updated;
+                });
+              } else if (parsed.error) {
+                throw new Error(parsed.error);
+              }
+            } catch {
+              // Ignore parse errors for malformed chunks
+            }
+          }
+        }
+      }
+    } catch (error) {
+      if ((error as Error).name === "AbortError") return;
+      setMessages(prev => {
+        const updated = [...prev];
+        updated[updated.length - 1] = { 
+          role: "assistant", 
+          content: "I'm sorry, I couldn't process your question. Please try again." 
+        };
+        return updated;
+      });
+    } finally {
+      setIsStreaming(false);
+      abortControllerRef.current = null;
+    }
+  }, [wedding]);
 
   const clearHistoryMutation = useMutation({
     mutationFn: async () => {
@@ -135,13 +192,13 @@ export function CouplePlannerChatbot() {
 
   const sendMessage = async (messageText?: string) => {
     const text = messageText || input.trim();
-    if (!text || chatMutation.isPending) return;
+    if (!text || isStreaming) return;
 
     setInput("");
     const userMessage: ChatMessage = { role: "user", content: text };
     const updatedHistory = [...messages, userMessage];
     setMessages(updatedHistory);
-    chatMutation.mutate({ message: text, currentHistory: updatedHistory });
+    streamChat(text, updatedHistory);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -288,7 +345,7 @@ export function CouplePlannerChatbot() {
                   >
                     {msg.role === "assistant" ? (
                       <div className="prose prose-sm dark:prose-invert max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&>table]:w-full [&>table]:text-xs [&>table]:border-collapse [&>table]:my-2 [&>table>thead>tr>th]:border [&>table>thead>tr>th]:border-border [&>table>thead>tr>th]:bg-muted [&>table>thead>tr>th]:px-2 [&>table>thead>tr>th]:py-1 [&>table>thead>tr>th]:text-left [&>table>tbody>tr>td]:border [&>table>tbody>tr>td]:border-border [&>table>tbody>tr>td]:px-2 [&>table>tbody>tr>td]:py-1 [&>table]:overflow-x-auto [&>table]:block [&>table]:max-w-full">
-                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
                       </div>
                     ) : (
                       msg.content
@@ -296,7 +353,7 @@ export function CouplePlannerChatbot() {
                   </div>
                 </div>
               ))}
-              {chatMutation.isPending && (
+              {isStreaming && messages.length > 0 && messages[messages.length - 1].content === "" && (
                 <div className="flex justify-start">
                   <div className="bg-muted rounded-2xl px-4 py-3 flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -320,13 +377,13 @@ export function CouplePlannerChatbot() {
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Ask about your wedding..."
-            disabled={chatMutation.isPending}
+            disabled={isStreaming}
             className="flex-1 h-11 text-base"
             data-testid="input-ai-planner-message"
           />
           <Button
             onClick={() => sendMessage()}
-            disabled={!input.trim() || chatMutation.isPending}
+            disabled={!input.trim() || isStreaming}
             size="icon"
             className="h-11 w-11 shrink-0"
             data-testid="button-send-ai-message"

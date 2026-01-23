@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Bot, Send, User, Sparkles, Calendar, Users, DollarSign, MapPin, Lightbulb, RefreshCw, Loader2, Wand2, Heart, PartyPopper, Music, Camera, Utensils, Flower2, Trash2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import type { Wedding } from "@shared/schema";
 
 interface ChatMessage {
@@ -75,49 +76,103 @@ export default function AiPlanner() {
     scrollToBottom();
   }, [messages]);
 
-  const chatMutation = useMutation({
-    mutationFn: async ({ message, currentHistory }: { message: string; currentHistory: ChatMessage[] }) => {
-      const response = await apiRequest("POST", "/api/ai/chat", {
-        message,
-        conversationHistory: currentHistory.map(m => ({
-          role: m.role,
-          content: m.content,
-        })),
-        weddingContext: wedding ? {
-          tradition: wedding.tradition,
-          city: wedding.location,
-          partner1Name: wedding.partner1Name,
-          partner2Name: wedding.partner2Name,
-          weddingDate: wedding.weddingDate ? new Date(wedding.weddingDate).toLocaleDateString() : undefined,
-          budget: wedding.totalBudget ? parseFloat(wedding.totalBudget) : undefined,
-          guestCount: wedding.guestCountEstimate,
-        } : undefined,
-        weddingId: wedding?.id,
-        persistHistory: true,
+  const [isStreaming, setIsStreaming] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  const streamChat = useCallback(async (message: string, currentHistory: ChatMessage[]) => {
+    setIsStreaming(true);
+    abortControllerRef.current = new AbortController();
+    
+    // Add empty assistant message that we'll update with streamed content
+    setMessages(prev => [...prev, { role: "assistant", content: "", timestamp: new Date() }]);
+    
+    try {
+      const response = await fetch("/api/ai/chat/stream", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        signal: abortControllerRef.current.signal,
+        body: JSON.stringify({
+          message,
+          conversationHistory: currentHistory.map(m => ({
+            role: m.role,
+            content: m.content,
+          })),
+          weddingContext: wedding ? {
+            tradition: wedding.tradition,
+            city: wedding.location,
+            partner1Name: wedding.partner1Name,
+            partner2Name: wedding.partner2Name,
+            weddingDate: wedding.weddingDate ? new Date(wedding.weddingDate).toLocaleDateString() : undefined,
+            budget: wedding.totalBudget ? parseFloat(wedding.totalBudget) : undefined,
+            guestCount: wedding.guestCountEstimate,
+          } : undefined,
+          weddingId: wedding?.id,
+          persistHistory: true,
+        }),
       });
-      return response.json();
-    },
-    onSuccess: (data) => {
-      setMessages(prev => [...prev, {
-        role: "assistant",
-        content: data.response,
-        timestamp: new Date(),
-      }]);
-    },
-    onError: (error: any) => {
+
+      if (!response.ok) {
+        throw new Error("Stream request failed");
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("No reader available");
+
+      const decoder = new TextDecoder();
+      let fullContent = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split("\n");
+
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const data = line.slice(6);
+            if (data === "[DONE]") continue;
+            
+            try {
+              const parsed = JSON.parse(data);
+              if (parsed.text) {
+                fullContent += parsed.text;
+                setMessages(prev => {
+                  const updated = [...prev];
+                  updated[updated.length - 1] = { role: "assistant", content: fullContent, timestamp: new Date() };
+                  return updated;
+                });
+              } else if (parsed.error) {
+                throw new Error(parsed.error);
+              }
+            } catch {
+              // Ignore parse errors for malformed chunks
+            }
+          }
+        }
+      }
+    } catch (error) {
+      if ((error as Error).name === "AbortError") return;
       toast({
         title: "Error",
-        description: error.message || "Failed to get response. Please try again.",
+        description: (error as Error).message || "Failed to get response. Please try again.",
         variant: "destructive",
       });
       setMessages(prev => {
-        if (prev.length > 0 && prev[prev.length - 1].role === "user") {
-          return prev.slice(0, -1);
-        }
-        return prev;
+        const updated = [...prev];
+        updated[updated.length - 1] = { 
+          role: "assistant", 
+          content: "I'm sorry, I couldn't process your question. Please try again.",
+          timestamp: new Date()
+        };
+        return updated;
       });
-    },
-  });
+    } finally {
+      setIsStreaming(false);
+      abortControllerRef.current = null;
+    }
+  }, [wedding, toast]);
 
   const clearHistoryMutation = useMutation({
     mutationFn: async () => {
@@ -143,7 +198,7 @@ export default function AiPlanner() {
   });
 
   const handleSend = () => {
-    if (!inputMessage.trim() || chatMutation.isPending) return;
+    if (!inputMessage.trim() || isStreaming) return;
 
     const userMessage: ChatMessage = {
       role: "user",
@@ -154,10 +209,12 @@ export default function AiPlanner() {
     const updatedHistory = [...messages, userMessage];
     setMessages(updatedHistory);
     setInputMessage("");
-    chatMutation.mutate({ message: userMessage.content, currentHistory: updatedHistory });
+    streamChat(userMessage.content, updatedHistory);
   };
 
   const handleSuggestedTopic = (prompt: string) => {
+    if (isStreaming) return;
+    
     const userMessage: ChatMessage = {
       role: "user",
       content: prompt,
@@ -166,7 +223,7 @@ export default function AiPlanner() {
 
     const updatedHistory = [...messages, userMessage];
     setMessages(updatedHistory);
-    chatMutation.mutate({ message: prompt, currentHistory: updatedHistory });
+    streamChat(prompt, updatedHistory);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -300,7 +357,7 @@ export default function AiPlanner() {
                       }`}
                     >
                       <div className="text-sm prose prose-sm dark:prose-invert max-w-none [&>p]:my-1 [&>ul]:my-2 [&>ol]:my-2 [&>h1]:text-base [&>h2]:text-sm [&>h3]:text-sm [&>h4]:text-sm [&>table]:w-full [&>table]:text-xs [&>table]:border-collapse [&>table]:my-2 [&>table>thead>tr>th]:border [&>table>thead>tr>th]:border-border [&>table>thead>tr>th]:bg-muted [&>table>thead>tr>th]:px-2 [&>table>thead>tr>th]:py-1 [&>table>thead>tr>th]:text-left [&>table>tbody>tr>td]:border [&>table>tbody>tr>td]:border-border [&>table>tbody>tr>td]:px-2 [&>table>tbody>tr>td]:py-1 [&>table]:overflow-x-auto [&>table]:block [&>table]:max-w-full">
-                        <ReactMarkdown>{message.content}</ReactMarkdown>
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
                       </div>
                       <p className={`text-xs mt-2 ${message.role === "user" ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
                         {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -316,7 +373,7 @@ export default function AiPlanner() {
                   </div>
                 ))}
 
-                {chatMutation.isPending && (
+                {isStreaming && messages.length > 0 && messages[messages.length - 1].content === "" && (
                   <div className="flex gap-3 justify-start" data-testid="message-loading">
                     <Avatar className="w-8 h-8 shrink-0">
                       <AvatarFallback className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white">
@@ -345,17 +402,17 @@ export default function AiPlanner() {
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Ask me anything about your wedding planning..."
-                disabled={chatMutation.isPending}
+                disabled={isStreaming}
                 className="flex-1"
                 data-testid="input-chat-message"
               />
               <Button
                 onClick={handleSend}
-                disabled={!inputMessage.trim() || chatMutation.isPending}
+                disabled={!inputMessage.trim() || isStreaming}
                 className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
                 data-testid="button-send-message"
               >
-                {chatMutation.isPending ? (
+                {isStreaming ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <Send className="w-4 h-4" />
