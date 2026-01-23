@@ -179,8 +179,10 @@ export function CouplePlannerChatbot() {
     }
   }, [isOpen]);
 
+  // Only lock scroll on mobile (< md breakpoint) when chat is open
   useEffect(() => {
-    if (isOpen) {
+    const isMobile = window.innerWidth < 768; // md breakpoint
+    if (isOpen && isMobile) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
