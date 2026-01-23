@@ -39,16 +39,25 @@ app.use(session({
 }));
 
 app.use(express.json({
+  limit: '10mb',
   verify: (req, _res, buf) => {
     req.rawBody = buf;
   }
 }));
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
+  const method = req.method;
   let capturedJsonResponse: Record<string, any> | undefined = undefined;
+
+  // Log request details for API calls
+  if (path.startsWith("/api")) {
+    const contentLength = req.get('content-length');
+    const bodySize = contentLength ? `${(parseInt(contentLength) / 1024).toFixed(1)}KB` : 'unknown';
+    log(`→ ${method} ${path} (body: ${bodySize})`);
+  }
 
   const originalResJson = res.json;
   res.json = function (bodyJson, ...args) {
@@ -59,13 +68,20 @@ app.use((req, res, next) => {
   res.on("finish", () => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+      const status = res.statusCode;
+      const statusEmoji = status >= 500 ? '✗' : status >= 400 ? '⚠' : '✓';
+      let logLine = `← ${statusEmoji} ${method} ${path} ${status} in ${duration}ms`;
+      
+      // Include error details for failed requests
+      if (status >= 400 && capturedJsonResponse) {
+        const errorInfo = capturedJsonResponse.error || capturedJsonResponse.message || '';
+        if (errorInfo) {
+          logLine += ` :: ${errorInfo}`;
+        }
       }
 
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
+      if (logLine.length > 120) {
+        logLine = logLine.slice(0, 119) + "…";
       }
 
       log(logLine);
