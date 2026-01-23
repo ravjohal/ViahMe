@@ -1,4 +1,6 @@
 import { Router } from "express";
+import { readFileSync } from "fs";
+import { join } from "path";
 import { requireAuth, type AuthRequest } from "../auth-middleware";
 import type { IStorage } from "../storage";
 import {
@@ -22,47 +24,22 @@ import {
   type SpeechGeneratorRequest,
 } from "../ai/gemini";
 
-// In-memory cache for AI chat responses (per wedding)
-// Key: weddingId:normalizedMessage, Value: { response, timestamp }
-interface CacheEntry {
-  response: string;
-  timestamp: number;
+// Cache replit.md content at startup for AI context (read once, use many)
+let replitMdContent: string = "";
+try {
+  replitMdContent = readFileSync(join(process.cwd(), "replit.md"), "utf-8");
+  console.log("Loaded replit.md for AI context");
+} catch (err) {
+  console.warn("Could not load replit.md for AI context:", err);
 }
-const aiResponseCache = new Map<string, CacheEntry>();
-const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours cache TTL
-const MAX_CACHE_SIZE = 1000; // Maximum cache entries
 
-// Normalize message for cache key matching
+// Normalize message for cache/database lookup
 function normalizeMessage(message: string): string {
   return message
     .toLowerCase()
     .trim()
     .replace(/[^\w\s]/g, '') // Remove punctuation
     .replace(/\s+/g, ' '); // Normalize whitespace
-}
-
-// Generate cache key from wedding ID and message
-function getCacheKey(weddingId: string, message: string): string {
-  return `${weddingId}:${normalizeMessage(message)}`;
-}
-
-// Clean expired entries and enforce size limit
-function cleanCache() {
-  const now = Date.now();
-  for (const [key, entry] of aiResponseCache.entries()) {
-    if (now - entry.timestamp > CACHE_TTL_MS) {
-      aiResponseCache.delete(key);
-    }
-  }
-  // If still over size limit, remove oldest entries
-  if (aiResponseCache.size > MAX_CACHE_SIZE) {
-    const entries = Array.from(aiResponseCache.entries())
-      .sort((a, b) => a[1].timestamp - b[1].timestamp);
-    const toRemove = entries.slice(0, entries.length - MAX_CACHE_SIZE);
-    for (const [key] of toRemove) {
-      aiResponseCache.delete(key);
-    }
-  }
 }
 
 export async function registerAiRoutes(router: Router, storage: IStorage) {
@@ -202,33 +179,48 @@ export async function registerAiRoutes(router: Router, storage: IStorage) {
       }
 
       const history: ChatMessage[] = Array.isArray(conversationHistory) ? conversationHistory : [];
-      const context: WeddingContext | undefined = weddingContext;
+      
+      // Enhance context with app documentation from replit.md
+      const context: WeddingContext | undefined = weddingContext ? {
+        ...weddingContext,
+        appDocumentation: replitMdContent || undefined,
+      } : replitMdContent ? { appDocumentation: replitMdContent } : undefined;
 
       let response: string;
       let fromCache = false;
 
-      // Check cache first if weddingId is provided and this is a standalone question (no conversation history)
+      // Check database chat history for cached response (same question asked before)
       if (weddingId && history.length === 0) {
-        const cacheKey = getCacheKey(weddingId, message);
-        const cachedEntry = aiResponseCache.get(cacheKey);
+        const normalizedQuery = normalizeMessage(message);
         
-        if (cachedEntry && (Date.now() - cachedEntry.timestamp) < CACHE_TTL_MS) {
-          response = cachedEntry.response;
-          fromCache = true;
-          console.log(`AI chat cache hit for wedding ${weddingId}`);
-        } else {
-          // Call LLM and cache the response
-          response = await chatWithPlanner(message, history, context);
+        try {
+          // Get all chat messages for this wedding to find matching Q&A pairs
+          const chatHistory = await storage.getAiChatMessages(weddingId, authReq.session.userId);
           
-          // Clean cache periodically and add new entry
-          cleanCache();
-          aiResponseCache.set(cacheKey, {
-            response,
-            timestamp: Date.now()
-          });
+          // Look for a matching user question and its subsequent assistant response
+          for (let i = 0; i < chatHistory.length - 1; i++) {
+            const userMsg = chatHistory[i];
+            const assistantMsg = chatHistory[i + 1];
+            
+            if (userMsg.role === 'user' && assistantMsg.role === 'assistant') {
+              const normalizedHistoryQuestion = normalizeMessage(userMsg.content);
+              
+              if (normalizedHistoryQuestion === normalizedQuery) {
+                response = assistantMsg.content;
+                fromCache = true;
+                console.log(`AI chat DB cache hit for wedding ${weddingId}`);
+                break;
+              }
+            }
+          }
+        } catch (dbError) {
+          console.error("Error checking chat history cache:", dbError);
+          // Continue to LLM if DB lookup fails
         }
-      } else {
-        // For conversations with history, always call LLM (context-dependent)
+      }
+
+      // If not found in cache, call LLM
+      if (!fromCache) {
         response = await chatWithPlanner(message, history, context);
       }
 
@@ -246,7 +238,7 @@ export async function registerAiRoutes(router: Router, storage: IStorage) {
             weddingId,
             userId: authReq.session.userId,
             role: 'assistant',
-            content: response
+            content: response!
           });
         } catch (persistError) {
           console.error("Error persisting chat history:", persistError);
@@ -254,7 +246,7 @@ export async function registerAiRoutes(router: Router, storage: IStorage) {
         }
       }
 
-      res.json({ response, cached: fromCache });
+      res.json({ response: response!, cached: fromCache });
     } catch (error) {
       console.error("Error in chat:", error);
       res.status(500).json({ 

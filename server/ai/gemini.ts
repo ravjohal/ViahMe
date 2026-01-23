@@ -295,6 +295,7 @@ export interface WeddingContext {
   weddingDate?: string;
   budget?: number;
   guestCount?: number;
+  appDocumentation?: string; // replit.md content for app feature knowledge
 }
 
 // Draft a new contract based on requirements
@@ -506,11 +507,17 @@ export async function chatWithPlanner(
     parts: [{ text: message + contextInfo }],
   });
 
+  // Build system instruction with optional app documentation
+  let systemInstruction = WEDDING_PLANNING_PROMPT;
+  if (weddingContext?.appDocumentation) {
+    systemInstruction += `\n\n=== APP DOCUMENTATION (for feature knowledge) ===\n${weddingContext.appDocumentation}`;
+  }
+
   try {
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       config: {
-        systemInstruction: WEDDING_PLANNING_PROMPT,
+        systemInstruction,
       },
       contents: contents,
     });
