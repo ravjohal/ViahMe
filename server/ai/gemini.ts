@@ -24,6 +24,26 @@ function logAIError(functionName: string, error: unknown): void {
   console.error(`Error:`, error);
 }
 
+// Timeout wrapper for AI calls (default 60 seconds)
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number = 60000, operation: string = 'AI request'): Promise<T> {
+  let timeoutId: NodeJS.Timeout;
+  
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new Error(`${operation} timed out after ${timeoutMs / 1000} seconds`));
+    }, timeoutMs);
+  });
+
+  try {
+    const result = await Promise.race([promise, timeoutPromise]);
+    clearTimeout(timeoutId!);
+    return result;
+  } catch (error) {
+    clearTimeout(timeoutId!);
+    throw error;
+  }
+}
+
 // Contract drafting system prompt
 const CONTRACT_SYSTEM_PROMPT = `You are an expert wedding contract drafting assistant for Viah.me, a South Asian wedding management platform. You help couples create professional vendor contracts.
 
@@ -514,13 +534,17 @@ export async function chatWithPlanner(
   }
 
   try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      config: {
-        systemInstruction,
-      },
-      contents: contents,
-    });
+    const response = await withTimeout(
+      ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        config: {
+          systemInstruction,
+        },
+        contents: contents,
+      }),
+      60000,
+      'Chat with planner'
+    );
 
     const result = response.text ||
       "I apologize, but I couldn't generate a response. Please try again.";
@@ -528,6 +552,10 @@ export async function chatWithPlanner(
     return result;
   } catch (error) {
     logAIError(functionName, error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    if (errorMessage.includes('timed out')) {
+      throw new Error("The AI is taking too long to respond. Please try a simpler question or try again later.");
+    }
     throw new Error("Failed to get a response. Please try again.");
   }
 }
