@@ -13,6 +13,14 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
     try {
       const { category, location, includeUnpublished, includeAllApproval, page, pageSize } = req.query;
 
+      // Check if user is authenticated
+      const sessionToken = req.cookies?.session;
+      let isAuthenticated = false;
+      if (sessionToken) {
+        const session = await storage.getSession(sessionToken);
+        isAuthenticated = !!session;
+      }
+
       let vendors = await storage.getAllVendors();
 
       if (includeAllApproval !== "true") {
@@ -33,6 +41,25 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
         );
       }
 
+      // For unauthenticated users, limit to 3 vendors per metro area
+      if (!isAuthenticated) {
+        const VENDORS_PER_METRO_UNAUTHENTICATED = 3;
+        const vendorsByMetro = new Map<string, typeof vendors>();
+        
+        for (const vendor of vendors) {
+          const metro = vendor.city || vendor.location || 'Other';
+          if (!vendorsByMetro.has(metro)) {
+            vendorsByMetro.set(metro, []);
+          }
+          const metroVendors = vendorsByMetro.get(metro)!;
+          if (metroVendors.length < VENDORS_PER_METRO_UNAUTHENTICATED) {
+            metroVendors.push(vendor);
+          }
+        }
+        
+        vendors = Array.from(vendorsByMetro.values()).flat();
+      }
+
       // If pagination params provided, return paginated response
       if (page && pageSize) {
         const pageNum = Math.max(1, parseInt(page as string, 10) || 1);
@@ -48,6 +75,7 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
           pageSize: size,
           total,
           totalPages,
+          limitedPreview: !isAuthenticated,
         });
       }
 
