@@ -875,22 +875,33 @@ export function VendorDirectory({
       </div>
 
       {comparisonVendors.length > 0 && (
-        <Card className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 shadow-lg border-2 border-primary/20">
-          <div className="p-4">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <GitCompare className="w-5 h-5 text-primary" />
-                <span className="font-semibold">
-                  {comparisonVendors.length} vendor{comparisonVendors.length > 1 ? 's' : ''} selected
-                </span>
+        <Card className="fixed bottom-4 left-2 right-2 md:left-1/2 md:right-auto md:-translate-x-1/2 md:w-auto z-50 shadow-lg border-2 border-primary/20">
+          <div className="p-3 md:p-4">
+            <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-4">
+              <div className="flex items-center justify-between md:justify-start gap-2">
+                <div className="flex items-center gap-2">
+                  <GitCompare className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+                  <span className="font-semibold text-sm md:text-base">
+                    {comparisonVendors.length} selected
+                  </span>
+                </div>
+                <Button
+                  onClick={onOpenComparison}
+                  disabled={comparisonVendors.length < 2}
+                  size="sm"
+                  className="md:hidden"
+                  data-testid="button-open-comparison-mobile"
+                >
+                  Compare
+                </Button>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0">
                 {comparisonVendors.map((vendor) => (
-                  <Badge key={vendor.id} variant="secondary" className="text-xs">
-                    {vendor.name}
+                  <Badge key={vendor.id} variant="secondary" className="text-xs whitespace-nowrap flex-shrink-0">
+                    <span className="max-w-[120px] md:max-w-none truncate">{vendor.name}</span>
                     <X
-                      className="w-3 h-3 ml-1 cursor-pointer"
+                      className="w-3 h-3 ml-1 cursor-pointer flex-shrink-0"
                       onClick={() => onAddToComparison?.(vendor)}
                     />
                   </Badge>
@@ -900,6 +911,7 @@ export function VendorDirectory({
               <Button
                 onClick={onOpenComparison}
                 disabled={comparisonVendors.length < 2}
+                className="hidden md:flex"
                 data-testid="button-open-comparison"
               >
                 Compare {comparisonVendors.length > 1 ? `(${comparisonVendors.length})` : ''}
