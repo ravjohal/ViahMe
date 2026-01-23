@@ -7,6 +7,7 @@ import {
   draftContract,
   reviewContract,
   chatWithPlanner,
+  chatWithPlannerStream,
   chatWithGuestAssistant,
   generateContractClause,
   suggestContractImprovements,
@@ -253,6 +254,160 @@ export async function registerAiRoutes(router: Router, storage: IStorage) {
         error: "Failed to get response",
         message: error instanceof Error ? error.message : "Please try again later"
       });
+    }
+  });
+
+  // Streaming chat endpoint for real-time responses
+  router.post("/chat/stream", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      if (!authReq.session.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const { message, conversationHistory, weddingContext, weddingId, persistHistory } = req.body;
+      
+      if (!message || message.trim().length === 0) {
+        return res.status(400).json({ 
+          error: "Message required",
+          message: "Please provide a message" 
+        });
+      }
+
+      const history: ChatMessage[] = Array.isArray(conversationHistory) ? conversationHistory : [];
+      
+      // Enhance context with app documentation from replit.md
+      const context: WeddingContext | undefined = weddingContext ? {
+        ...weddingContext,
+        appDocumentation: replitMdContent || undefined,
+      } : replitMdContent ? { appDocumentation: replitMdContent } : undefined;
+
+      // Check FAQ cache first for instant responses
+      const normalizedQuery = normalizeMessage(message);
+      let faqResponse: string | null = null;
+      
+      try {
+        const faqMatch = await storage.findFaqByNormalizedQuestion(normalizedQuery);
+        if (faqMatch) {
+          faqResponse = faqMatch.answer;
+          console.log(`FAQ cache hit for: "${message.substring(0, 50)}..."`);
+        }
+      } catch (faqError) {
+        console.error("Error checking FAQ cache:", faqError);
+      }
+
+      // Check database chat history for cached response
+      let cachedResponse: string | null = null;
+      if (!faqResponse && weddingId && history.length === 0) {
+        try {
+          const chatHistory = await storage.getAiChatMessages(weddingId, authReq.session.userId);
+          
+          for (let i = 0; i < chatHistory.length - 1; i++) {
+            const userMsg = chatHistory[i];
+            const assistantMsg = chatHistory[i + 1];
+            
+            if (userMsg.role === 'user' && assistantMsg.role === 'assistant') {
+              const normalizedHistoryQuestion = normalizeMessage(userMsg.content);
+              
+              if (normalizedHistoryQuestion === normalizedQuery) {
+                cachedResponse = assistantMsg.content;
+                console.log(`AI chat DB cache hit for wedding ${weddingId}`);
+                break;
+              }
+            }
+          }
+        } catch (dbError) {
+          console.error("Error checking chat history cache:", dbError);
+        }
+      }
+
+      // Set up SSE headers for streaming
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+      res.setHeader('X-Accel-Buffering', 'no');
+      res.flushHeaders();
+
+      // Track if client disconnected
+      let clientDisconnected = false;
+      req.on('close', () => {
+        clientDisconnected = true;
+      });
+
+      // If we have a cached response (FAQ or DB), stream it quickly
+      if (faqResponse || cachedResponse) {
+        const cachedContent = faqResponse || cachedResponse!;
+        
+        // Stream cached content in chunks for consistent UX
+        const chunkSize = 50;
+        for (let i = 0; i < cachedContent.length && !clientDisconnected; i += chunkSize) {
+          const chunk = cachedContent.slice(i, i + chunkSize);
+          res.write(`data: ${JSON.stringify({ text: chunk, cached: true })}\n\n`);
+        }
+        
+        if (!clientDisconnected) {
+          res.write(`data: ${JSON.stringify({ done: true, cached: true })}\n\n`);
+        }
+        res.end();
+        return;
+      }
+
+      // Stream from LLM
+      let fullResponse = "";
+      
+      try {
+        const stream = chatWithPlannerStream(message, history, context);
+        
+        for await (const chunk of stream) {
+          if (clientDisconnected) break;
+          fullResponse += chunk;
+          res.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
+        }
+
+        if (!clientDisconnected) {
+          res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+        }
+        res.end();
+
+        // Persist history after streaming completes (even if client disconnected)
+        if (persistHistory && weddingId && fullResponse.length > 0) {
+          try {
+            await storage.createAiChatMessage({
+              weddingId,
+              userId: authReq.session.userId,
+              role: 'user',
+              content: message
+            });
+            await storage.createAiChatMessage({
+              weddingId,
+              userId: authReq.session.userId,
+              role: 'assistant',
+              content: fullResponse
+            });
+          } catch (persistError) {
+            console.error("Error persisting chat history:", persistError);
+          }
+        }
+      } catch (streamError) {
+        console.error("Streaming error:", streamError);
+        if (!clientDisconnected) {
+          res.write(`data: ${JSON.stringify({ error: "Failed to get response" })}\n\n`);
+        }
+        res.end();
+      }
+    } catch (error) {
+      console.error("Error in streaming chat:", error);
+      // Check if headers have been sent (SSE already started)
+      if (!res.headersSent) {
+        res.status(500).json({ 
+          error: "Failed to get response",
+          message: error instanceof Error ? error.message : "Please try again later"
+        });
+      } else {
+        // Headers already sent, send SSE error event
+        res.write(`data: ${JSON.stringify({ error: "Failed to get response" })}\n\n`);
+        res.end();
+      }
     }
   });
 

@@ -311,6 +311,9 @@ import {
   aiChatMessages,
   type AiChatMessage,
   type InsertAiChatMessage,
+  aiFaq,
+  type AiFaq,
+  type InsertAiFaq,
 } from "@shared/schema";
 import { randomUUID, randomBytes } from "crypto";
 import bcrypt from "bcrypt";
@@ -1511,6 +1514,12 @@ export interface IStorage {
   getAiChatMessages(weddingId: string, userId: string): Promise<AiChatMessage[]>;
   createAiChatMessage(message: InsertAiChatMessage): Promise<AiChatMessage>;
   clearAiChatHistory(weddingId: string, userId: string): Promise<boolean>;
+
+  // AI FAQ
+  getAllFaq(): Promise<AiFaq[]>;
+  getActiveFaq(): Promise<AiFaq[]>;
+  findFaqByNormalizedQuestion(normalizedQuestion: string): Promise<AiFaq | null>;
+  createFaq(faq: InsertAiFaq): Promise<AiFaq>;
 }
 
 // Guest Planning Snapshot - comprehensive view of all guests and per-event costs
@@ -4890,6 +4899,12 @@ export class MemStorage implements IStorage {
   async getAiChatMessages(weddingId: string, userId: string): Promise<AiChatMessage[]> { return []; }
   async createAiChatMessage(message: InsertAiChatMessage): Promise<AiChatMessage> { throw new Error('MemStorage does not support AI Chat Messages. Use DBStorage.'); }
   async clearAiChatHistory(weddingId: string, userId: string): Promise<boolean> { return false; }
+
+  // AI FAQ (stub methods for MemStorage)
+  async getAllFaq(): Promise<AiFaq[]> { return []; }
+  async getActiveFaq(): Promise<AiFaq[]> { return []; }
+  async findFaqByNormalizedQuestion(normalizedQuestion: string): Promise<AiFaq | null> { return null; }
+  async createFaq(faq: InsertAiFaq): Promise<AiFaq> { throw new Error('MemStorage does not support FAQ. Use DBStorage.'); }
 }
 
 import { neon } from "@neondatabase/serverless";
@@ -13599,6 +13614,34 @@ export class DBStorage implements IStorage {
         eq(aiChatMessages.userId, userId)
       ));
     return true;
+  }
+
+  // AI FAQ methods
+  async getAllFaq(): Promise<AiFaq[]> {
+    return await this.db.select().from(aiFaq).orderBy(desc(aiFaq.priority));
+  }
+
+  async getActiveFaq(): Promise<AiFaq[]> {
+    return await this.db.select().from(aiFaq)
+      .where(eq(aiFaq.isActive, true))
+      .orderBy(desc(aiFaq.priority));
+  }
+
+  async findFaqByNormalizedQuestion(normalizedQuestion: string): Promise<AiFaq | null> {
+    const results = await this.db.select().from(aiFaq)
+      .where(and(
+        eq(aiFaq.normalizedQuestion, normalizedQuestion),
+        eq(aiFaq.isActive, true)
+      ))
+      .limit(1);
+    return results[0] || null;
+  }
+
+  async createFaq(faqData: InsertAiFaq): Promise<AiFaq> {
+    const [newFaq] = await this.db.insert(aiFaq)
+      .values(faqData)
+      .returning();
+    return newFaq;
   }
 }
 

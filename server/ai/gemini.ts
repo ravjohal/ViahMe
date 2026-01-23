@@ -532,6 +532,115 @@ export async function chatWithPlanner(
   }
 }
 
+// Streaming version of chatWithPlanner for real-time responses
+export async function* chatWithPlannerStream(
+  message: string,
+  conversationHistory: ChatMessage[],
+  weddingContext?: WeddingContext,
+): AsyncGenerator<string, string, unknown> {
+  const functionName = 'chatWithPlannerStream';
+  const startTime = Date.now();
+  
+  logAIRequest(functionName, { message, weddingContext, historyLength: conversationHistory.length });
+  
+  // Build context message
+  let contextInfo = "";
+  if (weddingContext) {
+    const parts = [];
+    if (weddingContext.partner1Name && weddingContext.partner2Name) {
+      parts.push(
+        `Couple: ${weddingContext.partner1Name} & ${weddingContext.partner2Name}`,
+      );
+    }
+    if (weddingContext.tradition)
+      parts.push(`Tradition: ${weddingContext.tradition}`);
+    if (weddingContext.city) parts.push(`City: ${weddingContext.city}`);
+    if (weddingContext.weddingDate)
+      parts.push(`Wedding Date: ${weddingContext.weddingDate}`);
+    if (weddingContext.budget)
+      parts.push(`Budget: $${weddingContext.budget.toLocaleString()}`);
+    if (weddingContext.guestCount)
+      parts.push(`Expected Guests: ${weddingContext.guestCount}`);
+
+    if (parts.length > 0) {
+      contextInfo = `\n\n[Wedding Context: ${parts.join(" | ")}]`;
+    }
+  }
+
+  // Build conversation for the model
+  const contents: Array<{ role: string; parts: Array<{ text: string }> }> = [];
+
+  // Apply summarization strategy if history exceeds threshold
+  if (conversationHistory.length > HISTORY_THRESHOLD) {
+    const olderMessages = conversationHistory.slice(0, -RECENT_MESSAGES_TO_KEEP);
+    const recentMessages = conversationHistory.slice(-RECENT_MESSAGES_TO_KEEP);
+
+    // Summarize older messages
+    const summary = await summarizeConversationHistory(olderMessages, weddingContext);
+
+    contents.push({
+      role: "user",
+      parts: [{ text: `[Previous conversation summary: ${summary}]` }],
+    });
+
+    contents.push({
+      role: "model",
+      parts: [{ text: "I understand the context from our previous discussion. Let me continue helping you with your wedding planning." }],
+    });
+
+    for (const msg of recentMessages) {
+      contents.push({
+        role: msg.role === "user" ? "user" : "model",
+        parts: [{ text: msg.content }],
+      });
+    }
+
+    console.log(`[AI Chat Stream] Summarized ${olderMessages.length} older messages, kept ${recentMessages.length} recent messages`);
+  } else {
+    for (const msg of conversationHistory) {
+      contents.push({
+        role: msg.role === "user" ? "user" : "model",
+        parts: [{ text: msg.content }],
+      });
+    }
+  }
+
+  contents.push({
+    role: "user",
+    parts: [{ text: message + contextInfo }],
+  });
+
+  let systemInstruction = WEDDING_PLANNING_PROMPT;
+  if (weddingContext?.appDocumentation) {
+    systemInstruction += `\n\n=== APP DOCUMENTATION (for feature knowledge) ===\n${weddingContext.appDocumentation}`;
+  }
+
+  try {
+    const stream = await ai.models.generateContentStream({
+      model: "gemini-2.5-flash",
+      config: {
+        systemInstruction,
+      },
+      contents: contents,
+    });
+
+    let fullText = "";
+    for await (const chunk of stream) {
+      const text = chunk.text || "";
+      if (text) {
+        fullText += text;
+        yield text;
+      }
+    }
+
+    logAIResponse(functionName, fullText, Date.now() - startTime);
+    return fullText;
+  } catch (error) {
+    logAIError(functionName, error);
+    throw new Error("Failed to get a response. Please try again.");
+  }
+}
+
 // Generate contract clauses for specific scenarios
 export async function generateContractClause(
   clauseType: string,

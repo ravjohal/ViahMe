@@ -5471,3 +5471,25 @@ export const insertAiChatMessageSchema = createInsertSchema(aiChatMessages).omit
 });
 export type InsertAiChatMessage = z.infer<typeof insertAiChatMessageSchema>;
 export type AiChatMessage = typeof aiChatMessages.$inferSelect;
+
+// AI FAQ - Pre-computed common questions and answers for instant responses
+export const aiFaq = pgTable("ai_faq", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  question: text("question").notNull(), // The common question
+  normalizedQuestion: text("normalized_question").notNull(), // Lowercase, no punctuation for matching
+  answer: text("answer").notNull(), // Pre-written answer
+  category: text("category"), // Optional category for organization
+  keywords: text("keywords").array(), // Keywords for fuzzy matching
+  priority: integer("priority").default(0), // Higher priority = checked first
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertAiFaqSchema = createInsertSchema(aiFaq).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertAiFaq = z.infer<typeof insertAiFaqSchema>;
+export type AiFaq = typeof aiFaq.$inferSelect;
