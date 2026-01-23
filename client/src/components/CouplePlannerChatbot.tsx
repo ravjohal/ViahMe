@@ -210,7 +210,7 @@ export function CouplePlannerChatbot() {
 
   const chatbotContent = !isOpen ? (
     <div 
-      className="fixed z-[9999] pointer-events-none"
+      className="fixed z-[9999]"
       style={{
         bottom: '96px',
         right: '16px',
@@ -218,7 +218,7 @@ export function CouplePlannerChatbot() {
     >
       <Button
         onClick={() => setIsOpen(true)}
-        className="rounded-full h-12 px-4 shadow-xl bg-gradient-to-br from-primary to-primary/80 animate-pulse hover:animate-none hover:scale-105 transition-transform gap-2 pointer-events-auto"
+        className="rounded-full h-12 px-4 shadow-xl bg-gradient-to-br from-primary to-primary/80 animate-pulse hover:animate-none hover:scale-105 transition-transform gap-2"
         data-testid="button-open-ai-planner"
       >
         <Sparkles className="h-5 w-5" />
@@ -233,11 +233,9 @@ export function CouplePlannerChatbot() {
         onClick={() => setIsOpen(false)}
       />
       
-      {/* Desktop: pointer-events-none on container allows scroll, pointer-events-auto on chat window */}
-      <div className="fixed inset-0 z-[9999] pointer-events-none hidden md:block" />
-      
+      {/* Chat window - full screen on mobile, corner position on desktop */}
       <div 
-        className="fixed z-[9999] bg-background flex flex-col pointer-events-auto
+        className="fixed z-[9999] bg-background flex flex-col
           inset-0 md:inset-auto
           md:bottom-6 md:right-6 
           md:w-[420px] md:max-w-[calc(100vw-48px)] 
