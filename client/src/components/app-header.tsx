@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Bell, Calendar, Menu, LogOut, Settings, User } from "lucide-react";
+import { Bell, Calendar, Menu, LogOut, Settings, User, Home, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -17,7 +17,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { usePermissions } from "@/hooks/use-permissions";
 import { MobileNavDrawer } from "@/components/mobile-nav-drawer";
 import { BottomNavBar } from "@/components/bottom-nav-bar";
-import { getAllCoupleNavItems, getAllVendorNavItems, type NavItem } from "@/config/navigation";
+import { COUPLE_NAV_SECTIONS, VENDOR_NAV_SECTIONS, ADMIN_NAV_SECTION, getAllCoupleNavItems, getAllVendorNavItems, type NavItem, type NavSection } from "@/config/navigation";
 import type { Wedding } from "@shared/schema";
 import { differenceInDays, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -140,53 +140,257 @@ export function AppHeader() {
             )}
           </Link>
 
-          {/* Desktop Navigation */}
+          {/* Desktop Navigation - Grouped Dropdowns */}
           <nav className="hidden lg:flex items-center gap-1 flex-1 justify-center">
-            {visibleNavItems.slice(0, 7).map((item) => {
-              const Icon = item.icon;
-              const isActive = location === item.path;
-              return (
-                <Link key={item.path} href={item.path}>
-                  <Button
-                    variant={isActive ? "secondary" : "ghost"}
-                    size="sm"
-                    className={cn(
-                      "gap-2",
-                      isActive && "bg-primary/10 text-primary"
-                    )}
-                    data-testid={`nav-${item.path.replace("/", "")}`}
-                  >
-                    <Icon className="w-4 h-4" />
-                    <span className="hidden xl:inline">{item.label}</span>
-                  </Button>
-                </Link>
-              );
-            })}
-            
-            {visibleNavItems.length > 7 && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="gap-2" data-testid="button-more-menu">
-                    <Menu className="w-4 h-4" />
-                    <span className="hidden xl:inline">More</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuLabel>More Pages</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {visibleNavItems.slice(7).map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <Link key={item.path} href={item.path}>
-                        <DropdownMenuItem className="gap-2 cursor-pointer" data-testid={`nav-dropdown-${item.path.replace("/", "")}`}>
-                          <Icon className="w-4 h-4" />
-                          {item.label}
-                        </DropdownMenuItem>
-                      </Link>
-                    );
-                  })}
-                </DropdownMenuContent>
-              </DropdownMenu>
+            {/* Standalone Home Button */}
+            <Link href={user?.role === "vendor" ? "/vendor-dashboard" : "/dashboard"}>
+              <Button
+                variant={location === "/dashboard" || location === "/vendor-dashboard" ? "secondary" : "ghost"}
+                size="sm"
+                className={cn(
+                  "gap-2",
+                  (location === "/dashboard" || location === "/vendor-dashboard") && "bg-primary/10 text-primary"
+                )}
+                data-testid="nav-home"
+              >
+                <Home className="w-4 h-4" />
+                <span>Home</span>
+              </Button>
+            </Link>
+
+            {user?.role !== "vendor" ? (
+              <>
+                {/* Planning Group - combines main planning items + planning section */}
+                {(() => {
+                  const planningItems = [
+                    ...COUPLE_NAV_SECTIONS.find(s => s.id === 'main')?.items.filter(i => 
+                      ['/budget', '/timeline', '/tasks', '/expenses'].includes(i.path)
+                    ) || [],
+                    ...COUPLE_NAV_SECTIONS.find(s => s.id === 'planning')?.items || [],
+                  ].filter(hasAccess);
+                  
+                  const isActive = planningItems.some(item => location === item.path);
+                  
+                  return planningItems.length > 0 && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant={isActive ? "secondary" : "ghost"} size="sm" className={cn("gap-2", isActive && "bg-primary/10 text-primary")} data-testid="nav-planning-dropdown">
+                          <Calendar className="w-4 h-4" />
+                          <span>Planning</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="center" className="w-56 max-h-80 overflow-y-auto">
+                        <DropdownMenuLabel>Planning & Budget</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        {planningItems.map((item) => {
+                          const Icon = item.icon;
+                          return (
+                            <Link key={item.path} href={item.path}>
+                              <DropdownMenuItem className={cn("flex items-start gap-3 py-2 cursor-pointer", location === item.path && "bg-primary/10")} data-testid={`nav-${item.path.replace("/", "")}`}>
+                                <Icon className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                                <div className="flex flex-col gap-0.5">
+                                  <span className="font-medium">{item.label}</span>
+                                  {item.description && <span className="text-xs text-muted-foreground">{item.description}</span>}
+                                </div>
+                              </DropdownMenuItem>
+                            </Link>
+                          );
+                        })}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  );
+                })()}
+
+                {/* People Group - guests, vendors, messages, team, invitations */}
+                {(() => {
+                  const peopleItems = [
+                    ...COUPLE_NAV_SECTIONS.find(s => s.id === 'main')?.items.filter(i => 
+                      ['/guests', '/vendors', '/messages'].includes(i.path)
+                    ) || [],
+                    ...COUPLE_NAV_SECTIONS.find(s => s.id === 'communication')?.items || [],
+                    ...(COUPLE_NAV_SECTIONS.find(s => s.id === 'planning')?.items.filter(i => i.path === '/collaborators') || []),
+                  ].filter(hasAccess);
+                  
+                  const isActive = peopleItems.some(item => location === item.path);
+                  
+                  return peopleItems.length > 0 && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant={isActive ? "secondary" : "ghost"} size="sm" className={cn("gap-2", isActive && "bg-primary/10 text-primary")} data-testid="nav-people-dropdown">
+                          <Users className="w-4 h-4" />
+                          <span>People</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="center" className="w-56 max-h-80 overflow-y-auto">
+                        <DropdownMenuLabel>Guests & Vendors</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        {peopleItems.map((item) => {
+                          const Icon = item.icon;
+                          return (
+                            <Link key={item.path} href={item.path}>
+                              <DropdownMenuItem className={cn("flex items-start gap-3 py-2 cursor-pointer", location === item.path && "bg-primary/10")} data-testid={`nav-${item.path.replace("/", "")}`}>
+                                <Icon className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                                <div className="flex flex-col gap-0.5">
+                                  <span className="font-medium">{item.label}</span>
+                                  {item.description && <span className="text-xs text-muted-foreground">{item.description}</span>}
+                                </div>
+                              </DropdownMenuItem>
+                            </Link>
+                          );
+                        })}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  );
+                })()}
+
+                {/* More Tools Group - website, media, extras */}
+                {(() => {
+                  const moreItems = [
+                    ...COUPLE_NAV_SECTIONS.find(s => s.id === 'main')?.items.filter(i => i.path === '/website-builder') || [],
+                    ...COUPLE_NAV_SECTIONS.find(s => s.id === 'content')?.items || [],
+                    ...COUPLE_NAV_SECTIONS.find(s => s.id === 'extras')?.items || [],
+                    ...(user?.isSiteAdmin ? ADMIN_NAV_SECTION.items : []),
+                  ].filter(hasAccess);
+                  
+                  const isActive = moreItems.some(item => location === item.path);
+                  
+                  return moreItems.length > 0 && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant={isActive ? "secondary" : "ghost"} size="sm" className={cn("gap-2", isActive && "bg-primary/10 text-primary")} data-testid="nav-more-dropdown">
+                          <Menu className="w-4 h-4" />
+                          <span>More</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="center" className="w-56 max-h-80 overflow-y-auto">
+                        <DropdownMenuLabel>More Tools</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        {moreItems.map((item) => {
+                          const Icon = item.icon;
+                          return (
+                            <Link key={item.path} href={item.path}>
+                              <DropdownMenuItem className={cn("flex items-start gap-3 py-2 cursor-pointer", location === item.path && "bg-primary/10")} data-testid={`nav-${item.path.replace("/", "")}`}>
+                                <Icon className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                                <div className="flex flex-col gap-0.5">
+                                  <span className="font-medium">{item.label}</span>
+                                  {item.description && <span className="text-xs text-muted-foreground">{item.description}</span>}
+                                </div>
+                              </DropdownMenuItem>
+                            </Link>
+                          );
+                        })}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  );
+                })()}
+              </>
+            ) : (
+              <>
+                {/* Vendor: Business dropdown */}
+                {(() => {
+                  const businessItems = VENDOR_NAV_SECTIONS.find(s => s.id === 'main')?.items.filter(i => i.path !== '/vendor-dashboard') || [];
+                  const isActive = businessItems.some(item => location === item.path);
+                  
+                  return businessItems.length > 0 && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant={isActive ? "secondary" : "ghost"} size="sm" className={cn("gap-2", isActive && "bg-primary/10 text-primary")} data-testid="nav-vendor-business-dropdown">
+                          <Calendar className="w-4 h-4" />
+                          <span>Business</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="center" className="w-56">
+                        <DropdownMenuLabel>Clients & Bookings</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        {businessItems.map((item) => {
+                          const Icon = item.icon;
+                          return (
+                            <Link key={item.path} href={item.path}>
+                              <DropdownMenuItem className={cn("flex items-start gap-3 py-2 cursor-pointer", location === item.path && "bg-primary/10")} data-testid={`nav-${item.path.replace("/", "")}`}>
+                                <Icon className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                                <div className="flex flex-col gap-0.5">
+                                  <span className="font-medium">{item.label}</span>
+                                  {item.description && <span className="text-xs text-muted-foreground">{item.description}</span>}
+                                </div>
+                              </DropdownMenuItem>
+                            </Link>
+                          );
+                        })}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  );
+                })()}
+
+                {/* Vendor: Tools dropdown */}
+                {(() => {
+                  const toolsItems = VENDOR_NAV_SECTIONS.find(s => s.id === 'business')?.items || [];
+                  const isActive = toolsItems.some(item => location === item.path);
+                  
+                  return toolsItems.length > 0 && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant={isActive ? "secondary" : "ghost"} size="sm" className={cn("gap-2", isActive && "bg-primary/10 text-primary")} data-testid="nav-vendor-tools-dropdown">
+                          <Menu className="w-4 h-4" />
+                          <span>Tools</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="center" className="w-56">
+                        <DropdownMenuLabel>Business Tools</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        {toolsItems.map((item) => {
+                          const Icon = item.icon;
+                          return (
+                            <Link key={item.path} href={item.path}>
+                              <DropdownMenuItem className={cn("flex items-start gap-3 py-2 cursor-pointer", location === item.path && "bg-primary/10")} data-testid={`nav-${item.path.replace("/", "")}`}>
+                                <Icon className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                                <div className="flex flex-col gap-0.5">
+                                  <span className="font-medium">{item.label}</span>
+                                  {item.description && <span className="text-xs text-muted-foreground">{item.description}</span>}
+                                </div>
+                              </DropdownMenuItem>
+                            </Link>
+                          );
+                        })}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  );
+                })()}
+
+                {/* Vendor: Profile dropdown */}
+                {(() => {
+                  const profileItems = VENDOR_NAV_SECTIONS.find(s => s.id === 'profile')?.items || [];
+                  const isActive = profileItems.some(item => location === item.path);
+                  
+                  return profileItems.length > 0 && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant={isActive ? "secondary" : "ghost"} size="sm" className={cn("gap-2", isActive && "bg-primary/10 text-primary")} data-testid="nav-vendor-profile-dropdown">
+                          <User className="w-4 h-4" />
+                          <span>Profile</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="center" className="w-56">
+                        <DropdownMenuLabel>Your Profile</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        {profileItems.map((item) => {
+                          const Icon = item.icon;
+                          return (
+                            <Link key={item.path} href={item.path}>
+                              <DropdownMenuItem className={cn("flex items-start gap-3 py-2 cursor-pointer", location === item.path && "bg-primary/10")} data-testid={`nav-${item.path.replace("/", "")}`}>
+                                <Icon className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                                <div className="flex flex-col gap-0.5">
+                                  <span className="font-medium">{item.label}</span>
+                                  {item.description && <span className="text-xs text-muted-foreground">{item.description}</span>}
+                                </div>
+                              </DropdownMenuItem>
+                            </Link>
+                          );
+                        })}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  );
+                })()}
+              </>
             )}
           </nav>
 
