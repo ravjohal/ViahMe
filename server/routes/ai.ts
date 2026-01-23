@@ -285,9 +285,19 @@ export async function registerAiRoutes(router: Router, storage: IStorage) {
       
       if (weddingId) {
         try {
-          const guests = await storage.getGuestsByWedding(weddingId);
-          actualGuestCount = guests.length;
-          hasNoGuests = guests.length === 0;
+          // Aggregate guest counts from events (each event has a guestCount field)
+          const events = await storage.getEventsByWedding(weddingId);
+          const totalEventGuestCount = events.reduce((sum, event) => sum + (event.guestCount || 0), 0);
+          
+          if (totalEventGuestCount > 0) {
+            actualGuestCount = totalEventGuestCount;
+            hasNoGuests = false;
+          } else {
+            // Fall back to checking guest list records
+            const guests = await storage.getGuestsByWedding(weddingId);
+            actualGuestCount = guests.length;
+            hasNoGuests = guests.length === 0;
+          }
         } catch (guestError) {
           console.error("Error fetching guest count for AI context:", guestError);
         }
@@ -300,9 +310,9 @@ export async function registerAiRoutes(router: Router, storage: IStorage) {
         guestCount: actualGuestCount !== undefined ? actualGuestCount : weddingContext.guestCount,
         hasNoGuests,
         guestDataNote: hasNoGuests 
-          ? "No guests have been added yet. Suggest they add guests in the Guest List for more accurate planning."
+          ? "No guests have been added yet. Add guest counts to your events or individual guests for more accurate planning."
           : actualGuestCount !== undefined 
-            ? `Actual guest count from database: ${actualGuestCount}`
+            ? `Total guest count across all ceremonies: ${actualGuestCount}`
             : undefined,
         appDocumentation: AI_FEATURE_CONTEXT,
       } : { appDocumentation: AI_FEATURE_CONTEXT };
