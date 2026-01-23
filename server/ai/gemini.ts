@@ -313,6 +313,8 @@ export interface WeddingContext {
   weddingDate?: string;
   budget?: number;
   guestCount?: number;
+  hasNoGuests?: boolean;
+  guestDataNote?: string;
   appDocumentation?: string; // replit.md content for app feature knowledge
 }
 
@@ -469,8 +471,10 @@ export async function chatWithPlanner(
       parts.push(`Wedding Date: ${weddingContext.weddingDate}`);
     if (weddingContext.budget)
       parts.push(`Budget: $${weddingContext.budget.toLocaleString()}`);
-    if (weddingContext.guestCount)
-      parts.push(`Expected Guests: ${weddingContext.guestCount}`);
+    if (weddingContext.guestCount && weddingContext.guestCount > 0)
+      parts.push(`Guest Count: ${weddingContext.guestCount}`);
+    if (weddingContext.guestDataNote)
+      parts.push(weddingContext.guestDataNote);
 
     if (parts.length > 0) {
       contextInfo = `\n\n[Wedding Context: ${parts.join(" | ")}]`;
@@ -585,8 +589,10 @@ export async function* chatWithPlannerStream(
       parts.push(`Wedding Date: ${weddingContext.weddingDate}`);
     if (weddingContext.budget)
       parts.push(`Budget: $${weddingContext.budget.toLocaleString()}`);
-    if (weddingContext.guestCount)
-      parts.push(`Expected Guests: ${weddingContext.guestCount}`);
+    if (weddingContext.guestCount && weddingContext.guestCount > 0)
+      parts.push(`Guest Count: ${weddingContext.guestCount}`);
+    if (weddingContext.guestDataNote)
+      parts.push(weddingContext.guestDataNote);
 
     if (parts.length > 0) {
       contextInfo = `\n\n[Wedding Context: ${parts.join(" | ")}]`;

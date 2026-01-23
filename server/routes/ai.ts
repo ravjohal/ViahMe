@@ -279,9 +279,31 @@ export async function registerAiRoutes(router: Router, storage: IStorage) {
 
       const history: ChatMessage[] = Array.isArray(conversationHistory) ? conversationHistory : [];
       
-      // Enhance context with condensed feature knowledge
+      // Fetch real guest count from database if weddingId is provided
+      let actualGuestCount: number | undefined;
+      let hasNoGuests = false;
+      
+      if (weddingId) {
+        try {
+          const guests = await storage.getGuestsByWeddingId(weddingId);
+          actualGuestCount = guests.length;
+          hasNoGuests = guests.length === 0;
+        } catch (guestError) {
+          console.error("Error fetching guest count for AI context:", guestError);
+        }
+      }
+      
+      // Enhance context with condensed feature knowledge and real guest data
       const context: WeddingContext | undefined = weddingContext ? {
         ...weddingContext,
+        // Override estimate with actual count if available, or indicate no guests
+        guestCount: actualGuestCount !== undefined ? actualGuestCount : weddingContext.guestCount,
+        hasNoGuests,
+        guestDataNote: hasNoGuests 
+          ? "No guests have been added yet. Suggest they add guests in the Guest List for more accurate planning."
+          : actualGuestCount !== undefined 
+            ? `Actual guest count from database: ${actualGuestCount}`
+            : undefined,
         appDocumentation: AI_FEATURE_CONTEXT,
       } : { appDocumentation: AI_FEATURE_CONTEXT };
 
