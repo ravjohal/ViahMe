@@ -1,9 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 
-// DON'T DELETE THIS COMMENT
-// Follow these instructions when using this blueprint:
-// - Valid Gemini models: "gemini-3.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"
-//   - gemini-3.0-flash is the fastest and recommended for chat
+// Single source of truth for the AI model - change this to switch models globally
+const GEMINI_MODEL = "gemini-2.5-flash";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
@@ -346,7 +344,7 @@ Please create a comprehensive, professional contract that protects both parties 
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3.0-flash",
+      model: GEMINI_MODEL,
       config: {
         systemInstruction: CONTRACT_SYSTEM_PROMPT,
       },
@@ -385,7 +383,7 @@ Please provide:
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3.0-flash",
+      model: GEMINI_MODEL,
       config: {
         systemInstruction: CONTRACT_REVIEW_PROMPT,
       },
@@ -433,7 +431,7 @@ Provide a clear, organized summary that preserves critical context for continuin
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3.0-flash",
+      model: GEMINI_MODEL,
       contents: prompt,
     });
 
@@ -536,7 +534,7 @@ export async function chatWithPlanner(
   try {
     const response = await withTimeout(
       ai.models.generateContent({
-        model: "gemini-3.0-flash",
+        model: GEMINI_MODEL,
         config: {
           systemInstruction,
         },
@@ -645,7 +643,7 @@ export async function* chatWithPlannerStream(
 
   try {
     const stream = await ai.models.generateContentStream({
-      model: "gemini-3.0-flash",
+      model: GEMINI_MODEL,
       config: {
         systemInstruction,
       },
@@ -689,7 +687,7 @@ Please provide a well-written, legally appropriate clause that can be added to a
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3.0-flash",
+      model: GEMINI_MODEL,
       config: {
         systemInstruction: CONTRACT_SYSTEM_PROMPT,
       },
@@ -719,7 +717,7 @@ Respond with a JSON array of improvement suggestions, each as a concise actionab
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3.0-flash",
+      model: GEMINI_MODEL,
       config: {
         systemInstruction:
           "You are a contract improvement assistant. Respond only with a valid JSON array of strings.",
@@ -791,7 +789,7 @@ Return as a JSON array of 3 strings.`;
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3.0-flash",
+      model: GEMINI_MODEL,
       config: {
         systemInstruction: VENDOR_REPLY_PROMPT,
         responseMimeType: "application/json",
@@ -862,7 +860,7 @@ Return as a JSON array of 3 strings.`;
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3.0-flash",
+      model: GEMINI_MODEL,
       config: {
         systemInstruction: COUPLE_MESSAGE_PROMPT,
         responseMimeType: "application/json",
@@ -997,7 +995,7 @@ Return as a JSON array of task objects.`;
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3.0-flash",
+      model: GEMINI_MODEL,
       config: {
         systemInstruction: TASK_RECOMMENDATION_PROMPT,
         responseMimeType: "application/json",
@@ -1038,7 +1036,7 @@ Return as a JSON array of 3 task title strings. Be specific and culturally appro
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3.0-flash",
+      model: GEMINI_MODEL,
       config: {
         systemInstruction: TASK_RECOMMENDATION_PROMPT,
         responseMimeType: "application/json",
@@ -1237,7 +1235,7 @@ Write in plain conversational English without any markdown formatting.`;
     }
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.0-flash",
+      model: GEMINI_MODEL,
       config,
       contents: prompt,
     });
@@ -1397,7 +1395,7 @@ ${contextParts.join("\n\n")}`;
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3.0-flash",
+      model: GEMINI_MODEL,
       config: {
         systemInstruction: systemPrompt,
       },
@@ -1481,7 +1479,7 @@ Provide realistic estimates for this specific combination. Remember to return ON
   try {
     console.log("[Gemini Budget] Calling Gemini API...");
     const response = await ai.models.generateContent({
-      model: "gemini-3.0-flash",
+      model: GEMINI_MODEL,
       config: {
         systemInstruction: BUDGET_ESTIMATE_PROMPT,
       },
@@ -1570,7 +1568,7 @@ Return a JSON object with:
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3.0-flash",
+      model: GEMINI_MODEL,
       config: {
         systemInstruction: VOICE_TO_GUEST_PROMPT,
         responseMimeType: "application/json",
@@ -1651,7 +1649,7 @@ export async function chatWithGuestAssistant(
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3.0-flash",
+      model: GEMINI_MODEL,
       config: {
         systemInstruction: GUEST_ASSISTANT_PROMPT,
         maxOutputTokens: 300, // Keep responses short and simple
@@ -1808,7 +1806,7 @@ Return as JSON with keys: "speech" (string), "estimatedDuration" (string like "4
     ];
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.0-flash",
+      model: GEMINI_MODEL,
       config: {
         systemInstruction: SPEECH_GENERATOR_PROMPT,
         responseMimeType: "application/json",
@@ -1931,7 +1929,7 @@ Return as JSON with keys: title, shortExplainer, fullExplainer, keyMoments (arra
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3.0-flash",
+      model: GEMINI_MODEL,
       config: {
         systemInstruction: CEREMONY_EXPLAINER_PROMPT,
         responseMimeType: "application/json",
