@@ -283,36 +283,47 @@ export async function registerAiRoutes(router: Router, storage: IStorage) {
       let actualGuestCount: number | undefined;
       let hasNoGuests = false;
       
+      let ceremonyGuestBreakdown: string | undefined;
+      
       if (weddingId) {
         try {
-          // Aggregate guest counts from events (each event has a guestCount field)
+          // Fetch all events/ceremonies with their individual guest counts
           const events = await storage.getEventsByWedding(weddingId);
-          const totalEventGuestCount = events.reduce((sum, event) => sum + (event.guestCount || 0), 0);
           
-          if (totalEventGuestCount > 0) {
-            actualGuestCount = totalEventGuestCount;
-            hasNoGuests = false;
+          if (events.length > 0) {
+            const eventsWithGuests = events
+              .filter(event => event.guestCount && event.guestCount > 0)
+              .map(event => `${event.name}: ${event.guestCount} guests`);
+            
+            if (eventsWithGuests.length > 0) {
+              ceremonyGuestBreakdown = `Ceremonies planned:\n${eventsWithGuests.join('\n')}`;
+              hasNoGuests = false;
+              // Use max guest count as the primary reference
+              actualGuestCount = Math.max(...events.map(e => e.guestCount || 0));
+            } else {
+              // Events exist but no guest counts set
+              ceremonyGuestBreakdown = `Ceremonies planned: ${events.map(e => e.name).join(', ')} (no guest counts set yet)`;
+              hasNoGuests = true;
+            }
           } else {
-            // Fall back to checking guest list records
-            const guests = await storage.getGuestsByWedding(weddingId);
-            actualGuestCount = guests.length;
-            hasNoGuests = guests.length === 0;
+            // No events planned yet
+            hasNoGuests = true;
           }
         } catch (guestError) {
-          console.error("Error fetching guest count for AI context:", guestError);
+          console.error("Error fetching events for AI context:", guestError);
         }
       }
       
-      // Enhance context with condensed feature knowledge and real guest data
+      // Enhance context with condensed feature knowledge and ceremony guest data
       const context: WeddingContext | undefined = weddingContext ? {
         ...weddingContext,
-        // Override estimate with actual count if available, or indicate no guests
+        // Override estimate with actual count if available
         guestCount: actualGuestCount !== undefined ? actualGuestCount : weddingContext.guestCount,
         hasNoGuests,
-        guestDataNote: hasNoGuests 
-          ? "No guests have been added yet. Add guest counts to your events or individual guests for more accurate planning."
-          : actualGuestCount !== undefined 
-            ? `Total guest count across all ceremonies: ${actualGuestCount}`
+        guestDataNote: ceremonyGuestBreakdown 
+          ? ceremonyGuestBreakdown
+          : hasNoGuests 
+            ? "No ceremonies or guest counts have been added yet. Suggest they add events in the Events section."
             : undefined,
         appDocumentation: AI_FEATURE_CONTEXT,
       } : { appDocumentation: AI_FEATURE_CONTEXT };
