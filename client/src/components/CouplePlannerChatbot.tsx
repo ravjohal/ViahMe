@@ -210,7 +210,7 @@ export function CouplePlannerChatbot() {
 
   const chatbotContent = !isOpen ? (
     <div 
-      className="fixed z-[9999]"
+      className="fixed z-[9999] pointer-events-none"
       style={{
         bottom: '96px',
         right: '16px',
@@ -218,7 +218,7 @@ export function CouplePlannerChatbot() {
     >
       <Button
         onClick={() => setIsOpen(true)}
-        className="rounded-full h-12 px-4 shadow-xl bg-gradient-to-br from-primary to-primary/80 animate-pulse hover:animate-none hover:scale-105 transition-transform gap-2"
+        className="rounded-full h-12 px-4 shadow-xl bg-gradient-to-br from-primary to-primary/80 animate-pulse hover:animate-none hover:scale-105 transition-transform gap-2 pointer-events-auto"
         data-testid="button-open-ai-planner"
       >
         <Sparkles className="h-5 w-5" />
@@ -227,13 +227,17 @@ export function CouplePlannerChatbot() {
     </div>
   ) : (
     <>
+      {/* Mobile backdrop - tapping closes the chat */}
       <div 
         className="fixed inset-0 bg-black/50 z-[9998] md:hidden"
         onClick={() => setIsOpen(false)}
       />
       
+      {/* Desktop: pointer-events-none on container allows scroll, pointer-events-auto on chat window */}
+      <div className="fixed inset-0 z-[9999] pointer-events-none hidden md:block" />
+      
       <div 
-        className="fixed z-[9999] bg-background flex flex-col
+        className="fixed z-[9999] bg-background flex flex-col pointer-events-auto
           inset-0 md:inset-auto
           md:bottom-6 md:right-6 
           md:w-[420px] md:max-w-[calc(100vw-48px)] 
