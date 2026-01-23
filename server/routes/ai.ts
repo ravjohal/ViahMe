@@ -1,6 +1,4 @@
 import { Router } from "express";
-import { readFileSync } from "fs";
-import { join } from "path";
 import { requireAuth, type AuthRequest } from "../auth-middleware";
 import type { IStorage } from "../storage";
 import {
@@ -25,14 +23,18 @@ import {
   type SpeechGeneratorRequest,
 } from "../ai/gemini";
 
-// Cache replit.md content at startup for AI context (read once, use many)
-let replitMdContent: string = "";
-try {
-  replitMdContent = readFileSync(join(process.cwd(), "replit.md"), "utf-8");
-  console.log("Loaded replit.md for AI context");
-} catch (err) {
-  console.warn("Could not load replit.md for AI context:", err);
-}
+// Condensed AI context - only essential feature knowledge (much smaller than full replit.md)
+const AI_FEATURE_CONTEXT = `Viah.me Features:
+- Budget: Ceremony-based tracking, vendor payments, expense splitting between families
+- Vendors: 32 categories, culturally-specialized, comparison tools, contracts with e-signatures
+- Guests: Bulk import, household grouping, per-event RSVPs, dietary tracking
+- Events: Multi-day timeline, ceremony templates (Sikh/Hindu/Muslim/Gujarati/South Indian)
+- Tasks: Checklist with reminders, assignable to partners/family
+- Communication: Vendor messaging, AI reply suggestions
+- Documents: Contract storage, photo galleries
+- Website: Guest-facing site with RSVP, livestream support
+- Cultural Info: Ceremony explanations, attire guides, ritual roles
+Navigate: Dashboard, Budget, Vendors, Guests, Events, Tasks, AI Planner, Settings`;
 
 // Normalize message for cache/database lookup
 function normalizeMessage(message: string): string {
@@ -181,11 +183,11 @@ export async function registerAiRoutes(router: Router, storage: IStorage) {
 
       const history: ChatMessage[] = Array.isArray(conversationHistory) ? conversationHistory : [];
       
-      // Enhance context with app documentation from replit.md
+      // Enhance context with condensed feature knowledge
       const context: WeddingContext | undefined = weddingContext ? {
         ...weddingContext,
-        appDocumentation: replitMdContent || undefined,
-      } : replitMdContent ? { appDocumentation: replitMdContent } : undefined;
+        appDocumentation: AI_FEATURE_CONTEXT,
+      } : { appDocumentation: AI_FEATURE_CONTEXT };
 
       let response: string;
       let fromCache = false;
@@ -276,11 +278,11 @@ export async function registerAiRoutes(router: Router, storage: IStorage) {
 
       const history: ChatMessage[] = Array.isArray(conversationHistory) ? conversationHistory : [];
       
-      // Enhance context with app documentation from replit.md
+      // Enhance context with condensed feature knowledge
       const context: WeddingContext | undefined = weddingContext ? {
         ...weddingContext,
-        appDocumentation: replitMdContent || undefined,
-      } : replitMdContent ? { appDocumentation: replitMdContent } : undefined;
+        appDocumentation: AI_FEATURE_CONTEXT,
+      } : { appDocumentation: AI_FEATURE_CONTEXT };
 
       // Check FAQ cache first for instant responses
       const normalizedQuery = normalizeMessage(message);
