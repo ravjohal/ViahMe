@@ -156,7 +156,7 @@ export function CouplePlannerChatbot() {
     },
     onSuccess: () => {
       setMessages([]);
-      setHistoryLoaded(false);
+      // Keep historyLoaded true to prevent stale cache from repopulating messages
       queryClient.invalidateQueries({ queryKey: [`/api/ai/chat/history/${wedding?.id}`] });
     },
   });
