@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Sparkles, Send, X, Loader2, Calendar, Users, DollarSign, Utensils, Music, Camera } from "lucide-react";
+import { Sparkles, Send, X, Loader2, Calendar, Users, DollarSign, Utensils, Music, Camera, Trash2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import type { Wedding } from "@shared/schema";
 
@@ -24,6 +24,7 @@ export function CouplePlannerChatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
+  const [historyLoaded, setHistoryLoaded] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -32,6 +33,28 @@ export function CouplePlannerChatbot() {
   });
 
   const wedding = weddings?.[0];
+
+  // Load chat history from server
+  const { data: chatHistoryData } = useQuery<{ history: Array<{ role: 'user' | 'assistant'; content: string }> }>({
+    queryKey: [`/api/ai/chat/history/${wedding?.id}`],
+    enabled: !!wedding?.id,
+  });
+
+  // Reset historyLoaded when wedding changes
+  useEffect(() => {
+    setHistoryLoaded(false);
+  }, [wedding?.id]);
+
+  // Initialize messages from history when loaded
+  useEffect(() => {
+    if (chatHistoryData?.history && !historyLoaded && wedding?.id) {
+      setMessages(chatHistoryData.history.map(m => ({
+        role: m.role,
+        content: m.content,
+      })));
+      setHistoryLoaded(true);
+    }
+  }, [chatHistoryData, historyLoaded, wedding?.id]);
 
   const chatMutation = useMutation({
     mutationFn: async ({ message, currentHistory }: { message: string; currentHistory: ChatMessage[] }) => {
@@ -50,6 +73,8 @@ export function CouplePlannerChatbot() {
           budget: wedding.totalBudget ? parseFloat(wedding.totalBudget) : undefined,
           guestCount: wedding.guestCountEstimate,
         } : undefined,
+        weddingId: wedding?.id,
+        persistHistory: true,
       });
       return response.json();
     },
@@ -64,6 +89,18 @@ export function CouplePlannerChatbot() {
         role: "assistant",
         content: "I'm sorry, I couldn't process your question. Please try again.",
       }]);
+    },
+  });
+
+  const clearHistoryMutation = useMutation({
+    mutationFn: async () => {
+      if (!wedding?.id) return;
+      await apiRequest("DELETE", `/api/ai/chat/history/${wedding.id}`);
+    },
+    onSuccess: () => {
+      setMessages([]);
+      setHistoryLoaded(false);
+      queryClient.invalidateQueries({ queryKey: [`/api/ai/chat/history/${wedding?.id}`] });
     },
   });
 
@@ -161,14 +198,28 @@ export function CouplePlannerChatbot() {
               <p className="text-xs text-muted-foreground">Your wedding planning assistant</p>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsOpen(false)}
-            data-testid="button-close-ai-planner"
-          >
-            <X className="h-5 w-5" />
-          </Button>
+          <div className="flex items-center gap-1">
+            {messages.length > 0 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => clearHistoryMutation.mutate()}
+                disabled={clearHistoryMutation.isPending}
+                title="Clear chat history"
+                data-testid="button-clear-ai-chat"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsOpen(false)}
+              data-testid="button-close-ai-planner"
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
         
         <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>

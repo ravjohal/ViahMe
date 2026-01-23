@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Bot, Send, User, Sparkles, Calendar, Users, DollarSign, MapPin, Lightbulb, RefreshCw, Loader2, Wand2, Heart, PartyPopper, Music, Camera, Utensils, Flower2 } from "lucide-react";
+import { Bot, Send, User, Sparkles, Calendar, Users, DollarSign, MapPin, Lightbulb, RefreshCw, Loader2, Wand2, Heart, PartyPopper, Music, Camera, Utensils, Flower2, Trash2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import type { Wedding } from "@shared/schema";
 
@@ -34,6 +34,7 @@ export default function AiPlanner() {
   const { toast } = useToast();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState("");
+  const [historyLoaded, setHistoryLoaded] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -42,6 +43,29 @@ export default function AiPlanner() {
   });
 
   const wedding = weddings?.[0];
+
+  // Load chat history from server
+  const { data: chatHistoryData } = useQuery<{ history: Array<{ role: 'user' | 'assistant'; content: string }> }>({
+    queryKey: [`/api/ai/chat/history/${wedding?.id}`],
+    enabled: !!wedding?.id,
+  });
+
+  // Reset historyLoaded when wedding changes
+  useEffect(() => {
+    setHistoryLoaded(false);
+  }, [wedding?.id]);
+
+  // Initialize messages from history when loaded
+  useEffect(() => {
+    if (chatHistoryData?.history && !historyLoaded && wedding?.id) {
+      setMessages(chatHistoryData.history.map(m => ({
+        role: m.role,
+        content: m.content,
+        timestamp: new Date(),
+      })));
+      setHistoryLoaded(true);
+    }
+  }, [chatHistoryData, historyLoaded, wedding?.id]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -68,6 +92,8 @@ export default function AiPlanner() {
           budget: wedding.totalBudget ? parseFloat(wedding.totalBudget) : undefined,
           guestCount: wedding.guestCountEstimate,
         } : undefined,
+        weddingId: wedding?.id,
+        persistHistory: true,
       });
       return response.json();
     },
@@ -89,6 +115,29 @@ export default function AiPlanner() {
           return prev.slice(0, -1);
         }
         return prev;
+      });
+    },
+  });
+
+  const clearHistoryMutation = useMutation({
+    mutationFn: async () => {
+      if (!wedding?.id) return;
+      await apiRequest("DELETE", `/api/ai/chat/history/${wedding.id}`);
+    },
+    onSuccess: () => {
+      setMessages([]);
+      setHistoryLoaded(false);
+      queryClient.invalidateQueries({ queryKey: [`/api/ai/chat/history/${wedding?.id}`] });
+      toast({
+        title: "Chat cleared",
+        description: "Starting a fresh conversation",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to clear chat history",
+        variant: "destructive",
       });
     },
   });
@@ -128,11 +177,15 @@ export default function AiPlanner() {
   };
 
   const handleClearChat = () => {
-    setMessages([]);
-    toast({
-      title: "Chat cleared",
-      description: "Starting a fresh conversation",
-    });
+    if (wedding?.id) {
+      clearHistoryMutation.mutate();
+    } else {
+      setMessages([]);
+      toast({
+        title: "Chat cleared",
+        description: "Starting a fresh conversation",
+      });
+    }
   };
 
 
