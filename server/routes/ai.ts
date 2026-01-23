@@ -36,6 +36,7 @@ const AI_FEATURE_CONTEXT = `Viah.me Features:
 - Cultural Info: Ceremony explanations, attire guides, ritual roles
 Navigate: Dashboard, Budget, Vendors, Guests, Events, Tasks, AI Planner, Settings`;
 
+
 // Normalize message for cache/database lookup
 function normalizeMessage(message: string): string {
   return message
