@@ -149,7 +149,7 @@ export async function registerAiRoutes(router: Router, storage: IStorage) {
         return res.status(401).json({ error: "Authentication required" });
       }
 
-      const { message, conversationHistory, weddingContext } = req.body;
+      const { message, conversationHistory, weddingContext, weddingId, persistHistory } = req.body;
       
       if (!message || message.trim().length === 0) {
         return res.status(400).json({ 
@@ -162,11 +162,81 @@ export async function registerAiRoutes(router: Router, storage: IStorage) {
       const context: WeddingContext | undefined = weddingContext;
 
       const response = await chatWithPlanner(message, history, context);
+
+      // If persistHistory is true and weddingId is provided, save both user message and AI response
+      if (persistHistory && weddingId) {
+        try {
+          await storage.createAiChatMessage({
+            weddingId,
+            userId: authReq.session.userId,
+            role: 'user',
+            content: message
+          });
+          await storage.createAiChatMessage({
+            weddingId,
+            userId: authReq.session.userId,
+            role: 'assistant',
+            content: response
+          });
+        } catch (persistError) {
+          console.error("Error persisting chat history:", persistError);
+          // Don't fail the request if persistence fails
+        }
+      }
+
       res.json({ response });
     } catch (error) {
       console.error("Error in chat:", error);
       res.status(500).json({ 
         error: "Failed to get response",
+        message: error instanceof Error ? error.message : "Please try again later"
+      });
+    }
+  });
+
+  // Get chat history for a wedding
+  router.get("/chat/history/:weddingId", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      if (!authReq.session.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const { weddingId } = req.params;
+      const messages = await storage.getAiChatMessages(weddingId, authReq.session.userId);
+      
+      // Transform to the format expected by the chat component
+      const history = messages.map(msg => ({
+        role: msg.role as 'user' | 'assistant',
+        content: msg.content
+      }));
+
+      res.json({ history });
+    } catch (error) {
+      console.error("Error fetching chat history:", error);
+      res.status(500).json({ 
+        error: "Failed to fetch chat history",
+        message: error instanceof Error ? error.message : "Please try again later"
+      });
+    }
+  });
+
+  // Clear chat history for a wedding
+  router.delete("/chat/history/:weddingId", await requireAuth(storage, false), async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      if (!authReq.session.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const { weddingId } = req.params;
+      await storage.clearAiChatHistory(weddingId, authReq.session.userId);
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error clearing chat history:", error);
+      res.status(500).json({ 
+        error: "Failed to clear chat history",
         message: error instanceof Error ? error.message : "Please try again later"
       });
     }

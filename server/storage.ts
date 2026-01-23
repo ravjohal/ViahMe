@@ -308,6 +308,9 @@ import {
   type InsertVendorTaskCategory,
   type MetroArea,
   type InsertMetroArea,
+  aiChatMessages,
+  type AiChatMessage,
+  type InsertAiChatMessage,
 } from "@shared/schema";
 import { randomUUID, randomBytes } from "crypto";
 import bcrypt from "bcrypt";
@@ -1503,6 +1506,11 @@ export interface IStorage {
   // Admin - User Management
   getAllUsersWithWeddings(): Promise<Array<{ user: User; wedding: Wedding | null }>>;
   getUserWithWedding(userId: string): Promise<{ user: User; wedding: Wedding | null } | null>;
+
+  // AI Chat Messages
+  getAiChatMessages(weddingId: string, userId: string): Promise<AiChatMessage[]>;
+  createAiChatMessage(message: InsertAiChatMessage): Promise<AiChatMessage>;
+  clearAiChatHistory(weddingId: string, userId: string): Promise<boolean>;
 }
 
 // Guest Planning Snapshot - comprehensive view of all guests and per-event costs
@@ -4877,6 +4885,11 @@ export class MemStorage implements IStorage {
   // Admin - User Management (stub methods for MemStorage)
   async getAllUsersWithWeddings(): Promise<Array<{ user: User; wedding: Wedding | null }>> { return []; }
   async getUserWithWedding(userId: string): Promise<{ user: User; wedding: Wedding | null } | null> { return null; }
+
+  // AI Chat Messages (stub methods for MemStorage)
+  async getAiChatMessages(weddingId: string, userId: string): Promise<AiChatMessage[]> { return []; }
+  async createAiChatMessage(message: InsertAiChatMessage): Promise<AiChatMessage> { throw new Error('MemStorage does not support AI Chat Messages. Use DBStorage.'); }
+  async clearAiChatHistory(weddingId: string, userId: string): Promise<boolean> { return false; }
 }
 
 import { neon } from "@neondatabase/serverless";
@@ -13559,6 +13572,33 @@ export class DBStorage implements IStorage {
     
     const [wedding] = await this.db.select().from(schema.weddings).where(eq(schema.weddings.userId, userId));
     return { user, wedding: wedding || null };
+  }
+
+  // AI Chat Messages
+  async getAiChatMessages(weddingId: string, userId: string): Promise<AiChatMessage[]> {
+    return await this.db.select()
+      .from(aiChatMessages)
+      .where(and(
+        eq(aiChatMessages.weddingId, weddingId),
+        eq(aiChatMessages.userId, userId)
+      ))
+      .orderBy(aiChatMessages.createdAt);
+  }
+
+  async createAiChatMessage(message: InsertAiChatMessage): Promise<AiChatMessage> {
+    const [newMessage] = await this.db.insert(aiChatMessages)
+      .values(message)
+      .returning();
+    return newMessage;
+  }
+
+  async clearAiChatHistory(weddingId: string, userId: string): Promise<boolean> {
+    await this.db.delete(aiChatMessages)
+      .where(and(
+        eq(aiChatMessages.weddingId, weddingId),
+        eq(aiChatMessages.userId, userId)
+      ));
+    return true;
   }
 }
 
