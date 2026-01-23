@@ -287,7 +287,7 @@ export function CouplePlannerChatbot() {
                     }`}
                   >
                     {msg.role === "assistant" ? (
-                      <div className="prose prose-sm dark:prose-invert max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+                      <div className="prose prose-sm dark:prose-invert max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&>table]:w-full [&>table]:text-xs [&>table]:border-collapse [&>table]:my-2 [&>table>thead>tr>th]:border [&>table>thead>tr>th]:border-border [&>table>thead>tr>th]:bg-muted [&>table>thead>tr>th]:px-2 [&>table>thead>tr>th]:py-1 [&>table>thead>tr>th]:text-left [&>table>tbody>tr>td]:border [&>table>tbody>tr>td]:border-border [&>table>tbody>tr>td]:px-2 [&>table>tbody>tr>td]:py-1 [&>table]:overflow-x-auto [&>table]:block [&>table]:max-w-full">
                         <ReactMarkdown>{msg.content}</ReactMarkdown>
                       </div>
                     ) : (
