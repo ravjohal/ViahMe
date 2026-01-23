@@ -5454,3 +5454,20 @@ export const insertUserFeedbackSchema = createInsertSchema(userFeedback).omit({
 });
 export type InsertUserFeedback = z.infer<typeof insertUserFeedbackSchema>;
 export type UserFeedback = typeof userFeedback.$inferSelect;
+
+// AI Chat Messages - persisted chat history for AI planner
+export const aiChatMessages = pgTable("ai_chat_messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull().references(() => weddings.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  role: text("role").notNull(), // 'user' | 'assistant'
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertAiChatMessageSchema = createInsertSchema(aiChatMessages).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertAiChatMessage = z.infer<typeof insertAiChatMessageSchema>;
+export type AiChatMessage = typeof aiChatMessages.$inferSelect;
