@@ -317,11 +317,11 @@ export async function registerAiRoutes(router: Router, storage: IStorage) {
       // Enhance context with condensed feature knowledge and ceremony guest data
       const context: WeddingContext | undefined = weddingContext ? {
         ...weddingContext,
-        // Override estimate with actual count if available
-        guestCount: actualGuestCount !== undefined ? actualGuestCount : weddingContext.guestCount,
+        // Remove single guestCount when we have per-ceremony breakdown to avoid AI confusion
+        guestCount: ceremonyGuestBreakdown ? undefined : (actualGuestCount !== undefined ? actualGuestCount : weddingContext.guestCount),
         hasNoGuests,
         guestDataNote: ceremonyGuestBreakdown 
-          ? ceremonyGuestBreakdown
+          ? `${ceremonyGuestBreakdown}\nNote: Each ceremony has a different guest count. Do not assume a single total.`
           : hasNoGuests 
             ? "No ceremonies or guest counts have been added yet. Suggest they add events in the Events section."
             : undefined,

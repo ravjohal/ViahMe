@@ -1,0 +1,26 @@
+11:59:23 PM [express] → POST /api/ai/chat/stream (body: 0.3KB)
+
+[AI REQUEST] chatWithPlannerStream
+Timestamp: 2026-01-23T23:59:24.028Z
+Request: {
+  "message": "Guest list tips",
+  "weddingContext": {
+    "tradition": "sikh",
+    "city": "Sacramento Metro",
+    "partner1Name": "Jay kular",
+    "partner2Name": "Sandeep rehal",
+    "weddingDate": "3/27/2026",
+    "budget": 106900,
+    "guestCount": 300,
+    "hasNoGuests": false,
+    "guestDataNote": "Ceremonies planned:\nRoka: 50 guests\nChunni Chadana: 50 guests\nReception: 300 guests\nPaath: 75 guests\nMehndi: 80 guests\nSangeet: 150 guests\nAnand Karaj: 250 guests",
+    "appDocumentation": "Viah.me Features:\n- Budget: Ceremony-based tracking, vendor payments, expense splitting between families\n- Vendors: 32 categories, culturally-specialized, comparison tools, contracts with e-signatures\n- Guests: Bulk import, household grouping, per-event RSVPs, dietary tracking\n- Events: Multi-day timeline, ceremony templates (Sikh/Hindu/Muslim/Gujarati/South Indian)\n- Tasks: Checklist with reminders, assignable to partners/family\n- Communication: Vendor messaging, AI reply suggestions\n- Documents: Contract storage, photo galleries\n- Website: Guest-facing site with RSVP, livestream support\n- Cultural Info: Ceremony explanations, attire guides, ritual roles\nNavigate: Dashboard, Budget, Vendors, Guests, Events, Tasks, AI Planner, Settings"
+  },
+  "historyLength": 1
+}
+
+[AI RESPONSE] chatWithPlannerStream
+Duration: 15284ms
+Response: Sat Sri Akal, Jay and Sandeep! Congratulations on your upcoming Anand Karaj. Planning a 300-guest Sikh wedding in the Sacramento metro area is no small feat—especially with a multi-day itinerary starting from the Roka all the way to the Reception. 
+
+Sacramento has a wonderful, vibrant Sikh community, but with that comes the challenge of the "ever-expanding" guest list. Since your budget is **$106,900**, keeping your guest count strictly at 300 for the Reception is your most important lever for s...
