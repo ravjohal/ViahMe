@@ -191,6 +191,58 @@ export const CITY_VENDOR_COSTS: Record<string, CityVendorCost[]> = {
     { category: 'tent_service', label: 'Tent Service', lowRange: 2800, highRange: 13000, unit: 'per_event', notes: 'Hot summers; cooling helpful' },
     { category: 'mobile_food', label: 'Mobile Food', lowRange: 1400, highRange: 3800, unit: 'per_event', notes: 'Good food truck scene' },
   ],
+  'Vancouver': [
+    { category: 'photographer', label: 'Photographer', lowRange: 3500, highRange: 10000, unit: 'per_event', notes: 'CAD pricing; strong South Asian wedding market' },
+    { category: 'videographer', label: 'Videographer', lowRange: 3000, highRange: 8500, unit: 'per_event', notes: 'CAD; cinematic packages popular' },
+    { category: 'caterer', label: 'Caterer', lowRange: 65, highRange: 150, unit: 'per_person', notes: 'CAD; excellent Punjabi cuisine options' },
+    { category: 'halal_caterer', label: 'Halal Caterer', lowRange: 70, highRange: 160, unit: 'per_person', notes: 'CAD; strong halal catering scene' },
+    { category: 'dj', label: 'DJ', lowRange: 1200, highRange: 3500, unit: 'per_event', notes: 'CAD; great Bollywood/Bhangra DJs locally' },
+    { category: 'dhol_player', label: 'Dhol Player', lowRange: 400, highRange: 1000, unit: 'per_event', notes: 'CAD; excellent local availability in Surrey' },
+    { category: 'makeup_artist', label: 'Makeup Artist', lowRange: 300, highRange: 700, unit: 'per_event', notes: 'CAD; many South Asian specialists' },
+    { category: 'mehndi_artist', label: 'Mehndi Artist', lowRange: 125, highRange: 350, unit: 'per_hour', notes: 'CAD; bridal mehndi $300-700' },
+    { category: 'decorator', label: 'Decorator', lowRange: 4500, highRange: 22000, unit: 'per_event', notes: 'CAD; Surrey area has many specialists' },
+    { category: 'mandap_decorator', label: 'Mandap Decorator', lowRange: 3000, highRange: 14000, unit: 'per_event', notes: 'CAD; custom traditional and modern designs' },
+    { category: 'florist', label: 'Florist', lowRange: 2200, highRange: 9000, unit: 'per_event', notes: 'CAD; fresh flower availability excellent' },
+    { category: 'banquet_hall', label: 'Banquet Hall', lowRange: 6000, highRange: 30000, unit: 'per_event', notes: 'CAD; many South Asian-friendly venues' },
+    { category: 'gurdwara', label: 'Gurdwara', lowRange: 500, highRange: 2000, unit: 'per_event', notes: 'CAD; largest Sikh population outside India' },
+    { category: 'temple', label: 'Temple', lowRange: 800, highRange: 4000, unit: 'per_event', notes: 'CAD; Ross Street Temple well-known' },
+    { category: 'horse_rental', label: 'Horse Rental', lowRange: 800, highRange: 1800, unit: 'per_event', notes: 'CAD; good availability in Fraser Valley' },
+    { category: 'limo_service', label: 'Limo Service', lowRange: 400, highRange: 1100, unit: 'per_event', notes: 'CAD; many luxury options' },
+    { category: 'turban_tier', label: 'Turban Tier', lowRange: 50, highRange: 140, unit: 'per_item', notes: 'CAD; Surrey has excellent pagg services' },
+    { category: 'pandit', label: 'Pandit', lowRange: 400, highRange: 1200, unit: 'per_event', notes: 'CAD; good priest availability' },
+    { category: 'granthi', label: 'Granthi', lowRange: 300, highRange: 800, unit: 'per_event', notes: 'CAD; Gurdwara-based or independent' },
+    { category: 'baraat_band', label: 'Baraat Band', lowRange: 900, highRange: 2800, unit: 'per_event', notes: 'CAD; strong Punjabi music community' },
+    { category: 'garland_maker', label: 'Garland Maker', lowRange: 100, highRange: 450, unit: 'per_item', notes: 'CAD; fresh jaimala specialists' },
+    { category: 'tent_service', label: 'Tent Service', lowRange: 3000, highRange: 14000, unit: 'per_event', notes: 'CAD; rain protection important in Vancouver' },
+    { category: 'mobile_food', label: 'Mobile Food', lowRange: 1400, highRange: 4000, unit: 'per_event', notes: 'CAD; growing food truck options' },
+  ],
+  'Toronto': [
+    { category: 'photographer', label: 'Photographer', lowRange: 4000, highRange: 12000, unit: 'per_event', notes: 'CAD; largest South Asian wedding market in Canada' },
+    { category: 'videographer', label: 'Videographer', lowRange: 3500, highRange: 10000, unit: 'per_event', notes: 'CAD; cinematic specialists abundant' },
+    { category: 'caterer', label: 'Caterer', lowRange: 75, highRange: 170, unit: 'per_person', notes: 'CAD; excellent variety of regional cuisines' },
+    { category: 'halal_caterer', label: 'Halal Caterer', lowRange: 80, highRange: 180, unit: 'per_person', notes: 'CAD; strong Pakistani/Indian halal options' },
+    { category: 'dj', label: 'DJ', lowRange: 1500, highRange: 4000, unit: 'per_event', notes: 'CAD; top-tier Bollywood/Bhangra DJs' },
+    { category: 'dhol_player', label: 'Dhol Player', lowRange: 450, highRange: 1200, unit: 'per_event', notes: 'CAD; excellent availability in Brampton/Mississauga' },
+    { category: 'makeup_artist', label: 'Makeup Artist', lowRange: 350, highRange: 850, unit: 'per_event', notes: 'CAD; many celebrity artists locally' },
+    { category: 'mehndi_artist', label: 'Mehndi Artist', lowRange: 150, highRange: 400, unit: 'per_hour', notes: 'CAD; bridal mehndi $350-850' },
+    { category: 'decorator', label: 'Decorator', lowRange: 5500, highRange: 28000, unit: 'per_event', notes: 'CAD; elaborate setups common' },
+    { category: 'mandap_decorator', label: 'Mandap Decorator', lowRange: 3500, highRange: 18000, unit: 'per_event', notes: 'CAD; custom luxury designs' },
+    { category: 'florist', label: 'Florist', lowRange: 2500, highRange: 11000, unit: 'per_event', notes: 'CAD; premium arrangements available' },
+    { category: 'banquet_hall', label: 'Banquet Hall', lowRange: 8000, highRange: 40000, unit: 'per_event', notes: 'CAD; many large-capacity venues' },
+    { category: 'gurdwara', label: 'Gurdwara', lowRange: 500, highRange: 2500, unit: 'per_event', notes: 'CAD; Malton and Brampton areas popular' },
+    { category: 'temple', label: 'Temple', lowRange: 1000, highRange: 5000, unit: 'per_event', notes: 'CAD; BAPS and other major temples' },
+    { category: 'mosque', label: 'Mosque/Masjid', lowRange: 500, highRange: 2000, unit: 'per_event', notes: 'CAD; many options for Nikah ceremonies' },
+    { category: 'horse_rental', label: 'Horse Rental', lowRange: 900, highRange: 2200, unit: 'per_event', notes: 'CAD; good availability' },
+    { category: 'limo_service', label: 'Limo Service', lowRange: 450, highRange: 1300, unit: 'per_event', notes: 'CAD; luxury fleet options' },
+    { category: 'turban_tier', label: 'Turban Tier', lowRange: 55, highRange: 160, unit: 'per_item', notes: 'CAD; Brampton area specialists' },
+    { category: 'pandit', label: 'Pandit', lowRange: 500, highRange: 1500, unit: 'per_event', notes: 'CAD; various tradition specialists' },
+    { category: 'granthi', label: 'Granthi', lowRange: 350, highRange: 900, unit: 'per_event', notes: 'CAD; Gurdwara-based or independent' },
+    { category: 'imam', label: 'Imam', lowRange: 300, highRange: 800, unit: 'per_event', notes: 'CAD; for Nikah ceremonies' },
+    { category: 'baraat_band', label: 'Baraat Band', lowRange: 1000, highRange: 3500, unit: 'per_event', notes: 'CAD; vibrant music scene' },
+    { category: 'garland_maker', label: 'Garland Maker', lowRange: 120, highRange: 500, unit: 'per_item', notes: 'CAD; fresh flowers readily available' },
+    { category: 'tent_service', label: 'Tent Service', lowRange: 3500, highRange: 16000, unit: 'per_event', notes: 'CAD; summer outdoor events popular' },
+    { category: 'mobile_food', label: 'Mobile Food', lowRange: 1600, highRange: 4500, unit: 'per_event', notes: 'CAD; diverse food truck options' },
+  ],
 };
 
 export const VENDOR_CATEGORY_INFO: Record<string, VendorCategoryInfo> = {
@@ -770,6 +822,9 @@ export function normalizeToKnownCity(location: string): string {
   }
   if (loc.includes('chicago') || loc.includes('schaumburg')) return 'Chicago';
   if (loc.includes('seattle') || loc.includes('bellevue')) return 'Seattle';
+  // Canadian cities
+  if (loc.includes('vancouver') || loc.includes('surrey') || loc.includes('burnaby') || loc.includes('richmond') || loc.includes('coquitlam') || loc.includes('langley') || loc.includes('abbotsford') || loc.includes('bc') || loc.includes('british columbia')) return 'Vancouver';
+  if (loc.includes('toronto') || loc.includes('mississauga') || loc.includes('brampton') || loc.includes('markham') || loc.includes('scarborough') || loc.includes('vaughan') || loc.includes('gta') || loc.includes('ontario')) return 'Toronto';
   return 'San Francisco Bay Area';
 }
 
@@ -798,4 +853,6 @@ export const KNOWN_CITIES = [
   'Los Angeles',
   'Chicago',
   'Seattle',
+  'Vancouver',
+  'Toronto',
 ] as const;
