@@ -3895,9 +3895,10 @@ export class MemStorage implements IStorage {
     const wedding = await this.getWedding(weddingId);
     const totalBudget = wedding?.totalBudget ? parseFloat(wedding.totalBudget) : 0;
 
-    const budgetCategories = await this.getBudgetCategoriesByWedding(weddingId);
-    const totalSpent = budgetCategories.reduce((sum, cat) => {
-      const amount = cat.spentAmount ? parseFloat(cat.spentAmount) : 0;
+    // Get total spent from expenses
+    const expenses = await this.getExpensesByWedding(weddingId);
+    const totalSpent = expenses.reduce((sum, exp) => {
+      const amount = exp.amount ? parseFloat(exp.amount) : 0;
       return sum + (isNaN(amount) ? 0 : amount);
     }, 0);
     const remainingBudget = totalBudget - totalSpent;
@@ -3941,15 +3942,36 @@ export class MemStorage implements IStorage {
     spent: string;
     percentage: number;
   }>> {
-    const budgetCategories = await this.getBudgetCategoriesByWedding(weddingId);
-    return budgetCategories.map(cat => {
-      const allocated = cat.allocatedAmount ? parseFloat(cat.allocatedAmount) : 0;
-      const spent = cat.spentAmount ? parseFloat(cat.spentAmount) : 0;
+    // Get budget allocations and expenses for the wedding
+    const budgetAllocations = await this.getBudgetAllocationsByWedding(weddingId);
+    const expenses = await this.getExpensesByWedding(weddingId);
+    const allBucketCategories = await this.getAllBudgetBucketCategories();
+    
+    // Build a map of bucket category id to display name
+    const bucketCategoryMap = new Map(allBucketCategories.map(c => [c.id, c.displayName]));
+    
+    // Calculate spent per bucket category
+    const spentByBucket = new Map<string, number>();
+    for (const exp of expenses) {
+      if (exp.bucketCategoryId) {
+        const current = spentByBucket.get(exp.bucketCategoryId) || 0;
+        spentByBucket.set(exp.bucketCategoryId, current + (parseFloat(exp.amount) || 0));
+      }
+    }
+    
+    // Build breakdown from allocations
+    const wedding = await this.getWedding(weddingId);
+    const totalBudget = wedding?.totalBudget ? parseFloat(wedding.totalBudget) : 0;
+    
+    return budgetAllocations.map(alloc => {
+      const allocated = alloc.allocatedAmount ? parseFloat(alloc.allocatedAmount) : 0;
+      const spent = alloc.bucketCategoryId ? (spentByBucket.get(alloc.bucketCategoryId) || 0) : 0;
+      const categoryName = alloc.bucketCategoryId ? (bucketCategoryMap.get(alloc.bucketCategoryId) || alloc.bucket || 'Unknown') : (alloc.bucket || 'Unknown');
       return {
-        category: cat.category,
+        category: categoryName,
         allocated: (isNaN(allocated) ? 0 : allocated).toFixed(2),
         spent: (isNaN(spent) ? 0 : spent).toFixed(2),
-        percentage: cat.percentage || 0,
+        percentage: totalBudget > 0 ? Math.round((allocated / totalBudget) * 100) : 0,
       };
     });
   }
@@ -9106,8 +9128,8 @@ export class DBStorage implements IStorage {
     // Get the couple's target guest count for fallback capacity
     const coupleTargetGuestCount = wedding?.guestCountEstimate || null;
     
-    // Get budget categories for per-event allocations
-    const budgetCategories = await this.getBudgetCategoriesByWedding(weddingId);
+    // Get budget allocations for per-event allocations
+    const budgetAllocations = await this.getBudgetAllocationsByWedding(weddingId);
 
     // Calculate confirmed seat counts
     const confirmedSeats = confirmedHouseholds.reduce((sum, h) => sum + h.maxCount, 0);
@@ -9170,21 +9192,11 @@ export class DBStorage implements IStorage {
         eventCapacity = coupleTargetGuestCount;
       }
       
-      // Find budget allocation for this event
-      const eventTypeLower = event.type.toLowerCase();
-      const eventNameLower = event.name.toLowerCase();
+      // Find budget allocation for this event (by ceremonyId match)
+      const matchingAllocation = budgetAllocations.find(alloc => alloc.ceremonyId === event.id);
       
-      const matchingCategory = budgetCategories.find((cat: BudgetCategory) => {
-        const catLower = cat.category.toLowerCase();
-        if (catLower === eventTypeLower || catLower === eventNameLower) return true;
-        if (catLower.includes(eventTypeLower) || catLower.includes(eventNameLower)) return true;
-        if (eventTypeLower.includes(catLower) || eventNameLower.includes(catLower)) return true;
-        if (['catering', 'food', 'venue', 'hospitality'].some(k => catLower.includes(k))) return false;
-        return false;
-      });
-      
-      const budgetAllocation = matchingCategory?.allocatedAmount 
-        ? parseFloat(matchingCategory.allocatedAmount) 
+      const eventBudgetAllocation = matchingAllocation?.allocatedAmount 
+        ? parseFloat(matchingAllocation.allocatedAmount) 
         : defaultEventAllocation;
       
       // Count confirmed guests for this event
@@ -9201,7 +9213,7 @@ export class DBStorage implements IStorage {
       const capacityUsed = confirmedInvited;
       const capacityRemaining = eventCapacity !== null ? eventCapacity - confirmedInvited : null;
       const isOverCapacity = eventCapacity !== null && confirmedInvited > eventCapacity;
-      const isOverBudget = budgetAllocation !== null && budgetAllocation > 0 && confirmedCost > budgetAllocation;
+      const isOverBudget = eventBudgetAllocation !== null && eventBudgetAllocation > 0 && confirmedCost > eventBudgetAllocation;
 
       return {
         id: event.id,
@@ -9210,7 +9222,7 @@ export class DBStorage implements IStorage {
         date: event.date,
         costPerHead,
         venueCapacity: eventCapacity,
-        budgetAllocation,
+        budgetAllocation: eventBudgetAllocation,
         confirmedInvited,
         confirmedCost,
         actualExpenseSpend,

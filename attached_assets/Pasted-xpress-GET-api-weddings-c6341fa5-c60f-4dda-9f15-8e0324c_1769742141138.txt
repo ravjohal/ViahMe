@@ -1,0 +1,101 @@
+xpress] ← ✗ GET /api/weddings/c6341fa5-c60f-4dda-9f15-8e0324c33c4e/guest-planning-snapshot 500 in 184ms :: this.getBudgetCatego…
+2026-01-29 03:49:39.94
+30bcec99
+User
+Found 0 tasks needing reminders today
+2026-01-29 04:22:05.97
+30bcec99
+User
+12:22:05 PM [express] → GET /api/auth/me (body: unknown)
+2026-01-29 04:22:06.11
+30bcec99
+User
+12:22:06 PM [express] ← ✓ GET /api/auth/me 304 in 141ms
+2026-01-29 04:22:06.13
+30bcec99
+User
+12:22:06 PM [express] → GET /api/weddings/c6341fa5-c60f-4dda-9f15-8e0324c33c4e/guest-planning-snapshot (body: unknown)
+2026-01-29 04:22:06.28
+30bcec99
+User
+12:22:06 PM [express] ← ✗ GET /api/weddings/c6341fa5-c60f-4dda-9f15-8e0324c33c4e/guest-planning-snapshot 500 in 155ms :: this.getBudgetCatego…
+2026-01-29 04:38:27.26
+30bcec99
+User
+12:38:27 PM [express] → GET /api/auth/me (body: unknown)
+2026-01-29 04:38:27.37
+30bcec99
+User
+12:38:27 PM [express] ← ✓ GET /api/auth/me 304 in 114ms
+2026-01-29 04:38:27.76
+30bcec99
+User
+12:38:27 PM [express] → GET /api/weddings/c6341fa5-c60f-4dda-9f15-8e0324c33c4e/guest-planning-snapshot (body: unknown)
+2026-01-29 04:38:27.92
+30bcec99
+User
+12:38:27 PM [express] ← ✗ GET /api/weddings/c6341fa5-c60f-4dda-9f15-8e0324c33c4e/guest-planning-snapshot 500 in 160ms :: this.getBudgetCatego…
+2026-01-29 04:49:38.59
+30bcec99
+User
+Found 0 tasks needing reminders today
+2026-01-29 05:12:16.95
+30bcec99
+User
+1:12:16 PM [express] → GET /api/auth/me (body: unknown)
+2026-01-29 05:12:17.04
+30bcec99
+User
+1:12:17 PM [express] → GET /api/weddings/c6341fa5-c60f-4dda-9f15-8e0324c33c4e/guest-planning-snapshot (body: unknown)
+2026-01-29 05:12:17.05
+30bcec99
+User
+1:12:17 PM [express] ← ✓ GET /api/auth/me 304 in 102ms
+2026-01-29 05:12:17.18
+30bcec99
+User
+1:12:17 PM [express] ← ✗ GET /api/weddings/c6341fa5-c60f-4dda-9f15-8e0324c33c4e/guest-planning-snapshot 500 in 139ms :: this.getBudgetCatego…
+2026-01-29 05:20:27.38
+30bcec99
+User
+1:20:27 PM [express] → GET /api/auth/me (body: unknown)
+2026-01-29 05:20:27.48
+30bcec99
+User
+1:20:27 PM [express] ← ✓ GET /api/auth/me 304 in 95ms
+2026-01-29 05:20:27.60
+30bcec99
+User
+1:20:27 PM [express] → GET /api/weddings/c6341fa5-c60f-4dda-9f15-8e0324c33c4e/guest-planning-snapshot (body: unknown)
+2026-01-29 05:20:27.75
+30bcec99
+User
+1:20:27 PM [express] ← ✗ GET /api/weddings/c6341fa5-c60f-4dda-9f15-8e0324c33c4e/guest-planning-snapshot 500 in 152ms :: this.getBudgetCatego…
+2026-01-29 05:49:38.80
+30bcec99
+User
+Found 0 tasks needing reminders today
+2026-01-29 06:49:38.86
+30bcec99
+User
+Found 0 tasks needing reminders today
+2026-01-29 07:49:40.84
+30bcec99
+User
+Found 0 tasks needing reminders today
+2026-01-29 08:04:52.04
+30bcec99
+User
+4:04:52 PM [express] → GET /api/weddings/c6341fa5-c60f-4dda-9f15-8e0324c33c4e/guest-planning-snapshot (body: unknown)
+2026-01-29 08:04:52.04
+30bcec99
+User
+4:04:52 PM [express] → GET /api/auth/me (body: unknown)
+2026-01-29 08:04:52.15
+30bcec99
+User
+4:04:52 PM [express] ← ✓ GET /api/auth/me 304 in 113ms
+2026-01-29 08:04:52.21
+30bcec99
+User
+4:04:52 PM [express] ← ✗ GET /api/weddings/c6341fa5-c60f-4dda-9f15-8e0324c33c4e/guest-planning-snapshot 500 in 174ms :: 
