@@ -17,4 +17,4 @@ CREATE TABLE IF NOT EXISTS user_feedback (
 
 -- Create index for status filtering
 CREATE INDEX IF NOT EXISTS user_feedback_status_idx ON user_feedback(status);
-CREATE INDEX IF NOT EXISTS user_feedback_created_at_idx ON user_feedback(created_at DESC);
+CREATE INDEX IF NOT EXISTS user_feedback_created_at_idx ON user_feedback(created_at);
